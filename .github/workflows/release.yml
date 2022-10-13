@@ -1,0 +1,70 @@
+# CI that:
+#
+# * creates a Github Release™️
+# * builds binaries/packages
+# * uploads those packages to the release
+#
+# Note that the release will be created before the packages,
+# so there will be a few minutes where the release has no packages
+# and then they will slowly trickle in. This is annoying if one of
+# the packaging tasks fails!
+name: Release
+
+permissions:
+  contents: write
+
+# This task will run whenever you push a github tag that looks like
+# a version number. We just look for `v` followed by at least one number
+# and then whatever. so `v1`, `v1.0.0`, and `v1.0.0-prerelease` all work.
+#
+# TODO: github has a way to mark a Github Release™️ as a "prerelease".
+# haven't checked if taiki-e/create-gh-release-action auto-detects and applies
+# this, but I've implemented it manually before if not.
+on:
+  push:
+    tags:
+      - v[0-9]+.*
+
+jobs:
+  # Create the Github Release™️ so the packages have something to be uploaded to
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: taiki-e/create-gh-release-action@v1
+        with:
+          # (optional) Path to changelog.
+          changelog: RELEASES.md
+          # (required) GitHub token for creating GitHub Releases.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build and packages all the things
+  upload-assets:
+    strategy:
+      matrix:
+        # For these target platforms
+        include:
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
+          # Note that glob pattern is not supported yet.
+          bin: cargo-dist
+          # (optional) Target triple, default is host triple.
+          target: ${{ matrix.target }}
+          # (required) GitHub token for uploading assets to GitHub Releases.
+          token: ${{ secrets.GITHUB_TOKEN }}

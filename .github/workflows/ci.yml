@@ -1,0 +1,148 @@
+# The "Normal" CI for tests and linters and whatnot
+name: Rust CI
+
+# Ci should be run on...
+on:
+  # Every pull request (will need approval for new contributors)
+  pull_request:
+  # Every push to...
+  push:
+    branches:
+      # The main branch
+      - main
+      # Not a thing I use personally but some people like having a release branch
+      - "release/**"
+  # And once a week? 
+  # This can catch things like "rust updated and actually regressed something"
+  schedule:
+    - cron: "11 7 * * 1,4"
+
+# We want all these checks to fail if they spit out warnings
+env:
+  RUSTFLAGS: -Dwarnings
+
+jobs:
+  # Check that rustfmt is a no-op
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  # Check that clippy is appeased
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: clippy
+          override: true
+      - uses: actions-rs/clippy-check@v1
+        env:
+          PWD: ${{ env.GITHUB_WORKSPACE }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --workspace --tests --examples
+
+  # Make sure the docs build without warnings
+  docs:
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -Dwarnings
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rust-docs
+          override: true
+      - uses: swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --workspace --no-deps
+
+# cargo-fuzz support, if needed/desired
+#
+#  build-fuzz:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v1
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: nightly
+#          profile: minimal
+#          override: true
+#      - uses: actions-rs/cargo@v1
+#        env:
+#          PWD: ${{ env.GITHUB_WORKSPACE }}
+#        with:
+#          command: install
+#          args: cargo-fuzz
+#      - uses: actions-rs/cargo@v1
+#        env:
+#          PWD: ${{ env.GITHUB_WORKSPACE }}
+#        with:
+#          command: fuzz
+#          args: build --fuzz-dir fuzz
+
+  # Build and run tests/doctests/examples on all platforms
+  # FIXME: look into `cargo-hack` which lets you more aggressively
+  # probe all your features and rust versions (see tracing's ci)
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Test the cross-product of these platforms+toolchains
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        rust: [nightly, stable]
+    steps:
+      # Setup tools
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+      - uses: swatinem/rust-cache@v1
+      # Run the tests/doctests (default features)
+      - uses: actions-rs/cargo@v1
+        env:
+          PWD: ${{ env.GITHUB_WORKSPACE }}
+        with:
+          command: test
+          args: --workspace
+      # Run the tests/doctests (all features)
+      - uses: actions-rs/cargo@v1
+        env:
+          PWD: ${{ env.GITHUB_WORKSPACE }}
+        with:
+          command: test
+          args: --workspace --all-features
+      # Test the examples (default features)
+      - uses: actions-rs/cargo@v1
+        env:
+          PWD: ${{ env.GITHUB_WORKSPACE }}
+        with:
+          command: test
+          args: --workspace --examples --bins
+      # Test the examples (all features)
+      - uses: actions-rs/cargo@v1
+        env:
+          PWD: ${{ env.GITHUB_WORKSPACE }}
+        with:
+          command: test
+          args: --workspace --all-features --examples --bins
