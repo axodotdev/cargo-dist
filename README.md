@@ -1,6 +1,6 @@
 # cargo-dist
 
-[![crates.io](https://img.shields.io/crates/v/cargo-dist.svg)](https://crates.io/crates/cargo-dist)
+[![crates.io](https://img.shields.io/crates/v/cargo-dist.svg)](https://crates.io/crates/cargo-dist) [![docs](https://docs.rs/cargo-dist/badge.svg)](https://docs.rs/cargo-dist)
 ![Rust CI](https://github.com/axodotdev/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)
 
 `cargo build` but For Building Final Distributable Artifacts.
