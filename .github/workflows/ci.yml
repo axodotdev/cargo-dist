@@ -6,16 +6,16 @@ on:
   # Every pull request (will need approval for new contributors)
   pull_request:
   # Every push to...
-  push:
-    branches:
-      # The main branch
-      - main
-      # Not a thing I use personally but some people like having a release branch
-      - "release/**"
+  #  push:
+  #  branches:
+  #    # The main branch
+  #     - main
+  #    # Not a thing I use personally but some people like having a release branch
+  #    - "release/**"
   # And once a week? 
   # This can catch things like "rust updated and actually regressed something"
-  schedule:
-    - cron: "11 7 * * 1,4"
+  # schedule:
+  #  - cron: "11 7 * * 1,4"
 
 # We want all these checks to fail if they spit out warnings
 env:
@@ -57,23 +57,23 @@ jobs:
           args: --workspace --tests --examples
 
   # Make sure the docs build without warnings
-  docs:
-    runs-on: ubuntu-latest
-    env:
-      RUSTDOCFLAGS: -Dwarnings
-    steps:
-      - uses: actions/checkout@master
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          components: rust-docs
-          override: true
-      - uses: swatinem/rust-cache@v1
-      - uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --workspace --no-deps
+  # docs:
+  #  runs-on: ubuntu-latest
+  #  env:
+  #    RUSTDOCFLAGS: -Dwarnings
+  #  steps:
+  #    - uses: actions/checkout@master
+  #    - uses: actions-rs/toolchain@v1
+  #      with:
+  #        toolchain: stable
+  #        profile: minimal
+  #        components: rust-docs
+  #        override: true
+  #    - uses: swatinem/rust-cache@v1
+  #    - uses: actions-rs/cargo@v1
+  #      with:
+  #        command: doc
+  #        args: --workspace --no-deps
 
   # Run cargo-vet (taken from the cargo-vet book)
   cargo-vet:
@@ -128,8 +128,10 @@ jobs:
     strategy:
       # Test the cross-product of these platforms+toolchains
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust: [nightly, stable]
+        # os: [ubuntu-latest, windows-latest, macOS-latest]
+        # rust: [nightly, stable]
+        os: [ubuntu-latest]
+        rust: [stable]
     steps:
       # Setup tools
       - uses: actions/checkout@master
@@ -147,23 +149,23 @@ jobs:
           command: test
           args: --workspace
       # Run the tests/doctests (all features)
-      - uses: actions-rs/cargo@v1
-        env:
-          PWD: ${{ env.GITHUB_WORKSPACE }}
-        with:
-          command: test
-          args: --workspace --all-features
+      # - uses: actions-rs/cargo@v1
+      #  env:
+      #    PWD: ${{ env.GITHUB_WORKSPACE }}
+      #  with:
+      #    command: test
+      #    args: --workspace --all-features
       # Test the examples (default features)
-      - uses: actions-rs/cargo@v1
-        env:
-          PWD: ${{ env.GITHUB_WORKSPACE }}
-        with:
-          command: test
-          args: --workspace --examples --bins
+      # - uses: actions-rs/cargo@v1
+      #  env:
+      #    PWD: ${{ env.GITHUB_WORKSPACE }}
+      #  with:
+      #    command: test
+      #    args: --workspace --examples --bins
       # Test the examples (all features)
-      - uses: actions-rs/cargo@v1
-        env:
-          PWD: ${{ env.GITHUB_WORKSPACE }}
-        with:
-          command: test
-          args: --workspace --all-features --examples --bins
+      # - uses: actions-rs/cargo@v1
+      #  env:
+      #    PWD: ${{ env.GITHUB_WORKSPACE }}
+      #  with:
+      #    command: test
+      #    args: --workspace --all-features --examples --bins
