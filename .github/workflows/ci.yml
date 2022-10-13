@@ -92,9 +92,9 @@ jobs:
     - name: Add the tool cache directory to the search path
       run: echo "${{ runner.tool_cache }}/cargo-vet/bin" >> $GITHUB_PATH
     - name: Ensure that the tool cache is populated with the cargo-vet binary
-      run: cargo install --root ${{ runner.tool_cache }}/cargo-vet --version ${{ env.CARGO_VET_VERSION }} cargo-vet
+      run: cargo install --root ${{ runner.tool_cache }}/cargo-vet --version ${{ env.CARGO_VET_VERSION }} --git https://github.com/Gankra/cargo-vet --branch bots cargo-vet
     - name: Invoke cargo-vet
-      run: cargo vet --locked
+      run: cargo vet --locked --output-format=json-full
 
 # cargo-fuzz support, if needed/desired
 #
