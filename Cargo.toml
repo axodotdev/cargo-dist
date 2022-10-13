@@ -26,7 +26,7 @@ cli = ["clap", "tracing-subscriber", "miette/fancy", "serde_json", "console", "c
 clap = { version = "4.0.0", optional = true, features = ["derive"] }
 tracing-subscriber = { version = "0.3.15", optional = true }
 serde_json = { version = "1.0.85", optional = true }
-console = { version = "0.15.1", optional = true }
+console = { version = "0.15.2", optional = true }
 clap-cargo = { version = "0.10.0", optional = true }
 
 # Features used by the cli and library
