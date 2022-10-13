@@ -2,7 +2,7 @@
 
 use clap::{
     builder::{PossibleValuesParser, TypedValueParser},
-    Parser, ValueEnum, Subcommand, Args,
+    Args, Parser, Subcommand, ValueEnum,
 };
 use tracing::level_filters::LevelFilter;
 
@@ -53,9 +53,7 @@ pub enum Commands {
 }
 
 #[derive(Args)]
-pub struct BuildArgs {
-
-}
+pub struct BuildArgs {}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum OutputFormat {

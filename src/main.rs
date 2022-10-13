@@ -5,7 +5,7 @@ use std::sync::Mutex;
 // Import everything from the lib version of ourselves
 use cargo_dist::*;
 use clap::Parser;
-use cli::{FakeCli, OutputFormat, Cli};
+use cli::{Cli, FakeCli, OutputFormat};
 use console::Term;
 use lazy_static::lazy_static;
 use miette::{Diagnostic, IntoDiagnostic};
