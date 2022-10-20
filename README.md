@@ -59,3 +59,4 @@ This will automatically:
 * TODO: update RELEASES.md to make the current release notes the latest release and start a new "upcoming releases" section
 
 The push of a commit with a tag of this form will in turn trigger github CI actions to create a new Github Release, build artifacts, and upload those artifacts to the release.
+
