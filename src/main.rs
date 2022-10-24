@@ -5,7 +5,7 @@ use std::sync::Mutex;
 // Import everything from the lib version of ourselves
 use cargo_dist::*;
 use clap::Parser;
-use cli::{Cli, FakeCli, OutputFormat};
+use cli::{Cli, Commands, FakeCli, OutputFormat};
 use console::Term;
 use lazy_static::lazy_static;
 use miette::{Diagnostic, IntoDiagnostic};
@@ -119,7 +119,10 @@ fn main() {
 }
 
 fn real_main(cli: &Cli) -> Result<(), miette::Report> {
-    let report = some_op()?;
+    let report = match &cli.command {
+        Some(Commands::Build(_args)) => build()?,
+        None => build()?,
+    };
     let mut out = Term::stdout();
 
     match cli.output_format {
@@ -130,12 +133,7 @@ fn real_main(cli: &Cli) -> Result<(), miette::Report> {
     Ok(())
 }
 
-fn print_human(out: &mut Term, report: &Report) -> Result<(), std::io::Error> {
-    if report.cats_are_cute {
-        writeln!(out, "cats are cute! :3")?;
-    } else {
-        writeln!(out, "cats aren't cute?!")?;
-    }
+fn print_human(_out: &mut Term, _report: &Report) -> Result<(), std::io::Error> {
     Ok(())
 }
 

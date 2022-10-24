@@ -4,7 +4,11 @@ use thiserror::Error;
 pub type Result<T> = std::result::Result<T, CargoDistError>;
 
 #[derive(Debug, Error, Diagnostic)]
-#[error("cargo-dist couldn't do that")]
-pub struct CargoDistError {
-    // TODO: at some context fields / miette stuff
+pub enum CargoDistError {
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Zip(#[from] zip::result::ZipError),
+    #[error(transparent)]
+    Serde(#[from] serde_json::Error),
 }
