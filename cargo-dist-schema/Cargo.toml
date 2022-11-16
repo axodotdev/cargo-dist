@@ -1,0 +1,16 @@
+[package]
+name = "cargo-dist-schema"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+camino = "1.1.1"
+schemars = "0.8.11"
+semver = "1.0.14"
+serde = { version = "1.0.147", features = ["derive"] }
+serde_json = "1.0.87"
+
+[dev-dependencies]
+insta = "1.19.1"

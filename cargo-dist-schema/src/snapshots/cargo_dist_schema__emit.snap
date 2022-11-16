@@ -1,0 +1,61 @@
+---
+source: cargo-dist-schema/src/lib.rs
+expression: "serde_json::to_string_pretty(&schema).unwrap()"
+---
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Manifest",
+  "description": "A manifest for a built package",
+  "type": "object",
+  "required": [
+    "binaries",
+    "name",
+    "path",
+    "version"
+  ],
+  "properties": {
+    "binaries": {
+      "description": "The binaries the package contains",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Binary"
+      }
+    },
+    "name": {
+      "description": "The name of the package",
+      "type": "string"
+    },
+    "path": {
+      "description": "The location of the package",
+      "type": "string"
+    },
+    "target": {
+      "description": "The target triple of the package",
+      "default": "",
+      "type": "string"
+    },
+    "version": {
+      "description": "The version of the package",
+      "type": "string"
+    }
+  },
+  "definitions": {
+    "Binary": {
+      "type": "object",
+      "required": [
+        "name",
+        "path"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the binary",
+          "type": "string"
+        },
+        "path": {
+          "description": "The path of the binary relative to the root of the package",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

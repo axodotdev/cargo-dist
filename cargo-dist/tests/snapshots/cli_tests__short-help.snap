@@ -1,5 +1,5 @@
 ---
-source: tests/cli-tests.rs
+source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
 ---
 stdout:
@@ -17,10 +17,8 @@ Options:
   -V, --version  Print version information
 
 GLOBAL OPTIONS:
-      --verbose <VERBOSE>
-          How verbose logging should be (log level) [default: warn] [possible values: off, error, warn, info, debug, trace]
-      --output-format <OUTPUT_FORMAT>
-          The format of the output [default: human] [possible values: human, json]
+      --verbose <VERBOSE>              How verbose logging should be (log level) [default: warn] [possible values: off, error, warn, info, debug, trace]
+      --output-format <OUTPUT_FORMAT>  The format of the output [default: human] [possible values: human, json]
 
 stderr:
 
