@@ -9,17 +9,19 @@ use std::{
     collections::{HashMap, HashSet},
     fs::File,
     io::BufReader,
+    path::PathBuf,
     process::Command,
 };
 
 use camino::Utf8PathBuf;
+use cargo_dist_schema::{Artifact, DistReport, Distributable, ExecutableArtifact, Release};
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
 use guppy::{
     graph::{BuildTargetId, DependencyDirection, PackageMetadata},
     MetadataCommand, PackageId,
 };
 use semver::Version;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use tracing::info;
 use xz2::write::XzEncoder;
 use zip::ZipWriter;
@@ -29,9 +31,6 @@ use errors::*;
 pub mod errors;
 #[cfg(test)]
 mod tests;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Report {}
 
 /// Key in workspace.metadata or package.metadata for our config
 const METADATA_DIST: &str = "dist";
@@ -77,6 +76,8 @@ struct DistGraph {
     artifacts: Vec<BuildArtifact>,
     /// Distributable bundles we want to build for our artifacts
     distributables: Vec<DistributableTarget>,
+    /// Logical releases that distributable bundles are grouped under
+    releases: Vec<ReleaseTarget>,
 }
 
 /// A build we need to perform to get artifacts to distribute.
@@ -103,11 +104,11 @@ struct CargoBuildTarget {
 /// An artifact we need from our builds
 enum BuildArtifact {
     /// An executable
-    Executable(ExecutableArtifact),
+    Executable(ExecutableBuildArtifact),
 }
 
 /// An executable we need from our builds
-struct ExecutableArtifact {
+struct ExecutableBuildArtifact {
     /// The name of the executable (without a file extension)
     exe_name: String,
     /// The cargo package this executable is defined by
@@ -118,12 +119,6 @@ struct ExecutableArtifact {
 
 /// A distributable bundle we want to build
 struct DistributableTarget {
-    /// The name of the app we're distributing
-    ///
-    /// i.e. `cargo-dist`
-    app_name: String,
-    /// The version of the app we're distributing
-    version: Version,
     /// The target platform
     ///
     /// i.e. `x86_64-pc-windows-msvc`
@@ -155,6 +150,16 @@ struct DistributableTarget {
     ///
     /// i.e. `README.md`
     assets: Vec<Utf8PathBuf>,
+}
+
+/// A logical release of an application that distributables are grouped under
+struct ReleaseTarget {
+    /// The name of the app
+    app_name: String,
+    /// The version of the app
+    version: Version,
+    /// The distributables this release includes
+    distributables: Vec<DistributableTargetIdx>,
 }
 
 /// The style of bundle for a [`DistributableTarget`][].
@@ -205,25 +210,25 @@ enum CargoTargetPackages {
 }
 
 /// Top level command of cargo_dist -- do everything!
-pub fn build() -> Result<Report> {
-    let dist_graph = gather_work()?;
+pub fn do_dist() -> Result<DistReport> {
+    let dist = gather_work()?;
 
     // TODO: parallelize this by working this like a dependency graph, so we can start
     // bundling up an executable the moment it's built!
 
     // First set up our target dirs so things don't have to race to do it later
-    if !dist_graph.dist_dir.exists() {
-        std::fs::create_dir_all(&dist_graph.dist_dir)?;
+    if !dist.dist_dir.exists() {
+        std::fs::create_dir_all(&dist.dist_dir)?;
     }
-    for distrib in &dist_graph.distributables {
-        init_distributable_dir(&dist_graph, distrib)?;
+    for distrib in &dist.distributables {
+        init_distributable_dir(&dist, distrib)?;
     }
 
     // Run all the builds
-    let built_artifacts = dist_graph
+    let built_artifacts = dist
         .targets
         .iter()
-        .map(|target| build_target(&dist_graph, target))
+        .map(|target| build_target(&dist, target))
         .collect::<Result<Vec<_>>>()?;
     let built_artifacts = built_artifacts
         .into_iter()
@@ -231,16 +236,51 @@ pub fn build() -> Result<Report> {
         .collect::<HashMap<_, _>>();
 
     // Build all the bundles
-    for distrib in &dist_graph.distributables {
-        populate_distributable_dir(&dist_graph, distrib, &built_artifacts)?;
-        bundle_distributable(&dist_graph, distrib)?;
+    for distrib in &dist.distributables {
+        populate_distributable_dir(&dist, distrib, &built_artifacts)?;
+        bundle_distributable(&dist, distrib)?;
         println!("bundled {}", distrib.file_path);
     }
 
-    // Report the results
-    let report = Report {};
-
-    Ok(report)
+    // Report the releases
+    let mut releases = vec![];
+    for release in &dist.releases {
+        releases.push(Release {
+            app_name: release.app_name.clone(),
+            app_version: release.version.to_string(),
+            distributables: release
+                .distributables
+                .iter()
+                .map(|distrib_idx| {
+                    let distrib = &dist.distributables[distrib_idx.0];
+                    Distributable {
+                        path: distrib.file_path.clone().into_std_path_buf(),
+                        target_triple: distrib.target_triple.clone(),
+                        artifacts: distrib
+                            .required_artifacts
+                            .iter()
+                            .map(|artifact_idx| {
+                                let artifact = &dist.artifacts[artifact_idx.0];
+                                let artifact_path = &built_artifacts[artifact_idx];
+                                match artifact {
+                                    BuildArtifact::Executable(exe) => {
+                                        Artifact::Executable(ExecutableArtifact {
+                                            name: exe.exe_name.clone(),
+                                            path: PathBuf::from(
+                                                artifact_path.file_name().unwrap(),
+                                            ),
+                                        })
+                                    }
+                                }
+                            })
+                            .collect(),
+                        kind: cargo_dist_schema::DistributableKind::Zip,
+                    }
+                })
+                .collect(),
+        })
+    }
+    Ok(DistReport::new(releases))
 }
 
 /// Precompute all the work this invocation will need to do
@@ -324,6 +364,7 @@ fn gather_work() -> Result<DistGraph> {
 
     // Give each artifact its own distributable (for now)
     let mut distributables = vec![];
+    let mut releases = HashMap::<(String, Version), ReleaseTarget>::new();
     for (idx, artifact) in artifacts.iter().enumerate() {
         let artifact_idx = BuildArtifactIdx(idx);
         match artifact {
@@ -373,9 +414,8 @@ fn gather_work() -> Result<DistGraph> {
                 let file_name = format!("{full_name}.{file_ext}");
                 let file_path = dist_dir.join(&file_name);
 
+                let distributable_idx = DistributableTargetIdx(distributables.len());
                 distributables.push(DistributableTarget {
-                    app_name,
-                    version,
                     target_triple,
                     full_name,
                     file_path,
@@ -384,11 +424,20 @@ fn gather_work() -> Result<DistGraph> {
                     bundle,
                     required_artifacts: Some(artifact_idx).into_iter().collect(),
                     assets,
-                })
+                });
+                let release = releases
+                    .entry((app_name.clone(), version.clone()))
+                    .or_insert_with(|| ReleaseTarget {
+                        app_name,
+                        version,
+                        distributables: vec![],
+                    });
+                release.distributables.push(distributable_idx);
             }
         }
     }
 
+    let releases = releases.into_iter().map(|e| e.1).collect();
     Ok(DistGraph {
         cargo,
         target_dir,
@@ -397,6 +446,7 @@ fn gather_work() -> Result<DistGraph> {
         targets,
         artifacts,
         distributables,
+        releases,
     })
 }
 
@@ -411,7 +461,7 @@ fn artifacts_for_cargo_packages<'a>(
             package.build_targets().filter_map(move |target| {
                 let build_id = target.id();
                 if let BuildTargetId::Binary(name) = build_id {
-                    Some(BuildArtifact::Executable(ExecutableArtifact {
+                    Some(BuildArtifact::Executable(ExecutableBuildArtifact {
                         exe_name: name.to_owned(),
                         package_id: package.id().clone(),
                         build_target: target_idx,

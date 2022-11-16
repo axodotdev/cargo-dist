@@ -4,56 +4,120 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
 ---
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Manifest",
-  "description": "A manifest for a built package",
+  "title": "DistReport",
+  "description": "The final report of cargo-dist",
   "type": "object",
   "required": [
-    "binaries",
-    "name",
-    "path",
-    "version"
+    "releases"
   ],
   "properties": {
-    "binaries": {
-      "description": "The binaries the package contains",
+    "releases": {
+      "description": "App releases we're distributing",
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Binary"
+        "$ref": "#/definitions/Release"
       }
-    },
-    "name": {
-      "description": "The name of the package",
-      "type": "string"
-    },
-    "path": {
-      "description": "The location of the package",
-      "type": "string"
-    },
-    "target": {
-      "description": "The target triple of the package",
-      "default": "",
-      "type": "string"
-    },
-    "version": {
-      "description": "The version of the package",
-      "type": "string"
     }
   },
   "definitions": {
-    "Binary": {
+    "Artifact": {
+      "description": "An artifact included in a Distributable",
+      "oneOf": [
+        {
+          "description": "An executable artifact",
+          "type": "object",
+          "required": [
+            "kind",
+            "name",
+            "path"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "executable"
+              ]
+            },
+            "name": {
+              "description": "The name of the executable",
+              "type": "string"
+            },
+            "path": {
+              "description": "The path of the executable relative to the root of the package",
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "Distributable": {
+      "description": "A distributable bundle that's part of a Release\n\ni.e. a zip or installer",
       "type": "object",
       "required": [
-        "name",
-        "path"
+        "artifacts",
+        "kind",
+        "path",
+        "target_triple"
       ],
       "properties": {
-        "name": {
-          "description": "The name of the binary",
-          "type": "string"
+        "artifacts": {
+          "description": "Artifacts included in the bundle (like executables)",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Artifact"
+          }
+        },
+        "kind": {
+          "description": "The kind of distributable (e.g. \"zip\")",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DistributableKind"
+            }
+          ]
         },
         "path": {
-          "description": "The path of the binary relative to the root of the package",
+          "description": "The location of the distributable bundle",
           "type": "string"
+        },
+        "target_triple": {
+          "description": "The target triple of the bundle",
+          "type": "string"
+        }
+      }
+    },
+    "DistributableKind": {
+      "oneOf": [
+        {
+          "description": "A zip or a tarball",
+          "type": "string",
+          "enum": [
+            "zip"
+          ]
+        }
+      ]
+    },
+    "Release": {
+      "type": "object",
+      "required": [
+        "app_name",
+        "app_version",
+        "distributables"
+      ],
+      "properties": {
+        "app_name": {
+          "description": "The name of the app",
+          "type": "string"
+        },
+        "app_version": {
+          "description": "The version of the app",
+          "type": "string"
+        },
+        "distributables": {
+          "description": "The distributable bundles for this release",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Distributable"
+          }
         }
       }
     }

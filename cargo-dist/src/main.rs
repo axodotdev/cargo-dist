@@ -4,6 +4,7 @@ use std::sync::Mutex;
 
 // Import everything from the lib version of ourselves
 use cargo_dist::*;
+use cargo_dist_schema::DistReport;
 use clap::Parser;
 use cli::{Cli, Commands, FakeCli, OutputFormat};
 use console::Term;
@@ -120,8 +121,8 @@ fn main() {
 
 fn real_main(cli: &Cli) -> Result<(), miette::Report> {
     let report = match &cli.command {
-        Some(Commands::Build(_args)) => build()?,
-        None => build()?,
+        Some(Commands::Build(_args)) => do_dist()?,
+        None => do_dist()?,
     };
     let mut out = Term::stdout();
 
@@ -133,11 +134,11 @@ fn real_main(cli: &Cli) -> Result<(), miette::Report> {
     Ok(())
 }
 
-fn print_human(_out: &mut Term, _report: &Report) -> Result<(), std::io::Error> {
+fn print_human(_out: &mut Term, _report: &DistReport) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn print_json(out: &mut Term, report: &Report) -> Result<(), std::io::Error> {
+fn print_json(out: &mut Term, report: &DistReport) -> Result<(), std::io::Error> {
     let string = serde_json::to_string_pretty(report).unwrap();
     writeln!(out, "{}", string)?;
     Ok(())
