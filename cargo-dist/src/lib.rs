@@ -266,9 +266,7 @@ pub fn do_dist() -> Result<DistReport> {
                                     BuildArtifact::Executable(exe) => {
                                         Artifact::Executable(ExecutableArtifact {
                                             name: exe.exe_name.clone(),
-                                            path: PathBuf::from(
-                                                artifact_path.file_name().unwrap(),
-                                            ),
+                                            path: PathBuf::from(artifact_path.file_name().unwrap()),
                                         })
                                     }
                                 }
