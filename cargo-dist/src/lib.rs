@@ -239,7 +239,7 @@ pub fn do_dist() -> Result<DistReport> {
     for distrib in &dist.distributables {
         populate_distributable_dir(&dist, distrib, &built_artifacts)?;
         bundle_distributable(&dist, distrib)?;
-        println!("bundled {}", distrib.file_path);
+        eprintln!("bundled {}", distrib.file_path);
     }
 
     // Report the releases
@@ -599,7 +599,7 @@ fn build_cargo_target(
 
 /// Initialize the dir for a distributable (and delete the old distributable file).
 fn init_distributable_dir(_dist: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
-    info!("recreating package dir: {}", distrib.dir_path);
+    info!("recreating distributable dir: {}", distrib.dir_path);
 
     // Clear out the dir we'll build the bundle up in
     if distrib.dir_path.exists() {
@@ -620,36 +620,36 @@ fn populate_distributable_dir(
     distrib: &DistributableTarget,
     built_artifacts: &HashMap<BuildArtifactIdx, Utf8PathBuf>,
 ) -> Result<()> {
-    info!("populating package dir: {}", distrib.dir_path);
+    info!("populating distributable dir: {}", distrib.dir_path);
     // Copy built artifacts
     for artifact_idx in &distrib.required_artifacts {
         let artifact_path = &built_artifacts[artifact_idx];
         let artifact_file_name = artifact_path.file_name().unwrap();
-        let packaged_artifact = distrib.dir_path.join(artifact_file_name);
-        info!("  adding {packaged_artifact}");
-        std::fs::copy(artifact_path, &packaged_artifact)?;
+        let bundled_artifact = distrib.dir_path.join(artifact_file_name);
+        info!("  adding {bundled_artifact}");
+        std::fs::copy(artifact_path, &bundled_artifact)?;
     }
 
     // Copy assets
     for asset in &distrib.assets {
         let asset_file_name = asset.file_name().unwrap();
-        let packaged_asset = distrib.dir_path.join(asset_file_name);
-        info!("  adding {packaged_asset}");
-        std::fs::copy(asset, packaged_asset)?;
+        let bundled_asset = distrib.dir_path.join(asset_file_name);
+        info!("  adding {bundled_asset}");
+        std::fs::copy(asset, bundled_asset)?;
     }
 
     Ok(())
 }
 
 fn bundle_distributable(dist_graph: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
-    info!("bundling package: {}", distrib.file_path);
+    info!("bundling distributable: {}", distrib.file_path);
     match &distrib.bundle {
-        BundleStyle::Zip => zip_package(dist_graph, distrib),
-        BundleStyle::Tar(compression) => tar_package(dist_graph, distrib, compression),
+        BundleStyle::Zip => zip_distributable(dist_graph, distrib),
+        BundleStyle::Tar(compression) => tar_distributable(dist_graph, distrib, compression),
     }
 }
 
-fn tar_package(
+fn tar_distributable(
     _dist_graph: &DistGraph,
     distrib: &DistributableTarget,
     compression: &CompressionImpl,
@@ -709,11 +709,11 @@ fn tar_package(
         }
     }
 
-    info!("package created at: {}", final_zip_path);
+    info!("distributable created at: {}", final_zip_path);
     Ok(())
 }
 
-fn zip_package(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
+fn zip_distributable(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
     // Set up the archive/compression
     let final_zip_path = &distrib.file_path;
     let final_zip_file = File::create(final_zip_path)?;
@@ -738,6 +738,6 @@ fn zip_package(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> Result
     // Finish up the compression
     let _zip_file = zip.finish()?;
     // Drop the file to close it
-    info!("package created at: {}", final_zip_path);
+    info!("distributable created at: {}", final_zip_path);
     Ok(())
 }

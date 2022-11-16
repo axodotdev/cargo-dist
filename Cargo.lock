@@ -272,6 +272,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "389ca505fd2c00136e0d0cd34bcd8b6bd0b59d5779aab396054b716334230c1c"
 dependencies = [
  "atty",
+ "backtrace",
  "bitflags",
  "clap_derive",
  "clap_lex",
