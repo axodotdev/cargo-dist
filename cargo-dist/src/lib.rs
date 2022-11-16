@@ -407,7 +407,7 @@ fn artifacts_for_cargo_packages<'a>(
 ) -> Vec<BuildArtifact> {
     packages
         .into_iter()
-        .map(|package| {
+        .flat_map(|package| {
             package.build_targets().filter_map(move |target| {
                 let build_id = target.id();
                 if let BuildTargetId::Binary(name) = build_id {
@@ -421,7 +421,6 @@ fn artifacts_for_cargo_packages<'a>(
                 }
             })
         })
-        .flatten()
         .collect::<Vec<_>>()
 }
 
@@ -506,7 +505,7 @@ fn build_cargo_target(
             let exe_name = exe.exe_name.clone();
             expected_exes
                 .entry(package_id)
-                .or_insert(HashMap::new())
+                .or_default()
                 .insert(exe_name, (*artifact_idx, Utf8PathBuf::new()));
         }
     }
@@ -580,7 +579,7 @@ fn populate_distributable_dir(
         let artifact_file_name = artifact_path.file_name().unwrap();
         let packaged_artifact = distrib.dir_path.join(artifact_file_name);
         info!("  adding {packaged_artifact}");
-        std::fs::copy(&artifact_path, &packaged_artifact)?;
+        std::fs::copy(artifact_path, &packaged_artifact)?;
     }
 
     // Copy assets
@@ -612,7 +611,7 @@ fn tar_package(
     let distrib_dir_name = &distrib.full_name;
     let zip_contents_name = format!("{distrib_dir_name}.tar");
     let final_zip_path = &distrib.file_path;
-    let final_zip_file = File::create(&final_zip_path)?;
+    let final_zip_file = File::create(final_zip_path)?;
 
     match compression {
         CompressionImpl::Gzip => {
@@ -669,7 +668,7 @@ fn tar_package(
 fn zip_package(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
     // Set up the archive/compression
     let final_zip_path = &distrib.file_path;
-    let final_zip_file = File::create(&final_zip_path)?;
+    let final_zip_file = File::create(final_zip_path)?;
 
     // Wrap our file in compression
     let mut zip = ZipWriter::new(final_zip_file);
