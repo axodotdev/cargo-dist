@@ -74,10 +74,10 @@ jobs:
           cargo dist --output-format=json > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
-          ARTIFACTS=`cat dist-manifest.json | jq --raw-output ".releases[].distributables[].path"`
+          cat dist-manifest.json | jq --raw-output ".releases[].distributables[].path" > uploads.txt
           echo "uploading..."
-          echo $ARTIFACTS
-          gh release upload $TAG $ARTIFACTS
+          cat uploads.txt
+          gh release upload $TAG $(cat uploads.txt)
           echo "uploaded!"
 
 
