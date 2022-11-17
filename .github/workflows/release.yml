@@ -55,10 +55,10 @@ jobs:
           #  os: macos-latest
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-          # - target: x86_64-apple-darwin
-          #   os: macos-latest
-          # - target: x86_64-pc-windows-msvc
-          #   os: windows-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
     runs-on: ${{ matrix.os }}
     env:
       TAG: ${{ needs.create-release.outputs.tag }}
@@ -72,8 +72,13 @@ jobs:
       - name: run cargo-dist
         run: |
           cargo dist --output-format=json > dist-manifest.json
+          echo "dist ran successfully"
+          cat dist-manifest.json
           ARTIFACTS=`cat dist-manifest.json | jq --raw-output ".releases[].distributables[].path"`
+          echo "uploading..."
+          echo $ARTIFACTS
           gh release upload $TAG $ARTIFACTS
+          echo "uploaded!"
 
 
   # Mark the release as a non-draft
@@ -87,4 +92,4 @@ jobs:
       - uses: actions/checkout@v3
       - name: mark release as non-draft
         run: |
-          gh release edit $TAG
+          gh release edit $TAG --draft=false
