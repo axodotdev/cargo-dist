@@ -57,23 +57,28 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-latest
     runs-on: ${{ matrix.os }}
+    env:
+      TAG: ${{ needs.create-release.outputs.computed-prefix }}${{ needs.create-release.outputs.version }}
     steps:
       - uses: actions/checkout@v3
       # install cargo-dist, run it, upload files
-      - run: |
-        TAG="${{needs.create-release.outputs.computed-prefix}}${{needs.create-release.outputs.version}}"
-        cargo install --path ./cargo-dist
-        cargo dist --output-format=json > dist-manifest.json
-        ARTIFACTS=`cat dist-manifest.json | jq --raw-output ".releases[].distributables[].path"`
-        gh release upload $TAG $ARTIFACTS
+      - name: install dist
+        run: cargo install --path ./cargo-dist
+      - name: run dist
+        run: |
+          cargo dist --output-format=json > dist-manifest.json
+          ARTIFACTS=`cat dist-manifest.json | jq --raw-output ".releases[].distributables[].path"`
+          gh release upload $TAG $ARTIFACTS
 
 
   # Mark the release as a non-draft
   publish-release:
-    needs: create-release
-    needs: upload-assets
+    needs: [create-release, upload-assets]
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.create-release.outputs.computed-prefix }}${{ needs.create-release.outputs.version }}
     steps:
-      - run: |
-        TAG="${{needs.create-release.outputs.computed-prefix}}${{needs.create-release.outputs.version}}"
-        gh release edit $TAG
+      - uses: actions/checkout@v3
+      - name: mark release as non-draft
+        run: |
+          gh release edit $TAG
