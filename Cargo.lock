@@ -171,7 +171,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist"
-version = "0.2.0-prerelease2"
+version = "0.2.0-prerelease3"
 dependencies = [
  "camino",
  "cargo-dist-schema",
@@ -198,7 +198,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist-schema"
-version = "0.2.0-prerelease2"
+version = "0.2.0-prerelease3"
 dependencies = [
  "camino",
  "insta",
