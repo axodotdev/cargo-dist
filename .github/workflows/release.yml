@@ -62,9 +62,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       # install cargo-dist, run it, upload files
-      - name: install dist
+      - name: Install Rust
+        run: rustup update stable && rustup default stable
+      - name: Install cargo-dist
         run: cargo install --path ./cargo-dist
-      - name: run dist
+      - name: run cargo-dist
         run: |
           cargo dist --output-format=json > dist-manifest.json
           ARTIFACTS=`cat dist-manifest.json | jq --raw-output ".releases[].distributables[].path"`
