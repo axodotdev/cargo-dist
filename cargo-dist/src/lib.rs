@@ -22,11 +22,12 @@ use guppy::{
 };
 use semver::Version;
 use serde::Deserialize;
-use tracing::info;
+use tracing::{info, warn};
 use xz2::write::XzEncoder;
 use zip::ZipWriter;
 
 use errors::*;
+use miette::{miette, Context, IntoDiagnostic};
 
 pub mod errors;
 #[cfg(test)]
@@ -218,7 +219,9 @@ pub fn do_dist() -> Result<DistReport> {
 
     // First set up our target dirs so things don't have to race to do it later
     if !dist.dist_dir.exists() {
-        std::fs::create_dir_all(&dist.dist_dir)?;
+        std::fs::create_dir_all(&dist.dist_dir)
+            .into_diagnostic()
+            .wrap_err_with(|| format!("couldn't create dist target dir at {}", dist.dist_dir))?;
     }
     for distrib in &dist.distributables {
         init_distributable_dir(&dist, distrib)?;
@@ -292,7 +295,10 @@ fn gather_work() -> Result<DistGraph> {
     // TODO: add a bunch of CLI flags for this. Ideally we'd use clap_cargo
     // but it wants us to use `flatten` and then we wouldn't be able to mark
     // the flags as global for all subcommands :(
-    let pkg_graph = metadata_cmd.build_graph().unwrap();
+    let pkg_graph = metadata_cmd
+        .build_graph()
+        .into_diagnostic()
+        .wrap_err("failed to read 'cargo metadata'")?;
     let workspace = pkg_graph.workspace();
     let workspace_members = pkg_graph.resolve_workspace();
 
@@ -302,7 +308,9 @@ fn gather_work() -> Result<DistGraph> {
         .metadata_table()
         .get(METADATA_DIST)
         .map(DistMetadata::deserialize)
-        .transpose()?;
+        .transpose()
+        .into_diagnostic()
+        .wrap_err("couldn't parse [workspace.metadata.dist]")?;
 
     // Currently just assume we're in a workspace, no single package!
     /*
@@ -311,7 +319,9 @@ fn gather_work() -> Result<DistGraph> {
         .get(0)
         .and_then(|(p, _)| p.metadata_table().get(METADATA_DIST))
         .map(DistMetadata::deserialize)
-        .transpose()?;
+        .transpose()
+        .into_diagnostic()
+        .wrap_err("couldn't parse package's [metadata.dist]")?;
      */
 
     let target_dir = workspace.target_directory().to_owned();
@@ -477,15 +487,22 @@ fn get_host_target(cargo: &str) -> Result<String> {
     let mut command = Command::new(cargo);
     command.arg("-vV");
     info!("exec: {:?}", command);
-    let output = command.output()?;
-    let output = String::from_utf8(output.stdout).expect("argh cargo use utf8!!");
+    let output = command
+        .output()
+        .into_diagnostic()
+        .wrap_err("failed to run 'cargo -vV' (trying to get info about host platform)")?;
+    let output = String::from_utf8(output.stdout)
+        .into_diagnostic()
+        .wrap_err("'cargo -vV' wasn't utf8? Really?")?;
     for line in output.lines() {
         if let Some(target) = line.strip_prefix("host: ") {
             info!("host target is {target}");
             return Ok(target.to_owned());
         }
     }
-    panic!("cargo failed to report its host target!?");
+    Err(miette!(
+        "'cargo -vV' failed to report its host target? Really?"
+    ))
 }
 
 /// Build a target
@@ -539,7 +556,10 @@ fn build_cargo_target(
         }
     }
     info!("exec: {:?}", command);
-    let mut task = command.spawn()?;
+    let mut task = command
+        .spawn()
+        .into_diagnostic()
+        .wrap_err_with(|| format!("failed to exec cargo build: {:?}", command))?;
 
     // Create entries for all the binaries we expect to find with empty paths
     // we'll fail if any are still empty at the end!
@@ -561,7 +581,12 @@ fn build_cargo_target(
     // Collect up the compiler messages to find out where binaries ended up
     let reader = std::io::BufReader::new(task.stdout.take().unwrap());
     for message in cargo_metadata::Message::parse_stream(reader) {
-        match message? {
+        let Ok(message) = message.into_diagnostic().wrap_err("failed to parse cargo json message").map_err(|e| warn!("{:?}", e)) else {
+            // It's ok for there to be messages we don't understand if we don't care about them.
+            // At the end we'll check if we got the messages we *do* need.
+            continue;
+        };
+        match message {
             cargo_metadata::Message::CompilerArtifact(artifact) => {
                 // Hey we got an executable, is it one we wanted?
                 if let Some(new_exe) = artifact.executable {
@@ -588,7 +613,7 @@ fn build_cargo_target(
     for (package_id, exes) in expected_exes {
         for (exe, (artifact_idx, exe_path)) in exes {
             if exe_path.as_str().is_empty() {
-                panic!("failed to find bin {exe} for {package_id}");
+                return Err(miette!("failed to find bin {} for {}", exe, package_id));
             }
             built_exes.insert(artifact_idx, exe_path);
         }
@@ -603,13 +628,26 @@ fn init_distributable_dir(_dist: &DistGraph, distrib: &DistributableTarget) -> R
 
     // Clear out the dir we'll build the bundle up in
     if distrib.dir_path.exists() {
-        std::fs::remove_dir_all(&distrib.dir_path)?;
+        std::fs::remove_dir_all(&distrib.dir_path)
+            .into_diagnostic()
+            .wrap_err_with(|| {
+                format!(
+                    "failed to delete old distributable dir {}",
+                    distrib.dir_path
+                )
+            })?;
     }
-    std::fs::create_dir(&distrib.dir_path)?;
+    std::fs::create_dir(&distrib.dir_path)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("failed to create distributable dir {}", distrib.dir_path))?;
 
     // Delete any existing bundle
     if distrib.file_path.exists() {
-        std::fs::remove_file(&distrib.file_path)?;
+        std::fs::remove_file(&distrib.file_path)
+            .into_diagnostic()
+            .wrap_err_with(|| {
+                format!("failed to delete old distributable {}", distrib.file_path)
+            })?;
     }
 
     Ok(())
@@ -627,7 +665,14 @@ fn populate_distributable_dir(
         let artifact_file_name = artifact_path.file_name().unwrap();
         let bundled_artifact = distrib.dir_path.join(artifact_file_name);
         info!("  adding {bundled_artifact}");
-        std::fs::copy(artifact_path, &bundled_artifact)?;
+        std::fs::copy(artifact_path, &bundled_artifact)
+            .into_diagnostic()
+            .wrap_err_with(|| {
+                format!(
+                    "failed to copy bundled artifact to distributable: {} => {}",
+                    artifact_path, bundled_artifact
+                )
+            })?;
     }
 
     // Copy assets
@@ -635,7 +680,14 @@ fn populate_distributable_dir(
         let asset_file_name = asset.file_name().unwrap();
         let bundled_asset = distrib.dir_path.join(asset_file_name);
         info!("  adding {bundled_asset}");
-        std::fs::copy(asset, bundled_asset)?;
+        std::fs::copy(asset, &bundled_asset)
+            .into_diagnostic()
+            .wrap_err_with(|| {
+                format!(
+                    "failed to copy bundled asset to distributable: {} => {}",
+                    asset, bundled_asset
+                )
+            })?;
     }
 
     Ok(())
@@ -659,7 +711,14 @@ fn tar_distributable(
     let distrib_dir_name = &distrib.full_name;
     let zip_contents_name = format!("{distrib_dir_name}.tar");
     let final_zip_path = &distrib.file_path;
-    let final_zip_file = File::create(final_zip_path)?;
+    let final_zip_file = File::create(final_zip_path)
+        .into_diagnostic()
+        .wrap_err_with(|| {
+            format!(
+                "failed to create file for distributable: {}",
+                final_zip_path
+            )
+        })?;
 
     match compression {
         CompressionImpl::Gzip => {
@@ -672,11 +731,24 @@ fn tar_distributable(
             let mut tar = tar::Builder::new(zip_output);
 
             // Add the whole dir to the tar
-            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)?;
+            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)
+                .into_diagnostic()
+                .wrap_err_with(|| {
+                    format!(
+                        "failed to copy directory into tar: {} => {}",
+                        distrib.dir_path, distrib_dir_name
+                    )
+                })?;
             // Finish up the tarring
-            let zip_output = tar.into_inner()?;
+            let zip_output = tar
+                .into_inner()
+                .into_diagnostic()
+                .wrap_err_with(|| format!("failed to write tar: {}", final_zip_path))?;
             // Finish up the compression
-            let _zip_file = zip_output.finish()?;
+            let _zip_file = zip_output
+                .finish()
+                .into_diagnostic()
+                .wrap_err_with(|| format!("failed to write archive: {}", final_zip_path))?;
             // Drop the file to close it
         }
         CompressionImpl::Xzip => {
@@ -685,11 +757,24 @@ fn tar_distributable(
             let mut tar = tar::Builder::new(zip_output);
 
             // Add the whole dir to the tar
-            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)?;
+            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)
+                .into_diagnostic()
+                .wrap_err_with(|| {
+                    format!(
+                        "failed to copy directory into tar: {} => {}",
+                        distrib.dir_path, distrib_dir_name
+                    )
+                })?;
             // Finish up the tarring
-            let zip_output = tar.into_inner()?;
+            let zip_output = tar
+                .into_inner()
+                .into_diagnostic()
+                .wrap_err_with(|| format!("failed to write tar: {}", final_zip_path))?;
             // Finish up the compression
-            let _zip_file = zip_output.finish()?;
+            let _zip_file = zip_output
+                .finish()
+                .into_diagnostic()
+                .wrap_err_with(|| format!("failed to write archive: {}", final_zip_path))?;
             // Drop the file to close it
         }
         CompressionImpl::Zstd => {
@@ -700,11 +785,24 @@ fn tar_distributable(
             let mut tar = tar::Builder::new(zip_output);
 
             // Add the whole dir to the tar
-            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)?;
+            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)
+                .into_diagnostic()
+                .wrap_err_with(|| {
+                    format!(
+                        "failed to copy directory into tar: {} => {}",
+                        distrib.dir_path, distrib_dir_name
+                    )
+                })?;
             // Finish up the tarring
-            let zip_output = tar.into_inner()?;
+            let zip_output = tar
+                .into_inner()
+                .into_diagnostic()
+                .wrap_err_with(|| format!("failed to write tar: {}", final_zip_path))?;
             // Finish up the compression
-            let _zip_file = zip_output.finish()?;
+            let _zip_file = zip_output
+                .finish()
+                .into_diagnostic()
+                .wrap_err_with(|| format!("failed to write archive: {}", final_zip_path))?;
             // Drop the file to close it
         }
     }
@@ -716,27 +814,50 @@ fn tar_distributable(
 fn zip_distributable(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
     // Set up the archive/compression
     let final_zip_path = &distrib.file_path;
-    let final_zip_file = File::create(final_zip_path)?;
+    let final_zip_file = File::create(final_zip_path)
+        .into_diagnostic()
+        .wrap_err_with(|| {
+            format!(
+                "failed to create file for distributable: {}",
+                final_zip_path
+            )
+        })?;
 
     // Wrap our file in compression
     let mut zip = ZipWriter::new(final_zip_file);
 
-    for entry in std::fs::read_dir(&distrib.dir_path)? {
-        let entry = entry?;
-        if entry.file_type()?.is_file() {
+    let dir = std::fs::read_dir(&distrib.dir_path)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("failed to read distributable dir: {}", distrib.dir_path))?;
+    for entry in dir {
+        let entry = entry.into_diagnostic()?;
+        if entry.file_type().into_diagnostic()?.is_file() {
             let options = zip::write::FileOptions::default()
                 .compression_method(zip::CompressionMethod::Stored);
-            let file = File::open(entry.path())?;
+            let file = File::open(entry.path()).into_diagnostic()?;
             let mut buf = BufReader::new(file);
-            zip.start_file(entry.file_name().to_string_lossy(), options)?;
-            std::io::copy(&mut buf, &mut zip)?;
+            let file_name = entry.file_name();
+            // TODO: ...don't do this lossy conversion?
+            let utf8_file_name = file_name.to_string_lossy();
+            zip.start_file(utf8_file_name.clone(), options)
+                .into_diagnostic()
+                .wrap_err_with(|| {
+                    format!(
+                        "failed to create file {} in zip: {}",
+                        utf8_file_name, final_zip_path
+                    )
+                })?;
+            std::io::copy(&mut buf, &mut zip).into_diagnostic()?;
         } else {
             panic!("TODO: implement zip subdirs! (or was this a symlink?)");
         }
     }
 
     // Finish up the compression
-    let _zip_file = zip.finish()?;
+    let _zip_file = zip
+        .finish()
+        .into_diagnostic()
+        .wrap_err_with(|| format!("failed to write archive: {}", final_zip_path))?;
     // Drop the file to close it
     info!("distributable created at: {}", final_zip_path);
     Ok(())
