@@ -1,6 +1,6 @@
 [package]
 name = "cargo-dist-schema"
-version = "0.2.0-prerelease3"
+version = "0.2.0-prerelease4"
 edition = "2021"
 exclude = [
   "book/*",
