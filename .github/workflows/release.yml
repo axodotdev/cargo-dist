@@ -61,7 +61,6 @@ jobs:
             os: windows-latest
     runs-on: ${{ matrix.os }}
     env:
-      TAG: ${{ needs.create-release.outputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
@@ -77,7 +76,7 @@ jobs:
           cat dist-manifest.json | jq --raw-output ".releases[].distributables[].path" > uploads.txt
           echo "uploading..."
           cat uploads.txt
-          gh release upload $TAG $(cat uploads.txt)
+          gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
           echo "uploaded!"
 
 
@@ -86,10 +85,9 @@ jobs:
     needs: [create-release, upload-assets]
     runs-on: ubuntu-latest
     env:
-      TAG: ${{ needs.create-release.outputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
       - name: mark release as non-draft
         run: |
-          gh release edit $TAG --draft=false
+          gh release edit ${{ needs.create-release.outputs.tag }} --draft=false
