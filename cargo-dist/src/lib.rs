@@ -13,7 +13,7 @@ use std::{
     process::Command,
 };
 
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Artifact, DistReport, Distributable, ExecutableArtifact, Release};
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
 use guppy::{
@@ -36,7 +36,8 @@ mod tests;
 /// Key in workspace.metadata or package.metadata for our config
 const METADATA_DIST: &str = "dist";
 /// Dir in target/ for us to build our packages in
-const TARGET_DIST: &str = "dist";
+/// NOTE: DO NOT GIVE THIS THE SAME NAME AS A PROFILE!
+const TARGET_DIST: &str = "distrib";
 /// Some files we'll try to grab.
 //TODO: LICENSE-* files, somehow!
 const BUILTIN_FILES: &[&str] = &["README.md", "CHANGELOG.md", "RELEASES.md"];
@@ -223,24 +224,26 @@ pub fn do_dist() -> Result<DistReport> {
             .into_diagnostic()
             .wrap_err_with(|| format!("couldn't create dist target dir at {}", dist.dist_dir))?;
     }
+
     for distrib in &dist.distributables {
+        eprintln!("bundling {}", distrib.file_name);
         init_distributable_dir(&dist, distrib)?;
     }
 
+    let mut built_artifacts = HashMap::new();
     // Run all the builds
-    let built_artifacts = dist
-        .targets
-        .iter()
-        .map(|target| build_target(&dist, target))
-        .collect::<Result<Vec<_>>>()?;
-    let built_artifacts = built_artifacts
-        .into_iter()
-        .flatten()
-        .collect::<HashMap<_, _>>();
+    for target in &dist.targets {
+        let new_built_artifacts = build_target(&dist, target)?;
+        // Copy the artifacts as soon as possible, future builds may clobber them!
+        for (&artifact_idx, built_artifact) in &new_built_artifacts {
+            populate_distributable_dirs_with_built_artifact(&dist, artifact_idx, built_artifact)?;
+        }
+        built_artifacts.extend(new_built_artifacts);
+    }
 
     // Build all the bundles
     for distrib in &dist.distributables {
-        populate_distributable_dir(&dist, distrib, &built_artifacts)?;
+        populate_distributable_dir_with_assets(&dist, distrib)?;
         bundle_distributable(&dist, distrib)?;
         eprintln!("bundled {}", distrib.file_path);
     }
@@ -520,6 +523,10 @@ fn build_cargo_target(
     dist_graph: &DistGraph,
     target: &CargoBuildTarget,
 ) -> Result<HashMap<BuildArtifactIdx, Utf8PathBuf>> {
+    eprintln!(
+        "building cargo target ({}/{})",
+        target.target_triple, target.profile
+    );
     // Run the build
     // TODO: add flags for things like split-debuginfo (annoyingly platform-specific mess)
     // TODO: add flags for opt-level=2 (strip after)
@@ -653,28 +660,34 @@ fn init_distributable_dir(_dist: &DistGraph, distrib: &DistributableTarget) -> R
     Ok(())
 }
 
-fn populate_distributable_dir(
+fn populate_distributable_dirs_with_built_artifact(
+    dist: &DistGraph,
+    artifact_idx: BuildArtifactIdx,
+    built_artifact: &Utf8Path,
+) -> Result<()> {
+    for distrib in &dist.distributables {
+        if distrib.required_artifacts.contains(&artifact_idx) {
+            let artifact_file_name = built_artifact.file_name().unwrap();
+            let bundled_artifact = distrib.dir_path.join(artifact_file_name);
+            info!("  adding {built_artifact} to {}", distrib.dir_path);
+            std::fs::copy(built_artifact, &bundled_artifact)
+                .into_diagnostic()
+                .wrap_err_with(|| {
+                    format!(
+                        "failed to copy bundled artifact to distributable: {} => {}",
+                        built_artifact, bundled_artifact
+                    )
+                })?;
+        }
+    }
+    Ok(())
+}
+
+fn populate_distributable_dir_with_assets(
     _dist: &DistGraph,
     distrib: &DistributableTarget,
-    built_artifacts: &HashMap<BuildArtifactIdx, Utf8PathBuf>,
 ) -> Result<()> {
     info!("populating distributable dir: {}", distrib.dir_path);
-    // Copy built artifacts
-    for artifact_idx in &distrib.required_artifacts {
-        let artifact_path = &built_artifacts[artifact_idx];
-        let artifact_file_name = artifact_path.file_name().unwrap();
-        let bundled_artifact = distrib.dir_path.join(artifact_file_name);
-        info!("  adding {bundled_artifact}");
-        std::fs::copy(artifact_path, &bundled_artifact)
-            .into_diagnostic()
-            .wrap_err_with(|| {
-                format!(
-                    "failed to copy bundled artifact to distributable: {} => {}",
-                    artifact_path, bundled_artifact
-                )
-            })?;
-    }
-
     // Copy assets
     for asset in &distrib.assets {
         let asset_file_name = asset.file_name().unwrap();
