@@ -29,7 +29,13 @@ fn test_version() {
     let mut ver_parts = ver.trim().split('.');
     ver_parts.next().unwrap().parse::<u8>().unwrap();
     ver_parts.next().unwrap().parse::<u8>().unwrap();
-    ver_parts.next().unwrap().parse::<u8>().unwrap();
+    let last = ver_parts.next().unwrap();
+    if let Some((last, _prerelease)) = last.split_once('-') {
+        last.parse::<u8>().unwrap();
+    } else {
+        last.parse::<u8>().unwrap();
+    }
+
     assert!(ver_parts.next().is_none());
 }
 
