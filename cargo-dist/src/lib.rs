@@ -546,9 +546,96 @@ fn build_cargo_target(
         target.target_triple, target.profile
     );
     // Run the build
-    // TODO: add flags for things like split-debuginfo (annoyingly platform-specific mess)
-    // TODO: add flags for opt-level=2 (strip after)
-    // TODO: should we create a profile..?
+
+    // TODO: figure out a principled way for us to add things to RUSTFLAGS
+    // without breaking everything. Cargo has some builtin ways like keys
+    // in [target...] tables that will get "merged" with the flags it wants
+    // to set. More blunt approaches like actually setting the environment
+    // variable I think can result in overwriting flags other places set
+    // (which is defensible, having spaghetti flags randomly injected by
+    // a dozen different tools is a build maintenance nightmare!)
+
+    // TODO: on windows, set RUSTFLAGS="-Ctarget-feature=+crt-static"
+    // See: https://rust-lang.github.io/rfcs/1721-crt-static.html
+    //
+    // Essentially you're *supposed* to be statically linking the windows """libc"""
+    // because it's actually a wrapper around more fundamental DLLs and not
+    // actually guaranteed to be on the system. This is why lots of games
+    // install a C/C++ runtime in their wizards! Unclear what the cost/benefit
+    // is of "install" vs "statically link", especially if you only need C
+    // and not all of C++. I am however unclear on "which" "libc" you're statically
+    // linking. More Research Needed.
+    //
+    // For similar reasons we may want to perfer targetting "linux-musl" over
+    // "linux-gnu" -- the former statically links libc and makes us more portable
+    // to "weird" linux setups like NixOS which apparently doesn't have like
+    // /etc or /lib to try to try to force things to properly specify their deps
+    // (statically linking libc says "no deps pls" (except for specific linux syscalls probably)).
+    // I am however vaguely aware of issues where some system magic is hidden away
+    // in the gnu libc (glibc) and musl subsequently diverges and acts wonky?
+    // This is all vague folklore to me, so More Research Needed.
+    //
+    // Just to round things out, let's discuss macos. I've never heard of these kinds
+    // of issues wrt macos! However I am vaguely aware that macos has an "sdk version"
+    // system, which vaguely specifies what APIs you're allowing yourself to use so
+    // you can be compatible with any system at least that new (so the older the SDK,
+    // the more compatible you are). Do we need to care about that? More Research Needed.
+
+    // TODO: maybe set RUSTFLAGS="-Cforce-frame-pointers=yes"
+    //
+    // On linux and macos this can make the unwind tables (debuginfo) smaller, more reliable,
+    // and faster at minimal runtime cost (these days). This can be a big win for profilers
+    // and crash reporters, which both want to unwind in "weird" places quickly and reliably.
+    //
+    // On windows this setting is unfortunately useless because Microsoft specified
+    // it to be... Wrong. Specifically it points "somewhere" in the frame (instead of
+    // at the start), and exists only to enable things like -Oz.
+    // See: https://github.com/rust-lang/rust/issues/82333
+
+    // TODO: maybe set RUSTFLAGS="-Csymbol-mangling-version=v0"
+    // See: https://github.com/rust-lang/rust/issues/60705
+    //
+    // Despite the name, v0 is actually the *second* mangling format for Rust symbols.
+    // The first was more unprincipled and adhoc, and is just the unnamed current
+    // default. In the future v0 should become the default. Currently we're waiting
+    // for as many tools as possible to add support (and then make it onto dev machines).
+    //
+    // The v0 scheme is bigger and contains more rich information (with its own fancy
+    // compression scheme to try to compensate). Unclear on the exact pros/cons of
+    // opting into it earlier.
+
+    // TODO: is there *any* world where we can help the user use Profile Guided Optimization (PGO)?
+    // See: https://doc.rust-lang.org/rustc/profile-guided-optimization.html
+    // See: https://blog.rust-lang.org/inside-rust/2020/11/11/exploring-pgo-for-the-rust-compiler.html
+    //
+    // In essence PGO is a ~three-step process:
+    //
+    // 1. Build your program
+    // 2. Run it on a "representative" workload and record traces of the execution ("a profile")
+    // 3. Rebuild your program with the profile to Guide Optimization
+    //
+    // For instance the compiler might see that a certain branch (if) always goes one way
+    // in the profile, and optimize the code to go faster if that holds true (by say outlining
+    // the other path).
+    //
+    // PGO can get *huge* wins but is at the mercy of step 2, which is difficult/impossible
+    // for a tool like cargo-dist to provide "automatically". But maybe we can streamline
+    // some of the rough edges? This is also possibly a place where A Better Telemetry Solution
+    // could do some interesting things for dev-controlled production environments.
+
+    // TODO: can we productively use RUSTFLAGS="--remap-path-prefix"?
+    // See: https://doc.rust-lang.org/rustc/command-line-arguments.html#--remap-path-prefix-remap-source-names-in-output
+    // See: https://github.com/rust-lang/rust/issues/87805
+    //
+    // Compiler toolchains like stuffing absolute host system paths in metadata/debuginfo,
+    // which can make things Bigger and also leak a modicum of private info. This flag
+    // lets you specify a rewrite rule for a prefix of the path, letting you map e.g.
+    // "C:\Users\Aria\checkouts\cargo-dist\src\main.rs" to ".\cargo-dist\src\main.rs".
+    //
+    // Unfortunately this is a VERY blunt instrument which does legit exact string matching
+    // and can miss paths in places rustc doesn't Expect/See. Still it might be worth
+    // setting it in case it Helps?
+
     let mut command = Command::new(&dist_graph.cargo);
     command
         .arg("build")
@@ -557,7 +644,7 @@ fn build_cargo_target(
         .arg("--message-format=json")
         .stdout(std::process::Stdio::piped());
     if target.features.no_default_features {
-        command.arg("--no-defauly-features");
+        command.arg("--no-default-features");
     }
     match &target.features.features {
         CargoTargetFeatureList::All => {
@@ -953,9 +1040,88 @@ pub fn do_init() -> Result<DistReport> {
         let mut new_profile = toml_edit::table();
         {
             let new_profile = new_profile.as_table_mut().unwrap();
+            // We're building for release, so this is a good base!
             new_profile.insert("inherits", toml_edit::value("release"));
+            // We want *full* debuginfo for good crashreporting/profiling
+            // This doesn't bloat the final binary because we use split-debuginfo below
             new_profile.insert("debug", toml_edit::value(true));
+            // Ensure that all debuginfo is pulled out of the binary and tossed
+            // into a separate file from the final binary. This should ideally be
+            // uploaded to something like a symbol server to be fetched on demand.
+            // This is already the default on windows (.pdb) and macos (.dsym) but
+            // is rather bleeding on other platforms (.dwp) -- it requires Rust 1.65,
+            // which as of this writing in the latest stable rust release! If anyone
+            // ever makes a big deal with building final binaries with an older MSRV
+            // we may need to more intelligently select this.
             new_profile.insert("split-debuginfo", toml_edit::value("packed"));
+
+            // TODO: set codegen-units=1?
+            //
+            // Ok so there's an inherent tradeoff in compilers where if the compiler does
+            // everything in a very serial/global way, it can discover more places where
+            // optimizations can be done and theoretically make things faster/smaller
+            // using all the information at its fingertips... at the cost of your builds
+            // taking forever. Both because you can't do stuff in parallel as much, and
+            // because most compiler optimizations take super-linear time in the input size.
+            //
+            // To keep the compiler from exploding, we generally break up the program
+            // into "codegen units" that get compiled independently and spit out some
+            // intermediate artifact (this is where object files and rlibs come from)
+            // that their dependents codegen units use.
+            //
+            // Compared to C, Rust codegen units are quite monolithic. Where each C
+            // *file* might gets its own codegen unit, Rust prefers scoping them to
+            // an entire *crate*. So crates that don't depend on eachother can be
+            // built in parallel, but building each crate is internally monolithic/serial.
+            //
+            // To balance this out, the codegen-units=N option tells rustc that it's
+            // ok to break up a crate into up to N different codegen-units, allowing
+            // compiles to be faster at the cost of losing some intra-crate optimization
+            // opportunities.
+            //
+            // In the --release profile, codegen-units is set to 16, which attempts
+            // to strike a balance between The Best Binaries and Ever Finishing Compiles.
+            // However the difference between 1 and 16 is further mitigated by LTO
+            // settings, see the next TODO!
+
+            // TODO: set lto="thin" (or "fat")?
+            //
+            // LTO, Link Time Optimization, basically enables more global optimizations
+            // which can make a final binary Faster at the cost of making compilation slower.
+            // Taking extra time to build Great binaries makes sense for a tool like dist.
+            //
+            // Thin LTO is the "new" form of LTO in llvm which is generally described as
+            // "way faster and basically just as good" as the old "fat" approach, but in
+            // practice it sounds like it does drop some perf on the ground. Dist is
+            // well-positioned to tune for "fat" here -- I've heard it claimed that
+            // thin vs fat can reduce chromium's size by 8%, although that's obviously
+            // a very extreme example.
+            //
+            // Release builds currently default to lto=false, which, despite the name,
+            // actually still does LTO (lto="off" *really* turns it off)! Specifically it
+            // does Thin LTO but *only* between the codegen units for a single crate.
+            // This theoretically negates the disadvantages of codegen-units=16 while
+            // still getting most of the advantages! Neat!
+
+            // TODO: set panic="abort"?
+            //
+            // PROBABLY NOT, but here's the discussion anyway!
+            //
+            // The default is panic="unwind", and things can be relying on unwinding
+            // for correctness. Unwinding support bloats up the binary and can make
+            // code run slower (because each place that *can* unwind is essentially
+            // an early-return the compiler needs to be cautious of).
+            //
+            // panic="abort" immediately crashes the program if you panic,
+            // but does still run the panic handler, so you *can* get things like
+            // backtraces/crashreports out at that point.
+            //
+            // See RUSTFLAGS="-Cforce-unwind-tables" for the semi-orthogonal flag
+            // that adjusts whether unwinding tables are emitted at all.
+            //
+            // Major C++ applications like Firefox already build with this flag,
+            // the Rust ecosystem largely works fine with either.
+
             new_profile
                 .decor_mut()
                 .set_prefix("\n# generated by 'cargo dist init'\n")
