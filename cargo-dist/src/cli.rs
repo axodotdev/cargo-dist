@@ -48,12 +48,19 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Build distributables for the current platform
     #[clap(disable_version_flag = true)]
     Build(BuildArgs),
+    /// Initialize default settings in your Cargo.toml
+    #[clap(disable_version_flag = true)]
+    Init(InitArgs),
 }
 
 #[derive(Args)]
 pub struct BuildArgs {}
+
+#[derive(Args)]
+pub struct InitArgs {}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum OutputFormat {

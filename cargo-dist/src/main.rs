@@ -122,6 +122,7 @@ fn main() {
 fn real_main(cli: &Cli) -> Result<(), miette::Report> {
     let report = match &cli.command {
         Some(Commands::Build(_args)) => do_dist()?,
+        Some(Commands::Init(_args)) => do_init()?,
         None => do_dist()?,
     };
     let mut out = Term::stdout();

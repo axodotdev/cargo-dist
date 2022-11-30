@@ -1,5 +1,5 @@
 ---
-source: tests/cli-tests.rs
+source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
 ---
 stdout:
@@ -12,7 +12,9 @@ Usage: cargo dist [OPTIONS]
 
 Commands:
   build
-          
+          Build distributables for the current platform
+  init
+          Initialize default settings in your Cargo.toml
   help
           Print this message or the help of the given subcommand(s)
 
