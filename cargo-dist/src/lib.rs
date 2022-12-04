@@ -17,7 +17,9 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Artifact, DistReport, Distributable, ExecutableArtifact, Release};
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
 use guppy::{
-    graph::{BuildTargetId, DependencyDirection, PackageMetadata},
+    graph::{
+        BuildTargetId, DependencyDirection, PackageGraph, PackageMetadata, PackageSet, Workspace,
+    },
     MetadataCommand, PackageId,
 };
 use semver::Version;
@@ -307,21 +309,9 @@ pub fn do_dist() -> Result<DistReport> {
 
 /// Precompute all the work this invocation will need to do
 fn gather_work() -> Result<DistGraph> {
-    let cargo = std::env::var("CARGO").expect("cargo didn't pass itself!?");
-    let mut metadata_cmd = MetadataCommand::new();
-    // guppy will source from the same place as us, but let's be paranoid and make sure
-    // EVERYTHING is DEFINITELY ALWAYS using the same Cargo!
-    metadata_cmd.cargo_path(&cargo);
-
-    // TODO: add a bunch of CLI flags for this. Ideally we'd use clap_cargo
-    // but it wants us to use `flatten` and then we wouldn't be able to mark
-    // the flags as global for all subcommands :(
-    let pkg_graph = metadata_cmd
-        .build_graph()
-        .into_diagnostic()
-        .wrap_err("failed to read 'cargo metadata'")?;
-    let workspace = pkg_graph.workspace();
-    let workspace_members = pkg_graph.resolve_workspace();
+    let cargo = cargo()?;
+    let pkg_graph = package_graph(&cargo)?;
+    let workspace = workspace_info(&pkg_graph)?;
 
     // TODO: use this (currently empty)
     let _workspace_config = pkg_graph
@@ -345,8 +335,8 @@ fn gather_work() -> Result<DistGraph> {
         .wrap_err("couldn't parse package's [metadata.dist]")?;
      */
 
-    let target_dir = workspace.target_directory().to_owned();
-    let workspace_dir = workspace.root().to_owned();
+    let target_dir = workspace.info.target_directory().to_owned();
+    let workspace_dir = workspace.info.root().to_owned();
     let dist_dir = target_dir.join(TARGET_DIST);
 
     // Currently just build the host target
@@ -376,7 +366,7 @@ fn gather_work() -> Result<DistGraph> {
                 let new_artifacts = match &target.package {
                     CargoTargetPackages::Workspace => artifacts_for_cargo_packages(
                         target_idx,
-                        workspace_members.packages(DependencyDirection::Forward),
+                        workspace.members.packages(DependencyDirection::Forward),
                     ),
                     CargoTargetPackages::Package(package_id) => {
                         artifacts_for_cargo_packages(target_idx, pkg_graph.metadata(package_id))
@@ -981,13 +971,18 @@ fn zip_distributable(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> 
     Ok(())
 }
 
-/// Run 'cargo dist init'
-pub fn do_init() -> Result<DistReport> {
+/// Get the path/command to invoke Cargo
+fn cargo() -> Result<String> {
     let cargo = std::env::var("CARGO").expect("cargo didn't pass itself!?");
+    Ok(cargo)
+}
+
+/// Get the PackageGraph for the current workspace
+fn package_graph(cargo: &str) -> Result<PackageGraph> {
     let mut metadata_cmd = MetadataCommand::new();
     // guppy will source from the same place as us, but let's be paranoid and make sure
     // EVERYTHING is DEFINITELY ALWAYS using the same Cargo!
-    metadata_cmd.cargo_path(&cargo);
+    metadata_cmd.cargo_path(cargo);
 
     // TODO: add a bunch of CLI flags for this. Ideally we'd use clap_cargo
     // but it wants us to use `flatten` and then we wouldn't be able to mark
@@ -996,22 +991,56 @@ pub fn do_init() -> Result<DistReport> {
         .build_graph()
         .into_diagnostic()
         .wrap_err("failed to read 'cargo metadata'")?;
-    let workspace = pkg_graph.workspace();
-    let workspace_members = pkg_graph.resolve_workspace();
 
-    let workspace_manifest_path = workspace.root().join("Cargo.toml");
-    if !workspace_manifest_path.exists() {
+    Ok(pkg_graph)
+}
+
+/// Info on the current workspace
+struct WorkspaceInfo<'pkg_graph> {
+    /// Most info on the workspace.
+    info: Workspace<'pkg_graph>,
+    /// The workspace members.
+    members: PackageSet<'pkg_graph>,
+    /// Path to the Cargo.toml of the workspace (may be a package's Cargo.toml)
+    manifest_path: Utf8PathBuf,
+    /// If the manifest_path points to a package, this is the one.
+    ///
+    /// If this is None, the workspace Cargo.toml is a virtual manifest.
+    root_package: Option<PackageMetadata<'pkg_graph>>,
+}
+
+/// Computes [`WorkspaceInfo`][] for the current workspace.
+fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
+    let workspace = pkg_graph.workspace();
+    let members = pkg_graph.resolve_workspace();
+
+    let manifest_path = workspace.root().join("Cargo.toml");
+    if !manifest_path.exists() {
         return Err(miette!("couldn't find root workspace Cargo.toml"));
     }
     // If this is Some, then the root Cargo.toml is for a specific package and not a virtual (workspace) manifest.
     // This affects things like [workspace.metadata] vs [package.metadata]
-    let root_package = workspace_members
+    let root_package = members
         .packages(DependencyDirection::Forward)
-        .find(|p| p.manifest_path() == workspace_manifest_path);
+        .find(|p| p.manifest_path() == manifest_path);
+
+    Ok(WorkspaceInfo {
+        info: workspace,
+        members,
+        manifest_path,
+        root_package,
+    })
+}
+
+/// Run 'cargo dist init'
+pub fn do_init() -> Result<DistReport> {
+    let cargo = cargo()?;
+    let pkg_graph = package_graph(&cargo)?;
+    let workspace = workspace_info(&pkg_graph)?;
 
     // Load in the workspace toml to edit and write back
     let mut workspace_toml = {
-        let mut workspace_toml_file = File::open(&workspace_manifest_path)
+        let mut workspace_toml_file = File::open(&workspace.manifest_path)
             .into_diagnostic()
             .wrap_err("couldn't load root workspace Cargo.toml")?;
         let mut workspace_toml_str = String::new();
@@ -1160,7 +1189,7 @@ pub fn do_init() -> Result<DistReport> {
     }
     // Setup [workspace.metadata.dist] or [package.metadata.dist]
     {
-        let metadata_pre_key = if root_package.is_some() {
+        let metadata_pre_key = if workspace.root_package.is_some() {
             "package"
         } else {
             "workspace"
@@ -1201,7 +1230,7 @@ pub fn do_init() -> Result<DistReport> {
         use std::io::Write;
         let mut workspace_toml_file = File::options()
             .write(true)
-            .open(&workspace_manifest_path)
+            .open(&workspace.manifest_path)
             .into_diagnostic()
             .wrap_err("couldn't load root workspace Cargo.toml")?;
         writeln!(&mut workspace_toml_file, "{}", workspace_toml)
