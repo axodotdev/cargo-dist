@@ -1055,53 +1055,83 @@ pub fn do_init() -> Result<DistReport> {
             // we may need to more intelligently select this.
             new_profile.insert("split-debuginfo", toml_edit::value("packed"));
 
-            // TODO: set codegen-units=1?
+            // TODO: set codegen-units=1? (Probably Not!)
             //
             // Ok so there's an inherent tradeoff in compilers where if the compiler does
             // everything in a very serial/global way, it can discover more places where
             // optimizations can be done and theoretically make things faster/smaller
             // using all the information at its fingertips... at the cost of your builds
-            // taking forever. Both because you can't do stuff in parallel as much, and
-            // because most compiler optimizations take super-linear time in the input size.
+            // taking forever. Compiler optimizations generally take super-linear time,
+            // so if you let the compiler see and think about EVERYTHING your builds
+            // can literally take *days* for codebases on the order of LLVM itself.
             //
-            // To keep the compiler from exploding, we generally break up the program
-            // into "codegen units" that get compiled independently and spit out some
-            // intermediate artifact (this is where object files and rlibs come from)
-            // that their dependents codegen units use.
+            // To keep compile times tractable, we generally break up the program
+            // into "codegen units" (AKA "translation units") that get compiled
+            // independently and then combined by the linker. This keeps the super-linear
+            // scaling under control, but prevents optimizations like inlining across
+            // units. (This process is why we have things like "object files" and "rlibs",
+            // those are the intermediate artifacts fed to the linker.)
             //
             // Compared to C, Rust codegen units are quite monolithic. Where each C
             // *file* might gets its own codegen unit, Rust prefers scoping them to
-            // an entire *crate*. So crates that don't depend on eachother can be
-            // built in parallel, but building each crate is internally monolithic/serial.
+            // an entire *crate*.  As it turns out, neither of these answers is right in
+            // all cases, and being able to tune the unit size is useful.
             //
-            // To balance this out, the codegen-units=N option tells rustc that it's
-            // ok to break up a crate into up to N different codegen-units, allowing
-            // compiles to be faster at the cost of losing some intra-crate optimization
-            // opportunities.
+            // Large C++ codebases like Firefox have "unified" builds where they basically
+            // concatenate files together to get bigger units. Rust provides the
+            // opposite: the codegen-units=N option tells rustc that it should try to
+            // break up a crate into at most N different units. This is done with some
+            // heuristics and contraints to try to still get the most out of each unit
+            // (i.e. try to keep functions that call eachother together for inlining).
             //
             // In the --release profile, codegen-units is set to 16, which attempts
             // to strike a balance between The Best Binaries and Ever Finishing Compiles.
-            // However the difference between 1 and 16 is further mitigated by LTO
-            // settings, see the next TODO!
+            // In principle, tuning this down to 1 could be profitable, but LTO
+            // (see the next TODO) does most of that work for us. As such we can probably
+            // leave this alone to keep compile times reasonable.
 
-            // TODO: set lto="thin" (or "fat")?
+            // TODO: set lto="thin" (or "fat")? (Probably "fat"!)
             //
-            // LTO, Link Time Optimization, basically enables more global optimizations
-            // which can make a final binary Faster at the cost of making compilation slower.
-            // Taking extra time to build Great binaries makes sense for a tool like dist.
+            // LTO, Link Time Optimization, is basically hijacking the step where we
+            // would link together everything and going back to the compiler (LLVM) to
+            // do global optimizations across codegen-units (see the previous TODO).
+            // Better Binaries, Slower Build Times.
             //
-            // Thin LTO is the "new" form of LTO in llvm which is generally described as
-            // "way faster and basically just as good" as the old "fat" approach, but in
-            // practice it sounds like it does drop some perf on the ground. Dist is
-            // well-positioned to tune for "fat" here -- I've heard it claimed that
-            // thin vs fat can reduce chromium's size by 8%, although that's obviously
-            // a very extreme example.
+            // LTO can be "fat" (or "full") or "thin".
+            //
+            // Fat LTO is the "obvious" implementation: once you're done individually
+            // optimizing the LLVM bitcode (IR) for each compilation unit, you concatenate
+            // all the units and optimize it all together. Extremely serial, extremely
+            // slow, but thorough as hell. For *enormous* codebases (millions of lines)
+            // this can become intractably expensive and crash the compiler.
+            //
+            // Thin LTO is newer and more complicated: instead of unconditionally putting
+            // everything together, we want to optimize each unit with other "useful" units
+            // pulled in for inlining and other analysis. This grouping is done with
+            // similar heuristics that rustc uses to break crates into codegen-units.
+            // This is much faster than Fat LTO and can scale to arbitrarily big
+            // codebases, but does produce slightly worse results.
             //
             // Release builds currently default to lto=false, which, despite the name,
             // actually still does LTO (lto="off" *really* turns it off)! Specifically it
             // does Thin LTO but *only* between the codegen units for a single crate.
             // This theoretically negates the disadvantages of codegen-units=16 while
             // still getting most of the advantages! Neat!
+            //
+            // Since most users will have codebases significantly smaller than An Entire
+            // Browser, we can probably go all the way to default lto="fat", and they
+            // can tune that down if it's problematic. If a user has "nightly" and "stable"
+            // builds, it might be the case that they want lto="thin" for the nightlies
+            // to keep them timely.
+            //
+            // > Aside: you may be wondering "why still have codegen units at all if using
+            // > Fat LTO" and the best answer I can give you is "doing things in parallel
+            // > at first lets you throw out a lot of junk and trim down the input before
+            // > starting the really expensive super-linear global analysis, without losing
+            // > too much of the important information". The less charitable answer is that
+            // > compiler infra is built around codegen units and so this is a pragmatic hack.
+            // >
+            // > Thin LTO of course *really* benefits from still having codegen units.
 
             // TODO: set panic="abort"?
             //
