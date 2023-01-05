@@ -31,6 +31,7 @@ use zip::ZipWriter;
 use errors::*;
 use miette::{miette, Context, IntoDiagnostic};
 
+pub mod ci;
 pub mod errors;
 #[cfg(test)]
 mod tests;
@@ -661,7 +662,7 @@ fn build_cargo_target(
     let mut task = command
         .spawn()
         .into_diagnostic()
-        .wrap_err_with(|| format!("failed to exec cargo build: {:?}", command))?;
+        .wrap_err_with(|| format!("failed to exec cargo build: {command:?}"))?;
 
     // Create entries for all the binaries we expect to find with empty paths
     // we'll fail if any are still empty at the end!
@@ -769,8 +770,7 @@ fn populate_distributable_dirs_with_built_artifact(
                 .into_diagnostic()
                 .wrap_err_with(|| {
                     format!(
-                        "failed to copy bundled artifact to distributable: {} => {}",
-                        built_artifact, bundled_artifact
+                        "failed to copy bundled artifact to distributable: {built_artifact} => {bundled_artifact}"
                     )
                 })?;
         }
@@ -791,10 +791,7 @@ fn populate_distributable_dir_with_assets(
         std::fs::copy(asset, &bundled_asset)
             .into_diagnostic()
             .wrap_err_with(|| {
-                format!(
-                    "failed to copy bundled asset to distributable: {} => {}",
-                    asset, bundled_asset
-                )
+                format!("failed to copy bundled asset to distributable: {asset} => {bundled_asset}")
             })?;
     }
 
@@ -821,12 +818,7 @@ fn tar_distributable(
     let final_zip_path = &distrib.file_path;
     let final_zip_file = File::create(final_zip_path)
         .into_diagnostic()
-        .wrap_err_with(|| {
-            format!(
-                "failed to create file for distributable: {}",
-                final_zip_path
-            )
-        })?;
+        .wrap_err_with(|| format!("failed to create file for distributable: {final_zip_path}"))?;
 
     match compression {
         CompressionImpl::Gzip => {
@@ -851,12 +843,12 @@ fn tar_distributable(
             let zip_output = tar
                 .into_inner()
                 .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write tar: {}", final_zip_path))?;
+                .wrap_err_with(|| format!("failed to write tar: {final_zip_path}"))?;
             // Finish up the compression
             let _zip_file = zip_output
                 .finish()
                 .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write archive: {}", final_zip_path))?;
+                .wrap_err_with(|| format!("failed to write archive: {final_zip_path}"))?;
             // Drop the file to close it
         }
         CompressionImpl::Xzip => {
@@ -877,12 +869,12 @@ fn tar_distributable(
             let zip_output = tar
                 .into_inner()
                 .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write tar: {}", final_zip_path))?;
+                .wrap_err_with(|| format!("failed to write tar: {final_zip_path}"))?;
             // Finish up the compression
             let _zip_file = zip_output
                 .finish()
                 .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write archive: {}", final_zip_path))?;
+                .wrap_err_with(|| format!("failed to write archive: {final_zip_path}"))?;
             // Drop the file to close it
         }
         CompressionImpl::Zstd => {
@@ -905,12 +897,12 @@ fn tar_distributable(
             let zip_output = tar
                 .into_inner()
                 .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write tar: {}", final_zip_path))?;
+                .wrap_err_with(|| format!("failed to write tar: {final_zip_path}"))?;
             // Finish up the compression
             let _zip_file = zip_output
                 .finish()
                 .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write archive: {}", final_zip_path))?;
+                .wrap_err_with(|| format!("failed to write archive: {final_zip_path}"))?;
             // Drop the file to close it
         }
     }
@@ -924,12 +916,7 @@ fn zip_distributable(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> 
     let final_zip_path = &distrib.file_path;
     let final_zip_file = File::create(final_zip_path)
         .into_diagnostic()
-        .wrap_err_with(|| {
-            format!(
-                "failed to create file for distributable: {}",
-                final_zip_path
-            )
-        })?;
+        .wrap_err_with(|| format!("failed to create file for distributable: {final_zip_path}"))?;
 
     // Wrap our file in compression
     let mut zip = ZipWriter::new(final_zip_file);
@@ -950,10 +937,7 @@ fn zip_distributable(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> 
             zip.start_file(utf8_file_name.clone(), options)
                 .into_diagnostic()
                 .wrap_err_with(|| {
-                    format!(
-                        "failed to create file {} in zip: {}",
-                        utf8_file_name, final_zip_path
-                    )
+                    format!("failed to create file {utf8_file_name} in zip: {final_zip_path}")
                 })?;
             std::io::copy(&mut buf, &mut zip).into_diagnostic()?;
         } else {
@@ -965,7 +949,7 @@ fn zip_distributable(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> 
     let _zip_file = zip
         .finish()
         .into_diagnostic()
-        .wrap_err_with(|| format!("failed to write archive: {}", final_zip_path))?;
+        .wrap_err_with(|| format!("failed to write archive: {final_zip_path}"))?;
     // Drop the file to close it
     info!("distributable created at: {}", final_zip_path);
     Ok(())
@@ -1033,7 +1017,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
 }
 
 /// Run 'cargo dist init'
-pub fn do_init() -> Result<DistReport> {
+pub fn do_init() -> Result<()> {
     let cargo = cargo()?;
     let pkg_graph = package_graph(&cargo)?;
     let workspace = workspace_info(&pkg_graph)?;
@@ -1233,9 +1217,16 @@ pub fn do_init() -> Result<DistReport> {
             .open(&workspace.manifest_path)
             .into_diagnostic()
             .wrap_err("couldn't load root workspace Cargo.toml")?;
-        writeln!(&mut workspace_toml_file, "{}", workspace_toml)
+        writeln!(&mut workspace_toml_file, "{workspace_toml}")
             .into_diagnostic()
             .wrap_err("failed to write to Cargo.toml")?;
     }
-    Ok(DistReport { releases: vec![] })
+    Ok(())
+}
+
+pub fn do_generate_ci() -> Result<()> {
+    // TODO: Currently only github CI, make this a flag!
+    let graph = gather_work()?;
+    ci::generate_github_ci(&graph.workspace_dir)?;
+    Ok(())
 }

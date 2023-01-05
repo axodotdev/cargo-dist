@@ -13,6 +13,8 @@ use miette::{Diagnostic, IntoDiagnostic};
 use thiserror::Error;
 use tracing::error;
 
+use crate::cli::{BuildArgs, GenerateCiArgs, InitArgs};
+
 mod cli;
 
 type ReportErrorFunc = dyn Fn(&miette::Report) + Send + Sync + 'static;
@@ -31,7 +33,7 @@ fn set_report_errors_as_json() {
         miette::JSONReportHandler::new()
             .render_report(&mut report, error.as_ref())
             .unwrap();
-        writeln!(&mut Term::stdout(), r#"{{"error": {}}}"#, report).unwrap();
+        writeln!(&mut Term::stdout(), r#"{{"error": {report}}}"#).unwrap();
     }));
 }
 
@@ -120,19 +122,12 @@ fn main() {
 }
 
 fn real_main(cli: &Cli) -> Result<(), miette::Report> {
-    let report = match &cli.command {
-        Some(Commands::Build(_args)) => do_dist()?,
-        Some(Commands::Init(_args)) => do_init()?,
-        None => do_dist()?,
-    };
-    let mut out = Term::stdout();
-
-    match cli.output_format {
-        OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
-        OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
+    match &cli.command {
+        Some(Commands::Build(args)) => cmd_dist(cli, args),
+        Some(Commands::Init(args)) => cmd_init(args),
+        Some(Commands::GenerateCi(args)) => cmd_generate_ci(args),
+        None => cmd_dist(cli, &BuildArgs::default()),
     }
-
-    Ok(())
 }
 
 fn print_human(_out: &mut Term, _report: &DistReport) -> Result<(), std::io::Error> {
@@ -141,6 +136,24 @@ fn print_human(_out: &mut Term, _report: &DistReport) -> Result<(), std::io::Err
 
 fn print_json(out: &mut Term, report: &DistReport) -> Result<(), std::io::Error> {
     let string = serde_json::to_string_pretty(report).unwrap();
-    writeln!(out, "{}", string)?;
+    writeln!(out, "{string}")?;
     Ok(())
+}
+
+fn cmd_dist(cli: &Cli, _args: &BuildArgs) -> Result<(), miette::Report> {
+    let report = do_dist()?;
+    let mut out = Term::stdout();
+    match cli.output_format {
+        OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
+        OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
+    }
+    Ok(())
+}
+
+fn cmd_init(_args: &InitArgs) -> Result<(), miette::Report> {
+    do_init()
+}
+
+fn cmd_generate_ci(_args: &GenerateCiArgs) -> Result<(), miette::Report> {
+    do_generate_ci()
 }

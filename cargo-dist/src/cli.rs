@@ -54,13 +54,19 @@ pub enum Commands {
     /// Initialize default settings in your Cargo.toml
     #[clap(disable_version_flag = true)]
     Init(InitArgs),
+    /// Generate CI scripts for orchestrating cargo-dist
+    #[clap(disable_version_flag = true)]
+    GenerateCi(GenerateCiArgs),
 }
 
-#[derive(Args)]
+#[derive(Args, Default)]
 pub struct BuildArgs {}
 
 #[derive(Args)]
 pub struct InitArgs {}
+
+#[derive(Args)]
+pub struct GenerateCiArgs {}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum OutputFormat {
