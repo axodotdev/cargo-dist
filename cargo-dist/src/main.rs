@@ -182,6 +182,11 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Report> {
+    if args.style.is_empty() {
+        return Err(miette::miette!(
+            "generate-ci needs at least one ci style (try 'cargo dist generate-ci github')"
+        ));
+    }
     // This command is more automagic, so provide default targets if none are chosen
     let targets = if cli.target.is_empty() {
         default_desktop_targets()
@@ -197,9 +202,9 @@ fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Repor
 
 fn default_desktop_targets() -> Vec<String> {
     vec![
-        "x86_64-gnu-unknown-linux".to_owned(),
-        "x86_64-pc-windows-msvc".to_owned(),
+        "x86_64-unknown-linux-gnu".to_owned(),
         "x86_64-apple-darwin".to_owned(),
+        "x86_64-pc-windows-msvc".to_owned(),
         // cross-compile not yet supported
         // "aarch64-gnu-unknown-linux".to_owned(),
         // "aarch64-pc-windows-msvc".to_owned(),

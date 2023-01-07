@@ -29,6 +29,9 @@ on:
     tags:
       - v[0-9]+.*
 
+env:
+  ALL_CARGO_DIST_TARGET_ARGS: --target=x86_64-unknown-linux-gnu --target=x86_64-apple-darwin --target=x86_64-pc-windows-msvc 
+
 jobs:
   # Create the Github Release™️ so the packages have something to be uploaded to
   create-release:
@@ -48,7 +51,7 @@ jobs:
 
 
   # Build and packages all the things
-  upload-assets:
+  upload-artifacts:
     needs: create-release
     strategy:
       matrix:
@@ -87,10 +90,32 @@ jobs:
           gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
           echo "uploaded!"
 
+  # Compute and upload the manifest for everything
+  upload-manifest:
+    needs: create-release
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        run: rustup update stable && rustup default stable
+      - name: Install cargo-dist
+        # Currently we install cargo-dist from the local repo, in the future when it's
+        # published on crates.io or has prebuilt binaries, we'll do better.
+        run: cargo install --path ./cargo-dist
+      - name: Run cargo-dist
+        run: |
+          cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS > dist-manifest.json
+          echo "dist ran successfully"
+          cat dist-manifest.json
+          gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
+          echo "uploaded!"
+
 
   # Mark the Github Release™️ as a non-draft now that everything has succeeded!
   publish-release:
-    needs: [create-release, upload-assets]
+    needs: [create-release, upload-artifacts, upload-manifest]
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

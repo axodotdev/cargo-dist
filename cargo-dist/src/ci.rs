@@ -35,6 +35,9 @@ on:
     tags:
       - v[0-9]+.*
 
+env:"###;
+
+const GITHUB_CI_PART2: &str = r###"
 jobs:
   # Create the Github Release™️ so the packages have something to be uploaded to
   create-release:
@@ -54,14 +57,14 @@ jobs:
 
 
   # Build and packages all the things
-  upload-assets:
+  upload-artifacts:
     needs: create-release
     strategy:
       matrix:
         # For these target platforms
         include:"###;
 
-const GITHUB_CI_PART2: &str = r###"
+const GITHUB_CI_PART3: &str = r###"
     runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,10 +91,32 @@ const GITHUB_CI_PART2: &str = r###"
           gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
           echo "uploaded!"
 
+  # Compute and upload the manifest for everything
+  upload-manifest:
+    needs: create-release
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        run: rustup update stable && rustup default stable
+      - name: Install cargo-dist
+        # Currently we install cargo-dist from git, in the future when it's
+        # published on crates.io or has prebuilt binaries, we'll do better.
+        run: cargo install --git https://github.com/axodotdev/cargo-dist/
+      - name: Run cargo-dist
+        run: |
+          cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS > dist-manifest.json
+          echo "dist ran successfully"
+          cat dist-manifest.json
+          gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
+          echo "uploaded!"
+
 
   # Mark the Github Release™️ as a non-draft now that everything has succeeded!
   publish-release:
-    needs: [create-release, upload-assets]
+    needs: [create-release, upload-artifacts, upload-manifest]
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -129,6 +154,19 @@ fn write_github_ci(f: &mut File, targets: &[String]) -> Result<(), std::io::Erro
 
     writeln!(f, "{GITHUB_CI_PART1}")?;
 
+    // Write out target args
+    let mut target_args = Vec::new();
+    for target in targets {
+        write!(&mut target_args, "--target={target} ")?;
+    }
+    writeln!(
+        f,
+        "  ALL_CARGO_DIST_TARGET_ARGS: {}",
+        String::from_utf8(target_args).unwrap()
+    )?;
+
+    writeln!(f, "{GITHUB_CI_PART2}")?;
+
     for target in targets {
         let Some(os) = github_os_for_target(target) else {
             warn!("skipping generating ci for {target} (no idea what github os should build this)");
@@ -138,7 +176,7 @@ fn write_github_ci(f: &mut File, targets: &[String]) -> Result<(), std::io::Erro
         writeln!(f, "          os: {os}")?;
     }
 
-    writeln!(f, "{GITHUB_CI_PART2}")?;
+    writeln!(f, "{GITHUB_CI_PART3}")?;
 
     Ok(())
 }
