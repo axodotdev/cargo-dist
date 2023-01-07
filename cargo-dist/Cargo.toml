@@ -1,7 +1,7 @@
 [package]
 name = "cargo-dist"
 description = "Shippable application packaging for Rust"
-version = "0.2.1-prerelease3"
+version = "0.2.1-prerelease4"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
@@ -32,7 +32,7 @@ console = { version = "0.15.1", optional = true }
 clap-cargo = { version = "0.10.0", optional = true }
 
 # Features used by the cli and library
-cargo-dist-schema = { version = "=0.2.1-prerelease3", path = "../cargo-dist-schema" }
+cargo-dist-schema = { version = "=0.2.1-prerelease4", path = "../cargo-dist-schema" }
 miette = { version = "5.3.0" }
 thiserror = "1.0.35"
 tracing = { version = "0.1.36", features = ["log"] }
