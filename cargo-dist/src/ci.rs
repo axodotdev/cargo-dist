@@ -2,6 +2,7 @@ use std::fs::File;
 
 use camino::Utf8PathBuf;
 use miette::{IntoDiagnostic, WrapErr};
+use tracing::warn;
 
 const GITHUB_CI_PART1: &str = r###"
 # CI that:
@@ -101,10 +102,14 @@ const GITHUB_CI_PART2: &str = r###"
           gh release edit ${{ needs.create-release.outputs.tag }} --draft=false
 "###;
 
-pub fn generate_github_ci(workspace_dir: &Utf8PathBuf) -> Result<(), miette::Report> {
+pub fn generate_github_ci(
+    workspace_dir: &Utf8PathBuf,
+    targets: &[String],
+) -> Result<(), miette::Report> {
     const GITHUB_CI_DIR: &str = ".github/workflows/";
     const GITHUB_CI_FILE: &str = "release.yml";
 
+    // FIXME: should we try to avoid clobbering old files..?
     let ci_dir = workspace_dir.join(GITHUB_CI_DIR);
     let ci_file = ci_dir.join(GITHUB_CI_FILE);
     std::fs::create_dir_all(&ci_dir)
@@ -113,32 +118,39 @@ pub fn generate_github_ci(workspace_dir: &Utf8PathBuf) -> Result<(), miette::Rep
     let mut file = File::create(ci_file)
         .into_diagnostic()
         .wrap_err("Failed to create ci file")?;
-    write_github_ci(&mut file)
+    write_github_ci(&mut file, targets)
         .into_diagnostic()
         .wrap_err("Failed to write to CI file")?;
     Ok(())
 }
 
-fn write_github_ci(f: &mut File) -> Result<(), std::io::Error> {
+fn write_github_ci(f: &mut File, targets: &[String]) -> Result<(), std::io::Error> {
     use std::io::Write;
-
-    let targets = [
-        // cross-compiling not yet impl'd
-        // ("aarch64-unknown-linux-gnu", "ubuntu-latest"),
-        // ("aarch64-apple-darwin", "macos-latest"),
-        ("x86_64-unknown-linux-gnu", "ubuntu-latest"),
-        ("x86_64-apple-darwin", "macos-latest"),
-        ("x86_64-pc-windows-msvc", "windows-latest"),
-    ];
 
     writeln!(f, "{GITHUB_CI_PART1}")?;
 
-    for (target, system) in targets {
+    for target in targets {
+        let Some(os) = github_os_for_target(target) else {
+            warn!("skipping generating ci for {target} (no idea what github os should build this)");
+            continue;
+        };
         writeln!(f, "        - target: {target}")?;
-        writeln!(f, "          os: {system}")?;
+        writeln!(f, "          os: {os}")?;
     }
 
     writeln!(f, "{GITHUB_CI_PART2}")?;
 
     Ok(())
+}
+
+fn github_os_for_target(target: &str) -> Option<&'static str> {
+    if target.contains("linux") {
+        Some("ubuntu-latest")
+    } else if target.contains("apple") {
+        Some("macos-latest")
+    } else if target.contains("windows") {
+        Some("windows-latest")
+    } else {
+        None
+    }
 }

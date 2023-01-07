@@ -4,7 +4,7 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
 ---
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "DistReport",
+  "title": "DistManifest",
   "description": "The final report of cargo-dist",
   "type": "object",
   "required": [

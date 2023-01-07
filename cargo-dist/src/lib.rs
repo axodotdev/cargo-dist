@@ -6,16 +6,15 @@
 #![allow(dead_code)]
 
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     fs::File,
     io::{BufReader, Read},
-    path::PathBuf,
     process::Command,
 };
 
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
-    Artifact, ArtifactKind, Asset, AssetKind, DistReport, ExecutableAsset, Release,
+    Artifact, ArtifactKind, Asset, AssetKind, DistManifest, ExecutableAsset, Release,
 };
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
 use guppy::{
@@ -68,6 +67,18 @@ const CPU_ARM: &str = "arm";
 /// Contents of METADATA_DIST in Cargo.toml files
 #[derive(Deserialize, Debug)]
 pub struct DistMetadata {}
+
+/// Global config for commands
+#[derive(Debug)]
+pub struct Config {
+    /// Target triples we want to build for
+    pub targets: Vec<String>,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum CiStyle {
+    Github,
+}
 
 /// A unique id for a [`BuildTarget`][]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
@@ -210,7 +221,7 @@ struct ArtifactTarget {
     /// The built assets this artifact will contain
     ///
     /// i.e. `cargo-dist.exe`
-    built_assets: HashSet<BuiltAssetIdx>,
+    built_assets: HashMap<BuiltAssetIdx, Utf8PathBuf>,
     /// Additional static assets to add to the artifact
     ///
     /// i.e. `README.md`
@@ -285,8 +296,8 @@ enum CargoTargetPackages {
 }
 
 /// Top level command of cargo_dist -- do everything!
-pub fn do_dist() -> Result<DistReport> {
-    let dist = gather_work()?;
+pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
+    let dist = gather_work(cfg)?;
 
     // TODO: parallelize this by working this like a dependency graph, so we can start
     // bundling up an executable the moment it's built!
@@ -321,62 +332,17 @@ pub fn do_dist() -> Result<DistReport> {
         eprintln!("bundled {}", artifact.file_path);
     }
 
-    // Report the releases
-    let mut releases = vec![];
-    for release in &dist.releases {
-        releases.push(Release {
-            app_name: release.app_name.clone(),
-            app_version: release.version.to_string(),
-            artifacts: release
-                .artifacts
-                .iter()
-                .map(|artifact_idx| {
-                    let artifact = &dist.artifacts[artifact_idx.0];
-                    Artifact {
-                        name: artifact.file_path.file_name().unwrap().to_owned(),
-                        path: Some(artifact.file_path.clone().into_std_path_buf()),
-                        target_triple: Some(artifact.target_triple.clone()),
-                        assets: artifact
-                            .built_assets
-                            .iter()
-                            .filter_map(|artifact_idx| {
-                                let asset = &dist.built_assets[artifact_idx.0];
-                                let asset_path = &built_assets[artifact_idx];
-                                match asset {
-                                    BuiltAsset::Executable(exe) => {
-                                        let symbols_artifact = exe.symbols_artifact.map(|a| {
-                                            dist.artifacts[a.0]
-                                                .file_path
-                                                .file_name()
-                                                .unwrap()
-                                                .to_owned()
-                                        });
-                                        Some(Asset {
-                                            name: exe.exe_name.clone(),
-                                            path: PathBuf::from(asset_path.file_name().unwrap()),
-                                            kind: AssetKind::Executable(ExecutableAsset {
-                                                symbols_artifact,
-                                            }),
-                                        })
-                                    }
-                                    BuiltAsset::Symbols(_sym) => {
-                                        // Symbols are their own assets, so no need to report
-                                        None
-                                    }
-                                }
-                            })
-                            .collect(),
-                        kind: artifact.kind.clone(),
-                    }
-                })
-                .collect(),
-        })
-    }
-    Ok(DistReport::new(releases))
+    Ok(build_manifest(&dist))
+}
+
+/// Just generate the manifest produced by `cargo dist build` without building
+pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
+    let dist = gather_work(cfg)?;
+    Ok(build_manifest(&dist))
 }
 
 /// Precompute all the work this invocation will need to do
-fn gather_work() -> Result<DistGraph> {
+fn gather_work(cfg: &Config) -> Result<DistGraph> {
     let cargo = cargo()?;
     let pkg_graph = package_graph(&cargo)?;
     let workspace = workspace_info(&pkg_graph)?;
@@ -407,23 +373,33 @@ fn gather_work() -> Result<DistGraph> {
     let workspace_dir = workspace.info.root().to_owned();
     let dist_dir = target_dir.join(TARGET_DIST);
 
-    // Currently just build the host target
-    let host_target_triple = get_host_target(&cargo)?;
-    let mut targets = vec![BuildTarget::Cargo(CargoBuildTarget {
-        // Just use the host target for now
-        target_triple: host_target_triple,
-        // Just build the whole workspace for now
-        package: CargoTargetPackages::Workspace,
-        // Just use the default build for now
-        features: CargoTargetFeatures {
-            no_default_features: false,
-            features: CargoTargetFeatureList::List(vec![]),
-        },
-        // Release is the GOAT profile, *obviously*
-        profile: String::from(PROFILE_DIST),
-        // Populated later
-        expected_assets: vec![],
-    })];
+    // If no targets were specified, just use the host target
+    let host_target_triple = [get_host_target(&cargo)?];
+    let triples = if cfg.targets.is_empty() {
+        &host_target_triple
+    } else {
+        &cfg.targets[..]
+    };
+
+    let mut targets = triples
+        .iter()
+        .map(|target_triple| {
+            BuildTarget::Cargo(CargoBuildTarget {
+                target_triple: target_triple.clone(),
+                // Just build the whole workspace for now
+                package: CargoTargetPackages::Workspace,
+                // Just use the default build for now
+                features: CargoTargetFeatures {
+                    no_default_features: false,
+                    features: CargoTargetFeatureList::List(vec![]),
+                },
+                // Release is the GOAT profile, *obviously*
+                profile: String::from(PROFILE_DIST),
+                // Populated later
+                expected_assets: vec![],
+            })
+        })
+        .collect::<Vec<_>>();
 
     // Find all the executables that each target will build
     let mut executables = vec![];
@@ -477,7 +453,7 @@ fn gather_work() -> Result<DistGraph> {
             // tar.xz is well-supported everywhere and much better than tar.gz
             BundleStyle::Tar(CompressionImpl::Xzip)
         };
-        let platform_exe_ext = if target_is_windows { "exe" } else { "" };
+        let platform_exe_ext = if target_is_windows { ".exe" } else { "" };
 
         // TODO: make bundled assets configurable
         // TODO: narrow this scope to the package of the binary..?
@@ -494,13 +470,14 @@ fn gather_work() -> Result<DistGraph> {
         let exe_dir_path = dist_dir.join(&exe_full_name);
         let exe_file_ext = match exe_bundle {
             BundleStyle::UncompressedFile => platform_exe_ext,
-            BundleStyle::Zip => "zip",
-            BundleStyle::Tar(CompressionImpl::Gzip) => "tar.gz",
-            BundleStyle::Tar(CompressionImpl::Zstd) => "tar.zstd",
-            BundleStyle::Tar(CompressionImpl::Xzip) => "tar.xz",
+            BundleStyle::Zip => ".zip",
+            BundleStyle::Tar(CompressionImpl::Gzip) => ".tar.gz",
+            BundleStyle::Tar(CompressionImpl::Zstd) => ".tar.zstd",
+            BundleStyle::Tar(CompressionImpl::Xzip) => ".tar.xz",
         };
-        let exe_file_name = format!("{exe_full_name}.{exe_file_ext}");
-        let exe_file_path = dist_dir.join(&exe_file_name);
+        let exe_bundle_name = format!("{exe_full_name}{exe_file_ext}");
+        let exe_bundle_path = dist_dir.join(&exe_bundle_name);
+        let exe_file_name = format!("{app_name}{platform_exe_ext}");
 
         // Ensure the release exists
         let release = releases
@@ -550,7 +527,9 @@ fn gather_work() -> Result<DistGraph> {
                     file_name: sym_file_name,
                     file_path: sym_file_path,
                     bundle: BundleStyle::UncompressedFile,
-                    built_assets: Some(sym_asset_idx).into_iter().collect(),
+                    built_assets: Some((sym_asset_idx, Utf8PathBuf::new()))
+                        .into_iter()
+                        .collect(),
                     static_assets: Default::default(),
                     kind: ArtifactKind::Symbols,
                 });
@@ -567,11 +546,13 @@ fn gather_work() -> Result<DistGraph> {
         artifacts.push(ArtifactTarget {
             target_triple,
             full_name: exe_full_name,
-            file_path: exe_file_path,
-            file_name: exe_file_name,
+            file_path: exe_bundle_path,
+            file_name: exe_bundle_name.clone(),
             dir_path: exe_dir_path,
             bundle: exe_bundle,
-            built_assets: Some(exe_asset_idx).into_iter().collect(),
+            built_assets: Some((exe_asset_idx, Utf8PathBuf::from(exe_file_name)))
+                .into_iter()
+                .collect(),
             static_assets: exe_static_assets,
             kind: ArtifactKind::ExecutableZip,
         });
@@ -589,6 +570,60 @@ fn gather_work() -> Result<DistGraph> {
         artifacts,
         releases,
     })
+}
+
+fn build_manifest(dist: &DistGraph) -> DistManifest {
+    // Report the releases
+    let mut releases = vec![];
+    for release in &dist.releases {
+        releases.push(Release {
+            app_name: release.app_name.clone(),
+            app_version: release.version.to_string(),
+            artifacts: release
+                .artifacts
+                .iter()
+                .map(|artifact_idx| {
+                    let artifact = &dist.artifacts[artifact_idx.0];
+                    Artifact {
+                        name: artifact.file_path.file_name().unwrap().to_owned(),
+                        path: Some(artifact.file_path.clone().into_std_path_buf()),
+                        target_triple: Some(artifact.target_triple.clone()),
+                        assets: artifact
+                            .built_assets
+                            .iter()
+                            .filter_map(|(asset_idx, asset_path)| {
+                                let asset = &dist.built_assets[asset_idx.0];
+                                match asset {
+                                    BuiltAsset::Executable(exe) => {
+                                        let symbols_artifact = exe.symbols_artifact.map(|a| {
+                                            dist.artifacts[a.0]
+                                                .file_path
+                                                .file_name()
+                                                .unwrap()
+                                                .to_owned()
+                                        });
+                                        Some(Asset {
+                                            name: exe.exe_name.clone(),
+                                            path: asset_path.clone().into_std_path_buf(),
+                                            kind: AssetKind::Executable(ExecutableAsset {
+                                                symbols_artifact,
+                                            }),
+                                        })
+                                    }
+                                    BuiltAsset::Symbols(_sym) => {
+                                        // Symbols are their own assets, so no need to report
+                                        None
+                                    }
+                                }
+                            })
+                            .collect(),
+                        kind: artifact.kind.clone(),
+                    }
+                })
+                .collect(),
+        })
+    }
+    DistManifest::new(releases)
 }
 
 /// Get all the artifacts built by this list of cargo packages
@@ -916,15 +951,14 @@ fn populate_artifact_dirs_with_built_assets(
     built_asset_path: &Utf8Path,
 ) -> Result<()> {
     for artifact in &dist.artifacts {
-        if artifact.built_assets.contains(&built_asset_idx) {
-            let asset_file_name = built_asset_path.file_name().unwrap();
+        if let Some(rel_asset_path) = artifact.built_assets.get(&built_asset_idx) {
             let bundled_asset = if let BundleStyle::UncompressedFile = artifact.bundle {
                 // If the asset is a single uncompressed file, we can just copy it to its final dest
                 info!("  copying {built_asset_path} to {}", artifact.dir_path);
                 artifact.dir_path.join(&artifact.file_path)
             } else {
                 info!("  adding {built_asset_path} to {}", artifact.dir_path);
-                artifact.dir_path.join(asset_file_name)
+                artifact.dir_path.join(rel_asset_path)
             };
 
             std::fs::copy(built_asset_path, &bundled_asset)
@@ -1194,8 +1228,13 @@ fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
     }
 }
 
+#[derive(Debug)]
+pub struct InitArgs {
+    pub ci_styles: Vec<CiStyle>,
+}
+
 /// Run 'cargo dist init'
-pub fn do_init() -> Result<()> {
+pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     let cargo = cargo()?;
     let pkg_graph = package_graph(&cargo)?;
     let workspace = workspace_info(&pkg_graph)?;
@@ -1399,12 +1438,26 @@ pub fn do_init() -> Result<()> {
             .into_diagnostic()
             .wrap_err("failed to write to Cargo.toml")?;
     }
+    if !args.ci_styles.is_empty() {
+        let ci_args = GenerateCiArgs {
+            ci_styles: args.ci_styles.clone(),
+        };
+        do_generate_ci(cfg, &ci_args)?;
+    }
     Ok(())
 }
 
-pub fn do_generate_ci() -> Result<()> {
-    // TODO: Currently only github CI, make this a flag!
-    let graph = gather_work()?;
-    ci::generate_github_ci(&graph.workspace_dir)?;
+#[derive(Debug)]
+pub struct GenerateCiArgs {
+    pub ci_styles: Vec<CiStyle>,
+}
+
+pub fn do_generate_ci(cfg: &Config, args: &GenerateCiArgs) -> Result<()> {
+    let graph = gather_work(cfg)?;
+    for style in &args.ci_styles {
+        match style {
+            CiStyle::Github => ci::generate_github_ci(&graph.workspace_dir, &cfg.targets)?,
+        }
+    }
     Ok(())
 }

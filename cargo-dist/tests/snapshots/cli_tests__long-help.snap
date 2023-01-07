@@ -17,6 +17,8 @@ Commands:
           Initialize default settings in your Cargo.toml
   generate-ci
           Generate CI scripts for orchestrating cargo-dist
+  manifest
+          Generate the final build manifest without running any builds
   help
           Print this message or the help of the given subcommand(s)
 
@@ -39,6 +41,9 @@ GLOBAL OPTIONS:
           
           [default: human]
           [possible values: human, json]
+
+      --target <TARGET>
+          Target triples we want to build
 
 stderr:
 

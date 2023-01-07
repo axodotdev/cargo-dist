@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 /// The final report of cargo-dist
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct DistReport {
+pub struct DistManifest {
     /// App releases we're distributing
     pub releases: Vec<Release>,
 }
@@ -92,7 +92,7 @@ pub struct ExecutableAsset {
     pub symbols_artifact: Option<String>,
 }
 
-impl DistReport {
+impl DistManifest {
     pub fn new(releases: Vec<Release>) -> Self {
         Self { releases }
     }
@@ -100,6 +100,6 @@ impl DistReport {
 
 #[test]
 fn emit() {
-    let schema = schemars::schema_for!(DistReport);
+    let schema = schemars::schema_for!(DistManifest);
     insta::assert_snapshot!(serde_json::to_string_pretty(&schema).unwrap());
 }

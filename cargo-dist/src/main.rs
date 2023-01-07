@@ -4,9 +4,9 @@ use std::sync::Mutex;
 
 // Import everything from the lib version of ourselves
 use cargo_dist::*;
-use cargo_dist_schema::DistReport;
+use cargo_dist_schema::DistManifest;
 use clap::Parser;
-use cli::{Cli, Commands, FakeCli, OutputFormat};
+use cli::{Cli, Commands, FakeCli, ManifestArgs, OutputFormat};
 use console::Term;
 use lazy_static::lazy_static;
 use miette::{Diagnostic, IntoDiagnostic};
@@ -123,25 +123,29 @@ fn main() {
 
 fn real_main(cli: &Cli) -> Result<(), miette::Report> {
     match &cli.command {
+        Some(Commands::Init(args)) => cmd_init(cli, args),
+        Some(Commands::GenerateCi(args)) => cmd_generate_ci(cli, args),
+        Some(Commands::Manifest(args)) => cmd_manifest(cli, args),
         Some(Commands::Build(args)) => cmd_dist(cli, args),
-        Some(Commands::Init(args)) => cmd_init(args),
-        Some(Commands::GenerateCi(args)) => cmd_generate_ci(args),
-        None => cmd_dist(cli, &BuildArgs::default()),
+        None => cmd_dist(cli, &cli.build_args),
     }
 }
 
-fn print_human(_out: &mut Term, _report: &DistReport) -> Result<(), std::io::Error> {
+fn print_human(_out: &mut Term, _report: &DistManifest) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn print_json(out: &mut Term, report: &DistReport) -> Result<(), std::io::Error> {
+fn print_json(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Error> {
     let string = serde_json::to_string_pretty(report).unwrap();
     writeln!(out, "{string}")?;
     Ok(())
 }
 
 fn cmd_dist(cli: &Cli, _args: &BuildArgs) -> Result<(), miette::Report> {
-    let report = do_dist()?;
+    let config = cargo_dist::Config {
+        targets: cli.target.clone(),
+    };
+    let report = do_dist(&config)?;
     let mut out = Term::stdout();
     match cli.output_format {
         OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
@@ -150,10 +154,55 @@ fn cmd_dist(cli: &Cli, _args: &BuildArgs) -> Result<(), miette::Report> {
     Ok(())
 }
 
-fn cmd_init(_args: &InitArgs) -> Result<(), miette::Report> {
-    do_init()
+fn cmd_manifest(cli: &Cli, _args: &ManifestArgs) -> Result<(), miette::Report> {
+    let config = cargo_dist::Config {
+        targets: cli.target.clone(),
+    };
+    let report = do_manifest(&config)?;
+    let mut out = Term::stdout();
+    match cli.output_format {
+        OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
+        OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
+    }
+    Ok(())
 }
 
-fn cmd_generate_ci(_args: &GenerateCiArgs) -> Result<(), miette::Report> {
-    do_generate_ci()
+fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
+    // This command is more automagic, so provide default targets if none are chosen
+    let targets = if cli.target.is_empty() {
+        default_desktop_targets()
+    } else {
+        cli.target.clone()
+    };
+    let config = cargo_dist::Config { targets };
+    let args = cargo_dist::InitArgs {
+        ci_styles: args.ci.iter().map(|ci| ci.to_lib()).collect(),
+    };
+    do_init(&config, &args)
+}
+
+fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Report> {
+    // This command is more automagic, so provide default targets if none are chosen
+    let targets = if cli.target.is_empty() {
+        default_desktop_targets()
+    } else {
+        cli.target.clone()
+    };
+    let config = cargo_dist::Config { targets };
+    let args = cargo_dist::GenerateCiArgs {
+        ci_styles: args.style.iter().map(|ci| ci.to_lib()).collect(),
+    };
+    do_generate_ci(&config, &args)
+}
+
+fn default_desktop_targets() -> Vec<String> {
+    vec![
+        "x86_64-gnu-unknown-linux".to_owned(),
+        "x86_64-pc-windows-msvc".to_owned(),
+        "x86_64-apple-darwin".to_owned(),
+        // cross-compile not yet supported
+        // "aarch64-gnu-unknown-linux".to_owned(),
+        // "aarch64-pc-windows-msvc".to_owned(),
+        // "aarch64-apple-darwin".to_owned(),
+    ]
 }
