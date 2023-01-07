@@ -1185,7 +1185,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
     if target.contains("windows-msvc") {
         Some(SymbolKind::Pdb)
-    } else if target.contains("macos") {
+    } else if target.contains("apple") {
         Some(SymbolKind::Dsym)
     } else {
         // Linux has DWPs but cargo doesn't properly uplift them
