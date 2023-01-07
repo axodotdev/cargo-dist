@@ -160,7 +160,7 @@ impl SymbolKind {
     fn ext(self) -> &'static str {
         match self {
             SymbolKind::Pdb => "pdb",
-            SymbolKind::Dsym => "dsym",
+            SymbolKind::Dsym => "dSYM",
             SymbolKind::Dwp => "dwp",
         }
     }
@@ -1217,13 +1217,22 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
 }
 
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
+    #[allow(clippy::if_same_then_else)]
     if target.contains("windows-msvc") {
         Some(SymbolKind::Pdb)
     } else if target.contains("apple") {
-        Some(SymbolKind::Dsym)
+        // Macos dSYM files are real and work but things
+        // freak out because it turns out they're directories
+        // and not "real" files? Temporarily disabling this
+        // until I have time to figure out what to do
+
+        // Some(SymbolKind::Dsym)
+        None
     } else {
         // Linux has DWPs but cargo doesn't properly uplift them
         // See: https://github.com/rust-lang/cargo/pull/11384
+
+        // Some(SymbolKind::Dwp)
         None
     }
 }
