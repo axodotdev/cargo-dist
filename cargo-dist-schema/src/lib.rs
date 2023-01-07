@@ -39,7 +39,7 @@ pub struct Artifact {
     pub path: Option<PathBuf>,
     /// Assets included in the bundle (like executables)
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub artifacts: Vec<Asset>,
+    pub assets: Vec<Asset>,
 }
 
 /// An asset contained in an artifact (executable, license, etc.)

@@ -71,11 +71,11 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
         }
       ],
       "required": [
-        "artifacts",
+        "assets",
         "name"
       ],
       "properties": {
-        "artifacts": {
+        "assets": {
           "description": "Assets included in the bundle (like executables)",
           "type": "array",
           "items": {

@@ -336,7 +336,7 @@ pub fn do_dist() -> Result<DistReport> {
                         name: artifact.file_path.file_name().unwrap().to_owned(),
                         path: Some(artifact.file_path.clone().into_std_path_buf()),
                         target_triple: Some(artifact.target_triple.clone()),
-                        artifacts: artifact
+                        assets: artifact
                             .built_assets
                             .iter()
                             .filter_map(|artifact_idx| {
