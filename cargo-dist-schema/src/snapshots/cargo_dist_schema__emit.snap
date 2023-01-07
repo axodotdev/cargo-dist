@@ -21,15 +21,96 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
   },
   "definitions": {
     "Artifact": {
-      "description": "An artifact included in a Distributable",
+      "description": "A distributable bundle that's part of a Release\n\ni.e. a zip or installer",
+      "type": "object",
+      "oneOf": [
+        {
+          "description": "A zip or a tarball",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "executable-zip"
+              ]
+            }
+          }
+        },
+        {
+          "description": "Standalone Symbols/Debuginfo for a build",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "symbols"
+              ]
+            }
+          }
+        },
+        {
+          "description": "Machine-readable metadata",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "dist-metadata"
+              ]
+            }
+          }
+        }
+      ],
+      "required": [
+        "artifacts",
+        "name"
+      ],
+      "properties": {
+        "artifacts": {
+          "description": "Assets included in the bundle (like executables)",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Asset"
+          }
+        },
+        "name": {
+          "description": "The unique name of the artifact (e.g. `myapp-v1.0.0-x86_64-pc-windows-msvc.zip`)",
+          "type": "string"
+        },
+        "path": {
+          "description": "The location of the artifact on the local system",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_triple": {
+          "description": "The target triple of the bundle",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Asset": {
+      "description": "An asset contained in an artifact (executable, license, etc.)",
+      "type": "object",
       "oneOf": [
         {
           "description": "An executable artifact",
           "type": "object",
           "required": [
-            "kind",
-            "name",
-            "path"
+            "kind"
           ],
           "properties": {
             "kind": {
@@ -38,70 +119,67 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
                 "executable"
               ]
             },
-            "name": {
-              "description": "The name of the executable",
-              "type": "string"
-            },
-            "path": {
-              "description": "The path of the executable relative to the root of the package",
-              "type": "string"
+            "symbols_artifact": {
+              "description": "The name of the Artifact containing symbols for this executable",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "description": "A README file",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "readme"
+              ]
+            }
+          }
+        },
+        {
+          "description": "A LICENSE file",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "license"
+              ]
             }
           }
         }
-      ]
-    },
-    "Distributable": {
-      "description": "A distributable bundle that's part of a Release\n\ni.e. a zip or installer",
-      "type": "object",
+      ],
       "required": [
-        "artifacts",
-        "kind",
-        "path",
-        "target_triple"
+        "name",
+        "path"
       ],
       "properties": {
-        "artifacts": {
-          "description": "Artifacts included in the bundle (like executables)",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Artifact"
-          }
-        },
-        "kind": {
-          "description": "The kind of distributable (e.g. \"zip\")",
-          "allOf": [
-            {
-              "$ref": "#/definitions/DistributableKind"
-            }
-          ]
-        },
-        "path": {
-          "description": "The location of the distributable bundle",
+        "name": {
+          "description": "The high-level name of the asset",
           "type": "string"
         },
-        "target_triple": {
-          "description": "The target triple of the bundle",
+        "path": {
+          "description": "The path of the asset relative to the root of the artifact",
           "type": "string"
         }
       }
-    },
-    "DistributableKind": {
-      "oneOf": [
-        {
-          "description": "A zip or a tarball",
-          "type": "string",
-          "enum": [
-            "zip"
-          ]
-        }
-      ]
     },
     "Release": {
       "type": "object",
       "required": [
         "app_name",
         "app_version",
-        "distributables"
+        "artifacts"
       ],
       "properties": {
         "app_name": {
@@ -112,11 +190,11 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
           "description": "The version of the app",
           "type": "string"
         },
-        "distributables": {
-          "description": "The distributable bundles for this release",
+        "artifacts": {
+          "description": "The artifacts for this release (zips, debuginfo, metadata...)",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Distributable"
+            "$ref": "#/definitions/Artifact"
           }
         }
       }

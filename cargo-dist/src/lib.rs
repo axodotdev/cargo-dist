@@ -14,7 +14,9 @@ use std::{
 };
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{Artifact, DistReport, Distributable, ExecutableArtifact, Release};
+use cargo_dist_schema::{
+    Artifact, ArtifactKind, Asset, AssetKind, DistReport, ExecutableAsset, Release,
+};
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
 use guppy::{
     graph::{
@@ -64,26 +66,27 @@ const CPU_ARM64: &str = "arm64";
 const CPU_ARM: &str = "arm";
 
 /// Contents of METADATA_DIST in Cargo.toml files
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct DistMetadata {}
 
 /// A unique id for a [`BuildTarget`][]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 struct BuildTargetIdx(usize);
 
-/// A unique id for a [`BuildArtifact`][]
+/// A unique id for a [`BuiltAsset`][]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-struct BuildArtifactIdx(usize);
+struct BuiltAssetIdx(usize);
 
-/// A unique id for a [`DistributableTarget`][]
+/// A unique id for a [`ArtifactTarget`][]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-struct DistributableTargetIdx(usize);
+struct ArtifactTargetIdx(usize);
 
 /// The graph of all work that cargo-dist needs to do on this invocation.
 ///
 /// All work is precomputed at the start of execution because only discovering
 /// what you need to do in the middle of building/packing things is a mess.
 /// It also allows us to report what *should* happen without actually doing it.
+#[derive(Debug)]
 struct DistGraph {
     /// The executable cargo told us to find itself at.
     cargo: String,
@@ -95,15 +98,16 @@ struct DistGraph {
     dist_dir: Utf8PathBuf,
     /// Targets we need to build
     targets: Vec<BuildTarget>,
-    /// Artifacts we want to get out of targets
-    artifacts: Vec<BuildArtifact>,
-    /// Distributable bundles we want to build for our artifacts
-    distributables: Vec<DistributableTarget>,
-    /// Logical releases that distributable bundles are grouped under
+    /// Assets we want to get out of builds
+    built_assets: Vec<BuiltAsset>,
+    /// Distributable artifacts we want to produce for the releases
+    artifacts: Vec<ArtifactTarget>,
+    /// Logical releases that artifacts are grouped under
     releases: Vec<ReleaseTarget>,
 }
 
 /// A build we need to perform to get artifacts to distribute.
+#[derive(Debug)]
 enum BuildTarget {
     /// A cargo build
     Cargo(CargoBuildTarget),
@@ -111,6 +115,7 @@ enum BuildTarget {
 }
 
 /// A cargo build
+#[derive(Debug)]
 struct CargoBuildTarget {
     /// The --target triple to pass
     target_triple: String,
@@ -120,73 +125,116 @@ struct CargoBuildTarget {
     package: CargoTargetPackages,
     /// The --profile to pass
     profile: String,
-    /// Artifacts we expect from this build
-    expected_artifacts: Vec<BuildArtifactIdx>,
+    /// Assets we expect from this build
+    expected_assets: Vec<BuiltAssetIdx>,
 }
 
-/// An artifact we need from our builds
-enum BuildArtifact {
+/// An asset we need from our builds
+#[derive(Debug)]
+enum BuiltAsset {
     /// An executable
-    Executable(ExecutableBuildArtifact),
+    Executable(ExecutableBuiltAsset),
+    /// Symbols for an executable
+    Symbols(SymbolsBuiltAsset),
+}
+
+#[derive(Copy, Clone, Debug)]
+enum SymbolKind {
+    Pdb,
+    Dsym,
+    Dwp,
+}
+
+impl SymbolKind {
+    fn ext(self) -> &'static str {
+        match self {
+            SymbolKind::Pdb => "pdb",
+            SymbolKind::Dsym => "dsym",
+            SymbolKind::Dwp => "dwp",
+        }
+    }
 }
 
 /// An executable we need from our builds
-struct ExecutableBuildArtifact {
+#[derive(Debug)]
+struct ExecutableBuiltAsset {
     /// The name of the executable (without a file extension)
     exe_name: String,
     /// The cargo package this executable is defined by
     package_id: PackageId,
     /// The [`BuildTarget`][] that should produce this.
     build_target: BuildTargetIdx,
+    /// The artifact containing symbols for this
+    symbols_artifact: Option<ArtifactTargetIdx>,
 }
 
-/// A distributable bundle we want to build
-struct DistributableTarget {
+/// Symbols we need from our builds
+#[derive(Debug)]
+struct SymbolsBuiltAsset {
+    /// The name of the executable these symbols are for (without a file extension)
+    exe_name: String,
+    /// The cargo package this executable is defined by
+    package_id: PackageId,
+    /// The [`BuildTarget`][] that should produce this.
+    build_target: BuildTargetIdx,
+    /// The kind of symbols this is
+    symbol_kind: SymbolKind,
+}
+
+/// A distributable artifact we want to build
+#[derive(Debug)]
+struct ArtifactTarget {
     /// The target platform
     ///
     /// i.e. `x86_64-pc-windows-msvc`
     target_triple: String,
-    /// The full name of the distributable
+    /// The full name of the artifact
     ///
     /// i.e. `cargo-dist-v0.1.0-x86_64-pc-windows-msvc`
     full_name: String,
-    /// The path to the directory where this distributable's
+    /// The path to the directory where this artifact's
     /// contents will be gathered before bundling.
     ///
     /// i.e. `/.../target/dist/cargo-dist-v0.1.0-x86_64-pc-windows-msvc/`
     dir_path: Utf8PathBuf,
-    /// The file name of the distributable
+    /// The file name of the artifact
     ///
     /// i.e. `cargo-dist-v0.1.0-x86_64-pc-windows-msvc.zip`
     file_name: String,
-    /// The path where the final distributable will appear
+    /// The path where the final artifact will appear
     ///
     /// i.e. `/.../target/dist/cargo-dist-v0.1.0-x86_64-pc-windows-msvc.zip`
     file_path: Utf8PathBuf,
     /// The bundling method (zip, tar.gz, ...)
     bundle: BundleStyle,
-    /// The build artifacts this distributable will contain
+    /// The built assets this artifact will contain
     ///
     /// i.e. `cargo-dist.exe`
-    required_artifacts: HashSet<BuildArtifactIdx>,
-    /// Additional static assets to add to the distributable
+    built_assets: HashSet<BuiltAssetIdx>,
+    /// Additional static assets to add to the artifact
     ///
     /// i.e. `README.md`
-    assets: Vec<Utf8PathBuf>,
+    static_assets: Vec<Utf8PathBuf>,
+    /// The kind of artifact this is
+    kind: ArtifactKind,
 }
 
-/// A logical release of an application that distributables are grouped under
+/// A logical release of an application that artifacts are grouped under
+#[derive(Debug)]
 struct ReleaseTarget {
     /// The name of the app
     app_name: String,
     /// The version of the app
     version: Version,
-    /// The distributables this release includes
-    distributables: Vec<DistributableTargetIdx>,
+    /// The artifacts this release includes
+    artifacts: Vec<ArtifactTargetIdx>,
 }
 
-/// The style of bundle for a [`DistributableTarget`][].
+/// The style of bundle for a [`ArtifactTarget`][].
+#[derive(Debug)]
 enum BundleStyle {
+    /// Just a single uncompressed file
+    UncompressedFile,
     /// `.zip`
     Zip,
     /// `.tar.<compression>`
@@ -199,6 +247,7 @@ enum BundleStyle {
 }
 
 /// Compression impls (used by [`BundleStyle::Tar`][])
+#[derive(Debug, Copy, Clone)]
 enum CompressionImpl {
     /// `.gz`
     Gzip,
@@ -209,6 +258,7 @@ enum CompressionImpl {
 }
 
 /// Cargo features a [`CargoBuildTarget`][] should use.
+#[derive(Debug)]
 struct CargoTargetFeatures {
     /// Whether to disable default features
     no_default_features: bool,
@@ -217,6 +267,7 @@ struct CargoTargetFeatures {
 }
 
 /// A list of features to build with
+#[derive(Debug)]
 enum CargoTargetFeatureList {
     /// All of them
     All,
@@ -225,6 +276,7 @@ enum CargoTargetFeatureList {
 }
 
 /// Whether to build a package or workspace
+#[derive(Debug)]
 enum CargoTargetPackages {
     /// Build the workspace
     Workspace,
@@ -246,27 +298,27 @@ pub fn do_dist() -> Result<DistReport> {
             .wrap_err_with(|| format!("couldn't create dist target dir at {}", dist.dist_dir))?;
     }
 
-    for distrib in &dist.distributables {
-        eprintln!("bundling {}", distrib.file_name);
-        init_distributable_dir(&dist, distrib)?;
+    for artifact in &dist.artifacts {
+        eprintln!("bundling {}", artifact.file_name);
+        init_artifact_dir(&dist, artifact)?;
     }
 
-    let mut built_artifacts = HashMap::new();
+    let mut built_assets = HashMap::new();
     // Run all the builds
     for target in &dist.targets {
-        let new_built_artifacts = build_target(&dist, target)?;
+        let new_built_assets = build_target(&dist, target)?;
         // Copy the artifacts as soon as possible, future builds may clobber them!
-        for (&artifact_idx, built_artifact) in &new_built_artifacts {
-            populate_distributable_dirs_with_built_artifact(&dist, artifact_idx, built_artifact)?;
+        for (&built_asset_idx, built_asset) in &new_built_assets {
+            populate_artifact_dirs_with_built_assets(&dist, built_asset_idx, built_asset)?;
         }
-        built_artifacts.extend(new_built_artifacts);
+        built_assets.extend(new_built_assets);
     }
 
     // Build all the bundles
-    for distrib in &dist.distributables {
-        populate_distributable_dir_with_assets(&dist, distrib)?;
-        bundle_distributable(&dist, distrib)?;
-        eprintln!("bundled {}", distrib.file_path);
+    for artifact in &dist.artifacts {
+        populate_artifact_dir_with_static_assets(&dist, artifact)?;
+        bundle_artifact(&dist, artifact)?;
+        eprintln!("bundled {}", artifact.file_path);
     }
 
     // Report the releases
@@ -275,31 +327,46 @@ pub fn do_dist() -> Result<DistReport> {
         releases.push(Release {
             app_name: release.app_name.clone(),
             app_version: release.version.to_string(),
-            distributables: release
-                .distributables
+            artifacts: release
+                .artifacts
                 .iter()
-                .map(|distrib_idx| {
-                    let distrib = &dist.distributables[distrib_idx.0];
-                    Distributable {
-                        path: distrib.file_path.clone().into_std_path_buf(),
-                        target_triple: distrib.target_triple.clone(),
-                        artifacts: distrib
-                            .required_artifacts
+                .map(|artifact_idx| {
+                    let artifact = &dist.artifacts[artifact_idx.0];
+                    Artifact {
+                        name: artifact.file_path.file_name().unwrap().to_owned(),
+                        path: Some(artifact.file_path.clone().into_std_path_buf()),
+                        target_triple: Some(artifact.target_triple.clone()),
+                        artifacts: artifact
+                            .built_assets
                             .iter()
-                            .map(|artifact_idx| {
-                                let artifact = &dist.artifacts[artifact_idx.0];
-                                let artifact_path = &built_artifacts[artifact_idx];
-                                match artifact {
-                                    BuildArtifact::Executable(exe) => {
-                                        Artifact::Executable(ExecutableArtifact {
+                            .filter_map(|artifact_idx| {
+                                let asset = &dist.built_assets[artifact_idx.0];
+                                let asset_path = &built_assets[artifact_idx];
+                                match asset {
+                                    BuiltAsset::Executable(exe) => {
+                                        let symbols_artifact = exe.symbols_artifact.map(|a| {
+                                            dist.artifacts[a.0]
+                                                .file_path
+                                                .file_name()
+                                                .unwrap()
+                                                .to_owned()
+                                        });
+                                        Some(Asset {
                                             name: exe.exe_name.clone(),
-                                            path: PathBuf::from(artifact_path.file_name().unwrap()),
+                                            path: PathBuf::from(asset_path.file_name().unwrap()),
+                                            kind: AssetKind::Executable(ExecutableAsset {
+                                                symbols_artifact,
+                                            }),
                                         })
+                                    }
+                                    BuiltAsset::Symbols(_sym) => {
+                                        // Symbols are their own assets, so no need to report
+                                        None
                                     }
                                 }
                             })
                             .collect(),
-                        kind: cargo_dist_schema::DistributableKind::Zip,
+                        kind: artifact.kind.clone(),
                     }
                 })
                 .collect(),
@@ -355,106 +422,160 @@ fn gather_work() -> Result<DistGraph> {
         // Release is the GOAT profile, *obviously*
         profile: String::from(PROFILE_DIST),
         // Populated later
-        expected_artifacts: vec![],
+        expected_assets: vec![],
     })];
 
-    // Find all the binaries that each target will build
-    let mut artifacts = vec![];
+    // Find all the executables that each target will build
+    let mut executables = vec![];
     for (idx, target) in targets.iter_mut().enumerate() {
         let target_idx = BuildTargetIdx(idx);
         match target {
             BuildTarget::Cargo(target) => {
-                let new_artifacts = match &target.package {
-                    CargoTargetPackages::Workspace => artifacts_for_cargo_packages(
+                let new_executables = match &target.package {
+                    CargoTargetPackages::Workspace => binaries_for_cargo_packages(
                         target_idx,
                         workspace.members.packages(DependencyDirection::Forward),
                     ),
                     CargoTargetPackages::Package(package_id) => {
-                        artifacts_for_cargo_packages(target_idx, pkg_graph.metadata(package_id))
+                        binaries_for_cargo_packages(target_idx, pkg_graph.metadata(package_id))
                     }
                 };
-                let new_artifact_idxs = artifacts.len()..artifacts.len() + new_artifacts.len();
-                artifacts.extend(new_artifacts);
-                target
-                    .expected_artifacts
-                    .extend(new_artifact_idxs.map(BuildArtifactIdx));
+                executables.extend(new_executables);
             }
         }
     }
 
-    // Give each artifact its own distributable (for now)
-    let mut distributables = vec![];
+    // Give each binary its own artifact (for now)
+    let mut artifacts = vec![];
+    let mut built_assets = vec![];
     let mut releases = HashMap::<(String, Version), ReleaseTarget>::new();
-    for (idx, artifact) in artifacts.iter().enumerate() {
-        let artifact_idx = BuildArtifactIdx(idx);
-        match artifact {
-            BuildArtifact::Executable(exe) => {
-                let build_target = &targets[exe.build_target.0];
-                let target_triple = match build_target {
-                    BuildTarget::Cargo(target) => target.target_triple.clone(),
+    for exe in executables {
+        // TODO: make app name configurable? Use some other fields in the PackageMetadata?
+        let app_name = exe.exe_name.clone();
+        // TODO: allow apps to be versioned separately from packages?
+        let version = pkg_graph
+            .metadata(&exe.package_id)
+            .unwrap()
+            .version()
+            .clone();
+        let build_target = &mut targets[exe.build_target.0];
+
+        // Register this executable as an asset we'll build
+        let exe_asset_idx = BuiltAssetIdx(built_assets.len());
+        built_assets.push(BuiltAsset::Executable(exe));
+
+        let target_triple = match build_target {
+            BuildTarget::Cargo(target) => target.target_triple.clone(),
+        };
+
+        // TODO: make bundle style configurable
+        let target_is_windows = target_triple.contains("windows");
+        let exe_bundle = if target_is_windows {
+            // Windows loves them zips
+            BundleStyle::Zip
+        } else {
+            // tar.xz is well-supported everywhere and much better than tar.gz
+            BundleStyle::Tar(CompressionImpl::Xzip)
+        };
+        let platform_exe_ext = if target_is_windows { "exe" } else { "" };
+
+        // TODO: make bundled assets configurable
+        // TODO: narrow this scope to the package of the binary..?
+        let exe_static_assets = BUILTIN_FILES
+            .iter()
+            .filter_map(|f| {
+                let file = workspace_dir.join(f);
+                file.exists().then_some(file)
+            })
+            .collect();
+
+        // TODO: make the bundle name configurable?
+        let exe_full_name = format!("{app_name}-v{version}-{target_triple}");
+        let exe_dir_path = dist_dir.join(&exe_full_name);
+        let exe_file_ext = match exe_bundle {
+            BundleStyle::UncompressedFile => platform_exe_ext,
+            BundleStyle::Zip => "zip",
+            BundleStyle::Tar(CompressionImpl::Gzip) => "tar.gz",
+            BundleStyle::Tar(CompressionImpl::Zstd) => "tar.zstd",
+            BundleStyle::Tar(CompressionImpl::Xzip) => "tar.xz",
+        };
+        let exe_file_name = format!("{exe_full_name}.{exe_file_ext}");
+        let exe_file_path = dist_dir.join(&exe_file_name);
+
+        // Ensure the release exists
+        let release = releases
+            .entry((app_name.clone(), version.clone()))
+            .or_insert_with(|| ReleaseTarget {
+                app_name,
+                version,
+                artifacts: vec![],
+            });
+
+        // Tell the target about this BuiltAsset is needs to make
+        #[allow(irrefutable_let_patterns)]
+        if let BuildTarget::Cargo(cargo_build_target) = build_target {
+            cargo_build_target.expected_assets.push(exe_asset_idx);
+
+            // If we support symbols, makes assets/artifacts for them too
+            if let Some(symbol_kind) = target_symbol_kind(&cargo_build_target.target_triple) {
+                let BuiltAsset::Executable(exe_asset) = &built_assets[exe_asset_idx.0] else {
+                    unreachable!();
                 };
 
-                // TODO: make bundle style configurable
-                let target_is_windows = target_triple.contains("windows");
-                let bundle = if target_is_windows {
-                    // Windows loves them zips
-                    BundleStyle::Zip
-                } else {
-                    // tar.xz is well-supported everywhere and much better than tar.gz
-                    BundleStyle::Tar(CompressionImpl::Xzip)
-                };
-
-                // TODO: make bundled assets configurable
-                // TODO: narrow this scope to the package of the binary..?
-                let assets = BUILTIN_FILES
-                    .iter()
-                    .filter_map(|f| {
-                        let file = workspace_dir.join(f);
-                        file.exists().then_some(file)
-                    })
-                    .collect();
-
-                // TODO: make app name configurable? Use some other fields in the PackageMetadata?
-                let app_name = exe.exe_name.clone();
-                // TODO: allow apps to be versioned separately from packages?
-                let version = pkg_graph
-                    .metadata(&exe.package_id)
-                    .unwrap()
-                    .version()
-                    .clone();
-                // TODO: make the bundle name configurable?
-                let full_name = format!("{app_name}-v{version}-{target_triple}");
-                let dir_path = dist_dir.join(&full_name);
-                let file_ext = match bundle {
-                    BundleStyle::Zip => "zip",
-                    BundleStyle::Tar(CompressionImpl::Gzip) => "tar.gz",
-                    BundleStyle::Tar(CompressionImpl::Zstd) => "tar.zstd",
-                    BundleStyle::Tar(CompressionImpl::Xzip) => "tar.xz",
-                };
-                let file_name = format!("{full_name}.{file_ext}");
-                let file_path = dist_dir.join(&file_name);
-
-                let distributable_idx = DistributableTargetIdx(distributables.len());
-                distributables.push(DistributableTarget {
-                    target_triple,
-                    full_name,
-                    file_path,
-                    file_name,
-                    dir_path,
-                    bundle,
-                    required_artifacts: Some(artifact_idx).into_iter().collect(),
-                    assets,
+                // Create a BuiltAsset for the symbols
+                let sym_asset_idx = BuiltAssetIdx(built_assets.len());
+                let sym_asset = BuiltAsset::Symbols(SymbolsBuiltAsset {
+                    exe_name: exe_asset.exe_name.clone(),
+                    package_id: exe_asset.package_id.clone(),
+                    build_target: exe_asset.build_target,
+                    symbol_kind,
                 });
-                let release = releases
-                    .entry((app_name.clone(), version.clone()))
-                    .or_insert_with(|| ReleaseTarget {
-                        app_name,
-                        version,
-                        distributables: vec![],
-                    });
-                release.distributables.push(distributable_idx);
+                built_assets.push(sym_asset);
+
+                // Add the asset to the target
+                cargo_build_target.expected_assets.push(sym_asset_idx);
+
+                // Create a dedicated artifact for this asset
+                let sym_ext = symbol_kind.ext();
+                let sym_full_name = format!("{exe_full_name}.{sym_ext}");
+                let sym_dir_path = dist_dir.join("syms");
+                let sym_file_name = sym_full_name.clone();
+                let sym_file_path = dist_dir.join(&sym_full_name);
+
+                let sym_artifact_idx = ArtifactTargetIdx(artifacts.len());
+                artifacts.push(ArtifactTarget {
+                    target_triple: target_triple.clone(),
+                    full_name: sym_full_name,
+                    dir_path: sym_dir_path,
+                    file_name: sym_file_name,
+                    file_path: sym_file_path,
+                    bundle: BundleStyle::UncompressedFile,
+                    built_assets: Some(sym_asset_idx).into_iter().collect(),
+                    static_assets: Default::default(),
+                    kind: ArtifactKind::Symbols,
+                });
+                release.artifacts.push(sym_artifact_idx);
+
+                let BuiltAsset::Executable(exe_asset) = &mut built_assets[exe_asset_idx.0] else {
+                    unreachable!();
+                };
+                exe_asset.symbols_artifact = Some(sym_artifact_idx);
             }
         }
+
+        let exe_artifact_idx = ArtifactTargetIdx(artifacts.len());
+        artifacts.push(ArtifactTarget {
+            target_triple,
+            full_name: exe_full_name,
+            file_path: exe_file_path,
+            file_name: exe_file_name,
+            dir_path: exe_dir_path,
+            bundle: exe_bundle,
+            built_assets: Some(exe_asset_idx).into_iter().collect(),
+            static_assets: exe_static_assets,
+            kind: ArtifactKind::ExecutableZip,
+        });
+        release.artifacts.push(exe_artifact_idx);
     }
 
     let releases = releases.into_iter().map(|e| e.1).collect();
@@ -464,34 +585,33 @@ fn gather_work() -> Result<DistGraph> {
         workspace_dir,
         dist_dir,
         targets,
+        built_assets,
         artifacts,
-        distributables,
         releases,
     })
 }
 
 /// Get all the artifacts built by this list of cargo packages
-fn artifacts_for_cargo_packages<'a>(
+fn binaries_for_cargo_packages<'a>(
     target_idx: BuildTargetIdx,
     packages: impl IntoIterator<Item = PackageMetadata<'a>>,
-) -> Vec<BuildArtifact> {
-    packages
-        .into_iter()
-        .flat_map(|package| {
-            package.build_targets().filter_map(move |target| {
-                let build_id = target.id();
-                if let BuildTargetId::Binary(name) = build_id {
-                    Some(BuildArtifact::Executable(ExecutableBuildArtifact {
-                        exe_name: name.to_owned(),
-                        package_id: package.id().clone(),
-                        build_target: target_idx,
-                    }))
-                } else {
-                    None
-                }
-            })
-        })
-        .collect::<Vec<_>>()
+) -> Vec<ExecutableBuiltAsset> {
+    let mut built_assets = Vec::new();
+    for package in packages {
+        for target in package.build_targets() {
+            let build_id = target.id();
+            if let BuildTargetId::Binary(name) = build_id {
+                built_assets.push(ExecutableBuiltAsset {
+                    exe_name: name.to_owned(),
+                    package_id: package.id().clone(),
+                    build_target: target_idx,
+                    // This will be filled in later
+                    symbols_artifact: None,
+                });
+            }
+        }
+    }
+    built_assets
 }
 
 /// Get the host target triple from cargo
@@ -521,7 +641,7 @@ fn get_host_target(cargo: &str) -> Result<String> {
 fn build_target(
     dist_graph: &DistGraph,
     target: &BuildTarget,
-) -> Result<HashMap<BuildArtifactIdx, Utf8PathBuf>> {
+) -> Result<HashMap<BuiltAssetIdx, Utf8PathBuf>> {
     match target {
         BuildTarget::Cargo(target) => build_cargo_target(dist_graph, target),
     }
@@ -531,7 +651,7 @@ fn build_target(
 fn build_cargo_target(
     dist_graph: &DistGraph,
     target: &CargoBuildTarget,
-) -> Result<HashMap<BuildArtifactIdx, Utf8PathBuf>> {
+) -> Result<HashMap<BuiltAssetIdx, Utf8PathBuf>> {
     eprintln!(
         "building cargo target ({}/{})",
         target.target_triple, target.profile
@@ -666,18 +786,28 @@ fn build_cargo_target(
 
     // Create entries for all the binaries we expect to find with empty paths
     // we'll fail if any are still empty at the end!
-    let mut expected_exes =
-        HashMap::<String, HashMap<String, (BuildArtifactIdx, Utf8PathBuf)>>::new();
-    for artifact_idx in &target.expected_artifacts {
-        let artifact = &dist_graph.artifacts[artifact_idx.0];
-        let BuildArtifact::Executable(exe) = artifact;
-        {
-            let package_id = exe.package_id.to_string();
-            let exe_name = exe.exe_name.clone();
-            expected_exes
-                .entry(package_id)
-                .or_default()
-                .insert(exe_name, (*artifact_idx, Utf8PathBuf::new()));
+    let mut expected_exes = HashMap::<String, HashMap<String, (BuiltAssetIdx, Utf8PathBuf)>>::new();
+    let mut expected_symbols =
+        HashMap::<String, HashMap<String, (BuiltAssetIdx, Utf8PathBuf)>>::new();
+    for asset_idx in &target.expected_assets {
+        let asset = &dist_graph.built_assets[asset_idx.0];
+        match asset {
+            BuiltAsset::Executable(exe) => {
+                let package_id = exe.package_id.to_string();
+                let exe_name = exe.exe_name.clone();
+                expected_exes
+                    .entry(package_id)
+                    .or_default()
+                    .insert(exe_name, (*asset_idx, Utf8PathBuf::new()));
+            }
+            BuiltAsset::Symbols(sym) => {
+                let package_id = sym.package_id.to_string();
+                let exe_name = sym.exe_name.clone();
+                expected_symbols
+                    .entry(package_id)
+                    .or_default()
+                    .insert(exe_name, (*asset_idx, Utf8PathBuf::new()));
+            }
         }
     }
 
@@ -696,11 +826,34 @@ fn build_cargo_target(
                     info!("got a new exe: {}", new_exe);
                     let package_id = artifact.package_id.to_string();
                     let exe_name = new_exe.file_stem().unwrap();
+
+                    // If we expected some symbols, pull them out of the paths of this executable
+                    let expected_sym = expected_symbols
+                        .get_mut(&package_id)
+                        .and_then(|m| m.get_mut(exe_name));
+                    if let Some((expected_sym_asset, sym_path)) = expected_sym {
+                        let expected_sym_asset = &dist_graph.built_assets[expected_sym_asset.0];
+                        let BuiltAsset::Symbols(expected_sym_asset) = expected_sym_asset else {
+                            unreachable!()
+                        };
+                        for path in artifact.filenames {
+                            let is_symbols = path
+                                .extension()
+                                .map(|e| e == expected_sym_asset.symbol_kind.ext())
+                                .unwrap_or(false);
+                            if is_symbols {
+                                // These are symbols we expected! Save the path.
+                                *sym_path = path;
+                            }
+                        }
+                    }
+
+                    // Get the exe path
                     let expected_exe = expected_exes
                         .get_mut(&package_id)
                         .and_then(|m| m.get_mut(exe_name));
                     if let Some(expected) = expected_exe {
-                        // It is! Save the path.
+                        // This is an exe we expected! Save the path.
                         expected.1 = new_exe;
                     }
                 }
@@ -712,65 +865,73 @@ fn build_cargo_target(
     }
 
     // Check that we got everything we expected, and normalize to ArtifactIdx => Artifact Path
-    let mut built_exes = HashMap::new();
+    let mut built_assets = HashMap::new();
     for (package_id, exes) in expected_exes {
         for (exe, (artifact_idx, exe_path)) in exes {
             if exe_path.as_str().is_empty() {
                 return Err(miette!("failed to find bin {} for {}", exe, package_id));
             }
-            built_exes.insert(artifact_idx, exe_path);
+            built_assets.insert(artifact_idx, exe_path);
+        }
+    }
+    for (package_id, symbols) in expected_symbols {
+        for (exe, (artifact_idx, sym_path)) in symbols {
+            if sym_path.as_str().is_empty() {
+                return Err(miette!("failed to find symbols {} for {}", exe, package_id));
+            }
+            built_assets.insert(artifact_idx, sym_path);
         }
     }
 
-    Ok(built_exes)
+    Ok(built_assets)
 }
 
-/// Initialize the dir for a distributable (and delete the old distributable file).
-fn init_distributable_dir(_dist: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
-    info!("recreating distributable dir: {}", distrib.dir_path);
+/// Initialize the dir for an artifact (and delete the old artifact file).
+fn init_artifact_dir(_dist: &DistGraph, artifact: &ArtifactTarget) -> Result<()> {
+    info!("recreating artifact dir: {}", artifact.dir_path);
 
     // Clear out the dir we'll build the bundle up in
-    if distrib.dir_path.exists() {
-        std::fs::remove_dir_all(&distrib.dir_path)
+    if artifact.dir_path.exists() {
+        std::fs::remove_dir_all(&artifact.dir_path)
             .into_diagnostic()
-            .wrap_err_with(|| {
-                format!(
-                    "failed to delete old distributable dir {}",
-                    distrib.dir_path
-                )
-            })?;
+            .wrap_err_with(|| format!("failed to delete old artifact dir {}", artifact.dir_path))?;
     }
-    std::fs::create_dir(&distrib.dir_path)
+    std::fs::create_dir(&artifact.dir_path)
         .into_diagnostic()
-        .wrap_err_with(|| format!("failed to create distributable dir {}", distrib.dir_path))?;
+        .wrap_err_with(|| format!("failed to create artifact dir {}", artifact.dir_path))?;
 
     // Delete any existing bundle
-    if distrib.file_path.exists() {
-        std::fs::remove_file(&distrib.file_path)
+    if artifact.file_path.exists() {
+        std::fs::remove_file(&artifact.file_path)
             .into_diagnostic()
-            .wrap_err_with(|| {
-                format!("failed to delete old distributable {}", distrib.file_path)
-            })?;
+            .wrap_err_with(|| format!("failed to delete old artifact {}", artifact.file_path))?;
     }
 
     Ok(())
 }
 
-fn populate_distributable_dirs_with_built_artifact(
+fn populate_artifact_dirs_with_built_assets(
     dist: &DistGraph,
-    artifact_idx: BuildArtifactIdx,
-    built_artifact: &Utf8Path,
+    built_asset_idx: BuiltAssetIdx,
+    built_asset_path: &Utf8Path,
 ) -> Result<()> {
-    for distrib in &dist.distributables {
-        if distrib.required_artifacts.contains(&artifact_idx) {
-            let artifact_file_name = built_artifact.file_name().unwrap();
-            let bundled_artifact = distrib.dir_path.join(artifact_file_name);
-            info!("  adding {built_artifact} to {}", distrib.dir_path);
-            std::fs::copy(built_artifact, &bundled_artifact)
+    for artifact in &dist.artifacts {
+        if artifact.built_assets.contains(&built_asset_idx) {
+            let asset_file_name = built_asset_path.file_name().unwrap();
+            let bundled_asset = if let BundleStyle::UncompressedFile = artifact.bundle {
+                // If the asset is a single uncompressed file, we can just copy it to its final dest
+                info!("  copying {built_asset_path} to {}", artifact.dir_path);
+                artifact.dir_path.join(&artifact.file_path)
+            } else {
+                info!("  adding {built_asset_path} to {}", artifact.dir_path);
+                artifact.dir_path.join(asset_file_name)
+            };
+
+            std::fs::copy(built_asset_path, &bundled_asset)
                 .into_diagnostic()
                 .wrap_err_with(|| {
                     format!(
-                        "failed to copy bundled artifact to distributable: {built_artifact} => {bundled_artifact}"
+                        "failed to copy built asset to artifact: {built_asset_path} => {bundled_asset}"
                     )
                 })?;
         }
@@ -778,47 +939,52 @@ fn populate_distributable_dirs_with_built_artifact(
     Ok(())
 }
 
-fn populate_distributable_dir_with_assets(
+fn populate_artifact_dir_with_static_assets(
     _dist: &DistGraph,
-    distrib: &DistributableTarget,
+    artifact: &ArtifactTarget,
 ) -> Result<()> {
-    info!("populating distributable dir: {}", distrib.dir_path);
+    info!("populating artifact dir: {}", artifact.dir_path);
     // Copy assets
-    for asset in &distrib.assets {
+    for asset in &artifact.static_assets {
         let asset_file_name = asset.file_name().unwrap();
-        let bundled_asset = distrib.dir_path.join(asset_file_name);
+        let bundled_asset = artifact.dir_path.join(asset_file_name);
         info!("  adding {bundled_asset}");
         std::fs::copy(asset, &bundled_asset)
             .into_diagnostic()
             .wrap_err_with(|| {
-                format!("failed to copy bundled asset to distributable: {asset} => {bundled_asset}")
+                format!("failed to copy bundled asset to artifact: {asset} => {bundled_asset}")
             })?;
     }
 
     Ok(())
 }
 
-fn bundle_distributable(dist_graph: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
-    info!("bundling distributable: {}", distrib.file_path);
-    match &distrib.bundle {
-        BundleStyle::Zip => zip_distributable(dist_graph, distrib),
-        BundleStyle::Tar(compression) => tar_distributable(dist_graph, distrib, compression),
+fn bundle_artifact(dist_graph: &DistGraph, artifact: &ArtifactTarget) -> Result<()> {
+    info!("bundling artifact: {}", artifact.file_path);
+    match &artifact.bundle {
+        BundleStyle::Zip => zip_artifact(dist_graph, artifact),
+        BundleStyle::Tar(compression) => tar_artifact(dist_graph, artifact, compression),
+        BundleStyle::UncompressedFile => {
+            // Already handled by populate_artifact_dirs_with_built_assets
+            info!("artifact created at: {}", artifact.file_path);
+            Ok(())
+        }
     }
 }
 
-fn tar_distributable(
+fn tar_artifact(
     _dist_graph: &DistGraph,
-    distrib: &DistributableTarget,
+    artifact: &ArtifactTarget,
     compression: &CompressionImpl,
 ) -> Result<()> {
     // Set up the archive/compression
     // The contents of the zip (e.g. a tar)
-    let distrib_dir_name = &distrib.full_name;
-    let zip_contents_name = format!("{distrib_dir_name}.tar");
-    let final_zip_path = &distrib.file_path;
+    let artifact_dir_name = &artifact.full_name;
+    let zip_contents_name = format!("{artifact_dir_name}.tar");
+    let final_zip_path = &artifact.file_path;
     let final_zip_file = File::create(final_zip_path)
         .into_diagnostic()
-        .wrap_err_with(|| format!("failed to create file for distributable: {final_zip_path}"))?;
+        .wrap_err_with(|| format!("failed to create file for artifact: {final_zip_path}"))?;
 
     match compression {
         CompressionImpl::Gzip => {
@@ -831,12 +997,12 @@ fn tar_distributable(
             let mut tar = tar::Builder::new(zip_output);
 
             // Add the whole dir to the tar
-            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)
+            tar.append_dir_all(artifact_dir_name, &artifact.dir_path)
                 .into_diagnostic()
                 .wrap_err_with(|| {
                     format!(
                         "failed to copy directory into tar: {} => {}",
-                        distrib.dir_path, distrib_dir_name
+                        artifact.dir_path, artifact_dir_name
                     )
                 })?;
             // Finish up the tarring
@@ -857,12 +1023,12 @@ fn tar_distributable(
             let mut tar = tar::Builder::new(zip_output);
 
             // Add the whole dir to the tar
-            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)
+            tar.append_dir_all(artifact_dir_name, &artifact.dir_path)
                 .into_diagnostic()
                 .wrap_err_with(|| {
                     format!(
                         "failed to copy directory into tar: {} => {}",
-                        distrib.dir_path, distrib_dir_name
+                        artifact.dir_path, artifact_dir_name
                     )
                 })?;
             // Finish up the tarring
@@ -885,12 +1051,12 @@ fn tar_distributable(
             let mut tar = tar::Builder::new(zip_output);
 
             // Add the whole dir to the tar
-            tar.append_dir_all(distrib_dir_name, &distrib.dir_path)
+            tar.append_dir_all(artifact_dir_name, &artifact.dir_path)
                 .into_diagnostic()
                 .wrap_err_with(|| {
                     format!(
                         "failed to copy directory into tar: {} => {}",
-                        distrib.dir_path, distrib_dir_name
+                        artifact.dir_path, artifact_dir_name
                     )
                 })?;
             // Finish up the tarring
@@ -907,23 +1073,23 @@ fn tar_distributable(
         }
     }
 
-    info!("distributable created at: {}", final_zip_path);
+    info!("artifact created at: {}", final_zip_path);
     Ok(())
 }
 
-fn zip_distributable(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> Result<()> {
+fn zip_artifact(_dist_graph: &DistGraph, artifact: &ArtifactTarget) -> Result<()> {
     // Set up the archive/compression
-    let final_zip_path = &distrib.file_path;
+    let final_zip_path = &artifact.file_path;
     let final_zip_file = File::create(final_zip_path)
         .into_diagnostic()
-        .wrap_err_with(|| format!("failed to create file for distributable: {final_zip_path}"))?;
+        .wrap_err_with(|| format!("failed to create file for artifact: {final_zip_path}"))?;
 
     // Wrap our file in compression
     let mut zip = ZipWriter::new(final_zip_file);
 
-    let dir = std::fs::read_dir(&distrib.dir_path)
+    let dir = std::fs::read_dir(&artifact.dir_path)
         .into_diagnostic()
-        .wrap_err_with(|| format!("failed to read distributable dir: {}", distrib.dir_path))?;
+        .wrap_err_with(|| format!("failed to read artifact dir: {}", artifact.dir_path))?;
     for entry in dir {
         let entry = entry.into_diagnostic()?;
         if entry.file_type().into_diagnostic()?.is_file() {
@@ -951,7 +1117,7 @@ fn zip_distributable(_dist_graph: &DistGraph, distrib: &DistributableTarget) -> 
         .into_diagnostic()
         .wrap_err_with(|| format!("failed to write archive: {final_zip_path}"))?;
     // Drop the file to close it
-    info!("distributable created at: {}", final_zip_path);
+    info!("artifact created at: {}", final_zip_path);
     Ok(())
 }
 
@@ -1014,6 +1180,18 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         manifest_path,
         root_package,
     })
+}
+
+fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
+    if target.contains("windows-msvc") {
+        Some(SymbolKind::Pdb)
+    } else if target.contains("macos") {
+        Some(SymbolKind::Dsym)
+    } else {
+        // Linux has DWPs but cargo doesn't properly uplift them
+        // See: https://github.com/rust-lang/cargo/pull/11384
+        None
+    }
 }
 
 /// Run 'cargo dist init'

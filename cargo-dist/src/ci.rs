@@ -82,7 +82,7 @@ const GITHUB_CI_PART2: &str = r###"
           cargo dist --output-format=json > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
-          cat dist-manifest.json | jq --raw-output ".releases[].distributables[].path" > uploads.txt
+          cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
           echo "uploading..."
           cat uploads.txt
           gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
