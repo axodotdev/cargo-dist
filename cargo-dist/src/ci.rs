@@ -58,8 +58,7 @@ jobs:
     strategy:
       matrix:
         # For these target platforms
-        include:
-"###;
+        include:"###;
 
 const GITHUB_CI_PART2: &str = r###"
     runs-on: ${{ matrix.os }}
@@ -124,8 +123,9 @@ fn write_github_ci(f: &mut File) -> Result<(), std::io::Error> {
     use std::io::Write;
 
     let targets = [
-        ("aarch64-unknown-linux-gnu", "ubuntu-latest"),
-        ("aarch64-apple-darwin", "macos-latest"),
+        // cross-compiling not yet impl'd
+        // ("aarch64-unknown-linux-gnu", "ubuntu-latest"),
+        // ("aarch64-apple-darwin", "macos-latest"),
         ("x86_64-unknown-linux-gnu", "ubuntu-latest"),
         ("x86_64-apple-darwin", "macos-latest"),
         ("x86_64-pc-windows-msvc", "windows-latest"),
