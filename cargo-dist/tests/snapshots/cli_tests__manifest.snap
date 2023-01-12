@@ -7,15 +7,15 @@ stdout:
   "releases": [
     {
       "app_name": "cargo-dist",
-      "app_version": "0.2.1-prerelease9",
+      "app_version": "0.2.2-prerelease1",
       "artifacts": [
         {
-          "name": "cargo-dist-v0.2.1-prerelease9-x86_64-pc-windows-msvc.pdb",
+          "name": "cargo-dist-v0.2.2-prerelease1-x86_64-pc-windows-msvc.pdb",
           "kind": "symbols",
           "target_triple": "x86_64-pc-windows-msvc"
         },
         {
-          "name": "cargo-dist-v0.2.1-prerelease9-x86_64-pc-windows-msvc.zip",
+          "name": "cargo-dist-v0.2.2-prerelease1-x86_64-pc-windows-msvc.zip",
           "kind": "executable-zip",
           "target_triple": "x86_64-pc-windows-msvc",
           "assets": [
@@ -23,12 +23,12 @@ stdout:
               "name": "cargo-dist",
               "path": "cargo-dist.exe",
               "kind": "executable",
-              "symbols_artifact": "cargo-dist-v0.2.1-prerelease9-x86_64-pc-windows-msvc.pdb"
+              "symbols_artifact": "cargo-dist-v0.2.2-prerelease1-x86_64-pc-windows-msvc.pdb"
             }
           ]
         },
         {
-          "name": "cargo-dist-v0.2.1-prerelease9-x86_64-apple-darwin.tar.xz",
+          "name": "cargo-dist-v0.2.2-prerelease1-x86_64-apple-darwin.tar.xz",
           "kind": "executable-zip",
           "target_triple": "x86_64-apple-darwin",
           "assets": [
@@ -40,7 +40,7 @@ stdout:
           ]
         },
         {
-          "name": "cargo-dist-v0.2.1-prerelease9-x86_64-unknown-linux-gnu.tar.xz",
+          "name": "cargo-dist-v0.2.2-prerelease1-x86_64-unknown-linux-gnu.tar.xz",
           "kind": "executable-zip",
           "target_triple": "x86_64-unknown-linux-gnu",
           "assets": [

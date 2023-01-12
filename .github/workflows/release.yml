@@ -32,6 +32,9 @@ on:
 env:
   ALL_CARGO_DIST_TARGET_ARGS: --target=x86_64-unknown-linux-gnu --target=x86_64-apple-darwin --target=x86_64-pc-windows-msvc 
   ALL_CARGO_DIST_INSTALLER_ARGS: --installer=github-shell --installer=github-powershell 
+  CARGO_DIST_VERSION: v0.2.2-prerelease1
+  CARGO_DIST_INSTALL_UNIX: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/$CARGO_DIST_VERSION/installer.sh | sh
+  CARGO_DIST_INSTALL_WINDOWS: irm 'https://github.com/axodotdev/cargo-dist/releases/download/$CARGO_DIST_VERSION/installer.ps1' | iex
 
 jobs:
   # Create the Github Release™️ so the packages have something to be uploaded to
@@ -60,10 +63,13 @@ jobs:
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-20.04
+          install-dist: $CARGO_DIST_INSTALL_UNIX
         - target: x86_64-apple-darwin
           os: macos-11
+          install-dist: $CARGO_DIST_INSTALL_UNIX
         - target: x86_64-pc-windows-msvc
           os: windows-2019
+          install-dist: $CARGO_DIST_INSTALL_WINDOWS
 
     runs-on: ${{ matrix.os }}
     env:
@@ -73,9 +79,7 @@ jobs:
       - name: Install Rust
         run: rustup update stable && rustup default stable
       - name: Install cargo-dist
-        # Currently we install cargo-dist from path, in the future when it's
-        # published on crates.io or has prebuilt binaries, we'll do better.
-        run: cargo install --path ./cargo-dist
+        run: $CARGO_DIST_INSTALL_UNIX
       - name: Run cargo-dist
         # This logic is a bit janky because it's trying to be a polyglot between
         # powershell and bash since this will run on windows, macos, and linux!
@@ -102,9 +106,7 @@ jobs:
       - name: Install Rust
         run: rustup update stable && rustup default stable
       - name: Install cargo-dist
-        # Currently we install cargo-dist from path, in the future when it's
-        # published on crates.io or has prebuilt binaries, we'll do better.
-        run: cargo install --path ./cargo-dist
+        run: ${{ matrix.install-dist }}
       - name: Run cargo-dist manifest
         run: |
           cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json

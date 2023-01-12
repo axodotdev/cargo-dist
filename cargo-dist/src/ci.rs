@@ -75,9 +75,7 @@ const GITHUB_CI_ARTIFACT_TASKS: &str = r###"
       - name: Install Rust
         run: rustup update stable && rustup default stable
       - name: Install cargo-dist
-        # Currently we install cargo-dist from git, in the future when it's
-        # published on crates.io or has prebuilt binaries, we'll do better.
-        run: cargo install --git https://github.com/axodotdev/cargo-dist/
+        run: $CARGO_DIST_INSTALL_UNIX
       - name: Run cargo-dist
         # This logic is a bit janky because it's trying to be a polyglot between
         # powershell and bash since this will run on windows, macos, and linux!
@@ -104,9 +102,7 @@ const GITHUB_CI_ARTIFACT_TASKS: &str = r###"
       - name: Install Rust
         run: rustup update stable && rustup default stable
       - name: Install cargo-dist
-        # Currently we install cargo-dist from git, in the future when it's
-        # published on crates.io or has prebuilt binaries, we'll do better.
-        run: cargo install --git https://github.com/axodotdev/cargo-dist/
+        run: ${{ matrix.install-dist }}
       - name: Run cargo-dist manifest
         run: |
           cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
@@ -195,6 +191,8 @@ fn write_github_ci(
     // Write out the current version
     let dist_version = env!("CARGO_PKG_VERSION");
     writeln!(f, "  CARGO_DIST_VERSION: v{dist_version}")?;
+    writeln!(f, "  CARGO_DIST_INSTALL_UNIX: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/$CARGO_DIST_VERSION/installer.sh | sh")?;
+    writeln!(f, "  CARGO_DIST_INSTALL_WINDOWS: irm 'https://github.com/axodotdev/cargo-dist/releases/download/$CARGO_DIST_VERSION/installer.ps1' | iex")?;
 
     writeln!(f, "{GITHUB_CI_CREATE_RELEASE}")?;
 
@@ -205,6 +203,12 @@ fn write_github_ci(
         };
         writeln!(f, "        - target: {target}")?;
         writeln!(f, "          os: {os}")?;
+        let install_cmd = if target.contains("windows") {
+          "$CARGO_DIST_INSTALL_WINDOWS"
+        } else {
+          "$CARGO_DIST_INSTALL_UNIX"
+        };
+        writeln!(f, "          install-dist: {install_cmd}")?;
     }
 
     writeln!(f, "{GITHUB_CI_ARTIFACT_TASKS}")?;
