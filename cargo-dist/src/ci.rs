@@ -117,7 +117,7 @@ const GITHUB_CI_ARTIFACT_TASKS: &str = r###"
 
 const GITHUB_CI_INSTALLERS: &str = r###"      - name: Run cargo-dist --installer=...
         run: |
-          cargo dist --output-format=json --no-build $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
+          cargo dist --output-format=json --no-builds $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
           cat dist-manifest.json | jq --raw-output '.releases[].artifacts[] | select(.kind == "installer") | .path' > uploads.txt
