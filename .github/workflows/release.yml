@@ -30,7 +30,8 @@ on:
       - v[0-9]+.*
 
 env:
-  ALL_CARGO_DIST_TARGET_ARGS: --target=x86_64-unknown-linux-gnu --target=x86_64-apple-darwin --target=x86_64-pc-windows-msvc 
+  ALL_CARGO_DIST_TARGET_ARGS: --target=x86_64-unknown-linux-musl --target=x86_64-apple-darwin --target=x86_64-pc-windows-msvc 
+  ALL_CARGO_DIST_INSTALLER_ARGS: --installer=github-shell 
 
 jobs:
   # Create the Github Release™️ so the packages have something to be uploaded to
@@ -57,12 +58,12 @@ jobs:
       matrix:
         # For these target platforms
         include:
-        - target: x86_64-unknown-linux-gnu
-          os: ubuntu-latest
+        - target: x86_64-unknown-linux-musl
+          os: ubuntu-20.04
         - target: x86_64-apple-darwin
-          os: macos-latest
+          os: macos-11
         - target: x86_64-pc-windows-msvc
-          os: windows-latest
+          os: windows-2019
 
     runs-on: ${{ matrix.os }}
     env:
@@ -72,7 +73,7 @@ jobs:
       - name: Install Rust
         run: rustup update stable && rustup default stable
       - name: Install cargo-dist
-        # Currently we install cargo-dist from the local repo, in the future when it's
+        # Currently we install cargo-dist from path, in the future when it's
         # published on crates.io or has prebuilt binaries, we'll do better.
         run: cargo install --path ./cargo-dist
       - name: Run cargo-dist
@@ -81,7 +82,7 @@ jobs:
         # The two platforms don't agree on how to talk about env vars but they
         # do agree on 'cat' and '$()' so we use that to marshal values between commmands.
         run: |
-          cargo dist --output-format=json > dist-manifest.json
+          cargo dist --target=${{ matrix.target }} --output-format=json > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
           cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
@@ -101,17 +102,26 @@ jobs:
       - name: Install Rust
         run: rustup update stable && rustup default stable
       - name: Install cargo-dist
-        # Currently we install cargo-dist from the local repo, in the future when it's
+        # Currently we install cargo-dist from path, in the future when it's
         # published on crates.io or has prebuilt binaries, we'll do better.
         run: cargo install --path ./cargo-dist
-      - name: Run cargo-dist
+      - name: Run cargo-dist manifest
         run: |
-          cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS > dist-manifest.json
-          echo "dist ran successfully"
+          cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
+          echo "dist manifest ran successfully"
           cat dist-manifest.json
           gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
-          echo "uploaded!"
-
+          echo "uploaded manifest!"
+      - name: Run cargo-dist --installer=...
+        run: |
+          cargo dist --output-format=json --no-build $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
+          echo "dist ran successfully"
+          cat dist-manifest.json
+          cat dist-manifest.json | jq --raw-output '.releases[].artifacts[] | select(.kind == "installer") | .path' > uploads.txt
+          echo "uploading..."
+          cat uploads.txt
+          gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
+          echo "uploaded installers!"
 
   # Mark the Github Release™️ as a non-draft now that everything has succeeded!
   publish-release:
