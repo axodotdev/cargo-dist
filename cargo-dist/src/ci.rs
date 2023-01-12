@@ -65,7 +65,7 @@ jobs:
         # For these target platforms
         include:"###;
 
-const GITHUB_CI_ARTIFACT_TASKS: &str = r###"
+const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"
     runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -100,9 +100,8 @@ const GITHUB_CI_ARTIFACT_TASKS: &str = r###"
       - uses: actions/checkout@v3
       - name: Install Rust
         run: rustup update stable && rustup default stable
-      - name: Install cargo-dist
-        run: ${{ env.CARGO_DIST_INSTALL_UNIX }}
-      - name: Run cargo-dist manifest
+      - name: Install cargo-dist"###;
+const GITHUB_CI_ARTIFACT_TASKS2: &str = r###"      - name: Run cargo-dist manifest
         run: |
           cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist manifest ran successfully"
@@ -190,8 +189,10 @@ fn write_github_ci(
     // Write out the current version
     let dist_version = env!("CARGO_PKG_VERSION");
     //writeln!(f, "  CARGO_DIST_VERSION: v{dist_version}")?;
-    writeln!(f, "  CARGO_DIST_INSTALL_UNIX: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v{dist_version}/installer.sh | sh")?;
-    writeln!(f, "  CARGO_DIST_INSTALL_WINDOWS: irm 'https://github.com/axodotdev/cargo-dist/releases/download/v{dist_version}/installer.ps1' | iex")?;
+    let install_unix = format!("curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v{dist_version}/installer.sh | sh");
+    let install_windows = format!("irm 'https://github.com/axodotdev/cargo-dist/releases/download/v{dist_version}/installer.ps1' | iex");
+    // writeln!(f, "  CARGO_DIST_INSTALL_UNIX: {install_unix}")?;
+    // writeln!(f, "  CARGO_DIST_INSTALL_WINDOWS: {install_windows}")?;
 
     writeln!(f, "{GITHUB_CI_CREATE_RELEASE}")?;
 
@@ -203,14 +204,16 @@ fn write_github_ci(
         writeln!(f, "        - target: {target}")?;
         writeln!(f, "          os: {os}")?;
         let install_cmd = if target.contains("windows") {
-            "${{ env.CARGO_DIST_INSTALL_WINDOWS }}"
+            &install_windows
         } else {
-            "${{ env.CARGO_DIST_INSTALL_UNIX }}"
+            &install_unix
         };
         writeln!(f, "          install-dist: {install_cmd}")?;
     }
 
-    writeln!(f, "{GITHUB_CI_ARTIFACT_TASKS}")?;
+    writeln!(f, "{GITHUB_CI_ARTIFACT_TASKS1}")?;
+    writeln!(f, "        run: {install_unix}")?;
+    writeln!(f, "{GITHUB_CI_ARTIFACT_TASKS2}")?;
 
     if !installers.is_empty() {
         writeln!(f, "{GITHUB_CI_INSTALLERS}")?;
