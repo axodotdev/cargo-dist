@@ -1,0 +1,70 @@
+---
+source: cargo-dist/tests/cli-tests.rs
+expression: format_outputs(&output)
+---
+stdout:
+{
+  "releases": [
+    {
+      "app_name": "cargo-dist",
+      "app_version": "0.2.1-prerelease3",
+      "artifacts": [
+        {
+          "name": "cargo-dist-v0.2.1-prerelease3-x86_64-pc-windows-msvc.pdb",
+          "kind": "symbols",
+          "target_triple": "x86_64-pc-windows-msvc"
+        },
+        {
+          "name": "cargo-dist-v0.2.1-prerelease3-x86_64-pc-windows-msvc.zip",
+          "kind": "executable-zip",
+          "target_triple": "x86_64-pc-windows-msvc",
+          "assets": [
+            {
+              "name": "cargo-dist",
+              "path": "cargo-dist.exe",
+              "kind": "executable",
+              "symbols_artifact": "cargo-dist-v0.2.1-prerelease3-x86_64-pc-windows-msvc.pdb"
+            }
+          ]
+        },
+        {
+          "name": "cargo-dist-v0.2.1-prerelease3-x86_64-apple-darwin.dsym",
+          "kind": "symbols",
+          "target_triple": "x86_64-apple-darwin"
+        },
+        {
+          "name": "cargo-dist-v0.2.1-prerelease3-x86_64-apple-darwin.tar.xz",
+          "kind": "executable-zip",
+          "target_triple": "x86_64-apple-darwin",
+          "assets": [
+            {
+              "name": "cargo-dist",
+              "path": "cargo-dist",
+              "kind": "executable",
+              "symbols_artifact": "cargo-dist-v0.2.1-prerelease3-x86_64-apple-darwin.dsym"
+            }
+          ]
+        },
+        {
+          "name": "cargo-dist-v0.2.1-prerelease3-x86_64-unknown-linux-gnu.tar.xz",
+          "kind": "executable-zip",
+          "target_triple": "x86_64-unknown-linux-gnu",
+          "assets": [
+            {
+              "name": "cargo-dist",
+              "path": "cargo-dist",
+              "kind": "executable"
+            }
+          ]
+        },
+        {
+          "name": "installer.sh",
+          "kind": "installer"
+        }
+      ]
+    }
+  ]
+}
+
+stderr:
+

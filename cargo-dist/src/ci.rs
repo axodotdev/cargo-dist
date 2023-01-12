@@ -4,7 +4,9 @@ use camino::Utf8PathBuf;
 use miette::{IntoDiagnostic, WrapErr};
 use tracing::warn;
 
-const GITHUB_CI_PART1: &str = r###"
+use crate::InstallerStyle;
+
+const GITHUB_CI_TRIGGER: &str = r###"
 # CI that:
 #
 # * checks for a Git Tag that looks like a release ("v1.2.0")
@@ -37,7 +39,7 @@ on:
 
 env:"###;
 
-const GITHUB_CI_PART2: &str = r###"
+const GITHUB_CI_CREATE_RELEASE: &str = r###"
 jobs:
   # Create the Github Release™️ so the packages have something to be uploaded to
   create-release:
@@ -64,7 +66,7 @@ jobs:
         # For these target platforms
         include:"###;
 
-const GITHUB_CI_PART3: &str = r###"
+const GITHUB_CI_ARTIFACT_TASKS: &str = r###"
     runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -105,15 +107,26 @@ const GITHUB_CI_PART3: &str = r###"
         # Currently we install cargo-dist from git, in the future when it's
         # published on crates.io or has prebuilt binaries, we'll do better.
         run: cargo install --git https://github.com/axodotdev/cargo-dist/
-      - name: Run cargo-dist
+      - name: Run cargo-dist manifest
         run: |
-          cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS > dist-manifest.json
-          echo "dist ran successfully"
+          cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
+          echo "dist manifest ran successfully"
           cat dist-manifest.json
           gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
-          echo "uploaded!"
+          echo "uploaded manifest!""###;
 
+const GITHUB_CI_INSTALLERS: &str = r###"      - name: Run cargo-dist --installer=...
+        run: |
+          cargo dist --output-format=json --no-build $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
+          echo "dist ran successfully"
+          cat dist-manifest.json
+          cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
+          echo "uploading..."
+          cat uploads.txt
+          gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
+          echo "uploaded installers!""###;
 
+const GITHUB_CI_FINISH_RELEASE: &str = r###"
   # Mark the Github Release™️ as a non-draft now that everything has succeeded!
   publish-release:
     needs: [create-release, upload-artifacts, upload-manifest]
@@ -130,6 +143,7 @@ const GITHUB_CI_PART3: &str = r###"
 pub fn generate_github_ci(
     workspace_dir: &Utf8PathBuf,
     targets: &[String],
+    installers: &[InstallerStyle],
 ) -> Result<(), miette::Report> {
     const GITHUB_CI_DIR: &str = ".github/workflows/";
     const GITHUB_CI_FILE: &str = "release.yml";
@@ -143,29 +157,42 @@ pub fn generate_github_ci(
     let mut file = File::create(ci_file)
         .into_diagnostic()
         .wrap_err("Failed to create ci file")?;
-    write_github_ci(&mut file, targets)
+    write_github_ci(&mut file, targets, installers)
         .into_diagnostic()
         .wrap_err("Failed to write to CI file")?;
     Ok(())
 }
 
-fn write_github_ci(f: &mut File, targets: &[String]) -> Result<(), std::io::Error> {
+fn write_github_ci(
+    f: &mut File,
+    targets: &[String],
+    installers: &[InstallerStyle],
+) -> Result<(), std::io::Error> {
     use std::io::Write;
 
-    writeln!(f, "{GITHUB_CI_PART1}")?;
+    writeln!(f, "{GITHUB_CI_TRIGGER}")?;
 
     // Write out target args
     let mut target_args = Vec::new();
     for target in targets {
         write!(&mut target_args, "--target={target} ")?;
     }
-    writeln!(
-        f,
-        "  ALL_CARGO_DIST_TARGET_ARGS: {}",
-        String::from_utf8(target_args).unwrap()
-    )?;
+    let target_args = String::from_utf8(target_args).unwrap();
+    writeln!(f, "  ALL_CARGO_DIST_TARGET_ARGS: {target_args}")?;
 
-    writeln!(f, "{GITHUB_CI_PART2}")?;
+    // Write out the installer args
+    let mut installer_args = Vec::new();
+    for installer in installers {
+        let installer = match installer {
+            InstallerStyle::GithubShell => "github-shell",
+            InstallerStyle::GithubPowershell => "github-powershell",
+        };
+        write!(&mut installer_args, "--installer={installer} ")?;
+    }
+    let installer_args = String::from_utf8(installer_args).unwrap();
+    writeln!(f, "  ALL_CARGO_DIST_INSTALLER_ARGS: {installer_args}")?;
+
+    writeln!(f, "{GITHUB_CI_CREATE_RELEASE}")?;
 
     for target in targets {
         let Some(os) = github_os_for_target(target) else {
@@ -176,8 +203,13 @@ fn write_github_ci(f: &mut File, targets: &[String]) -> Result<(), std::io::Erro
         writeln!(f, "          os: {os}")?;
     }
 
-    writeln!(f, "{GITHUB_CI_PART3}")?;
+    writeln!(f, "{GITHUB_CI_ARTIFACT_TASKS}")?;
 
+    if !installers.is_empty() {
+        writeln!(f, "{GITHUB_CI_INSTALLERS}")?;
+    }
+
+    writeln!(f, "{GITHUB_CI_FINISH_RELEASE}")?;
     Ok(())
 }
 

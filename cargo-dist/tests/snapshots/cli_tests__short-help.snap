@@ -16,13 +16,16 @@ Commands:
   help         Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help information (use `--help` for more detail)
-  -V, --version  Print version information
+      --no-builds  Don't actually do any builds, this can be useful for generating only installers
+  -h, --help       Print help information (use `--help` for more detail)
+  -V, --version    Print version information
 
 GLOBAL OPTIONS:
       --verbose <VERBOSE>              How verbose logging should be (log level) [default: warn] [possible values: off, error, warn, info, debug, trace]
       --output-format <OUTPUT_FORMAT>  The format of the output [default: human] [possible values: human, json]
+      --no-local-paths                 Strip local paths from output (e.g. in the dist manifest json)
       --target <TARGET>                Target triples we want to build
+      --installer <INSTALLER>          Installers we want to build [possible values: github-shell, github-powershell]
 
 stderr:
 

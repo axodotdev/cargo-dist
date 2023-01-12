@@ -41,10 +41,20 @@ pub struct Cli {
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub output_format: OutputFormat,
 
+    /// Strip local paths from output (e.g. in the dist manifest json)
+    #[clap(long)]
+    #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
+    pub no_local_paths: bool,
+
     /// Target triples we want to build
     #[clap(long)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub target: Vec<String>,
+
+    /// Installers we want to build
+    #[clap(long)]
+    #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
+    pub installer: Vec<InstallerStyle>,
 
     // Add the args from the "real" build command
     #[clap(flatten)]
@@ -75,7 +85,11 @@ pub enum Commands {
 }
 
 #[derive(Args)]
-pub struct BuildArgs {}
+pub struct BuildArgs {
+    /// Don't actually do any builds, this can be useful for generating only installers
+    #[clap(long)]
+    pub no_builds: bool,
+}
 
 #[derive(Args)]
 pub struct InitArgs {
@@ -102,6 +116,25 @@ impl CiStyle {
     pub fn to_lib(self) -> cargo_dist::CiStyle {
         match self {
             CiStyle::Github => cargo_dist::CiStyle::Github,
+        }
+    }
+}
+
+/// A style of installer to generate
+#[derive(ValueEnum, Clone, Copy)]
+pub enum InstallerStyle {
+    /// Generates a shell script that fetches from github ci
+    GithubShell,
+    /// Generates a powershell script that fetches from github ci
+    GithubPowershell,
+}
+
+impl InstallerStyle {
+    /// Convert the application version of this enum to the library version
+    pub fn to_lib(self) -> cargo_dist::InstallerStyle {
+        match self {
+            InstallerStyle::GithubShell => cargo_dist::InstallerStyle::GithubShell,
+            InstallerStyle::GithubPowershell => cargo_dist::InstallerStyle::GithubPowershell,
         }
     }
 }

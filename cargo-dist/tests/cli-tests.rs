@@ -66,3 +66,23 @@ fn test_short_help() {
     insta::assert_snapshot!("short-help", format_outputs(&output));
     assert!(output.status.success(), "{}", output.status);
 }
+
+#[test]
+fn test_manifest() {
+    let output = Command::new(BIN)
+        .arg("dist")
+        .arg("manifest")
+        .arg("--no-local-paths")
+        .arg("--output-format=json")
+        .arg("--target=x86_64-pc-windows-msvc")
+        .arg("--target=x86_64-apple-darwin")
+        .arg("--target=x86_64-unknown-linux-gnu")
+        .arg("--installer=github-shell")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .unwrap();
+
+    insta::assert_snapshot!(format_outputs(&output));
+    assert!(output.status.success(), "{}", output.status);
+}

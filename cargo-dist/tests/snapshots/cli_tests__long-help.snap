@@ -23,6 +23,9 @@ Commands:
           Print this message or the help of the given subcommand(s)
 
 Options:
+      --no-builds
+          Don't actually do any builds, this can be useful for generating only installers
+
   -h, --help
           Print help information (use `-h` for a summary)
 
@@ -42,8 +45,18 @@ GLOBAL OPTIONS:
           [default: human]
           [possible values: human, json]
 
+      --no-local-paths
+          Strip local paths from output (e.g. in the dist manifest json)
+
       --target <TARGET>
           Target triples we want to build
+
+      --installer <INSTALLER>
+          Installers we want to build
+
+          Possible values:
+          - github-shell:      Generates a shell script that fetches from github ci
+          - github-powershell: Generates a powershell script that fetches from github ci
 
 stderr:
 
