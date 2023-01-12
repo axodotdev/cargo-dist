@@ -95,7 +95,7 @@ install() {
     local _cargo_home_bin="~/.cargo/bin/"
     local _bin="$1"
     mkdir -p "$_cargo_home_bin"
-    cp _bin _cargo_home_bin
+    cp "$_bin" "$_cargo_home_bin"
 }
 
 get_architecture() {
