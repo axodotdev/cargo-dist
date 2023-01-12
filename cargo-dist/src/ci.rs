@@ -6,8 +6,7 @@ use tracing::warn;
 
 use crate::InstallerStyle;
 
-const GITHUB_CI_TRIGGER: &str = r###"
-# CI that:
+const GITHUB_CI_TRIGGER: &str = r###"# CI that:
 #
 # * checks for a Git Tag that looks like a release ("v1.2.0")
 # * creates a Github Release™️
@@ -190,9 +189,9 @@ fn write_github_ci(
 
     // Write out the current version
     let dist_version = env!("CARGO_PKG_VERSION");
-    writeln!(f, "  CARGO_DIST_VERSION: v{dist_version}")?;
-    writeln!(f, "  CARGO_DIST_INSTALL_UNIX: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/${{{{ env.CARGO_DIST_VERSION }}}}/installer.sh | sh")?;
-    writeln!(f, "  CARGO_DIST_INSTALL_WINDOWS: irm 'https://github.com/axodotdev/cargo-dist/releases/download/${{{{ env.CARGO_DIST_VERSION }}}}/installer.ps1' | iex")?;
+    //writeln!(f, "  CARGO_DIST_VERSION: v{dist_version}")?;
+    writeln!(f, "  CARGO_DIST_INSTALL_UNIX: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v{dist_version}/installer.sh | sh")?;
+    writeln!(f, "  CARGO_DIST_INSTALL_WINDOWS: irm 'https://github.com/axodotdev/cargo-dist/releases/download/v{dist_version}/installer.ps1' | iex")?;
 
     writeln!(f, "{GITHUB_CI_CREATE_RELEASE}")?;
 
