@@ -214,12 +214,15 @@ fn write_github_ci(
 }
 
 fn github_os_for_target(target: &str) -> Option<&'static str> {
+    // We want to default to older runners to minimize the places
+    // where random system dependencies can creep in and be very
+    // recent. This helps with portability!
     if target.contains("linux") {
-        Some("ubuntu-latest")
+        Some("ubuntu-20.04")
     } else if target.contains("apple") {
-        Some("macos-latest")
+        Some("macos-11")
     } else if target.contains("windows") {
-        Some("windows-latest")
+        Some("windows-2019")
     } else {
         None
     }
