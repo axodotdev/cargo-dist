@@ -211,7 +211,7 @@ pub(crate) struct ArtifactTarget {
     /// The target platform
     ///
     /// i.e. `x86_64-pc-windows-msvc`
-    target_triple: Option<String>,
+    target_triples: Vec<String>,
     /// The name of the directory this artifact's contents will be stored in (if necessary).
     ///
     /// This directory is technically a transient thing but it will show up as the name of
@@ -557,7 +557,7 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
                 let sym_artifact_idx = ArtifactTargetIdx(artifacts.len());
                 artifacts.push(ArtifactTarget {
-                    target_triple: Some(target_triple.clone()),
+                    target_triples: vec![target_triple.clone()],
                     dir_name: None,
                     dir_path: None,
                     file_name: sym_file_name,
@@ -580,7 +580,7 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
         let exe_artifact_idx = ArtifactTargetIdx(artifacts.len());
         artifacts.push(ArtifactTarget {
-            target_triple: Some(target_triple),
+            target_triples: vec![target_triple],
             dir_name: Some(exe_dir_name),
             dir_path: Some(exe_dir_path),
             file_path: exe_bundle_path,
@@ -605,11 +605,18 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
             let file_path;
             let file_name;
             let installer_impl;
+            let target_triples;
 
             match installer {
                 InstallerStyle::GithubShell => {
                     file_name = "installer.sh".to_owned();
                     file_path = dist_dir.join(&file_name);
+                    // All the triples we know about, sans windows (windows-gnu isn't handled...)
+                    target_triples = triples
+                        .iter()
+                        .filter(|s| !s.contains("windows"))
+                        .cloned()
+                        .collect::<Vec<_>>();
                     installer_impl = InstallerImpl::GithubShell(InstallerInfo {
                         app_name: app_name.clone(),
                         app_version: format!("v{version}"),
@@ -619,6 +626,8 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
                 InstallerStyle::GithubPowershell => {
                     file_name = "installer.ps1".to_owned();
                     file_path = dist_dir.join(&file_name);
+                    // Currently hardcoded to this one windows triple
+                    target_triples = vec!["x86_64-pc-windows-msvc".to_owned()];
                     installer_impl = InstallerImpl::GithubPowershell(InstallerInfo {
                         app_name: app_name.clone(),
                         app_version: format!("v{version}"),
@@ -629,7 +638,7 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
             let installer_artifact_idx = ArtifactTargetIdx(artifacts.len());
             artifacts.push(ArtifactTarget {
-                target_triple: None,
+                target_triples,
                 dir_name: None,
                 dir_path: None,
                 file_path,
@@ -675,7 +684,22 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                         } else {
                             Some(artifact.file_path.clone().into_std_path_buf())
                         },
-                        target_triple: artifact.target_triple.clone(),
+                        target_triples: artifact.target_triples.clone(),
+                        install_hint: match &artifact.bundle {
+                            BundleStyle::Installer(InstallerImpl::GithubShell(info)) => {
+                                let InstallerInfo { repo_url, app_version, .. } = info;
+                                let install_unix = format!("curl --proto '=https' --tlsv1.2 -L -sSf {repo_url}/releases/download/{app_version}/installer.sh | sh");
+                                Some(install_unix)
+                            }
+                            BundleStyle::Installer(InstallerImpl::GithubPowershell(info)) => {
+                                let InstallerInfo { repo_url, app_version, .. } = info;
+                                let install_windows = format!("irm '{repo_url}/releases/download/{app_version}/installer.ps1' | iex");
+                                Some(install_windows)
+                            }
+                            BundleStyle::Zip => None,
+                            BundleStyle::Tar(_) => None,
+                            BundleStyle::UncompressedFile => None,
+                        },
                         assets: artifact
                             .built_assets
                             .iter()

@@ -7,30 +7,36 @@ stdout:
   "releases": [
     {
       "app_name": "cargo-dist",
-      "app_version": "0.2.2-prerelease5",
+      "app_version": "0.2.2-prerelease6",
       "artifacts": [
         {
-          "name": "cargo-dist-v0.2.2-prerelease5-x86_64-pc-windows-msvc.pdb",
+          "name": "cargo-dist-v0.2.2-prerelease6-x86_64-pc-windows-msvc.pdb",
           "kind": "symbols",
-          "target_triple": "x86_64-pc-windows-msvc"
+          "target_triples": [
+            "x86_64-pc-windows-msvc"
+          ]
         },
         {
-          "name": "cargo-dist-v0.2.2-prerelease5-x86_64-pc-windows-msvc.zip",
+          "name": "cargo-dist-v0.2.2-prerelease6-x86_64-pc-windows-msvc.zip",
           "kind": "executable-zip",
-          "target_triple": "x86_64-pc-windows-msvc",
+          "target_triples": [
+            "x86_64-pc-windows-msvc"
+          ],
           "assets": [
             {
               "name": "cargo-dist",
               "path": "cargo-dist.exe",
               "kind": "executable",
-              "symbols_artifact": "cargo-dist-v0.2.2-prerelease5-x86_64-pc-windows-msvc.pdb"
+              "symbols_artifact": "cargo-dist-v0.2.2-prerelease6-x86_64-pc-windows-msvc.pdb"
             }
           ]
         },
         {
-          "name": "cargo-dist-v0.2.2-prerelease5-x86_64-apple-darwin.tar.xz",
+          "name": "cargo-dist-v0.2.2-prerelease6-x86_64-apple-darwin.tar.xz",
           "kind": "executable-zip",
-          "target_triple": "x86_64-apple-darwin",
+          "target_triples": [
+            "x86_64-apple-darwin"
+          ],
           "assets": [
             {
               "name": "cargo-dist",
@@ -40,9 +46,11 @@ stdout:
           ]
         },
         {
-          "name": "cargo-dist-v0.2.2-prerelease5-x86_64-unknown-linux-gnu.tar.xz",
+          "name": "cargo-dist-v0.2.2-prerelease6-x86_64-unknown-linux-gnu.tar.xz",
           "kind": "executable-zip",
-          "target_triple": "x86_64-unknown-linux-gnu",
+          "target_triples": [
+            "x86_64-unknown-linux-gnu"
+          ],
           "assets": [
             {
               "name": "cargo-dist",
@@ -53,11 +61,20 @@ stdout:
         },
         {
           "name": "installer.sh",
-          "kind": "installer"
+          "kind": "installer",
+          "target_triples": [
+            "x86_64-apple-darwin",
+            "x86_64-unknown-linux-gnu"
+          ],
+          "install_hint": "curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.2-prerelease6/installer.sh | sh"
         },
         {
           "name": "installer.ps1",
-          "kind": "installer"
+          "kind": "installer",
+          "target_triples": [
+            "x86_64-pc-windows-msvc"
+          ],
+          "install_hint": "irm 'https://github.com/axodotdev/cargo-dist/releases/download/v0.2.2-prerelease6/installer.ps1' | iex"
         }
       ]
     }

@@ -65,8 +65,7 @@ jobs:
         # For these target platforms
         include:"###;
 
-const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"
-    runs-on: ${{ matrix.os }}
+const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"    runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -103,7 +102,7 @@ const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"
       - name: Install cargo-dist"###;
 const GITHUB_CI_ARTIFACT_TASKS2: &str = r###"      - name: Run cargo-dist manifest
         run: |
-          cargo dist manifest --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
+          cargo dist manifest --no-local-paths --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist manifest ran successfully"
           cat dist-manifest.json
           gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json

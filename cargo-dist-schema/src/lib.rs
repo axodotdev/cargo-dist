@@ -32,14 +32,17 @@ pub struct Artifact {
     #[serde(flatten)]
     pub kind: ArtifactKind,
     /// The target triple of the bundle
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub target_triple: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub target_triples: Vec<String>,
     /// The location of the artifact on the local system
     #[serde(skip_serializing_if = "Option::is_none")]
     pub path: Option<PathBuf>,
     /// Assets included in the bundle (like executables)
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub assets: Vec<Asset>,
+    /// A string describing how to install this
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_hint: Option<String>,
 }
 
 /// An asset contained in an artifact (executable, license, etc.)

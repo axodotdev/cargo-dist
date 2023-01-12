@@ -87,7 +87,8 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
       ],
       "required": [
         "assets",
-        "name"
+        "name",
+        "target_triples"
       ],
       "properties": {
         "assets": {
@@ -96,6 +97,13 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
           "items": {
             "$ref": "#/definitions/Asset"
           }
+        },
+        "install_hint": {
+          "description": "A string describing how to install this",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "name": {
           "description": "The unique name of the artifact (e.g. `myapp-v1.0.0-x86_64-pc-windows-msvc.zip`)",
@@ -108,12 +116,12 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
             "null"
           ]
         },
-        "target_triple": {
+        "target_triples": {
           "description": "The target triple of the bundle",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
