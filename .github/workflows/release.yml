@@ -31,7 +31,7 @@ on:
 
 env:
   ALL_CARGO_DIST_TARGET_ARGS: --target=x86_64-unknown-linux-gnu --target=x86_64-apple-darwin --target=x86_64-pc-windows-msvc 
-  ALL_CARGO_DIST_INSTALLER_ARGS: --installer=github-shell 
+  ALL_CARGO_DIST_INSTALLER_ARGS: --installer=github-shell --installer=github-powershell 
 
 jobs:
   # Create the Github Release™️ so the packages have something to be uploaded to

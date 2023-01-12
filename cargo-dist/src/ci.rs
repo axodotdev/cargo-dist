@@ -192,6 +192,10 @@ fn write_github_ci(
     let installer_args = String::from_utf8(installer_args).unwrap();
     writeln!(f, "  ALL_CARGO_DIST_INSTALLER_ARGS: {installer_args}")?;
 
+    // Write out the current version
+    let dist_version = env!("CARGO_PKG_VERSION");
+    writeln!(f, "  CARGO_DIST_VERSION: v{dist_version}")?;
+
     writeln!(f, "{GITHUB_CI_CREATE_RELEASE}")?;
 
     for target in targets {
