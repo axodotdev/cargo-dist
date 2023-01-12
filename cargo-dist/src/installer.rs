@@ -92,8 +92,8 @@ download_binary_and_run_installer() {
 install() {
     # TODO: REWORK THE INSTALL STEP, THIS IS A JANK HACK
 
-    local _cargo_home_bin = "~/.cargo/bin/"
-    local _bin = "$1"
+    local _cargo_home_bin="~/.cargo/bin/"
+    local _bin="$1"
     mkdir -p "$_cargo_home_bin"
     cp _bin _cargo_home_bin
 }
