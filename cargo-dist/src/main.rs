@@ -218,7 +218,7 @@ fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Repor
 
 fn default_desktop_targets() -> Vec<String> {
     vec![
-        "x86_64-unknown-linux-musl".to_owned(),
+        "x86_64-unknown-linux-gnu".to_owned(),
         "x86_64-apple-darwin".to_owned(),
         "x86_64-pc-windows-msvc".to_owned(),
         // cross-compiles not yet supported
