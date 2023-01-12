@@ -84,7 +84,7 @@ const GITHUB_CI_ARTIFACT_TASKS: &str = r###"
         # The two platforms don't agree on how to talk about env vars but they
         # do agree on 'cat' and '$()' so we use that to marshal values between commmands.
         run: |
-          cargo dist --output-format=json > dist-manifest.json
+          cargo dist --target=${{ matrix.target }} --output-format=json > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
           cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
