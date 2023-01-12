@@ -120,7 +120,7 @@ const GITHUB_CI_INSTALLERS: &str = r###"      - name: Run cargo-dist --installer
           cargo dist --output-format=json --no-build $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
-          cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
+          cat dist-manifest.json | jq --raw-output '.releases[].artifacts[] | select(.kind == "installer") | .path' > uploads.txt
           echo "uploading..."
           cat uploads.txt
           gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
