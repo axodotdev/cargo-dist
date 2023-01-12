@@ -78,6 +78,7 @@ fn test_manifest() {
         .arg("--target=x86_64-apple-darwin")
         .arg("--target=x86_64-unknown-linux-gnu")
         .arg("--installer=github-shell")
+        .arg("--installer=github-powershell")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()

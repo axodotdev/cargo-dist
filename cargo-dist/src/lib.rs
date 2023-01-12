@@ -617,7 +617,7 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
                     });
                 }
                 InstallerStyle::GithubPowershell => {
-                    file_name = "installer.ps".to_owned();
+                    file_name = "installer.ps1".to_owned();
                     file_path = dist_dir.join(&file_name);
                     installer_impl = InstallerImpl::GithubPowershell(InstallerInfo {
                         app_name: app_name.clone(),
@@ -1593,6 +1593,8 @@ fn generate_installer(
         InstallerImpl::GithubShell(info) => {
             installer::generate_github_install_sh_script(target, info)
         }
-        InstallerImpl::GithubPowershell(_) => todo!(),
+        InstallerImpl::GithubPowershell(info) => {
+            installer::generate_github_install_ps_script(target, info)
+        }
     }
 }
