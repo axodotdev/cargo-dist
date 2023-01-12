@@ -4,8 +4,7 @@ use miette::{Context, IntoDiagnostic};
 
 use crate::{ArtifactTarget, InstallerInfo};
 
-const GITHUB_INSTALL_SH_SCRIPT_PART1: &str = r###" 
-#!/bin/bash
+const GITHUB_INSTALL_SH_SCRIPT_PART1: &str = r###"#!/bin/bash
 #
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
@@ -94,8 +93,8 @@ install() {
 
     local _cargo_home_bin=~/.cargo/bin/
     local _bin="$1"
-    mkdir -p "$_cargo_home_bin"
-    cp "$_bin" "$_cargo_home_bin"
+    mkdir -p $_cargo_home_bin
+    cp "$_bin" $_cargo_home_bin
 }
 
 get_architecture() {

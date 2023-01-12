@@ -1267,7 +1267,7 @@ fn zip_artifact(_dist_graph: &DistGraph, artifact: &ArtifactTarget) -> Result<()
 
 /// Get the path/command to invoke Cargo
 fn cargo() -> Result<String> {
-    let cargo = std::env::var("CARGO").expect("cargo didn't pass itself!?");
+    let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_owned());
     Ok(cargo)
 }
 
