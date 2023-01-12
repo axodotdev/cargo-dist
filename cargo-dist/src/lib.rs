@@ -780,6 +780,7 @@ fn build_cargo_target(
         target.target_triple, target.profile
     );
     // Run the build
+    let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
 
     // TODO: figure out a principled way for us to add things to RUSTFLAGS
     // without breaking everything. Cargo has some builtin ways like keys
@@ -814,6 +815,10 @@ fn build_cargo_target(
     // system, which vaguely specifies what APIs you're allowing yourself to use so
     // you can be compatible with any system at least that new (so the older the SDK,
     // the more compatible you are). Do we need to care about that? More Research Needed.
+
+    if target.target_triple.contains("windows-msvc") {
+        rustflags.push_str(" -Ctarget-feature=+crt-static");
+    }
 
     // TODO: maybe set RUSTFLAGS="-Cforce-frame-pointers=yes"
     //
@@ -876,6 +881,9 @@ fn build_cargo_target(
         .arg("--profile")
         .arg(&target.profile)
         .arg("--message-format=json")
+        .arg("--target")
+        .arg(&target.target_triple)
+        .env("RUSTFLAGS", rustflags)
         .stdout(std::process::Stdio::piped());
     if target.features.no_default_features {
         command.arg("--no-default-features");
