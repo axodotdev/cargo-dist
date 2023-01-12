@@ -141,9 +141,12 @@ fn print_json(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Erro
     Ok(())
 }
 
-fn cmd_dist(cli: &Cli, _args: &BuildArgs) -> Result<(), miette::Report> {
+fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::Config {
+        build: !args.no_builds,
+        no_local_paths: cli.no_local_paths,
         targets: cli.target.clone(),
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
     let report = do_dist(&config)?;
     let mut out = Term::stdout();
@@ -156,7 +159,10 @@ fn cmd_dist(cli: &Cli, _args: &BuildArgs) -> Result<(), miette::Report> {
 
 fn cmd_manifest(cli: &Cli, _args: &ManifestArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::Config {
+        build: true,
+        no_local_paths: cli.no_local_paths,
         targets: cli.target.clone(),
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
     let report = do_manifest(&config)?;
     let mut out = Term::stdout();
@@ -174,7 +180,12 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     } else {
         cli.target.clone()
     };
-    let config = cargo_dist::Config { targets };
+    let config = cargo_dist::Config {
+        build: true,
+        no_local_paths: cli.no_local_paths,
+        targets,
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+    };
     let args = cargo_dist::InitArgs {
         ci_styles: args.ci.iter().map(|ci| ci.to_lib()).collect(),
     };
@@ -193,7 +204,12 @@ fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Repor
     } else {
         cli.target.clone()
     };
-    let config = cargo_dist::Config { targets };
+    let config = cargo_dist::Config {
+        build: true,
+        no_local_paths: cli.no_local_paths,
+        targets,
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+    };
     let args = cargo_dist::GenerateCiArgs {
         ci_styles: args.style.iter().map(|ci| ci.to_lib()).collect(),
     };

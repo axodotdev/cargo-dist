@@ -82,6 +82,9 @@ pub enum ArtifactKind {
     /// Machine-readable metadata
     #[serde(rename = "dist-metadata")]
     DistMetadata,
+    /// Installer
+    #[serde(rename = "installer")]
+    Installer,
 }
 
 /// An executable artifact (exe/binary)

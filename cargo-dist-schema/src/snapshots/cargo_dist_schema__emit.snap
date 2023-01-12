@@ -68,6 +68,21 @@ expression: "serde_json::to_string_pretty(&schema).unwrap()"
               ]
             }
           }
+        },
+        {
+          "description": "Installer",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "installer"
+              ]
+            }
+          }
         }
       ],
       "required": [
