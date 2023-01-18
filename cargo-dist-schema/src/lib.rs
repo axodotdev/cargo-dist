@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 // FIXME: ideally these would be UTF8PathBufs but JsonSchema doesn't support (yet?)
 use std::path::PathBuf;
 
-/// The final report of cargo-dist
+/// A report of the releases and artifacts that cargo-dist generated
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DistManifest {
     /// The version of cargo-dist that generated this
@@ -47,7 +47,7 @@ pub struct Artifact {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub path: Option<PathBuf>,
-    /// Assets included in the bundle (like executables)
+    /// Assets included in the bundle (like executables and READMEs)
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
     pub assets: Vec<Asset>,
