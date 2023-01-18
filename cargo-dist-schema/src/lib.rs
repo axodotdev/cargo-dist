@@ -6,7 +6,13 @@ use std::path::PathBuf;
 /// The final report of cargo-dist
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DistManifest {
+    /// The version of cargo-dist that generated this
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dist_version: Option<String>,
     /// App releases we're distributing
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub releases: Vec<Release>,
 }
 
@@ -18,6 +24,8 @@ pub struct Release {
     // FIXME: should be a Version but JsonSchema doesn't support (yet?)
     pub app_version: String,
     /// The artifacts for this release (zips, debuginfo, metadata...)
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub artifacts: Vec<Artifact>,
 }
 
@@ -33,15 +41,19 @@ pub struct Artifact {
     pub kind: ArtifactKind,
     /// The target triple of the bundle
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub target_triples: Vec<String>,
     /// The location of the artifact on the local system
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub path: Option<PathBuf>,
     /// Assets included in the bundle (like executables)
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub assets: Vec<Asset>,
     /// A string describing how to install this
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub install_hint: Option<String>,
 }
 
@@ -49,9 +61,13 @@ pub struct Artifact {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Asset {
     /// The high-level name of the asset
-    pub name: String,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
     /// The path of the asset relative to the root of the artifact
-    pub path: PathBuf,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<PathBuf>,
     /// The kind of asset this is
     #[serde(flatten)]
     pub kind: AssetKind,
@@ -71,10 +87,14 @@ pub enum AssetKind {
     /// A LICENSE file
     #[serde(rename = "license")]
     License,
+    #[serde(other)]
+    #[serde(rename = "unknown")]
+    Unknown,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kind")]
+#[non_exhaustive]
 pub enum ArtifactKind {
     /// A zip or a tarball
     #[serde(rename = "executable-zip")]
@@ -88,6 +108,9 @@ pub enum ArtifactKind {
     /// Installer
     #[serde(rename = "installer")]
     Installer,
+    #[serde(other)]
+    #[serde(rename = "unknown")]
+    Unknown,
 }
 
 /// An executable artifact (exe/binary)
@@ -95,17 +118,43 @@ pub enum ArtifactKind {
 pub struct ExecutableAsset {
     /// The name of the Artifact containing symbols for this executable
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub symbols_artifact: Option<String>,
 }
 
 impl DistManifest {
-    pub fn new(releases: Vec<Release>) -> Self {
-        Self { releases }
+    /// Create a new DistManifest
+    pub fn new(dist_version: String, releases: Vec<Release>) -> Self {
+        Self {
+            dist_version: Some(dist_version),
+            releases,
+        }
+    }
+
+    /// Get the JSON Schema for a DistManifest
+    pub fn json_schema() -> schemars::schema::RootSchema {
+        schemars::schema_for!(DistManifest)
     }
 }
 
 #[test]
 fn emit() {
-    let schema = schemars::schema_for!(DistManifest);
-    insta::assert_snapshot!(serde_json::to_string_pretty(&schema).unwrap());
+    use std::fs::File;
+    use std::io::BufWriter;
+    use std::io::Write;
+
+    let schema = DistManifest::json_schema();
+    let json_schema = serde_json::to_string_pretty(&schema).unwrap();
+    insta::assert_snapshot!(json_schema);
+
+    // FIXME: (?) we should use something like xtask to update the schema, but this works ok.
+    let root = std::env!("CARGO_MANIFEST_DIR");
+    let schema = PathBuf::from(root).join("cargo-dist-json-schema.json");
+    let file = File::options()
+        .create(true)
+        .write(true)
+        .open(schema)
+        .unwrap();
+    let mut file = BufWriter::new(file);
+    writeln!(&mut file, "{}", json_schema).unwrap();
 }
