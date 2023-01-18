@@ -20,9 +20,10 @@ That said, the current version is Very Very Unstable And Experimental and really
 
 * [Way-Too-Quick Start](#way-too-quick-start)
 * [Installation](#installation)
+  * [Download Prebuilt Binaries From Github Releases](#download-prebuilt-binaries-from-github-releases)
+  * [Use The Installer Scripts](#use-the-installer-scripts)
   * [Build From Source With Cargo](#build-from-source-with-cargo)
-  * [Install Prebuilt Binaries With Cargo-Binstall](#install-prebuilt-binaries-with-cargo-binstall)
-  * [Download From Github Releases](#download-from-github-releases)
+  * [Install Prebuilt Binaries With cargo-binstall](#install-prebuilt-binaries-with-cargo-binstall)
 * [Setup](#setup)
   * [Configuring Installers](#configuring-installers)
   * [Configuring Targets](#configuring-targets)
@@ -59,23 +60,45 @@ That's gonna do a whole bunch of stuff you might not have expected (but I left o
 
 # Installation
 
+## Download Prebuilt Binaries From Github Releases
+
+[See The Latest Release](https://github.com/axodotdev/cargo-dist/releases/latest)!
+
+## Use The Installer Scripts
+
+**NOTE: these installer scripts are currently under-developed and will place binaries in `$HOME/.cargo/bin/` without properly informing Cargo of the change, resulting in `cargo uninstall cargo-dist` and some other things not working. They are however suitable for quickly bootstrapping cargo-dist in temporary environments (like CI) without any other binaries being installed.**
+
+Linux and macOS:
+
+```sh
+curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.2-prerelease7/installer.sh | sh
+```
+
+Windows PowerShell:
+
+```sh
+irm 'https://github.com/axodotdev/cargo-dist/releases/download/v0.2.2-prerelease7/installer.ps1' | iex
+```
+
 ## Build From Source With Cargo
+
+**This won't work until we publish a new version to Cargo.**
 
 ```sh
 cargo install dist --profile=dist
 ```
 
-## Install Prebuilt Binaries With Cargo-Binstall
+(`--profile=dist` may get you a slightly more optimized binary.)
+
+## Install Prebuilt Binaries With cargo-binstall
+
+**This won't work until we publish a new version to Cargo.**
 
 ```sh
-cargo binstall cargo-dist
+cargo binstall cargo-dist --no-symlinks
 ```
 
-## Download From Github Releases
-
-[Latest Release](https://github.com/axodotdev/cargo-dist/releases/latest)
-
-
+(Without `--no-symlinks` [this may fail on Windows](https://github.com/cargo-bins/cargo-binstall/issues/728))
 
 
 
@@ -112,14 +135,14 @@ See the next section ("Usage (CI)") for how the github workflow is triggered and
 
 ## Configuring Installers
 
-If you would like to generate (currently bad) installer scripts, you can pass `--installer` flags
+If you would like to generate (still under development) installer scripts, you can pass `--installer` flags
 to either `init` or `generate-ci`:
 
 ```sh
 cargo dist init --ci=github --installer=github-shell --installer=github-powershell
 ```
 
-This will result in `installer.sh` and `installer.ps1` being generated which fetch from a Github Release™️ and copy the binaries to `HOME/.cargo/bin/` on the assumption that this is on your path. The scripts are currently brittle and won't properly tell cargo about the installation. As such they are currently only really appropriate for bootstrapping CI scripts. This will be improved in the future.
+This will result in `installer.sh` and `installer.ps1` being generated which fetch from a Github Release™️ and copy the binaries to `$HOME/.cargo/bin/` on the assumption that this is on your PATH. The scripts are currently brittle and won't properly tell Cargo about the installation (making `cargo uninstall` and some other commands behave incorrectly). As such they're currently only really appropriate for setting up temporary environments like CI without any other binaries. This will be improved in the future.
 
 
 
@@ -137,7 +160,7 @@ If you would like to manually specify the targets, you can do this with `--targe
 
 Other commands like `cargo dist build` (bare `cargo dist`) will always default to only using the current host target, and may need more manual target specification. This is handled automatically if you're using dist's generated CI scripts.
 
-**cargo-dist does not currently support specifying additional targets based on different `--features` or anything else, this will change in the future.**
+**cargo-dist does not currently support specifying additional targets based on different `--features` or anything else, this will change in the future. See [issue #22](https://github.com/axodotdev/cargo-dist/issues/22) for discussion.**
 
 
 
@@ -218,7 +241,7 @@ For further details, see [Concepts](#concepts) and [Build Flags](#build-flags).
 cargo-dist views the world as follows:
 
 * You are trying to publish *Applications* (e.g. "ripgrep" or "cargo-binstall")
-* An Application has *Releases*, which are a specific version of an *Application* (e.g. "ripgrep 1.0.0" or "cargo-binstall 0.1.0-prerelease")
+* An Application has *Releases*, which are a specific version of an Application (e.g. "ripgrep 1.0.0" or "cargo-binstall 0.1.0-prerelease")
 * A Release has *Artifacts* that should be built and uploaded:
     * platform-specific "executable-zips" (`ripgrep-1.0.0-x86_64-apple-darwin.tar.xz`)
     * "symbols" (debuginfo/sourcemaps) for those executables (`ripgrep-1.0.0-x86_64-pc-windows-msvc.pdb`)
