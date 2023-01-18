@@ -47,6 +47,8 @@ cargo install cargo-release
 
 # one-time setup
 cargo dist init --ci=github
+git add .
+git commit -am "wow shiny new cargo-dist CI!"
 
 # cut a release
 cargo release 0.1.0
