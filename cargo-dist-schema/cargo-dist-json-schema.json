@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DistManifest",
-  "description": "The final report of cargo-dist",
+  "description": "A report of the releases and artifacts that cargo-dist generated",
   "type": "object",
   "properties": {
     "dist_version": {
@@ -104,7 +104,7 @@
       ],
       "properties": {
         "assets": {
-          "description": "Assets included in the bundle (like executables)",
+          "description": "Assets included in the bundle (like executables and READMEs)",
           "type": "array",
           "items": {
             "$ref": "#/definitions/Asset"
