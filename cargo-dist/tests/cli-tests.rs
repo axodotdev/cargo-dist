@@ -84,6 +84,12 @@ fn test_manifest() {
         .output()
         .unwrap();
 
-    insta::assert_snapshot!(format_outputs(&output));
+    // We don't want this to churn every time we do a version bump
+    insta::with_settings!({filters => vec![
+        (r"\d+\.\d+\.\d+(\-prerelease\d+)?", "1.0.0")
+    ]}, {
+        insta::assert_snapshot!(format_outputs(&output));
+    });
+
     assert!(output.status.success(), "{}", output.status);
 }

@@ -715,8 +715,8 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                                                 .to_owned()
                                         });
                                         Some(Asset {
-                                            name: exe.exe_name.clone(),
-                                            path: asset_path.clone().into_std_path_buf(),
+                                            name: Some(exe.exe_name.clone()),
+                                            path: Some(asset_path.clone().into_std_path_buf()),
                                             kind: AssetKind::Executable(ExecutableAsset {
                                                 symbols_artifact,
                                             }),
@@ -735,7 +735,8 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                 .collect(),
         })
     }
-    DistManifest::new(releases)
+    let dist_version = env!("CARGO_PKG_VERSION").to_owned();
+    DistManifest::new(dist_version, releases)
 }
 
 /// Get all the artifacts built by this list of cargo packages

@@ -49,5 +49,5 @@ semver = "1.0.14"
 toml_edit = "0.15.0"
 
 [dev-dependencies]
-insta = "1.19.1"
+insta = { version = "1.26.0", features = ["filters"] }
 
