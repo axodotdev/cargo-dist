@@ -19,7 +19,6 @@ required-features = ["cli"]
 [features]
 default = ["cli"]
 cli = ["clap", "tracing-subscriber", "miette/fancy", "serde_json", "console", "clap-cargo"]
-whatever = ["clap/debug"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
