@@ -1533,6 +1533,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
         dist_profile.or_insert(new_profile);
     }
     // Setup [workspace.metadata.dist] or [package.metadata.dist]
+    /* temporarily disabled until we have a real config to write here
     {
         let metadata_pre_key = if workspace.root_package.is_some() {
             "package"
@@ -1571,6 +1572,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
 
         dist_metadata.or_insert(new_metadata);
     }
+    */
     {
         use std::io::Write;
         let mut workspace_toml_file = File::options()
