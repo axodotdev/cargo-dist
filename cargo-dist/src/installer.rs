@@ -1,3 +1,7 @@
+//! Installer Generation
+//!
+//! In the future this might get split up into submodules.
+
 use std::fs::File;
 
 use miette::{Context, IntoDiagnostic};

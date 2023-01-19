@@ -85,6 +85,7 @@
           }
         },
         {
+          "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
           "type": "object",
           "required": [
             "kind"
@@ -194,6 +195,7 @@
           }
         },
         {
+          "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
           "type": "object",
           "required": [
             "kind"
@@ -226,6 +228,7 @@
       }
     },
     "Release": {
+      "description": "A Release of an Application",
       "type": "object",
       "required": [
         "app_name",

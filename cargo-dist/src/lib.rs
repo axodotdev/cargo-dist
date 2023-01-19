@@ -1,3 +1,5 @@
+#![deny(missing_docs)]
+
 //! # cargo-dist
 //!
 //!
@@ -82,14 +84,19 @@ pub struct Config {
     pub installers: Vec<InstallerStyle>,
 }
 
+/// The style of CI we should generate
 #[derive(Clone, Copy, Debug)]
 pub enum CiStyle {
+    /// Genereate Github CI
     Github,
 }
 
+/// The style of Installer we should generate
 #[derive(Clone, Copy, Debug)]
 pub enum InstallerStyle {
+    /// Generate a shell script that fetches from a Github Release
     GithubShell,
+    /// Generate a powershell script that fetches from a Github Release
     GithubPowershell,
 }
 
@@ -1372,8 +1379,10 @@ fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
     }
 }
 
+/// Arguments for `cargo dist init` ([`do_init`][])
 #[derive(Debug)]
 pub struct InitArgs {
+    /// The styles of CI we should generate
     pub ci_styles: Vec<CiStyle>,
 }
 
@@ -1593,11 +1602,14 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     Ok(())
 }
 
+/// Arguments for `cargo dist generate-ci` ([`do_generate_ci][])
 #[derive(Debug)]
 pub struct GenerateCiArgs {
+    /// Styles of CI to generate
     pub ci_styles: Vec<CiStyle>,
 }
 
+/// Generate CI scripts (impl of `cargo dist generate-ci`)
 pub fn do_generate_ci(cfg: &Config, args: &GenerateCiArgs) -> Result<()> {
     let graph = gather_work(cfg)?;
     for style in &args.ci_styles {

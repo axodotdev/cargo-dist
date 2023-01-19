@@ -1,3 +1,7 @@
+#![deny(missing_docs)]
+
+//! CLI binary interface for cargo-dist
+
 use std::io::Write;
 use std::panic;
 use std::sync::Mutex;
