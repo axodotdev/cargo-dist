@@ -1,3 +1,7 @@
+//! CI script generation
+//!
+//! In the future this may get split up into submodules.
+
 use std::fs::File;
 
 use camino::Utf8PathBuf;
@@ -133,6 +137,9 @@ const GITHUB_CI_FINISH_RELEASE: &str = r###"
           gh release edit ${{ needs.create-release.outputs.tag }} --draft=false
 "###;
 
+/// Generate CI for Github
+///
+/// This actually creates a file and writes to disk!
 pub fn generate_github_ci(
     workspace_dir: &Utf8PathBuf,
     targets: &[String],

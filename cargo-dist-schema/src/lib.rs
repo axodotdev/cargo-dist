@@ -1,3 +1,13 @@
+#![deny(missing_docs)]
+
+//! # cargo-dist-schema
+//!
+//! This crate exists to serialize and deserialize the dist-manifest.json produced
+//! by cargo-dist. Ideally it should be reasonably forward and backward compatible
+//! with different versions of this format.
+//!
+//! The root type of the schema is [`DistManifest`][].
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 // FIXME: ideally these would be UTF8PathBufs but JsonSchema doesn't support (yet?)
@@ -16,6 +26,7 @@ pub struct DistManifest {
     pub releases: Vec<Release>,
 }
 
+/// A Release of an Application
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Release {
     /// The name of the app
@@ -87,11 +98,15 @@ pub enum AssetKind {
     /// A LICENSE file
     #[serde(rename = "license")]
     License,
+    /// Unknown to this version of cargo-dist-schema
+    ///
+    /// This is a fallback for forward/backward-compat
     #[serde(other)]
     #[serde(rename = "unknown")]
     Unknown,
 }
 
+/// A kind of Artifact
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kind")]
 #[non_exhaustive]
@@ -108,6 +123,9 @@ pub enum ArtifactKind {
     /// Installer
     #[serde(rename = "installer")]
     Installer,
+    /// Unknown to this version of cargo-dist-schema
+    ///
+    /// This is a fallback for forward/backward-compat
     #[serde(other)]
     #[serde(rename = "unknown")]
     Unknown,
