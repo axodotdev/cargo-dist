@@ -10,8 +10,6 @@ on:
     branches:
       # The main branch
       - main
-      # Not a thing I use personally but some people like having a release branch
-      - "release/**"
   # And once a week? 
   # This can catch things like "rust updated and actually regressed something"
   schedule:
