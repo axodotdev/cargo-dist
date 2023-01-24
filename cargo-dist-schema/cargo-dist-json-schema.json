@@ -195,6 +195,21 @@
           }
         },
         {
+          "description": "A CHANGELOG or RELEASES file",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "changelog"
+              ]
+            }
+          }
+        },
+        {
           "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
           "type": "object",
           "required": [

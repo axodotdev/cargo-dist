@@ -47,9 +47,6 @@ const METADATA_DIST: &str = "dist";
 const TARGET_DIST: &str = "distrib";
 /// The profile we will build with
 const PROFILE_DIST: &str = "dist";
-/// Some files we'll try to grab.
-//TODO: LICENSE-* files, somehow!
-const BUILTIN_FILES: &[&str] = &["README.md", "CHANGELOG.md", "RELEASES.md"];
 
 /// The key for referring to linux as an "os"
 const OS_LINUX: &str = "linux";
@@ -247,7 +244,7 @@ pub(crate) struct ArtifactTarget {
     /// Additional static assets to add to the artifact
     ///
     /// i.e. `README.md`
-    static_assets: Vec<Utf8PathBuf>,
+    static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
     /// The kind of artifact this is
     kind: ArtifactKind,
 }
@@ -261,6 +258,16 @@ struct ReleaseTarget {
     version: Version,
     /// The artifacts this release includes
     artifacts: Vec<ArtifactTargetIdx>,
+}
+
+#[derive(Debug)]
+enum StaticAssetKind {
+    /// A README file
+    Readme,
+    /// A LICENSE file
+    License,
+    /// A CHANGLEOG or RELEASES file
+    Changelog,
 }
 
 /// The style of bundle for a [`ArtifactTarget`][].
@@ -467,12 +474,9 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
         // TODO: make app name configurable? Use some other fields in the PackageMetadata?
         let app_name = exe.exe_name.clone();
         let package_id = exe.package_id.clone();
+        let package_info = &workspace.package_info[&&package_id];
         // TODO: allow apps to be versioned separately from packages?
-        let version = pkg_graph
-            .metadata(&exe.package_id)
-            .unwrap()
-            .version()
-            .clone();
+        let version = package_info.version.clone();
         let build_target = &mut targets[exe.build_target.0];
 
         // Register this executable as an asset we'll build
@@ -496,13 +500,16 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
         // TODO: make bundled assets configurable
         // TODO: narrow this scope to the package of the binary..?
-        let exe_static_assets = BUILTIN_FILES
-            .iter()
-            .filter_map(|f| {
-                let file = workspace_dir.join(f);
-                file.exists().then_some(file)
-            })
-            .collect();
+        let mut exe_static_assets = vec![];
+        if let Some(readme) = &package_info.readme_file {
+            exe_static_assets.push((StaticAssetKind::Readme, readme.clone()));
+        }
+        if let Some(changelog) = &package_info.changelog_file {
+            exe_static_assets.push((StaticAssetKind::Changelog, changelog.clone()));
+        }
+        for license in &package_info.license_files {
+            exe_static_assets.push((StaticAssetKind::License, license.clone()));
+        }
 
         // TODO: make the bundle name configurable?
         let exe_dir_name = format!("{app_name}-v{version}-{target_triple}");
@@ -604,10 +611,8 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
     // Add installers (currently all 1:1 with releases rather than targets)
     for ((app_name, version), (package_id, release)) in &mut releases {
-        let repo = pkg_graph
-            .metadata(package_id)
-            .ok()
-            .and_then(|pkg| pkg.repository());
+        let package_info = &workspace.package_info[&&*package_id];
+        let repo = package_info.repository_url.as_deref();
         for installer in &cfg.installers {
             let file_path;
             let file_name;
@@ -627,6 +632,7 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
                     installer_impl = InstallerImpl::GithubShell(InstallerInfo {
                         app_name: app_name.clone(),
                         app_version: format!("v{version}"),
+                        // FIXME: we should probably actually report an error instead of defaulting?
                         repo_url: repo.unwrap_or("").to_owned(),
                     });
                 }
@@ -638,6 +644,7 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
                     installer_impl = InstallerImpl::GithubPowershell(InstallerInfo {
                         app_name: app_name.clone(),
                         app_version: format!("v{version}"),
+                        // FIXME: we should probably actually report an error instead of defaulting?
                         repo_url: repo.unwrap_or("").to_owned(),
                     });
                 }
@@ -689,7 +696,7 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                         path: if cfg.no_local_paths {
                             None
                         } else {
-                            Some(artifact.file_path.clone().into_std_path_buf())
+                            Some(artifact.file_path.to_string())
                         },
                         target_triples: artifact.target_triples.clone(),
                         install_hint: match &artifact.bundle {
@@ -723,7 +730,7 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                                         });
                                         Some(Asset {
                                             name: Some(exe.exe_name.clone()),
-                                            path: Some(asset_path.clone().into_std_path_buf()),
+                                            path: Some(asset_path.to_string()),
                                             kind: AssetKind::Executable(ExecutableAsset {
                                                 symbols_artifact,
                                             }),
@@ -734,7 +741,19 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                                         None
                                     }
                                 }
+                            }).chain(artifact.static_assets.iter().map(|(kind, asset)| {
+                                Asset {
+                                    name: Some(asset.file_name().unwrap().to_owned()),
+                                    path: Some(asset.file_name().unwrap().to_owned()),
+                                    kind: match kind {
+                                        StaticAssetKind::Changelog => AssetKind::Changelog,
+                                        StaticAssetKind::License => AssetKind::License,
+                                        StaticAssetKind::Readme => AssetKind::Readme,
+                                    }
+                                }
                             })
+
+                            )
                             .collect(),
                         kind: artifact.kind.clone(),
                     }
@@ -1121,7 +1140,7 @@ fn populate_artifact_dir_with_static_assets(
 
     info!("populating artifact dir: {}", artifact_dir_path);
     // Copy assets
-    for asset in &artifact.static_assets {
+    for (_kind, asset) in &artifact.static_assets {
         let asset_file_name = asset.file_name().unwrap();
         let bundled_asset = artifact_dir_path.join(asset_file_name);
         info!("  adding {bundled_asset}");
@@ -1327,6 +1346,11 @@ struct WorkspaceInfo<'pkg_graph> {
     info: Workspace<'pkg_graph>,
     /// The workspace members.
     members: PackageSet<'pkg_graph>,
+    /// Computed info about the packages beyond what Guppy tells us
+    ///
+    /// This notably includes finding readmes and licenses even if the user didn't
+    /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
+    package_info: HashMap<&'pkg_graph PackageId, PackageInfo>,
     /// Path to the Cargo.toml of the workspace (may be a package's Cargo.toml)
     manifest_path: Utf8PathBuf,
     /// If the manifest_path points to a package, this is the one.
@@ -1350,12 +1374,179 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         .packages(DependencyDirection::Forward)
         .find(|p| p.manifest_path() == manifest_path);
 
+    let workspace_root = workspace.root();
+    let mut package_info = HashMap::new();
+    for package in members.packages(DependencyDirection::Forward) {
+        let info = compute_package_info(workspace_root, &package)?;
+        package_info.insert(package.id(), info);
+    }
+
     Ok(WorkspaceInfo {
         info: workspace,
         members,
+        package_info,
         manifest_path,
         root_package,
     })
+}
+
+/// Computed info about the packages beyond what Guppy tells us
+///
+/// This notably includes finding readmes and licenses even if the user didn't
+/// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
+#[derive(Debug)]
+struct PackageInfo {
+    /// Name of the package
+    name: String,
+    /// Version of the package
+    version: Version,
+    /// A brief description of the package
+    description: Option<String>,
+    /// Authors of the package (may be empty)
+    authors: Vec<String>,
+    /// The license the package is provided under
+    license: Option<String>,
+    /// URL to the repository for this package
+    ///
+    /// This URL can be used by various CI/Installer helpers. In the future we
+    /// might also use it for auto-detecting "hey you're using github, here's the
+    /// recommended github setup".
+    ///
+    /// i.e. `--installer=github-shell` uses this as the base URL for fetching from
+    /// a Github Release™️.
+    repository_url: Option<String>,
+    /// URL to the homepage for this package.
+    ///
+    /// Currently this isn't terribly important or useful?
+    homepage_url: Option<String>,
+    /// URL to the documentation for this package.
+    ///
+    /// This will default to docs.rs if not specified, which is the default crates.io behaviour.
+    ///
+    /// Currently this isn't terribly important or useful?
+    documentation_url: Option<String>,
+    /// Path to the README file for this package.
+    ///
+    /// By default this should be copied into a zip containing this package's binary.
+    readme_file: Option<Utf8PathBuf>,
+    /// Paths to the LICENSE files for this package.
+    ///
+    /// By default these should be copied into a zip containing this package's binary.
+    ///
+    /// Cargo only lets you specify one such path, but that's because the license path
+    /// primarily exists as an escape hatch for someone's whacky-wild custom license.
+    /// But for our usecase we want to find those paths even if they're bog standard
+    /// MIT/Apache, which traditionally involves two separate license files.
+    license_files: Vec<Utf8PathBuf>,
+    /// Paths to the CHANGELOG or RELEASES file for this package
+    ///
+    /// By default this should be copied into a zip containing this package's binary.
+    ///
+    /// We will *try* to parse this
+    changelog_file: Option<Utf8PathBuf>,
+}
+
+fn compute_package_info(
+    workspace_root: &Utf8Path,
+    package: &PackageMetadata,
+) -> Result<PackageInfo> {
+    let mut info = PackageInfo {
+        name: package.name().to_owned(),
+        version: package.version().to_owned(),
+        description: package.description().map(ToOwned::to_owned),
+        authors: package.authors().to_vec(),
+        license: package.license().map(ToOwned::to_owned),
+        repository_url: package.repository().map(ToOwned::to_owned),
+        homepage_url: package.homepage().map(ToOwned::to_owned),
+        documentation_url: package.documentation().map(ToOwned::to_owned),
+        readme_file: package.readme().map(ToOwned::to_owned),
+        license_files: package
+            .license_file()
+            .map(ToOwned::to_owned)
+            .into_iter()
+            .collect(),
+        changelog_file: None,
+    };
+
+    // We don't want to search for any license files if one is manually given
+    // (need to check that here since we can find multiple licenses).
+    let search_for_license_file = info.license_files.is_empty();
+
+    // If there's no documentation URL provided, default assume it's docs.rs like crates.io does
+    if info.documentation_url.is_none() {
+        info.documentation_url = Some(format!("https://docs.rs/{}/{}", info.name, info.version));
+    }
+
+    // Is there a better way to get the path to sniff?
+    // Should we spider more than just package_root and workspace_root?
+    // Should we more carefully prevent grabbing LICENSES from both dirs?
+    // Should we not spider the workspace root for README since Cargo has a proper field for this?
+    // Should we check for a "readme=..." on the workspace root Cargo.toml?
+    let manifest_path = package.manifest_path();
+    let package_root = manifest_path
+        .parent()
+        .expect("package manifest had no parent!?");
+
+    for dir in &[package_root, workspace_root] {
+        let entries = dir
+            .read_dir_utf8()
+            .into_diagnostic()
+            .wrap_err("Failed to read workspace dir")?;
+        for entry in entries {
+            let entry = entry
+                .into_diagnostic()
+                .wrap_err("Failed to read workspace dir entry")?;
+            let meta = entry
+                .file_type()
+                .into_diagnostic()
+                .wrap_err("Failed to read workspace dir entry's metadata")?;
+            if meta.is_file() {
+                if entry.file_name().starts_with("README") {
+                    if info.readme_file.is_none() {
+                        let path = entry.path().to_owned();
+                        info!("Found README for {}: {}", info.name, path);
+                        info.readme_file = Some(path);
+                    } else {
+                        info!(
+                            "Ignoring candidate README for {}: {}",
+                            info.name,
+                            entry.path()
+                        );
+                    }
+                } else if entry.file_name().starts_with("LICENSE")
+                    || entry.file_name().starts_with("UNLICENSE")
+                {
+                    if search_for_license_file {
+                        let path = entry.path().to_owned();
+                        info!("Found LICENSE for {}: {}", info.name, path);
+                        info.license_files.push(path);
+                    } else {
+                        info!(
+                            "Ignoring candidate LICENSE for {}: {}",
+                            info.name,
+                            entry.path()
+                        );
+                    }
+                } else if entry.file_name().starts_with("CHANGELOG")
+                    || entry.file_name().starts_with("RELEASES")
+                {
+                    if info.changelog_file.is_none() {
+                        let path = entry.path().to_owned();
+                        info!("Found CHANGELOG for {}: {}", info.name, path);
+                        info.changelog_file = Some(path);
+                    } else {
+                        info!(
+                            "Ignoring candidate CHANGELOG for {}: {}",
+                            info.name,
+                            entry.path()
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(info)
 }
 
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
