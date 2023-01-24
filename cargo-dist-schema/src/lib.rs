@@ -10,8 +10,17 @@
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-// FIXME: ideally these would be UTF8PathBufs but JsonSchema doesn't support (yet?)
-use std::path::PathBuf;
+
+/// A local system path on the machine cargo-dist was run.
+///
+/// This is a String because when deserializing this may be a path format from a different OS!
+pub type LocalPath = String;
+/// A relative path inside an artifact
+///
+/// This is a String because when deserializing this may be a path format from a different OS!
+///
+/// (Should we normalize this one?)
+pub type RelPath = String;
 
 /// A report of the releases and artifacts that cargo-dist generated
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -57,7 +66,7 @@ pub struct Artifact {
     /// The location of the artifact on the local system
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub path: Option<PathBuf>,
+    pub path: Option<LocalPath>,
     /// Assets included in the bundle (like executables and READMEs)
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
@@ -78,7 +87,7 @@ pub struct Asset {
     /// The path of the asset relative to the root of the artifact
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub path: Option<PathBuf>,
+    pub path: Option<RelPath>,
     /// The kind of asset this is
     #[serde(flatten)]
     pub kind: AssetKind,
@@ -98,6 +107,9 @@ pub enum AssetKind {
     /// A LICENSE file
     #[serde(rename = "license")]
     License,
+    /// A CHANGELOG or RELEASES file
+    #[serde(rename = "changelog")]
+    Changelog,
     /// Unknown to this version of cargo-dist-schema
     ///
     /// This is a fallback for forward/backward-compat
@@ -160,6 +172,7 @@ fn emit() {
     use std::fs::File;
     use std::io::BufWriter;
     use std::io::Write;
+    use std::path::PathBuf;
 
     let schema = DistManifest::json_schema();
     let json_schema = serde_json::to_string_pretty(&schema).unwrap();
