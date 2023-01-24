@@ -25,10 +25,14 @@ stdout:
           ],
           "assets": [
             {
-              "name": "cargo-dist",
-              "path": "cargo-dist.exe",
-              "kind": "executable",
-              "symbols_artifact": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.pdb"
+              "name": "LICENSE-APACHE",
+              "path": "LICENSE-APACHE",
+              "kind": "license"
+            },
+            {
+              "name": "LICENSE-MIT",
+              "path": "LICENSE-MIT",
+              "kind": "license"
             },
             {
               "name": "README.md",
@@ -41,14 +45,10 @@ stdout:
               "kind": "changelog"
             },
             {
-              "name": "LICENSE-APACHE",
-              "path": "LICENSE-APACHE",
-              "kind": "license"
-            },
-            {
-              "name": "LICENSE-MIT",
-              "path": "LICENSE-MIT",
-              "kind": "license"
+              "name": "cargo-dist",
+              "path": "cargo-dist.exe",
+              "kind": "executable",
+              "symbols_artifact": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.pdb"
             }
           ]
         },
@@ -60,9 +60,14 @@ stdout:
           ],
           "assets": [
             {
-              "name": "cargo-dist",
-              "path": "cargo-dist",
-              "kind": "executable"
+              "name": "LICENSE-APACHE",
+              "path": "LICENSE-APACHE",
+              "kind": "license"
+            },
+            {
+              "name": "LICENSE-MIT",
+              "path": "LICENSE-MIT",
+              "kind": "license"
             },
             {
               "name": "README.md",
@@ -75,14 +80,9 @@ stdout:
               "kind": "changelog"
             },
             {
-              "name": "LICENSE-APACHE",
-              "path": "LICENSE-APACHE",
-              "kind": "license"
-            },
-            {
-              "name": "LICENSE-MIT",
-              "path": "LICENSE-MIT",
-              "kind": "license"
+              "name": "cargo-dist",
+              "path": "cargo-dist",
+              "kind": "executable"
             }
           ]
         },
@@ -94,9 +94,14 @@ stdout:
           ],
           "assets": [
             {
-              "name": "cargo-dist",
-              "path": "cargo-dist",
-              "kind": "executable"
+              "name": "LICENSE-APACHE",
+              "path": "LICENSE-APACHE",
+              "kind": "license"
+            },
+            {
+              "name": "LICENSE-MIT",
+              "path": "LICENSE-MIT",
+              "kind": "license"
             },
             {
               "name": "README.md",
@@ -109,14 +114,9 @@ stdout:
               "kind": "changelog"
             },
             {
-              "name": "LICENSE-APACHE",
-              "path": "LICENSE-APACHE",
-              "kind": "license"
-            },
-            {
-              "name": "LICENSE-MIT",
-              "path": "LICENSE-MIT",
-              "kind": "license"
+              "name": "cargo-dist",
+              "path": "cargo-dist",
+              "kind": "executable"
             }
           ]
         },
