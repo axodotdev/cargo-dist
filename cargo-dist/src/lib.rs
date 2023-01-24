@@ -691,6 +691,58 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                 .iter()
                 .map(|artifact_idx| {
                     let artifact = &dist.artifacts[artifact_idx.0];
+                    let mut assets = vec![];
+
+                    let built_assets = artifact
+                        .built_assets
+                        .iter()
+                        .filter_map(|(asset_idx, asset_path)| {
+                            let asset = &dist.built_assets[asset_idx.0];
+                            match asset {
+                                BuiltAsset::Executable(exe) => {
+                                    let symbols_artifact = exe.symbols_artifact.map(|a| {
+                                        dist.artifacts[a.0]
+                                            .file_path
+                                            .file_name()
+                                            .unwrap()
+                                            .to_owned()
+                                    });
+                                    Some(Asset {
+                                        name: Some(exe.exe_name.clone()),
+                                        path: Some(asset_path.to_string()),
+                                        kind: AssetKind::Executable(ExecutableAsset {
+                                            symbols_artifact,
+                                        }),
+                                    })
+                                }
+                                BuiltAsset::Symbols(_sym) => {
+                                    // Symbols are their own assets, so no need to report
+                                    None
+                                }
+                            }
+                        });
+
+                    let static_assets = artifact
+                        .static_assets
+                        .iter()
+                        .map(|(kind, asset)| {
+                            let kind = match kind {
+                                StaticAssetKind::Changelog => AssetKind::Changelog,
+                                StaticAssetKind::License => AssetKind::License,
+                                StaticAssetKind::Readme => AssetKind::Readme,
+                            };
+                            Asset {
+                                name: Some(asset.file_name().unwrap().to_owned()),
+                                path: Some(asset.file_name().unwrap().to_owned()),
+                                kind,
+                            }
+                        });
+
+                    assets.extend(built_assets);
+                    assets.extend(static_assets);
+                    // Sort the assets by name to make things extra stable
+                    assets.sort_by(|k1, k2| k1.name.cmp(&k2.name));
+
                     Artifact {
                         name: artifact.file_path.file_name().unwrap().to_owned(),
                         path: if cfg.no_local_paths {
@@ -714,47 +766,7 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                             BundleStyle::Tar(_) => None,
                             BundleStyle::UncompressedFile => None,
                         },
-                        assets: artifact
-                            .built_assets
-                            .iter()
-                            .filter_map(|(asset_idx, asset_path)| {
-                                let asset = &dist.built_assets[asset_idx.0];
-                                match asset {
-                                    BuiltAsset::Executable(exe) => {
-                                        let symbols_artifact = exe.symbols_artifact.map(|a| {
-                                            dist.artifacts[a.0]
-                                                .file_path
-                                                .file_name()
-                                                .unwrap()
-                                                .to_owned()
-                                        });
-                                        Some(Asset {
-                                            name: Some(exe.exe_name.clone()),
-                                            path: Some(asset_path.to_string()),
-                                            kind: AssetKind::Executable(ExecutableAsset {
-                                                symbols_artifact,
-                                            }),
-                                        })
-                                    }
-                                    BuiltAsset::Symbols(_sym) => {
-                                        // Symbols are their own assets, so no need to report
-                                        None
-                                    }
-                                }
-                            }).chain(artifact.static_assets.iter().map(|(kind, asset)| {
-                                Asset {
-                                    name: Some(asset.file_name().unwrap().to_owned()),
-                                    path: Some(asset.file_name().unwrap().to_owned()),
-                                    kind: match kind {
-                                        StaticAssetKind::Changelog => AssetKind::Changelog,
-                                        StaticAssetKind::License => AssetKind::License,
-                                        StaticAssetKind::Readme => AssetKind::Readme,
-                                    }
-                                }
-                            })
-
-                            )
-                            .collect(),
+                        assets,
                         kind: artifact.kind.clone(),
                     }
                 })
