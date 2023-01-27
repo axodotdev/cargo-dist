@@ -1456,6 +1456,10 @@ struct PackageInfo {
     ///
     /// We will *try* to parse this
     changelog_file: Option<Utf8PathBuf>,
+    /// The body of the current version's changelog entry, parsed out
+    changelog_text: Option<String>,
+    /// The title of the current version's changelog entry, parsed out
+    changelog_title: Option<String>,
 }
 
 fn compute_package_info(
@@ -1478,6 +1482,8 @@ fn compute_package_info(
             .into_iter()
             .collect(),
         changelog_file: None,
+        changelog_text: None,
+        changelog_title: None,
     };
 
     // We don't want to search for any license files if one is manually given
@@ -1512,53 +1518,81 @@ fn compute_package_info(
                 .file_type()
                 .into_diagnostic()
                 .wrap_err("Failed to read workspace dir entry's metadata")?;
-            if meta.is_file() {
-                if entry.file_name().starts_with("README") {
-                    if info.readme_file.is_none() {
-                        let path = entry.path().to_owned();
-                        info!("Found README for {}: {}", info.name, path);
-                        info.readme_file = Some(path);
-                    } else {
-                        info!(
-                            "Ignoring candidate README for {}: {}",
-                            info.name,
-                            entry.path()
-                        );
-                    }
-                } else if entry.file_name().starts_with("LICENSE")
-                    || entry.file_name().starts_with("UNLICENSE")
-                {
-                    if search_for_license_file {
-                        let path = entry.path().to_owned();
-                        info!("Found LICENSE for {}: {}", info.name, path);
-                        info.license_files.push(path);
-                    } else {
-                        info!(
-                            "Ignoring candidate LICENSE for {}: {}",
-                            info.name,
-                            entry.path()
-                        );
-                    }
-                } else if entry.file_name().starts_with("CHANGELOG")
-                    || entry.file_name().starts_with("RELEASES")
-                {
-                    if info.changelog_file.is_none() {
-                        let path = entry.path().to_owned();
-                        info!("Found CHANGELOG for {}: {}", info.name, path);
-                        info.changelog_file = Some(path);
-                    } else {
-                        info!(
-                            "Ignoring candidate CHANGELOG for {}: {}",
-                            info.name,
-                            entry.path()
-                        );
-                    }
+            if !meta.is_file() {
+                continue;
+            }
+            let file_name = entry.file_name();
+            if file_name.starts_with("README") {
+                if info.readme_file.is_none() {
+                    let path = entry.path().to_owned();
+                    info!("Found README for {}: {}", info.name, path);
+                    info.readme_file = Some(path);
+                } else {
+                    info!(
+                        "Ignoring candidate README for {}: {}",
+                        info.name,
+                        entry.path()
+                    );
+                }
+            } else if file_name.starts_with("LICENSE") || file_name.starts_with("UNLICENSE") {
+                if search_for_license_file {
+                    let path = entry.path().to_owned();
+                    info!("Found LICENSE for {}: {}", info.name, path);
+                    info.license_files.push(path);
+                } else {
+                    info!(
+                        "Ignoring candidate LICENSE for {}: {}",
+                        info.name,
+                        entry.path()
+                    );
+                }
+            } else if file_name.starts_with("CHANGELOG") || file_name.starts_with("RELEASES") {
+                if info.changelog_file.is_none() {
+                    let path = entry.path().to_owned();
+                    info!("Found CHANGELOG for {}: {}", info.name, path);
+                    info.changelog_file = Some(path);
+                } else {
+                    info!(
+                        "Ignoring candidate CHANGELOG for {}: {}",
+                        info.name,
+                        entry.path()
+                    );
+                }
+            }
+        }
+    }
+
+    // Try to parse out relevant parts of the changelog
+    // FIXME: ...this is kind of excessive to do eagerly and for each crate in the workspace
+    if let Some(changelog_path) = &info.changelog_file {
+        if let Ok(changelog_str) = try_load_changelog(changelog_path) {
+            let changelogs = parse_changelog::parse(&changelog_str)
+                .into_diagnostic()
+                .wrap_err_with(|| format!("failed to parse changelog at {changelog_path}"));
+            if let Ok(changelogs) = changelogs {
+                let version_string = format!("{}", info.version);
+                if let Some(release) = changelogs.get(&*version_string) {
+                    info.changelog_title = Some(release.title.to_owned());
+                    info.changelog_text = Some(release.notes.to_owned());
                 }
             }
         }
     }
 
     Ok(info)
+}
+
+/// Load a changelog to a string
+fn try_load_changelog(changelog_path: &Utf8Path) -> Result<String> {
+    let file = File::open(changelog_path)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("failed to open changelog at {changelog_path}"))?;
+    let mut data = BufReader::new(file);
+    let mut changelog_str = String::new();
+    data.read_to_string(&mut changelog_str)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("failed to read changelog at {changelog_path}"))?;
+    Ok(changelog_str)
 }
 
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
