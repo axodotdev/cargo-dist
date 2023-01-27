@@ -174,5 +174,5 @@ fn emit() {
         .open(schema)
         .unwrap();
     let mut file = BufWriter::new(file);
-    writeln!(&mut file, "{}", json_schema).unwrap();
+    writeln!(&mut file, "{json_schema}").unwrap();
 }
