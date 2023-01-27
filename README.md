@@ -75,7 +75,7 @@ cargo binstall cargo-dist --no-symlinks
 ## Build From Source With Cargo
 
 ```sh
-cargo install dist --profile=dist
+cargo install cargo-dist --profile=dist
 ```
 
 (`--profile=dist` may get you a slightly more optimized binary.)
