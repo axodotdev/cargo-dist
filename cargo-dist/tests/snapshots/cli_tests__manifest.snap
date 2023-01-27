@@ -51,6 +51,11 @@ stdout:
       ],
       "assets": [
         {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
           "name": "LICENSE-APACHE",
           "path": "LICENSE-APACHE",
           "kind": "license"
@@ -64,11 +69,6 @@ stdout:
           "name": "README.md",
           "path": "README.md",
           "kind": "readme"
-        },
-        {
-          "name": "RELEASES.md",
-          "path": "RELEASES.md",
-          "kind": "changelog"
         },
         {
           "name": "cargo-dist",
@@ -85,6 +85,11 @@ stdout:
       ],
       "assets": [
         {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
           "name": "LICENSE-APACHE",
           "path": "LICENSE-APACHE",
           "kind": "license"
@@ -98,11 +103,6 @@ stdout:
           "name": "README.md",
           "path": "README.md",
           "kind": "readme"
-        },
-        {
-          "name": "RELEASES.md",
-          "path": "RELEASES.md",
-          "kind": "changelog"
         },
         {
           "name": "cargo-dist",
@@ -119,6 +119,11 @@ stdout:
       ],
       "assets": [
         {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
           "name": "LICENSE-APACHE",
           "path": "LICENSE-APACHE",
           "kind": "license"
@@ -132,11 +137,6 @@ stdout:
           "name": "README.md",
           "path": "README.md",
           "kind": "readme"
-        },
-        {
-          "name": "RELEASES.md",
-          "path": "RELEASES.md",
-          "kind": "changelog"
         },
         {
           "name": "cargo-dist",

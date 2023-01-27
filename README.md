@@ -1,7 +1,12 @@
+<div class="oranda-hide">
+
 # `cargo-dist`
 
-[![crates.io](https://img.shields.io/crates/v/cargo-dist.svg)](https://crates.io/crates/cargo-dist) [![docs](https://docs.rs/cargo-dist/badge.svg)](https://docs.rs/cargo-dist)
-![Rust CI](https://github.com/axodotdev/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)
+</div>
+
+[![crates.io](https://img.shields.io/crates/v/cargo-dist.svg)](https://crates.io/crates/cargo-dist)
+[![docs](https://docs.rs/cargo-dist/badge.svg)](https://docs.rs/cargo-dist)
+[![Rust CI](https://github.com/axodotdev/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)](https://github.com/axodotdev/cargo-dist/actions/workflows/ci.yml)
 
 `cargo build` but For Building Final Distributable Artifacts and uploading them to an archive.
 

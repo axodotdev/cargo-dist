@@ -1,3 +1,5 @@
 /target
 *.snap.new
 /book/book/
+oranda-debug.log
+cargo-dist/public
