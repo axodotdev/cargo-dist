@@ -159,6 +159,7 @@ dependencies = [
  "insta",
  "lazy_static",
  "miette",
+ "parse-changelog",
  "semver",
  "serde",
  "serde_json",
@@ -706,6 +707,18 @@ name = "owo-colors"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1b04fb49957986fdce4d6ee7a65027d55d4b6d2265e5848bbb507b58ccfdb6f"
+
+[[package]]
+name = "parse-changelog"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "555d2b690ee626188bbcc9dfd8437f6286c5a22ed7445e4e3d0539bde749b5a6"
+dependencies = [
+ "indexmap",
+ "memchr",
+ "once_cell",
+ "regex",
+]
 
 [[package]]
 name = "password-hash"
