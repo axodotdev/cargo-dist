@@ -56,6 +56,25 @@ cargo release 0.1.0
 
 That's gonna do a whole bunch of stuff you might not have expected (but I left off the --execute flag from `cargo-release` so you won't actually break anything if you really did just copy paste that 😇). Read the rest of the docs to know what it does!
 
+Or if you don't want to use cargo-release, you can emulate its behaviour manually:
+
+```sh
+# install tools
+cargo install cargo-dist
+
+# one-time setup
+cargo dist init --ci=github
+git add .
+git commit -am "wow shiny new cargo-dist CI!"
+
+# cut a release
+# <first manually update the version of your crate, run tests, etc>
+git commit -am "chore: Release version 0.1.0"
+git tag v0.1.0
+cargo publish
+git push
+git push --tags
+```
 
 
 
@@ -189,9 +208,18 @@ cargo-release will then automatically:
 4. Publish to crates.io (disable this with `--no-publish`)
 4. Push to your repo's main branch
 
-You don't actually need to use cargo-release, it's just a great tool for streamlining your release process that we recommend everyone using!
+You don't actually need to use cargo-release, it's just a great tool for streamlining your release process that we recommend everyone using! Here's roughly a manual version of what it does in simple cases:
 
-When you *do* push a tag the CI will take over and do the following:
+```sh
+# <first manually update the version of your crate, run tests, etc>
+git commit -am "chore: Release version 0.1.0"
+git tag v0.1.0
+cargo publish
+git push
+git push --tags
+```
+
+When you *do* push a tag (and the commit it points to) the CI will take over and do the following:
 
 1. Create a *draft* Github Release™️ (with [taiki-e/create-github-release-action](https://github.com/taiki-e/create-gh-release-action))
 2. Build your application for all the target platforms, wrap them in zips/tars, and upload them to the Github Release™️
