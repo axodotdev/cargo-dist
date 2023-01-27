@@ -40,6 +40,31 @@ That said, the current version is Very Very Unstable And Experimental and the ex
 
 # Way-Too-Quick Start
 
+
+```sh
+# install tools
+cargo install cargo-dist
+
+# one-time setup
+cargo dist init --ci=github
+git add .
+git commit -am "wow shiny new cargo-dist CI!"
+
+# cut a release like you normally would
+
+# <manually update the version of your crate, run tests, etc>
+# then:
+git commit -am "chore: Release version 0.1.0"
+git tag v0.1.0
+cargo publish
+git push
+git push --tags
+```
+
+That's gonna do a whole bunch of stuff you might not have expected, but if it all works you'll get a Github Release™️ with built and zipped artifacts uploaded to it! Read the rest of the docs to learn more!
+
+You may have noticed "cut a release" still has a lot of tedious work. That's because we recommend using [cargo-release](https://github.com/crate-ci/cargo-release) to streamline the last step:
+
 ```sh
 # install tools
 cargo install cargo-dist
@@ -54,27 +79,7 @@ git commit -am "wow shiny new cargo-dist CI!"
 cargo release 0.1.0
 ```
 
-That's gonna do a whole bunch of stuff you might not have expected (but I left off the --execute flag from `cargo-release` so you won't actually break anything if you really did just copy paste that 😇). Read the rest of the docs to know what it does!
-
-Or if you don't want to use cargo-release, you can emulate its behaviour manually:
-
-```sh
-# install tools
-cargo install cargo-dist
-
-# one-time setup
-cargo dist init --ci=github
-git add .
-git commit -am "wow shiny new cargo-dist CI!"
-
-# cut a release
-# <first manually update the version of your crate, run tests, etc>
-git commit -am "chore: Release version 0.1.0"
-git tag v0.1.0
-cargo publish
-git push
-git push --tags
-```
+(I left off the --execute flag from `cargo-release` so you won't actually break anything if you really did just copy paste that 😇)
 
 
 
@@ -187,10 +192,21 @@ Other commands like `cargo dist build` (bare `cargo dist`) will always default t
 
 Once you've completed setup (run `cargo dist init --ci=...`), you're ready to start cutting releases!
 
-The github workflow will trigger whenever you push a [git tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging)
-to the main branch of your repository that looks like a version number (`v1`, `v1.2.0`, `v0.1.0-prerelease2`, etc.).
+The github workflow will trigger whenever you push a [git tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging) to the main branch of your repository that looks like a version number (`v1`, `v1.2.0`, `v0.1.0-prerelease2`, etc.).
 
-The easiest way to do this is to use [cargo-release](https://github.com/crate-ci/cargo-release):
+You might do that with something like this:
+
+```sh
+# <first manually update the version of your crate, run tests, etc>
+# then:
+git commit -am "chore: Release version 0.1.0"
+git tag v0.1.0
+cargo publish
+git push
+git push --tags
+```
+
+That's a bunch of junk to remember to do, so we recommend using [cargo-release](https://github.com/crate-ci/cargo-release) to streamline all of that:
 
 ```sh
 cargo release 0.1.0
@@ -207,17 +223,6 @@ cargo-release will then automatically:
 3. Make a git tag
 4. Publish to crates.io (disable this with `--no-publish`)
 4. Push to your repo's main branch
-
-You don't actually need to use cargo-release, it's just a great tool for streamlining your release process that we recommend everyone using! Here's roughly a manual version of what it does in simple cases:
-
-```sh
-# <first manually update the version of your crate, run tests, etc>
-git commit -am "chore: Release version 0.1.0"
-git tag v0.1.0
-cargo publish
-git push
-git push --tags
-```
 
 When you *do* push a tag (and the commit it points to) the CI will take over and do the following:
 
