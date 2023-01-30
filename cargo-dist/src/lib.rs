@@ -258,6 +258,10 @@ struct ReleaseTarget {
     version: Version,
     /// The artifacts this release includes
     artifacts: Vec<ArtifactTargetIdx>,
+    /// The body of the changelog for this release
+    changelog_body: Option<String>,
+    /// The title of the changelog for this release
+    changelog_title: Option<String>,
 }
 
 #[derive(Debug)]
@@ -309,6 +313,8 @@ pub(crate) struct InstallerInfo {
     pub(crate) app_name: String,
     pub(crate) app_version: String,
     pub(crate) repo_url: String,
+    pub(crate) desc: String,
+    pub(crate) hint: String,
 }
 
 /// Cargo features a [`CargoBuildTarget`][] should use.
@@ -536,6 +542,8 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
                         app_name: app_name.clone(),
                         version: version.clone(),
                         artifacts: vec![],
+                        changelog_body: None,
+                        changelog_title: None,
                     },
                 )
             });
@@ -621,6 +629,10 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
             match installer {
                 InstallerStyle::GithubShell => {
+                    let Some(repo_url) = repo else {
+                        warn!("skipping --installer=github-shell: 'repository' isn't set in Cargo.toml");
+                        continue;
+                    };
                     file_name = "installer.sh".to_owned();
                     file_path = dist_dir.join(&file_name);
                     // All the triples we know about, sans windows (windows-gnu isn't handled...)
@@ -629,23 +641,35 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
                         .filter(|s| !s.contains("windows"))
                         .cloned()
                         .collect::<Vec<_>>();
+                    let app_version = format!("v{version}");
+                    let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf {repo_url}/releases/download/{app_version}/installer.sh | sh");
+                    let desc = "Install prebuilt binaries via shell script".to_owned();
                     installer_impl = InstallerImpl::GithubShell(InstallerInfo {
                         app_name: app_name.clone(),
-                        app_version: format!("v{version}"),
-                        // FIXME: we should probably actually report an error instead of defaulting?
-                        repo_url: repo.unwrap_or("").to_owned(),
+                        app_version,
+                        repo_url: repo_url.to_owned(),
+                        hint,
+                        desc,
                     });
                 }
                 InstallerStyle::GithubPowershell => {
+                    let Some(repo_url) = repo else {
+                        warn!("skipping --installer=github-powershell: 'repository' isn't set in Cargo.toml");
+                        continue;
+                    };
                     file_name = "installer.ps1".to_owned();
                     file_path = dist_dir.join(&file_name);
                     // Currently hardcoded to this one windows triple
                     target_triples = vec!["x86_64-pc-windows-msvc".to_owned()];
+                    let app_version = format!("v{version}");
+                    let hint = format!("# WARNING: this installer is experimental\nirm '{repo_url}/releases/download/{app_version}/installer.ps1' | iex");
+                    let desc = "Install prebuilt binaries via powershell script".to_owned();
                     installer_impl = InstallerImpl::GithubPowershell(InstallerInfo {
                         app_name: app_name.clone(),
-                        app_version: format!("v{version}"),
-                        // FIXME: we should probably actually report an error instead of defaulting?
-                        repo_url: repo.unwrap_or("").to_owned(),
+                        app_version,
+                        repo_url: repo_url.to_owned(),
+                        hint,
+                        desc,
                     });
                 }
             }
@@ -664,6 +688,129 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
             });
             release.artifacts.push(installer_artifact_idx);
         }
+    }
+
+    // Add release notes
+    for ((_app_name, version), (package_id, release)) in &mut releases {
+        let package_info = &workspace.package_info[&&*package_id];
+
+        // Try to parse out relevant parts of the changelog
+        // FIXME: ...this is kind of excessive to do eagerly and for each crate in the workspace
+        if let Some(changelog_path) = &package_info.changelog_file {
+            if let Ok(changelog_str) = try_load_changelog(changelog_path) {
+                let changelogs = parse_changelog::parse(&changelog_str)
+                    .into_diagnostic()
+                    .wrap_err_with(|| format!("failed to parse changelog at {changelog_path}"));
+                if let Ok(changelogs) = changelogs {
+                    let version_string = format!("{}", package_info.version);
+                    if let Some(release_notes) = changelogs.get(&*version_string) {
+                        release.changelog_title = Some(release_notes.title.to_owned());
+                        release.changelog_body = Some(release_notes.notes.to_owned());
+                    }
+                }
+            }
+        }
+
+        use std::fmt::Write;
+        let mut changelog_body = String::new();
+
+        let mut installers = vec![];
+        let mut bundles = vec![];
+        let mut symbols = vec![];
+        let mut other = vec![];
+        for artifact_idx in &release.artifacts {
+            let artifact = &artifacts[artifact_idx.0];
+            match artifact.kind {
+                ArtifactKind::ExecutableZip => {
+                    bundles.push(artifact);
+                }
+                ArtifactKind::Symbols => {
+                    symbols.push(artifact);
+                }
+                ArtifactKind::DistMetadata => {
+                    // Do nothing
+                }
+                ArtifactKind::Installer => {
+                    installers.push(artifact);
+                }
+                ArtifactKind::Unknown => {
+                    other.push(artifact);
+                }
+                _ => todo!(),
+            }
+        }
+
+        if !installers.is_empty() {
+            changelog_body.push_str("## Install\n\n");
+            for installer in installers {
+                let install_hint;
+                let description;
+
+                match &installer.bundle {
+                    BundleStyle::Installer(InstallerImpl::GithubShell(info)) => {
+                        install_hint = Some(info.hint.clone());
+                        description = Some(info.desc.clone());
+                    }
+                    BundleStyle::Installer(InstallerImpl::GithubPowershell(info)) => {
+                        install_hint = Some(info.hint.clone());
+                        description = Some(info.desc.clone());
+                    }
+                    BundleStyle::Zip | BundleStyle::Tar(_) | BundleStyle::UncompressedFile => {
+                        unreachable!()
+                    }
+                }
+
+                let (Some(hint), Some(desc)) = (install_hint, description) else {
+                    continue;
+                };
+
+                writeln!(&mut changelog_body, "### {desc}\n").unwrap();
+                writeln!(&mut changelog_body, "```shell\n{hint}\n```\n").unwrap();
+            }
+        }
+
+        let repo_url = package_info.repository_url.as_deref();
+        if (bundles.is_empty() || !symbols.is_empty() || !other.is_empty()) && repo_url.is_some() {
+            // FIXME: this is a nasty cludge and we should use --ci=github here to take this path
+            #[allow(clippy::unnecessary_unwrap)]
+            let repo_url = repo_url.unwrap();
+
+            changelog_body.push_str("## Download\n\n");
+            changelog_body.push_str("| target | kind | download |\n");
+            changelog_body.push_str("|--------|------|----------|\n");
+            for artifact in bundles.iter().chain(&symbols).chain(&other) {
+                let mut targets = String::new();
+                let mut multi_target = false;
+                for target in &artifact.target_triples {
+                    if multi_target {
+                        targets.push_str(", ");
+                    }
+                    targets.push_str(target);
+                    multi_target = true;
+                }
+                let kind = match artifact.kind {
+                    ArtifactKind::ExecutableZip => "tarball",
+                    ArtifactKind::Symbols => "symbols",
+                    ArtifactKind::DistMetadata => "dist-manifest.json",
+                    ArtifactKind::Installer => unreachable!(),
+                    _ => "other",
+                };
+                let name = artifact.file_path.file_name().unwrap().to_owned();
+                let app_version = format!("v{version}");
+
+                let download_url = format!("{repo_url}/releases/download/{app_version}/{name}");
+                let download = format!("[{name}]({download_url})");
+                writeln!(&mut changelog_body, "| {targets} | {kind} | {download} |").unwrap();
+            }
+            writeln!(&mut changelog_body).unwrap();
+        }
+
+        if let Some(old_changelog_body) = release.changelog_body.take() {
+            changelog_body.push_str("## Release Notes\n\n");
+            changelog_body.push_str(&old_changelog_body);
+        }
+
+        release.changelog_body = Some(changelog_body);
     }
 
     let releases = releases.into_iter().map(|e| e.1 .1).collect();
@@ -686,6 +833,8 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
         releases.push(Release {
             app_name: release.app_name.clone(),
             app_version: release.version.to_string(),
+            changelog_title: release.changelog_title.clone(),
+            changelog_body: release.changelog_body.clone(),
             artifacts: release
                 .artifacts
                 .iter()
@@ -693,55 +842,70 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                     let artifact = &dist.artifacts[artifact_idx.0];
                     let mut assets = vec![];
 
-                    let built_assets = artifact
-                        .built_assets
-                        .iter()
-                        .filter_map(|(asset_idx, asset_path)| {
-                            let asset = &dist.built_assets[asset_idx.0];
-                            match asset {
-                                BuiltAsset::Executable(exe) => {
-                                    let symbols_artifact = exe.symbols_artifact.map(|a| {
-                                        dist.artifacts[a.0]
-                                            .file_path
-                                            .file_name()
-                                            .unwrap()
-                                            .to_owned()
-                                    });
-                                    Some(Asset {
-                                        name: Some(exe.exe_name.clone()),
-                                        path: Some(asset_path.to_string()),
-                                        kind: AssetKind::Executable(ExecutableAsset {
-                                            symbols_artifact,
-                                        }),
-                                    })
+                    let built_assets =
+                        artifact
+                            .built_assets
+                            .iter()
+                            .filter_map(|(asset_idx, asset_path)| {
+                                let asset = &dist.built_assets[asset_idx.0];
+                                match asset {
+                                    BuiltAsset::Executable(exe) => {
+                                        let symbols_artifact = exe.symbols_artifact.map(|a| {
+                                            dist.artifacts[a.0]
+                                                .file_path
+                                                .file_name()
+                                                .unwrap()
+                                                .to_owned()
+                                        });
+                                        Some(Asset {
+                                            name: Some(exe.exe_name.clone()),
+                                            path: Some(asset_path.to_string()),
+                                            kind: AssetKind::Executable(ExecutableAsset {
+                                                symbols_artifact,
+                                            }),
+                                        })
+                                    }
+                                    BuiltAsset::Symbols(_sym) => {
+                                        // Symbols are their own assets, so no need to report
+                                        None
+                                    }
                                 }
-                                BuiltAsset::Symbols(_sym) => {
-                                    // Symbols are their own assets, so no need to report
-                                    None
-                                }
-                            }
-                        });
+                            });
 
-                    let static_assets = artifact
-                        .static_assets
-                        .iter()
-                        .map(|(kind, asset)| {
-                            let kind = match kind {
-                                StaticAssetKind::Changelog => AssetKind::Changelog,
-                                StaticAssetKind::License => AssetKind::License,
-                                StaticAssetKind::Readme => AssetKind::Readme,
-                            };
-                            Asset {
-                                name: Some(asset.file_name().unwrap().to_owned()),
-                                path: Some(asset.file_name().unwrap().to_owned()),
-                                kind,
-                            }
-                        });
+                    let static_assets = artifact.static_assets.iter().map(|(kind, asset)| {
+                        let kind = match kind {
+                            StaticAssetKind::Changelog => AssetKind::Changelog,
+                            StaticAssetKind::License => AssetKind::License,
+                            StaticAssetKind::Readme => AssetKind::Readme,
+                        };
+                        Asset {
+                            name: Some(asset.file_name().unwrap().to_owned()),
+                            path: Some(asset.file_name().unwrap().to_owned()),
+                            kind,
+                        }
+                    });
 
                     assets.extend(built_assets);
                     assets.extend(static_assets);
                     // Sort the assets by name to make things extra stable
                     assets.sort_by(|k1, k2| k1.name.cmp(&k2.name));
+
+                    let mut install_hint = None;
+                    let mut description = None;
+
+                    match &artifact.bundle {
+                        BundleStyle::Installer(InstallerImpl::GithubShell(info)) => {
+                            install_hint = Some(info.hint.clone());
+                            description = Some(info.desc.clone());
+                        }
+                        BundleStyle::Installer(InstallerImpl::GithubPowershell(info)) => {
+                            install_hint = Some(info.hint.clone());
+                            description = Some(info.desc.clone());
+                        }
+                        BundleStyle::Zip | BundleStyle::Tar(_) | BundleStyle::UncompressedFile => {
+                            // Nothing yet
+                        }
+                    }
 
                     Artifact {
                         name: artifact.file_path.file_name().unwrap().to_owned(),
@@ -751,21 +915,8 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                             Some(artifact.file_path.to_string())
                         },
                         target_triples: artifact.target_triples.clone(),
-                        install_hint: match &artifact.bundle {
-                            BundleStyle::Installer(InstallerImpl::GithubShell(info)) => {
-                                let InstallerInfo { repo_url, app_version, .. } = info;
-                                let install_unix = format!("curl --proto '=https' --tlsv1.2 -L -sSf {repo_url}/releases/download/{app_version}/installer.sh | sh");
-                                Some(install_unix)
-                            }
-                            BundleStyle::Installer(InstallerImpl::GithubPowershell(info)) => {
-                                let InstallerInfo { repo_url, app_version, .. } = info;
-                                let install_windows = format!("irm '{repo_url}/releases/download/{app_version}/installer.ps1' | iex");
-                                Some(install_windows)
-                            }
-                            BundleStyle::Zip => None,
-                            BundleStyle::Tar(_) => None,
-                            BundleStyle::UncompressedFile => None,
-                        },
+                        install_hint,
+                        description,
                         assets,
                         kind: artifact.kind.clone(),
                     }
@@ -1456,10 +1607,6 @@ struct PackageInfo {
     ///
     /// We will *try* to parse this
     changelog_file: Option<Utf8PathBuf>,
-    /// The body of the current version's changelog entry, parsed out
-    changelog_text: Option<String>,
-    /// The title of the current version's changelog entry, parsed out
-    changelog_title: Option<String>,
 }
 
 fn compute_package_info(
@@ -1482,8 +1629,6 @@ fn compute_package_info(
             .into_iter()
             .collect(),
         changelog_file: None,
-        changelog_text: None,
-        changelog_title: None,
     };
 
     // We don't want to search for any license files if one is manually given
@@ -1557,23 +1702,6 @@ fn compute_package_info(
                         info.name,
                         entry.path()
                     );
-                }
-            }
-        }
-    }
-
-    // Try to parse out relevant parts of the changelog
-    // FIXME: ...this is kind of excessive to do eagerly and for each crate in the workspace
-    if let Some(changelog_path) = &info.changelog_file {
-        if let Ok(changelog_str) = try_load_changelog(changelog_path) {
-            let changelogs = parse_changelog::parse(&changelog_str)
-                .into_diagnostic()
-                .wrap_err_with(|| format!("failed to parse changelog at {changelog_path}"));
-            if let Ok(changelogs) = changelogs {
-                let version_string = format!("{}", info.version);
-                if let Some(release) = changelogs.get(&*version_string) {
-                    info.changelog_title = Some(release.title.to_owned());
-                    info.changelog_text = Some(release.notes.to_owned());
                 }
             }
         }

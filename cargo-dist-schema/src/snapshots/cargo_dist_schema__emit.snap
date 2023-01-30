@@ -115,6 +115,13 @@ expression: json_schema
             "$ref": "#/definitions/Asset"
           }
         },
+        "description": {
+          "description": "A brief description of what this artifact is",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "install_hint": {
           "description": "A string describing how to install this",
           "type": [
@@ -268,6 +275,20 @@ expression: json_schema
           "items": {
             "$ref": "#/definitions/Artifact"
           }
+        },
+        "changelog_body": {
+          "description": "The body of the changelog for this release",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "changelog_title": {
+          "description": "The title of the changelog for this release",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

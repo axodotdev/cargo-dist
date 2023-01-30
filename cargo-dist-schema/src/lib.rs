@@ -47,6 +47,14 @@ pub struct Release {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub artifacts: Vec<Artifact>,
+    /// The title of the changelog for this release
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub changelog_title: Option<String>,
+    /// The body of the changelog for this release
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub changelog_body: Option<String>,
 }
 
 /// A distributable bundle that's part of a Release
@@ -75,6 +83,10 @@ pub struct Artifact {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub install_hint: Option<String>,
+    /// A brief description of what this artifact is
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub description: Option<String>,
 }
 
 /// An asset contained in an artifact (executable, license, etc.)

@@ -13,7 +13,7 @@ use clap::Parser;
 use cli::{Cli, Commands, FakeCli, ManifestArgs, OutputFormat};
 use console::Term;
 use lazy_static::lazy_static;
-use miette::{Diagnostic, IntoDiagnostic, Context};
+use miette::{Diagnostic, IntoDiagnostic};
 use thiserror::Error;
 use tracing::error;
 
@@ -130,7 +130,6 @@ fn real_main(cli: &Cli) -> Result<(), miette::Report> {
         Some(Commands::Init(args)) => cmd_init(cli, args),
         Some(Commands::GenerateCi(args)) => cmd_generate_ci(cli, args),
         Some(Commands::Manifest(args)) => cmd_manifest(cli, args),
-        Some(Commands::ReleaseNotes(args)) => cmd_release_notes(cli, args),
         Some(Commands::Build(args)) => cmd_dist(cli, args),
         None => cmd_dist(cli, &cli.build_args),
     }
@@ -177,23 +176,6 @@ fn cmd_manifest(cli: &Cli, _args: &ManifestArgs) -> Result<(), miette::Report> {
     }
     Ok(())
 }
-
-fn cmd_release_notes(cli: &Cli, _args: &ManifestArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::Config {
-        build: true,
-        no_local_paths: cli.no_local_paths,
-        targets: cli.target.clone(),
-        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
-    };
-    let notes = cargo_dist::do_release_notes(&config)?;
-    let mut out = Term::stdout();
-    match cli.output_format {
-        OutputFormat::Human => writeln!(&mut out, "{notes}").into_diagnostic().wrap_err("failed to write to output")?,
-        OutputFormat::Json => unimplemented!(),
-    }
-    Ok(())
-}
-
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     // This command is more automagic, so provide default targets if none are chosen

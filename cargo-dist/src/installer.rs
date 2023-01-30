@@ -276,6 +276,7 @@ fn write_github_install_sh_script(
         app_name,
         app_version,
         repo_url,
+        ..
     } = info;
 
     writeln!(f, "{GITHUB_INSTALL_SH_SCRIPT_PART1}")?;
@@ -402,6 +403,7 @@ fn write_github_install_ps_script(
         app_name,
         app_version,
         repo_url,
+        ..
     } = info;
 
     writeln!(f, "{GITHUB_INSTALL_PS_SCRIPT_PART1}")?;
