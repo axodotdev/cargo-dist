@@ -86,7 +86,9 @@ fn test_manifest() {
 
     // We don't want this to churn every time we do a version bump
     insta::with_settings!({filters => vec![
-        (r"\d+\.\d+\.\d+(\-prerelease\d+)?", "1.0.0-FAKEVERSION")
+        (r"\d+\.\d+\.\d+(\-prerelease\d+)?", "1.0.0-FAKEVERSION"),
+        (r#""changelog_title": .*"#, r#""changelog_title": "CHANGELOG-CENSORED","#),
+        (r#""changelog_body": .*"#, r#""changelog_body": "CHANGELOG-CENSORED""#),
     ]}, {
         insta::assert_snapshot!(format_outputs(&output));
     });

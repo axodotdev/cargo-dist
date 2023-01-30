@@ -73,20 +73,6 @@ pub enum Commands {
     /// Generate CI scripts for orchestrating cargo-dist
     #[clap(disable_version_flag = true)]
     GenerateCi(GenerateCiArgs),
-    /// Get release notes for the current release.
-    /// 
-    /// This will attempt to use a detected RELEASES or CHANGELOG file and parse out the notes
-    /// for the current release with the parse-changelog library. It will then graft on some
-    /// additional generated information like a table describing the files in the release.
-    /// 
-    /// The semantics of this one are kind of vague right now as we don't have a well-defined
-    /// notion of partially publishing the binaries in the workspace. For now it assumes you're
-    /// publishing all the binaries in the workspace together and have combined release notes
-    /// in one file.
-    /// 
-    /// `--output-format=json` is not yet supported.
-    #[clap(disable_version_flag = true)]
-    ReleaseNotes(ReleaseNotesArgs),
     /// Generate the final build manifest without running any builds.
     ///
     /// Everything will be computed based on what cargo-dist *expects*
@@ -102,12 +88,11 @@ pub enum Commands {
 #[derive(Args)]
 pub struct ReleaseNotesArgs {
     /// Get release notes for a specific version.
-    /// 
+    ///
     /// Otherwise the app's current version will be used.
     #[clap(long)]
     pub version: Version,
 }
-
 
 #[derive(Args)]
 pub struct BuildArgs {
