@@ -109,8 +109,8 @@ const GITHUB_CI_ARTIFACT_TASKS2: &str = r###"      - name: Run cargo-dist manife
           cat dist-manifest.json
           gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
           echo "uploaded manifest!"
-          CHANGELOG_TITLE=$(cat temp.json | jq --raw-output ".releases[].changelog_title")
-          cat temp.json | jq --raw-output ".releases[].changelog_body" > new_dist_changelog.md
+          CHANGELOG_TITLE=$(cat dist-manifest.json | jq --raw-output ".releases[].changelog_title")
+          cat dist-manifest.json | jq --raw-output ".releases[].changelog_body" > new_dist_changelog.md
           gh release edit ${{ needs.create-release.outputs.tag }} --title="$CHANGELOG_TITLE" --notes-file=new_dist_changelog.md
           echo "updated release notes!"
           "###;
