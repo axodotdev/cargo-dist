@@ -379,7 +379,9 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
     // Build all the bundles
     for artifact in &dist.artifacts {
         populate_artifact_dir_with_static_assets(&dist, artifact)?;
-        bundle_artifact(&dist, artifact)?;
+        if cfg.build {
+            bundle_artifact(&dist, artifact)?;
+        }
         eprintln!("bundled {}", artifact.file_path);
     }
 
@@ -1613,6 +1615,16 @@ fn compute_package_info(
     workspace_root: &Utf8Path,
     package: &PackageMetadata,
 ) -> Result<PackageInfo> {
+    // Is there a better way to get the path to sniff?
+    // Should we spider more than just package_root and workspace_root?
+    // Should we more carefully prevent grabbing LICENSES from both dirs?
+    // Should we not spider the workspace root for README since Cargo has a proper field for this?
+    // Should we check for a "readme=..." on the workspace root Cargo.toml?
+    let manifest_path = package.manifest_path();
+    let package_root = manifest_path
+        .parent()
+        .expect("package manifest had no parent!?");
+
     let mut info = PackageInfo {
         name: package.name().to_owned(),
         version: package.version().to_owned(),
@@ -1622,7 +1634,7 @@ fn compute_package_info(
         repository_url: package.repository().map(ToOwned::to_owned),
         homepage_url: package.homepage().map(ToOwned::to_owned),
         documentation_url: package.documentation().map(ToOwned::to_owned),
-        readme_file: package.readme().map(ToOwned::to_owned),
+        readme_file: package.readme().map(|readme| package_root.join(readme)),
         license_files: package
             .license_file()
             .map(ToOwned::to_owned)
@@ -1639,16 +1651,6 @@ fn compute_package_info(
     if info.documentation_url.is_none() {
         info.documentation_url = Some(format!("https://docs.rs/{}/{}", info.name, info.version));
     }
-
-    // Is there a better way to get the path to sniff?
-    // Should we spider more than just package_root and workspace_root?
-    // Should we more carefully prevent grabbing LICENSES from both dirs?
-    // Should we not spider the workspace root for README since Cargo has a proper field for this?
-    // Should we check for a "readme=..." on the workspace root Cargo.toml?
-    let manifest_path = package.manifest_path();
-    let package_root = manifest_path
-        .parent()
-        .expect("package manifest had no parent!?");
 
     for dir in &[package_root, workspace_root] {
         let entries = dir
