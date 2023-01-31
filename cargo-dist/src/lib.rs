@@ -912,7 +912,7 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
                     }
 
                     Artifact {
-                        name: artifact.file_path.file_name().unwrap().to_owned(),
+                        name: Some(artifact.file_path.file_name().unwrap().to_owned()),
                         path: if cfg.no_local_paths {
                             None
                         } else {

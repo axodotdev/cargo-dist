@@ -57,13 +57,19 @@ pub struct Release {
     pub changelog_body: Option<String>,
 }
 
-/// A distributable bundle that's part of a Release
+/// A distributable artifact that's part of a Release
 ///
 /// i.e. a zip or installer
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Artifact {
     /// The unique name of the artifact (e.g. `myapp-v1.0.0-x86_64-pc-windows-msvc.zip`)
-    pub name: String,
+    ///
+    /// If this is missing then that indicates the artifact is purely informative and has
+    /// no physical files associated with it. This may be used (in the future) to e.g.
+    /// indicate you can install the application with `cargo install` or `npm install`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub name: Option<String>,
     /// The kind of artifact this is (e.g. "exectuable-zip")
     #[serde(flatten)]
     pub kind: ArtifactKind,

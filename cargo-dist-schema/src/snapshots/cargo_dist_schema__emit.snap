@@ -25,7 +25,7 @@ expression: json_schema
   },
   "definitions": {
     "Artifact": {
-      "description": "A distributable bundle that's part of a Release\n\ni.e. a zip or installer",
+      "description": "A distributable artifact that's part of a Release\n\ni.e. a zip or installer",
       "type": "object",
       "oneOf": [
         {
@@ -104,9 +104,6 @@ expression: json_schema
           }
         }
       ],
-      "required": [
-        "name"
-      ],
       "properties": {
         "assets": {
           "description": "Assets included in the bundle (like executables and READMEs)",
@@ -130,8 +127,11 @@ expression: json_schema
           ]
         },
         "name": {
-          "description": "The unique name of the artifact (e.g. `myapp-v1.0.0-x86_64-pc-windows-msvc.zip`)",
-          "type": "string"
+          "description": "The unique name of the artifact (e.g. `myapp-v1.0.0-x86_64-pc-windows-msvc.zip`)\n\nIf this is missing then that indicates the artifact is purely informative and has no physical files associated with it. This may be used (in the future) to e.g. indicate you can install the application with `cargo install` or `npm install`.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "path": {
           "description": "The location of the artifact on the local system",
