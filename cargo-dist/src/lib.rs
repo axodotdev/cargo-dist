@@ -379,9 +379,7 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
     // Build all the bundles
     for artifact in &dist.artifacts {
         populate_artifact_dir_with_static_assets(&dist, artifact)?;
-        if cfg.build {
-            bundle_artifact(&dist, artifact)?;
-        }
+        bundle_artifact(&dist, artifact)?;
         eprintln!("bundled {}", artifact.file_path);
     }
 
