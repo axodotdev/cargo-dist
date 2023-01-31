@@ -54,8 +54,6 @@ jobs:
       - id: create-gh-release
         uses: taiki-e/create-gh-release-action@v1
         with:
-          # (optional) Path to changelog. This will used to for the body of the Github Releaase™️
-          # changelog: RELEASES.md
           draft: true
           # (required) GitHub token for creating GitHub Releases.
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -110,7 +108,12 @@ const GITHUB_CI_ARTIFACT_TASKS2: &str = r###"      - name: Run cargo-dist manife
           echo "dist manifest ran successfully"
           cat dist-manifest.json
           gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
-          echo "uploaded manifest!""###;
+          echo "uploaded manifest!"
+          CHANGELOG_TITLE=$(cat temp.json | jq --raw-output ".releases[].changelog_title")
+          cat temp.json | jq --raw-output ".releases[].changelog_body" > new_dist_changelog.md
+          gh release edit ${{ needs.create-release.outputs.tag }} --title="$CHANGELOG_TITLE" --notes-file=new_dist_changelog.md
+          echo "updated release notes!"
+          "###;
 
 const GITHUB_CI_INSTALLERS: &str = r###"      - name: Run cargo-dist --installer=...
         run: |
