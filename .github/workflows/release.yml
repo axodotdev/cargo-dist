@@ -43,6 +43,8 @@ jobs:
       - id: create-gh-release
         uses: taiki-e/create-gh-release-action@v1
         with:
+          # (optional) Path to changelog. This will used to for the body of the Github Releaase™️
+          # changelog: RELEASES.md
           draft: true
           # (required) GitHub token for creating GitHub Releases.
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -57,13 +59,13 @@ jobs:
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-20.04
-          install-dist: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2-prerelease5/installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.1/installer.sh | sh
         - target: x86_64-apple-darwin
           os: macos-11
-          install-dist: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2-prerelease5/installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.1/installer.sh | sh
         - target: x86_64-pc-windows-msvc
           os: windows-2019
-          install-dist: irm 'https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2-prerelease5/installer.ps1' | iex
+          install-dist: irm 'https://github.com/axodotdev/cargo-dist/releases/download/v0.0.1/installer.ps1' | iex
     runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -99,7 +101,7 @@ jobs:
       - name: Install Rust
         run: rustup update stable && rustup default stable
       - name: Install cargo-dist
-        run: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2-prerelease5/installer.sh | sh
+        run: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.1/installer.sh | sh
       - name: Run cargo-dist manifest
         run: |
           cargo dist manifest --no-local-paths --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
@@ -107,11 +109,6 @@ jobs:
           cat dist-manifest.json
           gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
           echo "uploaded manifest!"
-          CHANGELOG_TITLE=$(cat temp.json | jq --raw-output ".releases[].changelog_title")
-          cat temp.json | jq --raw-output ".releases[].changelog_body" > new_dist_changelog.md
-          gh release edit ${{ needs.create-release.outputs.tag }} --title="$CHANGELOG_TITLE" --notes-file=new_dist_changelog.md
-          echo "updated release notes!"
-          
       - name: Run cargo-dist --installer=...
         run: |
           cargo dist --output-format=json --no-builds $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
