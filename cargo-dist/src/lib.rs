@@ -812,7 +812,10 @@ fn gather_work(cfg: &Config) -> Result<DistGraph> {
             changelog_body.push_str(&old_changelog_body);
         }
 
-        release.changelog_title = release.changelog_title.take().or_else(|| Some(format!("v{version}")));
+        release.changelog_title = release
+            .changelog_title
+            .take()
+            .or_else(|| Some(format!("v{version}")));
         release.changelog_body = Some(changelog_body);
     }
 
