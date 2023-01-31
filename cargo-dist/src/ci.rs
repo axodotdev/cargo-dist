@@ -35,6 +35,11 @@ permissions:
 #
 # If there's a prerelease-style suffix to the version then the Github Release™️
 # will be marked as a prerelease (handled by taiki-e/create-gh-release-action).
+#
+# Note that when generating links to uploaded artifacts, cargo-dist will currently
+# assume that your git tag is always v{VERSION} where VERSION is the version in
+# the published package's Cargo.toml (this is the default behaviour of cargo-release).
+# In the future this may be made more robust/configurable.
 on:
   push:
     tags:
@@ -82,9 +87,11 @@ const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"    runs-on: ${{ matrix.os }}
         # The two platforms don't agree on how to talk about env vars but they
         # do agree on 'cat' and '$()' so we use that to marshal values between commmands.
         run: |
+          # Actually do builds and make zips and whatnot
           cargo dist --target=${{ matrix.target }} --output-format=json > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
+          # Parse out what we just built and upload it to the Github Release™️
           cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
           echo "uploading..."
           cat uploads.txt
@@ -104,22 +111,28 @@ const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"    runs-on: ${{ matrix.os }}
       - name: Install cargo-dist"###;
 const GITHUB_CI_ARTIFACT_TASKS2: &str = r###"      - name: Run cargo-dist manifest
         run: |
+          # Generate a manifest describing everything
           cargo dist manifest --no-local-paths --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist manifest ran successfully"
           cat dist-manifest.json
+          # Upload the manifest to the Github Release™️
           gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
           echo "uploaded manifest!"
+          # Edit the Github Release™️ title/body to match what cargo-dist thinks it should be
           CHANGELOG_TITLE=$(cat dist-manifest.json | jq --raw-output ".releases[].changelog_title")
           cat dist-manifest.json | jq --raw-output ".releases[].changelog_body" > new_dist_changelog.md
           gh release edit ${{ needs.create-release.outputs.tag }} --title="$CHANGELOG_TITLE" --notes-file=new_dist_changelog.md
-          echo "updated release notes!"
-          "###;
+          echo "updated release notes!""###;
 
 const GITHUB_CI_INSTALLERS: &str = r###"      - name: Run cargo-dist --installer=...
         run: |
+          # Run cargo dist with --no-builds to get agnostic artifacts like installers
           cargo dist --output-format=json --no-builds $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
+          # Grab the installers that were generated and upload them.
+          # This filter is working around the fact that --no-builds is kinds hacky
+          # and still makes/reports malformed zips that we don't want to upload.
           cat dist-manifest.json | jq --raw-output '.releases[].artifacts[] | select(.kind == "installer") | .path' > uploads.txt
           echo "uploading..."
           cat uploads.txt
