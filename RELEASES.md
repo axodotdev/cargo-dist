@@ -1,5 +1,9 @@
 # Next Version (unreleased)
 
+Nothing Yet!
+
+# Version 0.0.2 (2023-01-31)
+
 cargo-dist:
 
 * Added proper detection of README/LICENSE/RELEASES/CHANGELOG files, which are now copied to the root of executable-zips.
@@ -19,6 +23,8 @@ cargo-dist-schema:
     * These are used to populate a Github Release
 * Added "description" to Artifact
     * Currently just used to describe some installers
+* Made Artifact::name Optional to futureproof
+    * If None this indicates the artifact is purely informative and no file exists (i.e. "you can install with cargo-binstall")
     
 # Version 0.0.1 (2023-01-23)
 
