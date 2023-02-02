@@ -13,11 +13,11 @@ use crate::InstallerStyle;
 const GITHUB_CI_TRIGGER: &str = r###"# CI that:
 #
 # * checks for a Git Tag that looks like a release ("v1.2.0")
-# * creates a Github Release™️
+# * creates a Github Release™
 # * builds binaries/packages with cargo-dist
-# * uploads those packages to the Github Release™️
+# * uploads those packages to the Github Release™
 #
-# Note that the Github Release™️ will be created before the packages,
+# Note that the Github Release™ will be created before the packages,
 # so there will be a few minutes where the release has no packages
 # and then they will slowly trickle in, possibly failing. To make
 # this more pleasant we mark the release as a "draft" until all
@@ -33,7 +33,7 @@ permissions:
 # a version number. We just look for `v` followed by at least one number
 # and then whatever. so `v1`, `v1.0.0`, and `v1.0.0-prerelease` all work.
 #
-# If there's a prerelease-style suffix to the version then the Github Release™️
+# If there's a prerelease-style suffix to the version then the Github Release™
 # will be marked as a prerelease (handled by taiki-e/create-gh-release-action).
 #
 # Note that when generating links to uploaded artifacts, cargo-dist will currently
@@ -49,7 +49,7 @@ env:"###;
 
 const GITHUB_CI_CREATE_RELEASE: &str = r###"
 jobs:
-  # Create the Github Release™️ so the packages have something to be uploaded to
+  # Create the Github Release™ so the packages have something to be uploaded to
   create-release:
     runs-on: ubuntu-latest
     outputs:
@@ -91,7 +91,7 @@ const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"    runs-on: ${{ matrix.os }}
           cargo dist --target=${{ matrix.target }} --output-format=json > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
-          # Parse out what we just built and upload it to the Github Release™️
+          # Parse out what we just built and upload it to the Github Release™
           cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
           echo "uploading..."
           cat uploads.txt
@@ -115,10 +115,10 @@ const GITHUB_CI_ARTIFACT_TASKS2: &str = r###"      - name: Run cargo-dist manife
           cargo dist manifest --no-local-paths --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist manifest ran successfully"
           cat dist-manifest.json
-          # Upload the manifest to the Github Release™️
+          # Upload the manifest to the Github Release™
           gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
           echo "uploaded manifest!"
-          # Edit the Github Release™️ title/body to match what cargo-dist thinks it should be
+          # Edit the Github Release™ title/body to match what cargo-dist thinks it should be
           CHANGELOG_TITLE=$(cat dist-manifest.json | jq --raw-output ".releases[].changelog_title")
           cat dist-manifest.json | jq --raw-output ".releases[].changelog_body" > new_dist_changelog.md
           gh release edit ${{ needs.create-release.outputs.tag }} --title="$CHANGELOG_TITLE" --notes-file=new_dist_changelog.md
@@ -140,7 +140,7 @@ const GITHUB_CI_INSTALLERS: &str = r###"      - name: Run cargo-dist --installer
           echo "uploaded installers!""###;
 
 const GITHUB_CI_FINISH_RELEASE: &str = r###"
-  # Mark the Github Release™️ as a non-draft now that everything has succeeded!
+  # Mark the Github Release™ as a non-draft now that everything has succeeded!
   publish-release:
     needs: [create-release, upload-artifacts, upload-manifest]
     runs-on: ubuntu-latest
