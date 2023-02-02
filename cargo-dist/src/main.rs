@@ -148,9 +148,10 @@ fn print_json(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Erro
 
 fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::Config {
-        build: !args.no_builds,
+        artifact_mode: args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
         targets: cli.target.clone(),
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
     let report = do_dist(&config)?;
@@ -162,11 +163,12 @@ fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
     Ok(())
 }
 
-fn cmd_manifest(cli: &Cli, _args: &ManifestArgs) -> Result<(), miette::Report> {
+fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::Config {
-        build: true,
+        artifact_mode: args.build_args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
         targets: cli.target.clone(),
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
     let report = do_manifest(&config)?;
@@ -178,7 +180,7 @@ fn cmd_manifest(cli: &Cli, _args: &ManifestArgs) -> Result<(), miette::Report> {
     Ok(())
 }
 
-fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
+fn cmd_init(cli: &Cli, _args: &InitArgs) -> Result<(), miette::Report> {
     // This command is more automagic, so provide default targets if none are chosen
     let targets = if cli.target.is_empty() {
         default_desktop_targets()
@@ -186,23 +188,17 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         cli.target.clone()
     };
     let config = cargo_dist::Config {
-        build: true,
+        artifact_mode: cargo_dist::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         targets,
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
-    let args = cargo_dist::InitArgs {
-        ci_styles: args.ci.iter().map(|ci| ci.to_lib()).collect(),
-    };
+    let args = cargo_dist::InitArgs {};
     do_init(&config, &args)
 }
 
-fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Report> {
-    if args.style.is_empty() {
-        return Err(miette::miette!(
-            "generate-ci needs at least one ci style (try 'cargo dist generate-ci github')"
-        ));
-    }
+fn cmd_generate_ci(cli: &Cli, _args: &GenerateCiArgs) -> Result<(), miette::Report> {
     // This command is more automagic, so provide default targets if none are chosen
     let targets = if cli.target.is_empty() {
         default_desktop_targets()
@@ -210,14 +206,13 @@ fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Repor
         cli.target.clone()
     };
     let config = cargo_dist::Config {
-        build: true,
+        artifact_mode: cargo_dist::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         targets,
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
-    let args = cargo_dist::GenerateCiArgs {
-        ci_styles: args.style.iter().map(|ci| ci.to_lib()).collect(),
-    };
+    let args = cargo_dist::GenerateCiArgs {};
     do_generate_ci(&config, &args)
 }
 
