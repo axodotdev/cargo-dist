@@ -202,6 +202,7 @@ fn emit() {
     let file = File::options()
         .create(true)
         .write(true)
+        .truncate(true)
         .open(schema)
         .unwrap();
     let mut file = BufWriter::new(file);
