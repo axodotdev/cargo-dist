@@ -57,6 +57,11 @@ pub struct Cli {
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub installer: Vec<InstallerStyle>,
 
+    /// CI we want to support
+    #[clap(long)]
+    #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
+    pub ci: Vec<CiStyle>,
+
     // Add the args from the "real" build command
     #[clap(flatten)]
     pub build_args: BuildArgs,
@@ -96,23 +101,65 @@ pub struct ReleaseNotesArgs {
 
 #[derive(Args)]
 pub struct BuildArgs {
-    /// Don't actually do any builds, this can be useful for generating only installers
-    #[clap(long)]
-    pub no_builds: bool,
+    /// Which subset of the Artifacts to build
+    ///
+    /// Artifacts can be broken up into two major classes:
+    ///
+    /// * local: made for each target system (executable-zips, symbols, MSIs...)
+    /// * global: made once (curl-sh installers, npm package, metadata...)
+    ///
+    /// Having this distinction lets us run cargo-dist independently on
+    /// multiple machines without collisions between the outputs by spinning
+    /// up machines that run something like:
+    ///
+    /// * linux-runner1: cargo-dist --artifacts=global
+    /// * linux-runner2: cargo-dist --artifacts=local --target=x86_64-unknown-linux-gnu
+    /// * windows-runner: cargo-dist --artifacts=local --target=x86_64-pc-windows-msvc
+    ///  
+    /// If let unspecified, we will pick a fuzzier "host" mode that builds "as much as possible"
+    /// for the local system. This mode is appropriate for local testing/debugging/demoing.
+    /// If no --target flags are passed on the CLI then "host" mode will try to intelligently
+    /// guess which targets to build for, which may include building targets that aren't
+    /// defined in your metadata.dist config (since that config may exclude the current machine!).
+    ///
+    /// The specifics of "host" mode are intentionally unspecified to enable us to provider better
+    /// out-of-the-box UX for local usage. In CI environments you should always specify "global"
+    /// or "local" to get consistent behaviour!
+    #[clap(long, value_enum)]
+    #[clap(default_value_t = ArtifactMode::Host)]
+    pub artifacts: ArtifactMode,
+}
+
+/// How we should select the artifacts to build
+#[derive(ValueEnum, Copy, Clone, Debug)]
+pub enum ArtifactMode {
+    /// Build target-specific artifacts like executable-zips, symbols, MSIs...
+    Local,
+    /// Build globally unique artifacts like curl-sh installers, npm packages, metadata...
+    Global,
+    /// Fuzzily build "as much as possible" for the host system
+    Host,
+    /// Build all the artifacts; only really appropriate for `cargo-dist manifest`
+    All,
+}
+
+impl ArtifactMode {
+    /// Convert the application version of this enum to the library version
+    pub fn to_lib(self) -> cargo_dist::ArtifactMode {
+        match self {
+            ArtifactMode::Local => cargo_dist::ArtifactMode::Local,
+            ArtifactMode::Global => cargo_dist::ArtifactMode::Global,
+            ArtifactMode::Host => cargo_dist::ArtifactMode::Host,
+            ArtifactMode::All => cargo_dist::ArtifactMode::All,
+        }
+    }
 }
 
 #[derive(Args)]
-pub struct InitArgs {
-    /// What styles of ci to generate
-    #[clap(long)]
-    pub ci: Vec<CiStyle>,
-}
+pub struct InitArgs {}
 
 #[derive(Args)]
-pub struct GenerateCiArgs {
-    /// What styles of ci to generate
-    pub style: Vec<CiStyle>,
-}
+pub struct GenerateCiArgs {}
 
 /// A style of CI to generate
 #[derive(ValueEnum, Clone, Copy)]
@@ -131,7 +178,7 @@ impl CiStyle {
 }
 
 /// A style of installer to generate
-#[derive(ValueEnum, Clone, Copy)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum InstallerStyle {
     /// Generates a shell script that fetches from github ci
     GithubShell,
@@ -150,7 +197,11 @@ impl InstallerStyle {
 }
 
 #[derive(Args)]
-pub struct ManifestArgs {}
+pub struct ManifestArgs {
+    // Add the args from the "real" build command
+    #[clap(flatten)]
+    pub build_args: BuildArgs,
+}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum OutputFormat {

@@ -6,7 +6,7 @@ use std::fs::File;
 
 use miette::{Context, IntoDiagnostic};
 
-use crate::{ArtifactTarget, InstallerInfo};
+use crate::InstallerInfo;
 
 ////////////////////////////////////////////////////////////////
 // Github Shell
@@ -254,10 +254,9 @@ download_binary_and_run_installer "$@" || exit 1
 "###;
 
 pub(crate) fn generate_github_install_sh_script(
-    artifact: &ArtifactTarget,
     info: &InstallerInfo,
 ) -> Result<(), miette::Report> {
-    let installer_file = &artifact.file_path;
+    let installer_file = &info.dest_path;
     let mut file = File::create(installer_file)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to create installer file {installer_file}"))?;
@@ -296,10 +295,9 @@ fn write_github_install_sh_script(
 ////////////////////////////////////////////////////////////////
 
 pub(crate) fn generate_github_install_ps_script(
-    artifact: &ArtifactTarget,
     info: &InstallerInfo,
 ) -> Result<(), miette::Report> {
-    let installer_file = &artifact.file_path;
+    let installer_file = &info.dest_path;
     let mut file = File::create(installer_file)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to create installer file {installer_file}"))?;
