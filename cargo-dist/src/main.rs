@@ -59,6 +59,7 @@ fn main() {
         .with_max_level(cli.verbose)
         .with_target(false)
         .without_time()
+        .with_writer(std::io::stderr)
         .with_ansi(console::colors_enabled_stderr())
         .init();
 
