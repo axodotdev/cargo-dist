@@ -205,6 +205,13 @@ fn write_github_ci(
         };
         write!(&mut installer_args, "--installer={installer} ")?;
     }
+
+    // If no installer args are present, add two single quotes to keep the YAML valid
+    // See https://github.com/axodotdev/cargo-dist/issues/101. 
+    if installer_args.is_empty() {
+      write!(&mut installer_args, "''")?;
+    }
+
     let installer_args = String::from_utf8(installer_args).unwrap();
     writeln!(f, "  ALL_CARGO_DIST_INSTALLER_ARGS: {installer_args}")?;
 
