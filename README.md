@@ -105,6 +105,14 @@ cargo install cargo-dist --profile=dist
 (`--profile=dist` may get you a slightly more optimized binary.)
 
 
+## Install From The AUR
+
+Arch Linux users can install `cargo-dist` from the [AUR](https://aur.archlinux.org/packages?O=0&SeB=nd&K=cargo-dist&outdated=&SB=p&SO=d&PP=50&submit=Go) using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers). For example:
+
+```sh
+paru -S cargo-dist
+```
+
 ## Download Prebuilt Binaries From Github Releases
 
 [See The Latest Release](https://github.com/axodotdev/cargo-dist/releases/latest)!
