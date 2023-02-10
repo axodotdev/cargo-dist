@@ -128,7 +128,7 @@ get_architecture() {
                 local _ostype=unknown-linux-gnu
             else
                 local _ostype=unknown-linux-musl
-                say "Downloading musl binary that does not include \`rover supergraph compose\`."
+                say "Downloading musl binary."
             fi
             ;;
 
