@@ -70,7 +70,7 @@ pub struct Artifact {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub name: Option<String>,
-    /// The kind of artifact this is (e.g. "exectuable-zip")
+    /// The kind of artifact this is (e.g. "executable-zip")
     #[serde(flatten)]
     pub kind: ArtifactKind,
     /// The target triple of the bundle

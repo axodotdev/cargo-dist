@@ -221,7 +221,7 @@ fn build_cargo_target(
     // and not all of C++. I am however unclear on "which" "libc" you're statically
     // linking. More Research Needed.
     //
-    // For similar reasons we may want to perfer targetting "linux-musl" over
+    // For similar reasons we may want to prefer targeting "linux-musl" over
     // "linux-gnu" -- the former statically links libc and makes us more portable
     // to "weird" linux setups like NixOS which apparently doesn't have like
     // /etc or /lib to try to try to force things to properly specify their deps
@@ -770,7 +770,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
             // concatenate files together to get bigger units. Rust provides the
             // opposite: the codegen-units=N option tells rustc that it should try to
             // break up a crate into at most N different units. This is done with some
-            // heuristics and contraints to try to still get the most out of each unit
+            // heuristics and constraints to try to still get the most out of each unit
             // (i.e. try to keep functions that call eachother together for inlining).
             //
             // In the --release profile, codegen-units is set to 16, which attempts
