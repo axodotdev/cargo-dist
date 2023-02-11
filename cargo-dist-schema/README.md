@@ -7,7 +7,7 @@ Schema reporting/parsing for cargo-dist's `dist-manifest.json`.
 
 This can be used to parse the machine-readable manifests produced by cargo-dist. Ideally it should be forward and backward compatible with newer and older versions of the manifests.
 
-This compatability is fairly important as one tool may need to look at releases spread over *years*. Also cargo-dist is self-hosting from previous releases, so when looking at cargo-dist's own releases there will always be (at least) an off-by-one in the manifest and the tool that manifest describes.
+This compatibility is fairly important as one tool may need to look at releases spread over *years*. Also cargo-dist is self-hosting from previous releases, so when looking at cargo-dist's own releases there will always be (at least) an off-by-one in the manifest and the tool that manifest describes.
 
 The bootstrapping chain officially starts at:
 

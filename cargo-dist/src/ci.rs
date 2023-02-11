@@ -85,7 +85,7 @@ const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"    runs-on: ${{ matrix.os }}
         # This logic is a bit janky because it's trying to be a polyglot between
         # powershell and bash since this will run on windows, macos, and linux!
         # The two platforms don't agree on how to talk about env vars but they
-        # do agree on 'cat' and '$()' so we use that to marshal values between commmands.
+        # do agree on 'cat' and '$()' so we use that to marshal values between commands.
         run: |
           # Actually do builds and make zips and whatnot
           cargo dist --target=${{ matrix.target }} --output-format=json > dist-manifest.json

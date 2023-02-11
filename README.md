@@ -337,7 +337,7 @@ In the future we'll probably also turn on these settings:
 
 * `profile.dist.lto="fat"` -- further optimize the binary in a way that's only practical for shippable releases
 * `RUSTFLAGS="-Csymbol-mangling-version=v0"` -- use the Fancier symbol mangling that preserves more info for debuggers
-* `RUSTFLAGS="-Cforce-frame-pointers=yes"` -- enable frame pointers, making debuggers and profilers more reliable and effecient in exchange for usually-negligible perf losses
+* `RUSTFLAGS="-Cforce-frame-pointers=yes"` -- enable frame pointers, making debuggers and profilers more reliable and efficient in exchange for usually-negligible perf losses
 * `RUSTFLAGS="--remap-path-prefix=..."` -- try to strip local paths from the debuginfo/binary 
 
 In a similar vein to the `crt-static` change, we may also one day prefer `linux-musl` over `linux-gnu` to produce more portable binaries. Currently the only mechanism we have to do this is "try to run builds on Github's older linux images so the minimum glibc version isn't too high". This is a place where we lack expertese and welcome recommendations! (This is blocked on supporting cross-compilation.)

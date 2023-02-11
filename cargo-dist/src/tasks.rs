@@ -69,7 +69,7 @@ pub struct Config {
 /// The style of CI we should generate
 #[derive(Clone, Copy, Debug)]
 pub enum CiStyle {
-    /// Genereate Github CI
+    /// Generate Github CI
     Github,
 }
 
