@@ -1,7 +1,52 @@
 //! Code to compute the tasks cargo-dist should do
 //!
 //! This is the heart and soul of cargo-dist, and ideally the [`gather_work`][] function
-//! should compute every minute detail dist will perform ahead of time.
+//! should compute every minute detail dist will perform ahead of time. This is done with
+//! the [`DistGraphBuilder`][], which roughly builds up the work to do as follows:
+//!
+//! 1. [`workspace_info`][]: find out everything we want to know about the workspace (binaries, configs, etc)
+//! 2. compute the TargetTriples we're interested based on ArtifactMode and target configs/flags
+//! 3. add Releases for all the binaries selected by the above steps
+//! 4. for each TargetTriple, create a ReleaseVariant of each Release
+//! 5. add target-specific Binaries to each ReleaseVariant
+//! 6. add Artifacts to each Release, which will be propagated to each ReleaseVariant as necessary
+//!   1. add executable-zips, propagated to ReleaseVariants
+//!   2. add installers, each one decides if it's global or local
+//! 7. compute actual BuildSteps from the current graph (a Binary will only induce an actual `cargo build`
+//!    here if one of the Artifacts that was added requires outputs from it!)
+//! 8. (NOT YET IMPLEMENTED) generate release/announcement notes
+//!
+//! During step 6 a lot of extra magic happens:
+//!
+//! * We drop artifacts on the ground if the current ArtifactMode disallows them
+//! * We also try to automatically detect that a Binary That Needs To Be Built Now
+//!   can produce symbols and make an Artifact for that too.
+//!
+//! In summary, the DistGraph has roughly the following hierarchy
+//!
+//! * Announcement: all the releases together
+//!   * Releases: a specific version of an app (my-app-v1.0.0)
+//!    * global Artifacts: artifacts that have only one version across all platforms
+//!    * ReleaseVariants: a target-specific part of a Release (my-app-v1.0.0-x86_64-apple-darwin)
+//!      * local Artifacts: artifacts that are per-Variant
+//!      * Binaries: a binary that should be built for a specifc Variant
+//!   * BuildSteps: steps we should take to build the artifacts
+//!
+//! Note that much of this hierarchy is rearranged/simplified in dist-manifest.json!
+//!
+//! Binaries are a little bit weird in that they are in principle nested under ReleaseVariants
+//! but can/should be shared between them when possible (e.g. if you have a crash reporter
+//! binary that's shared across various apps). This is... not well-supported and things will
+//! go a bit wonky if you actually try to do this right now. Notably what to parent a Symbols
+//! Artifact to becomes ambiguous! Probably we should just be fine with duplicating things in
+//! this case..?
+//!
+//! Also note that most of these things have (ideally, unchecked) globally unique "ids"
+//! that are used to create ids for things nested under them, to ensure final
+//! artifacts/folders/files always have unique names.
+//!
+//! Also note that the BuildSteps for installers are basically monolithic "build that installer"
+//! steps to give them the freedom to do whatever they need to do.
 
 use std::{
     fs::File,
@@ -247,14 +292,6 @@ pub enum InstallerStyle {
     #[serde(rename = "github-powershell")]
     GithubPowershell,
 }
-
-/// A unique id for a [`BuildTarget`][]
-#[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-pub struct BuildTargetIdx(pub usize);
-
-/// A unique id for a [`BuiltAsset`][]
-#[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-pub struct BuiltAssetIdx(pub usize);
 
 /// A unique id for a [`ArtifactTarget`][]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
