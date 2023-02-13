@@ -698,6 +698,8 @@ pub struct PackageInfo {
     pub authors: Vec<String>,
     /// The license the package is provided under
     pub license: Option<String>,
+    /// False if they set publish=false, true otherwise
+    pub publish: bool,
     /// URL to the repository for this package
     ///
     /// This URL can be used by various CI/Installer helpers. In the future we
@@ -1458,6 +1460,7 @@ impl DistGraph {
 
 /// Precompute all the work this invocation will need to do
 pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
+    eprintln!("analyzing workspace:");
     let cargo = cargo()?;
     let package_graph = package_graph(&cargo)?;
     let workspace = workspace_info(&package_graph)?;
@@ -1504,24 +1507,69 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     };
 
     // Choose which binaries we want to release
-    let mut rust_binaries = vec![];
+    let disabled_sty = console::Style::new().dim();
+    let enabled_sty = console::Style::new();
+    let mut rust_releases = vec![];
     for (pkg_id, pkg) in &workspace.package_info {
-        if !pkg.config.dist.unwrap_or(true) {
-            info!("ignoring {pkg_id}'s binaries (dist = false)");
-            continue;
+        let pkg_name = &pkg.name;
+
+        // Determine if this package's binaries should be Released
+        let mut disabled_reason = None;
+        if pkg.binaries.is_empty() {
+            // Nothing to publish if there's no binaries!
+            disabled_reason = Some("no binaries");
+        } else if let Some(do_dist) = pkg.config.dist {
+            // If [metadata.dist].dist is explicitly set, respect it!
+            if !do_dist {
+                disabled_reason = Some("dist = false");
+            }
+        } else if !pkg.publish {
+            // Otherwise defer to Cargo's `publish = false`
+            disabled_reason = Some("publish = false");
         }
+
+        // Report our conclusion/discoveries
+        let sty;
+        if let Some(reason) = disabled_reason {
+            sty = &disabled_sty;
+            eprintln!("  {}", sty.apply_to(format!("{pkg_name} ({reason})")));
+        } else {
+            sty = &enabled_sty;
+            eprintln!("  {}", sty.apply_to(pkg_name));
+        }
+
+        // Report each binary and potentially add it to the Release for this package
+        let mut rust_binaries = vec![];
         for binary in &pkg.binaries {
-            info!("found rust binary: {binary} ({pkg_id})");
-            rust_binaries.push((*pkg_id, binary));
+            eprintln!("    {}", sty.apply_to(format!("[bin] {}", binary)));
+            // In the future might want to allow this to be granular for each binary
+            if disabled_reason.is_none() {
+                rust_binaries.push(binary);
+            }
+        }
+
+        // If any binaries were accepted for this package, it's a Release!
+        if !rust_binaries.is_empty() {
+            rust_releases.push((*pkg_id, rust_binaries));
         }
     }
+    eprintln!();
 
-    // Create a Release for each binary
-    for (pkg_id, binary) in &rust_binaries {
+    // Give a friendly hint
+    if rust_releases.is_empty() {
+        let sty = console::Style::new().red();
+        eprintln!(
+            "{}",
+            sty.apply_to("...hey this workspace doesn't have anything to dist!")
+        );
+        eprintln!();
+    }
+
+    // Create a Release for each package
+    for (pkg_id, binaries) in &rust_releases {
         // TODO: make app name configurable? Use some other fields in the PackageMetadata?
-        let app_name = (*binary).clone();
         let package_info = &graph.workspace().package_info[pkg_id];
-        // TODO: allow apps to be versioned separately from packages?
+        let app_name = package_info.name.clone();
         let version = package_info.version.clone();
 
         // Create a Release for this binary
@@ -1545,7 +1593,9 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             let variant = graph.add_variant(release, target.clone());
 
             // Tell the variant to include this binary
-            graph.add_binary(variant, pkg_id, (*binary).clone());
+            for binary in binaries {
+                graph.add_binary(variant, pkg_id, (*binary).clone());
+            }
 
             // Add static assets
             let auto_includes_enabled = package_info.config.auto_includes.unwrap_or(true);
@@ -1767,6 +1817,7 @@ fn package_info(
         description: package.description().map(ToOwned::to_owned),
         authors: package.authors().to_vec(),
         license: package.license().map(ToOwned::to_owned),
+        publish: !package.publish().is_never(),
         repository_url: package.repository().map(ToOwned::to_owned),
         homepage_url: package.homepage().map(ToOwned::to_owned),
         documentation_url: package.documentation().map(ToOwned::to_owned),
@@ -1869,12 +1920,13 @@ pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Docum
 
 fn get_dist_profile(manifest_path: &Utf8Path) -> Result<CargoProfile> {
     let workspace_toml = load_root_cargo_toml(manifest_path)?;
-    let dist_profile = &workspace_toml["profile"][PROFILE_DIST];
+    let dist_profile = &workspace_toml
+        .get("profile")
+        .and_then(|p| p.get(PROFILE_DIST));
 
-    // Use the mandatory "inherits" field as a proxy for the profile existing
-    if !dist_profile["inherits"].is_str() {
+    let Some(dist_profile) = dist_profile else {
         return Err(miette!("[profile.dist] didn't exist"));
-    }
+    };
 
     // Get the fields we care about
     let debug = &dist_profile["debug"];

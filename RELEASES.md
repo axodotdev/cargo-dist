@@ -14,7 +14,7 @@ The following settings can *only* be set in `[workspace]`:
 
 The following settings can be set on either `[workspace]` or `[package]`, with the latter overriding the former:
 
-* dist: (bool, defaults true) whether this package's binaries should be visible to cargo-dist for the purposes of Releases.
+* dist: (bool, defaults to "undefined") whether this package's binaries should be visible to cargo-dist for the purposes of Releases. If undefined, we will defer to cargo's own publish=false config.
 * installers: (list of installer kinds) the default set of installers to generate for releases
 * targets: (list of rust-style target-triples) the default set of targets to use for releases (sort of, see the section on CLI configuration)
 * include: (list of paths relative to that Cargo.toml's dir) extra files to include in executable-zips (does not currently support paths or wildcards)
@@ -62,11 +62,12 @@ In the future this flag will also be used to specify a subset of the workspace t
 
 ## Fixes
 
-* installer artifacts are now properly prefixed with the id of the Release they're part of, preventing conflicts when doing multiple Releases at once (installer.sh => my-app-v1.0.0-installer.sh).
-* the generated github CI script is now Valid YAML. The script ran fine, but it was rightfully angering YAML linters!
+* Installer artifacts are now properly prefixed with the id of the Release they're part of, preventing conflicts when doing multiple Releases at once (installer.sh => my-app-v1.0.0-installer.sh).
+* The generated github CI script is now Valid YAML. The script ran fine, but it was rightfully angering YAML linters!
 * (NOT YET IMPLEMENTED) we now properly detect if `cargo dist init` has been run by checking for the presence of `[profile.dist]` in your root Cargo.toml
 * (NOT YET IMPLEMENTED) there is now top level fields in dist-manifest.json for release notes for the "full announcement" of all Releases. These fields should be preferred when generating e.g. the body of a Github Release, as they will behave more correctly when there are multiple Releases.
-
+* **If multiple binaries are defined by one Cargo package, they will now be considered part of the same "app" and bundled together in executable-zips.** Previously we would give each binary its own "app". The new behaviour matches how 'cargo install' works and is compatible with the expectations of 'cargo binstall'. You kinda have to go out of your way to shove multiple binaries under one package, so we figure if you do, we should respect it!
+* If a package specifes publish=false in its Cargo.toml, we will take this as a hint to not dist it. You can override this behaviour by setting `[package.metadata.dist] dist = true` in that Cargo.toml.
 
 
 

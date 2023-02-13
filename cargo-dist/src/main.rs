@@ -6,9 +6,10 @@ use std::io::Write;
 use std::panic;
 use std::sync::Mutex;
 
+use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
 use cargo_dist::*;
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{Cli, Commands, FakeCli, ManifestArgs, OutputFormat};
 use console::Term;
@@ -108,7 +109,7 @@ fn main() {
                     .location()
                     .map(|loc| format!("at {}:{}:{}", loc.file(), loc.line(), loc.column())),
             })
-            .wrap_err("cargo vet panicked"),
+            .wrap_err("cargo dist panicked"),
         );
     }));
 
@@ -136,7 +137,70 @@ fn real_main(cli: &Cli) -> Result<(), miette::Report> {
     }
 }
 
-fn print_human(_out: &mut Term, _report: &DistManifest) -> Result<(), std::io::Error> {
+fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::Error> {
+    // First say what the announcement would be
+    let announce_title = "(TODO: implement this string!)";
+    writeln!(out, "announcing {announce_title}")?;
+
+    // Now list off all releases
+    for release in &manifest.releases {
+        writeln!(
+            out,
+            "{}",
+            out.style()
+                .blue()
+                .apply_to(format!("  {} {}", release.app_name, release.app_version))
+        )?;
+        for artifact in &release.artifacts {
+            // Print out the name or path of the artifact (path is more useful by noisier)
+            if let Some(path) = &artifact.path {
+                // Try to highlight the actual filename for easier scanning
+                let path = Utf8PathBuf::from(path);
+                let file = path.file_name().unwrap();
+                let parent = path.as_str().strip_suffix(file);
+                if let Some(parent) = parent {
+                    write!(out, "    {}", parent)?;
+                    writeln!(out, "{}", out.style().green().apply_to(file))?;
+                } else {
+                    write!(out, "    {}", out.style().green().apply_to(path))?;
+                }
+            } else if let Some(name) = &artifact.name {
+                writeln!(out, "    {}", out.style().green().apply_to(name))?;
+            }
+
+            // Print out all the binaries first, those are the money!
+            for asset in &artifact.assets {
+                if let Some(path) = &asset.path {
+                    if let AssetKind::Executable(exe) = &asset.kind {
+                        writeln!(out, "      [bin] {}", path)?;
+                        if let Some(syms) = &exe.symbols_artifact {
+                            writeln!(out, "        (symbols artifact: {syms})")?;
+                        }
+                    }
+                }
+            }
+
+            // Provide a more compact printout of less interesting files
+            // (We have more specific labels than "misc" here, but we don't care)
+            let mut printed_asset = false;
+            for asset in &artifact.assets {
+                if !matches!(&asset.kind, AssetKind::Executable(_)) {
+                    if let Some(path) = &asset.path {
+                        if printed_asset {
+                            write!(out, ", ")?;
+                        } else {
+                            printed_asset = true;
+                            write!(out, "      [misc] ")?;
+                        }
+                        write!(out, "{path}")?;
+                    }
+                }
+            }
+            if printed_asset {
+                writeln!(out)?;
+            }
+        }
+    }
     Ok(())
 }
 
@@ -174,7 +238,15 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
     let report = do_manifest(&config)?;
     let mut out = Term::stdout();
     match cli.output_format {
-        OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
+        OutputFormat::Human => {
+            print_human(&mut out, &report).into_diagnostic()?;
+
+            // Add some context if we're printing predicted paths
+            if !cli.no_local_paths {
+                let message = "\nNOTE: 'cargo dist manifest' does not perform builds, these paths may not exist yet!";
+                writeln!(out, "{}", out.style().yellow().apply_to(message)).into_diagnostic()?;
+            }
+        }
         OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
     }
     Ok(())
