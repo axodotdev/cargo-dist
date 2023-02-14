@@ -5,16 +5,20 @@
 
 # This is just a little script that can be downloaded from the internet to
 # install an app. It downloads the tarball from GitHub releases,
-# extracts it and runs `??? TODO ???`. This means that you can pass
-# arguments to this shell script and they will be passed along to the installer.
+# and extracts it to ~/.cargo/bin/
+#
+# In the future this script will gain extra features, but for now it's
+# intentionally very simplistic to avoid shipping broken things.
 
 param (
-    [Parameter(HelpMessage = 'The GitHub repo from which to download the program.')]
-    [string]$repo = '{{REPO}}',
-    [Parameter(HelpMessage = 'Which app to download from the GitHub release.')]
+    [Parameter(HelpMessage = 'The name of the App')]
     [string]$app_name = '{{APP_NAME}}',
-    [Parameter(HelpMessage = 'Which version of the app to download.')]
-    [string]$package_version = '{{PACKAGE_VERSION}}'
+    [Parameter(HelpMessage = 'The version of the App')]
+    [string]$app_version = '{{APP_VERSION}}',
+    [Parameter(HelpMessage = 'The base name to use for artifacts to fetch')]
+    [string]$artifact_base_name = '{{ARTIFACT_BASE_NAME}}',
+    [Parameter(HelpMessage = 'The URL of the directory where artifacts can be fetched from')]
+    [string]$artifact_download_url = '{{ARTIFACT_DOWNLOAD_URL}}'
 )
 
 function Install-Binary($install_args) {
@@ -23,35 +27,35 @@ function Install-Binary($install_args) {
 
   Initialize-Environment
 
-  # If the VERSION env var is set, we use it instead
-  # of the version defined in the cargo.toml
-  $download_version = if (Test-Path env:VERSION) {
-    $Env:VERSION
-  } else {
-    $package_version
-  }
-
-  $exe = Download($download_version)
+  $exe = Download "$artifact_download_url" "$artifact_base_name"
   Invoke-Installer "$exe" "$install_args"
 
   $ErrorActionPreference = $old_erroractionpreference
 }
 
-function Download($version) {
-  $url = "$repo/releases/download/$version/$app_name-$version-x86_64-pc-windows-msvc.zip"
-  "Downloading $app_name from $url" | Out-Host
+function Download($download_url, $base_name) {
+  $arch = "x86_64-pc-windows-msvc"
+  $zip_ext = ".zip"
+  $exe_ext = ".exe"
+  $url = "$download_url/$base_name-$arch$zip_ext"
+  "Downloading $app_name $app_version from $url" | Out-Host
   $tmp = New-Temp-Dir
-  $dir_path = "$tmp\$app_name.zip"
+  $dir_path = "$tmp\$app_name$zip_ext"
   $wc = New-Object Net.Webclient
   $wc.downloadFile($url, $dir_path)
   Expand-Archive -Path $dir_path -DestinationPath "$tmp"
-  return "$tmp\$app_name.exe"
+
+  # TODO: take a list of binaries each zip will contain so we know what to extract
+  return "$tmp\$app_name$exe_ext"
 }
 
 function Invoke-Installer($tmp, $install_args) {
+  # FIXME: respect $CARGO_HOME if set
   $bin_dir = New-Item -Force -ItemType Directory -Path (Join-Path $HOME ".cargo\bin")
   Copy-Item "$exe" -Destination "$bin_dir"
   Remove-Item "$tmp" -Recurse -Force
+
+  "Installed $app_name $app_version to $bin_dir" | Out-Host
 }
 
 function Initialize-Environment() {
