@@ -327,7 +327,7 @@ fn write_github_install_ps_script(
         .replace("{{APP_NAME}}", app_name)
         .replace("{{PACKAGE_VERSION}}", app_version);
 
-    f.write(install_script.as_bytes())?;
+    f.write_all(install_script.as_bytes())?;
 
     Ok(())
 }
