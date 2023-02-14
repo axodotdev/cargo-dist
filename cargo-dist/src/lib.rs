@@ -5,7 +5,7 @@
 //!
 //!
 
-use std::{collections::HashMap, fs::File, io::BufReader, process::Command};
+use std::{collections::HashMap, fs::File, io::BufReader, ops::Not, process::Command};
 
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Release};
@@ -28,6 +28,11 @@ mod tests;
 /// Top level command of cargo_dist -- do everything!
 pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
     let dist = tasks::gather_work(cfg)?;
+    if !dist.is_init {
+        return Err(miette!(
+            "please run 'cargo dist init' before running any other commands!"
+        ));
+    }
 
     // TODO: parallelize this by working this like a dependency graph, so we can start
     // bundling up an executable the moment it's built! Note however that you shouldn't
@@ -49,7 +54,7 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
 
     // Run all the build steps
     for step in &dist.build_steps {
-        do_build_step(&dist, step)?;
+        run_build_step(&dist, step)?;
     }
 
     for artifact in &dist.artifacts {
@@ -62,6 +67,12 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
 /// Just generate the manifest produced by `cargo dist build` without building
 pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
     let dist = gather_work(cfg)?;
+    if !dist.is_init {
+        return Err(miette!(
+            "please run 'cargo dist init' before running any other commands!"
+        ));
+    }
+
     Ok(build_manifest(cfg, &dist))
 }
 
@@ -182,8 +193,8 @@ fn manifest_artifact(
     }
 }
 
-/// Build a target
-fn do_build_step(dist_graph: &DistGraph, target: &BuildStep) -> Result<()> {
+/// Run some build step
+fn run_build_step(dist_graph: &DistGraph, target: &BuildStep) -> Result<()> {
     match target {
         BuildStep::Cargo(target) => build_cargo_target(dist_graph, target),
         BuildStep::CopyFile(CopyFileStep {
@@ -538,188 +549,29 @@ pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
     // Load in the workspace toml to edit and write back
     let mut workspace_toml = tasks::load_root_cargo_toml(&workspace.manifest_path)?;
 
-    // Setup the [profile.dist]
-    {
-        let profiles = workspace_toml["profile"].or_insert(toml_edit::table());
-        if let Some(t) = profiles.as_table_mut() {
-            t.set_implicit(true)
-        }
-        let dist_profile = &mut profiles[PROFILE_DIST];
-        if !dist_profile.is_none() {
-            return Err(miette!(
-                "already init! (based on [profile.dist] existing in your Cargo.toml)"
-            ));
-        }
-        let mut new_profile = toml_edit::table();
-        {
-            let new_profile = new_profile.as_table_mut().unwrap();
-            // We're building for release, so this is a good base!
-            new_profile.insert("inherits", toml_edit::value("release"));
-            // We want *full* debuginfo for good crashreporting/profiling
-            // This doesn't bloat the final binary because we use split-debuginfo below
-            new_profile.insert("debug", toml_edit::value(true));
-            // Ensure that all debuginfo is pulled out of the binary and tossed
-            // into a separate file from the final binary. This should ideally be
-            // uploaded to something like a symbol server to be fetched on demand.
-            // This is already the default on windows (.pdb) and macos (.dsym) but
-            // is rather bleeding on other platforms (.dwp) -- it requires Rust 1.65,
-            // which as of this writing in the latest stable rust release! If anyone
-            // ever makes a big deal with building final binaries with an older MSRV
-            // we may need to more intelligently select this.
-            new_profile.insert("split-debuginfo", toml_edit::value("packed"));
-
-            // TODO: set codegen-units=1? (Probably Not!)
-            //
-            // Ok so there's an inherent tradeoff in compilers where if the compiler does
-            // everything in a very serial/global way, it can discover more places where
-            // optimizations can be done and theoretically make things faster/smaller
-            // using all the information at its fingertips... at the cost of your builds
-            // taking forever. Compiler optimizations generally take super-linear time,
-            // so if you let the compiler see and think about EVERYTHING your builds
-            // can literally take *days* for codebases on the order of LLVM itself.
-            //
-            // To keep compile times tractable, we generally break up the program
-            // into "codegen units" (AKA "translation units") that get compiled
-            // independently and then combined by the linker. This keeps the super-linear
-            // scaling under control, but prevents optimizations like inlining across
-            // units. (This process is why we have things like "object files" and "rlibs",
-            // those are the intermediate artifacts fed to the linker.)
-            //
-            // Compared to C, Rust codegen units are quite monolithic. Where each C
-            // *file* might gets its own codegen unit, Rust prefers scoping them to
-            // an entire *crate*.  As it turns out, neither of these answers is right in
-            // all cases, and being able to tune the unit size is useful.
-            //
-            // Large C++ codebases like Firefox have "unified" builds where they basically
-            // concatenate files together to get bigger units. Rust provides the
-            // opposite: the codegen-units=N option tells rustc that it should try to
-            // break up a crate into at most N different units. This is done with some
-            // heuristics and constraints to try to still get the most out of each unit
-            // (i.e. try to keep functions that call eachother together for inlining).
-            //
-            // In the --release profile, codegen-units is set to 16, which attempts
-            // to strike a balance between The Best Binaries and Ever Finishing Compiles.
-            // In principle, tuning this down to 1 could be profitable, but LTO
-            // (see the next TODO) does most of that work for us. As such we can probably
-            // leave this alone to keep compile times reasonable.
-
-            // TODO: set lto="thin" (or "fat")? (Probably "fat"!)
-            //
-            // LTO, Link Time Optimization, is basically hijacking the step where we
-            // would link together everything and going back to the compiler (LLVM) to
-            // do global optimizations across codegen-units (see the previous TODO).
-            // Better Binaries, Slower Build Times.
-            //
-            // LTO can be "fat" (or "full") or "thin".
-            //
-            // Fat LTO is the "obvious" implementation: once you're done individually
-            // optimizing the LLVM bitcode (IR) for each compilation unit, you concatenate
-            // all the units and optimize it all together. Extremely serial, extremely
-            // slow, but thorough as hell. For *enormous* codebases (millions of lines)
-            // this can become intractably expensive and crash the compiler.
-            //
-            // Thin LTO is newer and more complicated: instead of unconditionally putting
-            // everything together, we want to optimize each unit with other "useful" units
-            // pulled in for inlining and other analysis. This grouping is done with
-            // similar heuristics that rustc uses to break crates into codegen-units.
-            // This is much faster than Fat LTO and can scale to arbitrarily big
-            // codebases, but does produce slightly worse results.
-            //
-            // Release builds currently default to lto=false, which, despite the name,
-            // actually still does LTO (lto="off" *really* turns it off)! Specifically it
-            // does Thin LTO but *only* between the codegen units for a single crate.
-            // This theoretically negates the disadvantages of codegen-units=16 while
-            // still getting most of the advantages! Neat!
-            //
-            // Since most users will have codebases significantly smaller than An Entire
-            // Browser, we can probably go all the way to default lto="fat", and they
-            // can tune that down if it's problematic. If a user has "nightly" and "stable"
-            // builds, it might be the case that they want lto="thin" for the nightlies
-            // to keep them timely.
-            //
-            // > Aside: you may be wondering "why still have codegen units at all if using
-            // > Fat LTO" and the best answer I can give you is "doing things in parallel
-            // > at first lets you throw out a lot of junk and trim down the input before
-            // > starting the really expensive super-linear global analysis, without losing
-            // > too much of the important information". The less charitable answer is that
-            // > compiler infra is built around codegen units and so this is a pragmatic hack.
-            // >
-            // > Thin LTO of course *really* benefits from still having codegen units.
-
-            // TODO: set panic="abort"?
-            //
-            // PROBABLY NOT, but here's the discussion anyway!
-            //
-            // The default is panic="unwind", and things can be relying on unwinding
-            // for correctness. Unwinding support bloats up the binary and can make
-            // code run slower (because each place that *can* unwind is essentially
-            // an early-return the compiler needs to be cautious of).
-            //
-            // panic="abort" immediately crashes the program if you panic,
-            // but does still run the panic handler, so you *can* get things like
-            // backtraces/crashreports out at that point.
-            //
-            // See RUSTFLAGS="-Cforce-unwind-tables" for the semi-orthogonal flag
-            // that adjusts whether unwinding tables are emitted at all.
-            //
-            // Major C++ applications like Firefox already build with this flag,
-            // the Rust ecosystem largely works fine with either.
-
-            new_profile
-                .decor_mut()
-                .set_prefix("\n# generated by 'cargo dist init'\n")
-        }
-        dist_profile.or_insert(new_profile);
+    // Init things
+    let mut did_anything = false;
+    if init_dist_profile(cfg, &mut workspace_toml)? {
+        eprintln!("added [profile.dist] to your root Cargo.toml");
+        did_anything = true;
+    } else {
+        eprintln!("[profile.dist] already exists, nothing to do");
     }
-    // Setup [workspace.metadata.dist] or [package.metadata.dist]
-    /* temporarily disabled until we have a real config to write here
-    {
-        let metadata_pre_key = if workspace.root_package.is_some() {
-            "package"
-        } else {
-            "workspace"
-        };
-        let workspace = workspace_toml[metadata_pre_key].or_insert(toml_edit::table());
-        if let Some(t) = workspace.as_table_mut() {
-            t.set_implicit(true)
-        }
-        let metadata = workspace["metadata"].or_insert(toml_edit::table());
-        if let Some(t) = metadata.as_table_mut() {
-            t.set_implicit(true)
-        }
-        let dist_metadata = &mut metadata[METADATA_DIST];
-        if !dist_metadata.is_none() {
-            return Err(miette!(
-                "already init! (based on [workspace.metadata.dist] existing in your Cargo.toml)"
-            ));
-        }
-        let mut new_metadata = toml_edit::table();
-        {
-            let new_metadata = new_metadata.as_table_mut().unwrap();
-            new_metadata.insert(
-                "os",
-                toml_edit::Item::Value([OS_WINDOWS, OS_MACOS, OS_LINUX].into_iter().collect()),
-            );
-            new_metadata.insert(
-                "cpu",
-                toml_edit::Item::Value([CPU_X64, CPU_ARM64].into_iter().collect()),
-            );
-            new_metadata.decor_mut().set_prefix(
-                "\n# These keys are generated by 'cargo dist init' and are fake placeholders\n",
-            );
-        }
-
-        dist_metadata.or_insert(new_metadata);
+    if init_dist_metadata(cfg, &mut workspace_toml)? {
+        eprintln!("added [workspace.metadata.dist] to your root Cargo.toml");
+        did_anything = true;
+    } else {
+        eprintln!("[workspace.metadata.dist] already exists, nothing to do");
     }
-    */
-    {
+
+    if did_anything {
         use std::io::Write;
         let mut workspace_toml_file = File::options()
             .write(true)
             .open(&workspace.manifest_path)
             .into_diagnostic()
             .wrap_err("couldn't load root workspace Cargo.toml")?;
-        writeln!(&mut workspace_toml_file, "{workspace_toml}")
+        write!(&mut workspace_toml_file, "{workspace_toml}")
             .into_diagnostic()
             .wrap_err("failed to write to Cargo.toml")?;
     }
@@ -730,17 +582,309 @@ pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
     Ok(())
 }
 
+fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) -> Result<bool> {
+    let profiles = workspace_toml["profile"].or_insert(toml_edit::table());
+    if let Some(t) = profiles.as_table_mut() {
+        t.set_implicit(true)
+    }
+    let dist_profile = &mut profiles[PROFILE_DIST];
+    if !dist_profile.is_none() {
+        return Ok(false);
+    }
+    let mut new_profile = toml_edit::table();
+    {
+        let new_profile = new_profile.as_table_mut().unwrap();
+        // We're building for release, so this is a good base!
+        new_profile.insert("inherits", toml_edit::value("release"));
+        // We want *full* debuginfo for good crashreporting/profiling
+        // This doesn't bloat the final binary because we use split-debuginfo below
+        // new_profile.insert("debug", toml_edit::value(true));
+
+        // Ensure that all debuginfo is pulled out of the binary and tossed
+        // into a separate file from the final binary. This should ideally be
+        // uploaded to something like a symbol server to be fetched on demand.
+        // This is already the default on windows (.pdb) and macos (.dsym) but
+        // is rather bleeding on other platforms (.dwp) -- it requires Rust 1.65,
+        // which as of this writing in the latest stable rust release! If anyone
+        // ever makes a big deal with building final binaries with an older MSRV
+        // we may need to more intelligently select this.
+        // new_profile.insert("split-debuginfo", toml_edit::value("packed"));
+
+        // TODO: set codegen-units=1? (Probably Not!)
+        //
+        // Ok so there's an inherent tradeoff in compilers where if the compiler does
+        // everything in a very serial/global way, it can discover more places where
+        // optimizations can be done and theoretically make things faster/smaller
+        // using all the information at its fingertips... at the cost of your builds
+        // taking forever. Compiler optimizations generally take super-linear time,
+        // so if you let the compiler see and think about EVERYTHING your builds
+        // can literally take *days* for codebases on the order of LLVM itself.
+        //
+        // To keep compile times tractable, we generally break up the program
+        // into "codegen units" (AKA "translation units") that get compiled
+        // independently and then combined by the linker. This keeps the super-linear
+        // scaling under control, but prevents optimizations like inlining across
+        // units. (This process is why we have things like "object files" and "rlibs",
+        // those are the intermediate artifacts fed to the linker.)
+        //
+        // Compared to C, Rust codegen units are quite monolithic. Where each C
+        // *file* might gets its own codegen unit, Rust prefers scoping them to
+        // an entire *crate*.  As it turns out, neither of these answers is right in
+        // all cases, and being able to tune the unit size is useful.
+        //
+        // Large C++ codebases like Firefox have "unified" builds where they basically
+        // concatenate files together to get bigger units. Rust provides the
+        // opposite: the codegen-units=N option tells rustc that it should try to
+        // break up a crate into at most N different units. This is done with some
+        // heuristics and constraints to try to still get the most out of each unit
+        // (i.e. try to keep functions that call eachother together for inlining).
+        //
+        // In the --release profile, codegen-units is set to 16, which attempts
+        // to strike a balance between The Best Binaries and Ever Finishing Compiles.
+        // In principle, tuning this down to 1 could be profitable, but LTO
+        // (see the next TODO) does most of that work for us. As such we can probably
+        // leave this alone to keep compile times reasonable.
+
+        // TODO: set lto="thin" (or "fat")? (Probably "fat"!)
+        //
+        // LTO, Link Time Optimization, is basically hijacking the step where we
+        // would link together everything and going back to the compiler (LLVM) to
+        // do global optimizations across codegen-units (see the previous TODO).
+        // Better Binaries, Slower Build Times.
+        //
+        // LTO can be "fat" (or "full") or "thin".
+        //
+        // Fat LTO is the "obvious" implementation: once you're done individually
+        // optimizing the LLVM bitcode (IR) for each compilation unit, you concatenate
+        // all the units and optimize it all together. Extremely serial, extremely
+        // slow, but thorough as hell. For *enormous* codebases (millions of lines)
+        // this can become intractably expensive and crash the compiler.
+        //
+        // Thin LTO is newer and more complicated: instead of unconditionally putting
+        // everything together, we want to optimize each unit with other "useful" units
+        // pulled in for inlining and other analysis. This grouping is done with
+        // similar heuristics that rustc uses to break crates into codegen-units.
+        // This is much faster than Fat LTO and can scale to arbitrarily big
+        // codebases, but does produce slightly worse results.
+        //
+        // Release builds currently default to lto=false, which, despite the name,
+        // actually still does LTO (lto="off" *really* turns it off)! Specifically it
+        // does Thin LTO but *only* between the codegen units for a single crate.
+        // This theoretically negates the disadvantages of codegen-units=16 while
+        // still getting most of the advantages! Neat!
+        //
+        // Since most users will have codebases significantly smaller than An Entire
+        // Browser, we can probably go all the way to default lto="fat", and they
+        // can tune that down if it's problematic. If a user has "nightly" and "stable"
+        // builds, it might be the case that they want lto="thin" for the nightlies
+        // to keep them timely.
+        //
+        // > Aside: you may be wondering "why still have codegen units at all if using
+        // > Fat LTO" and the best answer I can give you is "doing things in parallel
+        // > at first lets you throw out a lot of junk and trim down the input before
+        // > starting the really expensive super-linear global analysis, without losing
+        // > too much of the important information". The less charitable answer is that
+        // > compiler infra is built around codegen units and so this is a pragmatic hack.
+        // >
+        // > Thin LTO of course *really* benefits from still having codegen units.
+
+        // TODO: set panic="abort"?
+        //
+        // PROBABLY NOT, but here's the discussion anyway!
+        //
+        // The default is panic="unwind", and things can be relying on unwinding
+        // for correctness. Unwinding support bloats up the binary and can make
+        // code run slower (because each place that *can* unwind is essentially
+        // an early-return the compiler needs to be cautious of).
+        //
+        // panic="abort" immediately crashes the program if you panic,
+        // but does still run the panic handler, so you *can* get things like
+        // backtraces/crashreports out at that point.
+        //
+        // See RUSTFLAGS="-Cforce-unwind-tables" for the semi-orthogonal flag
+        // that adjusts whether unwinding tables are emitted at all.
+        //
+        // Major C++ applications like Firefox already build with this flag,
+        // the Rust ecosystem largely works fine with either.
+
+        new_profile
+            .decor_mut()
+            .set_prefix("\n# The profile that 'cargo dist' will build with\n")
+    }
+    dist_profile.or_insert(new_profile);
+
+    Ok(true)
+}
+
+/// Initialize [workspace.metadata.dist] with default values based on what was passed on the CLI
+///
+/// Returns whether the initialization was actually done
+fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) -> Result<bool> {
+    use toml_edit::{value, Item};
+    // Setup [workspace.metadata.dist]
+    let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
+    if let Some(t) = workspace.as_table_mut() {
+        t.set_implicit(true)
+    }
+    let metadata = workspace["metadata"].or_insert(toml_edit::table());
+    if let Some(t) = metadata.as_table_mut() {
+        t.set_implicit(true)
+    }
+    let dist_metadata = &mut metadata[METADATA_DIST];
+    if !dist_metadata.is_none() {
+        return Ok(false);
+    }
+
+    // We "pointlessly" make this struct so you remember to consider what init should
+    // do with any new config values!
+    let meta = DistMetadata {
+        // If they init with this version we're gonna try to stick to it!
+        cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
+        // latest stable release at this precise moment
+        // maybe there's something more clever we can do here, but, *shrug*
+        rust_toolchain_version: Some("1.67.1".to_owned()),
+        ci: cfg.ci.clone(),
+        installers: cfg
+            .installers
+            .is_empty()
+            .not()
+            .then(|| cfg.installers.clone()),
+        targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),
+        dist: None,
+        include: vec![],
+        auto_includes: None,
+    };
+
+    const KEY_RUST_VERSION: &str = "rust-toolchain-version";
+    const DESC_RUST_VERSION: &str =
+        "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n";
+
+    const KEY_DIST_VERSION: &str = "cargo-dist-version";
+    const DESC_DIST_VERSION: &str =
+        "# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)\n";
+
+    const KEY_CI: &str = "ci";
+    const DESC_CI: &str = "# CI backends to support (see 'cargo dist generate-ci')\n";
+
+    const KEY_INSTALLERS: &str = "installers";
+    const DESC_INSTALLERS: &str = "# The installers to generate for each app\n";
+
+    const KEY_TARGETS: &str = "targets";
+    const DESC_TARGETS: &str = "# Target platforms to build apps for (Rust target-triple syntax)\n";
+
+    const KEY_DIST: &str = "dist";
+    const DESC_DIST: &str =
+        "# Whether to consider the binaries in a package for distribution (defaults true)\n";
+
+    const KEY_INCLUDE: &str = "include";
+    const DESC_INCLUDE: &str =
+        "# Extra static files to include in each App (path relative to this Cargo.toml's dir)\n";
+
+    const KEY_AUTO_INCLUDE: &str = "auto-includes";
+    const DESC_AUTO_INCLUDE: &str =
+        "# Whether to auto-include files like READMEs, LICENSEs, and CHANGELOGs (default true)\n";
+
+    let mut new_metadata = toml_edit::table();
+    let table = new_metadata.as_table_mut().unwrap();
+    if let Some(val) = meta.cargo_dist_version {
+        table.insert(KEY_DIST_VERSION, value(val.to_string()));
+        table
+            .key_decor_mut(KEY_DIST_VERSION)
+            .unwrap()
+            .set_prefix(DESC_DIST_VERSION);
+    }
+    if let Some(val) = meta.rust_toolchain_version {
+        table.insert(KEY_RUST_VERSION, value(val));
+        table
+            .key_decor_mut(KEY_RUST_VERSION)
+            .unwrap()
+            .set_prefix(DESC_RUST_VERSION);
+    }
+    if !meta.ci.is_empty() {
+        table.insert(
+            KEY_CI,
+            Item::Value(
+                meta.ci
+                    .iter()
+                    .map(|ci| match ci {
+                        CiStyle::Github => "github",
+                    })
+                    .collect(),
+            ),
+        );
+        table.key_decor_mut(KEY_CI).unwrap().set_prefix(DESC_CI);
+    }
+    if let Some(val) = meta.installers {
+        table.insert(
+            KEY_INSTALLERS,
+            Item::Value(
+                val.iter()
+                    .map(|installer| match installer {
+                        InstallerStyle::GithubPowershell => "github-powershell",
+                        InstallerStyle::GithubShell => "github-shell",
+                    })
+                    .collect(),
+            ),
+        );
+        table
+            .key_decor_mut(KEY_INSTALLERS)
+            .unwrap()
+            .set_prefix(DESC_INSTALLERS);
+    }
+    if let Some(val) = meta.targets {
+        table.insert(KEY_TARGETS, Item::Value(val.into_iter().collect()));
+        table
+            .key_decor_mut(KEY_TARGETS)
+            .unwrap()
+            .set_prefix(DESC_TARGETS);
+    }
+    if let Some(val) = meta.dist {
+        table.insert(KEY_DIST, value(val));
+        table.key_decor_mut(KEY_DIST).unwrap().set_prefix(DESC_DIST);
+    }
+    if !meta.include.is_empty() {
+        table.insert(
+            KEY_INCLUDE,
+            Item::Value(meta.include.iter().map(ToString::to_string).collect()),
+        );
+        table
+            .key_decor_mut(KEY_INCLUDE)
+            .unwrap()
+            .set_prefix(DESC_INCLUDE);
+    }
+    if let Some(val) = meta.auto_includes {
+        table.insert(KEY_AUTO_INCLUDE, value(val));
+        table
+            .key_decor_mut(KEY_AUTO_INCLUDE)
+            .unwrap()
+            .set_prefix(DESC_AUTO_INCLUDE);
+    }
+    table
+        .decor_mut()
+        .set_prefix("\n# Config for 'cargo dist'\n");
+
+    dist_metadata.or_insert(new_metadata);
+
+    Ok(true)
+}
+
 /// Arguments for `cargo dist generate-ci` ([`do_generate_ci][])
 #[derive(Debug)]
 pub struct GenerateCiArgs {}
 
 /// Generate CI scripts (impl of `cargo dist generate-ci`)
 pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
-    let graph = gather_work(cfg)?;
+    let dist = gather_work(cfg)?;
+    if !dist.is_init {
+        return Err(miette!(
+            "please run 'cargo dist init' before running any other commands!"
+        ));
+    }
+
     for style in &cfg.ci {
         match style {
             CiStyle::Github => {
-                ci::generate_github_ci(&graph.workspace_dir, &cfg.targets, &cfg.installers)?
+                ci::generate_github_ci(&dist.workspace_dir, &cfg.targets, &cfg.installers)?
             }
         }
     }
