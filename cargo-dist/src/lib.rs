@@ -105,6 +105,9 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
     let mut manifest = DistManifest::new(releases);
     manifest.dist_version = Some(env!("CARGO_PKG_VERSION").to_owned());
     manifest.announcement_tag = dist.announcement_tag.clone();
+    manifest.announcement_title = dist.announcement_title.clone();
+    manifest.announcement_changelog = dist.announcement_changelog.clone();
+    manifest.announcement_github_body = dist.announcement_github_body.clone();
     manifest
 }
 

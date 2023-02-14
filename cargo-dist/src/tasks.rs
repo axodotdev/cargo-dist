@@ -274,7 +274,7 @@ pub enum ArtifactMode {
 }
 
 /// The style of CI we should generate
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CiStyle {
     /// Generate Github CI
     #[serde(rename = "github")]
@@ -282,7 +282,7 @@ pub enum CiStyle {
 }
 
 /// The style of Installer we should generate
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum InstallerStyle {
     /// Generate a shell script that fetches from a Github Release
     #[serde(rename = "github-shell")]
@@ -669,6 +669,10 @@ pub struct WorkspaceInfo<'pkg_graph> {
     ///
     /// If this is None, the workspace Cargo.toml is a virtual manifest.
     pub root_package: Option<PackageMetadata<'pkg_graph>>,
+    /// If the workspace root has some auto-includeable files, here they are!
+    ///
+    /// This is currently what is use for top-level Announcement contents.
+    pub root_auto_includes: AutoIncludes,
     /// The desired cargo-dist version for handling this project
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
@@ -1247,97 +1251,138 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         builds
     }
 
-    fn compute_announcement_info(&mut self) {
-        // Add release notes
-        /*
-        for ((_app_name, version), (package_id, release)) in &mut releases {
-            let package_info = &workspace.package_info[&&*package_id];
+    fn compute_announcement_info(&mut self, announcing_version: Option<&Version>) {
+        // Default to using the tag as a title
+        self.inner.announcement_title = self.inner.announcement_tag.clone();
 
-            // Try to parse out relevant parts of the changelog
-            // FIXME: ...this is kind of excessive to do eagerly and for each crate in the workspace
-            if let Some(changelog_path) = &package_info.changelog_file {
-                if let Ok(changelog_str) = try_load_changelog(changelog_path) {
-                    let changelogs = parse_changelog::parse(&changelog_str)
-                        .into_diagnostic()
-                        .wrap_err_with(|| format!("failed to parse changelog at {changelog_path}"));
-                    if let Ok(changelogs) = changelogs {
-                        let version_string = format!("{}", package_info.version);
-                        if let Some(release_notes) = changelogs.get(&*version_string) {
-                            release.changelog_title = Some(release_notes.title.to_owned());
-                            release.changelog_body = Some(release_notes.notes.to_owned());
-                        }
-                    }
-                }
+        self.compute_announcement_changelog(announcing_version);
+        self.compute_announcement_github();
+    }
+
+    /// Try to compute changelogs for the announcement
+    fn compute_announcement_changelog(&mut self, announcing_version: Option<&Version>) {
+        // FIXME: currently this only supports a top-level changelog, it would be nice
+        // to allow individual apps to have individual streams
+
+        // FIXME: derive changelogs from semantic commits?
+
+        // Try to find the version we're announcing in the top level CHANGELOG/RELEASES
+        let Some(announcing_version) = announcing_version else {
+            info!("not announcing a consistent version, skipping changelog generation");
+            return;
+        };
+
+        // Load and parse the changelog
+        let Some(changelog_path) = &self.workspace.root_auto_includes.changelog else {
+            info!("no root changelog found, skipping changelog generation");
+            return;
+        };
+        let Ok(changelog_str) = try_load_changelog(changelog_path) else {
+            info!("failed to load changelog, skipping changelog generation");
+            return;
+        };
+        let changelogs = parse_changelog::parse(&changelog_str)
+            .into_diagnostic()
+            .wrap_err_with(|| format!("failed to parse changelog at {changelog_path}"));
+        let changelogs = match changelogs {
+            Ok(changelogs) => changelogs,
+            Err(e) => {
+                info!(
+                    "failed to parse changelog, skipping changelog generation\n{:?}",
+                    e
+                );
+                return;
+            }
+        };
+
+        // Try to lookup this version in the changelog
+        let version_string = format!("{}", announcing_version);
+        let Some(release_notes) = changelogs.get(&*version_string) else {
+            info!("failed to find {version_string} in changelogs, skipping changelog generation");
+            return;
+        };
+
+        info!("succesfully parsed changelog!");
+        self.inner.announcement_title = Some(release_notes.title.to_owned());
+        self.inner.announcement_changelog = Some(release_notes.notes.to_owned());
+    }
+
+    /// If we're publishing to Github, generate some Github notes
+    fn compute_announcement_github(&mut self) {
+        use std::fmt::Write;
+
+        if !self.inner.ci_style.contains(&CiStyle::Github) {
+            info!("not publishing to Github, skipping Github Release Notes");
+            return;
+        }
+
+        let mut gh_body = String::new();
+        let download_url = self.github_download_url();
+
+        // Add the contents of each Release to the body
+        for release in &self.inner.releases {
+            let heading_suffix = format!("{} {}", release.app_name, release.version);
+
+            // Delineate releases if there's more than 1
+            if self.inner.releases.len() > 1 {
+                writeln!(gh_body, "# {heading_suffix}\n").unwrap();
             }
 
-            use std::fmt::Write;
-            let mut changelog_body = String::new();
-
-            let mut installers = vec![];
+            // Sort out all the artifacts in this Release
+            let mut global_installers = vec![];
+            let mut local_installers = vec![];
             let mut bundles = vec![];
             let mut symbols = vec![];
-            let mut other = vec![];
-            for artifact_idx in &release.global_artifacts {
-                let artifact = &artifacts[artifact_idx.0];
-                match artifact.kind {
-                    ArtifactKind::ExecutableZip => {
-                        bundles.push(artifact);
+
+            for &artifact_idx in &release.global_artifacts {
+                let artifact = self.artifact(artifact_idx);
+                match &artifact.kind {
+                    ArtifactKind::ExecutableZip(zip) => bundles.push((artifact, zip)),
+                    ArtifactKind::Symbols(syms) => symbols.push((artifact, syms)),
+                    ArtifactKind::Installer(installer) => {
+                        global_installers.push((artifact, installer))
                     }
-                    ArtifactKind::Symbols => {
-                        symbols.push(artifact);
-                    }
-                    ArtifactKind::DistMetadata => {
-                        // Do nothing
-                    }
-                    ArtifactKind::Installer => {
-                        installers.push(artifact);
-                    }
-                    ArtifactKind::Unknown => {
-                        other.push(artifact);
-                    }
-                    _ => todo!(),
                 }
             }
 
-            if !installers.is_empty() {
-                changelog_body.push_str("## Install\n\n");
-                for installer in installers {
-                    let install_hint;
-                    let description;
-
-                    match &installer.bundle {
-                        BundleStyle::Installer(InstallerImpl::GithubShell(info)) => {
-                            install_hint = Some(info.hint.clone());
-                            description = Some(info.desc.clone());
-                        }
-                        BundleStyle::Installer(InstallerImpl::GithubPowershell(info)) => {
-                            install_hint = Some(info.hint.clone());
-                            description = Some(info.desc.clone());
-                        }
-                        BundleStyle::Zip | BundleStyle::Tar(_) | BundleStyle::UncompressedFile => {
-                            unreachable!()
+            for &variant_idx in &release.variants {
+                let variant = self.variant(variant_idx);
+                for &artifact_idx in &variant.local_artifacts {
+                    let artifact = self.artifact(artifact_idx);
+                    match &artifact.kind {
+                        ArtifactKind::ExecutableZip(zip) => bundles.push((artifact, zip)),
+                        ArtifactKind::Symbols(syms) => symbols.push((artifact, syms)),
+                        ArtifactKind::Installer(installer) => {
+                            local_installers.push((artifact, installer))
                         }
                     }
-
-                    let (Some(hint), Some(desc)) = (install_hint, description) else {
-                        continue;
-                    };
-
-                    writeln!(&mut changelog_body, "### {desc}\n").unwrap();
-                    writeln!(&mut changelog_body, "```shell\n{hint}\n```\n").unwrap();
                 }
             }
 
-            let repo_url = package_info.repository_url.as_deref();
-            if (bundles.is_empty() || !symbols.is_empty() || !other.is_empty()) && repo_url.is_some() {
-                // FIXME: this is a nasty cludge and we should use --ci=github here to take this path
-                #[allow(clippy::unnecessary_unwrap)]
-                let repo_url = repo_url.unwrap();
+            if !global_installers.is_empty() {
+                writeln!(gh_body, "## Install {heading_suffix}\n").unwrap();
+                for (_installer, details) in global_installers {
+                    let (InstallerImpl::GithubShell(info) | InstallerImpl::GithubPowershell(info)) =
+                        details;
 
-                changelog_body.push_str("## Download\n\n");
-                changelog_body.push_str("| target | kind | download |\n");
-                changelog_body.push_str("|--------|------|----------|\n");
-                for artifact in bundles.iter().chain(&symbols).chain(&other) {
+                    writeln!(&mut gh_body, "### {}\n", info.desc).unwrap();
+                    writeln!(&mut gh_body, "```shell\n{}\n```\n", info.hint).unwrap();
+                }
+            }
+
+            let other_artifacts: Vec<_> = bundles
+                .iter()
+                .map(|i| i.0)
+                .chain(local_installers.iter().map(|i| i.0))
+                .chain(symbols.iter().map(|i| i.0))
+                .collect();
+            if !other_artifacts.is_empty() && download_url.is_some() {
+                let download_url = download_url.as_ref().unwrap();
+                writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();
+                gh_body.push_str("| target | kind | download |\n");
+                gh_body.push_str("|--------|------|----------|\n");
+
+                for artifact in other_artifacts {
                     let mut targets = String::new();
                     let mut multi_target = false;
                     for target in &artifact.target_triples {
@@ -1348,34 +1393,28 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         multi_target = true;
                     }
                     let kind = match artifact.kind {
-                        ArtifactKind::ExecutableZip => "tarball",
-                        ArtifactKind::Symbols => "symbols",
-                        ArtifactKind::DistMetadata => "dist-manifest.json",
-                        ArtifactKind::Installer => unreachable!(),
-                        _ => "other",
+                        ArtifactKind::ExecutableZip(_) => "tarball",
+                        ArtifactKind::Symbols(_) => "symbols",
+                        ArtifactKind::Installer(_) => "installer",
                     };
-                    let name = artifact.file_path.file_name().unwrap().to_owned();
-                    let app_version = format!("v{version}");
-
-                    let download_url = format!("{repo_url}/releases/download/{app_version}/{name}");
-                    let download = format!("[{name}]({download_url})");
-                    writeln!(&mut changelog_body, "| {targets} | {kind} | {download} |").unwrap();
+                    let name = &artifact.id;
+                    let artifact_download_url = format!("{download_url}{name}");
+                    let download = format!("[{name}]({artifact_download_url})");
+                    writeln!(&mut gh_body, "| {targets} | {kind} | {download} |").unwrap();
                 }
-                writeln!(&mut changelog_body).unwrap();
+                writeln!(&mut gh_body).unwrap();
             }
-
-            if let Some(old_changelog_body) = release.changelog_body.take() {
-                changelog_body.push_str("## Release Notes\n\n");
-                changelog_body.push_str(&old_changelog_body);
-            }
-
-            release.changelog_title = release
-                .changelog_title
-                .take()
-                .or_else(|| Some(format!("v{version}")));
-            release.changelog_body = Some(changelog_body);
         }
-         */
+
+        // add release notes
+        if let Some(changelog) = self.inner.announcement_changelog.as_ref() {
+            gh_body.push_str("## Release Notes\n\n");
+            gh_body.push_str(changelog);
+        }
+
+        info!("succesfully generated github release body!");
+        // self.inner.artifact_download_url = Some(download_url);
+        self.inner.announcement_github_body = Some(gh_body);
     }
 
     fn cargo(&self) -> &str {
@@ -1389,6 +1428,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
     fn binary_mut(&mut self, idx: BinaryIdx) -> &mut Binary {
         &mut self.inner.binaries[idx.0]
+    }
+    fn artifact(&self, idx: ArtifactIdx) -> &Artifact {
+        &self.inner.artifacts[idx.0]
     }
     fn artifact_mut(&mut self, idx: ArtifactIdx) -> &mut Artifact {
         &mut self.inner.artifacts[idx.0]
@@ -1404,6 +1446,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
     fn variant_mut(&mut self, idx: ReleaseVariantIdx) -> &mut ReleaseVariant {
         &mut self.inner.variants[idx.0]
+    }
+    fn github_download_url(&self) -> Option<String> {
+        let repo_url = self.workspace.repo_url.as_ref()?;
+        let tag = self.inner.announcement_tag.as_ref()?;
+        Some(format!("{repo_url}/releases/download/{tag}/"))
     }
     fn local_artifacts_enabled(&self) -> bool {
         match self.artifact_mode {
@@ -1614,8 +1661,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             let tag = format!("v{version}");
             info!("inferred Announcement tag: {}", tag);
             announcement_tag = Some(tag);
-            // This value won't be read, but it is *true*
-            // announcing_version = Some(version.clone());
+            announcing_version = Some(version.clone());
         } else {
             use std::fmt::Write;
             let mut msg = String::new();
@@ -1724,7 +1770,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
 
     // Prep the announcement's release notes and whatnot
-    graph.compute_announcement_info();
+    graph.compute_announcement_info(announcing_version.as_ref());
 
     // Finally compute all the build steps!
     graph.compute_build_steps();
@@ -1819,12 +1865,15 @@ pub fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
     let workspace_root = workspace.root();
     workspace_config.make_relative_to(workspace_root);
 
+    let root_auto_includes = find_auto_includes(workspace_root)?;
+
     let mut repo_url_conflicted = false;
     let mut repo_url = None;
     let mut all_package_info = FastMap::new();
     for package in members.packages(DependencyDirection::Forward) {
-        let info = package_info(workspace_root, &workspace_config, &package)?;
+        let mut info = package_info(workspace_root, &workspace_config, &package)?;
 
+        // Check for global settings on local packages
         if info.config.cargo_dist_version.is_some() {
             warn!("package.metadata.dist.cargo-dist-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path());
         }
@@ -1835,6 +1884,9 @@ pub fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
             warn!("package.metadata.dist.ci is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path());
         }
 
+        // Apply root workspace's auto-includes
+        merge_auto_includes(&mut info, &root_auto_includes);
+
         // Try to find repo URL consensus
         if !repo_url_conflicted {
             if let Some(new_url) = &info.repository_url {
@@ -1842,6 +1894,7 @@ pub fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
                     if new_url == cur_url {
                         // great! consensus!
                     } else {
+                        warn!("your workspace has inconsistent values for 'repository', refusing to select one:\n  {}\n  {}", new_url, cur_url);
                         repo_url_conflicted = true;
                         repo_url = None;
                     }
@@ -1854,12 +1907,20 @@ pub fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         all_package_info.insert(package.id(), info);
     }
 
+    // Normalize trailing `/` on the repo URL
+    if let Some(repo_url) = &mut repo_url {
+        if repo_url.ends_with('/') {
+            repo_url.pop();
+        }
+    }
+
     Ok(WorkspaceInfo {
         info: workspace,
         members,
         package_info: all_package_info,
         manifest_path,
         root_package,
+        root_auto_includes,
         dist_profile,
         desired_cargo_dist_version: workspace_config.cargo_dist_version,
         desired_rust_toolchain: workspace_config.rust_toolchain_version,
@@ -1869,7 +1930,7 @@ pub fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
 }
 
 fn package_info(
-    workspace_root: &Utf8Path,
+    _workspace_root: &Utf8Path,
     workspace_config: &DistMetadata,
     package: &PackageMetadata,
 ) -> Result<PackageInfo> {
@@ -1923,73 +1984,94 @@ fn package_info(
         config: package_config,
     };
 
-    // We don't want to search for any license files if one is manually given
-    // (need to check that here since we can find multiple licenses).
-    let search_for_license_file = info.license_files.is_empty();
+    // Find files we might want to auto-include
+    //
+    // This is kinda expensive so only bother doing it for things we MIGHT care about
+    if !info.binaries.is_empty() {
+        let auto_includes = find_auto_includes(package_root)?;
+        merge_auto_includes(&mut info, &auto_includes);
+    }
 
     // If there's no documentation URL provided, default assume it's docs.rs like crates.io does
     if info.documentation_url.is_none() {
         info.documentation_url = Some(format!("https://docs.rs/{}/{}", info.name, info.version));
     }
 
-    for dir in &[package_root, workspace_root] {
-        let entries = dir
-            .read_dir_utf8()
+    Ok(info)
+}
+
+/// Various files we might want to auto-include
+#[derive(Debug, Clone)]
+pub struct AutoIncludes {
+    /// README
+    pub readme: Option<Utf8PathBuf>,
+    /// LICENSE/UNLICENSE
+    pub licenses: Vec<Utf8PathBuf>,
+    /// CHANGELOG/RELEASES
+    pub changelog: Option<Utf8PathBuf>,
+}
+
+/// Find auto-includeable files in a dir
+fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
+    let entries = dir
+        .read_dir_utf8()
+        .into_diagnostic()
+        .wrap_err("Failed to read workspace dir")?;
+
+    let mut includes = AutoIncludes {
+        readme: None,
+        licenses: vec![],
+        changelog: None,
+    };
+
+    for entry in entries {
+        let entry = entry
             .into_diagnostic()
-            .wrap_err("Failed to read workspace dir")?;
-        for entry in entries {
-            let entry = entry
-                .into_diagnostic()
-                .wrap_err("Failed to read workspace dir entry")?;
-            let meta = entry
-                .file_type()
-                .into_diagnostic()
-                .wrap_err("Failed to read workspace dir entry's metadata")?;
-            if !meta.is_file() {
-                continue;
+            .wrap_err("Failed to read workspace dir entry")?;
+        let meta = entry
+            .file_type()
+            .into_diagnostic()
+            .wrap_err("Failed to read workspace dir entry's metadata")?;
+        if !meta.is_file() {
+            continue;
+        }
+        let file_name = entry.file_name();
+        if file_name.starts_with("README") {
+            if includes.readme.is_none() {
+                let path = entry.path().to_owned();
+                info!("Found README at {}", path);
+                includes.readme = Some(path);
+            } else {
+                info!("Ignoring duplicate candidate README at {}", entry.path());
             }
-            let file_name = entry.file_name();
-            if file_name.starts_with("README") {
-                if info.readme_file.is_none() {
-                    let path = entry.path().to_owned();
-                    info!("Found README for {}: {}", info.name, path);
-                    info.readme_file = Some(path);
-                } else {
-                    info!(
-                        "Ignoring candidate README for {}: {}",
-                        info.name,
-                        entry.path()
-                    );
-                }
-            } else if file_name.starts_with("LICENSE") || file_name.starts_with("UNLICENSE") {
-                if search_for_license_file {
-                    let path = entry.path().to_owned();
-                    info!("Found LICENSE for {}: {}", info.name, path);
-                    info.license_files.push(path);
-                } else {
-                    info!(
-                        "Ignoring candidate LICENSE for {}: {}",
-                        info.name,
-                        entry.path()
-                    );
-                }
-            } else if file_name.starts_with("CHANGELOG") || file_name.starts_with("RELEASES") {
-                if info.changelog_file.is_none() {
-                    let path = entry.path().to_owned();
-                    info!("Found CHANGELOG for {}: {}", info.name, path);
-                    info.changelog_file = Some(path);
-                } else {
-                    info!(
-                        "Ignoring candidate CHANGELOG for {}: {}",
-                        info.name,
-                        entry.path()
-                    );
-                }
+        } else if file_name.starts_with("LICENSE") || file_name.starts_with("UNLICENSE") {
+            let path = entry.path().to_owned();
+            info!("Found LICENSE at {}", path);
+            includes.licenses.push(path);
+        } else if file_name.starts_with("CHANGELOG") || file_name.starts_with("RELEASES") {
+            if includes.changelog.is_none() {
+                let path = entry.path().to_owned();
+                info!("Found CHANGELOG at {}", path);
+                includes.changelog = Some(path);
+            } else {
+                info!("Ignoring duplicate candidate CHANGELOG at {}", entry.path());
             }
         }
     }
 
-    Ok(info)
+    Ok(includes)
+}
+
+fn merge_auto_includes(info: &mut PackageInfo, auto_includes: &AutoIncludes) {
+    if info.readme_file.is_none() {
+        info.readme_file = auto_includes.readme.clone();
+    }
+    if info.changelog_file.is_none() {
+        info.changelog_file = auto_includes.changelog.clone();
+    }
+    if info.license_files.is_empty() {
+        info.license_files = auto_includes.licenses.clone();
+    }
 }
 
 /// Load the root workspace toml into toml-edit form

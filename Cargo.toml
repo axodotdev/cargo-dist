@@ -14,10 +14,13 @@ tag-name = "v{{version}}"
 cargo-dist-version = "0.0.2"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
 rust-toolchain-version = "1.67.1"
+# The CI to use
+ci = ["github"]
 # The installers to generate for each app
 installers = ["github-shell", "github-powershell"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc"]
+
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
