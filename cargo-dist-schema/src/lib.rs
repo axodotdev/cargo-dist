@@ -29,10 +29,22 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_version: Option<String>,
+    /// The (git) tag associated with this announcement
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    /// The (git) tag associated with this announcement
     pub announcement_tag: Option<String>,
+    /// A title for the announcement
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub announcement_title: Option<String>,
+    /// A changelog for the announcement
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub announcement_changelog: Option<String>,
+    /// A Github Releases body for the announcement
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub announcement_github_body: Option<String>,
     /// App releases we're distributing
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -180,6 +192,9 @@ impl DistManifest {
         Self {
             dist_version: None,
             announcement_tag: None,
+            announcement_title: None,
+            announcement_changelog: None,
+            announcement_github_body: None,
             releases,
         }
     }
