@@ -108,7 +108,7 @@ pub struct DistMetadata {
     ///
     /// When generating full tasks graphs (such as CI scripts) we will pick this version.
     ///
-    /// TODO: Should we produce a warning if running locally with a different version? In theory
+    /// FIXME: Should we produce a warning if running locally with a different version? In theory
     /// it shouldn't be a problem and newer versions should just be Better... probably you
     /// Really want to have the exact version when running generate-ci to avoid generating
     /// things other cargo-dist versions can't handle!
@@ -131,7 +131,7 @@ pub struct DistMetadata {
     /// package. Note that we may still build the package as a side-effect of building the
     /// workspace -- we just won't bundle it up and report it.
     ///
-    /// TODO: maybe you should also be allowed to make this a list of binary names..?
+    /// FIXME: maybe you should also be allowed to make this a list of binary names..?
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist: Option<bool>,
@@ -156,9 +156,6 @@ pub struct DistMetadata {
     /// out which binary to install, but you might end up with an msi for each supported arch!
     ///
     /// TODO: list off what values are accepted (msi's are currently only hypothetical!)
-    ///
-    /// TODO: determine how to use this field when doing a simple local build. I think we
-    /// should build every installer that *can* be built on the current platform..?
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<InstallerStyle>>,
@@ -170,11 +167,11 @@ pub struct DistMetadata {
     /// The inputs should be valid rustc target triples (see `rustc --print target-list`) such
     /// as `x86_64-pc-windows-msvc`, `aarch64-apple-darwin`, or `x86_64-unknown-linux-gnu`.
     ///
-    /// TODO: We also accept one magic target: `universal2-apple-darwin`. This will induce us to
-    /// build both of `x86_64-apple-darwin` and `aarch64-apple-darwin` (arm64) and then combine
+    /// FIXME: We should also accept one magic target: `universal2-apple-darwin`. This will induce
+    /// us to build `x86_64-apple-darwin` and `aarch64-apple-darwin` (arm64) and then combine
     /// them into a "universal" binary that can run on either arch (using apple's `lipo` tool).
     ///
-    /// TODO: Allow higher level requests like "[macos, windows, linux] x [x86_64, aarch64]"?
+    /// FIXME: Allow higher level requests like "[macos, windows, linux] x [x86_64, aarch64]"?
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<String>>,
@@ -393,8 +390,9 @@ pub enum BuildStep {
     /// Zip up a directory
     Zip(ZipDirStep),
     /// Generate some kind of installer
-    GenerateInstaller(InstallerImpl), // TODO: For macos universal builds we'll want
-                                      // Lipo(LipoStep)
+    GenerateInstaller(InstallerImpl),
+    // FIXME: For macos universal builds we'll want
+    // Lipo(LipoStep)
 }
 
 /// A cargo build (and copy the outputs to various locations)
@@ -1078,7 +1076,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let artifact_name = format!("{release_id}-installer.ps1");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
-        // All the triples we know about, sans windows (windows-gnu isn't handled...)
+        // All the windows triples we know about
         let target_triples = release
             .targets
             .iter()
@@ -1184,7 +1182,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                             // No additional steps needed, the file is PERFECT (for now)
                         }
                         SymbolKind::Dsym => {
-                            // TODO: compress the dSYM in a .tar.xz, it's a actually a directory!
+                            // FIXME: compress the dSYM in a .tar.xz, it's a actually a directory!
                         }
                         SymbolKind::Dwp => {
                             // No additional steps needed?
@@ -1218,7 +1216,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         for (target, binaries) in targets {
             let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
 
-            // TODO: figure out a principled way for us to add things to RUSTFLAGS
+            // FIXME: is there a more principled way for us to add things to RUSTFLAGS
             // without breaking everything. Cargo has some builtin ways like keys
             // in [target...] tables that will get "merged" with the flags it wants
             // to set. More blunt approaches like actually setting the environment
@@ -1226,32 +1224,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // (which is defensible, having spaghetti flags randomly injected by
             // a dozen different tools is a build maintenance nightmare!)
 
-            // TODO: on windows, set RUSTFLAGS="-Ctarget-feature=+crt-static"
+            // You're *supposed* to link libc statically on windows but Rust has a bad default.
             // See: https://rust-lang.github.io/rfcs/1721-crt-static.html
-            //
-            // Essentially you're *supposed* to be statically linking the windows """libc"""
-            // because it's actually a wrapper around more fundamental DLLs and not
-            // actually guaranteed to be on the system. This is why lots of games
-            // install a C/C++ runtime in their wizards! Unclear what the cost/benefit
-            // is of "install" vs "statically link", especially if you only need C
-            // and not all of C++. I am however unclear on "which" "libc" you're statically
-            // linking. More Research Needed.
-            //
-            // For similar reasons we may want to perfer targeting "linux-musl" over
-            // "linux-gnu" -- the former statically links libc and makes us more portable
-            // to "weird" linux setups like NixOS which apparently doesn't have like
-            // /etc or /lib to try to try to force things to properly specify their deps
-            // (statically linking libc says "no deps pls" (except for specific linux syscalls probably)).
-            // I am however vaguely aware of issues where some system magic is hidden away
-            // in the gnu libc (glibc) and musl subsequently diverges and acts wonky?
-            // This is all vague folklore to me, so More Research Needed.
-            //
-            // Just to round things out, let's discuss macos. I've never heard of these kinds
-            // of issues wrt macos! However I am vaguely aware that macos has an "sdk version"
-            // system, which vaguely specifies what APIs you're allowing yourself to use so
-            // you can be compatible with any system at least that new (so the older the SDK,
-            // the more compatible you are). Do we need to care about that? More Research Needed.
-
             if target.contains("windows-msvc") {
                 rustflags.push_str(" -Ctarget-feature=+crt-static");
             }
@@ -1684,7 +1658,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
     // Create a Release for each package
     for (pkg_id, binaries) in &rust_releases {
-        // TODO: make app name configurable? Use some other fields in the PackageMetadata?
+        // FIXME: make app name configurable? Use some other fields in the PackageMetadata?
         let package_info = &graph.workspace().package_info[pkg_id];
         let app_name = package_info.name.clone();
         let version = package_info.version.clone();
@@ -1794,7 +1768,7 @@ pub fn package_graph(cargo: &str) -> Result<PackageGraph> {
     // EVERYTHING is DEFINITELY ALWAYS using the same Cargo!
     metadata_cmd.cargo_path(cargo);
 
-    // TODO: add a bunch of CLI flags for this. Ideally we'd use clap_cargo
+    // FIXME?: add a bunch of CLI flags for this? Ideally we'd use clap_cargo
     // but it wants us to use `flatten` and then we wouldn't be able to mark
     // the flags as global for all subcommands :(
     let pkg_graph = metadata_cmd
