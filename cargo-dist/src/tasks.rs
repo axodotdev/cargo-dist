@@ -340,6 +340,8 @@ pub struct DistGraph {
     pub announcement_changelog: Option<String>,
     /// Github Releases body for the announcement
     pub announcement_github_body: Option<String>,
+    /// Base URL that artifacts are downloadable from ("{artifact_download_url}/{artifact.id}")
+    pub artifact_download_url: Option<String>,
 
     /// Targets we need to build
     pub build_steps: Vec<BuildStep>,
@@ -613,12 +615,14 @@ pub enum InstallerImpl {
 pub struct InstallerInfo {
     /// The path to generate the installer at
     pub dest_path: Utf8PathBuf,
-    /// App name to use
+    /// App name to use (display)
     pub app_name: String,
-    /// App version to use
+    /// App version to use (display)
     pub app_version: String,
-    /// URL to the repo
-    pub repo_url: String,
+    /// Base URL to use
+    pub base_url: String,
+    /// Base name of an artifact
+    pub base_name: String,
     /// Description of the installer
     pub desc: String,
     /// Hint for how to run the installer
@@ -777,6 +781,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 announcement_changelog: None,
                 announcement_github_body: None,
                 announcement_title: None,
+                artifact_download_url: None,
                 ci_style: vec![],
                 build_steps: vec![],
                 artifacts: vec![],
@@ -1024,9 +1029,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let repo = self.workspace().repo_url.clone(); // &self.workspace.repo_url;
-        let Some(repo_url) = repo else {
-            warn!("skipping --installer=github-shell: 'repository' isn't consistently set in your Cargo.tomls");
+        let Some(download_url) = &self.inner.artifact_download_url else {
+            warn!("skipping github-shell installer: couldn't compute a URL to download artifacts from");
             return;
         };
         let artifact_name = format!("{release_id}-installer.sh");
@@ -1039,11 +1043,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .cloned()
             .collect::<Vec<_>>();
 
-        // At this point it's an integrity error to not have an announcement tag
-        let tag = self.inner.announcement_tag.as_ref().unwrap();
-        let base_url = format!("{repo_url}/releases/download/{tag}");
-        let download_url = format!("{base_url}/{artifact_name}");
-        let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf {download_url} | sh");
+        let installer_url = format!("{download_url}/{artifact_name}");
+        let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
 
         let installer_artifact = Artifact {
@@ -1056,8 +1057,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             kind: ArtifactKind::Installer(InstallerImpl::GithubShell(InstallerInfo {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
-                app_version: format!("v{}", release.version),
-                repo_url,
+                app_version: release.version.to_string(),
+                base_name: release.id.clone(),
+                base_url: download_url.clone(),
                 hint,
                 desc,
             })),
@@ -1073,9 +1075,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let repo = self.workspace().repo_url.clone(); // &self.workspace.repo_url;
-        let Some(repo_url) = repo else {
-            warn!("skipping --installer=github-powershell: 'repository' isn't consistently set in your Cargo.tomls");
+        let Some(download_url) = &self.inner.artifact_download_url else {
+            warn!("skipping github-shell installer: couldn't compute a URL to download artifacts from");
             return;
         };
         let artifact_name = format!("{release_id}-installer.ps1");
@@ -1088,11 +1089,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .cloned()
             .collect::<Vec<_>>();
 
-        // At this point it's an integrity error to not have an announcement tag
-        let tag = self.inner.announcement_tag.as_ref().unwrap();
-        let base_url = format!("{repo_url}/releases/download/{tag}");
-        let download_url = format!("{base_url}/{artifact_name}");
-        let hint = format!("# WARNING: this installer is experimental\nirm '{download_url}' | iex");
+        let installer_url = format!("{download_url}/{artifact_name}");
+        let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
 
         let installer_artifact = Artifact {
@@ -1105,8 +1103,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             kind: ArtifactKind::Installer(InstallerImpl::GithubPowershell(InstallerInfo {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
-                app_version: format!("v{}", release.version),
-                repo_url,
+                app_version: release.version.to_string(),
+                base_name: release.id.clone(),
+                base_url: download_url.clone(),
                 hint,
                 desc,
             })),
@@ -1317,7 +1316,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
 
         let mut gh_body = String::new();
-        let download_url = self.github_download_url();
+        let download_url = self.inner.artifact_download_url.as_ref();
 
         // Add the contents of each Release to the body
         for release in &self.inner.releases {
@@ -1398,7 +1397,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         ArtifactKind::Installer(_) => "installer",
                     };
                     let name = &artifact.id;
-                    let artifact_download_url = format!("{download_url}{name}");
+                    let artifact_download_url = format!("{download_url}/{name}");
                     let download = format!("[{name}]({artifact_download_url})");
                     writeln!(&mut gh_body, "| {targets} | {kind} | {download} |").unwrap();
                 }
@@ -1446,11 +1445,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
     fn variant_mut(&mut self, idx: ReleaseVariantIdx) -> &mut ReleaseVariant {
         &mut self.inner.variants[idx.0]
-    }
-    fn github_download_url(&self) -> Option<String> {
-        let repo_url = self.workspace.repo_url.as_ref()?;
-        let tag = self.inner.announcement_tag.as_ref()?;
-        Some(format!("{repo_url}/releases/download/{tag}/"))
     }
     fn local_artifacts_enabled(&self) -> bool {
         match self.artifact_mode {
@@ -1701,6 +1695,10 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         "integrity error: failed to select announcement tag"
     );
     graph.inner.announcement_tag = announcement_tag;
+    if let Some(repo_url) = workspace.repo_url.as_ref() {
+        let tag = graph.inner.announcement_tag.as_ref().unwrap();
+        graph.inner.artifact_download_url = Some(format!("{repo_url}/releases/download/{tag}"));
+    }
 
     // Create a Release for each package
     for (pkg_id, binaries) in &rust_releases {
