@@ -27,5 +27,9 @@ GLOBAL OPTIONS:
       --target <TARGET>                Target triples we want to build
       --installer <INSTALLER>          Installers we want to build [possible values: github-shell, github-powershell]
 
+GLOBAL_OPTIONS:
+      --exe-bundle-style <EXE_BUNDLE_STYLE>
+          Executable bundle style [possible values: uncompressed-file, zip, tar-gzip, tar-xzip, tar-zstd]
+
 stderr:
 

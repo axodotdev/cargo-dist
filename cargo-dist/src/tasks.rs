@@ -62,6 +62,8 @@ pub struct Config {
     pub no_local_paths: bool,
     /// Target triples we want to build for
     pub targets: Vec<String>,
+    /// Executable bundle style
+    pub exe_bundle_style: Option<BundleStyle>,
     /// Installers we want to generate
     pub installers: Vec<InstallerStyle>,
 }
@@ -266,7 +268,7 @@ pub enum StaticAssetKind {
 }
 
 /// The style of bundle for a [`ArtifactTarget`][].
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BundleStyle {
     /// Just a single uncompressed file
     UncompressedFile,
@@ -521,15 +523,20 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             BuildTarget::Cargo(target) => target.target_triple.clone(),
         };
 
-        // TODO: make bundle style configurable
         let target_is_windows = target_triple.contains("windows");
-        let exe_bundle = if target_is_windows {
-            // Windows loves them zips
-            BundleStyle::Zip
-        } else {
-            // tar.xz is well-supported everywhere and much better than tar.gz
-            BundleStyle::Tar(CompressionImpl::Xzip)
+        let exe_bundle = match cfg.exe_bundle_style.clone() {
+            Some(bundle_style) => bundle_style,
+            None => {
+                if target_is_windows {
+                    // Windows loves them zips
+                    BundleStyle::Zip
+                } else {
+                    // tar.xz is well-supported everywhere and much better than tar.gz
+                    BundleStyle::Tar(CompressionImpl::Xzip)
+                }
+            }
         };
+
         let platform_exe_ext = if target_is_windows { ".exe" } else { "" };
 
         // TODO: make bundled assets configurable
@@ -547,7 +554,11 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
         // TODO: make the bundle name configurable?
         let exe_dir_name = format!("{app_name}-v{version}-{target_triple}");
-        let exe_dir_path = dist_dir.join(&exe_dir_name);
+        let exe_dir_path = match exe_bundle {
+            BundleStyle::UncompressedFile => None, // if the executable is a single uncompressed file a dir shouldn't be generated
+            _ => Some(dist_dir.join(&exe_dir_name)),
+        };
+
         let exe_file_ext = match exe_bundle {
             BundleStyle::UncompressedFile => platform_exe_ext,
             BundleStyle::Zip => ".zip",
@@ -632,7 +643,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         artifacts.push(ArtifactTarget {
             target_triples: vec![target_triple],
             dir_name: Some(exe_dir_name),
-            dir_path: Some(exe_dir_path),
+            dir_path: exe_dir_path,
             file_path: exe_bundle_path,
             file_name: exe_bundle_name.clone(),
             bundle: exe_bundle,

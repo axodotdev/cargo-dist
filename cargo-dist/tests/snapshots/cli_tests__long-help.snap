@@ -58,5 +58,16 @@ GLOBAL OPTIONS:
           - github-shell:      Generates a shell script that fetches from github ci
           - github-powershell: Generates a powershell script that fetches from github ci
 
+GLOBAL_OPTIONS:
+      --exe-bundle-style <EXE_BUNDLE_STYLE>
+          Executable bundle style
+
+          Possible values:
+          - uncompressed-file: Just a single uncompressed file
+          - zip:               `.zip`
+          - tar-gzip:          `.tar.gz`
+          - tar-xzip:          `.tar.xz`
+          - tar-zstd:          `.tar.zstd`
+
 stderr:
 

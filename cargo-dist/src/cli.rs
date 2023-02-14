@@ -57,6 +57,12 @@ pub struct Cli {
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub installer: Vec<InstallerStyle>,
 
+    /// Executable bundle style
+    // todo: different bundle styles for different files
+    #[clap(long)]
+    #[clap(help_heading = "GLOBAL_OPTIONS", global = true)]
+    pub exe_bundle_style: Option<ExeBundleStyle>,
+
     // Add the args from the "real" build command
     #[clap(flatten)]
     pub build_args: BuildArgs,
@@ -145,6 +151,40 @@ impl InstallerStyle {
         match self {
             InstallerStyle::GithubShell => cargo_dist::InstallerStyle::GithubShell,
             InstallerStyle::GithubPowershell => cargo_dist::InstallerStyle::GithubPowershell,
+        }
+    }
+}
+
+/// Bundle style for an executable
+#[derive(ValueEnum, Clone, Copy)]
+pub enum ExeBundleStyle {
+    /// Just a single uncompressed file
+    UncompressedFile,
+    /// `.zip`
+    Zip,
+    /// `.tar.gz`
+    TarGzip,
+    /// `.tar.xz`
+    TarXzip,
+    /// `.tar.zstd`
+    TarZstd,
+}
+
+impl ExeBundleStyle {
+    /// Convert the application version of this enum to the library version
+    pub fn to_lib(self) -> cargo_dist::BundleStyle {
+        match self {
+            ExeBundleStyle::UncompressedFile => cargo_dist::BundleStyle::UncompressedFile,
+            ExeBundleStyle::Zip => cargo_dist::BundleStyle::Zip,
+            ExeBundleStyle::TarGzip => {
+                cargo_dist::BundleStyle::Tar(cargo_dist::CompressionImpl::Gzip)
+            }
+            ExeBundleStyle::TarXzip => {
+                cargo_dist::BundleStyle::Tar(cargo_dist::CompressionImpl::Xzip)
+            }
+            ExeBundleStyle::TarZstd => {
+                cargo_dist::BundleStyle::Tar(cargo_dist::CompressionImpl::Zstd)
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ use camino::Utf8PathBuf;
 use miette::{IntoDiagnostic, WrapErr};
 use tracing::warn;
 
-use crate::InstallerStyle;
+use crate::{BundleStyle, CompressionImpl, InstallerStyle};
 
 const GITHUB_CI_TRIGGER: &str = r###"# CI that:
 #
@@ -88,7 +88,7 @@ const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"    runs-on: ${{ matrix.os }}
         # do agree on 'cat' and '$()' so we use that to marshal values between commands.
         run: |
           # Actually do builds and make zips and whatnot
-          cargo dist --target=${{ matrix.target }} --output-format=json > dist-manifest.json
+          cargo dist --target=${{ matrix.target }} --output-format=json ${{ env.ALL_CARGO_EXE_BUNDLE_ARGS }} > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
           # Parse out what we just built and upload it to the Github Release™
@@ -112,7 +112,7 @@ const GITHUB_CI_ARTIFACT_TASKS1: &str = r###"    runs-on: ${{ matrix.os }}
 const GITHUB_CI_ARTIFACT_TASKS2: &str = r###"      - name: Run cargo-dist manifest
         run: |
           # Generate a manifest describing everything
-          cargo dist manifest --no-local-paths --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
+          cargo dist manifest --no-local-paths --output-format=json $ALL_CARGO_DIST_TARGET_ARGS $ALL_CARGO_EXE_BUNDLE_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist manifest ran successfully"
           cat dist-manifest.json
           # Upload the manifest to the Github Release™
@@ -127,7 +127,7 @@ const GITHUB_CI_ARTIFACT_TASKS2: &str = r###"      - name: Run cargo-dist manife
 const GITHUB_CI_INSTALLERS: &str = r###"      - name: Run cargo-dist --installer=...
         run: |
           # Run cargo dist with --no-builds to get agnostic artifacts like installers
-          cargo dist --output-format=json --no-builds $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
+          cargo dist --output-format=json --no-builds $ALL_CARGO_EXE_BUNDLE_ARGS $ALL_CARGO_DIST_INSTALLER_ARGS > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
           # Grab the installers that were generated and upload them.
@@ -159,6 +159,7 @@ const GITHUB_CI_FINISH_RELEASE: &str = r###"
 pub fn generate_github_ci(
     workspace_dir: &Utf8PathBuf,
     targets: &[String],
+    exe_bundle_style: Option<&BundleStyle>,
     installers: &[InstallerStyle],
 ) -> Result<(), miette::Report> {
     const GITHUB_CI_DIR: &str = ".github/workflows/";
@@ -173,7 +174,7 @@ pub fn generate_github_ci(
     let mut file = File::create(ci_file)
         .into_diagnostic()
         .wrap_err("Failed to create ci file")?;
-    write_github_ci(&mut file, targets, installers)
+    write_github_ci(&mut file, targets, exe_bundle_style, installers)
         .into_diagnostic()
         .wrap_err("Failed to write to CI file")?;
     Ok(())
@@ -182,6 +183,7 @@ pub fn generate_github_ci(
 fn write_github_ci(
     f: &mut File,
     targets: &[String],
+    exe_bundle_style: Option<&BundleStyle>,
     installers: &[InstallerStyle],
 ) -> Result<(), std::io::Error> {
     use std::io::Write;
@@ -214,6 +216,31 @@ fn write_github_ci(
 
     let installer_args = String::from_utf8(installer_args).unwrap();
     writeln!(f, "  ALL_CARGO_DIST_INSTALLER_ARGS: {installer_args}")?;
+
+    // Write out the exe bundle args
+    let mut exe_bundle_args = Vec::new();
+    if let Some(exe_bundle_style) = exe_bundle_style {
+        let bundle_style = match exe_bundle_style {
+            BundleStyle::UncompressedFile => "uncompressed-file",
+            BundleStyle::Zip => "zip",
+            BundleStyle::Tar(compression_type) => match compression_type {
+                CompressionImpl::Gzip => "tar-gzip",
+                CompressionImpl::Xzip => "tar-xzip",
+                CompressionImpl::Zstd => "tar-zstd",
+            },
+            BundleStyle::Installer(_) => unreachable!("exe's shouldn't be installers"),
+        };
+
+        write!(&mut exe_bundle_args, "--exe-bundle-style={bundle_style} ")?;
+    }
+
+    // If no exe bundle args are present, add two single quotes to keep the YAML valid
+    if exe_bundle_args.is_empty() {
+        write!(&mut exe_bundle_args, "''")?;
+    }
+
+    let exe_bundle_args = String::from_utf8(exe_bundle_args).unwrap();
+    writeln!(f, "  ALL_CARGO_EXE_BUNDLE_ARGS: {exe_bundle_args}")?;
 
     // Write out the current version
     let dist_version = env!("CARGO_PKG_VERSION");

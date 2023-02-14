@@ -920,9 +920,12 @@ pub fn do_generate_ci(cfg: &Config, args: &GenerateCiArgs) -> Result<()> {
     let graph = gather_work(cfg)?;
     for style in &args.ci_styles {
         match style {
-            CiStyle::Github => {
-                ci::generate_github_ci(&graph.workspace_dir, &cfg.targets, &cfg.installers)?
-            }
+            CiStyle::Github => ci::generate_github_ci(
+                &graph.workspace_dir,
+                &cfg.targets,
+                cfg.exe_bundle_style.as_ref(),
+                &cfg.installers,
+            )?,
         }
     }
     Ok(())

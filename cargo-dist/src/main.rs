@@ -151,6 +151,7 @@ fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         build: !args.no_builds,
         no_local_paths: cli.no_local_paths,
         targets: cli.target.clone(),
+        exe_bundle_style: cli.exe_bundle_style.map(|s| s.to_lib()),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
     let report = do_dist(&config)?;
@@ -167,6 +168,7 @@ fn cmd_manifest(cli: &Cli, _args: &ManifestArgs) -> Result<(), miette::Report> {
         build: true,
         no_local_paths: cli.no_local_paths,
         targets: cli.target.clone(),
+        exe_bundle_style: cli.exe_bundle_style.map(|s| s.to_lib()),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
     let report = do_manifest(&config)?;
@@ -189,6 +191,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         build: true,
         no_local_paths: cli.no_local_paths,
         targets,
+        exe_bundle_style: cli.exe_bundle_style.map(|s| s.to_lib()),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
     let args = cargo_dist::InitArgs {
@@ -213,6 +216,7 @@ fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Repor
         build: true,
         no_local_paths: cli.no_local_paths,
         targets,
+        exe_bundle_style: cli.exe_bundle_style.map(|s| s.to_lib()),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
     };
     let args = cargo_dist::GenerateCiArgs {
