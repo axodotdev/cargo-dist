@@ -5,17 +5,33 @@ expression: format_outputs(&output)
 stdout:
 {
   "dist_version": "1.0.0-FAKEVERSION",
+  "announcement_tag": "CENSORED",
+  "announcement_title": "CENSORED"
+  "announcement_changelog": "CENSORED"
+  "announcement_github_body": "CENSORED"
   "releases": [
     {
       "app_name": "cargo-dist",
       "app_version": "1.0.0-FAKEVERSION",
       "artifacts": [
         {
-          "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.pdb",
-          "kind": "symbols",
+          "name": "cargo-dist-v1.0.0-FAKEVERSION-installer.sh",
+          "kind": "installer",
           "target_triples": [
             "x86_64-pc-windows-msvc"
-          ]
+          ],
+          "install_hint": "# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-v1.0.0-FAKEVERSION-installer.sh | sh",
+          "description": "Install prebuilt binaries via shell script"
+        },
+        {
+          "name": "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1",
+          "kind": "installer",
+          "target_triples": [
+            "x86_64-apple-darwin",
+            "x86_64-unknown-linux-gnu"
+          ],
+          "install_hint": "# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-v1.0.0-FAKEVERSION-installer.ps1 | sh",
+          "description": "Install prebuilt binaries via shell script"
         },
         {
           "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
@@ -50,6 +66,13 @@ stdout:
               "kind": "executable",
               "symbols_artifact": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.pdb"
             }
+          ]
+        },
+        {
+          "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.pdb",
+          "kind": "symbols",
+          "target_triples": [
+            "x86_64-pc-windows-msvc"
           ]
         },
         {
@@ -119,32 +142,16 @@ stdout:
               "kind": "executable"
             }
           ]
-        },
-        {
-          "name": "installer.sh",
-          "kind": "installer",
-          "target_triples": [
-            "x86_64-apple-darwin",
-            "x86_64-unknown-linux-gnu"
-          ],
-          "install_hint": "# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/installer.sh | sh",
-          "description": "Install prebuilt binaries via shell script"
-        },
-        {
-          "name": "installer.ps1",
-          "kind": "installer",
-          "target_triples": [
-            "x86_64-pc-windows-msvc"
-          ],
-          "install_hint": "# WARNING: this installer is experimental\nirm 'https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/installer.ps1' | iex",
-          "description": "Install prebuilt binaries via powershell script"
         }
-      ],
-      "changelog_title": "CHANGELOG-CENSORED",
-      "changelog_body": "CHANGELOG-CENSORED"
+      ]
     }
   ]
 }
 
 stderr:
+analyzing workspace:
+  cargo-dist
+    [bin] cargo-dist
+  cargo-dist-schema (no binaries)
+
 

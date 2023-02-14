@@ -8,6 +8,34 @@ expression: json_schema
   "description": "A report of the releases and artifacts that cargo-dist generated",
   "type": "object",
   "properties": {
+    "announcement_changelog": {
+      "description": "A changelog for the announcement",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "announcement_github_body": {
+      "description": "A Github Releases body for the announcement",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "announcement_tag": {
+      "description": "The (git) tag associated with this announcement",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "announcement_title": {
+      "description": "A title for the announcement",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "dist_version": {
       "description": "The version of cargo-dist that generated this",
       "type": [

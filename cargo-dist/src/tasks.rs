@@ -2,7 +2,7 @@
 //!
 //! This is the heart and soul of cargo-dist, and ideally the [`gather_work`][] function
 //! should compute every minute detail dist will perform ahead of time. This is done with
-//! the [`DistGraphBuilder`][], which roughly builds up the work to do as follows:
+//! the DistGraphBuilder, which roughly builds up the work to do as follows:
 //!
 //! 1. [`workspace_info`][]: find out everything we want to know about the workspace (binaries, configs, etc)
 //! 2. compute the TargetTriples we're interested based on ArtifactMode and target configs/flags
@@ -292,7 +292,7 @@ pub enum InstallerStyle {
     GithubPowershell,
 }
 
-/// A unique id for a [`ArtifactTarget`][]
+/// A unique id for a [`Artifact`][]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct ArtifactIdx(pub usize);
 
@@ -300,7 +300,7 @@ pub struct ArtifactIdx(pub usize);
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct ReleaseVariantIdx(pub usize);
 
-/// A unique id for a [`ReleaseTarget`][]
+/// A unique id for a [`Release`][]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct ReleaseIdx(pub usize);
 
@@ -629,7 +629,7 @@ pub struct InstallerInfo {
     pub hint: String,
 }
 
-/// Cargo features a [`CargoBuildTarget`][] should use.
+/// Cargo features a cargo build should use.
 #[derive(Debug)]
 pub struct CargoTargetFeatures {
     /// Whether to disable default features
@@ -666,7 +666,7 @@ pub struct WorkspaceInfo<'pkg_graph> {
     ///
     /// This notably includes finding readmes and licenses even if the user didn't
     /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
-    pub package_info: FastMap<&'pkg_graph PackageId, PackageInfo>,
+    pub package_info: SortedMap<&'pkg_graph PackageId, PackageInfo>,
     /// Path to the Cargo.toml of the workspace (may be a package's Cargo.toml)
     pub manifest_path: Utf8PathBuf,
     /// If the manifest_path points to a package, this is the one.
@@ -1867,7 +1867,7 @@ pub fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
 
     let mut repo_url_conflicted = false;
     let mut repo_url = None;
-    let mut all_package_info = FastMap::new();
+    let mut all_package_info = SortedMap::new();
     for package in members.packages(DependencyDirection::Forward) {
         let mut info = package_info(workspace_root, &workspace_config, &package)?;
 
