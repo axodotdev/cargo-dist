@@ -101,8 +101,11 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
             artifacts,
         })
     }
-    let dist_version = env!("CARGO_PKG_VERSION").to_owned();
-    DistManifest::new(dist_version, releases)
+
+    let mut manifest = DistManifest::new(releases);
+    manifest.dist_version = Some(env!("CARGO_PKG_VERSION").to_owned());
+    manifest.announcement_tag = dist.announcement_tag.clone();
+    manifest
 }
 
 fn manifest_artifact(

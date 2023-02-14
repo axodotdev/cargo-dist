@@ -29,6 +29,10 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_version: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// The (git) tag associated with this announcement
+    pub announcement_tag: Option<String>,
     /// App releases we're distributing
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -172,9 +176,10 @@ pub struct ExecutableAsset {
 
 impl DistManifest {
     /// Create a new DistManifest
-    pub fn new(dist_version: String, releases: Vec<Release>) -> Self {
+    pub fn new(releases: Vec<Release>) -> Self {
         Self {
-            dist_version: Some(dist_version),
+            dist_version: None,
+            announcement_tag: None,
             releases,
         }
     }
