@@ -139,8 +139,11 @@ fn real_main(cli: &Cli) -> Result<(), miette::Report> {
 
 fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::Error> {
     // First say what the announcement would be
-    let announce_title = "(TODO: implement this string!)";
-    writeln!(out, "announcing {announce_title}")?;
+    writeln!(
+        out,
+        "announcing {}",
+        manifest.announcement_tag.as_ref().unwrap()
+    )?;
 
     // Now list off all releases
     for release in &manifest.releases {
@@ -217,6 +220,7 @@ fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        announcement_tag: cli.tag.clone(),
     };
     let report = do_dist(&config)?;
     let mut out = Term::stdout();
@@ -234,6 +238,7 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        announcement_tag: cli.tag.clone(),
     };
     let report = do_manifest(&config)?;
     let mut out = Term::stdout();
@@ -265,6 +270,7 @@ fn cmd_init(cli: &Cli, _args: &InitArgs) -> Result<(), miette::Report> {
         targets,
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        announcement_tag: cli.tag.clone(),
     };
     let args = cargo_dist::InitArgs {};
     do_init(&config, &args)
@@ -283,6 +289,7 @@ fn cmd_generate_ci(cli: &Cli, _args: &GenerateCiArgs) -> Result<(), miette::Repo
         targets,
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        announcement_tag: cli.tag.clone(),
     };
     let args = cargo_dist::GenerateCiArgs {};
     do_generate_ci(&config, &args)

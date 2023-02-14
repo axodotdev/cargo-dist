@@ -259,6 +259,8 @@ pub struct Config {
     pub ci: Vec<CiStyle>,
     /// Installers we want to generate
     pub installers: Vec<InstallerStyle>,
+    /// The (git) tag to use for this Announcement.
+    pub announcement_tag: Option<String>,
 }
 
 /// How we should select the artifacts to build
@@ -334,13 +336,13 @@ pub struct DistGraph {
     /// The git tag used for the announcement (e.g. v1.0.0)
     ///
     /// This is important for certain URLs like Github Releases
-    pub announce_tag: String,
+    pub announcement_tag: Option<String>,
     /// Title of the announcement
-    pub announce_title: Option<String>,
+    pub announcement_title: Option<String>,
     /// Raw changelog for the announcement
-    pub announce_changelog: Option<String>,
+    pub announcement_changelog: Option<String>,
     /// Github Releases body for the announcement
-    pub announce_github_body: Option<String>,
+    pub announcement_github_body: Option<String>,
 
     /// Targets we need to build
     pub build_steps: Vec<BuildStep>,
@@ -762,11 +764,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let workspace_dir = workspace.info.root().to_owned();
         let dist_dir = target_dir.join(TARGET_DIST);
 
-        // The git tag associated with this announcement, which is used in things
-        // like github-releases URLs, so we need it to be defined globally.
-        // TODO: source this properly from a CLI flag and/or auto-detection
-        let announce_tag = "v1.0.0-FAKEVER".to_owned();
-
         Self {
             inner: DistGraph {
                 is_init: workspace.dist_profile.is_some(),
@@ -774,10 +771,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 target_dir,
                 workspace_dir,
                 dist_dir,
-                announce_tag,
-                announce_changelog: None,
-                announce_github_body: None,
-                announce_title: None,
+                announcement_tag: None,
+                announcement_changelog: None,
+                announcement_github_body: None,
+                announcement_title: None,
                 ci_style: vec![],
                 build_steps: vec![],
                 artifacts: vec![],
@@ -798,6 +795,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     fn add_release(&mut self, app_name: String, version: Version) -> ReleaseIdx {
         let idx = ReleaseIdx(self.inner.releases.len());
         let id = format!("{app_name}-v{version}");
+        info!("added release {id}");
         self.inner.releases.push(Release {
             app_name,
             version,
@@ -820,6 +818,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             ..
         } = self.release_mut(to_release);
         let id = format!("{release_id}-{target}");
+        info!("added variant {id}");
 
         variants.push(idx);
         targets.push(target.clone());
@@ -850,6 +849,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let idx = if let Some(&idx) = self.binaries_by_id.get(&id) {
             idx
         } else {
+            info!("added binary {id}");
             let idx = BinaryIdx(self.inner.binaries.len());
             let binary = Binary {
                 id,
@@ -881,6 +881,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         if !self.local_artifacts_enabled() {
             return;
         }
+        info!(
+            "adding executable zip to release {}",
+            self.release(to_release).id
+        );
 
         // Create an executable-zip for each Variant
         let release = self.release(to_release);
@@ -1032,7 +1036,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .filter(|s| s.contains("windows"))
             .cloned()
             .collect::<Vec<_>>();
-        let tag = &self.inner.announce_tag;
+
+        // At this point it's an integrity error to not have an announcement tag
+        let tag = self.inner.announcement_tag.as_ref().unwrap();
         let base_url = format!("{repo_url}/releases/download/{tag}");
         let download_url = format!("{base_url}/{artifact_name}");
         let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf {download_url} | sh");
@@ -1079,7 +1085,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .filter(|s| !s.contains("windows"))
             .cloned()
             .collect::<Vec<_>>();
-        let tag = &self.inner.announce_tag;
+
+        // At this point it's an integrity error to not have an announcement tag
+        let tag = self.inner.announcement_tag.as_ref().unwrap();
         let base_url = format!("{repo_url}/releases/download/{tag}");
         let download_url = format!("{base_url}/{artifact_name}");
         let hint = format!("# WARNING: this installer is experimental\nirm '{download_url}' | iex");
@@ -1468,6 +1476,42 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     let workspace = workspace_info(&package_graph)?;
     let mut graph = DistGraphBuilder::new(cargo, &workspace, cfg.artifact_mode);
 
+    // First thing's first: if they gave us an announcement tag then we should try to parse it
+    let mut announcing_package = None;
+    let mut announcing_version = None;
+    let mut announcement_tag = cfg.announcement_tag.clone();
+    if let Some(tag) = &announcement_tag {
+        // First check if it matches any package
+        for (pkg_id, package) in &workspace.package_info {
+            let package_tag = format!("{}-v{}", package.name, package.version);
+            if &package_tag == tag {
+                info!("announcement tag matched {pkg_id}");
+                assert!(
+                    announcing_package.is_none(),
+                    "how on earth do you have two packages that match {package_tag}!?"
+                );
+                announcing_package = Some(pkg_id);
+            }
+        }
+
+        // If it doesn't match any package then try to parse it as v{VERSION}
+        if announcing_package.is_none() {
+            if let Some(version) = tag
+                .strip_prefix('v')
+                .and_then(|v| v.parse::<Version>().ok())
+            {
+                announcing_version = Some(version);
+            }
+        }
+
+        // If none of the approaches work, refuse to proceed
+        if announcing_package.is_none() && announcing_version.is_none() {
+            return Err(miette!(
+                "The provided announcement tag ({tag}) didn't match any Package or Version"
+            ));
+        }
+    }
+
     if cfg.ci.is_empty() {
         graph.set_ci_style(workspace.ci_kinds.clone());
     } else {
@@ -1491,7 +1535,8 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     // Choose which set of target triples we're building for
     let mut bypass_package_target_prefs = false;
     let triples = if cfg.targets.is_empty() {
-        if let ArtifactMode::Host = cfg.artifact_mode {
+        if matches!(cfg.artifact_mode, ArtifactMode::Host) {
+            info!("using host target-triple");
             // In "host" mode we want to build for the host arch regardless of what the
             // packages claim they support.
             //
@@ -1499,14 +1544,19 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             // FIXME: it would be nice to do "easy" crosses like x64 mac => arm64 + universal2
             bypass_package_target_prefs = true;
             &host_target_triple
+        } else if all_target_triples.is_empty() {
+            return Err(miette!("You specified --artifacts, disabling host mode, but specified no targets to build!"));
         } else {
+            info!("using all target-triples");
             // Otherwise assume the user wants all targets (desirable for --artifacts=global)
             &all_target_triples[..]
         }
     } else {
+        info!("using explicit target-triples");
         // If the CLI has explicit targets, only use those!
         &cfg.targets[..]
     };
+    info!("selected triples: {:?}", triples);
 
     // Choose which binaries we want to release
     let disabled_sty = console::Style::new().dim();
@@ -1519,20 +1569,35 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         let mut disabled_reason = None;
         if pkg.binaries.is_empty() {
             // Nothing to publish if there's no binaries!
-            disabled_reason = Some("no binaries");
+            disabled_reason = Some("no binaries".to_owned());
         } else if let Some(do_dist) = pkg.config.dist {
             // If [metadata.dist].dist is explicitly set, respect it!
             if !do_dist {
-                disabled_reason = Some("dist = false");
+                disabled_reason = Some("dist = false".to_owned());
             }
         } else if !pkg.publish {
             // Otherwise defer to Cargo's `publish = false`
-            disabled_reason = Some("publish = false");
+            disabled_reason = Some("publish = false".to_owned());
+        } else if let Some(id) = &announcing_package {
+            // If we're announcing a package, reject every other package
+            if pkg_id != id {
+                disabled_reason = Some(format!(
+                    "didn't match tag {}",
+                    announcement_tag.as_ref().unwrap()
+                ));
+            }
+        } else if let Some(ver) = &announcing_version {
+            if &pkg.version != ver {
+                disabled_reason = Some(format!(
+                    "didn't match tag {}",
+                    announcement_tag.as_ref().unwrap()
+                ));
+            }
         }
 
         // Report our conclusion/discoveries
         let sty;
-        if let Some(reason) = disabled_reason {
+        if let Some(reason) = &disabled_reason {
             sty = &disabled_sty;
             eprintln!("  {}", sty.apply_to(format!("{pkg_name} ({reason})")));
         } else {
@@ -1557,15 +1622,65 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
     eprintln!();
 
-    // Give a friendly hint
+    // Don't proceed if this doesn't make sense
     if rust_releases.is_empty() {
-        let sty = console::Style::new().red();
-        eprintln!(
-            "{}",
-            sty.apply_to("...hey this workspace doesn't have anything to dist!")
-        );
-        eprintln!();
+        return Err(miette!(
+            "This workspace doesn't have anything for cargo-dist to Release!"
+        ));
     }
+    // If we don't have a tag yet we MUST successfully select one here or fail
+    if announcement_tag.is_none() {
+        let mut versions = SortedMap::<&Version, Vec<&PackageId>>::new();
+        for (pkg_id, _) in &rust_releases {
+            let info = &graph.workspace().package_info[pkg_id];
+            versions.entry(&info.version).or_default().push(pkg_id);
+        }
+        if versions.len() == 1 {
+            let version = *versions.first_key_value().unwrap().0;
+            let tag = format!("v{version}");
+            info!("inferred Announcement tag: {}", tag);
+            announcement_tag = Some(tag);
+            // This value won't be read, but it is *true*
+            // announcing_version = Some(version.clone());
+        } else {
+            use std::fmt::Write;
+            let mut msg = String::new();
+            msg.push_str(
+                "There are too many unrelated apps in your workspace to coherently Announce!\n\n",
+            );
+            msg.push_str("Please either specify --tag, or give them all the same version\n\n");
+            msg.push_str("Here are some options:\n\n");
+            for (version, packages) in &versions {
+                write!(msg, "--tag=v{version} will Announce: ").unwrap();
+                let mut multi_package = false;
+                for pkg_id in packages {
+                    let info = &graph.workspace().package_info[pkg_id];
+                    if multi_package {
+                        write!(msg, ", ").unwrap();
+                    } else {
+                        multi_package = true;
+                    }
+                    write!(msg, "{}", info.name).unwrap();
+                }
+                writeln!(msg).unwrap();
+            }
+            msg.push('\n');
+            let some_pkg = versions.first_key_value().unwrap().1.first().unwrap();
+            let info = &graph.workspace().package_info[some_pkg];
+            let some_tag = format!("--tag={}-v{}", info.name, info.version);
+            writeln!(
+                msg,
+                "you can also request any single package with {some_tag}"
+            )
+            .unwrap();
+            return Err(miette!("{}", msg));
+        }
+    }
+    assert!(
+        announcement_tag.is_some(),
+        "integrity error: failed to select announcement tag"
+    );
+    graph.inner.announcement_tag = announcement_tag;
 
     // Create a Release for each package
     for (pkg_id, binaries) in &rust_releases {
