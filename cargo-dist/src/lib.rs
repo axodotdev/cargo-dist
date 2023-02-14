@@ -34,7 +34,7 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
         ));
     }
 
-    // TODO: parallelize this by working this like a dependency graph, so we can start
+    // FIXME: parallelize this by working this like a dependency graph, so we can start
     // bundling up an executable the moment it's built! Note however that you shouldn't
     // parallelize Cargo invocations because it has global state that can get clobbered.
     // Most problematically if you do two builds with different feature flags the final
@@ -516,7 +516,7 @@ fn really_zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
             let file = File::open(entry.path()).into_diagnostic()?;
             let mut buf = BufReader::new(file);
             let file_name = entry.file_name();
-            // TODO: ...don't do this lossy conversion?
+            // FIXME: ...don't do this lossy conversion?
             let utf8_file_name = file_name.to_string_lossy();
             zip.start_file(utf8_file_name.clone(), options)
                 .into_diagnostic()
@@ -525,7 +525,7 @@ fn really_zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
                 })?;
             std::io::copy(&mut buf, &mut zip).into_diagnostic()?;
         } else {
-            panic!("TODO: implement zip subdirs! (or was this a symlink?)");
+            todo!("implement zip subdirs! (or was this a symlink?)");
         }
     }
 
