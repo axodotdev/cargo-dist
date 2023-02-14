@@ -316,6 +316,9 @@ pub struct BinaryIdx(pub usize);
 /// It also allows us to report what *should* happen without actually doing it.
 #[derive(Debug)]
 pub struct DistGraph {
+    /// Whether it looks like `cargo dist init` has been run
+    pub is_init: bool,
+
     // Some simple global facts
     /// The executable cargo told us to find itself at.
     pub cargo: String,
@@ -326,7 +329,6 @@ pub struct DistGraph {
     /// cargo-dist's target dir (generally nested under `target_dir`).
     pub dist_dir: Utf8PathBuf,
 
-    // Announcement info
     /// Styles of CI we want to support
     pub ci_style: Vec<CiStyle>,
     /// The git tag used for the announcement (e.g. v1.0.0)
@@ -340,7 +342,6 @@ pub struct DistGraph {
     /// Github Releases body for the announcement
     pub announce_github_body: Option<String>,
 
-    // The actual task graph
     /// Targets we need to build
     pub build_steps: Vec<BuildStep>,
     /// Distributable artifacts we want to produce for the releases
@@ -768,6 +769,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         Self {
             inner: DistGraph {
+                is_init: workspace.dist_profile.is_some(),
                 cargo,
                 target_dir,
                 workspace_dir,
@@ -1929,22 +1931,21 @@ fn get_dist_profile(manifest_path: &Utf8Path) -> Result<CargoProfile> {
     };
 
     // Get the fields we care about
-    let debug = &dist_profile["debug"];
-    let split_debuginfo = &dist_profile["split-debuginfo"];
+    let debug = dist_profile.get("debug");
+    let split_debuginfo = dist_profile.get("split-debuginfo");
 
     // clean up the true/false sugar for "debug"
-    let debug = if let Some(val) = debug.as_bool() {
-        if val {
-            Some(2)
-        } else {
-            Some(0)
-        }
-    } else {
-        debug.as_integer()
-    };
+    let debug = debug.and_then(|debug| {
+        debug
+            .as_bool()
+            .map(|val| if val { 2 } else { 0 })
+            .or_else(|| debug.as_integer())
+    });
 
     // Just capture split-debuginfo directly
-    let split_debuginfo = split_debuginfo.as_str().map(ToOwned::to_owned);
+    let split_debuginfo = split_debuginfo
+        .and_then(|v| v.as_str())
+        .map(ToOwned::to_owned);
 
     Ok(CargoProfile {
         debug,
