@@ -16,9 +16,9 @@ Commands:
   help         Print this message or the help of the given subcommand(s)
 
 Options:
-      --no-builds  Don't actually do any builds, this can be useful for generating only installers
-  -h, --help       Print help information (use `--help` for more detail)
-  -V, --version    Print version information
+      --artifacts <ARTIFACTS>  Which subset of the Artifacts to build [default: host] [possible values: local, global, host, all]
+  -h, --help                   Print help information (use `--help` for more detail)
+  -V, --version                Print version information
 
 GLOBAL OPTIONS:
       --verbose <VERBOSE>              How verbose logging should be (log level) [default: warn] [possible values: off, error, warn, info, debug, trace]
@@ -26,6 +26,8 @@ GLOBAL OPTIONS:
       --no-local-paths                 Strip local paths from output (e.g. in the dist manifest json)
       --target <TARGET>                Target triples we want to build
       --installer <INSTALLER>          Installers we want to build [possible values: github-shell, github-powershell]
+      --ci <CI>                        CI we want to support [possible values: github]
+      --tag <TAG>                      The (git) tag to use for the Announcement that each invocation of cargo-dist is performing
 
 stderr:
 
