@@ -887,11 +887,9 @@ pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
         ));
     }
 
-    for style in &cfg.ci {
+    for style in &dist.ci_style {
         match style {
-            CiStyle::Github => {
-                ci::generate_github_ci(&dist.workspace_dir, &cfg.targets, &cfg.installers)?
-            }
+            CiStyle::Github => ci::generate_github_ci(&dist)?,
         }
     }
     Ok(())

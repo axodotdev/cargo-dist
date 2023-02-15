@@ -1,0 +1,115 @@
+# CI that:
+#
+# * checks for a Git Tag that looks like a release ("v1.2.0")
+# * creates a Github Release™
+# * builds binaries/packages with cargo-dist
+# * uploads those packages to the Github Release™
+#
+# Note that the Github Release™ will be created before the packages,
+# so there will be a few minutes where the release has no packages
+# and then they will slowly trickle in, possibly failing. To make
+# this more pleasant we mark the release as a "draft" until all
+# artifacts have been successfully uploaded. This allows you to
+# choose what to do with partial successes and avoids spamming
+# anyone with notifications before the release is actually ready.
+name: Release
+
+permissions:
+  contents: write
+
+# This task will run whenever you push a git tag that looks like
+# a version number. We just look for `v` followed by at least one number
+# and then whatever. so `v1`, `v1.0.0`, and `v1.0.0-prerelease` all work.
+#
+# If there's a prerelease-style suffix to the version then the Github Release™
+# will be marked as a prerelease (handled by taiki-e/create-gh-release-action).
+#
+# Note that when generating links to uploaded artifacts, cargo-dist will currently
+# assume that your git tag is always v{VERSION} where VERSION is the version in
+# the published package's Cargo.toml (this is the default behaviour of cargo-release).
+# In the future this may be made more robust/configurable.
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  # Create the Github Release™ so the packages have something to be uploaded to
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.create-gh-release.outputs.computed-prefix }}${{ steps.create-gh-release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        run: {{{{INSTALL_RUST}}}}
+      - name: Install cargo-dist
+        run: {{{{INSTALL_DIST_SH}}}}
+      - id: create-gh-release
+        uses: taiki-e/create-gh-release-action@v1
+        with:
+          draft: true
+          # (required) GitHub token for creating GitHub Releases.
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: upload manifest
+        run: |
+          cargo dist manifest --tag=${{ needs.create-release.outputs.tag }} --artifacts=all --no-local-paths --output-format=json > dist-manifest.json
+          echo "dist manifest ran successfully"
+          cat dist-manifest.json
+        
+          # Upload the manifest to the Github Release™
+          gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
+          echo "uploaded manifest!"
+        
+          # Edit the Github Release™ title/body to match what cargo-dist thinks it should be
+          ANNOUNCEMENT_TITLE=$(cat dist-manifest.json | jq --raw-output ".announcement_title")
+          cat dist-manifest.json | jq --raw-output ".releases[].announcement_github_body" > new_dist_announcement.md
+          gh release edit ${{ needs.create-release.outputs.tag }} --title="$ANNOUNCEMENT_TITLE" --notes-file=new_dist_announcement.md
+          echo "updated announcement!"
+
+  # Build and packages all the things
+  upload-artifacts:
+    needs: create-release
+    strategy:
+      matrix:
+        # For these target platforms
+        include: {{{{ARTIFACTS_MATRIX}}}}
+
+    runs-on: ${{ matrix.os }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        run: {{{{INSTALL_RUST}}}}
+      - name: Install cargo-dist
+        run: ${{ matrix.install-dist }}
+      - name: Run cargo-dist
+        # This logic is a bit janky because it's trying to be a polyglot between
+        # powershell and bash since this will run on windows, macos, and linux!
+        # The two platforms don't agree on how to talk about env vars but they
+        # do agree on 'cat' and '$()' so we use that to marshal values between commands.
+        run: |
+          # Actually do builds and make zips and whatnot
+          cargo dist build --tag=${{ needs.create-release.outputs.tag }} --output-format=json ${{ matrix.dist-args }} > dist-manifest.json
+          echo "dist ran successfully"
+          cat dist-manifest.json
+
+          # Parse out what we just built and upload it to the Github Release™
+          cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
+          echo "uploading..."
+          cat uploads.txt
+          gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
+          echo "uploaded!"
+
+  # Mark the Github Release™ as a non-draft now that everything has succeeded!
+  publish-release:
+    needs: [create-release, upload-artifacts]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: mark release as non-draft
+        run: |
+          gh release edit ${{ needs.create-release.outputs.tag }} --draft=false

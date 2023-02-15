@@ -327,6 +327,11 @@ pub struct DistGraph {
     pub workspace_dir: Utf8PathBuf,
     /// cargo-dist's target dir (generally nested under `target_dir`).
     pub dist_dir: Utf8PathBuf,
+    /// The desired cargo-dist version for handling this project
+    pub desired_cargo_dist_version: Option<Version>,
+    /// The desired rust toolchain for handling this project
+    pub desired_rust_toolchain: Option<String>,
+    /// The desired ci backends for this project
 
     /// Styles of CI we want to support
     pub ci_style: Vec<CiStyle>,
@@ -777,6 +782,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 target_dir,
                 workspace_dir,
                 dist_dir,
+                desired_cargo_dist_version: workspace.desired_cargo_dist_version.clone(),
+                desired_rust_toolchain: workspace.desired_rust_toolchain.clone(),
                 announcement_tag: None,
                 announcement_changelog: None,
                 announcement_github_body: None,
@@ -1044,7 +1051,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .collect::<Vec<_>>();
 
         let installer_url = format!("{download_url}/{artifact_name}");
-        let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf {installer_url} | sh");
+        let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
 
         let installer_artifact = Artifact {
