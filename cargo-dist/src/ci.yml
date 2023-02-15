@@ -1,12 +1,12 @@
 # CI that:
 #
-# * checks for a Git Tag that looks like a release ("v1.2.0")
+# * checks for a Git Tag that looks like a release
 # * creates a Github Release™
-# * builds binaries/packages with cargo-dist
-# * uploads those packages to the Github Release™
+# * builds binaries/artifacts with cargo-dist
+# * uploads those artifacts to the Github Release™
 #
-# Note that the Github Release™ will be created before the packages,
-# so there will be a few minutes where the release has no packages
+# Note that the Github Release™ will be created before the artifacts,
+# so there will be a few minutes where the release has no artifacts
 # and then they will slowly trickle in, possibly failing. To make
 # this more pleasant we mark the release as a "draft" until all
 # artifacts have been successfully uploaded. This allows you to
@@ -17,20 +17,29 @@ name: Release
 permissions:
   contents: write
 
-# This task will run whenever you push a git tag that looks like
-# a version number. We just look for `v` followed by at least one number
-# and then whatever. so `v1`, `v1.0.0`, and `v1.0.0-prerelease` all work.
+# This task will run whenever you push a git tag that looks like a version
+# like "v1", "v1.2.0", "v0.1.0-prerelease01", "my-app-v1.0.0", etc.
+# The version will be roughly parsed as ({PACKAGE_NAME}-)?v{VERSION}, where
+# PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
+# must be a Cargo-style SemVer Version.
+#
+# If PACKAGE_NAME is specified, then we will create a Github Release™ for that
+# package (erroring out if it doesn't have the given version or isn't cargo-dist-able).
+#
+# If PACKAGE_NAME isn't specified, then we will create a Github Release™ for all
+# (cargo-dist-able) packages in the workspace with that version (this is mode is
+# intended for workspaces with only one dist-able package, or with all dist-able
+# packages versioned/released in lockstep).
+#
+# If you push multiple tags at once, separate instances of this workflow will
+# spin up, creating an independent Github Release™ for each one.
 #
 # If there's a prerelease-style suffix to the version then the Github Release™
-# will be marked as a prerelease (handled by taiki-e/create-gh-release-action).
-#
-# Note that when generating links to uploaded artifacts, cargo-dist will currently
-# assume that your git tag is always v{VERSION} where VERSION is the version in
-# the published package's Cargo.toml (this is the default behaviour of cargo-release).
-# In the future this may be made more robust/configurable.
+# will be marked as a prerelease.
 on:
   push:
     tags:
+      # TODO: test that this better filter works: *-?v[0-9]+*
       - '*'
 
 jobs:
