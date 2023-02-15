@@ -33,6 +33,9 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announcement_tag: Option<String>,
+    /// Whether this announcement appears to be a prerelease
+    #[serde(default)]
+    pub announcement_is_prerelease: bool,
     /// A title for the announcement
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -192,6 +195,7 @@ impl DistManifest {
         Self {
             dist_version: None,
             announcement_tag: None,
+            announcement_is_prerelease: false,
             announcement_title: None,
             announcement_changelog: None,
             announcement_github_body: None,

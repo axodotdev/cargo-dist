@@ -37,35 +37,30 @@ jobs:
   # Create the Github Release™ so the packages have something to be uploaded to
   create-release:
     runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.create-gh-release.outputs.computed-prefix }}${{ steps.create-gh-release.outputs.version }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
         run: {{{{INSTALL_RUST}}}}
       - name: Install cargo-dist
         run: {{{{INSTALL_DIST_SH}}}}
-      - id: create-gh-release
-        uses: taiki-e/create-gh-release-action@v1
-        with:
-          draft: true
-          # (required) GitHub token for creating GitHub Releases.
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: upload manifest
+      - name: Create Release
         run: |
-          cargo dist manifest --tag=${{ needs.create-release.outputs.tag }} --artifacts=all --no-local-paths --output-format=json > dist-manifest.json
+          cargo dist manifest --tag=${{ github.ref_name }} --artifacts=all --no-local-paths --output-format=json > dist-manifest.json
           echo "dist manifest ran successfully"
           cat dist-manifest.json
         
-          # Upload the manifest to the Github Release™
-          gh release upload ${{ needs.create-release.outputs.tag }} dist-manifest.json
-          echo "uploaded manifest!"
-        
-          # Edit the Github Release™ title/body to match what cargo-dist thinks it should be
+          # Create the Github Release™ based on what cargo-dist thinks it should be
           ANNOUNCEMENT_TITLE=$(cat dist-manifest.json | jq --raw-output ".announcement_title")
-          cat dist-manifest.json | jq --raw-output ".releases[].announcement_github_body" > new_dist_announcement.md
-          gh release edit ${{ needs.create-release.outputs.tag }} --title="$ANNOUNCEMENT_TITLE" --notes-file=new_dist_announcement.md
+          IS_PRERELEASE=$(cat dist-manifest.json | jq --raw-output ".announcement_is_prerelease")
+          cat dist-manifest.json | jq --raw-output ".announcement_github_body" > new_dist_announcement.md
+          gh release create ${{ github.ref_name }} --draft --prerelease="$IS_PRERELEASE" --title="$ANNOUNCEMENT_TITLE" --notes-file=new_dist_announcement.md
           echo "updated announcement!"
+
+          # Upload the manifest to the Github Release™
+          gh release upload ${{ github.ref_name }} dist-manifest.json
+          echo "uploaded manifest!"
 
   # Build and packages all the things
   upload-artifacts:
@@ -91,7 +86,7 @@ jobs:
         # do agree on 'cat' and '$()' so we use that to marshal values between commands.
         run: |
           # Actually do builds and make zips and whatnot
-          cargo dist build --tag=${{ needs.create-release.outputs.tag }} --output-format=json ${{ matrix.dist-args }} > dist-manifest.json
+          cargo dist build --tag=${{ github.ref_name }} --output-format=json ${{ matrix.dist-args }} > dist-manifest.json
           echo "dist ran successfully"
           cat dist-manifest.json
 
@@ -99,7 +94,7 @@ jobs:
           cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
           echo "uploading..."
           cat uploads.txt
-          gh release upload ${{ needs.create-release.outputs.tag }} $(cat uploads.txt)
+          gh release upload ${{ github.ref_name }} $(cat uploads.txt)
           echo "uploaded!"
 
   # Mark the Github Release™ as a non-draft now that everything has succeeded!
@@ -112,4 +107,4 @@ jobs:
       - uses: actions/checkout@v3
       - name: mark release as non-draft
         run: |
-          gh release edit ${{ needs.create-release.outputs.tag }} --draft=false
+          gh release edit ${{ github.ref_name }} --draft=false

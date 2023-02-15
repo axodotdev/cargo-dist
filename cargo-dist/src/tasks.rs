@@ -339,6 +339,8 @@ pub struct DistGraph {
     ///
     /// This is important for certain URLs like Github Releases
     pub announcement_tag: Option<String>,
+    /// Whether the announcement appears to be a prerelease
+    pub announcement_is_prerelease: bool,
     /// Title of the announcement
     pub announcement_title: Option<String>,
     /// Raw changelog for the announcement
@@ -785,6 +787,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desired_cargo_dist_version: workspace.desired_cargo_dist_version.clone(),
                 desired_rust_toolchain: workspace.desired_rust_toolchain.clone(),
                 announcement_tag: None,
+                announcement_is_prerelease: false,
                 announcement_changelog: None,
                 announcement_github_body: None,
                 announcement_title: None,
@@ -1501,6 +1504,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     // First thing's first: if they gave us an announcement tag then we should try to parse it
     let mut announcing_package = None;
     let mut announcing_version = None;
+    let mut announcing_prerelease = false;
     let mut announcement_tag = cfg.announcement_tag.clone();
     if let Some(tag) = &announcement_tag {
         // First check if it matches any package
@@ -1512,6 +1516,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
                     announcing_package.is_none(),
                     "how on earth do you have two packages that match {package_tag}!?"
                 );
+                announcing_prerelease = !package.version.pre.is_empty();
                 announcing_package = Some(pkg_id);
             }
         }
@@ -1522,6 +1527,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
                 .strip_prefix('v')
                 .and_then(|v| v.parse::<Version>().ok())
             {
+                announcing_prerelease = !version.pre.is_empty();
                 announcing_version = Some(version);
             }
         }
@@ -1662,6 +1668,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             let tag = format!("v{version}");
             info!("inferred Announcement tag: {}", tag);
             announcement_tag = Some(tag);
+            announcing_prerelease = !version.pre.is_empty();
             announcing_version = Some(version.clone());
         } else {
             use std::fmt::Write;
@@ -1702,6 +1709,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         "integrity error: failed to select announcement tag"
     );
     graph.inner.announcement_tag = announcement_tag;
+    graph.inner.announcement_is_prerelease = announcing_prerelease;
     if let Some(repo_url) = workspace.repo_url.as_ref() {
         let tag = graph.inner.announcement_tag.as_ref().unwrap();
         graph.inner.artifact_download_url = Some(format!("{repo_url}/releases/download/{tag}"));
