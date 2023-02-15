@@ -589,7 +589,7 @@ pub enum StaticAssetKind {
 }
 
 /// The style of zip/tarball to make
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ZipStyle {
     /// `.zip`
     Zip,
@@ -598,7 +598,7 @@ pub enum ZipStyle {
 }
 
 /// Compression impls (used by [`ZipStyle::Tar`][])
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CompressionImpl {
     /// `.gz`
     Gzip,
@@ -606,6 +606,19 @@ pub enum CompressionImpl {
     Xzip,
     /// `.zstd`
     Zstd,
+}
+impl ZipStyle {
+    /// Get the extension used for this kind of zip
+    pub fn ext(&self) -> &'static str {
+        match self {
+            ZipStyle::Zip => ".zip",
+            ZipStyle::Tar(compression) => match compression {
+                CompressionImpl::Gzip => ".tar.gz",
+                CompressionImpl::Xzip => ".tar.xz",
+                CompressionImpl::Zstd => ".tar.zstd",
+            },
+        }
+    }
 }
 
 /// A kind of an installer
@@ -622,18 +635,31 @@ pub enum InstallerImpl {
 pub struct InstallerInfo {
     /// The path to generate the installer at
     pub dest_path: Utf8PathBuf,
-    /// App name to use (display)
+    /// App name to use (display only)
     pub app_name: String,
-    /// App version to use (display)
+    /// App version to use (display only)
     pub app_version: String,
-    /// Base URL to use
+    /// URL of the directory where artifacts can be fetched from
     pub base_url: String,
-    /// Base name of an artifact
-    pub base_name: String,
-    /// Description of the installer
+    /// Artifacts this installer can fetch
+    pub artifacts: Vec<ExecutableZipFragment>,
+    /// Description of the installer (a good heading)
     pub desc: String,
     /// Hint for how to run the installer
     pub hint: String,
+}
+
+/// A fake fragment of an ExecutableZip artifact for installers
+#[derive(Debug, Clone)]
+pub struct ExecutableZipFragment {
+    /// The id of the artifact
+    pub id: String,
+    /// The targets the artifact supports
+    pub target_triples: Vec<TargetTriple>,
+    /// The binaries the artifact contains (name, assumed at root)
+    pub binaries: Vec<String>,
+    /// The style of zip this is
+    pub zip_style: ZipStyle,
 }
 
 /// Cargo features a cargo build should use.
@@ -907,42 +933,54 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let release = self.release(to_release);
         let variants = release.variants.clone();
         for variant_idx in variants {
-            // This is largely just a lot of path/name computation
-            let dist_dir = &self.inner.dist_dir;
-            let variant = self.variant(variant_idx);
+            let (zip_artifact, built_assets) = self.make_executable_zip_for_variant(variant_idx);
 
-            // FIXME: this should be configurable
-            let target_is_windows = variant.target.contains("windows");
-            let zip_style = if target_is_windows {
-                // Windows loves them zips
-                ZipStyle::Zip
-            } else {
-                // tar.xz is well-supported everywhere and much better than tar.gz
-                ZipStyle::Tar(CompressionImpl::Xzip)
-            };
-            let platform_exe_ext = if target_is_windows { ".exe" } else { "" };
-
-            let artifact_dir_name = variant.id.clone();
-            let artifact_dir_path = dist_dir.join(&artifact_dir_name);
-            let artifact_ext = match zip_style {
-                ZipStyle::Zip => ".zip",
-                ZipStyle::Tar(CompressionImpl::Gzip) => ".tar.gz",
-                ZipStyle::Tar(CompressionImpl::Zstd) => ".tar.zstd",
-                ZipStyle::Tar(CompressionImpl::Xzip) => ".tar.xz",
-            };
-            let artifact_name = format!("{artifact_dir_name}{artifact_ext}");
-            let artifact_path = dist_dir.join(&artifact_name);
-
-            let static_assets = variant.static_assets.clone();
-            let mut built_assets = Vec::new();
-            for &binary_idx in &variant.binaries {
-                let binary = self.binary(binary_idx);
-                let exe_name = &binary.name;
-                let exe_filename = format!("{exe_name}{platform_exe_ext}");
-                built_assets.push((binary_idx, artifact_dir_path.join(exe_filename)));
+            let zip_artifact_idx = self.add_local_artifact(variant_idx, zip_artifact);
+            for (binary, dest_path) in built_assets {
+                self.require_binary(zip_artifact_idx, variant_idx, binary, dest_path);
             }
+        }
+    }
 
-            let zip_artifact = Artifact {
+    /// Make an executable zip for a variant, but don't yet integrate it into the graph
+    ///
+    /// This is useful for installers which want to know about *potential* executable zips
+    fn make_executable_zip_for_variant(
+        &self,
+        variant_idx: ReleaseVariantIdx,
+    ) -> (Artifact, Vec<(BinaryIdx, Utf8PathBuf)>) {
+        // This is largely just a lot of path/name computation
+        let dist_dir = &self.inner.dist_dir;
+        let variant = self.variant(variant_idx);
+
+        // FIXME: this should be configurable
+        let target_is_windows = variant.target.contains("windows");
+        let zip_style = if target_is_windows {
+            // Windows loves them zips
+            ZipStyle::Zip
+        } else {
+            // tar.xz is well-supported everywhere and much better than tar.gz
+            ZipStyle::Tar(CompressionImpl::Xzip)
+        };
+        let platform_exe_ext = if target_is_windows { ".exe" } else { "" };
+
+        let artifact_dir_name = variant.id.clone();
+        let artifact_dir_path = dist_dir.join(&artifact_dir_name);
+        let artifact_ext = zip_style.ext();
+        let artifact_name = format!("{artifact_dir_name}{artifact_ext}");
+        let artifact_path = dist_dir.join(&artifact_name);
+
+        let static_assets = variant.static_assets.clone();
+        let mut built_assets = Vec::new();
+        for &binary_idx in &variant.binaries {
+            let binary = self.binary(binary_idx);
+            let exe_name = &binary.name;
+            let exe_filename = format!("{exe_name}{platform_exe_ext}");
+            built_assets.push((binary_idx, artifact_dir_path.join(exe_filename)));
+        }
+
+        (
+            Artifact {
                 id: artifact_name,
                 target_triples: vec![variant.target.clone()],
                 dir_name: Some(artifact_dir_name),
@@ -953,13 +991,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     zip_style,
                     static_assets,
                 }),
-            };
-
-            let zip_artifact_idx = self.add_local_artifact(variant_idx, zip_artifact);
-            for (binary, dest_path) in built_assets {
-                self.require_binary(zip_artifact_idx, variant_idx, binary, dest_path);
-            }
-        }
+            },
+            built_assets,
+        )
     }
 
     fn require_binary(
@@ -1045,21 +1079,45 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let artifact_name = format!("{release_id}-installer.sh");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
-        // All the triples we know about, sans windows (windows-gnu isn't handled...)
-        let target_triples = release
-            .targets
-            .iter()
-            .filter(|s| s.contains("windows"))
-            .cloned()
-            .collect::<Vec<_>>();
-
         let installer_url = format!("{download_url}/{artifact_name}");
         let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
 
+        // Gather up the bundles the installer supports
+        let mut artifacts = vec![];
+        let mut target_triples = SortedSet::new();
+        for &variant_idx in &release.variants {
+            let variant = self.variant(variant_idx);
+            let target = &variant.target;
+            if target.contains("windows") {
+                continue;
+            }
+            // Compute the artifact zip this variant *would* make *if* it were built
+            // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
+            // way to add artifacts to the graph and then say "ok but don't build it".
+            let (artifact, binaries) = self.make_executable_zip_for_variant(variant_idx);
+            let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
+                unreachable!();
+            };
+            target_triples.insert(target.clone());
+            artifacts.push(ExecutableZipFragment {
+                id: artifact.id,
+                target_triples: artifact.target_triples,
+                zip_style: zip.zip_style,
+                binaries: binaries
+                    .into_iter()
+                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
+                    .collect(),
+            });
+        }
+        if artifacts.is_empty() {
+            warn!("skipping github-shell installer: not building any supported platforms (use --artifacts=global)");
+            return;
+        };
+
         let installer_artifact = Artifact {
             id: artifact_name,
-            target_triples,
+            target_triples: target_triples.into_iter().collect(),
             dir_name: None,
             dir_path: None,
             file_path: artifact_path.clone(),
@@ -1068,8 +1126,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
-                base_name: release.id.clone(),
                 base_url: download_url.clone(),
+                artifacts,
                 hint,
                 desc,
             })),
@@ -1079,33 +1137,58 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn add_github_powershell_installer(&mut self, to_release: ReleaseIdx) {
-        // TODO: completely rework this and the impl in installer.rs to properly use `announce_tag`
         if !self.global_artifacts_enabled() {
             return;
         }
+
+        // Get the basic info about the installer
         let release = self.release(to_release);
         let release_id = &release.id;
         let Some(download_url) = &self.inner.artifact_download_url else {
-            warn!("skipping github-shell installer: couldn't compute a URL to download artifacts from");
+            warn!("skipping github-powershell installer: couldn't compute a URL to download artifacts from");
             return;
         };
         let artifact_name = format!("{release_id}-installer.ps1");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
-        // All the windows triples we know about
-        let target_triples = release
-            .targets
-            .iter()
-            .filter(|s| !s.contains("windows"))
-            .cloned()
-            .collect::<Vec<_>>();
-
         let installer_url = format!("{download_url}/{artifact_name}");
         let hint = format!("# WARNING: this installer is experimental\nirm {installer_url} | iex");
         let desc = "Install prebuilt binaries via powershell script".to_owned();
 
+        // Gather up the bundles the installer supports
+        let mut artifacts = vec![];
+        let mut target_triples = SortedSet::new();
+        for &variant_idx in &release.variants {
+            let variant = self.variant(variant_idx);
+            let target = &variant.target;
+            if !target.contains("windows") {
+                continue;
+            }
+            // Compute the artifact zip this variant *would* make *if* it were built
+            // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
+            // way to add artifacts to the graph and then say "ok but don't build it".
+            let (artifact, binaries) = self.make_executable_zip_for_variant(variant_idx);
+            let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
+                unreachable!();
+            };
+            target_triples.insert(target.clone());
+            artifacts.push(ExecutableZipFragment {
+                id: artifact.id,
+                target_triples: artifact.target_triples,
+                zip_style: zip.zip_style,
+                binaries: binaries
+                    .into_iter()
+                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
+                    .collect(),
+            });
+        }
+        if artifacts.is_empty() {
+            warn!("skipping github-powershell installer: not building any supported platforms (use --artifacts=global)");
+            return;
+        };
+
         let installer_artifact = Artifact {
             id: artifact_name,
-            target_triples,
+            target_triples: target_triples.into_iter().collect(),
             dir_name: None,
             dir_path: None,
             file_path: artifact_path.clone(),
@@ -1114,8 +1197,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
-                base_name: release.id.clone(),
                 base_url: download_url.clone(),
+                artifacts,
                 hint,
                 desc,
             })),
@@ -1186,7 +1269,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     build_steps.push(BuildStep::Zip(ZipDirStep {
                         src_path: artifact_dir.to_owned(),
                         dest_path: artifact.file_path.clone(),
-                        zip_style: zip.zip_style.clone(),
+                        zip_style: zip.zip_style,
                     }));
                 }
                 ArtifactKind::Symbols(symbols) => {

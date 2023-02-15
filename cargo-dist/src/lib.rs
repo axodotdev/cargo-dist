@@ -897,9 +897,13 @@ pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
 }
 
 /// Build a cargo target
-fn generate_installer(_dist_graph: &DistGraph, style: &InstallerImpl) -> Result<()> {
+fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
     match style {
-        InstallerImpl::GithubShell(info) => installer::generate_github_install_sh_script(info),
-        InstallerImpl::GithubPowershell(info) => installer::generate_github_install_ps_script(info),
+        InstallerImpl::GithubShell(info) => {
+            installer::generate_github_install_sh_script(dist, info)
+        }
+        InstallerImpl::GithubPowershell(info) => {
+            installer::generate_github_install_ps_script(dist, info)
+        }
     }
 }
