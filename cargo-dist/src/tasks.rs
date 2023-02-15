@@ -1100,8 +1100,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .collect::<Vec<_>>();
 
         let installer_url = format!("{download_url}/{artifact_name}");
-        let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -L -sSf {installer_url} | sh");
-        let desc = "Install prebuilt binaries via shell script".to_owned();
+        let hint = format!("# WARNING: this installer is experimental\nirm {installer_url} | iex");
+        let desc = "Install prebuilt binaries via powershell script".to_owned();
 
         let installer_artifact = Artifact {
             id: artifact_name,

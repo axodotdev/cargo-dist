@@ -22,6 +22,11 @@ expression: json_schema
         "null"
       ]
     },
+    "announcement_is_prerelease": {
+      "description": "Whether this announcement appears to be a prerelease",
+      "default": false,
+      "type": "boolean"
+    },
     "announcement_tag": {
       "description": "The (git) tag associated with this announcement",
       "type": [
