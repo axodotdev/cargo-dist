@@ -246,7 +246,7 @@ pub struct CargoProfile {
 /// Global config for commands
 #[derive(Debug)]
 pub struct Config {
-    /// Whether we'll actually run builds (if false we'll still generate installers)
+    /// The subset of artifacts we want to build
     pub artifact_mode: ArtifactMode,
     /// Whether local paths to files should be in the final dist json output
     pub no_local_paths: bool,
