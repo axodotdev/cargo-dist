@@ -15,8 +15,6 @@ param (
     [string]$app_name = '{{APP_NAME}}',
     [Parameter(HelpMessage = 'The version of the App')]
     [string]$app_version = '{{APP_VERSION}}',
-    [Parameter(HelpMessage = 'The base name to use for artifacts to fetch')]
-    [string]$artifact_base_name = '{{ARTIFACT_BASE_NAME}}',
     [Parameter(HelpMessage = 'The URL of the directory where artifacts can be fetched from')]
     [string]$artifact_download_url = '{{ARTIFACT_DOWNLOAD_URL}}'
 )
@@ -27,35 +25,69 @@ function Install-Binary($install_args) {
 
   Initialize-Environment
 
-  $exe = Download "$artifact_download_url" "$artifact_base_name"
-  Invoke-Installer "$exe" "$install_args"
+  # Platform info injected by cargo-dist
+  $platforms = {{PLATFORM_INFO}}
+
+  $fetched = Download "$artifact_download_url" $platforms
+  # FIXME: add a flag that lets the user not do this step
+  Invoke-Installer $fetched "$install_args"
 
   $ErrorActionPreference = $old_erroractionpreference
 }
 
-function Download($download_url, $base_name) {
+function Download($download_url, $platforms) {
+  # FIXME: make this something we lookup based on the current machine
   $arch = "x86_64-pc-windows-msvc"
-  $zip_ext = ".zip"
-  $exe_ext = ".exe"
-  $url = "$download_url/$base_name-$arch$zip_ext"
-  "Downloading $app_name $app_version from $url" | Out-Host
+
+  # Lookup what we expect this platform to look like
+  # FIXME: produce a nice error if $arch isn't found (or do fallback guesses?)
+  $info = $platforms[$arch]
+  $zip_ext = $info["zip_ext"]
+  $bin_names = $info["bins"]
+  $artifact_name = $info["artifact_name"]
+
+  # Make a new temp dir to unpack things to
   $tmp = New-Temp-Dir
   $dir_path = "$tmp\$app_name$zip_ext"
+
+  # Download and unpack!
+  $url = "$download_url/$artifact_name"
+  "Downloading $app_name $app_version $arch" | Out-Host
+  "  from $url" | Out-Host
+  "  to $dir_path" | Out-Host
   $wc = New-Object Net.Webclient
   $wc.downloadFile($url, $dir_path)
-  Expand-Archive -Path $dir_path -DestinationPath "$tmp"
 
-  # TODO: take a list of binaries each zip will contain so we know what to extract
-  return "$tmp\$app_name$exe_ext"
+  # FIXME: this will probably need to do something else for a zip_ext != ?
+  # at worst we can just stop here and the file is fetched for the user?
+  "Unpacking to $tmp" | Out-Host
+  Expand-Archive -Path $dir_path -DestinationPath "$tmp"
+  
+
+  # Let the next step know what to copy
+  $bin_paths = @()
+  foreach ($bin_name in $bin_names) {
+    "  Unpacked $bin_name" | Out-Host
+    $bin_paths += "$tmp\$bin_name"
+  }
+  return $bin_paths
 }
 
-function Invoke-Installer($tmp, $install_args) {
+function Invoke-Installer($bin_paths) {
   # FIXME: respect $CARGO_HOME if set
-  $bin_dir = New-Item -Force -ItemType Directory -Path (Join-Path $HOME ".cargo\bin")
-  Copy-Item "$exe" -Destination "$bin_dir"
-  Remove-Item "$tmp" -Recurse -Force
+  # FIXME: add a flag that lets the user pick this dir
+  # FIXME: try to detect other "nice" dirs on the user's PATH?
+  # FIXME: detect if the selected install dir exists or is on PATH?
+  $dest_dir = New-Item -Force -ItemType Directory -Path (Join-Path $HOME ".cargo\bin")
 
-  "Installed $app_name $app_version to $bin_dir" | Out-Host
+  "Installing to $dest_dir" | Out-Host
+  # Just copy the binaries from the temp location to the install dir
+  foreach ($bin_path in $bin_paths) {
+    Copy-Item "$bin_path" -Destination "$dest_dir"
+    Remove-Item "$bin_path" -Recurse -Force
+  }
+
+  "Everything's installed!" | Out-Host
 }
 
 function Initialize-Environment() {
