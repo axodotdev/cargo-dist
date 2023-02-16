@@ -157,10 +157,8 @@ pub struct DistMetadata {
     ///
     /// Currently accepted values:
     ///
-    /// * github-shell
-    /// * github-powershell
-    ///
-    /// (In the future the github- prefix might be removed, these are pretty generic now!)
+    /// * shell
+    /// * powershell
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<InstallerStyle>>,
@@ -293,12 +291,12 @@ pub enum CiStyle {
 /// The style of Installer we should generate
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum InstallerStyle {
-    /// Generate a shell script that fetches from a Github Release
-    #[serde(rename = "github-shell")]
-    GithubShell,
-    /// Generate a powershell script that fetches from a Github Release
-    #[serde(rename = "github-powershell")]
-    GithubPowershell,
+    /// Generate a shell script that fetches from [`DistGraph::artifact_download_url`][]
+    #[serde(rename = "shell")]
+    Shell,
+    /// Generate a powershell script that fetches from [`DistGraph::artifact_download_url`][]
+    #[serde(rename = "powershell")]
+    Powershell,
 }
 
 /// A unique id for a [`Artifact`][]
@@ -633,10 +631,10 @@ impl ZipStyle {
 /// A kind of an installer
 #[derive(Debug, Clone)]
 pub enum InstallerImpl {
-    /// Github Releases shell installer script
-    GithubShell(InstallerInfo),
-    /// Github Releases powershell installer script
-    GithubPowershell(InstallerInfo),
+    /// shell installer script
+    Shell(InstallerInfo),
+    /// powershell installer script
+    Powershell(InstallerInfo),
 }
 
 /// Generic info about an installer
@@ -757,7 +755,7 @@ pub struct PackageInfo {
     /// might also use it for auto-detecting "hey you're using github, here's the
     /// recommended github setup".
     ///
-    /// i.e. `--installer=github-shell` uses this as the base URL for fetching from
+    /// i.e. `--installer=shell` uses this as the base URL for fetching from
     /// a Github Release™️.
     pub repository_url: Option<String>,
     /// URL to the homepage for this package.
@@ -1070,19 +1068,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
     fn add_installer(&mut self, to_release: ReleaseIdx, installer: &InstallerStyle) {
         match installer {
-            InstallerStyle::GithubShell => self.add_github_shell_installer(to_release),
-            InstallerStyle::GithubPowershell => self.add_github_powershell_installer(to_release),
+            InstallerStyle::Shell => self.add_shell_installer(to_release),
+            InstallerStyle::Powershell => self.add_powershell_installer(to_release),
         }
     }
 
-    fn add_github_shell_installer(&mut self, to_release: ReleaseIdx) {
+    fn add_shell_installer(&mut self, to_release: ReleaseIdx) {
         if !self.global_artifacts_enabled() {
             return;
         }
         let release = self.release(to_release);
         let release_id = &release.id;
         let Some(download_url) = &self.inner.artifact_download_url else {
-            warn!("skipping github-shell installer: couldn't compute a URL to download artifacts from");
+            warn!("skipping shell installer: couldn't compute a URL to download artifacts from");
             return;
         };
         let artifact_name = format!("{release_id}-installer.sh");
@@ -1119,7 +1117,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             });
         }
         if artifacts.is_empty() {
-            warn!("skipping github-shell installer: not building any supported platforms (use --artifacts=global)");
+            warn!("skipping shell installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
 
@@ -1130,7 +1128,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             dir_path: None,
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
-            kind: ArtifactKind::Installer(InstallerImpl::GithubShell(InstallerInfo {
+            kind: ArtifactKind::Installer(InstallerImpl::Shell(InstallerInfo {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
@@ -1144,7 +1142,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.add_global_artifact(to_release, installer_artifact);
     }
 
-    fn add_github_powershell_installer(&mut self, to_release: ReleaseIdx) {
+    fn add_powershell_installer(&mut self, to_release: ReleaseIdx) {
         if !self.global_artifacts_enabled() {
             return;
         }
@@ -1153,7 +1151,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let release = self.release(to_release);
         let release_id = &release.id;
         let Some(download_url) = &self.inner.artifact_download_url else {
-            warn!("skipping github-powershell installer: couldn't compute a URL to download artifacts from");
+            warn!("skipping powershell installer: couldn't compute a URL to download artifacts from");
             return;
         };
         let artifact_name = format!("{release_id}-installer.ps1");
@@ -1190,7 +1188,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             });
         }
         if artifacts.is_empty() {
-            warn!("skipping github-powershell installer: not building any supported platforms (use --artifacts=global)");
+            warn!("skipping powershell installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
 
@@ -1201,7 +1199,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             dir_path: None,
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
-            kind: ArtifactKind::Installer(InstallerImpl::GithubPowershell(InstallerInfo {
+            kind: ArtifactKind::Installer(InstallerImpl::Powershell(InstallerInfo {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
@@ -1486,8 +1484,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if !global_installers.is_empty() {
                 writeln!(gh_body, "## Install {heading_suffix}\n").unwrap();
                 for (_installer, details) in global_installers {
-                    let (InstallerImpl::GithubShell(info) | InstallerImpl::GithubPowershell(info)) =
-                        details;
+                    let (InstallerImpl::Shell(info) | InstallerImpl::Powershell(info)) = details;
 
                     writeln!(&mut gh_body, "### {}\n", info.desc).unwrap();
                     writeln!(&mut gh_body, "```shell\n{}\n```\n", info.hint).unwrap();

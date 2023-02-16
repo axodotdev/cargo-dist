@@ -17,7 +17,7 @@ The following settings can *only* be set in `[workspace]`:
 The following settings can be set on either `[workspace]` or `[package]`, with the latter overriding the former:
 
 * dist: (bool, defaults to "undefined") whether this package's binaries should be visible to cargo-dist for the purposes of Releases. If undefined, we will defer to cargo's own publish=false config. Packages without binaries are always invisible to cargo-dist.
-* installers: (list of installer kinds) the default set of installers to generate for releases (currently only "github-shell" and "github-powershell" are defined)
+* installers: (list of installer kinds) the default set of installers to generate for releases (currently only "shell" and "powershell" are defined)
 * targets: (list of rust-style target-triples) the default set of targets to use for releases (sort of, see the section on CLI configuration)
 * include: (list of paths relative to that Cargo.toml's dir) extra files to include in executable-zips (does not currently support directories or wildcards, individual files only)
 * auto-includes: (bool, defaults true) whether dist should add README/LICENSE/etc files to your executable-zips when it finds them.
@@ -113,6 +113,7 @@ Release notes are now temporarily simplified for reliability:
 * Installer artifacts are now properly prefixed with the id of the Release they're part of, preventing conflicts when doing multiple Releases at once (installer.sh => my-app-v1.0.0-installer.sh).
 * Installers now properly handle packages that define multiple binaries (installing all of them, just like cargo-install)
 * Installers now properly know the Github Release they are going to point to (previously they would guess based on the version of the package which was broken in complicated workflows)
+* --installer=github-shell and --installer=github-powershell have had the "github-" prefix removed. They now generically use the concept of an "artifact download url" which will be configurable in the future (for now it only gets populated if ci=github is set and your workspace has a coherent definition for "repository" in its Cargo.tomls).
 
 
 

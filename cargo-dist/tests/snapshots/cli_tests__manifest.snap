@@ -35,40 +35,6 @@ stdout:
           "description": "Install prebuilt binaries via powershell script"
         },
         {
-          "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
-          "kind": "executable-zip",
-          "target_triples": [
-            "x86_64-pc-windows-msvc"
-          ],
-          "assets": [
-            {
-              "name": "LICENSE-APACHE",
-              "path": "LICENSE-APACHE",
-              "kind": "license"
-            },
-            {
-              "name": "LICENSE-MIT",
-              "path": "LICENSE-MIT",
-              "kind": "license"
-            },
-            {
-              "name": "README.md",
-              "path": "README.md",
-              "kind": "readme"
-            },
-            {
-              "name": "RELEASES.md",
-              "path": "RELEASES.md",
-              "kind": "changelog"
-            },
-            {
-              "name": "cargo-dist",
-              "path": "cargo-dist.exe",
-              "kind": "executable"
-            }
-          ]
-        },
-        {
           "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz",
           "kind": "executable-zip",
           "target_triples": [
@@ -98,6 +64,40 @@ stdout:
             {
               "name": "cargo-dist",
               "path": "cargo-dist",
+              "kind": "executable"
+            }
+          ]
+        },
+        {
+          "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
+          "kind": "executable-zip",
+          "target_triples": [
+            "x86_64-pc-windows-msvc"
+          ],
+          "assets": [
+            {
+              "name": "LICENSE-APACHE",
+              "path": "LICENSE-APACHE",
+              "kind": "license"
+            },
+            {
+              "name": "LICENSE-MIT",
+              "path": "LICENSE-MIT",
+              "kind": "license"
+            },
+            {
+              "name": "README.md",
+              "path": "README.md",
+              "kind": "readme"
+            },
+            {
+              "name": "RELEASES.md",
+              "path": "RELEASES.md",
+              "kind": "changelog"
+            },
+            {
+              "name": "cargo-dist",
+              "path": "cargo-dist.exe",
               "kind": "executable"
             }
           ]

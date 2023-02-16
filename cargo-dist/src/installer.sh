@@ -6,7 +6,7 @@
 # except according to those terms.
 
 # This is just a little script that can be downloaded from the internet to
-# install $APP_NAME. It downloads the tarball from GitHub releases,
+# install $APP_NAME. It downloads the tarball from ARTIFACT_DOWNLOAD_URL,
 # and extracts it to ~/.cargo/bin/
 #
 # In the future this script will gain extra features, but for now it's
