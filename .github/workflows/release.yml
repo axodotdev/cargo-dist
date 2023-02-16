@@ -76,18 +76,18 @@ jobs:
     strategy:
       matrix:
         # For these target platforms
-        include: 
+        include:
         - os: ubuntu-20.04
           dist-args: --artifacts=global
           install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.sh | sh
         - os: macos-11
-          dist-args: --artifacts=local --target=x86_64-apple-darwin 
+          dist-args: --artifacts=local --target=x86_64-apple-darwin
           install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.sh | sh
         - os: ubuntu-20.04
-          dist-args: --artifacts=local --target=x86_64-unknown-linux-gnu 
+          dist-args: --artifacts=local --target=x86_64-unknown-linux-gnu
           install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.sh | sh
         - os: windows-2019
-          dist-args: --artifacts=local --target=x86_64-pc-windows-msvc 
+          dist-args: --artifacts=local --target=x86_64-pc-windows-msvc
           install-dist: irm  https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.ps1 | iex
 
     runs-on: ${{ matrix.os }}

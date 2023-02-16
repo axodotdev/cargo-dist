@@ -67,7 +67,7 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
     let install_dist_ps1 = install_dist_ps1_for_version(dist_version);
 
     // Build up the task matrix for building Artifacts
-    let mut artifacts_matrix = String::new();
+    let mut artifacts_matrix = String::from("include:");
 
     // If we have Global Artifacts, we need one task for that. If we've done a Good Job
     // then these artifacts should be possible to build on *any* platform. Linux is usually
@@ -87,9 +87,9 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
         use std::fmt::Write;
         let install_dist =
             install_dist_for_github_runner(runner, &install_dist_sh, &install_dist_ps1);
-        let mut dist_args = String::from("--artifacts=local ");
+        let mut dist_args = String::from("--artifacts=local");
         for target in targets {
-            write!(dist_args, "--target={target} ").unwrap();
+            write!(dist_args, " --target={target}").unwrap();
         }
         push_github_artifacts_matrix_entry(&mut artifacts_matrix, runner, &dist_args, install_dist);
     }

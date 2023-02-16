@@ -76,7 +76,7 @@ jobs:
     strategy:
       matrix:
         # For these target platforms
-        include: {{{{ARTIFACTS_MATRIX}}}}
+        {{{{ARTIFACTS_MATRIX}}}}
 
     runs-on: ${{ matrix.os }}
     env:
