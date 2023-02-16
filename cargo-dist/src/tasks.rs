@@ -155,7 +155,12 @@ pub struct DistMetadata {
     /// vs msi is a good comparison here -- you want a universal shell script that figures
     /// out which binary to install, but you might end up with an msi for each supported arch!
     ///
-    /// TODO: list off what values are accepted (msi's are currently only hypothetical!)
+    /// Currently accepted values:
+    ///
+    /// * github-shell
+    /// * github-powershell
+    ///
+    /// (In the future the github- prefix might be removed, these are pretty generic now!)
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<InstallerStyle>>,
@@ -1071,7 +1076,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn add_github_shell_installer(&mut self, to_release: ReleaseIdx) {
-        // TODO: completely rework this and the impl in installer.rs to properly use `announce_tag`
         if !self.global_artifacts_enabled() {
             return;
         }
