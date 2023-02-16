@@ -2236,7 +2236,10 @@ fn get_dist_profile(manifest_path: &Utf8Path) -> Result<CargoProfile> {
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
     #[allow(clippy::if_same_then_else)]
     if target.contains("windows-msvc") {
-        Some(SymbolKind::Pdb)
+        // Temporary disabled pending redesign of symbol handling!
+
+        // Some(SymbolKind::Pdb)
+        None
     } else if target.contains("apple") {
         // Macos dSYM files are real and work but things
         // freak out because it turns out they're directories

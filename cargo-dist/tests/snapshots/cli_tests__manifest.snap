@@ -64,16 +64,8 @@ stdout:
             {
               "name": "cargo-dist",
               "path": "cargo-dist.exe",
-              "kind": "executable",
-              "symbols_artifact": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.pdb"
+              "kind": "executable"
             }
-          ]
-        },
-        {
-          "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.pdb",
-          "kind": "symbols",
-          "target_triples": [
-            "x86_64-pc-windows-msvc"
           ]
         },
         {
