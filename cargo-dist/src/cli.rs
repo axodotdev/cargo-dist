@@ -222,18 +222,18 @@ impl CiStyle {
 /// A style of installer to generate
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum InstallerStyle {
-    /// Generates a shell script that fetches from github ci
-    GithubShell,
-    /// Generates a powershell script that fetches from github ci
-    GithubPowershell,
+    /// Generates a shell script that fetches from your Artifact Download URL (Github Release for now)
+    Shell,
+    /// Generates a shell script that fetches from your Artifact Download URL (Github Release for now)
+    Powershell,
 }
 
 impl InstallerStyle {
     /// Convert the application version of this enum to the library version
     pub fn to_lib(self) -> cargo_dist::InstallerStyle {
         match self {
-            InstallerStyle::GithubShell => cargo_dist::InstallerStyle::GithubShell,
-            InstallerStyle::GithubPowershell => cargo_dist::InstallerStyle::GithubPowershell,
+            InstallerStyle::Shell => cargo_dist::InstallerStyle::Shell,
+            InstallerStyle::Powershell => cargo_dist::InstallerStyle::Powershell,
         }
     }
 }

@@ -176,9 +176,7 @@ fn manifest_artifact(
             description = None;
             kind = cargo_dist_schema::ArtifactKind::Symbols;
         }
-        ArtifactKind::Installer(
-            InstallerImpl::GithubPowershell(info) | InstallerImpl::GithubShell(info),
-        ) => {
+        ArtifactKind::Installer(InstallerImpl::Powershell(info) | InstallerImpl::Shell(info)) => {
             install_hint = Some(info.hint.clone());
             description = Some(info.desc.clone());
             kind = cargo_dist_schema::ArtifactKind::Installer;
@@ -827,8 +825,8 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
             Item::Value(
                 val.iter()
                     .map(|installer| match installer {
-                        InstallerStyle::GithubPowershell => "github-powershell",
-                        InstallerStyle::GithubShell => "github-shell",
+                        InstallerStyle::Powershell => "powershell",
+                        InstallerStyle::Shell => "shell",
                     })
                     .collect(),
             ),
@@ -899,11 +897,7 @@ pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
 /// Build a cargo target
 fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
     match style {
-        InstallerImpl::GithubShell(info) => {
-            installer::generate_github_install_sh_script(dist, info)
-        }
-        InstallerImpl::GithubPowershell(info) => {
-            installer::generate_github_install_ps_script(dist, info)
-        }
+        InstallerImpl::Shell(info) => installer::generate_install_sh_script(dist, info),
+        InstallerImpl::Powershell(info) => installer::generate_install_ps_script(dist, info),
     }
 }

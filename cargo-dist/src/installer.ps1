@@ -4,7 +4,7 @@
 # except according to those terms.
 
 # This is just a little script that can be downloaded from the internet to
-# install an app. It downloads the tarball from GitHub releases,
+# install an app. It downloads the tarball from artifact_download_url,
 # and extracts it to ~/.cargo/bin/
 #
 # In the future this script will gain extra features, but for now it's

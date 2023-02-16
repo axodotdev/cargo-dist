@@ -9,10 +9,10 @@ use miette::{Context, IntoDiagnostic};
 use crate::{DistGraph, InstallerInfo, ZipStyle};
 
 ////////////////////////////////////////////////////////////////
-// Github Shell
+// Shell Installer
 ////////////////////////////////////////////////////////////////
 
-pub(crate) fn generate_github_install_sh_script(
+pub(crate) fn generate_install_sh_script(
     dist: &DistGraph,
     info: &InstallerInfo,
 ) -> Result<(), miette::Report> {
@@ -20,13 +20,13 @@ pub(crate) fn generate_github_install_sh_script(
     let mut file = File::create(installer_file)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to create installer file {installer_file}"))?;
-    write_github_install_sh_script(&mut file, dist, info)
+    write_install_sh_script(&mut file, dist, info)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to write to installer file {installer_file}"))?;
     Ok(())
 }
 
-fn write_github_install_sh_script<W: std::io::Write>(
+fn write_install_sh_script<W: std::io::Write>(
     f: &mut W,
     _dist: &DistGraph,
     info: &InstallerInfo,
@@ -89,10 +89,10 @@ fn write_github_install_sh_script<W: std::io::Write>(
 }
 
 ////////////////////////////////////////////////////////////////
-// Github Powershell
+// Powershell Installer
 ////////////////////////////////////////////////////////////////
 
-pub(crate) fn generate_github_install_ps_script(
+pub(crate) fn generate_install_ps_script(
     dist: &DistGraph,
     info: &InstallerInfo,
 ) -> Result<(), miette::Report> {
@@ -100,13 +100,13 @@ pub(crate) fn generate_github_install_ps_script(
     let mut file = File::create(installer_file)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to create installer file {installer_file}"))?;
-    write_github_install_ps_script(&mut file, dist, info)
+    write_install_ps_script(&mut file, dist, info)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to write to installer file {installer_file}"))?;
     Ok(())
 }
 
-fn write_github_install_ps_script<W: std::io::Write>(
+fn write_install_ps_script<W: std::io::Write>(
     f: &mut W,
     _dist: &DistGraph,
     info: &InstallerInfo,

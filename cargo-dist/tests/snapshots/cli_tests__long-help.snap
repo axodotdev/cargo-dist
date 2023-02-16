@@ -85,8 +85,10 @@ GLOBAL OPTIONS:
           If left unspecified we will use the values in [workspace.metadata.dist]. `cargo dist init` will persist the values you pass to that location.
 
           Possible values:
-          - github-shell:      Generates a shell script that fetches from github ci
-          - github-powershell: Generates a powershell script that fetches from github ci
+          - shell:
+            Generates a shell script that fetches from your Artifact Download URL (Github Release for now)
+          - powershell:
+            Generates a shell script that fetches from your Artifact Download URL (Github Release for now)
 
       --ci <CI>
           CI we want to support
