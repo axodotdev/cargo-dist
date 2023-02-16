@@ -1,4 +1,4 @@
-# Version 0.0.3-prerelease02 (still being tested!!!)
+# Version 0.0.3-prerelease03 (still being tested!!!)
 
 **USE AT YOUR OWN RISK, SUPER ALPHA**
 
@@ -85,6 +85,21 @@ Although you *could* use extremely careful versioning in conjuction with Unified
 **WARNING!** cargo-release *largely* already generates tags that express these exact semantics, except for one annoying corner case (that I've found so far): if you have a non-virtual workspace (the root Cargo.toml is an actual package with child packages), it will always try to tag releases of the root package with a Unified Tag, even when trying using `--workspace`. This will not play well with cargo-dist. Initial testing suggests virtual workspaces behave much better.
 
 **WARNING!** cargo-dist currently errors out if you provide a Singular tag for a library-only package (or a Unified Tag that selects only similarly unselectable packages). This is bad UX, but we need to figure out a story for what to do in that situation. (We could just make a Github Release with no artifacts, maybe still grab your Release Notes..?)
+
+## Release Notes
+
+Release notes are now temporarily simplified for reliability:
+
+* For the purposes of a top level Announcement (Github Release), notes are now no longer associated with the individual apps being published, meaning there's only one set of notes generated.
+
+* If you have a RELEASES* or CHANGELOG* file in the root of your workspace, we will assume these are the release notes for any Unified Announcement (see the previous section) and try to include the relevant section at the top of the Github Release. This is done with the [parse_changelog](https://github.com/taiki-e/parse-changelog) library. If parsing/lookup fails we continue on silently.
+
+* If the above process succeeds, the heading of the section we found will become the new title of the Github Release. For example, if we find `1.2.0` matches `# Version 1.2.0 (2023-01-25)`, the title of the Github Release will become "Version 1.2.0 (2023-01-25)".
+
+* If you are publishing `1.2.0-prerelease` and we don't find that in your RELEASES/CHANGELOG file, we will now also look for bare `1.2.0` (stripping the prerelease/build portions), on the assumption that these are the WIP release notes for the version you're prereleasing. This lets you iterate on a version without having to churn headings every time you want to cut a prerelease (we recommend including a parenthetical indicating the version is not yet released).
+
+* We will no longer attempt to include your release notes for Singular Announcements (see the previous section). They will only get auto-generated installers/downloads sections. This is obviously suboptimal, and will be fixed, we just need to do design work on the proper way to handle those cases. (Please tell me in [issue #139](https://github.com/axodotdev/cargo-dist/issues/139)!)
+
 
 
 ## Fixes

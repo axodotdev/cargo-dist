@@ -1437,6 +1437,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut gh_body = String::new();
         let download_url = self.inner.artifact_download_url.as_ref();
 
+        // add release notes
+        if let Some(changelog) = self.inner.announcement_changelog.as_ref() {
+            gh_body.push_str("## Release Notes\n\n");
+            gh_body.push_str(changelog);
+        }
+
         // Add the contents of each Release to the body
         for release in &self.inner.releases {
             let heading_suffix = format!("{} {}", release.app_name, release.version);
@@ -1522,12 +1528,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
                 writeln!(&mut gh_body).unwrap();
             }
-        }
-
-        // add release notes
-        if let Some(changelog) = self.inner.announcement_changelog.as_ref() {
-            gh_body.push_str("## Release Notes\n\n");
-            gh_body.push_str(changelog);
         }
 
         info!("succesfully generated github release body!");
