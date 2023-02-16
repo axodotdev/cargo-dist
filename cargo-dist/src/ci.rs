@@ -58,9 +58,13 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
     }
 
     // Install Rust with rustup
-    // FIXME: we get some warnings from Github about hardcoded rust tools being on PATH
+    //
+    // We pass --no-self-update to work around https://github.com/rust-lang/rustup/issues/2441
+    //
+    // FIXME(#127): we get some warnings from Github about hardcoded rust tools being on PATH
     // that are shadowing the rustup ones? Look into this!
-    let install_rust = format!("rustup update {rust_version} && rustup default {rust_version}");
+    let install_rust =
+        format!("rustup update {rust_version} --no-self-update && rustup default {rust_version}");
 
     // Get the platform-specific installation methods
     let install_dist_sh = install_dist_sh_for_version(dist_version);
