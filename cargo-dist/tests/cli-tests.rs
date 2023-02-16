@@ -91,6 +91,7 @@ fn test_manifest() {
         (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
         (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
         (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
+        (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
     ]}, {
         insta::assert_snapshot!(format_outputs(&output));
     });
