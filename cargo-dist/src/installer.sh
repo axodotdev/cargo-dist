@@ -51,7 +51,7 @@ download_binary_and_run_installer() {
     # download the zip
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
     local _dir="$(mktemp -d 2>/dev/null || ensure mktemp -d -t $APP_NAME)"
-    local _file="$_dir/input.tar.gz"
+    local _file="$_dir/input$_zip_ext"
 
     say "downloading $APP_NAME $APP_VERSION ${_arch}" 1>&2
     say "  from $_url" 1>&2
