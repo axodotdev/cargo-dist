@@ -62,13 +62,13 @@ jobs:
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-20.04
-          install-dist: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2-prerelease01/installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2/installer.sh | sh
         - target: x86_64-apple-darwin
           os: macos-11
-          install-dist: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2-prerelease01/installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2/installer.sh | sh
         - target: x86_64-pc-windows-msvc
           os: windows-2019
-          install-dist: irm 'https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2-prerelease01/installer.ps1' | iex
+          install-dist: irm 'https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2/installer.ps1' | iex
     runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -106,7 +106,7 @@ jobs:
       - name: Install Rust
         run: rustup update stable && rustup default stable
       - name: Install cargo-dist
-        run: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2-prerelease01/installer.sh | sh
+        run: curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2/installer.sh | sh
       - name: Run cargo-dist manifest
         run: |
           # Generate a manifest describing everything
