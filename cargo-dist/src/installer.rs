@@ -78,7 +78,6 @@ fn write_github_install_sh_script<W: std::io::Write>(
 
     let install_script = include_str!("installer.sh");
     let install_script = install_script
-        .replace("{{REPO_URL}}", "TODO: repo url")
         .replace("{{APP_NAME}}", app_name)
         .replace("{{APP_VERSION}}", app_version)
         .replace("{{ARTIFACT_DOWNLOAD_URL}}", base_url)
