@@ -246,6 +246,10 @@ pub struct CargoProfile {
 /// Global config for commands
 #[derive(Debug)]
 pub struct Config {
+    /// Whether we need to compute an announcement tag or if we can fudge it
+    ///
+    /// Commands like generate-ci and init don't need announcements, but want to run gather_work
+    pub needs_coherent_announcement_tag: bool,
     /// The subset of artifacts we want to build
     pub artifact_mode: ArtifactMode,
     /// Whether local paths to files should be in the final dist json output
@@ -1753,7 +1757,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             announcement_tag = Some(tag);
             announcing_prerelease = !version.pre.is_empty();
             announcing_version = Some(version.clone());
-        } else {
+        } else if cfg.needs_coherent_announcement_tag {
             use std::fmt::Write;
             let mut msg = String::new();
             msg.push_str(
@@ -1785,6 +1789,11 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             )
             .unwrap();
             return Err(miette!("{}", msg));
+        } else {
+            // We don't need a coherent announcement tag so use a fake one to continue on
+            announcement_tag = Some("v1.0.0-FAKEVER".to_owned());
+            announcing_prerelease = true;
+            announcing_version = Some("1.0.0-FAKEVER".parse().unwrap());
         }
     }
     assert!(
