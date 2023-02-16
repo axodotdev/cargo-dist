@@ -1,8 +1,8 @@
 # CI that:
 #
 # * checks for a Git Tag that looks like a release
-# * creates a Github Release™
-# * builds binaries/artifacts with cargo-dist
+# * creates a Github Release™ and fills in its text
+# * builds artifacts with cargo-dist (executable-zips, installers)
 # * uploads those artifacts to the Github Release™
 #
 # Note that the Github Release™ will be created before the artifacts,
@@ -39,8 +39,7 @@ permissions:
 on:
   push:
     tags:
-      # TODO: test that this better filter works: *-?v[0-9]+*
-      - '*'
+      - '*-?v[0-9]+*'
 
 jobs:
   # Create the Github Release™ so the packages have something to be uploaded to
