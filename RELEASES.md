@@ -1,4 +1,6 @@
-# Version 0.0.3-prerelease01 (still being tested)
+# Version 0.0.3-prerelease01 (still being tested!!!)
+
+**USE AT YOUR OWN RISK, SUPER ALPHA**
 
 A major overhaul has been done to the design to rationalize some improperly defined features/behaviours, when you update to this version you will need to rerun `cargo dist init` (and need to generate-ci).
 
