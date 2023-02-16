@@ -57,7 +57,9 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
         local_targets.extend(release.targets.iter());
     }
 
-    // Install Rust with rustup (TODO: confirm this works)
+    // Install Rust with rustup
+    // FIXME: we get some warnings from Github about hardcoded rust tools being on PATH
+    // that are shadowing the rustup ones? Look into this!
     let install_rust = format!("rustup update {rust_version} && rustup default {rust_version}");
 
     // Get the platform-specific installation methods
