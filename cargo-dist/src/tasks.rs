@@ -1397,7 +1397,25 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         // Try to lookup this version in the changelog
         let version_string = format!("{}", announcing_version);
-        let Some(release_notes) = changelogs.get(&*version_string) else {
+        let release_notes = if let Some(release_notes) = changelogs.get(&*version_string) {
+            release_notes
+        } else if !announcing_version.pre.is_empty() {
+            // If we're a prerelease, try looking for this version without the prerelease suffix
+            // on the basis that we shouldn't be backfilling prereleases after the real release,
+            // so those are probably also our own WIP release notes.
+            let normal_version = Version::new(
+                announcing_version.major,
+                announcing_version.minor,
+                announcing_version.patch,
+            );
+
+            let version_string = format!("{}", normal_version);
+            let Some(release_notes) = changelogs.get(&*version_string) else {
+                info!("failed to find {version_string} in changelogs, skipping changelog generation");
+                return;
+            };
+            release_notes
+        } else {
             info!("failed to find {version_string} in changelogs, skipping changelog generation");
             return;
         };
