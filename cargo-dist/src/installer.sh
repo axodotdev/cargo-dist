@@ -14,7 +14,8 @@
 
 set -u
 
-REPO="{{REPO_URL}}"
+# FIXME: patch in the repo's URL for suggesting filling an issue
+# REPO="{{REPO_URL}}"
 APP_NAME="{{APP_NAME}}"
 APP_VERSION="{{APP_VERSION}}"
 ARTIFACT_DOWNLOAD_URL="{{ARTIFACT_DOWNLOAD_URL}}"
@@ -64,7 +65,7 @@ download_binary_and_run_installer() {
       say "this may be a standard network error, but it may also indicate"
       say "that $APP_NAME's release process is not working. When in doubt"
       say "please feel free to open an issue!"
-      say "$REPO/issues/new/choose"
+      # say "$REPO/issues/new/choose"
       exit 1
     fi
 
