@@ -39,51 +39,50 @@ fn write_github_install_sh_script<W: std::io::Write>(
         ..
     } = info;
 
-    let mut base_name = None;
+    let platform_entry_template = r###"
+        "{{TARGET}}")
+            _artifact_name="{{ARTIFACT_NAME}}"
+            _zip_ext="{{ZIP_EXT}}"
+            _bins="{{BINS}}"
+            ;;"###;
+
+    let mut entries = String::new();
+
     for artifact in artifacts {
         assert!(artifact.target_triples.len() == 1, "It's awesome you made multi-arch executable-zips, but now you need to implement support in the sh installer!");
         let target = &artifact.target_triples[0];
         assert_eq!(artifact.zip_style, ZipStyle::Tar(crate::CompressionImpl::Xzip), "If you're trying to make zip styles configurable, but now you need to implement support in the sh installer!");
         let zip_ext = artifact.zip_style.ext();
+        let artifact_name = &artifact.id;
 
-        // temp hack for a commit or two: strip stuff to get basename
-        base_name = Some(
-            artifact
-                .id
-                .strip_suffix(zip_ext)
-                .unwrap()
-                .strip_suffix(target)
-                .unwrap(),
-        )
-
-        /*
         let mut bins = String::new();
         let mut multi_bin = false;
-        for (_bin, bin_path) in artifact.required_binaries {
+        for bin in &artifact.binaries {
             // FIXME: we should really stop pervasively assuming things are copied to the root...
-            let rel_path = bin_path.file_name().unwrap();
+            let rel_path = bin;
             if multi_bin {
-                bins.push_str(", ");
+                bins.push(' ');
             } else {
                 multi_bin = true;
             }
-            write!(bins, "\"{}\"", rel_path).unwrap();
+            bins.push_str(rel_path);
         }
 
         let entry = platform_entry_template
             .replace("{{TARGET}}", target)
+            .replace("{{ARTIFACT_NAME}}", artifact_name)
             .replace("{{BINS}}", &bins)
             .replace("{{ZIP_EXT}}", zip_ext);
         entries.push_str(&entry);
-        */
     }
 
     let install_script = include_str!("installer.sh");
     let install_script = install_script
+        .replace("{{REPO_URL}}", "TODO: repo url")
         .replace("{{APP_NAME}}", app_name)
         .replace("{{APP_VERSION}}", app_version)
-        .replace("{{ARTIFACT_BASE_NAME}}", base_name.unwrap())
-        .replace("{{ARTIFACT_DOWNLOAD_URL}}", base_url);
+        .replace("{{ARTIFACT_DOWNLOAD_URL}}", base_url)
+        .replace("{{PLATFORM_INFO}}", &entries);
 
     f.write_all(install_script.as_bytes())?;
 
