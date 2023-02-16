@@ -50,9 +50,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        run: rustup update 1.67.1 && rustup default 1.67.1
+        run: rustup update 1.67.1 --no-self-update && rustup default 1.67.1
       - name: Install cargo-dist
-        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.sh | sh
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease03/cargo-dist-v0.0.3-prerelease03-installer.sh | sh
       - name: Create Release
         run: |
           cargo dist manifest --tag=${{ github.ref_name }} --artifacts=all --no-local-paths --output-format=json > dist-manifest.json
@@ -79,16 +79,16 @@ jobs:
         include:
         - os: ubuntu-20.04
           dist-args: --artifacts=global
-          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease03/cargo-dist-v0.0.3-prerelease03-installer.sh | sh
         - os: macos-11
           dist-args: --artifacts=local --target=x86_64-apple-darwin
-          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease03/cargo-dist-v0.0.3-prerelease03-installer.sh | sh
         - os: ubuntu-20.04
           dist-args: --artifacts=local --target=x86_64-unknown-linux-gnu
-          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease03/cargo-dist-v0.0.3-prerelease03-installer.sh | sh
         - os: windows-2019
           dist-args: --artifacts=local --target=x86_64-pc-windows-msvc
-          install-dist: irm  https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease02/cargo-dist-v0.0.3-prerelease02-installer.ps1 | iex
+          install-dist: irm  https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease03/cargo-dist-v0.0.3-prerelease03-installer.ps1 | iex
 
     runs-on: ${{ matrix.os }}
     env:
@@ -96,7 +96,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        run: rustup update 1.67.1 && rustup default 1.67.1
+        run: rustup update 1.67.1 --no-self-update && rustup default 1.67.1
       - name: Install cargo-dist
         run: ${{ matrix.install-dist }}
       - name: Run cargo-dist
