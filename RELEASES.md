@@ -1,4 +1,4 @@
-# Version 0.0.3-prerelease01 (still being tested!!!)
+# Version 0.0.3-prerelease02 (still being tested!!!)
 
 **USE AT YOUR OWN RISK, SUPER ALPHA**
 
