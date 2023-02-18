@@ -84,7 +84,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        run: {{{{INSTALL_RUST}}}}
+        run: |
+          {{{{INSTALL_RUST}}}}
+          rustup target add ${{ matrix.targets }}
       - name: Install cargo-dist
         run: ${{ matrix.install-dist }}
       - name: Run cargo-dist

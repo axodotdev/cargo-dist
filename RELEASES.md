@@ -114,6 +114,7 @@ Release notes are now temporarily simplified for reliability:
 * Installers now properly handle packages that define multiple binaries (installing all of them, just like cargo-install)
 * Installers now properly know the Github Release they are going to point to (previously they would guess based on the version of the package which was broken in complicated workflows)
 * --installer=github-shell and --installer=github-powershell have had the "github-" prefix removed. They now generically use the concept of an "artifact download url" which will be configurable in the future (for now it only gets populated if ci=github is set and your workspace has a coherent definition for "repository" in its Cargo.tomls).
+* Added aarch64-apple-darwin target support
 
 
 

@@ -75,11 +75,12 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
 
     // If we have Global Artifacts, we need one task for that. If we've done a Good Job
     // then these artifacts should be possible to build on *any* platform. Linux is usually
-    // fast/cheap, so that's a reasonable choice.s
+    // fast/cheap, so that's a reasonable choice.
     if needs_global_build {
         push_github_artifacts_matrix_entry(
             &mut artifacts_matrix,
             GITHUB_LINUX_RUNNER,
+            &[&"x86_64-unknown-linux-gnu".to_owned()],
             "--artifacts=global",
             &install_dist_sh,
         );
@@ -92,10 +93,16 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
         let install_dist =
             install_dist_for_github_runner(runner, &install_dist_sh, &install_dist_ps1);
         let mut dist_args = String::from("--artifacts=local");
-        for target in targets {
+        for target in &targets {
             write!(dist_args, " --target={target}").unwrap();
         }
-        push_github_artifacts_matrix_entry(&mut artifacts_matrix, runner, &dist_args, install_dist);
+        push_github_artifacts_matrix_entry(
+            &mut artifacts_matrix,
+            runner,
+            &targets,
+            &dist_args,
+            install_dist,
+        );
     }
 
     // Finally write the final CI script to the Writer
@@ -114,6 +121,7 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
 fn push_github_artifacts_matrix_entry(
     matrix: &mut String,
     runner: &str,
+    targets: &[&TargetTriple],
     dist_args: &str,
     install_dist: &str,
 ) {
@@ -121,11 +129,20 @@ fn push_github_artifacts_matrix_entry(
 
     const MATRIX_ENTRY_TEMPLATE: &str = r###"
         - os: {{{{GITHUB_RUNNER}}}}
+          targets: {{{{TARGETS}}}}
           dist-args: {{{{DIST_ARGS}}}}
           install-dist: {{{{INSTALL_DIST}}}}"###;
 
     let entry = MATRIX_ENTRY_TEMPLATE
         .replace("{{{{GITHUB_RUNNER}}}}", runner)
+        .replace(
+            "{{{{TARGETS}}}}",
+            &targets
+                .iter()
+                .map(AsRef::as_ref)
+                .collect::<Vec<&str>>()
+                .join(" "),
+        )
         .replace("{{{{DIST_ARGS}}}}", dist_args)
         .replace("{{{{INSTALL_DIST}}}}", install_dist);
 
