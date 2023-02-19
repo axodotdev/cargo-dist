@@ -1393,34 +1393,23 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
         };
 
-        // Try to lookup this version in the changelog
-        let version_string = format!("{}", announcing_version);
-        let release_notes = if let Some(release_notes) = changelogs.get(&*version_string) {
-            release_notes
-        } else if !announcing_version.pre.is_empty() {
-            // If we're a prerelease, try looking for this version without the prerelease suffix
-            // on the basis that we shouldn't be backfilling prereleases after the real release,
-            // so those are probably also our own WIP release notes.
-            let normal_version = Version::new(
-                announcing_version.major,
-                announcing_version.minor,
-                announcing_version.patch,
-            );
-
-            let version_string = format!("{}", normal_version);
-            let Some(release_notes) = changelogs.get(&*version_string) else {
-                info!("failed to find {version_string} in changelogs, skipping changelog generation");
+        // Try to extract the changelog entry for the announcing version.
+        // First, try to find the exact version. If that fails, try to find this version without
+        // the prerelease suffix.
+        // Because releasing a prerelease for a version that was already published before does not
+        // make much sense it is fairly safe to assume that this entry is in fact just our WIP state
+        // of the release notes.
+        let Some((title, notes)) =
+            try_extract_changelog_exact(&changelogs, announcing_version)
+                .or_else(|| try_extract_changelog_normalized(&changelogs, announcing_version))
+            else {
+                info!("failed to find {announcing_version} in changelogs, skipping changelog generation");
                 return;
             };
-            release_notes
-        } else {
-            info!("failed to find {version_string} in changelogs, skipping changelog generation");
-            return;
-        };
 
         info!("succesfully parsed changelog!");
-        self.inner.announcement_title = Some(release_notes.title.to_owned());
-        self.inner.announcement_changelog = Some(release_notes.notes.to_owned());
+        self.inner.announcement_title = Some(title);
+        self.inner.announcement_changelog = Some(notes);
     }
 
     /// If we're publishing to Github, generate some Github notes
@@ -2283,4 +2272,53 @@ fn try_load_changelog(changelog_path: &Utf8Path) -> Result<String> {
         .into_diagnostic()
         .wrap_err_with(|| format!("failed to read changelog at {changelog_path}"))?;
     Ok(changelog_str)
+}
+
+/// Tries to find a changelog entry with the exact version given and returns its title and notes.
+fn try_extract_changelog_exact(
+    changelogs: &parse_changelog::Changelog,
+    version: &Version,
+) -> Option<(String, String)> {
+    let version_string = format!("{}", version);
+
+    changelogs.get(&*version_string).map(|release_notes| {
+        (
+            release_notes.title.to_string(),
+            release_notes.notes.to_string(),
+        )
+    })
+}
+
+/// Tries to find a changelog entry that matches the given version's normalized form. That is, just
+/// the `major.minor.patch` part. If successful, the entry's title is modified to include the
+/// version's prerelease part before it is returned together with the notes.
+///
+/// Noop if the given version is already normalized.
+fn try_extract_changelog_normalized(
+    changelogs: &parse_changelog::Changelog,
+    version: &Version,
+) -> Option<(String, String)> {
+    if version.pre.is_empty() {
+        return None;
+    }
+
+    let version_normalized = Version::new(version.major, version.minor, version.patch);
+    let version_normalized_string = format!("{}", version_normalized);
+
+    let release_notes = changelogs.get(&*version_normalized_string)?;
+
+    // title looks something like '<prefix><version><freeform>'
+    // prefix could be 'v' or 'Version ' for example
+    let (prefix_and_version, freeform) = release_notes.title.split_at(
+        release_notes
+            .title
+            .find(&*version_normalized_string)
+            .unwrap() // impossible that this version string is not present in the header
+            + version_normalized_string.len(),
+    );
+
+    // insert prerelease suffix into the title
+    let title = format!("{}-{} {}", prefix_and_version.trim(), version.pre, freeform.trim());
+
+    Some((title.trim().to_string(), release_notes.notes.to_string()))
 }
