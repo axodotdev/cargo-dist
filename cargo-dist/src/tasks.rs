@@ -2318,7 +2318,12 @@ fn try_extract_changelog_normalized(
     );
 
     // insert prerelease suffix into the title
-    let title = format!("{}-{} {}", prefix_and_version.trim(), version.pre, freeform.trim());
+    let title = format!(
+        "{}-{} {}",
+        prefix_and_version.trim(),
+        version.pre,
+        freeform.trim()
+    );
 
     Some((title.trim().to_string(), release_notes.notes.to_string()))
 }
