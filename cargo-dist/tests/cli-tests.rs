@@ -94,3 +94,63 @@ fn test_manifest() {
 
     assert!(output.status.success(), "{}", output.status);
 }
+
+#[test]
+fn test_lib_manifest() {
+    let version = std::env!("CARGO_PKG_VERSION");
+    let output = Command::new(BIN)
+        .arg("dist")
+        .arg("manifest")
+        .arg("--artifacts=all")
+        .arg("--no-local-paths")
+        .arg("--output-format=json")
+        .arg("--tag")
+        .arg(&format!("cargo-dist-schema-v{}", version))
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .unwrap();
+
+    // We don't want this to churn every time we do a version bump
+    insta::with_settings!({filters => vec![
+        (r"\d+\.\d+\.\d+(\-prerelease\d+)?", "1.0.0-FAKEVERSION"),
+        (r#""announcement_tag": .*"#, r#""announcement_tag": "CENSORED","#),
+        (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
+        (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
+        (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
+        (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
+    ]}, {
+        insta::assert_snapshot!(format_outputs(&output));
+    });
+
+    assert!(output.status.success(), "{}", output.status);
+}
+
+#[test]
+fn test_error_manifest() {
+    let output = Command::new(BIN)
+        .arg("dist")
+        .arg("manifest")
+        .arg("--artifacts=all")
+        .arg("--no-local-paths")
+        .arg("--output-format=json")
+        .arg("--tag=v0.0.0")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .unwrap();
+
+    // We don't want this to churn every time we do a version bump
+    insta::with_settings!({filters => vec![
+        (r"\d+\.\d+\.\d+(\-prerelease\d+)?", "1.0.0-FAKEVERSION"),
+        (r#""announcement_tag": .*"#, r#""announcement_tag": "CENSORED","#),
+        (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
+        (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
+        (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
+        (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
+    ]}, {
+        insta::assert_snapshot!(format_outputs(&output));
+    });
+
+    assert!(!output.status.success(), "{}", output.status);
+}

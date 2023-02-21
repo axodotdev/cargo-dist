@@ -1,0 +1,17 @@
+---
+source: cargo-dist/tests/cli-tests.rs
+expression: format_outputs(&output)
+---
+stdout:
+{"error": {"message": "This workspace doesn't have anything for cargo-dist to Release!","severity": "error","causes": [],"labels": [],"related": []}}
+
+stderr:
+analyzing workspace:
+  cargo-dist (didn't match tag v1.0.0-FAKEVERSION)
+    [bin] cargo-dist
+  cargo-dist-schema (no binaries)
+
+
+  × This workspace doesn't have anything for cargo-dist to Release!
+
+

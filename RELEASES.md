@@ -1,4 +1,4 @@
-# Version 0.0.3 (not yet released!)
+# Version 0.0.3 (under development)
 
 **USE AT YOUR OWN RISK, SUPER ALPHA**
 

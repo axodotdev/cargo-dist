@@ -1758,9 +1758,13 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
     // Don't proceed if this doesn't make sense
     if rust_releases.is_empty() {
-        return Err(miette!(
-            "This workspace doesn't have anything for cargo-dist to Release!"
-        ));
+        if announcing_package.is_some() {
+            warn!("You're trying to explicitly Release a library, only minimal functionality will work");
+        } else {
+            return Err(miette!(
+                "This workspace doesn't have anything for cargo-dist to Release!"
+            ));
+        }
     }
     // If we don't have a tag yet we MUST successfully select one here or fail
     if announcement_tag.is_none() {

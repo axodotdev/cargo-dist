@@ -32,6 +32,8 @@ lazy_static! {
 
 fn set_report_errors_as_json() {
     *REPORT_ERROR.lock().unwrap() = Some(Box::new(move |error| {
+        // Still write a human-friendly version to stderr
+        writeln!(&mut Term::stderr(), "{error:?}").unwrap();
         // Manually invoke JSONReportHandler to format the error as a report
         // to out_.
         let mut report = String::new();
