@@ -103,7 +103,10 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
     let ci_yml = ci_yml
         .replace("{{{{INSTALL_RUST}}}}", &install_rust)
         .replace("{{{{INSTALL_DIST_SH}}}}", &install_dist_sh)
-        .replace("{{{{ARTIFACTS_MATRIX}}}}", &artifacts_matrix);
+        .replace("{{{{ARTIFACTS_MATRIX}}}}", &artifacts_matrix)
+        // If someone is using autocrlf stuff the templates might get rewritten
+        // to include windows-style newlines and we don't want that, so strip 'em.
+        .replace('\r', "");
 
     f.write_all(ci_yml.as_bytes())?;
 

@@ -81,7 +81,10 @@ fn write_install_sh_script<W: std::io::Write>(
         .replace("{{APP_NAME}}", app_name)
         .replace("{{APP_VERSION}}", app_version)
         .replace("{{ARTIFACT_DOWNLOAD_URL}}", base_url)
-        .replace("{{PLATFORM_INFO}}", &entries);
+        .replace("{{PLATFORM_INFO}}", &entries)
+        // If someone is using autocrlf stuff the templates might get rewritten
+        // to include windows-style newlines and we don't want that, so strip 'em.
+        .replace('\r', "");
 
     f.write_all(install_script.as_bytes())?;
 
@@ -163,7 +166,10 @@ fn write_install_ps_script<W: std::io::Write>(
         .replace("{{APP_NAME}}", app_name)
         .replace("{{APP_VERSION}}", app_version)
         .replace("{{ARTIFACT_DOWNLOAD_URL}}", base_url)
-        .replace("{{PLATFORM_INFO}}", &platform_info);
+        .replace("{{PLATFORM_INFO}}", &platform_info)
+        // If someone is using autocrlf stuff the templates might get rewritten
+        // to include windows-style newlines and we don't want that, so strip 'em.
+        .replace('\r', "");
 
     f.write_all(install_script.as_bytes())?;
 
