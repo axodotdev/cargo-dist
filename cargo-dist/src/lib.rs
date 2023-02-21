@@ -601,117 +601,22 @@ fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
         let new_profile = new_profile.as_table_mut().unwrap();
         // We're building for release, so this is a good base!
         new_profile.insert("inherits", toml_edit::value("release"));
-        // We want *full* debuginfo for good crashreporting/profiling
-        // This doesn't bloat the final binary because we use split-debuginfo below
-        // new_profile.insert("debug", toml_edit::value(true));
-
-        // Ensure that all debuginfo is pulled out of the binary and tossed
-        // into a separate file from the final binary. This should ideally be
-        // uploaded to something like a symbol server to be fetched on demand.
-        // This is already the default on windows (.pdb) and macos (.dsym) but
-        // is rather bleeding on other platforms (.dwp) -- it requires Rust 1.65,
-        // which as of this writing in the latest stable rust release! If anyone
-        // ever makes a big deal with building final binaries with an older MSRV
-        // we may need to more intelligently select this.
-        // new_profile.insert("split-debuginfo", toml_edit::value("packed"));
-
-        // TODO: set codegen-units=1? (Probably Not!)
+        // We're building for SUPER DUPER release, so lto is a good idea to enable!
         //
-        // Ok so there's an inherent tradeoff in compilers where if the compiler does
-        // everything in a very serial/global way, it can discover more places where
-        // optimizations can be done and theoretically make things faster/smaller
-        // using all the information at its fingertips... at the cost of your builds
-        // taking forever. Compiler optimizations generally take super-linear time,
-        // so if you let the compiler see and think about EVERYTHING your builds
-        // can literally take *days* for codebases on the order of LLVM itself.
+        // There's a decent argument for lto=true (aka "fat") here but the cost-benefit
+        // is a bit complex. Fat LTO can be way more expensive to compute (to the extent
+        // that enormous applications like chromium can become unbuildable), but definitely
+        // eeks out a bit more from your binaries.
         //
-        // To keep compile times tractable, we generally break up the program
-        // into "codegen units" (AKA "translation units") that get compiled
-        // independently and then combined by the linker. This keeps the super-linear
-        // scaling under control, but prevents optimizations like inlining across
-        // units. (This process is why we have things like "object files" and "rlibs",
-        // those are the intermediate artifacts fed to the linker.)
+        // In principle cargo-dist is targetting True Shippable Binaries and so it's
+        // worth it to go nuts getting every last drop out of your binaries... but a lot
+        // of people are going to build binaries that might never even be used, so really
+        // we're just burning a bunch of CI time for nothing.
         //
-        // Compared to C, Rust codegen units are quite monolithic. Where each C
-        // *file* might gets its own codegen unit, Rust prefers scoping them to
-        // an entire *crate*.  As it turns out, neither of these answers is right in
-        // all cases, and being able to tune the unit size is useful.
-        //
-        // Large C++ codebases like Firefox have "unified" builds where they basically
-        // concatenate files together to get bigger units. Rust provides the
-        // opposite: the codegen-units=N option tells rustc that it should try to
-        // break up a crate into at most N different units. This is done with some
-        // heuristics and constraints to try to still get the most out of each unit
-        // (i.e. try to keep functions that call eachother together for inlining).
-        //
-        // In the --release profile, codegen-units is set to 16, which attempts
-        // to strike a balance between The Best Binaries and Ever Finishing Compiles.
-        // In principle, tuning this down to 1 could be profitable, but LTO
-        // (see the next TODO) does most of that work for us. As such we can probably
-        // leave this alone to keep compile times reasonable.
-
-        // TODO: set lto="thin" (or "fat")? (Probably "fat"!)
-        //
-        // LTO, Link Time Optimization, is basically hijacking the step where we
-        // would link together everything and going back to the compiler (LLVM) to
-        // do global optimizations across codegen-units (see the previous TODO).
-        // Better Binaries, Slower Build Times.
-        //
-        // LTO can be "fat" (or "full") or "thin".
-        //
-        // Fat LTO is the "obvious" implementation: once you're done individually
-        // optimizing the LLVM bitcode (IR) for each compilation unit, you concatenate
-        // all the units and optimize it all together. Extremely serial, extremely
-        // slow, but thorough as hell. For *enormous* codebases (millions of lines)
-        // this can become intractably expensive and crash the compiler.
-        //
-        // Thin LTO is newer and more complicated: instead of unconditionally putting
-        // everything together, we want to optimize each unit with other "useful" units
-        // pulled in for inlining and other analysis. This grouping is done with
-        // similar heuristics that rustc uses to break crates into codegen-units.
-        // This is much faster than Fat LTO and can scale to arbitrarily big
-        // codebases, but does produce slightly worse results.
-        //
-        // Release builds currently default to lto=false, which, despite the name,
-        // actually still does LTO (lto="off" *really* turns it off)! Specifically it
-        // does Thin LTO but *only* between the codegen units for a single crate.
-        // This theoretically negates the disadvantages of codegen-units=16 while
-        // still getting most of the advantages! Neat!
-        //
-        // Since most users will have codebases significantly smaller than An Entire
-        // Browser, we can probably go all the way to default lto="fat", and they
-        // can tune that down if it's problematic. If a user has "nightly" and "stable"
-        // builds, it might be the case that they want lto="thin" for the nightlies
-        // to keep them timely.
-        //
-        // > Aside: you may be wondering "why still have codegen units at all if using
-        // > Fat LTO" and the best answer I can give you is "doing things in parallel
-        // > at first lets you throw out a lot of junk and trim down the input before
-        // > starting the really expensive super-linear global analysis, without losing
-        // > too much of the important information". The less charitable answer is that
-        // > compiler infra is built around codegen units and so this is a pragmatic hack.
-        // >
-        // > Thin LTO of course *really* benefits from still having codegen units.
-
-        // TODO: set panic="abort"?
-        //
-        // PROBABLY NOT, but here's the discussion anyway!
-        //
-        // The default is panic="unwind", and things can be relying on unwinding
-        // for correctness. Unwinding support bloats up the binary and can make
-        // code run slower (because each place that *can* unwind is essentially
-        // an early-return the compiler needs to be cautious of).
-        //
-        // panic="abort" immediately crashes the program if you panic,
-        // but does still run the panic handler, so you *can* get things like
-        // backtraces/crashreports out at that point.
-        //
-        // See RUSTFLAGS="-Cforce-unwind-tables" for the semi-orthogonal flag
-        // that adjusts whether unwinding tables are emitted at all.
-        //
-        // Major C++ applications like Firefox already build with this flag,
-        // the Rust ecosystem largely works fine with either.
-
+        // The user has the freedom to crank this up higher (and/or set codegen-units=1)
+        // if they think it's worth it, but we otherwise probably shouldn't set the planet
+        // on fire just because Number Theoretically Go Up.
+        new_profile.insert("lto", toml_edit::value("thin"));
         new_profile
             .decor_mut()
             .set_prefix("\n# The profile that 'cargo dist' will build with\n")
