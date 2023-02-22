@@ -1,6 +1,6 @@
 # Way-Too-Quickstart
 
-This quickstart is a bit *too* quick because there's some important nuances to "announcing and building releases" that depend on the way you like to structure and version your workspace. This section will blatantly ignore those nuances and show you the Happiest Happy Path. Checkout the sections on "[supported workflows][]" for more details on what you should *actually* do.
+This quickstart is a bit *too* quick because there's some important nuances to "announcing and building releases" that depend on the way you like to structure and version your workspace. This section will blatantly ignore those nuances and show you the Happiest Happy Path. Checkout [the guide][guide] for more details on what you should *actually* do.
 
 There are [many ways to install cargo-dist][install]. For simplicitly we'll use `cargo install` as that will work everywhere (*stares at NixOS users and people who think they should run desktop RISC-V*):
 
@@ -50,9 +50,9 @@ cargo release 0.1.0
 
 (I left off the --execute flag from `cargo-release` so you won't accidentally break anything if you really did just copy paste that 😇)
 
-Now on to the "[supported workflows][]" section for all the nuance this one completely glossed over!
+Now on to [the guide][] for all the nuance this section completely glossed over!
 
 
 [cargo-release]: https://github.com/crate-ci/cargo-release
-[supported workflows]: ./supported-workflows.html
-[install]: ./install.html
+[guide]: ./guide.md
+[install]: ./install.md
