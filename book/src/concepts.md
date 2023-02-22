@@ -1,15 +1,15 @@
 # Concepts
 
-Here's the section where I use a bunch of words Capitalized Words to indicate they are a Special Concept in cargo-dist as I try to explain how it works.
+Here's the section where I use a bunch of words Capitalized Words to indicate they are a Special Concept in cargo-dist as I try to explain how it works. These are the "advanced" docs of cargo-dist, for the "beginner" docs see [the guide][guide] for the "beginner" docs.
 
 An invocation of cargo-dist has 4 major inputs:
 
-* The structure of your workspace (via cargo-metadata)
+* The structure of your project's [Cargo Workspace][workspace] (via [cargo-metadata][])
 * The config in your Cargo.toml `[workspace.metadata.dist]` (and `[package.metadata.dist]`)
 * The "announcement tag" (e.g. `--tag=v1.0.0`) 
 * The "artifact mode" (e.g. `--artifacts=all`)
 
-The first two define the full Universe of platforms/binaries/installers that cargo-dist wants to build, and the second two tell cargo-dist what subset of that to actually bother with.
+The first two define the full "Universe" of your project -- the platforms/binaries/installers that cargo-dist wants to build. The second two tell cargo-dist what subset of the Universe to actually bother with.
 
 It's important to the structure of cargo-dist that every invocation is aware of the full Universe and how it's being subsetted, because for instance if you want a shell script installer that does platform detection and fetches binaries, it needs to know about all the binaries/platforms it has to select from, even if this *particular* run of cargo-dist won't build them all!
 
@@ -114,7 +114,7 @@ This tells us that evil-workspace and third-bin actually already agree on their 
 
 Although you *could* use extremely careful versioning in conjuction with Unified Announcements to release a weird subset of the packages in your workspace, you really *shouldn't* because the Github Releases will be incoherent (v0.1.0 has these random packages, v0.2.0 has these other random packages... huh?), and you're liable to create painful tag collisions.
 
-Normally cargo-dist will error out if the Announcement Tag selects no Apps, because it exists to build and distribute App and you just asked it to do nothing (which is probably a mistake). This would however create annoying CI errors if you just wanted to tag Individual Releases for your libraries. To make this more pleasant, **cargo-dist will produce a very minimal build-less Announcement (and therefore Github Release) if you explicitly request a Singular Announcement that matches a library-only package**. This feature is kind of half-baked, please let us know what you want to happen in this situation!
+Normally cargo-dist will error out if the Announcement Tag selects no Apps, because it exists to build and distribute Apps and you just asked it to do nothing (which is probably a mistake). This would however create annoying CI errors if you just wanted to tag Individual Releases for your libraries. To make this more pleasant, **cargo-dist will produce a very minimal build-less Announcement (and therefore Github Release) if you explicitly request a Singular Announcement that matches a library-only package**. This feature is kind of half-baked, please let us know what you want to happen in this situation!
 
 
 
@@ -133,7 +133,7 @@ Let's ignore "host" mode for a bit and focus on the other three. Each one of the
 
 
 
-## --artifacts="all"
+## All Artifacts Mode
 
 The "all" Artifact Mode is largely intended for the `manifest` command, to get a listing of everything that would be produced if you were to push the given tag to CI. Here we check what v0.5.0 would produce for our favourite example workspace:
 
@@ -154,7 +154,7 @@ This is the only way that CI uses the flag, but you could also use "all" with `b
 
 
 
-## --artifacts="global"
+## Global Artifacts Mode
 
 The "global" Artifact Mode allows you to unambiguously create a task that will build all the Artifacts for your Apps that *aren't* platform-specific and therefore only need to be made once per App:
 
@@ -167,13 +167,17 @@ cargo dist build --tag=v0.5.0 --artifacts=global --no-local-paths
 Here we see that it only results in the "shell" and "powershell" installers getting built. The code to generate these should be totally cross-platform, so any runner is suitable for the task. The CI creates one "global" task that uses linux because that's the fast/cheap one.
 
 
-## --artifacts="local"
+## Local Artifacts Mode
 
 The "local" Artifact Mode allows you to unambiguously create a task that will build all the Artifacts for your Apps that *are* platform-specific and therefore should have a copy made for every target platform.
 
 If you just use this flag bare, cargo-dist *will* respect the request and try to build for all platforms at once... and this will probably fail, because cross-compilation is hard. Each "local" run should generally use `--target` to filter down the set of all supported targets to the ones you can confidently build on the current machine (`rustc -vV` will tell you the "host" target platform if you're not sure).
 
 In my case it's "x86_64-pc-windows-msvc", so let's try that:
+
+```sh
+cargo dist build --tag=v0.5.0 --artifacts=local --target=x86_64-pc-windows-msvc --no-local-paths
+```
 
 ![A local build producing only executable-zips for the current platform][local-build-example]
 
@@ -183,7 +187,7 @@ CI will spin up one "local" task for each of the major desktop platforms, groupi
 
 
 
-## --artifacts="host"
+## Host Artifacts Mode
 
 Host mode is the default "do something useful on my machine" mode. It's intended for testing and demoing cargo-dist on your project, and is never used in CI due to its intentionally fuzzy semantics.
 
@@ -241,3 +245,6 @@ CI will just invoke cargo-dist in the following sequence:
 [executable-zip]: TODO://link-the-dist-config-field
 [artifact-modes]: TODO://link-the-artifact-modes-section
 [defining-your-apps-section]: TODO://link-to-section
+[cargo-metadata]: https://doc.rust-lang.org/cargo/commands/cargo-metadata.html
+[workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
+[guide]: ./guide.html

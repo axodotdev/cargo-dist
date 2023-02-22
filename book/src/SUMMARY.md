@@ -1,8 +1,10 @@
 # Summary
 
-- [Introduction](./introduction.md)\
+- [Introduction](./introduction.md)
 - [Install](./install.md)
 - [Way Too Quick Start](./way-too-quickstart.md)
-- [Supported Workflows](./supported-workflows.md)
+- [Guide](./guide.md)
+  - [A Simple Application](./simple-guide.md)
+  - [More Complex Workspaces](./workspace-guide.md)
 - [Config](./config.md)
 - [Concepts](./concepts.md)
