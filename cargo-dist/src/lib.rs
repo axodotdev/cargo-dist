@@ -10,6 +10,7 @@ use std::{collections::HashMap, fs::File, io::BufReader, ops::Not, process::Comm
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Release};
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
+use semver::Version;
 use tracing::{info, warn};
 use xz2::write::XzEncoder;
 use zip::ZipWriter;
@@ -786,6 +787,12 @@ pub struct GenerateCiArgs {}
 /// Generate CI scripts (impl of `cargo dist generate-ci`)
 pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
     let dist = gather_work(cfg)?;
+    if let Some(desired_version) = &dist.desired_cargo_dist_version {
+        let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
+        if desired_version != &current_version {
+            return Err(miette!("you're running cargo-dist {}, but 'cargo-dist-version = {}' is set in your Cargo.toml\n\nYou should update cargo-dist-version if you want to update to this version", current_version, desired_version));
+        }
+    }
     if !dist.is_init {
         return Err(miette!(
             "please run 'cargo dist init' before running any other commands!"
