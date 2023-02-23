@@ -8,6 +8,8 @@
 //!
 //! The root type of the schema is [`DistManifest`][].
 
+use std::collections::BTreeMap;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -21,6 +23,8 @@ pub type LocalPath = String;
 ///
 /// (Should we normalize this one?)
 pub type RelPath = String;
+/// The unique ID of an Artifact
+pub type ArtifactId = String;
 
 /// A report of the releases and artifacts that cargo-dist generated
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -52,6 +56,10 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub releases: Vec<Release>,
+    /// The artifacts included in this Announcement, referenced by releases.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub artifacts: BTreeMap<ArtifactId, Artifact>,
 }
 
 /// A Release of an Application
@@ -65,7 +73,7 @@ pub struct Release {
     /// The artifacts for this release (zips, debuginfo, metadata...)
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub artifacts: Vec<Artifact>,
+    pub artifacts: Vec<ArtifactId>,
 }
 
 /// A distributable artifact that's part of a Release
@@ -180,7 +188,7 @@ pub struct ExecutableAsset {
 
 impl DistManifest {
     /// Create a new DistManifest
-    pub fn new(releases: Vec<Release>) -> Self {
+    pub fn new(releases: Vec<Release>, artifacts: BTreeMap<String, Artifact>) -> Self {
         Self {
             dist_version: None,
             announcement_tag: None,
@@ -189,6 +197,7 @@ impl DistManifest {
             announcement_changelog: None,
             announcement_github_body: None,
             releases,
+            artifacts,
         }
     }
 

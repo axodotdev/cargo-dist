@@ -5,7 +5,13 @@
 //!
 //!
 
-use std::{collections::HashMap, fs::File, io::BufReader, ops::Not, process::Command};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fs::File,
+    io::BufReader,
+    ops::Not,
+    process::Command,
+};
 
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Release};
@@ -80,16 +86,21 @@ pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
 fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
     // Report the releases
     let mut releases = vec![];
+    let mut all_artifacts = BTreeMap::<String, cargo_dist_schema::Artifact>::new();
     for release in &dist.releases {
         // Gather up all the local and global artifacts
         let mut artifacts = vec![];
         for &artifact_idx in &release.global_artifacts {
-            artifacts.push(manifest_artifact(cfg, dist, artifact_idx));
+            let id = &dist.artifact(artifact_idx).id;
+            all_artifacts.insert(id.clone(), manifest_artifact(cfg, dist, artifact_idx));
+            artifacts.push(id.clone());
         }
         for &variant_idx in &release.variants {
             let variant = dist.variant(variant_idx);
             for &artifact_idx in &variant.local_artifacts {
-                artifacts.push(manifest_artifact(cfg, dist, artifact_idx));
+                let id = &dist.artifact(artifact_idx).id;
+                all_artifacts.insert(id.clone(), manifest_artifact(cfg, dist, artifact_idx));
+                artifacts.push(id.clone());
             }
         }
 
@@ -101,7 +112,7 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
         })
     }
 
-    let mut manifest = DistManifest::new(releases);
+    let mut manifest = DistManifest::new(releases, all_artifacts);
     manifest.dist_version = Some(env!("CARGO_PKG_VERSION").to_owned());
     manifest.announcement_tag = dist.announcement_tag.clone();
     manifest.announcement_is_prerelease = dist.announcement_is_prerelease;

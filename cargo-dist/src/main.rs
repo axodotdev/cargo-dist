@@ -156,7 +156,8 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
                 .blue()
                 .apply_to(format!("  {} {}", release.app_name, release.app_version))
         )?;
-        for artifact in &release.artifacts {
+        for artifact_id in &release.artifacts {
+            let artifact = &manifest.artifacts[artifact_id];
             // Print out the name or path of the artifact (path is more useful by noisier)
             if let Some(path) = &artifact.path {
                 // Try to highlight the actual filename for easier scanning
