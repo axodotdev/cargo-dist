@@ -66,14 +66,6 @@ pub struct Release {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub artifacts: Vec<Artifact>,
-    /// The title of the changelog for this release
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub changelog_title: Option<String>,
-    /// The body of the changelog for this release
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub changelog_body: Option<String>,
 }
 
 /// A distributable artifact that's part of a Release
@@ -166,9 +158,6 @@ pub enum ArtifactKind {
     /// Standalone Symbols/Debuginfo for a build
     #[serde(rename = "symbols")]
     Symbols,
-    /// Machine-readable metadata
-    #[serde(rename = "dist-metadata")]
-    DistMetadata,
     /// Installer
     #[serde(rename = "installer")]
     Installer,
