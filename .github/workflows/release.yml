@@ -45,6 +45,8 @@ jobs:
   # Create the Github Release™ so the packages have something to be uploaded to
   create-release:
     runs-on: ubuntu-latest
+    outputs:
+      has-releases: ${{ steps.create-release.outputs.has-releases }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -52,8 +54,8 @@ jobs:
       - name: Install Rust
         run: rustup update 1.67.1 --no-self-update && rustup default 1.67.1
       - name: Install cargo-dist
-        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease04/cargo-dist-v0.0.3-prerelease04-installer.sh | sh
-      - name: Create Release
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease05/cargo-dist-v0.0.3-prerelease05-installer.sh | sh
+      - id: create-release
         run: |
           cargo dist manifest --tag=${{ github.ref_name }} --artifacts=all --no-local-paths --output-format=json > dist-manifest.json
           echo "dist manifest ran successfully"
@@ -70,25 +72,31 @@ jobs:
           gh release upload ${{ github.ref_name }} dist-manifest.json
           echo "uploaded manifest!"
 
+          # Disable all the upload-artifacts tasks if we have no actual releases
+          HAS_RELEASES=$(cat dist-manifest.json | jq --raw-output ".releases != null")
+          echo "has-releases=$HAS_RELEASES" >> "$GITHUB_OUTPUT"
+
   # Build and packages all the things
   upload-artifacts:
+    # Let the initial task tell us to not run (currently very blunt)
     needs: create-release
+    if: ${{ needs.create-release.outputs.has-releases == 'true' }}
     strategy:
       matrix:
         # For these target platforms
         include:
         - os: ubuntu-20.04
           dist-args: --artifacts=global
-          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease04/cargo-dist-v0.0.3-prerelease04-installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease05/cargo-dist-v0.0.3-prerelease05-installer.sh | sh
         - os: macos-11
           dist-args: --artifacts=local --target=x86_64-apple-darwin
-          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease04/cargo-dist-v0.0.3-prerelease04-installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease05/cargo-dist-v0.0.3-prerelease05-installer.sh | sh
         - os: ubuntu-20.04
           dist-args: --artifacts=local --target=x86_64-unknown-linux-gnu
-          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease04/cargo-dist-v0.0.3-prerelease04-installer.sh | sh
+          install-dist: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease05/cargo-dist-v0.0.3-prerelease05-installer.sh | sh
         - os: windows-2019
           dist-args: --artifacts=local --target=x86_64-pc-windows-msvc
-          install-dist: irm  https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease04/cargo-dist-v0.0.3-prerelease04-installer.ps1 | iex
+          install-dist: irm  https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease05/cargo-dist-v0.0.3-prerelease05-installer.ps1 | iex
 
     runs-on: ${{ matrix.os }}
     env:
@@ -119,7 +127,9 @@ jobs:
 
   # Mark the Github Release™ as a non-draft now that everything has succeeded!
   publish-release:
+    # Only run after all the other tasks, but it's ok if upload-artifacts was skipped
     needs: [create-release, upload-artifacts]
+    if: ${{ always() && needs.create-release.result == 'success' && (needs.upload-artifacts.result == 'skipped' || needs.upload-artifacts.result == 'success') }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
