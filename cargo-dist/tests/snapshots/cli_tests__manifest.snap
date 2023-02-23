@@ -15,130 +15,137 @@ stdout:
       "app_name": "cargo-dist",
       "app_version": "1.0.0-FAKEVERSION",
       "artifacts": [
+        "cargo-dist-v1.0.0-FAKEVERSION-installer.sh",
+        "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1",
+        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz",
+        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
+        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.xz"
+      ]
+    }
+  ],
+  "artifacts": {
+    "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "install_hint": "# WARNING: this installer is experimental\nirm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-v1.0.0-FAKEVERSION-installer.ps1 | iex",
+      "description": "Install prebuilt binaries via powershell script"
+    },
+    "cargo-dist-v1.0.0-FAKEVERSION-installer.sh": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-installer.sh",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "install_hint": "# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-v1.0.0-FAKEVERSION-installer.sh | sh",
+      "description": "Install prebuilt binaries via shell script"
+    },
+    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ],
+      "assets": [
         {
-          "name": "cargo-dist-v1.0.0-FAKEVERSION-installer.sh",
-          "kind": "installer",
-          "target_triples": [
-            "x86_64-apple-darwin",
-            "x86_64-unknown-linux-gnu"
-          ],
-          "install_hint": "# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-v1.0.0-FAKEVERSION-installer.sh | sh",
-          "description": "Install prebuilt binaries via shell script"
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
         },
         {
-          "name": "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1",
-          "kind": "installer",
-          "target_triples": [
-            "x86_64-pc-windows-msvc"
-          ],
-          "install_hint": "# WARNING: this installer is experimental\nirm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-v1.0.0-FAKEVERSION-installer.ps1 | iex",
-          "description": "Install prebuilt binaries via powershell script"
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
         },
         {
-          "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz",
-          "kind": "executable-zip",
-          "target_triples": [
-            "x86_64-apple-darwin"
-          ],
-          "assets": [
-            {
-              "name": "LICENSE-APACHE",
-              "path": "LICENSE-APACHE",
-              "kind": "license"
-            },
-            {
-              "name": "LICENSE-MIT",
-              "path": "LICENSE-MIT",
-              "kind": "license"
-            },
-            {
-              "name": "README.md",
-              "path": "README.md",
-              "kind": "readme"
-            },
-            {
-              "name": "RELEASES.md",
-              "path": "RELEASES.md",
-              "kind": "changelog"
-            },
-            {
-              "name": "cargo-dist",
-              "path": "cargo-dist",
-              "kind": "executable"
-            }
-          ]
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
         },
         {
-          "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
-          "kind": "executable-zip",
-          "target_triples": [
-            "x86_64-pc-windows-msvc"
-          ],
-          "assets": [
-            {
-              "name": "LICENSE-APACHE",
-              "path": "LICENSE-APACHE",
-              "kind": "license"
-            },
-            {
-              "name": "LICENSE-MIT",
-              "path": "LICENSE-MIT",
-              "kind": "license"
-            },
-            {
-              "name": "README.md",
-              "path": "README.md",
-              "kind": "readme"
-            },
-            {
-              "name": "RELEASES.md",
-              "path": "RELEASES.md",
-              "kind": "changelog"
-            },
-            {
-              "name": "cargo-dist",
-              "path": "cargo-dist.exe",
-              "kind": "executable"
-            }
-          ]
+          "name": "RELEASES.md",
+          "path": "RELEASES.md",
+          "kind": "changelog"
         },
         {
-          "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.xz",
-          "kind": "executable-zip",
-          "target_triples": [
-            "x86_64-unknown-linux-gnu"
-          ],
-          "assets": [
-            {
-              "name": "LICENSE-APACHE",
-              "path": "LICENSE-APACHE",
-              "kind": "license"
-            },
-            {
-              "name": "LICENSE-MIT",
-              "path": "LICENSE-MIT",
-              "kind": "license"
-            },
-            {
-              "name": "README.md",
-              "path": "README.md",
-              "kind": "readme"
-            },
-            {
-              "name": "RELEASES.md",
-              "path": "RELEASES.md",
-              "kind": "changelog"
-            },
-            {
-              "name": "cargo-dist",
-              "path": "cargo-dist",
-              "kind": "executable"
-            }
-          ]
+          "name": "cargo-dist",
+          "path": "cargo-dist",
+          "kind": "executable"
+        }
+      ]
+    },
+    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "assets": [
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "RELEASES.md",
+          "path": "RELEASES.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "cargo-dist",
+          "path": "cargo-dist.exe",
+          "kind": "executable"
+        }
+      ]
+    },
+    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.xz": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "RELEASES.md",
+          "path": "RELEASES.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "cargo-dist",
+          "path": "cargo-dist",
+          "kind": "executable"
         }
       ]
     }
-  ]
+  }
 }
 
 stderr:

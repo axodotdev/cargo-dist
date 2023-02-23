@@ -41,6 +41,13 @@ expression: json_schema
         "null"
       ]
     },
+    "artifacts": {
+      "description": "The artifacts included in this Announcement, referenced by releases.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Artifact"
+      }
+    },
     "dist_version": {
       "description": "The version of cargo-dist that generated this",
       "type": [
@@ -291,7 +298,7 @@ expression: json_schema
           "description": "The artifacts for this release (zips, debuginfo, metadata...)",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Artifact"
+            "type": "string"
           }
         }
       }
