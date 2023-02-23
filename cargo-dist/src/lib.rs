@@ -598,6 +598,7 @@ fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
     }
     let mut new_profile = toml_edit::table();
     {
+        // For some detailed discussion, see: https://github.com/axodotdev/cargo-dist/issues/118
         let new_profile = new_profile.as_table_mut().unwrap();
         // We're building for release, so this is a good base!
         new_profile.insert("inherits", toml_edit::value("release"));
