@@ -1,4 +1,4 @@
-# cargo-dist
+# `cargo-dist`
 
 [![crates.io](https://img.shields.io/crates/v/cargo-dist.svg)](https://crates.io/crates/cargo-dist) [![docs](https://docs.rs/cargo-dist/badge.svg)](https://docs.rs/cargo-dist)
 ![Rust CI](https://github.com/axodotdev/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)
@@ -36,10 +36,7 @@ That said, the current version is Very Very Unstable And Experimental and the ex
   * [Updating Snapshots](#updating-snapshots)
   * [Cutting Releases](#cutting-releases)
 
-
-
 # Way-Too-Quick Start
-
 
 ```sh
 # install tools
@@ -81,11 +78,7 @@ cargo release 0.1.0
 
 (I left off the --execute flag from `cargo-release` so you won't actually break anything if you really did just copy paste that 😇)
 
-
-
-
 # Installation
-
 
 ## Install Prebuilt Binaries With cargo-binstall
 
@@ -95,7 +88,6 @@ cargo binstall cargo-dist --no-symlinks
 
 (Without `--no-symlinks` [this may fail on Windows](https://github.com/cargo-bins/cargo-binstall/issues/728))
 
-
 ## Build From Source With Cargo
 
 ```sh
@@ -103,7 +95,6 @@ cargo install cargo-dist --profile=dist
 ```
 
 (`--profile=dist` may get you a slightly more optimized binary.)
-
 
 ## Install From The AUR
 
@@ -160,11 +151,9 @@ If you want to just (re)generate the ci scripts, you can do:
 cargo dist generate-ci
 ```
 
-(This assumes you have set `ci = ["github"]` in your Cargo.toml, which you should do so that things like installers understand that Github Releases are a place to fetch artifacts from. You *can* pass "github" to generate-ci to test it out, but it won't persist. Maybe that UX should be reworked.)
+> This assumes you have set `ci = ["github"]` in the `[workspace.metadata.dist]` section of your `Cargo.toml`, which you should do so that things like installers understand that Github Releases are a place to fetch artifacts from. You *can* pass `-ci=github` to `cargo dist generate-ci` to test it out, but it won't persist. Maybe that UX should be reworked.
 
-See the next section ("Usage (CI)") for how the github workflow is triggered and what it does.
-
-
+See the [Usage (CI)](#usage-ci) section for how the Github workflow is triggered and what it does.
 
 ## Configuring Installers
 
@@ -177,8 +166,6 @@ cargo dist init --ci=github --installer=shell --installer=powershell
 
 This will result in `installer.sh` and `installer.ps1` being generated which fetch from a Github Release™️ and copy the binaries to `$HOME/.cargo/bin/` on the assumption that this is on your PATH. The scripts are currently brittle and won't properly tell Cargo about the installation (making `cargo uninstall` and some other commands behave incorrectly). As such they're currently only really appropriate for setting up temporary environments like CI without any other binaries. This will be improved in the future.
 
-
-
 ## Configuring Targets
 
 By default, `init` and `generate-ci` will assume you want to build for a "standard desktop suite of targets". This is currently:
@@ -189,18 +176,15 @@ By default, `init` and `generate-ci` will assume you want to build for a "standa
 
 (In The future arm64 counterparts and linux-musl will probably join this, but unfortunately we currently don't support cross-compilation.)
 
-If you would like to manually specify the targets, you can do this with `--target=...` which can be passed any number of times. If this flag is passed then the defaults will be cleared. 
+If you would like to manually specify the targets, you can do this with `--target=…` which can be passed any number of times. If this flag is passed then the defaults will be cleared. 
 
 Other commands like `cargo dist build` (bare `cargo dist`) will always default to only using the current host target, and may need more manual target specification. This is handled automatically if you're using dist's generated CI scripts.
 
 **cargo-dist does not currently support specifying additional targets based on different `--features` or anything else, this will change in the future. See [issue #22](https://github.com/axodotdev/cargo-dist/issues/22) for discussion.**
 
-
-
-
 # Usage (CI)
 
-Once you've completed setup (run `cargo dist init --ci=...`), you're ready to start cutting releases!
+Once you've completed setup (run `cargo dist init --ci=…`), you're ready to start cutting releases!
 
 The github workflow will trigger whenever you push a [git tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging) to the main branch of your repository that looks like a version number (`v1`, `v1.2.0`, `v0.1.0-prerelease2`, etc.).
 
@@ -224,9 +208,9 @@ cargo release 0.1.0
 
 > NOTE: this will do nothing unless you also pass `--execute`, this is omitted intentionally!
 
-> ALSO NOTE: if your application is part of a larger workspace, you may want to configure cargo-release with things like `shared-version` and `tag-name` to get the desired result. In the future the CI scripts we generate may be smarter and able to detect things like "partial publishes of the workspace". For now we assume you're always publishing the entire workspace!
+> ALSO NOTE: if your application is part of a larger workspace, you may want to configure `cargo release` with things like `shared-version` and `tag-name` to get the desired result. In the future the CI scripts we generate may be smarter and able to detect things like "partial publishes of the workspace". For now we assume you're always publishing the entire workspace!
 
-cargo-release will then automatically:
+`cargo release` will then automatically:
 
 1. Bump all your version numbers
 2. Make a git commit
@@ -244,14 +228,11 @@ When you *do* push a tag (and the commit it points to) the CI will take over and
 
 The reason we do this extra dance with drafts is that we don't want to notify anyone of the release until it's Complete, but also don't want to lose anything if some only some of the build tasks failed.
 
-
-
-
 # Usage (Local Builds)
 
 > When you run bare `cargo dist` this is actually a synonym for `cargo dist build`. For the sake of clarity these docs will prefer this longer form.
 
-The happy path of cargo-dist is to just have its generated CI scripts handle all the details for you, so you never *really* need to run `cargo dist build` if you're happy to leave it to the CI. But there's plenty of reasons to want to do a local build, or to just want to understand what the builds do, so here's the docs for that!
+The happy path of `cargo dist` is to just have its generated CI scripts handle all the details for you, so you never *really* need to run `cargo dist build` if you're happy to leave it to the CI. But there's plenty of reasons to want to do a local build, or to just want to understand what the builds do, so here's the docs for that!
 
 At a high level, `cargo dist build` will:
 
@@ -273,8 +254,6 @@ If you pass `--no-builds` you can make it skip cargo builds and just focus on ge
 If you run `cargo dist manifest --output-format=json` it will skip generating artifacts and just produce `dist-manifest.json`. Notably, if you pass every `--installer` and `--target` flag at once to this command you will get a unified manifest for everything you should produce on every platform. `--no-local-paths` will strip away the actual paths pointing into `target`, which would otherwise become giberish if the artifacts get moved to another system.
 
 For further details, see [Concepts](#concepts) and [Build Flags](#build-flags).
-
-
 
 # Concepts
 
@@ -309,9 +288,6 @@ A current key property of cargo-dist's design is that it can compute all of thes
 
 (Applications only really exist implicitly -- in practice cargo-dist on really ever talks about Releases, since that's just An Application With A Version, and we always have *some* version.)
 
-
-
-
 # Build Flags
 
 cargo-dist changes a bunch of the default build flags you would get with `cargo build --release`, so here's what we change and why!
@@ -342,7 +318,6 @@ In the future we'll probably also turn on these settings:
 
 In a similar vein to the `crt-static` change, we may also one day prefer `linux-musl` over `linux-gnu` to produce more portable binaries. Currently the only mechanism we have to do this is "try to run builds on Github's older linux images so the minimum glibc version isn't too high". This is a place where we lack expertese and welcome recommendations! (This is blocked on supporting cross-compilation.)
 
-
 # Compatibility With Other Tools
 
 cargo-dist can used totally standalone (well, you need Cargo), but is intended to be a cog in various machines. Here's some things that work well with it:
@@ -350,11 +325,6 @@ cargo-dist can used totally standalone (well, you need Cargo), but is intended t
 * CI Scripts should be automatically triggered by simple uses of [cargo-release](https://github.com/crate-ci/cargo-release)
 * If you set `repository` in your Cargo.toml, then [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) should automagically find, download, and install binaries from the Github Releases™️ we produce without any further configuration
 * FUTURE AXODOTDEV TOOL will be able to consume dist-manifest.json and DO COOL THINGS
-
-
-
-
-
 
 # Contributing
 
@@ -379,8 +349,6 @@ If you know you like the changes, just use `cargo insta accept` to auto-apply al
 (If you introduced brand-new snapshot tests you will also have to `git add` them!)
 
 > NOTE: when it succeeds, cargo-dist-schema's `emit` test will actually commit the results back to disk to `cargo-dist-schema/cargo-dist-schema.json` as a side-effect. This is a janky hack to make sure we have that stored and up to date at all times (the test also uses an insta snapshot but insta snapshots include an extra gunk header so it's not something we'd want to link end users). The file isn't even used for anything yet, I just want it to Exist because it seems useful and important. In the future we might properly host it and have our outputs link it via a `$schema` field.
-
-
 
 ## Cutting Releases
 
