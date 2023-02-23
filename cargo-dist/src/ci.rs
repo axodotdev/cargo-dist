@@ -25,13 +25,13 @@ pub fn generate_github_ci(dist: &DistGraph) -> Result<(), miette::Report> {
     std::fs::create_dir_all(&ci_dir)
         .into_diagnostic()
         .wrap_err("Failed to create ci dir")?;
-    let mut file = File::create(ci_file)
+    let mut file = File::create(&ci_file)
         .into_diagnostic()
         .wrap_err("Failed to create ci file")?;
     write_github_ci(&mut file, dist)
         .into_diagnostic()
         .wrap_err("Failed to write to CI file")?;
-    info!("successfully generated Github CI");
+    eprintln!("generated Github CI to {}", ci_file);
     Ok(())
 }
 
