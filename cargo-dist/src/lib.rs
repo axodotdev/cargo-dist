@@ -96,8 +96,6 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
         releases.push(Release {
             app_name: release.app_name.clone(),
             app_version: release.version.to_string(),
-            changelog_title: release.changelog_title.clone(),
-            changelog_body: release.changelog_body.clone(),
             artifacts,
         })
     }

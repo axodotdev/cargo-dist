@@ -92,21 +92,6 @@ expression: json_schema
           }
         },
         {
-          "description": "Machine-readable metadata",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "dist-metadata"
-              ]
-            }
-          }
-        },
-        {
           "description": "Installer",
           "type": "object",
           "required": [
@@ -308,20 +293,6 @@ expression: json_schema
           "items": {
             "$ref": "#/definitions/Artifact"
           }
-        },
-        "changelog_body": {
-          "description": "The body of the changelog for this release",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "changelog_title": {
-          "description": "The title of the changelog for this release",
-          "type": [
-            "string",
-            "null"
-          ]
         }
       }
     }
