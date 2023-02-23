@@ -1439,6 +1439,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         if let Some(changelog) = self.inner.announcement_changelog.as_ref() {
             gh_body.push_str("## Release Notes\n\n");
             gh_body.push_str(changelog);
+            gh_body.push_str("\n\n");
         }
 
         // Add the contents of each Release to the body
