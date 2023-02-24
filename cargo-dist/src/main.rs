@@ -11,7 +11,7 @@ use camino::Utf8PathBuf;
 use cargo_dist::*;
 use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
-use cli::{Cli, Commands, FakeCli, ManifestArgs, OutputFormat};
+use cli::{Cli, Commands, FakeCli, HelpMarkdownArgs, ManifestArgs, OutputFormat};
 use console::Term;
 use lazy_static::lazy_static;
 use miette::{Diagnostic, IntoDiagnostic};
@@ -134,6 +134,7 @@ fn real_main(cli: &Cli) -> Result<(), miette::Report> {
         Some(Commands::Init(args)) => cmd_init(cli, args),
         Some(Commands::GenerateCi(args)) => cmd_generate_ci(cli, args),
         Some(Commands::Manifest(args)) => cmd_manifest(cli, args),
+        Some(Commands::HelpMarkdown(args)) => cmd_help_md(cli, args),
         Some(Commands::Build(args)) => cmd_dist(cli, args),
         None => cmd_dist(cli, &cli.build_args),
     }
@@ -312,4 +313,154 @@ fn default_desktop_targets() -> Vec<String> {
         // "aarch64-pc-windows-msvc".to_owned(),
         // "aarch64-apple-darwin".to_owned(),
     ]
+}
+
+fn cmd_help_md(_args: &Cli, _sub_args: &HelpMarkdownArgs) -> Result<(), miette::Report> {
+    let mut out = Term::stdout();
+    print_help_markdown(&mut out).into_diagnostic()
+}
+
+/// Perform crimes on clap long_help to generate markdown docs
+fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
+    use clap::CommandFactory;
+
+    let app_name = "cargo-dist";
+    let pretty_app_name = "cargo dist";
+    // Make a new App to get the help message this time.
+
+    writeln!(out, "# {pretty_app_name} CLI manual")?;
+    writeln!(out)?;
+    writeln!(
+        out,
+        "> This manual can be regenerated with `{pretty_app_name} help-markdown`"
+    )?;
+    writeln!(out)?;
+
+    let mut fake_cli = FakeCli::command().term_width(0);
+    let full_command = fake_cli.get_subcommands_mut().next().unwrap();
+    full_command.build();
+    let mut todo = vec![full_command];
+    let mut is_full_command = true;
+
+    while let Some(command) = todo.pop() {
+        let mut help_buf = Vec::new();
+        command.write_long_help(&mut help_buf)?;
+        let help = String::from_utf8(help_buf).unwrap();
+
+        // First line is --version
+        let lines = help.lines();
+        // let version_line = lines.next().unwrap();
+        let subcommand_name = command.get_name();
+
+        if is_full_command {
+            // writeln!(out, "Version: `{version_line}`")?;
+            // writeln!(out)?;
+        } else {
+            // Give subcommands some breathing room
+            writeln!(out, "<br><br><br>")?;
+            writeln!(out, "## {pretty_app_name} {subcommand_name}")?;
+        }
+
+        let mut in_subcommands_listing = false;
+        let mut in_global_options = false;
+        let mut in_normal_options = false;
+        for line in lines {
+            if let Some(usage) = line.strip_prefix("Usage: ") {
+                writeln!(out, "### Usage:")?;
+                writeln!(out)?;
+                writeln!(out, "```")?;
+                writeln!(out, "{usage}")?;
+                writeln!(out, "```")?;
+                continue;
+            }
+
+            // Use a trailing colon to indicate a heading
+            if let Some(heading) = line.strip_suffix(':') {
+                if !line.starts_with(' ') {
+                    in_subcommands_listing = heading == "Commands";
+
+                    in_global_options = heading == "GLOBAL OPTIONS";
+                    in_normal_options = heading == "Options";
+
+                    writeln!(out, "### {heading}")?;
+
+                    if in_normal_options && is_full_command {
+                        writeln!(
+                            out,
+                            "This command is an alias for `cargo dist build`, refer to that\n"
+                        )?;
+                    }
+                    if in_global_options && !is_full_command {
+                        writeln!(
+                            out,
+                            "This subcommand accepts all the [global options](#global-options)"
+                        )?;
+                    }
+                    continue;
+                }
+            }
+
+            if in_normal_options && is_full_command {
+                // Skip normal options for the primary command
+                continue;
+            }
+            if in_global_options && !is_full_command {
+                // Skip global options for non-primary commands
+                continue;
+            }
+
+            if in_subcommands_listing && !line.starts_with("     ") {
+                // subcommand names are list items
+                let own_subcommand_name = line.trim();
+                if !own_subcommand_name.is_empty() {
+                    write!(
+                        out,
+                        "* [{own_subcommand_name}](#{app_name}-{own_subcommand_name}): "
+                    )?;
+                    continue;
+                }
+            }
+            // The rest is indented, get rid of that
+            let line = line.trim();
+
+            // argument names are subheadings
+            if line.starts_with("- ") {
+                // Do nothing it's a bullet
+            } else if line.starts_with('-') || line.starts_with('<') {
+                writeln!(out, "#### `{line}`")?;
+                continue;
+            }
+            if line == "[SYMBOLS_PATH_LEGACY]..." {
+                writeln!(out, "#### `{line}`")?;
+                continue;
+            }
+
+            // escape default/value strings
+            if line.starts_with('[') {
+                writeln!(out, "\\{line}  ")?;
+                continue;
+            }
+
+            // Normal paragraph text
+            writeln!(out, "{line}")?;
+        }
+        writeln!(out)?;
+
+        // The todo list is a stack, and processed in reverse-order, append
+        // these commands to the end in reverse-order so the first command is
+        // processed first (i.e. at the end of the list).
+        if subcommand_name != "help" {
+            todo.extend(
+                command
+                    .get_subcommands_mut()
+                    .filter(|cmd| !cmd.is_hide_set())
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .rev(),
+            );
+            is_full_command = false;
+        }
+    }
+
+    Ok(())
 }

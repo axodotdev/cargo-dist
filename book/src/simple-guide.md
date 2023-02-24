@@ -134,7 +134,7 @@ cargo publish --dry-run
 
 If both of those seem happy, you're ready to release! All we need to do is push up a commit that has the [Git Tag][git-tag] that [manifest][] suggested. As we've seen in previous sections, it's recommending "v0.1.0" for our example app, so let's use that:
 
-```
+```sh
 # Publish to a Github Release with cargo-dist
 git commit -am "Chore: Release 0.1.0"
 git tag "v0.1.0"

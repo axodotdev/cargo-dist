@@ -12,7 +12,7 @@ Usage: cargo dist [OPTIONS]
 
 Commands:
   build
-          Build distributables for the current platform
+          Build artifacts
   init
           Initialize default settings in your Cargo.toml
   generate-ci
@@ -28,9 +28,7 @@ Options:
           
           Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, MSIs...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
           
-          Having this distinction lets us run cargo-dist independently on multiple machines without collisions between the outputs, by invoking it with this kind of pattern:
-          
-          ``` linux-runner1 (get full manifest): cargo-dist manifest --artifacts=all --output-format=json linux-runner2 (get global artifacts): cargo-dist --artifacts=global linux-runner3 (get linux artifacts): cargo-dist --artifacts=local --target=x86_64-unknown-linux-gnu windows-runner (get windows artifacts): cargo-dist --artifacts=local --target=x86_64-pc-windows-msvc ```
+          Having this distinction lets us run cargo-dist independently on multiple machines without collisions between the outputs.
           
           If let unspecified, we will pick a fuzzier "host" mode that builds "as much as possible" for the local system. This mode is appropriate for local testing/debugging/demoing. If no --target flags are passed on the CLI then "host" mode will try to intelligently guess which targets to build for, which may include building targets that aren't defined in your metadata.dist config (since that config may exclude the current machine!).
           
@@ -39,14 +37,10 @@ Options:
           [default: host]
 
           Possible values:
-          - local:
-            Build target-specific artifacts like executable-zips, symbols, MSIs...
-          - global:
-            Build globally unique artifacts like curl-sh installers, npm packages, metadata...
-          - host:
-            Fuzzily build "as much as possible" for the host system
-          - all:
-            Build all the artifacts; only really appropriate for `cargo dist manifest`
+          - local:  Build target-specific artifacts like executable-zips and MSIs
+          - global: Build unique artifacts like curl-sh installers and npm packages
+          - host:   Fuzzily build "as much as possible" for the host system
+          - all:    Build all the artifacts; useful for `cargo dist manifest`
 
   -h, --help
           Print help information (use `-h` for a summary)
@@ -85,10 +79,8 @@ GLOBAL OPTIONS:
           If left unspecified we will use the values in [workspace.metadata.dist]. `cargo dist init` will persist the values you pass to that location.
 
           Possible values:
-          - shell:
-            Generates a shell script that fetches from your Artifact Download URL (Github Release for now)
-          - powershell:
-            Generates a shell script that fetches from your Artifact Download URL (Github Release for now)
+          - shell:      Generates a shell script that fetches/installs the right build
+          - powershell: Generates a powershell script that fetches/installs the right build
 
       --ci <CI>
           CI we want to support
