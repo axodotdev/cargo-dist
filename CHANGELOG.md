@@ -1,28 +1,25 @@
 # Version 0.0.3 (under development)
 
-**USE AT YOUR OWN RISK, SUPER ALPHA**
+A major overhaul has been done to the design to rationalize some improperly defined features/behaviours. When you update to this version **we recommend following these MIGRATION INSTRUCTIONS**:
 
-A major overhaul has been done to the design to rationalize some improperly defined features/behaviours, when you update to this version you will need to rerun `cargo dist init` (and need to generate-ci).
+1. (optional) delete `[profile.dist]` from your Cargo.toml
+2. run `cargo dist init --ci=github`
+3. run `cargo dist generate-ci`
 
-## Configuration (Cargo.toml)
+Performing Step 1 will result in Step 2 getting you our new recommended default profile; linux users were having issues with the debuginfo stuff.
 
-You can now persistently configure cargo-dist with `[workspace.metadata.dist]` in your root Cargo.toml, with the ability to override some settings per-package with `[package.metadata.dist]`.
+Step 2 will introduce default configuration to your Cargo.toml that's necessary for the new design to work reliably. You can add `--installer="shell` and `--installer="powershell" here if you want those to be setup automatically.
 
-The following settings can *only* be set in `[workspace]`:
+Step 3 will completely blow away your release.yml CI with the new design. The overall approach is the same but everything is more consistent and coherent.
 
-* cargo-dist-version: (Cargo SemVer format) specifies the desired version of cargo-dist for building the project. Currently only used when generating CI scripts. When you run `cargo dist init` the version you're using will be set here. If omitted, every time you run `cargo dist generate-ci` it will just bake in the version of cargo dist you are currently locally running.
-* rust-toolchain-version: (rustup toolchain format) species the desired version of rust/cargo for building the project. Currently only used when generating CI scripts. When you run `cargo dist init` we currently just select a hardcoded stable release (1.67.1). If omitted we will just select the "stable" toolchain (which will drift over time).
-* ci: a list of CI backends to support (currently only `["github"]` will work). This is used by `cargo dist generate-ci` so you no longer need to pass the flag every time. It's also used to detect the format to use for download URLs (for things like installer scripts).
+The new design is described in detail in [the new cargo-dist book](https://axodotdev.github.io/cargo-dist/)!
 
-The following settings can be set on either `[workspace]` or `[package]`, with the latter overriding the former:
 
-* dist: (bool, defaults to "undefined") whether this package's binaries should be visible to cargo-dist for the purposes of Releases. If undefined, we will defer to cargo's own publish=false config. Packages without binaries are always invisible to cargo-dist.
-* installers: (list of installer kinds) the default set of installers to generate for releases (currently only "shell" and "powershell" are defined)
-* targets: (list of rust-style target-triples) the default set of targets to use for releases (sort of, see the section on CLI configuration)
-* include: (list of paths relative to that Cargo.toml's dir) extra files to include in executable-zips (does not currently support directories or wildcards, individual files only)
-* auto-includes: (bool, defaults true) whether dist should add README/LICENSE/etc files to your executable-zips when it finds them.
+## Configuration 
 
-## Configuration (Artifact CLI flags)
+You can now include persistent configuration for cargo-dist in `[workspace.metadata.dist]` and `[package.metadata.dist]`. [See the book for details](https://axodotdev.github.io/cargo-dist/config.html#metadatadist).
+
+## Artifact Modes
 
 Previously cargo-dist had some vague notions of what it was supposed to do when you invoked it, because there were platform-specific artifacts like executable-zips but also more platform-agnostic ones like installer scripts. This result in flags like `--no-builds` with messy semantics and hacks to filter out artifacts we "don't want right now" in the CI scripts (`--no-builds` was is removed in this release, it was busted).
 
@@ -55,7 +52,7 @@ If you pass `--installer`, `--ci`, or `--target` this will replace the Cargo.tom
 **WARING!** If you specify --artifacts and --target, the selected targets can only be a *subset* of the ones defined in your Cargo.toml. This ensures `cargo dist --artifacts=global` has behaviour consistent with `cargo dist --artifacts=local --target=...`, as global artifacts need to be aware of all targets at once. "host" mode bypasses this restriction so that runs of cargo dist on developer machines can do *something* useful even if the Cargo.toml doesn't know about the host platform.
 
 
-## Configuration (Announcement/Release Selection)
+## Announcement/Release Selection
 
 There is also now a `--tag` flag for specifying the git tag to use for announcing a new release. This tag must have a specific format detailed below. The tag serves two purposes:
 
@@ -116,6 +113,7 @@ Release notes are now temporarily simplified for reliability:
 * Installers now properly handle packages that define multiple binaries (installing all of them, just like cargo-install)
 * Installers now properly know the Github Release they are going to point to (previously they would guess based on the version of the package which was broken in complicated workflows)
 * --installer=github-shell and --installer=github-powershell have had the "github-" prefix removed. They now generically use the concept of an "artifact download url" which will be configurable in the future (for now it only gets populated if ci=github is set and your workspace has a coherent definition for "repository" in its Cargo.tomls).
+* We will error out if you try to run `cargo dist generate-ci` and the `cargo-dist-version` in your config doesn't match the version you're currently running
 
 
 
