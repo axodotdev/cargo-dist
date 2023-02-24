@@ -9,7 +9,7 @@ Usage: cargo dist [OPTIONS]
        cargo dist <COMMAND>
 
 Commands:
-  build        Build distributables for the current platform
+  build        Build artifacts
   init         Initialize default settings in your Cargo.toml
   generate-ci  Generate CI scripts for orchestrating cargo-dist
   manifest     Generate the final build manifest without running any builds

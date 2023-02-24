@@ -18,7 +18,7 @@ pub enum FakeCli {
 
 #[derive(Args)]
 #[clap(version)]
-#[clap(bin_name = "cargo vet")]
+#[clap(bin_name = "cargo dist")]
 #[clap(args_conflicts_with_subcommands = true)]
 /// Shippable packaging for Rust.
 ///
@@ -109,7 +109,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Build distributables for the current platform
+    /// Build artifacts
     #[clap(disable_version_flag = true)]
     Build(BuildArgs),
     /// Initialize default settings in your Cargo.toml
@@ -124,10 +124,15 @@ pub enum Commands {
     /// the output of a build to be, so this may produce several paths
     /// to nowhere without the actual build to populate them!
     ///
-    /// Currently for uniformity this still requires --output-format=json
-    /// to actually produce any output -- should it?
+    /// This is most useful when paired with `--artifacts=all`.
     #[clap(disable_version_flag = true)]
     Manifest(ManifestArgs),
+    /// Print --help as markdown (for generating docs)
+    ///
+    /// The output of this is not stable or guaranteed.
+    #[clap(disable_version_flag = true)]
+    #[clap(hide = true)]
+    HelpMarkdown(HelpMarkdownArgs),
 }
 
 #[derive(Args)]
@@ -148,15 +153,7 @@ pub struct BuildArgs {
     /// which are made once per app (curl-sh installers, npm package, metadata...).
     ///
     /// Having this distinction lets us run cargo-dist independently on
-    /// multiple machines without collisions between the outputs, by invoking it with
-    /// this kind of pattern:
-    ///
-    /// ```
-    /// linux-runner1 (get full manifest): cargo-dist manifest --artifacts=all --output-format=json
-    /// linux-runner2 (get global artifacts): cargo-dist --artifacts=global
-    /// linux-runner3 (get linux artifacts): cargo-dist --artifacts=local --target=x86_64-unknown-linux-gnu
-    /// windows-runner (get windows artifacts): cargo-dist --artifacts=local --target=x86_64-pc-windows-msvc
-    /// ```
+    /// multiple machines without collisions between the outputs.
     ///   
     /// If let unspecified, we will pick a fuzzier "host" mode that builds "as much as possible"
     /// for the local system. This mode is appropriate for local testing/debugging/demoing.
@@ -175,13 +172,13 @@ pub struct BuildArgs {
 /// How we should select the artifacts to build
 #[derive(ValueEnum, Copy, Clone, Debug)]
 pub enum ArtifactMode {
-    /// Build target-specific artifacts like executable-zips, symbols, MSIs...
+    /// Build target-specific artifacts like executable-zips and MSIs
     Local,
-    /// Build globally unique artifacts like curl-sh installers, npm packages, metadata...
+    /// Build unique artifacts like curl-sh installers and npm packages
     Global,
     /// Fuzzily build "as much as possible" for the host system
     Host,
-    /// Build all the artifacts; only really appropriate for `cargo dist manifest`
+    /// Build all the artifacts; useful for `cargo dist manifest`
     All,
 }
 
@@ -203,6 +200,9 @@ pub struct InitArgs {}
 #[derive(Args)]
 pub struct GenerateCiArgs {}
 
+#[derive(clap::Args)]
+pub struct HelpMarkdownArgs {}
+
 /// A style of CI to generate
 #[derive(ValueEnum, Clone, Copy)]
 pub enum CiStyle {
@@ -222,9 +222,9 @@ impl CiStyle {
 /// A style of installer to generate
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum InstallerStyle {
-    /// Generates a shell script that fetches from your Artifact Download URL (Github Release for now)
+    /// Generates a shell script that fetches/installs the right build
     Shell,
-    /// Generates a shell script that fetches from your Artifact Download URL (Github Release for now)
+    /// Generates a powershell script that fetches/installs the right build
     Powershell,
 }
 

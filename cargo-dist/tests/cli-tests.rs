@@ -154,3 +154,17 @@ fn test_error_manifest() {
 
     assert!(!output.status.success(), "{}", output.status);
 }
+
+#[test]
+fn test_markdown_help() {
+    let output = Command::new(BIN)
+        .arg("dist")
+        .arg("help-markdown")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .unwrap();
+
+    insta::assert_snapshot!("markdown-help", format_outputs(&output));
+    assert!(output.status.success(), "{}", output.status);
+}
