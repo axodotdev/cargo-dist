@@ -236,15 +236,15 @@ CI will just invoke cargo-dist in the following sequence:
 [local-build-example]: img/local-build.png
 
 [binary targets]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
-[publish-false]: https://doc.rust-lang.org/cargo/reference/manifest.html?highlight=format#the-publish-field
-[config-dist]: TODO://link-the-dist-config-field
+[publish-false]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-publish-field
+[config-dist]: ./config.md#dist
 [cdylibs]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#library
 [cargo-conflicts]: https://github.com/rust-lang/cargo/issues/6313
-[announcements-section]: TODO://link-the-announcements-section
+[announcements-section]: #announcements-selecting-apps
 [rust-platform]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-[executable-zip]: TODO://link-the-dist-config-field
-[artifact-modes]: TODO://link-the-artifact-modes-section
-[defining-your-apps-section]: TODO://link-to-section
+[executable-zip]: ./artifacts.md#executable-zip
+[artifact-modes-section]: #artifact-modes-selecting-artifacts
+[defining-your-apps-section]: #defining-your-apps
 [cargo-metadata]: https://doc.rust-lang.org/cargo/commands/cargo-metadata.html
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
 [guide]: ./guide.html

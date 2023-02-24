@@ -40,7 +40,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 
 First let's talk about `[profile.dist]`. This is a custom [Cargo Profile][cargo-profile] that cargo-dist will use to build your app. If you want to, you can use it yourself by passing `--profile=dist` to cargo (i.e. `cargo run --profile=dist`). We define a separate profile from the normal "release" one so that you can be comfortable giving your Shippable Builds more aggressive settings without making local development too tedious.
 
-In this case the default profile cargo-dist recommends is essentially the same as --release (hence `inherits = "release"`), but with [thin LTO][thin-lto] enabled (`lto = "thin"`). This will make the build take longer, but produce more optimized builds. See ["tuning your build"][tuning] for more details.
+In this case the default profile cargo-dist recommends is essentially the same as --release (hence `inherits = "release"`), but with [thin LTO][thin-lto] enabled (`lto = "thin"`). This will make the build take longer, but produce more optimized builds.
 
 cargo-dist uses the existence of `[profile.dist]` in your Cargo.toml to detect if your project has been properly initialized, and will generally refuse to run other commands otherwise. Sorry but you can't delete the profile!
 
@@ -180,23 +180,22 @@ parse-changelog also has support for a special `# Unreleased` heading, but we do
 [way-too-quickstart]: ./way-too-quickstart.md
 [issues]: https://github.com/axodotdev/cargo-dist/issues
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[installers]: TODO://link-to-installers-info
+[installers]: ./artifacts.md#installers
 [bin]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
 [config]: ./config.html
 [cargo-release]: https://github.com/crate-ci/cargo-release
 [git-tag]: https://git-scm.com/book/en/v2/Git-Basics-Tagging
-[init]: TODO://link-to-init-command
-[generate-ci]: TODO://link-to-generate-ci-command
+[init]:  ./cli.md#cargo-dist-init
+[generate-ci]:  ./cli.md#cargo-dist-generate-ci
 [cargo-profile]: https://doc.rust-lang.org/cargo/reference/profiles.html
 [thin-lto]: https://doc.rust-lang.org/cargo/reference/profiles.html#lto
-[tunning]: TODO://link-to-tuning
 [workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table
 [rust-version]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field
 [rustup]: https://rustup.rs/
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [release-yml]: https://github.com/axodotdev/cargo-dist/blob/main/.github/workflows/release.yml
 [jq]: https://stedolan.github.io/jq/
-[manifest]: TODO://link-to-manifest-command
-[build]: TODO://link-to-build-command
-[artifact-modes]: TODO://link-to-artifact-modes
+[manifest]:  ./cli.md#cargo-dist-manifest
+[build]: ./cli.md#cargo-dist-build
+[artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
 [parse-changelog]: https://github.com/taiki-e/parse-changelog

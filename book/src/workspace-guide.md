@@ -72,5 +72,5 @@ These two modes support the following workflows:
 [crate]: https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html
 [crates-io]: https://crates.io/
 [bins]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
-[publish-config]: TODO://link-to-publish-config
-[dist-config]: TODO://link-to-dist-config
+[publish-config]: ./config.md#publish
+[dist-config]: ./config.md#dist

@@ -9,5 +9,6 @@
 - [Reference](./reference.md)
   - [Concepts](./concepts.md)
   - [Config](./config.md)
+  - [Artifacts](./artifacts.md)
   - [CLI Manual](./cli.md)
   - [dist-manifest.json](./schema.md)
