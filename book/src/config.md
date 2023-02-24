@@ -157,5 +157,5 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
 [semver-version]: https://docs.rs/semver/latest/semver/struct.Version.html
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-[executable-zips]: TODO://executable-zips
-[artifacts-modes]: TODO://link-concepts-artifact-modes-section
+[executable-zips]: ./artifacts.md#executable-zip
+[artifacts-modes]: ./concepts.md#artifact-modes-selecting-artifacts
