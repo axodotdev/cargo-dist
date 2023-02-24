@@ -107,7 +107,7 @@ jobs:
           cat dist-manifest.json
 
           # Parse out what we just built and upload it to the Github Release™
-          cat dist-manifest.json | jq --raw-output ".releases[].artifacts[].path" > uploads.txt
+          cat dist-manifest.json | jq --raw-output ".artifacts[]?.path | select( . != null )" > uploads.txt
           echo "uploading..."
           cat uploads.txt
           gh release upload ${{ github.ref_name }} $(cat uploads.txt)
