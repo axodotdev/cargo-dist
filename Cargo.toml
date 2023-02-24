@@ -11,7 +11,7 @@ tag-name = "v{{version}}"
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.0.3-prerelease08"
+cargo-dist-version = "0.0.3-prerelease09"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
 rust-toolchain-version = "1.67.1"
 # CI backends to support (see 'cargo dist generate-ci')
