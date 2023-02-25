@@ -8,7 +8,7 @@ A major overhaul has been done to the design to rationalize some improperly defi
 
 Performing Step 1 will result in Step 2 getting you our new recommended default profile; linux users were having issues with the debuginfo stuff.
 
-Step 2 will introduce default configuration to your Cargo.toml that's necessary for the new design to work reliably. You can add `--installer="shell` and `--installer="powershell" here if you want those to be setup automatically.
+Step 2 will introduce default configuration to your Cargo.toml that's necessary for the new design to work reliably. You can add `--installer=shell` and `--installer=powershell` here if you want those to be setup automatically.
 
 Step 3 will completely blow away your release.yml CI with the new design. The overall approach is the same but everything is more consistent and coherent.
 
