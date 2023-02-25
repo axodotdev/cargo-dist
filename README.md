@@ -21,12 +21,17 @@ for a rust project. This includes:
 
 Even though cargo-dist is primarily a tool for building and packaging applications (steps 2-4), we put a fair amount of effort into Generating Your CI Scripts For You because we want to be able to run things locally and know what the CI *should* do without actually running it. It also helps avoid needless vendor lock-in -- in an ideal world, migrating from Github to Gitlab or your own personal infra would be just one invocation of cargo-dist away!
 
-That said, the current version is Very Very Unstable And Experimental and the extra conveniences currently only work with Github CI and Github Releases™️!
+That said, the current version is Experimental and the extra conveniences currently only work with Github CI and Github Releases™️!
 
 # Read The Book!
 
 We've got all the docs you need over at the [cargo-dist book](https://axodotdev.github.io/cargo-dist/book/)!
 
+* [Introduction](https://axodotdev.github.io/cargo-dist/book/introduction.html)
+* [Install](https://axodotdev.github.io/cargo-dist/book/install.html)
+* [Way-Too-Quickstart](https://axodotdev.github.io/cargo-dist/book/way-too-quickstart.html)
+* [Guide](https://axodotdev.github.io/cargo-dist/book/guide.html)
+* [Reference](https://axodotdev.github.io/cargo-dist/book/reference.html)
 
 # Contributing
 
