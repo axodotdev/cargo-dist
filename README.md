@@ -25,7 +25,7 @@ That said, the current version is Very Very Unstable And Experimental and the ex
 
 # Read The Book!
 
-We've got all the docs you need over at the [cargo-dist book](https://axodotdev.github.io/cargo-dist)!
+We've got all the docs you need over at the [cargo-dist book](https://axodotdev.github.io/cargo-dist/book/)!
 
 
 # Contributing

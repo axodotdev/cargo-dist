@@ -12,12 +12,12 @@ Step 2 will introduce default configuration to your Cargo.toml that's necessary 
 
 Step 3 will completely blow away your release.yml CI with the new design. The overall approach is the same but everything is more consistent and coherent.
 
-The new design is described in detail in [the new cargo-dist book](https://axodotdev.github.io/cargo-dist/)!
+The new design is described in detail in [the new cargo-dist book](https://axodotdev.github.io/cargo-dist/book/)!
 
 
 ## Configuration 
 
-You can now include persistent configuration for cargo-dist in `[workspace.metadata.dist]` and `[package.metadata.dist]`. [See the book for details](https://axodotdev.github.io/cargo-dist/config.html#metadatadist).
+You can now include persistent configuration for cargo-dist in `[workspace.metadata.dist]` and `[package.metadata.dist]`. [See the book for details](https://axodotdev.github.io/cargo-dist/book/config.html#metadatadist).
 
 ## Artifact Modes
 
