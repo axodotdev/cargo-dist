@@ -1,0 +1,43 @@
+name: Web
+on:
+  push:
+    branches:
+      - main
+    workflow_run:
+      workflows: ["Release"]
+      types: 
+        - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+    - name: Install mdbook
+      run: |
+        mkdir mdbook
+        curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.14/mdbook-v0.4.14-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook
+        echo `pwd`/mdbook >> $GITHUB_PATH
+    - name: Run mdbook build
+      run: |
+        cd book
+        mdbook build
+    - name: Install and run oranda
+      run: |
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/download/v0.0.1/oranda-v0.0.1-installer.sh | sh
+        cd cargo-dist
+        oranda build
+    - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          branch: gh-pages
+          folder: cargo-dist/public
+          token: ${{ secrets.GITHUB_TOKEN }}
+          single-commit: true
