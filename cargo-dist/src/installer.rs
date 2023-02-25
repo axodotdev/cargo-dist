@@ -48,6 +48,18 @@ fn write_install_sh_script<W: std::io::Write>(
 
     let mut entries = String::new();
 
+    // If they have an x64 macos build but not an arm64 one, add a fallback entry
+    // to try to install x64 on arm64 and let rosetta deal with it
+    const X64_MACOS: &str = "x86_64-apple-darwin";
+    const ARM64_MACOS: &str = "aarch64-apple-darwin";
+    let has_x64_apple = artifacts
+        .iter()
+        .any(|a| a.target_triples.iter().any(|s| s == X64_MACOS));
+    let has_arm_apple = artifacts
+        .iter()
+        .any(|a| a.target_triples.iter().any(|s| s == ARM64_MACOS));
+    let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
+
     for artifact in artifacts {
         assert!(artifact.target_triples.len() == 1, "It's awesome you made multi-arch executable-zips, but now you need to implement support in the sh installer!");
         let target = &artifact.target_triples[0];
@@ -74,6 +86,15 @@ fn write_install_sh_script<W: std::io::Write>(
             .replace("{{BINS}}", &bins)
             .replace("{{ZIP_EXT}}", zip_ext);
         entries.push_str(&entry);
+
+        if do_rosetta_fallback && target == X64_MACOS {
+            let entry = platform_entry_template
+                .replace("{{TARGET}}", ARM64_MACOS)
+                .replace("{{ARTIFACT_NAME}}", artifact_name)
+                .replace("{{BINS}}", &bins)
+                .replace("{{ZIP_EXT}}", zip_ext);
+            entries.push_str(&entry);
+        }
     }
 
     let install_script = include_str!("installer.sh");
