@@ -3,7 +3,12 @@
 
 //! # cargo-dist
 //!
+//! This is the library at the core of the 'cargo dist' CLI. It currently mostly exists
+//! for the sake of internal documentation/testing, and isn't intended to be used by anyone else.
+//! That said, if you have a reason to use it, let us know!
 //!
+//! It's currently not terribly well-suited to being used as a pure library because it happily
+//! writes to stderr/stdout whenever it pleases. Suboptimal for a library.
 
 use std::{
     collections::{BTreeMap, HashMap},
