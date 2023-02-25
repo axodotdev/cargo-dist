@@ -37,11 +37,13 @@ paru -S cargo-dist
 Linux and macOS:
 
 ```sh
-curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2/installer.sh | sh
+# WARNING: this installer is experimental
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease10/cargo-dist-v0.0.3-prerelease10-installer.sh | sh
 ```
 
 Windows PowerShell:
 
 ```sh
-irm 'https://github.com/axodotdev/cargo-dist/releases/download/v0.0.2/installer.ps1' | iex
+# WARNING: this installer is experimental
+irm https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease10/cargo-dist-v0.0.3-prerelease10-installer.ps1 | iex
 ```
