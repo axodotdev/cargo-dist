@@ -79,9 +79,7 @@ Basically the one thing we can't deal with is you saying "I would like a single 
 
 Although you *could* use extremely careful versioning in conjuction with Unified Announcements to release a weird subset of the packages in your workspace, you really *shouldn't* because the Github Releases will be incoherent (v0.1.0 has these random packages, v0.2.0 has these other random packages... huh?), and you're liable to create painful tag collisions.
 
-**WARNING!** cargo-release *largely* already generates tags that express these exact semantics, except for one annoying corner case (that I've found so far): if you have a non-virtual workspace (the root Cargo.toml is an actual package with child packages), it will always try to tag releases of the root package with a Unified Tag, even when trying using `--workspace`. This will not play well with cargo-dist. Initial testing suggests virtual workspaces behave much better.
-
-**WARNING!** cargo-dist currently errors out if you provide a Singular tag for a library-only package (or a Unified Tag that selects only similarly unselectable packages). This is bad UX, but we need to figure out a story for what to do in that situation. (We could just make a Github Release with no artifacts, maybe still grab your Release Notes..?)
+**WARNING!** cargo-release *largely* already generates tags that express these exact semantics, except for one annoying corner case (that I've found so far): if you have a non-virtual workspace (the root Cargo.toml is an actual package with child packages), it will always try to tag releases of the root package with a Unified Tag, even when using `--workspace`. This will not play well with cargo-dist. Initial testing suggests virtual workspaces behave much better.
 
 ## Release Notes
 
