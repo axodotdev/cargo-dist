@@ -16,9 +16,9 @@ jobs:
       with:
         fetch-depth: 0
     - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      with:
+        toolchain: stable
+        override: true
     - name: Install mdbook
       run: |
         mkdir mdbook
