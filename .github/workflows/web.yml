@@ -34,10 +34,10 @@ jobs:
         cd cargo-dist
         oranda build
     - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          branch: gh-pages
-          folder: cargo-dist/public
-          token: ${{ secrets.GITHUB_TOKEN }}
-          single-commit: true
+      uses: JamesIves/github-pages-deploy-action@v4.4.1
+      if: ${{ github.ref == 'refs/heads/main' }}
+      with:
+        branch: gh-pages
+        folder: cargo-dist/public
+        token: ${{ secrets.GITHUB_TOKEN }}
+        single-commit: true
