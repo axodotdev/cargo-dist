@@ -40,6 +40,8 @@ Now here's the really important question you need to answer: **how do you want t
 
 ## Announcement Tags
 
+> See [the guide on using cargo-dist with cargo-release for more detailed documentation of how to tag your commits in various workspace configurations][cargo-release-guide]!
+
 When you push a Git Tag to your repository, cargo-dist's CI will try to create a single Announcement (A Github Release) for that tag. When you only have one Package that's a completely unambiguous operation. When you have multiple Packages we now need some way to disambiguate what you actually meant.
 
 1 Git Tag = 1 cargo-dist Announcement = 1 Github Release
@@ -58,11 +60,22 @@ These two modes support the following workflows:
 
 > NOTE: Although you *could* use extremely careful versioning in conjuction with Unified Announcements to release a weird subset of the packages in your workspace, you really *shouldn't* because the Github Releases will be incoherent (v0.1.0 has these random packages, v0.2.0 has these other random packages... huh?), and you're liable to create painful tag collisions.
 
-> NOTE: Normally cargo-dist will error out if the Announcement Tag selects no Apps, because it exists to build and distribute Apps and you just asked it to do nothing (which is probably a mistake). This would however create annoying CI errors if you just wanted to tag Individual Releases for your libraries. To make this more pleasant, **cargo-dist will produce a very minimal build-less Announcement (and therefore Github Release) if you explicitly request a Singular Announcement that matches a library-only package**. This feature is kind of half-baked, please let us know what you want to happen in this situation!
-
 **The need for a coherent Announcement Tag is so important that cargo-dist commands like "build" and "manifest" will error out if one isn't provided and it can't be guessed.** If that happens you may need to pass an explicit `--tag=...` flag to disambiguate. Being this strict helps catch problems before you push to CI.
 
 
+## Singular Library Hack
+
+Normally cargo-dist will error out if the Announcement Tag selects no Apps, because it exists to build and distribute Apps and you just asked it to do nothing (which is probably a mistake). This would however create annoying CI errors if you just wanted to tag releases for your libraries.
+
+For 0.0.3 I opted for this kind of weird half-functionality:
+
+**cargo-dist will produce a very minimal build-less Announcement (and therefore Github Release) if you explicitly request a Singular Announcement that matches a library-only package**. This feature is kind of half-baked, please let us know what you want to happen in this situation!
+
+We'll probably have to add a config for specifying whether you want libraries to get Announcements or not when you push a singular tag for them.
+
+## Using cargo-release
+
+See [the dedicated guide to using cargo-release with cargo-dist][cargo-release-guide], which covers all sorts of nasty workspaces (it's also just a more useful in-depth look at ).
 
 
 [simple-guide]: ./simple-guide.html
@@ -74,3 +87,4 @@ These two modes support the following workflows:
 [bins]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
 [publish-config]: ./config.md#publish
 [dist-config]: ./config.md#dist
+[cargo-release-guide]: ./cargo-release-guide.md

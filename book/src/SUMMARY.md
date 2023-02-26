@@ -6,6 +6,7 @@
 - [Guide](./guide.md)
   - [A Simple Application](./simple-guide.md)
   - [More Complex Workspaces](./workspace-guide.md)
+  - [Using cargo-release](./cargo-release-guide.md)
 - [Reference](./reference.md)
   - [Concepts](./concepts.md)
   - [Config](./config.md)
