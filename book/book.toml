@@ -4,3 +4,7 @@ language = "en"
 multilingual = false
 src = "src"
 title = "cargo-dist"
+
+[output.html]
+git-repository-url = "https://github.com/axodotdev/cargo-dist"
+edit-url-template = "https://github.com/axodotdev/cargo-dist/edit/main/book/{path}"
