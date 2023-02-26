@@ -35,12 +35,58 @@ function Install-Binary($install_args) {
   $ErrorActionPreference = $old_erroractionpreference
 }
 
+function Get-TargetTriple() {
+  try {
+    # NOTE: this might return X64 on ARM64 Windows, which is OK since emulation is available.
+    # It works correctly starting in PowerShell Core 7.3 and Windows PowerShell in Win 11 22H2.
+    # Ideally this would just be
+    #   [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+    # but that gets a type from the wrong assembly on Windows PowerShell (i.e. not Core)
+    $a = [System.Reflection.Assembly]::LoadWithPartialName("System.Runtime.InteropServices.RuntimeInformation")
+    $t = $a.GetType("System.Runtime.InteropServices.RuntimeInformation")
+    $p = $t.GetProperty("OSArchitecture")
+    # Possible OSArchitecture Values: https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.architecture
+    # Rust supported platforms: https://doc.rust-lang.org/stable/rustc/platform-support.html
+    switch ($p.GetValue($null).ToString())
+    {
+      "X86" { return "i686-pc-windows-msvc" }
+      "X64" { return "x86_64-pc-windows-msvc" }
+      "Arm" { return "thumbv7a-pc-windows-msvc" }
+      "Arm64" { return "aarch64-pc-windows-msvc" }
+    }
+  } catch {
+    # The above was added in .NET 4.7.1, so Windows PowerShell in versions of Windows
+    # prior to Windows 10 v1709 may not have this API.
+    Write-Verbose "Get-TargetTriple: Exception when trying to determine OS architecture."
+    Write-Verbose $_
+  }
+
+  # This is available in .NET 4.0. We already checked for PS 5, which requires .NET 4.5.
+  Write-Verbose("Get-TargetTriple: falling back to Is64BitOperatingSystem.")
+  if ([System.Environment]::Is64BitOperatingSystem) {
+    return "x86_64-pc-windows-msvc"
+  } else {
+    return "i686-pc-windows-msvc"
+  }
+}
+
 function Download($download_url, $platforms) {
   # FIXME: make this something we lookup based on the current machine
-  $arch = "x86_64-pc-windows-msvc"
+  $arch = Get-TargetTriple
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # X64 is well-supported, including in emulation on ARM64
+    Write-Verbose "$arch is not availablem falling back to X64"
+    $arch = "x86_64-pc-windows-msvc"
+  }
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # should not be possible, as currently we always produce X64 binaries.
+    $platforms_json = ConvertTo-Json $platforms
+    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
+  }
 
   # Lookup what we expect this platform to look like
-  # FIXME: produce a nice error if $arch isn't found (or do fallback guesses?)
   $info = $platforms[$arch]
   $zip_ext = $info["zip_ext"]
   $bin_names = $info["bins"]
