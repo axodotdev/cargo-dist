@@ -4,7 +4,9 @@ Let's start with the kind of simple [Cargo Workspace][workspace] you would get f
 
 Our goal will be to setup a Github CI workflow that announces a new release of our application with a Github Release. The workflow will also build our application for the 3 major desktop platforms, wrap the binaries in zips/tarballs, and upload them to the Github Release. The Github Release's text will also include the relevant release notes from our RELEASES.md file.
 
-The workflow will be triggered whenever you push a [Git Tag][git-tag] specifying the application's new version, like "v1.0.0". Don't worry, you won't need to write those workflows yourself, cargo-dist will generate them for you!
+The workflow will be triggered whenever you push a [Git Tag][git-tag] specifying the application's new version, like "v1.0.0". Don't worry, you won't need to write those workflows yourself, cargo-dist will generate them for you! 
+
+> TO BE EXTREMELY PEDANTIC: The workflow will trigger whenever Github sees that the git tag *and* the commit it refers to are part of the repo *and* the timestamp(?) of both(?) is *after* the commit that introduced the workflow's yml file. That last part is an absolute headache, and may require you to delete the tag *both locally and on github* if you created it before the workflow. Basically, setup cargo-dist *before* you start cutting releases!
 
 ## Setup
 
@@ -116,7 +118,7 @@ If you add `--output-format=json` you'll get a full machine-readable output inst
 
 ## Cutting Releases
 
-With all our one-time setup done, we're ready to cut a release! This can be streamlined a lot with [cargo-release][] which will do essentially everything we're about to go through with a single command, but it's helpful to understand the actual steps in case cargo-release doesn't fit your usecase or if you need to debug issues.
+With all our one-time setup done, we're ready to cut a release! This can be streamlined a lot with [cargo-release][] which will do essentially everything we're about to go through with a single command ([see the guide on that][cargo-release-guide]), but it's helpful to understand the actual steps in case cargo-release doesn't fit your usecase or if you need to debug issues.
 
 The first step is to do all the things you would do to prep a release: update docs, update release notes, bump version numbers in Cargo.tomls, run tests, and so on.
 
@@ -199,3 +201,4 @@ parse-changelog also has support for a special `# Unreleased` heading, but we do
 [build]: ./cli.md#cargo-dist-build
 [artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
 [parse-changelog]: https://github.com/taiki-e/parse-changelog
+[cargo-release-guide]: ./cargo-release-guide.md

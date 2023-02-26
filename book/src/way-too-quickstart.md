@@ -30,9 +30,11 @@ The important parts of "cut a release" are that you update the crates you want t
 
 At this point you're done! The generated CI script should pick up the ball and create a Github Release with all your builds over the next few minutes!
 
+
+
 ## Streamlining Cutting A Release
 
-You may have noticed "cut a release" still has a lot of tedious work. That's because we recommend using [cargo-release][] to streamline the last step, which in *simple workspaces* will do exactly the same thing as above:
+You may have noticed "cut a release" still has a lot of tedious work. That's because we recommend using [cargo-release][] to streamline the last step, which in *simple workspaces* will do exactly the same thing as above (but more robustly):
 
 ```sh
 # install tools
@@ -50,9 +52,10 @@ cargo release 0.1.0
 
 (I left off the --execute flag from `cargo-release` so you won't accidentally break anything if you really did just copy paste that 😇)
 
-Now on to [the guide][] for all the nuance this section completely glossed over!
+For more details on using cargo-release with cargo-dist, see [the guide for that][cargo-release-guide].
 
 
 [cargo-release]: https://github.com/crate-ci/cargo-release
 [guide]: ./guide.md
 [install]: ./install.md
+[cargo-release-guide]: ./cargo-release-guide.md
