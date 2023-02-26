@@ -185,7 +185,7 @@ TLDR: this is a more complicated mess because but you *probably* want to make th
 ```toml
 # Add this config to your root Cargo.toml (main package)
 [package.metadata.release]
-tag-name = {{crate_name}}-v{{version}}
+tag-name = "{{crate_name}}-v{{version}}"
 ```
 
 ```sh
