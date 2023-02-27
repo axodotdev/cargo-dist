@@ -1,4 +1,4 @@
-# Version 0.0.3 (under development)
+# Version 0.0.3 (2023-02-27)
 
 A major overhaul has been done to the design to rationalize some improperly defined features/behaviours. When you update to this version **we recommend following these MIGRATION INSTRUCTIONS**:
 
