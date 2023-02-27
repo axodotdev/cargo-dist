@@ -38,12 +38,12 @@ Linux and macOS:
 
 ```sh
 # WARNING: this installer is experimental
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease12/cargo-dist-v0.0.3-prerelease12-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3/cargo-dist-v0.0.3-installer.sh | sh
 ```
 
 Windows PowerShell:
 
 ```sh
 # WARNING: this installer is experimental
-irm https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3-prerelease12/cargo-dist-v0.0.3-prerelease12-installer.ps1 | iex
+irm https://github.com/axodotdev/cargo-dist/releases/download/v0.0.3/cargo-dist-v0.0.3-installer.ps1 | iex
 ```
