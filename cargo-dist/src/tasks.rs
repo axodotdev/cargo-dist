@@ -339,6 +339,9 @@ pub struct DistGraph {
     /// The desired rust toolchain for handling this project
     pub desired_rust_toolchain: Option<String>,
     /// The desired ci backends for this project
+    pub tools: Tools,
+    /// The target triple of the current system
+    pub host_target: String,
 
     /// Styles of CI we want to support
     pub ci_style: Vec<CiStyle>,
@@ -367,6 +370,22 @@ pub struct DistGraph {
     pub variants: Vec<ReleaseVariant>,
     /// Logical releases that artifacts are grouped under
     pub releases: Vec<Release>,
+}
+
+/// Various tools we have found installed on the system
+#[derive(Debug, Clone, Default)]
+pub struct Tools {
+    /// rustup, useful for getting specific toolchains
+    pub rustup: Option<Tool>,
+}
+
+/// A tool we have found installed on the system
+#[derive(Debug, Clone, Default)]
+pub struct Tool {
+    /// The string to pass to Command::new
+    pub cmd: String,
+    /// The version the tool reported (in case useful)
+    pub version: String,
 }
 
 /// A binary we want to build (specific to a Variant)
@@ -399,6 +418,8 @@ pub struct Binary {
 pub enum BuildStep {
     /// Do a cargo build (and copy the outputs to various locations)
     Cargo(CargoBuildStep),
+    /// Run rustup to get a toolchain
+    Rustup(RustupStep),
     /// Copy a file
     CopyFile(CopyFileStep),
     /// Copy a dir
@@ -426,6 +447,15 @@ pub struct CargoBuildStep {
     pub rustflags: String,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+}
+
+/// A cargo build (and copy the outputs to various locations)
+#[derive(Debug)]
+pub struct RustupStep {
+    /// The rustup to invoke (mostly here to prove you Have rustup)
+    pub rustup: Tool,
+    /// The target to install
+    pub target: String,
 }
 
 /// zip/tarball some directory
@@ -805,6 +835,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         cargo: String,
         workspace: &'pkg_graph WorkspaceInfo<'pkg_graph>,
         artifact_mode: ArtifactMode,
+        host_target: String,
     ) -> Self {
         let target_dir = workspace.info.target_directory().to_owned();
         let workspace_dir = workspace.info.root().to_owned();
@@ -819,6 +850,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dist_dir,
                 desired_cargo_dist_version: workspace.desired_cargo_dist_version.clone(),
                 desired_rust_toolchain: workspace.desired_rust_toolchain.clone(),
+                tools: Tools::default(),
+                host_target,
                 announcement_tag: None,
                 announcement_is_prerelease: false,
                 announcement_changelog: None,
@@ -1248,7 +1281,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let mut build_steps = vec![];
         let cargo_builds = self.compute_cargo_builds();
-        build_steps.extend(cargo_builds.into_iter().map(BuildStep::Cargo));
+        build_steps.extend(cargo_builds.into_iter());
 
         for artifact in &self.inner.artifacts {
             match &artifact.kind {
@@ -1301,7 +1334,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.inner.build_steps = build_steps;
     }
 
-    fn compute_cargo_builds(&mut self) -> Vec<CargoBuildStep> {
+    fn compute_cargo_builds(&mut self) -> Vec<BuildStep> {
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
@@ -1332,7 +1365,22 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 rustflags.push_str(" -Ctarget-feature=+crt-static");
             }
 
-            builds.push(CargoBuildStep {
+            // If we're trying to cross-compile on macOS, ensure the rustup toolchain
+            // is setup!
+            if target.ends_with("apple-darwin")
+                && self.inner.host_target.ends_with("apple-darwin")
+                && target != self.inner.host_target
+            {
+                if let Some(rustup) = self.inner.tools.rustup.clone() {
+                    builds.push(BuildStep::Rustup(RustupStep {
+                        rustup,
+                        target: target.clone(),
+                    }));
+                } else {
+                    warn!("You're trying to cross-compile on macOS, but I can't find rustup to ensure you have the rust toolchains for it!")
+                }
+            }
+            builds.push(BuildStep::Cargo(CargoBuildStep {
                 target_triple: target.clone(),
                 // Just build the whole workspace for now
                 package: CargoTargetPackages::Workspace,
@@ -1344,7 +1392,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 rustflags,
                 profile: String::from(PROFILE_DIST),
                 expected_binaries: binaries,
-            });
+            }));
         }
         builds
     }
@@ -1522,9 +1570,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.inner.announcement_github_body = Some(gh_body);
     }
 
-    fn cargo(&self) -> &str {
-        &self.inner.cargo
-    }
     fn workspace(&self) -> &'pkg_graph WorkspaceInfo<'pkg_graph> {
         self.workspace
     }
@@ -1595,7 +1640,9 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     let cargo = cargo()?;
     let package_graph = package_graph(&cargo)?;
     let workspace = workspace_info(&package_graph)?;
-    let mut graph = DistGraphBuilder::new(cargo, &workspace, cfg.artifact_mode);
+    let host_target = get_host_target(&cargo)?;
+    let mut graph = DistGraphBuilder::new(cargo, &workspace, cfg.artifact_mode, host_target);
+    graph.inner.tools = tool_info();
 
     // First thing's first: if they gave us an announcement tag then we should try to parse it
     let mut announcing_package = None;
@@ -1643,7 +1690,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
 
     // If no targets were specified, just use the host target
-    let host_target_triple = [get_host_target(graph.cargo())?];
+    let host_target_triple = [];
     // If all targets specified, union together the targets our packages support
     // Note that this uses BTreeSet as an intermediate to make the order stable
     let all_target_triples = graph
@@ -2331,4 +2378,20 @@ fn try_extract_changelog_normalized(
     );
 
     Some((title.trim().to_string(), release_notes.notes.to_string()))
+}
+
+fn tool_info() -> Tools {
+    Tools {
+        rustup: find_tool("rustup"),
+    }
+}
+
+fn find_tool(name: &str) -> Option<Tool> {
+    let output = Command::new(name).arg("-V").output().ok()?;
+    let string_output = String::from_utf8(output.stdout).ok()?;
+    let version = string_output.lines().next()?;
+    Some(Tool {
+        cmd: name.to_owned(),
+        version: version.to_owned(),
+    })
 }
