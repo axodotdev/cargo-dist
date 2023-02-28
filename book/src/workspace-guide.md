@@ -28,7 +28,7 @@ Alright here's where things get a bit more complicated and you need to make a de
 How cargo-dist interprets multiple packages is actually fairly simple:
 
 * Each Package that defines binaries is considered an "App" with completely independent zips/installers
-* Each Package that doesn't define binaries is wholy irrelevant and ignored
+* Each Package that doesn't define binaries is wholly irrelevant and ignored
 
 If a Package defines binaries but you want cargo-dist to ignore it just like it does with library-only packages (i.e. because the binaries are for local testing), you can do that with either:
 
@@ -58,7 +58,7 @@ These two modes support the following workflows:
 * Releasing an individual App in a workspace with its own independent versioning (Singular)
 * Releasing several Apps in a workspace at once, but all independently (Push multiple Singular tags at once)
 
-> NOTE: Although you *could* use extremely careful versioning in conjuction with Unified Announcements to release a weird subset of the packages in your workspace, you really *shouldn't* because the Github Releases will be incoherent (v0.1.0 has these random packages, v0.2.0 has these other random packages... huh?), and you're liable to create painful tag collisions.
+> NOTE: Although you *could* use extremely careful versioning in conjunction with Unified Announcements to release a weird subset of the packages in your workspace, you really *shouldn't* because the Github Releases will be incoherent (v0.1.0 has these random packages, v0.2.0 has these other random packages... huh?), and you're liable to create painful tag collisions.
 
 **The need for a coherent Announcement Tag is so important that cargo-dist commands like "build" and "manifest" will error out if one isn't provided and it can't be guessed.** If that happens you may need to pass an explicit `--tag=...` flag to disambiguate. Being this strict helps catch problems before you push to CI.
 

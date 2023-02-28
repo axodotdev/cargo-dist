@@ -61,7 +61,7 @@ If you know you like the changes, just use `cargo insta accept` to auto-apply al
 
 cargo-dist is self-hosting, so just follow the usual [usage instructions](#usage-ci) and publish with `cargo release 1.0.0`! (Or whatever cooler version you prefer.)
 
-If that releases succeeds, we recommend updating the boostrap version of cargo-dist as a follow up:
+If that releases succeeds, we recommend updating the bootstrap version of cargo-dist as a follow up:
 
 * install the version of cargo-dist you just released by downloading the binary
 * edit cargo-dist-version in the root Cargo.toml to that version
