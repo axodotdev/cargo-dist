@@ -284,17 +284,11 @@ fn cmd_init(cli: &Cli, _args: &InitArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_generate_ci(cli: &Cli, _args: &GenerateCiArgs) -> Result<(), miette::Report> {
-    // This command is more automagic, so provide default targets if none are chosen
-    let targets = if cli.target.is_empty() {
-        default_desktop_targets()
-    } else {
-        cli.target.clone()
-    };
     let config = cargo_dist::Config {
         needs_coherent_announcement_tag: false,
         artifact_mode: cargo_dist::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
-        targets,
+        targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
