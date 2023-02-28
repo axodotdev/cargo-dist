@@ -15,5 +15,10 @@
         "crates.io": "cargo install cargo-dist"
     }
   },
-  "additional_css": ["oranda/cargo-dist.css"]
+  "additional_css": ["oranda/cargo-dist.css"],
+  "analytics": {
+    "plausible": {
+      "domain": "opensource.axo.dev"
+    }
+  }
 }
