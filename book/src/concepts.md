@@ -112,7 +112,7 @@ In this case the error notes two valid Unified Announcements:
 
 This tells us that evil-workspace and third-bin actually already agree on their Version. If we *do* want a Unified Announcement, we probably want to bring many-bin into agreement, or mark it as publish=false or dist=false.
 
-Although you *could* use extremely careful versioning in conjuction with Unified Announcements to release a weird subset of the packages in your workspace, you really *shouldn't* because the Github Releases will be incoherent (v0.1.0 has these random packages, v0.2.0 has these other random packages... huh?), and you're liable to create painful tag collisions.
+Although you *could* use extremely careful versioning in conjunction with Unified Announcements to release a weird subset of the packages in your workspace, you really *shouldn't* because the Github Releases will be incoherent (v0.1.0 has these random packages, v0.2.0 has these other random packages... huh?), and you're liable to create painful tag collisions.
 
 Normally cargo-dist will error out if the Announcement Tag selects no Apps, because it exists to build and distribute Apps and you just asked it to do nothing (which is probably a mistake). This would however create annoying CI errors if you just wanted to tag Individual Releases for your libraries. To make this more pleasant, **cargo-dist will produce a very minimal build-less Announcement (and therefore Github Release) if you explicitly request a Singular Announcement that matches a library-only package**. This feature is kind of half-baked, please let us know what you want to happen in this situation!
 

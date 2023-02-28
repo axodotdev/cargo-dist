@@ -89,7 +89,7 @@ This is a list of CI backends you want to support, allowing subsequent runs of [
 
 Example: `targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc"]`
 
-This is a list of [target platforms][platforms] you want your application(s) to be built for. In principle this can be overriden on a per-package basis but that is not well tested.
+This is a list of [target platforms][platforms] you want your application(s) to be built for. In principle this can be overridden on a per-package basis but that is not well tested.
 
 In v0.0.3 the only properly supported choices are:
 
@@ -105,13 +105,13 @@ By default all runs of `cargo-dist` will be trying to handle all platforms speci
 
 Example: `installers = ["shell", "powershell"]`
 
-This is a list of installers you want to be made for your application(s). In principle this can be overriden on a per-package basis but that is not well tested.
+This is a list of installers you want to be made for your application(s). In principle this can be overridden on a per-package basis but that is not well tested.
 
 The currently supported values are:
 
 * "shell" (global installer, one per app): a shell script that detects the current platform and fetches and installs binaries from the release's "Artifact Download URL". Ideal for `curl | sh` installation. Currently this always tries to install in `~/.cargo/bin/`.
 
-* "powershell" (global installer, one per app): a powershall script that detects the current platform and fetches and installs binaries from the release's "Artifact Download URL". Ideal for `irm | iex` installation (that's Windows' version of `curl | sh`). Currently this always tries to install in `~/.cargo/bin/`.
+* "powershell" (global installer, one per app): a powershell script that detects the current platform and fetches and installs binaries from the release's "Artifact Download URL". Ideal for `irm | iex` installation (that's Windows' version of `curl | sh`). Currently this always tries to install in `~/.cargo/bin/`.
 
 See "repository" for some discussion on the "Artifact Download URL".
 

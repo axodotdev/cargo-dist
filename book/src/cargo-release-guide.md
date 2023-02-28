@@ -8,7 +8,7 @@ cargo-dist intentionally doesn't handle these steps of cutting a release for you
 
 * updating the versions of your packages
 * writing your release notes
-* commiting the results
+* committing the results
 * tagging your commits
 * pushing to your repo
 * publishing to crates.io
@@ -21,12 +21,12 @@ That said, you might find [cargo-release][] useful because it can handle all of 
 
 ## cargo-release Basics
 
-> NOTE: cargo-release will never do anything side-effectful unless you also pass it `--execute`. Unless otherwise specified, we are discussing the behaviour when that flag is passed, but will be omiting it for safety/brevity.
+> NOTE: cargo-release will never do anything side-effectful unless you also pass it `--execute`. Unless otherwise specified, we are discussing the behaviour when that flag is passed, but will be omitting it for safety/brevity.
 
 In [a simple project][simple-guide] with one package, without any configuration set for cargo-release, the command `cargo release 1.0.0` is roughly sugar for:
 
 ```sh
-<does some basic checks for uncommited files and upstream being ahead>
+<does some basic checks for uncommitted files and upstream being ahead>
 <edits your Cargo.toml to have version 1.0.0>
 git commit -am "chore: Release my-app version 1.0.0"
 git tag v1.0.0
@@ -174,7 +174,7 @@ We need to tell it that we *really* meant it and pass `--workspace`!
 
 What's happening here is that `cargo-release` is conceptually defined to run on each package individually, with just the "git push" step being unified. The tagging settings we're providing work because it's basically repeatedly going "oh hey I was already going to make that tag, no need to make it again". It doesn't have a proper notion of the entire workspace being released in perfect lockstep, so if you ask it to release only some of the packages it will happily oblige.
 
-In the virtual workspace this Just Works because commands in the root directory are implicilty `--workspace`.
+In the virtual workspace this Just Works because commands in the root directory are implicitly `--workspace`.
 
 
 
