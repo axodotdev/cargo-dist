@@ -217,6 +217,7 @@ fn manifest_artifact(
 fn run_build_step(dist_graph: &DistGraph, target: &BuildStep) -> Result<()> {
     match target {
         BuildStep::Cargo(target) => build_cargo_target(dist_graph, target),
+        BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd),
         BuildStep::CopyFile(CopyFileStep {
             src_path,
             dest_path,
@@ -373,6 +374,23 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         }
     }
 
+    Ok(())
+}
+
+/// Build a cargo target
+fn rustup_toolchain(_dist_graph: &DistGraph, cmd: &RustupStep) -> Result<()> {
+    eprintln!("running rustup to ensure you have {} installed", cmd.target);
+    let status = Command::new(&cmd.rustup.cmd)
+        .arg("target")
+        .arg("add")
+        .arg(&cmd.target)
+        .status()
+        .into_diagnostic()
+        .wrap_err("Failed to install rustup toolchain")?;
+
+    if !status.success() {
+        return Err(miette!("Failed to install rustup toolchain"));
+    }
     Ok(())
 }
 
