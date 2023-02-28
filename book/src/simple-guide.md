@@ -165,9 +165,9 @@ Roughly speaking, the library is looking for something like:
 # <ignorable prefix> <version> <ignorable suffix>
 ```
 
-For instance in `# Version 1.0.0 (2022-03-01)`, the only really important part is the "1.0.0", which should exactly match the Cargo version of your package. If you want to see how your RELEASES/CHANGELOG file is interpretted you can install parse-changelog as a CLI and run it on the file to see what it thinks. In the future we'll have some better debugging tools for this.
+For instance in `# Version 1.0.0 (2022-03-01)`, the only really important part is the "1.0.0", which should exactly match the Cargo version of your package. If you want to see how your RELEASES/CHANGELOG file is interpreted you can install parse-changelog as a CLI and run it on the file to see what it thinks. In the future we'll have some better debugging tools for this.
 
-If you're publishing a Version with some prerelease bits like "1.0.0-prerelease.1", then we'll first look for that exact match in your RELEASES/CHANGELOG. If we can't find it we'll strip the prerelease/build suffic (in this case going back to "1.0.0") and check for that. If *that* finds a match we'll edit the heading to include the prerelease suffix when we include it in the Announcement. This lets you have a stable heading like `# Version 1.0.0 (under development)`, and prereleases will get headings like `# Version 1.0.0-prerelease.1 (under development)`.
+If you're publishing a Version with some prerelease bits like "1.0.0-prerelease.1", then we'll first look for that exact match in your RELEASES/CHANGELOG. If we can't find it we'll strip the prerelease/build suffix (in this case going back to "1.0.0") and check for that. If *that* finds a match we'll edit the heading to include the prerelease suffix when we include it in the Announcement. This lets you have a stable heading like `# Version 1.0.0 (under development)`, and prereleases will get headings like `# Version 1.0.0-prerelease.1 (under development)`.
 
 parse-changelog also has support for a special `# Unreleased` heading, but we don't yet use that. (We should!)
 

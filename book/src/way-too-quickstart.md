@@ -2,7 +2,7 @@
 
 This quickstart is a bit *too* quick because there's some important nuances to "announcing and building releases" that depend on the way you like to structure and version your workspace. This section will blatantly ignore those nuances and show you the Happiest Happy Path. Checkout [the guide][guide] for more details on what you should *actually* do.
 
-There are [many ways to install cargo-dist][install]. For simplicitly we'll use `cargo install` as that will work everywhere (*stares at NixOS users and people who think they should run desktop RISC-V*):
+There are [many ways to install cargo-dist][install]. For simplicity we'll use `cargo install` as that will work everywhere (*stares at NixOS users and people who think they should run desktop RISC-V*):
 
 ```sh
 # install tools

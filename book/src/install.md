@@ -1,7 +1,7 @@
 # Install
 
 Surprise! The tool for prebuilt shippable binaries has way too many ways to install it!
-Whichever way you choose to install it, it should be invokable as `cargo dist ...`. If you insist on invoking the binary directly as `cargo-dist` you must still add the extra `dist` arg and invoke it as `cargo-dist dist ...` (a quirk of the way cargo invokes subcommands).
+Whichever way you choose to install it, it should be invocable as `cargo dist ...`. If you insist on invoking the binary directly as `cargo-dist` you must still add the extra `dist` arg and invoke it as `cargo-dist dist ...` (a quirk of the way cargo invokes subcommands).
 
 ## Install Prebuilt Binaries With cargo-binstall
 
