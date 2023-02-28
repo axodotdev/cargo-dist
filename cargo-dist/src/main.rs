@@ -305,13 +305,15 @@ fn cmd_generate_ci(cli: &Cli, _args: &GenerateCiArgs) -> Result<(), miette::Repo
 
 fn default_desktop_targets() -> Vec<String> {
     vec![
+        // Everyone can build x64!
         "x86_64-unknown-linux-gnu".to_owned(),
         "x86_64-apple-darwin".to_owned(),
         "x86_64-pc-windows-msvc".to_owned(),
-        // cross-compiles not yet supported
+        // Apple is really easy to cross from Apple
+        "aarch64-apple-darwin".to_owned(),
+        // other cross-compiles not yet supported
         // "aarch64-gnu-unknown-linux".to_owned(),
         // "aarch64-pc-windows-msvc".to_owned(),
-        // "aarch64-apple-darwin".to_owned(),
     ]
 }
 
