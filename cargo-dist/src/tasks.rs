@@ -1690,7 +1690,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
 
     // If no targets were specified, just use the host target
-    let host_target_triple = [];
+    let host_target_triple = [graph.inner.host_target.clone()];
     // If all targets specified, union together the targets our packages support
     // Note that this uses BTreeSet as an intermediate to make the order stable
     let all_target_triples = graph
