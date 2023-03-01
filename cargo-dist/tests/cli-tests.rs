@@ -32,10 +32,12 @@ fn test_version() {
     let last = ver_parts.next().unwrap();
     if let Some((last, _prerelease)) = last.split_once('-') {
         last.parse::<u8>().unwrap();
+        if let Some(build) = ver_parts.next() {
+            build.parse::<u8>().unwrap();
+        }
     } else {
         last.parse::<u8>().unwrap();
     }
-
     assert!(ver_parts.next().is_none());
 }
 
@@ -82,7 +84,7 @@ fn test_manifest() {
 
     // We don't want this to churn every time we do a version bump
     insta::with_settings!({filters => vec![
-        (r"\d+\.\d+\.\d+(\-prerelease\d+)?", "1.0.0-FAKEVERSION"),
+        (r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?", "1.0.0-FAKEVERSION"),
         (r#""announcement_tag": .*"#, r#""announcement_tag": "CENSORED","#),
         (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
         (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
@@ -113,7 +115,7 @@ fn test_lib_manifest() {
 
     // We don't want this to churn every time we do a version bump
     insta::with_settings!({filters => vec![
-        (r"\d+\.\d+\.\d+(\-prerelease\d+)?", "1.0.0-FAKEVERSION"),
+        (r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?", "1.0.0-FAKEVERSION"),
         (r#""announcement_tag": .*"#, r#""announcement_tag": "CENSORED","#),
         (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
         (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
@@ -142,7 +144,7 @@ fn test_error_manifest() {
 
     // We don't want this to churn every time we do a version bump
     insta::with_settings!({filters => vec![
-        (r"\d+\.\d+\.\d+(\-prerelease\d+)?", "1.0.0-FAKEVERSION"),
+        (r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?", "1.0.0-FAKEVERSION"),
         (r#""announcement_tag": .*"#, r#""announcement_tag": "CENSORED","#),
         (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
         (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),

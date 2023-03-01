@@ -1,6 +1,5 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
-assertion_line: 92
 expression: format_outputs(&output)
 ---
 stdout:
@@ -18,7 +17,6 @@ stdout:
       "artifacts": [
         "cargo-dist-v1.0.0-FAKEVERSION-installer.sh",
         "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1",
-        "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.xz",
         "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz",
         "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
         "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.xz"
@@ -26,40 +24,6 @@ stdout:
     }
   ],
   "artifacts": {
-    "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.xz": {
-      "name": "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.xz",
-      "kind": "executable-zip",
-      "target_triples": [
-        "aarch64-apple-darwin"
-      ],
-      "assets": [
-        {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
-          "kind": "license"
-        },
-        {
-          "name": "README.md",
-          "path": "README.md",
-          "kind": "readme"
-        },
-        {
-          "name": "cargo-dist",
-          "path": "cargo-dist",
-          "kind": "executable"
-        }
-      ]
-    },
     "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1": {
       "name": "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1",
       "kind": "installer",
@@ -73,7 +37,6 @@ stdout:
       "name": "cargo-dist-v1.0.0-FAKEVERSION-installer.sh",
       "kind": "installer",
       "target_triples": [
-        "aarch64-apple-darwin",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu"
       ],
