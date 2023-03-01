@@ -50,7 +50,7 @@ git commit -am "wow shiny new cargo-dist CI!"
 cargo release 0.1.0
 ```
 
-(I left off the --execute flag from `cargo-release` so you won't accidentally break anything if you really did just copy paste that 😇)
+(I left off the `--execute` flag from `cargo-release` so you won't accidentally break anything if you really did just copy paste that 😇)
 
 For more details on using cargo-release with cargo-dist, see [the guide for that][cargo-release-guide].
 
