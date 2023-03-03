@@ -1,6 +1,6 @@
-# Version 0.0.4 (under development)
+# Version 0.0.4 (2023-03-03)
 
-This is a smaller release than originally planned to get some platform support that was blocking folks out the door.
+This is a smaller release than originally planned to get some platform support that was blocking folks out the door. Features that were originally planned for this one will ideally be part of the next release.
 
 * aarch64-apple-darwin ("apple silicon"/"arm64 macos") is now properly supported, and can be cross-compiled from x64 macos (and x64 can be crossed from arm64)
     * if you have rustup installed we will `rustup target add` before attempting the build, as this is the only requirement (thanks for making it easy, Apple!)
