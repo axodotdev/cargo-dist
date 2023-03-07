@@ -5,6 +5,7 @@
 use std::fs::File;
 
 use miette::{IntoDiagnostic, WrapErr};
+use newline_converter::dos2unix;
 use semver::Version;
 use tracing::{info, warn};
 
@@ -105,7 +106,7 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
         .replace("{{{{INSTALL_DIST_SH}}}}", &install_dist_sh)
         .replace("{{{{ARTIFACTS_MATRIX}}}}", &artifacts_matrix);
 
-    f.write_all(ci_yml.as_bytes())?;
+    f.write_all(dos2unix(&ci_yml).as_bytes())?;
 
     Ok(())
 }
