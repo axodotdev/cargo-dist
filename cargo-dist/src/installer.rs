@@ -5,6 +5,7 @@
 use std::fs::File;
 
 use miette::{Context, IntoDiagnostic};
+use newline_converter::{dos2unix, unix2dos};
 
 use crate::{DistGraph, InstallerInfo, ZipStyle};
 
@@ -104,7 +105,7 @@ fn write_install_sh_script<W: std::io::Write>(
         .replace("{{ARTIFACT_DOWNLOAD_URL}}", base_url)
         .replace("{{PLATFORM_INFO}}", &entries);
 
-    f.write_all(install_script.as_bytes())?;
+    f.write_all(dos2unix(&install_script).as_bytes())?;
 
     Ok(())
 }
@@ -186,7 +187,7 @@ fn write_install_ps_script<W: std::io::Write>(
         .replace("{{ARTIFACT_DOWNLOAD_URL}}", base_url)
         .replace("{{PLATFORM_INFO}}", &platform_info);
 
-    f.write_all(install_script.as_bytes())?;
+    f.write_all(unix2dos(&install_script).as_bytes())?;
 
     Ok(())
 }
