@@ -1,7 +1,7 @@
 [package]
 name = "cargo-dist-schema"
 description = "Schema information for cargo-dist's dist-manifest.json"
-version = "0.0.5-prerelease.2"
+version = "0.0.5"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
