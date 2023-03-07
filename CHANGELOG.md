@@ -1,3 +1,25 @@
+# Version 0.0.5 (2023-03-07)
+
+This is a bug-fix release for an issue with cross-platform line endings. Specifically
+folks reported in [#181] that they were seeing the Shell installer (for Mac and Linux)
+be generated with mixed CRLF and LF line endings, which was causing both functionality
+and development issues (git churn).
+
+For those unfamiliar- the line endings on Windows machines are different than those
+on Mac and Linux ones and it can cause a lot of unfortunate chaos.
+
+There are 2 styles of control characters to mark a line break in a text file:
+
+- `LF`, (`\n`), Linux/Mac: `LF` stands for "Line Feed"
+- `CRLF`, (`\r\n`), Windows: `CR` stands for "Carriage Return"
+
+The presence of CRLF line endings in a shell script will cause issues. Similarly LF
+line endings in a powershell script will cause issues. In some cases, users have
+had shell scripts generate with *some* CRLF line endings and so we are trying to
+fix that :)
+
+[181]: https://github.com/axodotdev/cargo-dist/issues/181
+
 # Version 0.0.4 (2023-03-03)
 
 This is a smaller release than originally planned to get some platform support that was blocking folks out the door. Features that were originally planned for this one will ideally be part of the next release.
