@@ -1,7 +1,8 @@
-# Version 0.0.5 (2023-03-07)
+# Version 0.0.5 (2023-03-15)
 
-This is a bug-fix release for an issue with cross-platform line endings. Specifically
-folks reported in [#181] that they were seeing the Shell installer (for Mac and Linux)
+This is a bug-fix release for an issue with cross-platform line endings that affected
+users who installed cargo-dist with `cargo install`. Prebuilt binaries were unaffected. 
+Specifically folks reported in [#181] that they were seeing the Shell installer (for Mac and Linux)
 be generated with mixed CRLF and LF line endings, which was causing both functionality
 and development issues (git churn).
 
@@ -14,9 +15,24 @@ There are 2 styles of control characters to mark a line break in a text file:
 - `CRLF`, (`\r\n`), Windows: `CR` stands for "Carriage Return"
 
 The presence of CRLF line endings in a shell script will cause issues. Similarly LF
-line endings in a powershell script will cause issues. In some cases, users have
-had shell scripts generate with *some* CRLF line endings and so we are trying to
-fix that :)
+line endings in a powershell script will cause issues. (Citation needed on the powershell
+thing but sure let's play it safe/idiomatic here.)
+
+The problem was that the `.crate` uploaded to crates.io had CRLF endings in some templates
+because `cargo publish` was run on windows and the git repo was configured to checkout files
+with platform-specific endings. The prebuilt binaries were checked out and built on linux
+(Github CI), and so only used LF endings.
+
+The reason we got *mixed* LF and CRLF is because the contents of the installer scripts come from
+mixed sources: the bulk comes from template files on disk, but a few key lines are injected
+programmatically by rust code with `writeln` (and `write` with manual `\n`). Note that Rust's
+println/writeln are guaranteed to emit LF on all platforms (because really CRLF should just be
+fazed out and platform-specific writeln would be a mess). This was good and desirable, the
+main screw up was the line endings in the stored template being forwarded verbatim instead
+of all being rewritten to LF.
+
+To be EXTRA SURE this doesn't happen in the future we just straight up rewrite all newlines
+before writing the final result, making the newlines stored in cargo-dist's git repo irrelevant.
 
 [181]: https://github.com/axodotdev/cargo-dist/issues/181
 
