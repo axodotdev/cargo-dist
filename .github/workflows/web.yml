@@ -3,10 +3,10 @@ on:
   push:
     branches:
       - main
-    workflow_run:
-      workflows: ["Release"]
-      types: 
-        - completed
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
 
 jobs:
   deploy:
@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-        ref: '84292f1db9e0ecade5ac47c924fb5706a8c46242'
+        ref: 'bbfa1d5c70d7d8a163b4ce2dda0a894e59ac8826'
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
