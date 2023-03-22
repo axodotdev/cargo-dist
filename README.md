@@ -45,7 +45,7 @@ test fails, you will need to use the `cargo insta` CLI tool to update them:
 cargo install cargo-insta
 ```
 
-One installed, you can review and accept the changes with:
+Once installed, you can review and accept the changes with:
 
 ```sh
 cargo insta review
