@@ -1,4 +1,8 @@
-use crate::{PackageInfo, Result, SortedMap, WorkspaceInfo, WorkspaceKind};
+//! Support for Cargo-based Rust projects
+
+use std::{collections::BTreeMap, fs::File, io::Read};
+
+use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8Path;
 use guppy::{
     graph::{BuildTargetId, DependencyDirection, PackageGraph, PackageMetadata},
@@ -6,6 +10,9 @@ use guppy::{
 };
 use miette::{miette, Context, IntoDiagnostic};
 use tracing::warn;
+
+/// All the [profile] entries we found in the root Cargo.toml
+pub type CargoProfiles = BTreeMap<String, CargoProfile>;
 
 /// Try to find a Cargo/Rust project at the given path
 ///
@@ -41,50 +48,18 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         return Err(miette!("couldn't find root workspace Cargo.toml"));
     }
 
-    /*
-    // Get the [workspace.metadata.dist] table, which can be set either in a virtual
-    // manifest or a root package (this code handles them uniformly).
+    let cargo_profiles = get_profiles(&manifest_path)?;
 
-       let mut workspace_config = workspace
-           .metadata_table()
-           .get(METADATA_DIST)
-           .map(DistMetadata::deserialize)
-           .transpose()
-           .into_diagnostic()
-           .wrap_err("couldn't parse [workspace.metadata.dist]")?
-           .unwrap_or_default();
-
-       let dist_profile = get_dist_profile(&manifest_path)
-           .map_err(|e| {
-               let err = e.wrap_err("failed to load [profile.dist] from toml");
-               info!("{:?}", err);
-           })
-           .ok();
-    */
+    let cargo_metadata_table = Some(workspace.metadata_table().clone());
     let workspace_root = workspace.root();
-    /*
-       workspace_config.make_relative_to(workspace_root);
-    */
     let root_auto_includes = crate::find_auto_includes(workspace_root)?;
 
     let mut repo_url_conflicted = false;
     let mut repo_url = None;
-    let mut all_package_info = SortedMap::new();
+    let mut all_package_info = vec![];
     for package in members.packages(DependencyDirection::Forward) {
-        let mut info = package_info(workspace_root, /*&workspace_config,*/ &package)?;
+        let mut info = package_info(workspace_root, &package)?;
 
-        // Check for global settings on local packages
-        /*
-               if info.config.cargo_dist_version.is_some() {
-                   warn!("package.metadata.dist.cargo-dist-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path());
-               }
-               if info.config.cargo_dist_version.is_some() {
-                   warn!("package.metadata.dist.rust-toolchain-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path());
-               }
-               if !info.config.ci.is_empty() {
-                   warn!("package.metadata.dist.ci is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path());
-               }
-        */
         // Apply root workspace's auto-includes
         crate::merge_auto_includes(&mut info, &root_auto_includes);
 
@@ -105,7 +80,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
             }
         }
 
-        all_package_info.insert(package.id().clone(), info);
+        all_package_info.push(info);
     }
 
     // Normalize trailing `/` on the repo URL
@@ -127,43 +102,19 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
 
         repository_url: repo_url,
         root_auto_includes,
-        /*
-
-        dist_profile,
-        desired_cargo_dist_version: workspace_config.cargo_dist_version,
-        desired_rust_toolchain: workspace_config.rust_toolchain_version,
-        ci_kinds: workspace_config.ci,
-        */
+        cargo_metadata_table,
+        cargo_profiles,
     })
 }
 
-fn package_info(
-    _workspace_root: &Utf8Path,
-    /*workspace_config: &DistMetadata,*/
-    package: &PackageMetadata,
-) -> Result<PackageInfo> {
-    // Is there a better way to get the path to sniff?
-    // Should we spider more than just package_root and workspace_root?
-    // Should we more carefully prevent grabbing LICENSES from both dirs?
-    // Should we not spider the workspace root for README since Cargo has a proper field for this?
-    // Should we check for a "readme=..." on the workspace root Cargo.toml?
+fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result<PackageInfo> {
     let manifest_path = package.manifest_path().to_owned();
     let package_root = manifest_path
         .parent()
         .expect("package manifest had no parent!?")
         .to_owned();
-    /*
-       let mut package_config = package
-           .metadata_table()
-           .get(METADATA_DIST)
-           .map(DistMetadata::deserialize)
-           .transpose()
-           .into_diagnostic()
-           .wrap_err("couldn't parse [package.metadata.dist]")?
-           .unwrap_or_default();
-       package_config.make_relative_to(package_root);
-       package_config.merge_workspace_config(workspace_config);
-    */
+    let cargo_package_id = Some(package.id().clone());
+    let cargo_metadata_table = Some(package.metadata_table().clone());
     let mut binaries = vec![];
     for target in package.build_targets() {
         let build_id = target.id();
@@ -174,7 +125,7 @@ fn package_info(
 
     let mut info = PackageInfo {
         name: package.name().to_owned(),
-        version: Some(package.version().to_string()),
+        version: Some(Version::Cargo(package.version().clone())),
         manifest_path,
         package_root: package_root.clone(),
         description: package.description().map(ToOwned::to_owned),
@@ -192,7 +143,8 @@ fn package_info(
             .collect(),
         changelog_file: None,
         binaries,
-        /*config: package_config,*/
+        cargo_metadata_table,
+        cargo_package_id,
     };
 
     // Find files we might want to auto-include
@@ -213,4 +165,77 @@ fn package_info(
     }
 
     Ok(info)
+}
+
+/// Load the root workspace toml into toml-edit form
+pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
+    // FIXME: this should really be factored out into some sort of i/o module
+    let mut workspace_toml_file = File::open(manifest_path)
+        .into_diagnostic()
+        .wrap_err("couldn't load root workspace Cargo.toml")?;
+    let mut workspace_toml_str = String::new();
+    workspace_toml_file
+        .read_to_string(&mut workspace_toml_str)
+        .into_diagnostic()
+        .wrap_err("couldn't read root workspace Cargo.toml")?;
+    workspace_toml_str
+        .parse::<toml_edit::Document>()
+        .into_diagnostic()
+        .wrap_err("couldn't parse root workspace Cargo.toml")
+}
+
+fn get_profiles(manifest_path: &Utf8Path) -> Result<BTreeMap<String, CargoProfile>> {
+    let mut profiles = CargoProfiles::new();
+    let workspace_toml = load_root_cargo_toml(manifest_path)?;
+    let Some(profiles_table) = &workspace_toml.get("profile").and_then(|t| t.as_table()) else {
+        // No table, empty return
+        return Ok(profiles)
+    };
+
+    for (profile_name, profile) in profiles_table.iter() {
+        // Get the fields we care about
+        let debug = profile.get("debug");
+        let split_debuginfo = profile.get("split-debuginfo");
+        let inherits = profile.get("inherits");
+
+        // clean up the true/false sugar for "debug"
+        let debug = debug.and_then(|debug| {
+            debug
+                .as_bool()
+                .map(|val| if val { 2 } else { 0 })
+                .or_else(|| debug.as_integer())
+        });
+
+        // Just capture these directly
+        let split_debuginfo = split_debuginfo
+            .and_then(|v| v.as_str())
+            .map(ToOwned::to_owned);
+        let inherits = inherits.and_then(|v| v.as_str()).map(ToOwned::to_owned);
+
+        let entry = CargoProfile {
+            inherits,
+            debug,
+            split_debuginfo,
+        };
+        profiles.insert(profile_name.to_owned(), entry);
+    }
+
+    Ok(profiles)
+}
+
+/// Parts of a [profile.*] entry in a Cargo.toml we care about
+#[derive(Debug, Clone)]
+pub struct CargoProfile {
+    /// What profile a custom profile inherits from
+    pub inherits: Option<String>,
+    /// Whether debuginfo is enabled.
+    ///
+    /// can be 0, 1, 2, true (=2), false (=0).
+    pub debug: Option<i64>,
+    /// Whether split-debuginfo is enabled.
+    ///
+    /// Can be "off", "packed", or "unpacked".
+    ///
+    /// If "packed" then we expect a pdb/dsym/dwp artifact.
+    pub split_debuginfo: Option<String>,
 }

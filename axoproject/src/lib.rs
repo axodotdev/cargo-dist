@@ -3,12 +3,15 @@
 //!
 //! The main entry point is [`get_project`][].
 
+#![deny(missing_docs)]
+
+use std::fmt::Display;
+
 use camino::{Utf8Path, Utf8PathBuf};
-use guppy::PackageId;
 use miette::{Context, IntoDiagnostic};
 use tracing::info;
 
-pub type SortedMap<K, V> = std::collections::BTreeMap<K, V>;
+/// Our version of a Result
 pub type Result<T> = std::result::Result<T, miette::Report>;
 
 #[cfg(feature = "npm-projects")]
@@ -40,7 +43,7 @@ pub struct WorkspaceInfo {
     ///
     /// This notably includes finding readmes and licenses even if the user didn't
     /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
-    pub package_info: SortedMap<PackageId, PackageInfo>,
+    pub package_info: Vec<PackageInfo>,
     /// Path to the root manifest of the workspace
     ///
     /// This can be either a Cargo.toml or package.json. In either case this manifest
@@ -56,22 +59,30 @@ pub struct WorkspaceInfo {
     ///
     /// This is currently what is use for top-level Announcement contents.
     pub root_auto_includes: AutoIncludes,
-    /*
-       info specific to cargo-dist -- should this crate handle them and oranda
-       just ignores them..? That would be good for web services that want to
-       understand both, right..?
+    /// Raw cargo `[workspace.metadata]` table
+    #[cfg(feature = "cargo-projects")]
+    pub cargo_metadata_table: Option<serde_json::Value>,
+    /// Any [profile.*] entries we found in the root Cargo.toml
+    #[cfg(feature = "cargo-projects")]
+    pub cargo_profiles: rust::CargoProfiles,
+}
 
-       /// The desired cargo-dist version for handling this project
-       pub desired_cargo_dist_version: Option<Version>,
-       /// The desired rust toolchain for handling this project
-       pub desired_rust_toolchain: Option<String>,
-       /// The desired ci backends for this project
-       pub ci_kinds: Vec<CiStyle>,
-       /// Contents of [profile.dist] in the root Cargo.toml
-       ///
-       /// This is used to determine if we expect split-debuginfo from builds.
-       pub dist_profile: Option<CargoProfile>,
-    */
+impl WorkspaceInfo {
+    /// Get a package
+    pub fn package(&self, idx: PackageIdx) -> &PackageInfo {
+        &self.package_info[idx.0]
+    }
+    /// Get a mutable package
+    pub fn package_mut(&mut self, idx: PackageIdx) -> &PackageInfo {
+        &mut self.package_info[idx.0]
+    }
+    /// Iterate over packages
+    pub fn packages(&self) -> impl Iterator<Item = (PackageIdx, &PackageInfo)> {
+        self.package_info
+            .iter()
+            .enumerate()
+            .map(|(i, k)| (PackageIdx(i), k))
+    }
 }
 
 /// Computed info about a package
@@ -101,7 +112,7 @@ pub struct PackageInfo {
     /// Probably we could get away with making it non-optional but allowing this
     /// theoretically lets npm users "kick the tires" even when they're not ready
     /// to publish.
-    pub version: Option<String>,
+    pub version: Option<Version>,
     /// A brief description of the package
     pub description: Option<String>,
     /// Authors of the package (may be empty)
@@ -160,10 +171,62 @@ pub struct PackageInfo {
     /// For Cargo this is currently properly computed in all its complexity.
     /// For JS we currently just assume every package defines a binary with its own name.
     pub binaries: Vec<String>,
-    /*
-    /// DistMetadata for the package (with workspace merged and paths made absolute)
-    pub config: DistMetadata,
-    */
+    /// Raw cargo `[package.metadata]` table
+    #[cfg(feature = "cargo-projects")]
+    pub cargo_metadata_table: Option<serde_json::Value>,
+    /// A unique id used by Cargo to refer to the package
+    #[cfg(feature = "cargo-projects")]
+    pub cargo_package_id: Option<guppy::PackageId>,
+}
+
+/// An id for a [`PackageInfo`][] entry in a [`WorkspaceInfo`][].
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PackageIdx(pub usize);
+
+/// A Version abstracted over project type
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Version {
+    /// cargo version
+    #[cfg(feature = "cargo-projects")]
+    Cargo(semver::Version),
+    /// npm version
+    #[cfg(feature = "npm-projects")]
+    Npm(node_semver::Version),
+}
+
+impl Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            #[cfg(feature = "cargo-projects")]
+            Version::Cargo(v) => v.fmt(f),
+            #[cfg(feature = "npm-projects")]
+            Version::Npm(v) => v.fmt(f),
+        }
+    }
+}
+
+impl Version {
+    /// Assume it's a cargo Version
+    #[cfg(feature = "cargo-projects")]
+    pub fn cargo(&self) -> &semver::Version {
+        #[allow(irrefutable_let_patterns)]
+        if let Version::Cargo(v) = self {
+            v
+        } else {
+            panic!("Version wasn't in the cargo format")
+        }
+    }
+
+    /// Assume it's an npm Version
+    #[cfg(feature = "npm-projects")]
+    pub fn npm(&self) -> &node_semver::Version {
+        #[allow(irrefutable_let_patterns)]
+        if let Version::Npm(v) = self {
+            v
+        } else {
+            panic!("Version wasn't in the npm format")
+        }
+    }
 }
 
 /// Various files we might want to auto-include
@@ -212,6 +275,12 @@ pub fn get_project(start_dir: &Utf8Path) -> Option<WorkspaceInfo> {
 /// This doesn't look at parent/child dirs, and doesn't factor in user provided paths.
 /// Handle those details by using [`merge_auto_includes`][] to merge the results into a [`PackageInfo`].
 pub fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
+    // Is there a better way to get the path to sniff?
+    // Should we spider more than just package_root and workspace_root?
+    // Should we more carefully prevent grabbing LICENSES from both dirs?
+    // Should we not spider the workspace root for README since Cargo has a proper field for this?
+    // Should we check for a "readme=..." on the workspace root Cargo.toml?
+
     let mut includes = AutoIncludes {
         readme: None,
         licenses: vec![],

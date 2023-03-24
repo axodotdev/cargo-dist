@@ -26,7 +26,7 @@ fn print_project(project: &WorkspaceInfo) {
     let disabled_sty = console::Style::new().dim();
     let enabled_sty = console::Style::new();
 
-    for pkg in project.package_info.values() {
+    for (_, pkg) in project.packages() {
         let pkg_name = &pkg.name;
 
         // Determine if this package's binaries should be Released

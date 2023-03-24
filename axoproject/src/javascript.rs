@@ -1,11 +1,12 @@
+//! Support for npm-based JavaScript projects
+
 use std::{fs::File, io::BufReader};
 
 use camino::{Utf8Path, Utf8PathBuf};
-use guppy::PackageId;
 use miette::{miette, Context, IntoDiagnostic};
 use oro_common::{Manifest, Repository};
 
-use crate::{PackageInfo, Result, SortedMap, WorkspaceInfo, WorkspaceKind};
+use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind};
 
 /// Try to find an npm/js project at the given path.
 ///
@@ -28,7 +29,7 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
     let package_name = manifest
         .name
         .expect("your package doesn't have a name, is it a workspace? We don't support that yet.");
-    let version = manifest.version.as_ref().map(|v| v.to_string());
+    let version = manifest.version.map(Version::Npm);
     let authors = manifest
         .author
         .and_then(|a| match a {
@@ -75,12 +76,14 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
         // FIXME: is there any JS equivalent to this?
         changelog_file: None,
         // FIXME: don't just assume this is a binary?
-        binaries: vec![package_name.clone()],
+        binaries: vec![package_name],
+        #[cfg(feature = "cargo-projects")]
+        cargo_metadata_table: None,
+        cargo_package_id: None,
     };
     crate::merge_auto_includes(&mut info, &root_auto_includes);
 
-    let mut package_info = SortedMap::new();
-    package_info.insert(PackageId::new(package_name), info);
+    let package_info = vec![info];
 
     Ok(WorkspaceInfo {
         kind: WorkspaceKind::Rust,
@@ -90,6 +93,10 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
         manifest_path,
         repository_url,
         root_auto_includes,
+        #[cfg(feature = "cargo-projects")]
+        cargo_metadata_table: None,
+        #[cfg(feature = "cargo-projects")]
+        cargo_profiles: crate::rust::CargoProfiles::new(),
     })
 }
 
