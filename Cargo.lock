@@ -69,6 +69,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 [[package]]
 name = "axo-project"
 version = "0.1.0"
+source = "git+https://github.com/axodotdev/axo-project/#d7620690b3061cd9107495b7f1cd8afbb14f977f"
 dependencies = [
  "camino",
  "console",
