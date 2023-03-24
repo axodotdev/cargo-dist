@@ -580,9 +580,7 @@ pub struct InitArgs {}
 
 /// Run 'cargo dist init'
 pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
-    let cargo = tasks::cargo()?;
-    let pkg_graph = tasks::package_graph(&cargo)?;
-    let workspace = tasks::workspace_info(&pkg_graph)?;
+    let workspace = tasks::get_project()?;
 
     // Load in the workspace toml to edit and write back
     let mut workspace_toml = tasks::load_root_cargo_toml(&workspace.manifest_path)?;

@@ -54,13 +54,9 @@ use std::{
     process::Command,
 };
 
+use axo_project::{PackageIdx, WorkspaceInfo};
 use camino::{Utf8Path, Utf8PathBuf};
-use guppy::{
-    graph::{
-        BuildTargetId, DependencyDirection, PackageGraph, PackageMetadata, PackageSet, Workspace,
-    },
-    MetadataCommand, PackageId,
-};
+use guppy::PackageId;
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -102,7 +98,7 @@ pub type SortedMap<K, V> = std::collections::BTreeMap<K, V>;
 pub type SortedSet<T> = std::collections::BTreeSet<T>;
 
 /// Contents of METADATA_DIST in Cargo.toml files
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct DistMetadata {
     /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
     ///
@@ -229,21 +225,6 @@ impl DistMetadata {
         self.include
             .extend(workspace_config.include.iter().cloned());
     }
-}
-
-/// Parts of a [profile.*] entry in a Cargo.toml we care about
-#[derive(Debug, Clone)]
-pub struct CargoProfile {
-    /// Whether debuginfo is enabled.
-    ///
-    /// can be 0, 1, 2, true (=2), false (=0).
-    pub debug: Option<i64>,
-    /// Whether split-debuginfo is enabled.
-    ///
-    /// Can be "off", "packed", or "unpacked".
-    ///
-    /// If "packed" then we expect a pdb/dsym/dwp artifact.
-    pub split_debuginfo: Option<String>,
 }
 
 /// Global config for commands
@@ -726,130 +707,61 @@ pub enum CargoTargetPackages {
     Package(PackageId),
 }
 
-/// Info on the current workspace
-pub struct WorkspaceInfo<'pkg_graph> {
-    /// Most info on the workspace.
-    pub info: Workspace<'pkg_graph>,
-    /// The workspace members.
-    pub members: PackageSet<'pkg_graph>,
-    /// Computed info about the packages beyond what Guppy tells us
-    ///
-    /// This notably includes finding readmes and licenses even if the user didn't
-    /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
-    pub package_info: SortedMap<&'pkg_graph PackageId, PackageInfo>,
-    /// Path to the Cargo.toml of the workspace (may be a package's Cargo.toml)
-    pub manifest_path: Utf8PathBuf,
-    /// If the manifest_path points to a package, this is the one.
-    ///
-    /// If this is None, the workspace Cargo.toml is a virtual manifest.
-    pub root_package: Option<PackageMetadata<'pkg_graph>>,
-    /// If the workspace root has some auto-includeable files, here they are!
-    ///
-    /// This is currently what is use for top-level Announcement contents.
-    pub root_auto_includes: AutoIncludes,
-    /// The desired cargo-dist version for handling this project
-    pub desired_cargo_dist_version: Option<Version>,
-    /// The desired rust toolchain for handling this project
-    pub desired_rust_toolchain: Option<String>,
-    /// The desired ci backends for this project
-    pub ci_kinds: Vec<CiStyle>,
-    /// Contents of [profile.dist] in the root Cargo.toml
-    ///
-    /// This is used to determine if we expect split-debuginfo from builds.
-    pub dist_profile: Option<CargoProfile>,
-    /// A consensus URL for the repo according the workspace
-    pub repo_url: Option<String>,
-}
-
-/// Computed info about the packages beyond what Guppy tells us
-///
-/// This notably includes finding readmes and licenses even if the user didn't
-/// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
-#[derive(Debug)]
-pub struct PackageInfo {
-    /// Name of the package
-    pub name: String,
-    /// Version of the package
-    pub version: Version,
-    /// A brief description of the package
-    pub description: Option<String>,
-    /// Authors of the package (may be empty)
-    pub authors: Vec<String>,
-    /// The license the package is provided under
-    pub license: Option<String>,
-    /// False if they set publish=false, true otherwise
-    pub publish: bool,
-    /// URL to the repository for this package
-    ///
-    /// This URL can be used by various CI/Installer helpers. In the future we
-    /// might also use it for auto-detecting "hey you're using github, here's the
-    /// recommended github setup".
-    ///
-    /// i.e. `--installer=shell` uses this as the base URL for fetching from
-    /// a Github Release™️.
-    pub repository_url: Option<String>,
-    /// URL to the homepage for this package.
-    ///
-    /// Currently this isn't terribly important or useful?
-    pub homepage_url: Option<String>,
-    /// URL to the documentation for this package.
-    ///
-    /// This will default to docs.rs if not specified, which is the default crates.io behaviour.
-    ///
-    /// Currently this isn't terribly important or useful?
-    pub documentation_url: Option<String>,
-    /// Path to the README file for this package.
-    ///
-    /// By default this should be copied into a zip containing this package's binary.
-    pub readme_file: Option<Utf8PathBuf>,
-    /// Paths to the LICENSE files for this package.
-    ///
-    /// By default these should be copied into a zip containing this package's binary.
-    ///
-    /// Cargo only lets you specify one such path, but that's because the license path
-    /// primarily exists as an escape hatch for someone's whacky-wild custom license.
-    /// But for our usecase we want to find those paths even if they're bog standard
-    /// MIT/Apache, which traditionally involves two separate license files.
-    pub license_files: Vec<Utf8PathBuf>,
-    /// Paths to the CHANGELOG or RELEASES file for this package
-    ///
-    /// By default this should be copied into a zip containing this package's binary.
-    ///
-    /// We will *try* to parse this
-    pub changelog_file: Option<Utf8PathBuf>,
-    /// Names of binaries this package defines
-    pub binaries: Vec<String>,
-    /// DistMetadata for the package (with workspace merged and paths made absolute)
-    pub config: DistMetadata,
-}
-
 struct DistGraphBuilder<'pkg_graph> {
     inner: DistGraph,
-    workspace: &'pkg_graph WorkspaceInfo<'pkg_graph>,
+    workspace: &'pkg_graph WorkspaceInfo,
     artifact_mode: ArtifactMode,
     binaries_by_id: FastMap<String, BinaryIdx>,
+    workspace_metadata: DistMetadata,
+    package_metadata: Vec<DistMetadata>,
 }
 
 impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     fn new(
         cargo: String,
-        workspace: &'pkg_graph WorkspaceInfo<'pkg_graph>,
+        workspace: &'pkg_graph WorkspaceInfo,
         artifact_mode: ArtifactMode,
         host_target: String,
     ) -> Self {
-        let target_dir = workspace.info.target_directory().to_owned();
-        let workspace_dir = workspace.info.root().to_owned();
+        let target_dir = workspace.target_dir.clone();
+        let workspace_dir = workspace.workspace_dir.clone();
         let dist_dir = target_dir.join(TARGET_DIST);
+
+        let dist_profile = workspace.cargo_profiles.get(PROFILE_DIST);
+        let mut workspace_metadata = parse_metadata_table(workspace.cargo_metadata_table.as_ref());
+        workspace_metadata.make_relative_to(&workspace.workspace_dir);
+        let desired_cargo_dist_version = workspace_metadata.cargo_dist_version.clone();
+        let desired_rust_toolchain = workspace_metadata.rust_toolchain_version.clone();
+
+        let mut package_metadata = vec![];
+        for package in &workspace.package_info {
+            let mut package_config = parse_metadata_table(package.cargo_metadata_table.as_ref());
+
+            // Check for global settings on local packages
+            if package_config.cargo_dist_version.is_some() {
+                warn!("package.metadata.dist.cargo-dist-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
+            }
+            if package_config.cargo_dist_version.is_some() {
+                warn!("package.metadata.dist.rust-toolchain-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
+            }
+            if !package_config.ci.is_empty() {
+                warn!("package.metadata.dist.ci is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
+            }
+
+            package_config.make_relative_to(&package.package_root);
+            package_config.merge_workspace_config(&workspace_metadata);
+            package_metadata.push(package_config);
+        }
 
         Self {
             inner: DistGraph {
-                is_init: workspace.dist_profile.is_some(),
+                is_init: dist_profile.is_some(),
                 cargo,
                 target_dir,
                 workspace_dir,
                 dist_dir,
-                desired_cargo_dist_version: workspace.desired_cargo_dist_version.clone(),
-                desired_rust_toolchain: workspace.desired_rust_toolchain.clone(),
+                desired_cargo_dist_version,
+                desired_rust_toolchain,
                 tools: Tools::default(),
                 host_target,
                 announcement_tag: None,
@@ -865,10 +777,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 variants: vec![],
                 releases: vec![],
             },
+            package_metadata,
+            workspace_metadata,
             workspace,
             binaries_by_id: FastMap::new(),
             artifact_mode,
         }
+    }
+
+    fn package_metadata(&self, idx: PackageIdx) -> &DistMetadata {
+        &self.package_metadata[idx.0]
     }
 
     fn set_ci_style(&mut self, style: Vec<CiStyle>) {
@@ -919,13 +837,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     fn add_binary(
         &mut self,
         to_variant: ReleaseVariantIdx,
-        pkg_id: &PackageId,
+        pkg_idx: PackageIdx,
         binary_name: String,
     ) {
         let variant = self.variant(to_variant);
-        let pkg_id = pkg_id.clone();
         let target = variant.target.clone();
-        let version = &self.workspace.package_info[&pkg_id].version;
+        let package = self.workspace.package(pkg_idx);
+        let version = package.version.as_ref().unwrap().cargo();
+        let pkg_id = package.cargo_package_id.clone().unwrap();
         let id = format!("{binary_name}-v{version}-{target}");
 
         // If we already are building this binary we don't need to do it again!
@@ -936,7 +855,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let idx = BinaryIdx(self.inner.binaries.len());
             let binary = Binary {
                 id,
-                pkg_id: pkg_id.clone(),
+                pkg_id,
                 name: binary_name,
                 target: variant.target.clone(),
                 copy_exe_to: vec![],
@@ -1570,7 +1489,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.inner.announcement_github_body = Some(gh_body);
     }
 
-    fn workspace(&self) -> &'pkg_graph WorkspaceInfo<'pkg_graph> {
+    fn workspace(&self) -> &'pkg_graph WorkspaceInfo {
         self.workspace
     }
     fn binary(&self, idx: BinaryIdx) -> &Binary {
@@ -1638,8 +1557,7 @@ impl DistGraph {
 pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     eprintln!("analyzing workspace:");
     let cargo = cargo()?;
-    let package_graph = package_graph(&cargo)?;
-    let workspace = workspace_info(&package_graph)?;
+    let workspace = crate::get_project()?;
     let host_target = get_host_target(&cargo)?;
     let mut graph = DistGraphBuilder::new(cargo, &workspace, cfg.artifact_mode, host_target);
     graph.inner.tools = tool_info();
@@ -1651,15 +1569,19 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     let mut announcement_tag = cfg.announcement_tag.clone();
     if let Some(tag) = &announcement_tag {
         // First check if it matches any package
-        for (pkg_id, package) in &workspace.package_info {
-            let package_tag = format!("{}-v{}", package.name, package.version);
+        for (pkg_id, package) in workspace.packages() {
+            let package_version = package.version.as_ref().unwrap().cargo();
+            let package_tag = format!("{}-v{}", package.name, package_version);
             if &package_tag == tag {
-                info!("announcement tag matched {pkg_id}");
+                info!(
+                    "announcement tag matched {}@{}",
+                    package.name, package_version
+                );
                 assert!(
                     announcing_package.is_none(),
                     "how on earth do you have two packages that match {package_tag}!?"
                 );
-                announcing_prerelease = !package.version.pre.is_empty();
+                announcing_prerelease = !package_version.pre.is_empty();
                 announcing_package = Some(pkg_id);
             }
         }
@@ -1684,7 +1606,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
 
     if cfg.ci.is_empty() {
-        graph.set_ci_style(workspace.ci_kinds.clone());
+        graph.set_ci_style(graph.workspace_metadata.ci.clone());
     } else {
         graph.set_ci_style(cfg.ci.clone());
     }
@@ -1695,9 +1617,8 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     // Note that this uses BTreeSet as an intermediate to make the order stable
     let all_target_triples = graph
         .workspace
-        .package_info
-        .iter()
-        .flat_map(|(_, info)| info.config.targets.iter().flatten())
+        .packages()
+        .flat_map(|(id, _)| graph.package_metadata(id).targets.iter().flatten())
         .collect::<SortedSet<_>>()
         .into_iter()
         .cloned()
@@ -1733,7 +1654,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     let disabled_sty = console::Style::new().dim();
     let enabled_sty = console::Style::new();
     let mut rust_releases = vec![];
-    for (pkg_id, pkg) in &workspace.package_info {
+    for (pkg_id, pkg) in workspace.packages() {
         let pkg_name = &pkg.name;
 
         // Determine if this package's binaries should be Released
@@ -1741,7 +1662,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         if pkg.binaries.is_empty() {
             // Nothing to publish if there's no binaries!
             disabled_reason = Some("no binaries".to_owned());
-        } else if let Some(do_dist) = pkg.config.dist {
+        } else if let Some(do_dist) = graph.package_metadata(pkg_id).dist {
             // If [metadata.dist].dist is explicitly set, respect it!
             if !do_dist {
                 disabled_reason = Some("dist = false".to_owned());
@@ -1749,7 +1670,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         } else if !pkg.publish {
             // Otherwise defer to Cargo's `publish = false`
             disabled_reason = Some("publish = false".to_owned());
-        } else if let Some(id) = &announcing_package {
+        } else if let Some(id) = announcing_package {
             // If we're announcing a package, reject every other package
             if pkg_id != id {
                 disabled_reason = Some(format!(
@@ -1758,7 +1679,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
                 ));
             }
         } else if let Some(ver) = &announcing_version {
-            if &pkg.version != ver {
+            if pkg.version.as_ref().unwrap().cargo() != ver {
                 disabled_reason = Some(format!(
                     "didn't match tag {}",
                     announcement_tag.as_ref().unwrap()
@@ -1788,7 +1709,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
         // If any binaries were accepted for this package, it's a Release!
         if !rust_binaries.is_empty() {
-            rust_releases.push((*pkg_id, rust_binaries));
+            rust_releases.push((pkg_id, rust_binaries));
         }
     }
     eprintln!();
@@ -1805,10 +1726,11 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
     // If we don't have a tag yet we MUST successfully select one here or fail
     if announcement_tag.is_none() {
-        let mut versions = SortedMap::<&Version, Vec<&PackageId>>::new();
-        for (pkg_id, _) in &rust_releases {
-            let info = &graph.workspace().package_info[pkg_id];
-            versions.entry(&info.version).or_default().push(pkg_id);
+        let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
+        for (pkg_idx, _) in &rust_releases {
+            let info = graph.workspace().package(*pkg_idx);
+            let version = info.version.as_ref().unwrap().cargo();
+            versions.entry(version).or_default().push(*pkg_idx);
         }
         if versions.len() == 1 {
             let version = *versions.first_key_value().unwrap().0;
@@ -1828,8 +1750,8 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             for (version, packages) in &versions {
                 write!(msg, "--tag=v{version} will Announce: ").unwrap();
                 let mut multi_package = false;
-                for pkg_id in packages {
-                    let info = &graph.workspace().package_info[pkg_id];
+                for &pkg_id in packages {
+                    let info = &graph.workspace().package(pkg_id);
                     if multi_package {
                         write!(msg, ", ").unwrap();
                     } else {
@@ -1840,9 +1762,13 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
                 writeln!(msg).unwrap();
             }
             msg.push('\n');
-            let some_pkg = versions.first_key_value().unwrap().1.first().unwrap();
-            let info = &graph.workspace().package_info[some_pkg];
-            let some_tag = format!("--tag={}-v{}", info.name, info.version);
+            let some_pkg = *versions.first_key_value().unwrap().1.first().unwrap();
+            let info = &graph.workspace().package(some_pkg);
+            let some_tag = format!(
+                "--tag={}-v{}",
+                info.name,
+                info.version.as_ref().unwrap().cargo()
+            );
             writeln!(
                 msg,
                 "you can also request any single package with {some_tag}"
@@ -1862,17 +1788,19 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     );
     graph.inner.announcement_tag = announcement_tag;
     graph.inner.announcement_is_prerelease = announcing_prerelease;
-    if let Some(repo_url) = workspace.repo_url.as_ref() {
+    if let Some(repo_url) = workspace.repository_url.as_ref() {
         let tag = graph.inner.announcement_tag.as_ref().unwrap();
         graph.inner.artifact_download_url = Some(format!("{repo_url}/releases/download/{tag}"));
     }
 
     // Create a Release for each package
-    for (pkg_id, binaries) in &rust_releases {
+    for (pkg_idx, binaries) in &rust_releases {
         // FIXME: make app name configurable? Use some other fields in the PackageMetadata?
-        let package_info = &graph.workspace().package_info[pkg_id];
+        let package_info = graph.workspace().package(*pkg_idx);
+        // FIXME: this clone is hacky but I'm in the middle of a nasty refactor
+        let package_config = graph.package_metadata(*pkg_idx).clone();
         let app_name = package_info.name.clone();
-        let version = package_info.version.clone();
+        let version = package_info.version.as_ref().unwrap().cargo().clone();
 
         // Create a Release for this binary
         let release = graph.add_release(app_name, version);
@@ -1880,8 +1808,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         // Create variants for this Release for each target
         for target in triples {
             let use_target = bypass_package_target_prefs
-                || package_info
-                    .config
+                || package_config
                     .targets
                     .as_deref()
                     .unwrap_or_default()
@@ -1896,11 +1823,11 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
             // Tell the variant to include this binary
             for binary in binaries {
-                graph.add_binary(variant, pkg_id, (*binary).clone());
+                graph.add_binary(variant, *pkg_idx, (*binary).clone());
             }
 
             // Add static assets
-            let auto_includes_enabled = package_info.config.auto_includes.unwrap_or(true);
+            let auto_includes_enabled = package_config.auto_includes.unwrap_or(true);
             if auto_includes_enabled {
                 if let Some(readme) = &package_info.readme_file {
                     graph.add_static_asset(variant, StaticAssetKind::Readme, readme.clone());
@@ -1912,7 +1839,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
                     graph.add_static_asset(variant, StaticAssetKind::License, license.clone());
                 }
             }
-            for static_asset in &package_info.config.include {
+            for static_asset in &package_config.include {
                 graph.add_static_asset(variant, StaticAssetKind::Other, static_asset.clone())
             }
         }
@@ -1921,11 +1848,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
         // Add installers to the Release
         let installers = if cfg.installers.is_empty() {
-            package_info
-                .config
-                .installers
-                .as_deref()
-                .unwrap_or_default()
+            package_config.installers.as_deref().unwrap_or_default()
         } else {
             &cfg.installers[..]
         };
@@ -1972,273 +1895,6 @@ pub fn get_host_target(cargo: &str) -> Result<String> {
     ))
 }
 
-/// Get the PackageGraph for the current workspace
-pub fn package_graph(cargo: &str) -> Result<PackageGraph> {
-    let mut metadata_cmd = MetadataCommand::new();
-    // guppy will source from the same place as us, but let's be paranoid and make sure
-    // EVERYTHING is DEFINITELY ALWAYS using the same Cargo!
-    metadata_cmd.cargo_path(cargo);
-
-    // FIXME?: add a bunch of CLI flags for this? Ideally we'd use clap_cargo
-    // but it wants us to use `flatten` and then we wouldn't be able to mark
-    // the flags as global for all subcommands :(
-    let pkg_graph = metadata_cmd
-        .build_graph()
-        .into_diagnostic()
-        .wrap_err("failed to read 'cargo metadata'")?;
-
-    Ok(pkg_graph)
-}
-
-/// Computes [`WorkspaceInfo`][] for the current workspace.
-pub fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
-    let workspace = pkg_graph.workspace();
-    let members = pkg_graph.resolve_workspace();
-
-    let manifest_path = workspace.root().join("Cargo.toml");
-    if !manifest_path.exists() {
-        return Err(miette!("couldn't find root workspace Cargo.toml"));
-    }
-    // If this is Some, then the root Cargo.toml is for a specific package and not a virtual (workspace) manifest.
-    // This affects things like [workspace.metadata] vs [package.metadata]
-    //
-    // FIXME: actually I think this works more uniformly than I thought and maybe we don't need to pay attention
-    // to this at all? The root package can still have [workspace.metadata] and in fact we're mandating that
-    // for "global" settings like ci/cargo-dist-version.
-    let root_package = members
-        .packages(DependencyDirection::Forward)
-        .find(|p| p.manifest_path() == manifest_path);
-
-    // Get the [workspace.metadata.dist] table, which can be set either in a virtual
-    // manifest or a root package (this code handles them uniformly).
-    let mut workspace_config = workspace
-        .metadata_table()
-        .get(METADATA_DIST)
-        .map(DistMetadata::deserialize)
-        .transpose()
-        .into_diagnostic()
-        .wrap_err("couldn't parse [workspace.metadata.dist]")?
-        .unwrap_or_default();
-
-    let dist_profile = get_dist_profile(&manifest_path)
-        .map_err(|e| {
-            let err = e.wrap_err("failed to load [profile.dist] from toml");
-            info!("{:?}", err);
-        })
-        .ok();
-
-    let workspace_root = workspace.root();
-    workspace_config.make_relative_to(workspace_root);
-
-    let root_auto_includes = find_auto_includes(workspace_root)?;
-
-    let mut repo_url_conflicted = false;
-    let mut repo_url = None;
-    let mut all_package_info = SortedMap::new();
-    for package in members.packages(DependencyDirection::Forward) {
-        let mut info = package_info(workspace_root, &workspace_config, &package)?;
-
-        // Check for global settings on local packages
-        if info.config.cargo_dist_version.is_some() {
-            warn!("package.metadata.dist.cargo-dist-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path());
-        }
-        if info.config.cargo_dist_version.is_some() {
-            warn!("package.metadata.dist.rust-toolchain-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path());
-        }
-        if !info.config.ci.is_empty() {
-            warn!("package.metadata.dist.ci is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path());
-        }
-
-        // Apply root workspace's auto-includes
-        merge_auto_includes(&mut info, &root_auto_includes);
-
-        // Try to find repo URL consensus
-        if !repo_url_conflicted {
-            if let Some(new_url) = &info.repository_url {
-                if let Some(cur_url) = &repo_url {
-                    if new_url == cur_url {
-                        // great! consensus!
-                    } else {
-                        warn!("your workspace has inconsistent values for 'repository', refusing to select one:\n  {}\n  {}", new_url, cur_url);
-                        repo_url_conflicted = true;
-                        repo_url = None;
-                    }
-                } else {
-                    repo_url = info.repository_url.clone();
-                }
-            }
-        }
-
-        all_package_info.insert(package.id(), info);
-    }
-
-    // Normalize trailing `/` on the repo URL
-    if let Some(repo_url) = &mut repo_url {
-        if repo_url.ends_with('/') {
-            repo_url.pop();
-        }
-    }
-
-    Ok(WorkspaceInfo {
-        info: workspace,
-        members,
-        package_info: all_package_info,
-        manifest_path,
-        root_package,
-        root_auto_includes,
-        dist_profile,
-        desired_cargo_dist_version: workspace_config.cargo_dist_version,
-        desired_rust_toolchain: workspace_config.rust_toolchain_version,
-        ci_kinds: workspace_config.ci,
-        repo_url,
-    })
-}
-
-fn package_info(
-    _workspace_root: &Utf8Path,
-    workspace_config: &DistMetadata,
-    package: &PackageMetadata,
-) -> Result<PackageInfo> {
-    // Is there a better way to get the path to sniff?
-    // Should we spider more than just package_root and workspace_root?
-    // Should we more carefully prevent grabbing LICENSES from both dirs?
-    // Should we not spider the workspace root for README since Cargo has a proper field for this?
-    // Should we check for a "readme=..." on the workspace root Cargo.toml?
-    let manifest_path = package.manifest_path();
-    let package_root = manifest_path
-        .parent()
-        .expect("package manifest had no parent!?");
-
-    let mut package_config = package
-        .metadata_table()
-        .get(METADATA_DIST)
-        .map(DistMetadata::deserialize)
-        .transpose()
-        .into_diagnostic()
-        .wrap_err("couldn't parse [package.metadata.dist]")?
-        .unwrap_or_default();
-    package_config.make_relative_to(package_root);
-    package_config.merge_workspace_config(workspace_config);
-
-    let mut binaries = vec![];
-    for target in package.build_targets() {
-        let build_id = target.id();
-        if let BuildTargetId::Binary(name) = build_id {
-            binaries.push(name.to_owned());
-        }
-    }
-
-    let mut info = PackageInfo {
-        name: package.name().to_owned(),
-        version: package.version().to_owned(),
-        description: package.description().map(ToOwned::to_owned),
-        authors: package.authors().to_vec(),
-        license: package.license().map(ToOwned::to_owned),
-        publish: !package.publish().is_never(),
-        repository_url: package.repository().map(ToOwned::to_owned),
-        homepage_url: package.homepage().map(ToOwned::to_owned),
-        documentation_url: package.documentation().map(ToOwned::to_owned),
-        readme_file: package.readme().map(|readme| package_root.join(readme)),
-        license_files: package
-            .license_file()
-            .map(ToOwned::to_owned)
-            .into_iter()
-            .collect(),
-        changelog_file: None,
-        binaries,
-        config: package_config,
-    };
-
-    // Find files we might want to auto-include
-    //
-    // This is kinda expensive so only bother doing it for things we MIGHT care about
-    if !info.binaries.is_empty() {
-        let auto_includes = find_auto_includes(package_root)?;
-        merge_auto_includes(&mut info, &auto_includes);
-    }
-
-    // If there's no documentation URL provided, default assume it's docs.rs like crates.io does
-    if info.documentation_url.is_none() {
-        info.documentation_url = Some(format!("https://docs.rs/{}/{}", info.name, info.version));
-    }
-
-    Ok(info)
-}
-
-/// Various files we might want to auto-include
-#[derive(Debug, Clone)]
-pub struct AutoIncludes {
-    /// README
-    pub readme: Option<Utf8PathBuf>,
-    /// LICENSE/UNLICENSE
-    pub licenses: Vec<Utf8PathBuf>,
-    /// CHANGELOG/RELEASES
-    pub changelog: Option<Utf8PathBuf>,
-}
-
-/// Find auto-includeable files in a dir
-fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
-    let entries = dir
-        .read_dir_utf8()
-        .into_diagnostic()
-        .wrap_err("Failed to read workspace dir")?;
-
-    let mut includes = AutoIncludes {
-        readme: None,
-        licenses: vec![],
-        changelog: None,
-    };
-
-    for entry in entries {
-        let entry = entry
-            .into_diagnostic()
-            .wrap_err("Failed to read workspace dir entry")?;
-        let meta = entry
-            .file_type()
-            .into_diagnostic()
-            .wrap_err("Failed to read workspace dir entry's metadata")?;
-        if !meta.is_file() {
-            continue;
-        }
-        let file_name = entry.file_name();
-        if file_name.starts_with("README") {
-            if includes.readme.is_none() {
-                let path = entry.path().to_owned();
-                info!("Found README at {}", path);
-                includes.readme = Some(path);
-            } else {
-                info!("Ignoring duplicate candidate README at {}", entry.path());
-            }
-        } else if file_name.starts_with("LICENSE") || file_name.starts_with("UNLICENSE") {
-            let path = entry.path().to_owned();
-            info!("Found LICENSE at {}", path);
-            includes.licenses.push(path);
-        } else if file_name.starts_with("CHANGELOG") || file_name.starts_with("RELEASES") {
-            if includes.changelog.is_none() {
-                let path = entry.path().to_owned();
-                info!("Found CHANGELOG at {}", path);
-                includes.changelog = Some(path);
-            } else {
-                info!("Ignoring duplicate candidate CHANGELOG at {}", entry.path());
-            }
-        }
-    }
-
-    Ok(includes)
-}
-
-fn merge_auto_includes(info: &mut PackageInfo, auto_includes: &AutoIncludes) {
-    if info.readme_file.is_none() {
-        info.readme_file = auto_includes.readme.clone();
-    }
-    if info.changelog_file.is_none() {
-        info.changelog_file = auto_includes.changelog.clone();
-    }
-    if info.license_files.is_empty() {
-        info.license_files = auto_includes.licenses.clone();
-    }
-}
-
 /// Load the root workspace toml into toml-edit form
 pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
     // FIXME: this should really be factored out into some sort of i/o module
@@ -2254,39 +1910,6 @@ pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Docum
         .parse::<toml_edit::Document>()
         .into_diagnostic()
         .wrap_err("couldn't parse root workspace Cargo.toml")
-}
-
-fn get_dist_profile(manifest_path: &Utf8Path) -> Result<CargoProfile> {
-    let workspace_toml = load_root_cargo_toml(manifest_path)?;
-    let dist_profile = &workspace_toml
-        .get("profile")
-        .and_then(|p| p.get(PROFILE_DIST));
-
-    let Some(dist_profile) = dist_profile else {
-        return Err(miette!("[profile.dist] didn't exist"));
-    };
-
-    // Get the fields we care about
-    let debug = dist_profile.get("debug");
-    let split_debuginfo = dist_profile.get("split-debuginfo");
-
-    // clean up the true/false sugar for "debug"
-    let debug = debug.and_then(|debug| {
-        debug
-            .as_bool()
-            .map(|val| if val { 2 } else { 0 })
-            .or_else(|| debug.as_integer())
-    });
-
-    // Just capture split-debuginfo directly
-    let split_debuginfo = split_debuginfo
-        .and_then(|v| v.as_str())
-        .map(ToOwned::to_owned);
-
-    Ok(CargoProfile {
-        debug,
-        split_debuginfo,
-    })
 }
 
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
@@ -2394,4 +2017,24 @@ fn find_tool(name: &str) -> Option<Tool> {
         cmd: name.to_owned(),
         version: version.to_owned(),
     })
+}
+
+fn parse_metadata_table(metadata_table: Option<&serde_json::Value>) -> DistMetadata {
+    metadata_table
+        .and_then(|t| t.get(METADATA_DIST))
+        .map(DistMetadata::deserialize)
+        .transpose()
+        .ok()
+        .unwrap_or_default()
+        .unwrap_or_default()
+}
+
+/// Get the general info about the project (via axo-project)
+pub fn get_project() -> Result<axo_project::WorkspaceInfo> {
+    let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
+    let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
+    let Some(project) = axo_project::get_project(&start_dir) else {
+        return Err(miette!("failed to find Cargo project in {start_dir}"));
+    };
+    Ok(project)
 }
