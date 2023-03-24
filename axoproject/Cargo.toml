@@ -1,0 +1,24 @@
+[package]
+name = "axo-project"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[features]
+default = ["cli"]
+cli = ["cargo-projects", "npm-projects"]
+cargo-projects = ["guppy"]
+npm-projects = ["oro-common"]
+
+[dependencies]
+camino = "1.1.4"
+console = "0.15.5"
+miette = "5.6.0"
+guppy = { version = "0.15.2", optional = true }
+tracing = "0.1.37"
+oro-common = { version = "0.3.11", optional = true }
+serde_json = "1.0.94"
+serde = "1.0.158"
+
