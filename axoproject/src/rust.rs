@@ -7,17 +7,21 @@ use guppy::{
 use miette::{miette, Context, IntoDiagnostic};
 use tracing::warn;
 
-pub fn get_project() -> Result<WorkspaceInfo> {
-    let graph = package_graph()?;
+/// Try to find a Cargo/Rust project at the given path
+///
+/// This relies on `cargo metadata` so will only work if you have `cargo` installed.
+pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
+    let graph = package_graph(start_dir)?;
     workspace_info(&graph)
 }
 
 /// Get the PackageGraph for the current workspace
-fn package_graph() -> Result<PackageGraph> {
+fn package_graph(start_dir: &Utf8Path) -> Result<PackageGraph> {
     let mut metadata_cmd = MetadataCommand::new();
 
     // We don't care about dependency information, and disabling it makes things much faster!
     metadata_cmd.no_deps();
+    metadata_cmd.current_dir(start_dir);
 
     let pkg_graph = metadata_cmd
         .build_graph()
@@ -37,9 +41,10 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         return Err(miette!("couldn't find root workspace Cargo.toml"));
     }
 
+    /*
     // Get the [workspace.metadata.dist] table, which can be set either in a virtual
     // manifest or a root package (this code handles them uniformly).
-    /*
+
        let mut workspace_config = workspace
            .metadata_table()
            .get(METADATA_DIST)
@@ -142,10 +147,11 @@ fn package_info(
     // Should we more carefully prevent grabbing LICENSES from both dirs?
     // Should we not spider the workspace root for README since Cargo has a proper field for this?
     // Should we check for a "readme=..." on the workspace root Cargo.toml?
-    let manifest_path = package.manifest_path();
+    let manifest_path = package.manifest_path().to_owned();
     let package_root = manifest_path
         .parent()
-        .expect("package manifest had no parent!?");
+        .expect("package manifest had no parent!?")
+        .to_owned();
     /*
        let mut package_config = package
            .metadata_table()
@@ -169,6 +175,8 @@ fn package_info(
     let mut info = PackageInfo {
         name: package.name().to_owned(),
         version: Some(package.version().to_string()),
+        manifest_path,
+        package_root: package_root.clone(),
         description: package.description().map(ToOwned::to_owned),
         authors: package.authors().to_vec(),
         license: package.license().map(ToOwned::to_owned),
@@ -191,7 +199,7 @@ fn package_info(
     //
     // This is kinda expensive so only bother doing it for things we MIGHT care about
     if !info.binaries.is_empty() {
-        let auto_includes = crate::find_auto_includes(package_root)?;
+        let auto_includes = crate::find_auto_includes(&package_root)?;
         crate::merge_auto_includes(&mut info, &auto_includes);
     }
 

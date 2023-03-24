@@ -1,3 +1,8 @@
+//! Shared code for gathering up information about a workspace, used by various axo.dev tools
+//! like cargo-dist and oranda.
+//!
+//! The main entry point is [`get_project`][].
+
 use camino::{Utf8Path, Utf8PathBuf};
 use guppy::PackageId;
 use miette::{Context, IntoDiagnostic};
@@ -21,26 +26,41 @@ pub enum WorkspaceKind {
 }
 
 /// Info on the current workspace
+///
+/// This can either be a cargo workspace or an npm workspace, the concepts
+/// are conflated to let users of axo-project handle things more uniformly.
 pub struct WorkspaceInfo {
+    /// The kinf of workspace this is (Rust or Javascript)
     pub kind: WorkspaceKind,
     /// The directory where build output will go (generally `target/`)
     pub target_dir: Utf8PathBuf,
     /// The root directory of the workspace (where the root Cargo.toml is)
     pub workspace_dir: Utf8PathBuf,
-    /// Computed info about the packages beyond what Guppy tells us
+    /// Computed info about the packages.
     ///
     /// This notably includes finding readmes and licenses even if the user didn't
     /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
     pub package_info: SortedMap<PackageId, PackageInfo>,
-    /// Path to the Cargo.toml of the workspace (may be a package's Cargo.toml)
+    /// Path to the root manifest of the workspace
+    ///
+    /// This can be either a Cargo.toml or package.json. In either case this manifest
+    /// may or may not represent a "real" package. Both systems have some notion of
+    /// "virtual" manifest which exists only to list the actual packages in the workspace.
     pub manifest_path: Utf8PathBuf,
-    /// A consensus URL for the repo according the workspace
+    /// A consensus URL for the repo according to the packages in the workspace
+    ///
+    /// If there are multiple packages in the workspace that specify a repository
+    /// but they disagree, this will be None.
     pub repository_url: Option<String>,
     /// If the workspace root has some auto-includeable files, here they are!
     ///
     /// This is currently what is use for top-level Announcement contents.
     pub root_auto_includes: AutoIncludes,
     /*
+       info specific to cargo-dist -- should this crate handle them and oranda
+       just ignores them..? That would be good for web services that want to
+       understand both, right..?
+
        /// The desired cargo-dist version for handling this project
        pub desired_cargo_dist_version: Option<Version>,
        /// The desired rust toolchain for handling this project
@@ -54,17 +74,33 @@ pub struct WorkspaceInfo {
     */
 }
 
-/// Computed info about the packages beyond what Guppy tells us
+/// Computed info about a package
 ///
 /// This notably includes finding readmes and licenses even if the user didn't
 /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
 #[derive(Debug)]
 pub struct PackageInfo {
+    /// Path to the manifest for this package
+    pub manifest_path: Utf8PathBuf,
+    /// Path to the root dir for this package
+    pub package_root: Utf8PathBuf,
     /// Name of the package
+    ///
+    /// This can actually be missing for JS packages, but in that case it's basically
+    /// the same thing as a "virtual manifest" in Cargo. PackageInfo is only for concrete
+    /// packages so we don't need to allow for that.
     pub name: String,
     /// Version of the package
     ///
-    /// If Cargo, this is a SemVer version
+    /// Both cargo and npm use SemVer but they disagree slightly on what that means:
+    ///
+    /// * cargo: https://crates.io/crates/semver
+    /// * npm: https://crates.io/crates/node-semver
+    ///
+    /// Cargo requires this field at all times, npm only requires it to publish.
+    /// Probably we could get away with making it non-optional but allowing this
+    /// theoretically lets npm users "kick the tires" even when they're not ready
+    /// to publish.
     pub version: Option<String>,
     /// A brief description of the package
     pub description: Option<String>,
@@ -73,6 +109,8 @@ pub struct PackageInfo {
     /// The license the package is provided under
     pub license: Option<String>,
     /// False if they set publish=false, true otherwise
+    ///
+    /// Currently always true for npm packages.
     pub publish: bool,
     /// URL to the repository for this package
     ///
@@ -80,7 +118,7 @@ pub struct PackageInfo {
     /// might also use it for auto-detecting "hey you're using github, here's the
     /// recommended github setup".
     ///
-    /// i.e. `--installer=shell` uses this as the base URL for fetching from
+    /// i.e. `cargo dist init --installer=shell` uses this as the base URL for fetching from
     /// a Github Release™️.
     pub repository_url: Option<String>,
     /// URL to the homepage for this package.
@@ -95,16 +133,21 @@ pub struct PackageInfo {
     pub documentation_url: Option<String>,
     /// Path to the README file for this package.
     ///
-    /// By default this should be copied into a zip containing this package's binary.
+    /// If the user specifies where this is, we'll respect it. Otherwise we'll try to find
+    /// this in the workspace using AutoIncludes.
     pub readme_file: Option<Utf8PathBuf>,
     /// Paths to the LICENSE files for this package.
     ///
     /// By default these should be copied into a zip containing this package's binary.
     ///
-    /// Cargo only lets you specify one such path, but that's because the license path
-    /// primarily exists as an escape hatch for someone's whacky-wild custom license.
-    /// But for our usecase we want to find those paths even if they're bog standard
-    /// MIT/Apache, which traditionally involves two separate license files.
+    /// If the user specifies where this is, we'll respect it. Otherwise we'll try to find
+    /// this in the workspace using AutoIncludes.
+    ///
+    /// Cargo only lets you specify one such path, but that's because its license-path
+    /// key primarily exists as an escape hatch for someone's whacky-wild custom license.
+    /// Ultimately Cargo's license-path is inadequate for Normal Licenses because it
+    /// can't handle the standard pattern of dual licensing MIT/Apache and having two
+    /// license files. AutoIncludes properly handles dual licensing.
     pub license_files: Vec<Utf8PathBuf>,
     /// Paths to the CHANGELOG or RELEASES file for this package
     ///
@@ -113,6 +156,9 @@ pub struct PackageInfo {
     /// We will *try* to parse this
     pub changelog_file: Option<Utf8PathBuf>,
     /// Names of binaries this package defines
+    ///
+    /// For Cargo this is currently properly computed in all its complexity.
+    /// For JS we currently just assume every package defines a binary with its own name.
     pub binaries: Vec<String>,
     /*
     /// DistMetadata for the package (with workspace merged and paths made absolute)
@@ -131,32 +177,59 @@ pub struct AutoIncludes {
     pub changelog: Option<Utf8PathBuf>,
 }
 
-pub fn get_project() -> Option<WorkspaceInfo> {
+/// Tries to find information about the project/workspace at the given path,
+/// walking up to ancestors as necessary.
+///
+/// This can be either a cargo project or an npm project. Support for each
+/// one is behind feature flags:
+///
+/// * cargo-projects
+/// * npm-projects
+///
+/// Concepts of both will largely be conflated, the only distinction will be
+/// the top level [`WorkspaceKind`][].
+pub fn get_project(start_dir: &Utf8Path) -> Option<WorkspaceInfo> {
+    // FIXME: should we provide and feedback/logging here?
     #[cfg(feature = "cargo-projects")]
-    if let Ok(project) = rust::get_project() {
+    if let Ok(project) = rust::get_project(start_dir) {
         return Some(project);
     }
     #[cfg(feature = "npm-projects")]
-    if let Ok(project) = javascript::get_project() {
+    if let Ok(project) = javascript::get_project(start_dir) {
         return Some(project);
     }
     None
 }
 
 /// Find auto-includeable files in a dir
+///
+/// This includes:
+///
+/// * reamde: `README*`
+/// * license: `LICENSE*` and `UNLICENSE*`
+/// * changelog: `CHANGELOG*` and `RELEASES*`
+///
+/// This doesn't look at parent/child dirs, and doesn't factor in user provided paths.
+/// Handle those details by using [`merge_auto_includes`][] to merge the results into a [`PackageInfo`].
 pub fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
-    let entries = dir
-        .read_dir_utf8()
-        .into_diagnostic()
-        .wrap_err("Failed to read workspace dir")?;
-
     let mut includes = AutoIncludes {
         readme: None,
         licenses: vec![],
         changelog: None,
     };
 
+    // Iterate over files in the dir
+    let entries = dir
+        .read_dir_utf8()
+        .into_diagnostic()
+        .wrap_err("Failed to read workspace dir")?;
+
     for entry in entries {
+        // Make sure it's a file
+        //
+        // I think this *may* mishandle symlinks, Rust's docs have some notes that
+        // the only reliable way to check if something is a file is to try to Open it,
+        // but honestly I don't super care about someone symlinking a README???
         let entry = entry
             .into_diagnostic()
             .wrap_err("Failed to read workspace dir entry")?;
@@ -169,6 +242,8 @@ pub fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
         }
         let file_name = entry.file_name();
         if file_name.starts_with("README") {
+            // Found a readme! It doesn't really make sense to have multiple of these,
+            // so we just need to pick one (probably will never be stressed...)
             if includes.readme.is_none() {
                 let path = entry.path().to_owned();
                 info!("Found README at {}", path);
@@ -177,10 +252,15 @@ pub fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
                 info!("Ignoring duplicate candidate README at {}", entry.path());
             }
         } else if file_name.starts_with("LICENSE") || file_name.starts_with("UNLICENSE") {
+            // Found a license! Dual licensing means we will often have multiple of these,
+            // so we should grab every one we can find!
             let path = entry.path().to_owned();
             info!("Found LICENSE at {}", path);
             includes.licenses.push(path);
         } else if file_name.starts_with("CHANGELOG") || file_name.starts_with("RELEASES") {
+            // Found a changelog! It doesn't really make sense to have multiple of these,
+            // so we just need to pick one? Might one day become untrue if we work out
+            // how to do changelogs for independently versioned/released monorepos.
             if includes.changelog.is_none() {
                 let path = entry.path().to_owned();
                 info!("Found CHANGELOG at {}", path);
@@ -194,6 +274,14 @@ pub fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
     Ok(includes)
 }
 
+/// Merge AutoIncluded files into PackageInfo, preferring already existing values
+/// over the AutoIncludes. The expected way to use this is:
+///
+/// 1. Compute PackageInfo from a manifest, populate fields with user-provided paths
+/// 2. Compute AutoIncludes for the package's root dir, merge them in
+/// 3. Compute AutoIncludes for the workspace's root dir, merge them in
+///
+/// This naturally cascades results.
 pub fn merge_auto_includes(info: &mut PackageInfo, auto_includes: &AutoIncludes) {
     if info.readme_file.is_none() {
         info.readme_file = auto_includes.readme.clone();
@@ -201,12 +289,19 @@ pub fn merge_auto_includes(info: &mut PackageInfo, auto_includes: &AutoIncludes)
     if info.changelog_file.is_none() {
         info.changelog_file = auto_includes.changelog.clone();
     }
+    // Note that even though we allow for multiple licenses, it's supremely wonky
+    // to source them from multiple locations, so if any source provides a license
+    // we will ignore all the other ones.
     if info.license_files.is_empty() {
         info.license_files = auto_includes.licenses.clone();
     }
 }
 
 /*
+
+cargo-dist utils we might want to factor out here, haven't thought about it yet
+
+
 /// Load a changelog to a string
 fn try_load_changelog(changelog_path: &Utf8Path) -> Result<String> {
     let file = File::open(changelog_path)
