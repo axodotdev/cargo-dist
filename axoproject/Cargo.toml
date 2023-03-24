@@ -1,16 +1,28 @@
 [package]
 name = "axo-project"
+description = "project detection logic for various axo.dev applications"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/axodotdev/cargo-dist"
+exclude = [
+  "book/*",
+  "src/snapshots/*",
+  "src/tests/",
+  "tests/",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "axo-project"
+required-features = ["cli"]
 
 [features]
 default = ["cli"]
 cli = ["cargo-projects", "npm-projects"]
-cargo-projects = ["guppy"]
-npm-projects = ["oro-common"]
+cargo-projects = ["guppy", "semver"]
+npm-projects = ["oro-common", "node-semver"]
 
 [dependencies]
 camino = "1.1.4"
@@ -21,4 +33,24 @@ tracing = "0.1.37"
 oro-common = { version = "0.3.11", optional = true }
 serde_json = "1.0.94"
 serde = "1.0.158"
+toml_edit = "0.15.0"
+semver = { version = "1.0.17", optional = true }
+node-semver = { version = "2.1.0", optional = true }
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.0.5"
+# The preferred Rust toolchain to use in CI (rustup toolchain syntax)
+rust-toolchain-version = "1.67.1"
+# CI backends to support (see 'cargo dist generate-ci')
+ci = ["github"]
+# The installers to generate for each app
+installers = ["shell", "powershell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 

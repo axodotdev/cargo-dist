@@ -1,10 +1,23 @@
+use std::path::PathBuf;
+
 use axo_project::WorkspaceInfo;
+use camino::Utf8PathBuf;
 
 fn main() -> Result<(), miette::Report> {
-    if let Some(project) = axo_project::get_project() {
+    // Take an optional "path to search from" as the first argument
+    // Otherwise use current working directory
+    let mut args = std::env::args_os();
+    let _bin_name = args.next();
+    let start_path = args.next().map(PathBuf::from);
+
+    let start_dir = start_path
+        .unwrap_or_else(|| std::env::current_dir().expect("couldn't get current working dir!?"));
+    let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
+
+    if let Some(project) = axo_project::get_project(&start_dir) {
         print_project(&project);
     } else {
-        eprintln!("Couldn't find a project in the current directory");
+        eprintln!("Couldn't find a project in {}", start_dir);
     }
     Ok(())
 }
@@ -13,7 +26,7 @@ fn print_project(project: &WorkspaceInfo) {
     let disabled_sty = console::Style::new().dim();
     let enabled_sty = console::Style::new();
 
-    for pkg in project.package_info.values() {
+    for (_, pkg) in project.packages() {
         let pkg_name = &pkg.name;
 
         // Determine if this package's binaries should be Released

@@ -1,14 +1,18 @@
+//! Support for npm-based JavaScript projects
+
 use std::{fs::File, io::BufReader};
 
 use camino::{Utf8Path, Utf8PathBuf};
-use guppy::PackageId;
-use miette::{Context, IntoDiagnostic};
+use miette::{miette, Context, IntoDiagnostic};
 use oro_common::{Manifest, Repository};
 
-use crate::{PackageInfo, Result, SortedMap, WorkspaceInfo, WorkspaceKind};
+use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind};
 
-pub fn get_project() -> Result<WorkspaceInfo> {
-    let root = workspace_root().unwrap();
+/// Try to find an npm/js project at the given path.
+///
+/// This relies on orogene's understanding of npm packages.
+pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
+    let root = workspace_root(start_dir)?;
     let manifest_path = root.join("package.json");
     let manifest = load_manifest(&manifest_path)?;
 
@@ -21,22 +25,22 @@ pub fn get_project() -> Result<WorkspaceInfo> {
 
     let root_auto_includes = crate::find_auto_includes(&root)?;
 
-    // Not having a name is common to virtual manifests!
+    // Not having a name is common for virtual manifests, but we don't handle those!
     let package_name = manifest
         .name
         .expect("your package doesn't have a name, is it a workspace? We don't support that yet.");
-    let version = manifest.version.as_ref().map(|v| v.to_string());
+    let version = manifest.version.map(Version::Npm);
     let authors = manifest
         .author
         .and_then(|a| match a {
             oro_common::PersonField::Str(s) => Some(vec![s]),
-            // Not yet implemented!
+            // FIXME: Not yet implemented!
             oro_common::PersonField::Obj(_) => None,
         })
         .unwrap_or_default();
 
     let repository_url = manifest.repository.and_then(|url| match url {
-        // TODO: process this into a proper URL?
+        // FIXME: process this into a proper URL?
         //
         // It can be things like:
         //
@@ -54,6 +58,8 @@ pub fn get_project() -> Result<WorkspaceInfo> {
     let mut info = PackageInfo {
         name: package_name.clone(),
         version,
+        manifest_path: manifest_path.clone(),
+        package_root: root.clone(),
         description: manifest.description,
         authors,
         license: manifest.license,
@@ -70,12 +76,14 @@ pub fn get_project() -> Result<WorkspaceInfo> {
         // FIXME: is there any JS equivalent to this?
         changelog_file: None,
         // FIXME: don't just assume this is a binary?
-        binaries: vec![package_name.clone()],
+        binaries: vec![package_name],
+        #[cfg(feature = "cargo-projects")]
+        cargo_metadata_table: None,
+        cargo_package_id: None,
     };
     crate::merge_auto_includes(&mut info, &root_auto_includes);
 
-    let mut package_info = SortedMap::new();
-    package_info.insert(PackageId::new(package_name), info);
+    let package_info = vec![info];
 
     Ok(WorkspaceInfo {
         kind: WorkspaceKind::Rust,
@@ -85,22 +93,27 @@ pub fn get_project() -> Result<WorkspaceInfo> {
         manifest_path,
         repository_url,
         root_auto_includes,
+        #[cfg(feature = "cargo-projects")]
+        cargo_metadata_table: None,
+        #[cfg(feature = "cargo-projects")]
+        cargo_profiles: crate::rust::CargoProfiles::new(),
     })
 }
 
-fn workspace_root() -> Option<Utf8PathBuf> {
-    let current_dir = std::env::current_dir().expect("couldn't get current working dir!?");
-    let start_dir =
-        Utf8PathBuf::from_path_buf(current_dir).expect("current working dir isn't utf8!?");
+/// Find the workspace root given this starting dir (potentially walking up to ancestor dirs)
+fn workspace_root(start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
     for path in start_dir.ancestors() {
+        // NOTE: orogene also looks for node_modules, but we can't do anything if there's
+        // no package.json, so we can just ignore that approach?
         let pkg_json = path.join("package.json");
         if pkg_json.is_file() {
-            return Some(path.to_owned());
+            return Ok(path.to_owned());
         }
     }
-    None
+    Err(miette!("failed to find a dir with a package.json"))
 }
 
+/// Load and parse a package.json
 fn load_manifest(manifest_path: &Utf8Path) -> Result<Manifest> {
     let file = File::open(manifest_path)
         .into_diagnostic()
