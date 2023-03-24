@@ -20,7 +20,7 @@ pub mod javascript;
 pub mod rust;
 
 /// Kind of workspace
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WorkspaceKind {
     /// cargo/rust workspace
     Rust,
