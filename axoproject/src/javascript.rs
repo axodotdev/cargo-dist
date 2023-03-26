@@ -5,6 +5,7 @@ use std::{fs::File, io::BufReader};
 use camino::{Utf8Path, Utf8PathBuf};
 use miette::{miette, Context, IntoDiagnostic};
 use oro_common::{Manifest, Repository};
+use oro_package_spec::GitInfo;
 
 use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind};
 
@@ -39,24 +40,34 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
         })
         .unwrap_or_default();
 
+    // FIXME: do we care that we're dropping lots of useful semantic info on the ground here?
     let repository_url = manifest.repository.and_then(|url| match url {
-        // FIXME: process this into a proper URL?
-        //
-        // It can be things like:
-        //
-        // * "npm/npm"
-        // * "github:user/repo"
-        // * "gist:11081aaa281"
-        // * "bitbucket:user/repo"
-        // * "gitlab:user/repo"
-        //
-        // Using the same syntax as https://docs.npmjs.com/cli/v7/commands/npm-install
-        Repository::Str(repo) => Some(repo),
+        Repository::Str(magic) => {
+            // This "shorthand" form can be all kinds of magic things that we need to try to
+            // parse out. Thankfully oro-package-spec provides an implementation of this with
+            // the FromString impl of GitInfo. If we can't parse it, that's fine, just drop it.
+            let obj: Option<GitInfo> = magic.parse().ok();
+            obj.and_then(|obj| obj.https())
+                .as_ref()
+                .map(ToString::to_string)
+        }
         Repository::Obj { url, .. } => url,
     });
 
+    // FIXME: it's unfortunate that we're loading the package.json twice!
+    // Also arguably we shouldn't hard fail if we fail to make sense of the
+    // binaries... except the whole point of axo-project is to find binaries?
+    let build_manifest = oro_common::BuildManifest::from_path(&manifest_path)
+        .into_diagnostic()
+        .wrap_err("failed to parse package.json binary info")?;
+    let binaries = build_manifest
+        .bin
+        .into_iter()
+        .map(|k| k.0)
+        .collect::<Vec<_>>();
+
     let mut info = PackageInfo {
-        name: package_name.clone(),
+        name: package_name,
         version,
         manifest_path: manifest_path.clone(),
         package_root: root.clone(),
@@ -76,7 +87,7 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
         // FIXME: is there any JS equivalent to this?
         changelog_file: None,
         // FIXME: don't just assume this is a binary?
-        binaries: vec![package_name],
+        binaries,
         #[cfg(feature = "cargo-projects")]
         cargo_metadata_table: None,
         cargo_package_id: None,
