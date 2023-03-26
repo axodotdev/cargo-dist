@@ -96,6 +96,7 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
         binaries,
         #[cfg(feature = "cargo-projects")]
         cargo_metadata_table: None,
+        #[cfg(feature = "cargo-projects")]
         cargo_package_id: None,
     };
     crate::merge_auto_includes(&mut info, &root_auto_includes);
