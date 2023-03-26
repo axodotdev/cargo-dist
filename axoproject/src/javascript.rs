@@ -86,7 +86,7 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
     let package_info = vec![info];
 
     Ok(WorkspaceInfo {
-        kind: WorkspaceKind::Rust,
+        kind: WorkspaceKind::Javascript,
         target_dir,
         workspace_dir: root,
         package_info,
