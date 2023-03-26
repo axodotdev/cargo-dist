@@ -105,8 +105,8 @@ pub struct PackageInfo {
     ///
     /// Both cargo and npm use SemVer but they disagree slightly on what that means:
     ///
-    /// * cargo: https://crates.io/crates/semver
-    /// * npm: https://crates.io/crates/node-semver
+    /// * cargo: <https://crates.io/crates/semver>
+    /// * npm: <https://crates.io/crates/node-semver>
     ///
     /// Cargo requires this field at all times, npm only requires it to publish.
     /// Probably we could get away with making it non-optional but allowing this

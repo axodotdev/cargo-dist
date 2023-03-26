@@ -11,7 +11,7 @@ use guppy::{
 use miette::{miette, Context, IntoDiagnostic};
 use tracing::warn;
 
-/// All the [profile] entries we found in the root Cargo.toml
+/// All the `[profile]` entries we found in the root Cargo.toml
 pub type CargoProfiles = BTreeMap<String, CargoProfile>;
 
 /// Try to find a Cargo/Rust project at the given path
