@@ -1,3 +1,6 @@
+[workspace]
+exclude = ["tests/projects/"]
+
 [package]
 name = "axo-project"
 description = "project detection logic for various axo.dev applications"
@@ -19,8 +22,8 @@ name = "axo-project"
 required-features = ["cli"]
 
 [features]
-default = ["cli"]
-cli = ["cargo-projects", "npm-projects"]
+default = ["cli", "cargo-projects", "npm-projects"]
+cli = []
 cargo-projects = ["guppy", "semver"]
 npm-projects = ["oro-common", "node-semver"]
 
