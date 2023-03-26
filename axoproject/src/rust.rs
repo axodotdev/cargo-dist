@@ -66,28 +66,26 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         // Try to find repo URL consensus
         if !repo_url_conflicted {
             if let Some(new_url) = &info.repository_url {
+                // Normalize away trailing `/` stuff before comparing
+                let mut normalized_new_url = new_url.clone();
+                if normalized_new_url.ends_with('/') {
+                    normalized_new_url.pop();
+                }
                 if let Some(cur_url) = &repo_url {
-                    if new_url == cur_url {
+                    if &normalized_new_url == cur_url {
                         // great! consensus!
                     } else {
-                        warn!("your workspace has inconsistent values for 'repository', refusing to select one:\n  {}\n  {}", new_url, cur_url);
+                        warn!("your workspace has inconsistent values for 'repository', refusing to select one:\n  {}\n  {}", normalized_new_url, cur_url);
                         repo_url_conflicted = true;
                         repo_url = None;
                     }
                 } else {
-                    repo_url = info.repository_url.clone();
+                    repo_url = Some(normalized_new_url);
                 }
             }
         }
 
         all_package_info.push(info);
-    }
-
-    // Normalize trailing `/` on the repo URL
-    if let Some(repo_url) = &mut repo_url {
-        if repo_url.ends_with('/') {
-            repo_url.pop();
-        }
     }
 
     let target_dir = workspace.target_directory().to_owned();
