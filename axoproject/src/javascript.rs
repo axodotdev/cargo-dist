@@ -55,7 +55,7 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
     });
     // Normalize away trailing `/` on repo URL
     if let Some(repo_url) = &mut repository_url {
-        if repo_url.ends_with("/") {
+        if repo_url.ends_with('/') {
             repo_url.pop();
         }
     }
