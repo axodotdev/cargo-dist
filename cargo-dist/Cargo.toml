@@ -47,7 +47,7 @@ semver = "1.0.14"
 toml_edit = "0.15.0"
 parse-changelog = { version = "0.5.3", default-features = false }
 newline-converter = "0.2.2"
-axo-project = { version = "0.1.0",  git = "https://github.com/axodotdev/axo-project/", default-features = false, features = ["cargo-projects"] }
+axoproject = { version = "0.1.0", default-features = false, features = ["cargo-projects"] }
 
 [dev-dependencies]
 insta = { version = "1.26.0", features = ["filters"] }
