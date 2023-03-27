@@ -1,2 +1,2 @@
 /target
-/tests/projects/cargo-new/target
+/tests/projects/*/target
