@@ -54,7 +54,7 @@ use std::{
     process::Command,
 };
 
-use axo_project::{PackageIdx, WorkspaceInfo};
+use axoproject::{PackageIdx, WorkspaceInfo};
 use camino::{Utf8Path, Utf8PathBuf};
 use guppy::PackageId;
 use miette::{miette, Context, IntoDiagnostic};
@@ -2030,10 +2030,10 @@ fn parse_metadata_table(metadata_table: Option<&serde_json::Value>) -> DistMetad
 }
 
 /// Get the general info about the project (via axo-project)
-pub fn get_project() -> Result<axo_project::WorkspaceInfo> {
+pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
-    let Some(project) = axo_project::get_project(&start_dir) else {
+    let Some(project) = axoproject::get_project(&start_dir) else {
         return Err(miette!("failed to find Cargo project in {start_dir}"));
     };
     Ok(project)
