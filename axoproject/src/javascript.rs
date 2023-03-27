@@ -120,6 +120,21 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
 
 /// Find the workspace root given this starting dir (potentially walking up to ancestor dirs)
 fn workspace_root(start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
+    // We want a proper absolute path so we can compare paths to workspace roots easily.
+    //
+    // Also if someone starts the path with ./ we should trim that to avoid weirdness.
+    // Maybe we should be using proper `canonicalize` but then we'd need to canonicalize
+    // every path we get from random APIs to be consistent.
+    let start_dir = if let Ok(clean_dir) = start_dir.strip_prefix("./") {
+        clean_dir.to_owned()
+    } else {
+        start_dir.to_owned()
+    };
+    let start_dir = if start_dir.is_relative() {
+        Utf8PathBuf::from_path_buf(std::env::current_dir().unwrap().join(start_dir)).unwrap()
+    } else {
+        start_dir
+    };
     for path in start_dir.ancestors() {
         // NOTE: orogene also looks for node_modules, but we can't do anything if there's
         // no package.json, so we can just ignore that approach?

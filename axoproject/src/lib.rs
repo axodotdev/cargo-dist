@@ -18,6 +18,8 @@ pub type Result<T> = std::result::Result<T, miette::Report>;
 pub mod javascript;
 #[cfg(feature = "cargo-projects")]
 pub mod rust;
+#[cfg(test)]
+mod tests;
 
 /// Kind of workspace
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -252,16 +254,30 @@ pub struct AutoIncludes {
 /// Concepts of both will largely be conflated, the only distinction will be
 /// the top level [`WorkspaceKind`][].
 pub fn get_project(start_dir: &Utf8Path) -> Option<WorkspaceInfo> {
-    // FIXME: should we provide and feedback/logging here?
+    #![allow(clippy::vec_init_then_push)]
+
+    let mut best_project = None;
+    let mut max_depth = 0;
+    let mut projects = vec![];
+
+    // FIXME: should we provide feedback/logging here?
     #[cfg(feature = "cargo-projects")]
-    if let Ok(project) = rust::get_project(start_dir) {
-        return Some(project);
-    }
+    projects.push(rust::get_project(start_dir));
+
     #[cfg(feature = "npm-projects")]
-    if let Ok(project) = javascript::get_project(start_dir) {
-        return Some(project);
+    projects.push(javascript::get_project(start_dir));
+
+    // If we find multiple projects, prefer the one deeper in the file system
+    // (the one closer to the start_dir).
+    for project in projects.into_iter().flatten() {
+        let depth = project.workspace_dir.ancestors().count();
+        if depth > max_depth {
+            best_project = Some(project);
+            max_depth = depth;
+        }
     }
-    None
+
+    best_project
 }
 
 /// Find auto-includeable files in a dir
