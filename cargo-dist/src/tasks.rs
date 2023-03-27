@@ -4,7 +4,7 @@
 //! should compute every minute detail dist will perform ahead of time. This is done with
 //! the DistGraphBuilder, which roughly builds up the work to do as follows:
 //!
-//! 1. [`workspace_info`][]: find out everything we want to know about the workspace (binaries, configs, etc)
+//! 1. [`get_project`][]: find out everything we want to know about the workspace (binaries, configs, etc)
 //! 2. compute the TargetTriples we're interested based on ArtifactMode and target configs/flags
 //! 3. add Releases for all the binaries selected by the above steps
 //! 4. for each TargetTriple, create a ReleaseVariant of each Release
