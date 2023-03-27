@@ -8,11 +8,11 @@ fn test_self_detect() {
     assert_eq!(project.package_info.len(), 1);
 
     let package = &project.package_info[0];
-    assert_eq!(package.name, "axo-project");
+    assert_eq!(package.name, "axoproject");
     assert_eq!(package.binaries.len(), 1);
 
     let binary = &package.binaries[0];
-    assert_eq!(binary, "axo-project");
+    assert_eq!(binary, "axoproject");
 }
 
 #[cfg(feature = "cargo-projects")]

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use axo_project::WorkspaceInfo;
+use axoproject::WorkspaceInfo;
 use camino::Utf8PathBuf;
 
 fn main() -> Result<(), miette::Report> {
@@ -14,7 +14,7 @@ fn main() -> Result<(), miette::Report> {
         .unwrap_or_else(|| std::env::current_dir().expect("couldn't get current working dir!?"));
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
 
-    if let Some(project) = axo_project::get_project(&start_dir) {
+    if let Some(project) = axoproject::get_project(&start_dir) {
         print_project(&project);
     } else {
         eprintln!("Couldn't find a project in {}", start_dir);

@@ -62,7 +62,7 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
 
     // FIXME: it's unfortunate that we're loading the package.json twice!
     // Also arguably we shouldn't hard fail if we fail to make sense of the
-    // binaries... except the whole point of axo-project is to find binaries?
+    // binaries... except the whole point of axoproject is to find binaries?
     let build_manifest = oro_common::BuildManifest::from_path(&manifest_path)
         .into_diagnostic()
         .wrap_err("failed to parse package.json binary info")?;

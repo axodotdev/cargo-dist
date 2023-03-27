@@ -2,12 +2,12 @@
 exclude = ["tests/projects/"]
 
 [package]
-name = "axo-project"
+name = "axoproject"
 description = "project detection logic for various axo.dev applications"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/axodotdev/cargo-dist"
+repository = "https://github.com/axodotdev/axoproject"
 exclude = [
   "book/*",
   "src/snapshots/*",
@@ -18,7 +18,7 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
-name = "axo-project"
+name = "axoproject"
 required-features = ["cli"]
 
 [features]

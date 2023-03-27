@@ -33,7 +33,7 @@ pub enum WorkspaceKind {
 /// Info on the current workspace
 ///
 /// This can either be a cargo workspace or an npm workspace, the concepts
-/// are conflated to let users of axo-project handle things more uniformly.
+/// are conflated to let users of axoproject handle things more uniformly.
 pub struct WorkspaceInfo {
     /// The kinf of workspace this is (Rust or Javascript)
     pub kind: WorkspaceKind,
