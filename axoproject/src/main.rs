@@ -28,6 +28,7 @@ fn print_project(project: &WorkspaceInfo) {
 
     for (_, pkg) in project.packages() {
         let pkg_name = &pkg.name;
+        let pkg_version = &pkg.version;
 
         // Determine if this package's binaries should be Released
         let mut disabled_reason = None;
@@ -54,7 +55,7 @@ fn print_project(project: &WorkspaceInfo) {
                     ));
                 }
             } else if let Some(ver) = &announcing_version {
-                if &pkg.version != ver {
+                if pkg_version != ver {
                     disabled_reason = Some(format!(
                         "didn't match tag {}",
                         announcement_tag.as_ref().unwrap()
@@ -67,10 +68,21 @@ fn print_project(project: &WorkspaceInfo) {
         let sty;
         if let Some(reason) = &disabled_reason {
             sty = &disabled_sty;
-            eprintln!("  {}", sty.apply_to(format!("{pkg_name} ({reason})")));
+            if let Some(version) = pkg_version {
+                eprintln!(
+                    "  {}",
+                    sty.apply_to(format!("{pkg_name}@{version} ({reason})"))
+                );
+            } else {
+                eprintln!("  {}", sty.apply_to(format!("{pkg_name} ({reason})")));
+            }
         } else {
             sty = &enabled_sty;
-            eprintln!("  {}", sty.apply_to(pkg_name));
+            if let Some(version) = pkg_version {
+                eprintln!("  {}@{version}", sty.apply_to(pkg_name));
+            } else {
+                eprintln!("  {}", sty.apply_to(pkg_name));
+            }
         }
 
         // Report each binary and potentially add it to the Release for this package
