@@ -92,8 +92,11 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
         license_files: vec![],
         // FIXME: is there any JS equivalent to this?
         changelog_file: None,
-        // FIXME: don't just assume this is a binary?
         binaries,
+        // FIXME: is there any JS equivalent to this?
+        cdylibs: vec![],
+        // FIXME: is there any JS equivalent to this?
+        cstaticlibs: vec![],
         #[cfg(feature = "cargo-projects")]
         cargo_metadata_table: None,
         #[cfg(feature = "cargo-projects")]
