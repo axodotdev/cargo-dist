@@ -3,7 +3,7 @@ use crate::WorkspaceKind;
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_self_detect() {
-    let project = crate::get_project("./".into()).unwrap();
+    let project = crate::get_workspaces("./".into()).best().unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(project.package_info.len(), 1);
 
@@ -18,7 +18,9 @@ fn test_self_detect() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_new() {
-    let project = crate::get_project("tests/projects/cargo-new/src/".into()).unwrap();
+    let project = crate::get_workspaces("tests/projects/cargo-new/src/".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(project.package_info.len(), 1);
 
@@ -33,7 +35,9 @@ fn test_cargo_new() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_virtual() {
-    let project = crate::get_project("tests/projects/cargo-virtual/virtual/".into()).unwrap();
+    let project = crate::get_workspaces("tests/projects/cargo-virtual/virtual/".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(project.package_info.len(), 3);
 
@@ -59,7 +63,9 @@ fn test_cargo_virtual() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_nonvirtual() {
-    let project = crate::get_project("tests/projects/cargo-nonvirtual/".into()).unwrap();
+    let project = crate::get_workspaces("tests/projects/cargo-nonvirtual/".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(project.package_info.len(), 6);
 
@@ -105,7 +111,9 @@ fn test_cargo_nonvirtual() {
 #[cfg(feature = "npm-projects")]
 #[test]
 fn test_npm_init_legacy() {
-    let project = crate::get_project("tests/projects/npm-init-legacy".into()).unwrap();
+    let project = crate::get_workspaces("tests/projects/npm-init-legacy".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Javascript);
     assert_eq!(project.package_info.len(), 1);
 
@@ -122,10 +130,10 @@ fn test_npm_init_legacy() {
 
 #[cfg(feature = "npm-projects")]
 #[test]
-// NOTE: this test is currently busted pending upstream orogene fixes
-#[ignore]
 fn test_npm_create_react_app() {
-    let project = crate::get_project("tests/projects/npm-create-react-app/src/".into()).unwrap();
+    let project = crate::get_workspaces("tests/projects/npm-create-react-app/src/".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Javascript);
     assert_eq!(project.package_info.len(), 1);
 
@@ -138,8 +146,8 @@ fn test_npm_create_react_app() {
     assert_eq!(package.binaries.len(), 2);
 
     let binary = &package.binaries[0];
-    assert_eq!(binary, "index.js");
+    assert_eq!(binary, "App.js");
 
     let binary = &package.binaries[1];
-    assert_eq!(binary, "App.js");
+    assert_eq!(binary, "index.js");
 }
