@@ -5,7 +5,7 @@ use std::{collections::BTreeMap, fs::File, io::Read};
 use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8Path;
 use guppy::{
-    graph::{BuildTargetId, DependencyDirection, PackageGraph, PackageMetadata},
+    graph::{BuildTargetId, DependencyDirection, PackageGraph, PackageMetadata, BuildTargetKind},
     MetadataCommand,
 };
 use miette::{miette, Context, IntoDiagnostic};
@@ -113,11 +113,75 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         .to_owned();
     let cargo_package_id = Some(package.id().clone());
     let cargo_metadata_table = Some(package.metadata_table().clone());
+
     let mut binaries = vec![];
+    let mut cdylibs = vec![];
+    let mut cstaticlibs = vec![];
     for target in package.build_targets() {
         let build_id = target.id();
-        if let BuildTargetId::Binary(name) = build_id {
-            binaries.push(name.to_owned());
+        match build_id {
+            BuildTargetId::Binary(name) => {
+                // Hooray it's a proper binary
+                binaries.push(name.to_owned());
+            }
+            BuildTargetId::Library => {
+                // This is the ONE AND ONLY "true" library target, now that we've confirmed
+                // that we can trust BuildTargetKind::LibraryOrExample to only be non-examples.
+                // All the different kinds of library outputs like cdylibs and staticlibs are
+                // shoved into this one build target, making it impossible to build only one
+                // at a time (which is really unfortunate because cargo can produce conflicting
+                // names for some of the outputs on some platforms).
+                //
+                // crate-types is a messy field with weird naming and history. The outputs are
+                // roughly broken into two families (by me). See rustc's docs for details:
+                //
+                // https://doc.rust-lang.org/nightly/reference/linkage.html
+                //
+                //
+                // # rust-only / intermediates
+                //
+                // * proc-macro: a target to build the proc-macros *defined* by this crate
+                // * rlib: a rust-only staticlib
+                // * dylib: a rust-only dynamic library
+                // * lib: the fuzzy default library target that lets cargo/rustc pick
+                //   the "right" choice. this enables things like -Cprefer-dynamic
+                //   which override all libs to the desired result.
+                //
+                // The rust-only outputs are mostly things rust developers don't have to care
+                // about, and mostly exist as intermediate.temporary results (the main exception
+                // is the stdlib is shipped in this form, because it's released in lockstep with
+                // the rustc that understands it)
+                //
+                //
+                // # final outputs
+                //
+                // * staticlib: a C-style static library
+                // * cdylib: a C-style dynamic library
+                // * bin: a binary (not relevant here)
+                //
+                // Grouping a C-style static library here is kinda dubious but at very least
+                // it's something meaningful outside of cargo/rustc itself (I super don't care
+                // that rlibs are a thin veneer over staticlibs and that you got things to link,
+                // you're not "supposed" to do that.)
+                if let BuildTargetKind::LibraryOrExample(crate_types) = target.kind() {
+                    for crate_type in crate_types {
+                        match &**crate_type {
+                            "cdylib" => {
+                                cdylibs.push(target.name().to_owned());
+                            }
+                            "staticlib" => {
+                                cstaticlibs.push(target.name().to_owned());
+                            }
+                            _ => {
+                                // Don't care about these
+                            }
+                        }
+                    }
+                }
+            } 
+            _ => {
+                // Don't care about these
+            }
         }
     }
 
@@ -141,6 +205,8 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
             .collect(),
         changelog_file: None,
         binaries,
+        cdylibs,
+        cstaticlibs,
         cargo_metadata_table,
         cargo_package_id,
     };

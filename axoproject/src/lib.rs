@@ -171,8 +171,19 @@ pub struct PackageInfo {
     /// Names of binaries this package defines
     ///
     /// For Cargo this is currently properly computed in all its complexity.
-    /// For JS we currently just assume every package defines a binary with its own name.
+    /// For JS I *think* this is computed in its full complexity but Tests Needed
+    /// and also there's so many ways to define things who can ever be sure.
     pub binaries: Vec<String>,
+    /// Names of C-style staticlibs (.a) this library defines.
+    ///
+    /// For Cargo this is currently properly computed in all its complexity.
+    /// For JS we don't compute this at all.
+    pub cstaticlibs: Vec<String>,
+    /// Names of C-style dylibs (.dll, .so, ...) this package defines
+    ///
+    /// For Cargo this is currently properly computed in all its complexity.
+    /// For JS we don't compute this at all.
+    pub cdylibs: Vec<String>,
     /// Raw cargo `[package.metadata]` table
     #[cfg(feature = "cargo-projects")]
     pub cargo_metadata_table: Option<serde_json::Value>,
