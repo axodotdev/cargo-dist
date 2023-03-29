@@ -5,7 +5,7 @@ use std::{collections::BTreeMap, fs::File, io::Read};
 use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8Path;
 use guppy::{
-    graph::{BuildTargetId, DependencyDirection, PackageGraph, PackageMetadata, BuildTargetKind},
+    graph::{BuildTargetId, BuildTargetKind, DependencyDirection, PackageGraph, PackageMetadata},
     MetadataCommand,
 };
 use miette::{miette, Context, IntoDiagnostic};
@@ -178,7 +178,7 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
                         }
                     }
                 }
-            } 
+            }
             _ => {
                 // Don't care about these
             }

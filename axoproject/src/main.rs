@@ -95,12 +95,11 @@ fn print_project(project: &WorkspaceInfo) {
             }
         }
         for lib in &pkg.cdylibs {
-            eprintln!("    {}", sty.apply_to(format!("[cdylib] {}", lib))); 
+            eprintln!("    {}", sty.apply_to(format!("[cdylib] {}", lib)));
         }
         for lib in &pkg.cstaticlibs {
-            eprintln!("    {}", sty.apply_to(format!("[cstaticlib] {}", lib))); 
+            eprintln!("    {}", sty.apply_to(format!("[cstaticlib] {}", lib)));
         }
-
 
         // If any binaries were accepted for this package, it's a Release!
         if !rust_binaries.is_empty() {
