@@ -122,6 +122,8 @@ fn test_npm_init_legacy() {
 
 #[cfg(feature = "npm-projects")]
 #[test]
+// NOTE: this test is currently busted pending upstream orogene fixes
+#[ignore]
 fn test_npm_create_react_app() {
     let project = crate::get_project("tests/projects/npm-create-react-app/src/".into()).unwrap();
     assert_eq!(project.kind, WorkspaceKind::Javascript);
