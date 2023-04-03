@@ -54,10 +54,10 @@ use std::{
     process::Command,
 };
 
-use axoproject::{PackageIdx, WorkspaceInfo};
+use axoproject::{PackageIdx, WorkspaceInfo, WorkspaceSearch};
 use camino::{Utf8Path, Utf8PathBuf};
 use guppy::PackageId;
-use miette::{miette, Context, IntoDiagnostic};
+use miette::{miette, Report, Context, IntoDiagnostic};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
@@ -2033,8 +2033,14 @@ fn parse_metadata_table(metadata_table: Option<&serde_json::Value>) -> DistMetad
 pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
-    let Some(project) = axoproject::get_project(&start_dir) else {
-        return Err(miette!("failed to find Cargo project in {start_dir}"));
-    };
-    Ok(project)
+    match axoproject::rust::get_workspace(&start_dir) {
+        WorkspaceSearch::Found(mut workspace) => {
+            for warning in workspace.warnings.drain(..) {
+                warn!("{:?}", Report::new(warning));
+            }
+            Ok(workspace)
+        },
+        WorkspaceSearch::Missing(e) => Err(Report::new(e).wrap_err("no cargo workspace found")),
+        WorkspaceSearch::Broken(e) => Err(Report::new(e).wrap_err("your cargo workspace has an issue")),
+    }
 }

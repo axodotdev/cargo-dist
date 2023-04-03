@@ -3,7 +3,7 @@ source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
 ---
 stdout:
-{"error": {"message": "This workspace doesn't have anything for cargo-dist to Release!","severity": "error","causes": [],"labels": [],"related": []}}
+{"diagnostic": {"message": "This workspace doesn't have anything for cargo-dist to Release!","severity": "error","causes": [],"labels": [],"related": []}}
 
 stderr:
 analyzing workspace:

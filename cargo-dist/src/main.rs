@@ -3,8 +3,6 @@
 //! CLI binary interface for cargo-dist
 
 use std::io::Write;
-use std::panic;
-use std::sync::Mutex;
 
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
@@ -13,130 +11,29 @@ use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{Cli, Commands, FakeCli, HelpMarkdownArgs, ManifestArgs, OutputFormat};
 use console::Term;
-use lazy_static::lazy_static;
-use miette::{Diagnostic, IntoDiagnostic};
-use thiserror::Error;
-use tracing::error;
+use miette::IntoDiagnostic;
 
 use crate::cli::{BuildArgs, GenerateCiArgs, InitArgs};
 
 mod cli;
 
-type ReportErrorFunc = dyn Fn(&miette::Report) + Send + Sync + 'static;
-
-// XXX: We might be able to get rid of this `lazy_static` after 1.63 due to
-// `const Mutex::new` being stabilized.
-lazy_static! {
-    static ref REPORT_ERROR: Mutex<Option<Box<ReportErrorFunc>>> = Mutex::new(None);
-}
-
-fn set_report_errors_as_json() {
-    *REPORT_ERROR.lock().unwrap() = Some(Box::new(move |error| {
-        // Still write a human-friendly version to stderr
-        writeln!(&mut Term::stderr(), "{error:?}").unwrap();
-        // Manually invoke JSONReportHandler to format the error as a report
-        // to out_.
-        let mut report = String::new();
-        miette::JSONReportHandler::new()
-            .render_report(&mut report, error.as_ref())
-            .unwrap();
-        writeln!(&mut Term::stdout(), r#"{{"error": {report}}}"#).unwrap();
-    }));
-}
-
-fn report_error(error: &miette::Report) {
-    {
-        let guard = REPORT_ERROR.lock().unwrap();
-        if let Some(do_report) = &*guard {
-            do_report(error);
-            return;
-        }
-    }
-    error!("{:?}", error);
-}
-
 fn main() {
-    let FakeCli::Dist(cli) = FakeCli::parse();
-    // Init the logger
-    tracing_subscriber::fmt::fmt()
-        .with_max_level(cli.verbose)
-        .with_target(false)
-        .without_time()
-        .with_writer(std::io::stderr)
-        .with_ansi(console::colors_enabled_stderr())
-        .init();
-
-    // Control how errors are formatted by setting the miette hook. This will
-    // only be used for errors presented to humans, when formatting an error as
-    // JSON, it will be handled by a custom `report_error` override, bypassing
-    // the hook.
-    let using_log_file = false;
-    miette::set_hook(Box::new(move |_| {
-        let graphical_theme = if console::colors_enabled_stderr() && !using_log_file {
-            miette::GraphicalTheme::unicode()
-        } else {
-            miette::GraphicalTheme::unicode_nocolor()
-        };
-        Box::new(
-            miette::MietteHandlerOpts::new()
-                .graphical_theme(graphical_theme)
-                .build(),
-        )
-    }))
-    .expect("failed to initialize error handler");
-
-    // Now that miette is set up, use it to format panics.
-    panic::set_hook(Box::new(move |panic_info| {
-        let payload = panic_info.payload();
-        let message = if let Some(msg) = payload.downcast_ref::<&str>() {
-            msg
-        } else if let Some(msg) = payload.downcast_ref::<String>() {
-            &msg[..]
-        } else {
-            "something went wrong"
-        };
-
-        #[derive(Debug, Error, Diagnostic)]
-        #[error("{message}")]
-        pub struct PanicError {
-            pub message: String,
-            #[help]
-            pub help: Option<String>,
-        }
-
-        report_error(
-            &miette::Report::from(PanicError {
-                message: message.to_owned(),
-                help: panic_info
-                    .location()
-                    .map(|loc| format!("at {}:{}:{}", loc.file(), loc.line(), loc.column())),
-            })
-            .wrap_err("cargo dist panicked"),
-        );
-    }));
-
-    // If we're outputting JSON, replace the error report method such that it
-    // writes errors out to the normal output stream as JSON.
-    if cli.output_format == OutputFormat::Json {
-        set_report_errors_as_json();
-    }
-
-    let main_result = real_main(&cli);
-
-    let _ = main_result.map_err(|e| {
-        report_error(&e);
-        std::process::exit(-1);
-    });
+    let FakeCli::Dist(config) = FakeCli::parse();
+    axocli::CliAppBuilder::new("cargo dist")
+        .verbose(config.verbose)
+        .json_errors(config.output_format == OutputFormat::Json)
+        .start(config, real_main);
 }
 
-fn real_main(cli: &Cli) -> Result<(), miette::Report> {
-    match &cli.command {
-        Some(Commands::Init(args)) => cmd_init(cli, args),
-        Some(Commands::GenerateCi(args)) => cmd_generate_ci(cli, args),
-        Some(Commands::Manifest(args)) => cmd_manifest(cli, args),
-        Some(Commands::HelpMarkdown(args)) => cmd_help_md(cli, args),
-        Some(Commands::Build(args)) => cmd_dist(cli, args),
-        None => cmd_dist(cli, &cli.build_args),
+fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
+    let config = &cli.config;
+    match &config.command {
+        Some(Commands::Init(args)) => cmd_init(config, args),
+        Some(Commands::GenerateCi(args)) => cmd_generate_ci(config, args),
+        Some(Commands::Manifest(args)) => cmd_manifest(config, args),
+        Some(Commands::HelpMarkdown(args)) => cmd_help_md(config, args),
+        Some(Commands::Build(args)) => cmd_dist(config, args),
+        None => cmd_dist(config, &config.build_args),
     }
 }
 

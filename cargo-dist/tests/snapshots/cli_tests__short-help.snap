@@ -17,8 +17,8 @@ Commands:
 
 Options:
       --artifacts <ARTIFACTS>  Which subset of the Artifacts to build [default: host] [possible values: local, global, host, all]
-  -h, --help                   Print help information (use `--help` for more detail)
-  -V, --version                Print version information
+  -h, --help                   Print help (see more with '--help')
+  -V, --version                Print version
 
 GLOBAL OPTIONS:
       --verbose <VERBOSE>              How verbose logging should be (log level) [default: warn] [possible values: off, error, warn, info, debug, trace]
