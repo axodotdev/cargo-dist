@@ -116,7 +116,7 @@ Possible values:
 - all:    Build all the artifacts; useful for `cargo dist manifest`
 
 #### `-h, --help`
-Print help information (use `-h` for a summary)
+Print help (see a summary with '-h')
 
 ### GLOBAL OPTIONS
 This subcommand accepts all the [global options](#global-options)
@@ -133,7 +133,7 @@ cargo dist init [OPTIONS]
 
 ### Options
 #### `-h, --help`
-Print help information (use `-h` for a summary)
+Print help (see a summary with '-h')
 
 ### GLOBAL OPTIONS
 This subcommand accepts all the [global options](#global-options)
@@ -150,7 +150,7 @@ cargo dist generate-ci [OPTIONS]
 
 ### Options
 #### `-h, --help`
-Print help information (use `-h` for a summary)
+Print help (see a summary with '-h')
 
 ### GLOBAL OPTIONS
 This subcommand accepts all the [global options](#global-options)
@@ -190,7 +190,7 @@ Possible values:
 - all:    Build all the artifacts; useful for `cargo dist manifest`
 
 #### `-h, --help`
-Print help information (use `-h` for a summary)
+Print help (see a summary with '-h')
 
 ### GLOBAL OPTIONS
 This subcommand accepts all the [global options](#global-options)
