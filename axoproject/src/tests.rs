@@ -3,7 +3,7 @@ use crate::WorkspaceKind;
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_self_detect() {
-    let project = crate::get_project("./".into()).unwrap();
+    let project = crate::get_workspaces(None, "./".into()).best().unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(project.package_info.len(), 1);
 
@@ -18,7 +18,57 @@ fn test_self_detect() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_new() {
-    let project = crate::get_project("tests/projects/cargo-new/src/".into()).unwrap();
+    let project = crate::get_workspaces(None, "tests/projects/cargo-new/src/".into())
+        .best()
+        .unwrap();
+    assert_eq!(project.kind, WorkspaceKind::Rust);
+    assert_eq!(project.package_info.len(), 1);
+
+    let package = &project.package_info[0];
+    assert_eq!(package.name, "cargo-new");
+    assert_eq!(package.binaries.len(), 1);
+
+    let binary = &package.binaries[0];
+    assert_eq!(binary, "cargo-new");
+}
+
+#[cfg(feature = "cargo-projects")]
+#[test]
+fn test_rooted_cargo_wrong() {
+    use camino::Utf8PathBuf;
+
+    let project = crate::get_workspaces(
+        Some(Utf8PathBuf::from("src/")).as_deref(),
+        "tests/projects/cargo-new/src/".into(),
+    )
+    .best();
+    assert!(project.is_none());
+}
+
+#[cfg(feature = "cargo-projects")]
+#[test]
+fn test_rooted_cargo_clamped_too_soon() {
+    use camino::Utf8PathBuf;
+
+    let project = crate::get_workspaces(
+        Some(Utf8PathBuf::from("tests/projects/cargo-new/src/")).as_deref(),
+        "tests/projects/cargo-new/src/".into(),
+    )
+    .best();
+    assert!(project.is_none());
+}
+
+#[cfg(feature = "cargo-projects")]
+#[test]
+fn test_rooted_cargo_good() {
+    use camino::Utf8PathBuf;
+
+    let project = crate::get_workspaces(
+        Some(Utf8PathBuf::from("tests/projects/cargo-new/")).as_deref(),
+        "tests/projects/cargo-new/src/".into(),
+    )
+    .best()
+    .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(project.package_info.len(), 1);
 
@@ -33,7 +83,9 @@ fn test_cargo_new() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_virtual() {
-    let project = crate::get_project("tests/projects/cargo-virtual/virtual/".into()).unwrap();
+    let project = crate::get_workspaces(None, "tests/projects/cargo-virtual/virtual/".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(project.package_info.len(), 3);
 
@@ -59,7 +111,9 @@ fn test_cargo_virtual() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_nonvirtual() {
-    let project = crate::get_project("tests/projects/cargo-nonvirtual/".into()).unwrap();
+    let project = crate::get_workspaces(None, "tests/projects/cargo-nonvirtual/".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(project.package_info.len(), 6);
 
@@ -105,7 +159,9 @@ fn test_cargo_nonvirtual() {
 #[cfg(feature = "npm-projects")]
 #[test]
 fn test_npm_init_legacy() {
-    let project = crate::get_project("tests/projects/npm-init-legacy".into()).unwrap();
+    let project = crate::get_workspaces(None, "tests/projects/npm-init-legacy".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Javascript);
     assert_eq!(project.package_info.len(), 1);
 
@@ -122,10 +178,10 @@ fn test_npm_init_legacy() {
 
 #[cfg(feature = "npm-projects")]
 #[test]
-// NOTE: this test is currently busted pending upstream orogene fixes
-#[ignore]
 fn test_npm_create_react_app() {
-    let project = crate::get_project("tests/projects/npm-create-react-app/src/".into()).unwrap();
+    let project = crate::get_workspaces(None, "tests/projects/npm-create-react-app/src/".into())
+        .best()
+        .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Javascript);
     assert_eq!(project.package_info.len(), 1);
 
@@ -138,8 +194,59 @@ fn test_npm_create_react_app() {
     assert_eq!(package.binaries.len(), 2);
 
     let binary = &package.binaries[0];
-    assert_eq!(binary, "index.js");
+    assert_eq!(binary, "App.js");
 
     let binary = &package.binaries[1];
-    assert_eq!(binary, "App.js");
+    assert_eq!(binary, "index.js");
+}
+
+#[cfg(feature = "npm-projects")]
+#[test]
+fn test_rooted_npm_wrong() {
+    use camino::Utf8PathBuf;
+
+    let project = crate::get_workspaces(
+        Some(Utf8PathBuf::from("src/")).as_deref(),
+        "tests/projects/npm-init-legacy/".into(),
+    )
+    .best();
+    assert!(project.is_none());
+}
+
+#[cfg(feature = "npm-projects")]
+#[test]
+fn test_rooted_npm_clamped_too_soon() {
+    use camino::Utf8PathBuf;
+
+    let project = crate::get_workspaces(
+        Some(Utf8PathBuf::from("tests/projects/npm-init-legacy/src/")).as_deref(),
+        "tests/projects/npm-init-legacy/src/".into(),
+    )
+    .best();
+    assert!(project.is_none());
+}
+
+#[cfg(feature = "npm-projects")]
+#[test]
+fn test_rooted_npm_good() {
+    use camino::Utf8PathBuf;
+
+    let project = crate::get_workspaces(
+        Some(Utf8PathBuf::from("tests/projects/npm-init-legacy/")).as_deref(),
+        "tests/projects/npm-init-legacy/src/".into(),
+    )
+    .best()
+    .unwrap();
+    assert_eq!(project.kind, WorkspaceKind::Javascript);
+    assert_eq!(project.package_info.len(), 1);
+
+    let package = &project.package_info[0];
+    assert_eq!(package.name, "npm-init-legacy");
+
+    // NOTE: we provide a path for this binary that doesn't exist, so if we
+    // get more rigorous this test will fail. That's fine, the test can be
+    // updated. Oranda has similar tests.
+    assert_eq!(package.binaries.len(), 1);
+    let binary = &package.binaries[0];
+    assert_eq!(binary, "npm-init-legacy");
 }

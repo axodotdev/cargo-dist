@@ -1,25 +1,40 @@
 //! Support for Cargo-based Rust projects
 
-use std::{collections::BTreeMap, fs::File, io::Read};
+use std::collections::BTreeMap;
 
-use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind};
-use camino::Utf8Path;
+use crate::{
+    errors::AxoprojectError, PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind,
+    WorkspaceSearch,
+};
+use axoasset::{AxoassetError, LocalAsset, SourceFile};
+use camino::{Utf8Path, Utf8PathBuf};
 use guppy::{
     graph::{BuildTargetId, BuildTargetKind, DependencyDirection, PackageGraph, PackageMetadata},
     MetadataCommand,
 };
-use miette::{miette, Context, IntoDiagnostic};
-use tracing::warn;
 
 /// All the `[profile]` entries we found in the root Cargo.toml
 pub type CargoProfiles = BTreeMap<String, CargoProfile>;
 
-/// Try to find a Cargo/Rust project at the given path
+/// Try to find a Cargo/Rust workspace at the given path
+///
+/// See [`crate::get_workspaces`][] for the semantics.
 ///
 /// This relies on `cargo metadata` so will only work if you have `cargo` installed.
-pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
-    let graph = package_graph(start_dir)?;
-    workspace_info(&graph)
+pub fn get_workspace(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> WorkspaceSearch {
+    // The call to `workspace_manifest` here is redundant with what cargo-metadata will
+    // do, but doing it ourselves makes it really easy to distinguish between
+    // "no workspace at all" and "workspace is busted".
+    if let Err(e) = workspace_manifest(root_dir, start_dir) {
+        return WorkspaceSearch::Missing(e);
+    }
+
+    // There's definitely some kind of Cargo workspace, now try to make sense of it
+    let workspace = package_graph(start_dir).and_then(|graph| workspace_info(&graph));
+    match workspace {
+        Ok(workspace) => WorkspaceSearch::Found(workspace),
+        Err(e) => WorkspaceSearch::Broken(e),
+    }
 }
 
 /// Get the PackageGraph for the current workspace
@@ -30,10 +45,7 @@ fn package_graph(start_dir: &Utf8Path) -> Result<PackageGraph> {
     metadata_cmd.no_deps();
     metadata_cmd.current_dir(start_dir);
 
-    let pkg_graph = metadata_cmd
-        .build_graph()
-        .into_diagnostic()
-        .wrap_err("failed to read 'cargo metadata'")?;
+    let pkg_graph = metadata_cmd.build_graph()?;
 
     Ok(pkg_graph)
 }
@@ -42,11 +54,15 @@ fn package_graph(start_dir: &Utf8Path) -> Result<PackageGraph> {
 fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
     let workspace = pkg_graph.workspace();
     let members = pkg_graph.resolve_workspace();
+    let mut warnings = vec![];
 
     let manifest_path = workspace.root().join("Cargo.toml");
-    if !manifest_path.exists() {
-        return Err(miette!("couldn't find root workspace Cargo.toml"));
-    }
+    // I originally had this as a proper Error but honestly this would be MADNESS and
+    // I want someone to tell me about this if they ever encounter it, so blow everything up
+    assert!(
+        manifest_path.exists(),
+        "cargo metadata returned a workspace without a Cargo.toml!?"
+    );
 
     let cargo_profiles = get_profiles(&manifest_path)?;
 
@@ -55,7 +71,8 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
     let root_auto_includes = crate::find_auto_includes(workspace_root)?;
 
     let mut repo_url_conflicted = false;
-    let mut repo_url = None;
+    let mut repo_url = None::<String>;
+    let mut repo_url_origin = None::<Utf8PathBuf>;
     let mut all_package_info = vec![];
     for package in members.packages(DependencyDirection::Forward) {
         let mut info = package_info(workspace_root, &package)?;
@@ -75,12 +92,18 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
                     if &normalized_new_url == cur_url {
                         // great! consensus!
                     } else {
-                        warn!("your workspace has inconsistent values for 'repository', refusing to select one:\n  {}\n  {}", normalized_new_url, cur_url);
+                        warnings.push(AxoprojectError::InconsistentRepositoryKey {
+                            file1: repo_url_origin.as_ref().unwrap().to_owned(),
+                            url1: cur_url.clone(),
+                            file2: info.manifest_path.clone(),
+                            url2: normalized_new_url,
+                        });
                         repo_url_conflicted = true;
                         repo_url = None;
                     }
                 } else {
                     repo_url = Some(normalized_new_url);
+                    repo_url_origin = Some(info.manifest_path.clone());
                 }
             }
         }
@@ -102,6 +125,8 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         root_auto_includes,
         cargo_metadata_table,
         cargo_profiles,
+
+        warnings,
     })
 }
 
@@ -231,21 +256,49 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
     Ok(info)
 }
 
+/// Find the potential workspace root given this starting dir (potentially walking up to ancestor dirs)
+
+fn workspace_manifest(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
+    let manifest = LocalAsset::search_ancestors(start_dir, "Cargo.toml")?;
+
+    if let Some(root_dir) = root_dir {
+        let root_dir = if root_dir.is_relative() {
+            let current_dir = LocalAsset::current_dir()?;
+            current_dir.join(root_dir)
+        } else {
+            root_dir.to_owned()
+        };
+        let improperly_nested = pathdiff::diff_utf8_paths(&manifest, root_dir)
+            .map(|p| p.starts_with(".."))
+            .unwrap_or(true);
+        if improperly_nested {
+            return Err(AxoassetError::SearchFailed {
+                start_dir: start_dir.to_owned(),
+                desired_filename: "Cargo.toml".to_owned(),
+            })?;
+        }
+    }
+
+    Ok(manifest)
+}
+
 /// Load the root workspace toml into toml-edit form
 pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
-    // FIXME: this should really be factored out into some sort of i/o module
-    let mut workspace_toml_file = File::open(manifest_path)
-        .into_diagnostic()
-        .wrap_err("couldn't load root workspace Cargo.toml")?;
-    let mut workspace_toml_str = String::new();
-    workspace_toml_file
-        .read_to_string(&mut workspace_toml_str)
-        .into_diagnostic()
-        .wrap_err("couldn't read root workspace Cargo.toml")?;
-    workspace_toml_str
+    let manifest_src = SourceFile::load_local(manifest_path)?;
+    // FIXME: upstream better toml-edit support into axoasset..?
+    manifest_src
+        .contents()
         .parse::<toml_edit::Document>()
-        .into_diagnostic()
-        .wrap_err("couldn't parse root workspace Cargo.toml")
+        .map_err(|details| {
+            let span = details
+                .line_col()
+                .and_then(|(line, col)| manifest_src.span_for_line_col(line, col));
+            AxoprojectError::ParseCargoToml {
+                source: manifest_src,
+                span,
+                details,
+            }
+        })
 }
 
 fn get_profiles(manifest_path: &Utf8Path) -> Result<BTreeMap<String, CargoProfile>> {

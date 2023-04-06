@@ -1,20 +1,35 @@
 //! Support for npm-based JavaScript projects
 
-use std::{fs::File, io::BufReader};
-
+use axoasset::{AxoassetError, LocalAsset, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
-use miette::{miette, Context, IntoDiagnostic};
 use oro_common::{Manifest, Repository};
 use oro_package_spec::GitInfo;
 
-use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind};
+use crate::{
+    errors::AxoprojectError, PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind,
+    WorkspaceSearch,
+};
 
-/// Try to find an npm/js project at the given path.
+/// Try to find an npm/js workspace at the given path.
+///
+/// See [`crate::get_workspaces`][] for the semantics.
 ///
 /// This relies on orogene's understanding of npm packages.
-pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
-    let root = workspace_root(start_dir)?;
-    let manifest_path = root.join("package.json");
+pub fn get_workspace(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> WorkspaceSearch {
+    let manifest_path = match workspace_manifest(root_dir, start_dir) {
+        Ok(path) => path,
+        Err(e) => {
+            return WorkspaceSearch::Missing(e);
+        }
+    };
+    match read_workspace(manifest_path) {
+        Ok(workspace) => WorkspaceSearch::Found(workspace),
+        Err(e) => WorkspaceSearch::Broken(e),
+    }
+}
+
+fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
+    let root = manifest_path.parent().unwrap().to_owned();
     let manifest = load_manifest(&manifest_path)?;
 
     // For now this code is fairly naive and doesn't understand workspaces.
@@ -27,9 +42,9 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
     let root_auto_includes = crate::find_auto_includes(&root)?;
 
     // Not having a name is common for virtual manifests, but we don't handle those!
-    let package_name = manifest
-        .name
-        .expect("your package doesn't have a name, is it a workspace? We don't support that yet.");
+    let Some(package_name) = manifest.name else {
+        return Err(crate::errors::AxoprojectError::NamelessNpmPackage { manifest: manifest_path });
+    };
     let version = manifest.version.map(Version::Npm);
     let authors = manifest
         .author
@@ -63,14 +78,19 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
     // FIXME: it's unfortunate that we're loading the package.json twice!
     // Also arguably we shouldn't hard fail if we fail to make sense of the
     // binaries... except the whole point of axoproject is to find binaries?
-    let build_manifest = oro_common::BuildManifest::from_path(&manifest_path)
-        .into_diagnostic()
-        .wrap_err("failed to parse package.json binary info")?;
-    let binaries = build_manifest
+    let build_manifest =
+        oro_common::BuildManifest::from_path(&manifest_path).map_err(|details| {
+            AxoprojectError::BuildInfoParse {
+                manifest_path: manifest_path.clone(),
+                details,
+            }
+        })?;
+    let mut binaries = build_manifest
         .bin
         .into_iter()
         .map(|k| k.0)
         .collect::<Vec<_>>();
+    binaries.sort();
 
     let mut info = PackageInfo {
         name: package_name,
@@ -114,6 +134,7 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
         manifest_path,
         repository_url,
         root_auto_includes,
+        warnings: vec![],
         #[cfg(feature = "cargo-projects")]
         cargo_metadata_table: None,
         #[cfg(feature = "cargo-projects")]
@@ -122,41 +143,35 @@ pub fn get_project(start_dir: &Utf8Path) -> Result<WorkspaceInfo> {
 }
 
 /// Find the workspace root given this starting dir (potentially walking up to ancestor dirs)
-fn workspace_root(start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
-    // We want a proper absolute path so we can compare paths to workspace roots easily.
-    //
-    // Also if someone starts the path with ./ we should trim that to avoid weirdness.
-    // Maybe we should be using proper `canonicalize` but then we'd need to canonicalize
-    // every path we get from random APIs to be consistent.
-    let start_dir = if let Ok(clean_dir) = start_dir.strip_prefix("./") {
-        clean_dir.to_owned()
-    } else {
-        start_dir.to_owned()
-    };
-    let start_dir = if start_dir.is_relative() {
-        Utf8PathBuf::from_path_buf(std::env::current_dir().unwrap().join(start_dir)).unwrap()
-    } else {
-        start_dir
-    };
-    for path in start_dir.ancestors() {
-        // NOTE: orogene also looks for node_modules, but we can't do anything if there's
-        // no package.json, so we can just ignore that approach?
-        let pkg_json = path.join("package.json");
-        if pkg_json.is_file() {
-            return Ok(path.to_owned());
+fn workspace_manifest(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
+    let manifest = LocalAsset::search_ancestors(start_dir, "package.json")?;
+
+    if let Some(root_dir) = root_dir {
+        let root_dir = if root_dir.is_relative() {
+            let current_dir = LocalAsset::current_dir()?;
+            current_dir.join(root_dir)
+        } else {
+            root_dir.to_owned()
+        };
+
+        let improperly_nested = pathdiff::diff_utf8_paths(&manifest, root_dir)
+            .map(|p| p.starts_with(".."))
+            .unwrap_or(true);
+
+        if improperly_nested {
+            return Err(AxoassetError::SearchFailed {
+                start_dir: start_dir.to_owned(),
+                desired_filename: "package.json".to_owned(),
+            })?;
         }
     }
-    Err(miette!("failed to find a dir with a package.json"))
+
+    Ok(manifest)
 }
 
 /// Load and parse a package.json
 fn load_manifest(manifest_path: &Utf8Path) -> Result<Manifest> {
-    let file = File::open(manifest_path)
-        .into_diagnostic()
-        .wrap_err("failed to read package.json")?;
-    let reader = BufReader::new(file);
-    let manifest: Manifest = serde_json::from_reader(reader)
-        .into_diagnostic()
-        .wrap_err("failed to parse package.json")?;
+    let source = SourceFile::load_local(manifest_path)?;
+    let manifest = source.deserialize_json()?;
     Ok(manifest)
 }

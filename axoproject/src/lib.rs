@@ -1,19 +1,17 @@
 //! Shared code for gathering up information about a workspace, used by various axo.dev tools
 //! like cargo-dist and oranda.
 //!
-//! The main entry point is [`get_project`][].
+//! The main entry point is [`get_workspaces`][].
 
 #![deny(missing_docs)]
 
 use std::fmt::Display;
 
 use camino::{Utf8Path, Utf8PathBuf};
-use miette::{Context, IntoDiagnostic};
+use errors::{AxoprojectError, Result};
 use tracing::info;
 
-/// Our version of a Result
-pub type Result<T> = std::result::Result<T, miette::Report>;
-
+pub mod errors;
 #[cfg(feature = "npm-projects")]
 pub mod javascript;
 #[cfg(feature = "cargo-projects")]
@@ -21,12 +19,67 @@ pub mod rust;
 #[cfg(test)]
 mod tests;
 
+/// Information about various kinds of workspaces
+pub struct Workspaces {
+    /// Info about the cargo/rust workspace
+    #[cfg(feature = "cargo-projects")]
+    pub rust: WorkspaceSearch,
+    /// Info about the npm/js workspace
+    #[cfg(feature = "npm-projects")]
+    pub javascript: WorkspaceSearch,
+}
+
+impl Workspaces {
+    #[cfg(test)]
+    pub(crate) fn best(self) -> Option<WorkspaceInfo> {
+        #![allow(clippy::vec_init_then_push)]
+
+        let mut best_project = None;
+        let mut max_depth = 0;
+        let mut projects = vec![];
+
+        // FIXME: should we provide feedback/logging here?
+        #[cfg(feature = "cargo-projects")]
+        projects.push(self.rust);
+
+        #[cfg(feature = "npm-projects")]
+        projects.push(self.javascript);
+
+        // If we find multiple projects, prefer the one deeper in the file system
+        // (the one closer to the start_dir).
+        for project in projects {
+            let WorkspaceSearch::Found(project) = project else {
+                continue;
+            };
+            let depth = project.workspace_dir.ancestors().count();
+            if depth > max_depth {
+                best_project = Some(project);
+                max_depth = depth;
+            }
+        }
+
+        best_project
+    }
+}
+
+/// Result of searching for a particular kind of workspace
+pub enum WorkspaceSearch {
+    /// We found it
+    Found(WorkspaceInfo),
+    /// We found something that looks like a workspace but there's something wrong with it
+    Broken(AxoprojectError),
+    /// We found no hint of this kind of workspace
+    Missing(AxoprojectError),
+}
+
 /// Kind of workspace
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WorkspaceKind {
     /// cargo/rust workspace
+    #[cfg(feature = "cargo-projects")]
     Rust,
     /// npm/js workspace
+    #[cfg(feature = "npm-projects")]
     Javascript,
 }
 
@@ -61,6 +114,8 @@ pub struct WorkspaceInfo {
     ///
     /// This is currently what is use for top-level Announcement contents.
     pub root_auto_includes: AutoIncludes,
+    /// Non-fatal issues that were encountered and should probably be reported
+    pub warnings: Vec<AxoprojectError>,
     /// Raw cargo `[workspace.metadata]` table
     #[cfg(feature = "cargo-projects")]
     pub cargo_metadata_table: Option<serde_json::Value>,
@@ -253,8 +308,14 @@ pub struct AutoIncludes {
     pub changelog: Option<Utf8PathBuf>,
 }
 
-/// Tries to find information about the project/workspace at the given path,
-/// walking up to ancestors as necessary.
+/// Tries to find information about the workspace at start_dir, walking up
+/// ancestors as necessary until we reach root_dir (or run out of ancestors).
+///
+/// Behaviour is unspecified if only part of the workspace is nested in root_dir.
+///
+/// In the future setting root_dir may cause the output's paths to be relative
+/// to that directory, but for now they're always absolute. The cli does this
+/// relativizing, but not the library.
 ///
 /// This can be either a cargo project or an npm project. Support for each
 /// one is behind feature flags:
@@ -264,31 +325,13 @@ pub struct AutoIncludes {
 ///
 /// Concepts of both will largely be conflated, the only distinction will be
 /// the top level [`WorkspaceKind`][].
-pub fn get_project(start_dir: &Utf8Path) -> Option<WorkspaceInfo> {
-    #![allow(clippy::vec_init_then_push)]
-
-    let mut best_project = None;
-    let mut max_depth = 0;
-    let mut projects = vec![];
-
-    // FIXME: should we provide feedback/logging here?
-    #[cfg(feature = "cargo-projects")]
-    projects.push(rust::get_project(start_dir));
-
-    #[cfg(feature = "npm-projects")]
-    projects.push(javascript::get_project(start_dir));
-
-    // If we find multiple projects, prefer the one deeper in the file system
-    // (the one closer to the start_dir).
-    for project in projects.into_iter().flatten() {
-        let depth = project.workspace_dir.ancestors().count();
-        if depth > max_depth {
-            best_project = Some(project);
-            max_depth = depth;
-        }
+pub fn get_workspaces(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> Workspaces {
+    Workspaces {
+        #[cfg(feature = "cargo-projects")]
+        rust: rust::get_workspace(root_dir, start_dir),
+        #[cfg(feature = "npm-projects")]
+        javascript: javascript::get_workspace(root_dir, start_dir),
     }
-
-    best_project
 }
 
 /// Find auto-includeable files in a dir
@@ -302,6 +345,13 @@ pub fn get_project(start_dir: &Utf8Path) -> Option<WorkspaceInfo> {
 /// This doesn't look at parent/child dirs, and doesn't factor in user provided paths.
 /// Handle those details by using [`merge_auto_includes`][] to merge the results into a [`PackageInfo`].
 pub fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
+    find_auto_includes_inner(dir).map_err(|details| AxoprojectError::AutoIncludeSearch {
+        dir: dir.to_owned(),
+        details,
+    })
+}
+
+fn find_auto_includes_inner(dir: &Utf8Path) -> std::result::Result<AutoIncludes, std::io::Error> {
     // Is there a better way to get the path to sniff?
     // Should we spider more than just package_root and workspace_root?
     // Should we more carefully prevent grabbing LICENSES from both dirs?
@@ -315,10 +365,7 @@ pub fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
     };
 
     // Iterate over files in the dir
-    let entries = dir
-        .read_dir_utf8()
-        .into_diagnostic()
-        .wrap_err("Failed to read workspace dir")?;
+    let entries = dir.read_dir_utf8()?;
 
     for entry in entries {
         // Make sure it's a file
@@ -326,13 +373,8 @@ pub fn find_auto_includes(dir: &Utf8Path) -> Result<AutoIncludes> {
         // I think this *may* mishandle symlinks, Rust's docs have some notes that
         // the only reliable way to check if something is a file is to try to Open it,
         // but honestly I don't super care about someone symlinking a README???
-        let entry = entry
-            .into_diagnostic()
-            .wrap_err("Failed to read workspace dir entry")?;
-        let meta = entry
-            .file_type()
-            .into_diagnostic()
-            .wrap_err("Failed to read workspace dir entry's metadata")?;
+        let entry = entry?;
+        let meta = entry.file_type()?;
         if !meta.is_file() {
             continue;
         }
