@@ -287,7 +287,7 @@ pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Docum
     let manifest_src = SourceFile::load_local(manifest_path)?;
     // FIXME: upstream better toml-edit support into axoasset..?
     manifest_src
-        .source()
+        .contents()
         .parse::<toml_edit::Document>()
         .map_err(|details| {
             let span = details

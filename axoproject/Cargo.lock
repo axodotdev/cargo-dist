@@ -85,8 +85,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "axoasset"
-version = "0.0.1"
-source = "git+https://github.com/axodotdev/axoasset#87d7315e329b1e64fc10d8fef075a48fb258f098"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d142a02f4d5064a72f402a7a750c2f9b23c7355e0c9804d67c0ef22f0421cc8"
 dependencies = [
  "camino",
  "image",
@@ -101,7 +102,8 @@ dependencies = [
 [[package]]
 name = "axocli"
 version = "0.1.0"
-source = "git+https://github.com/axodotdev/axocli#3a48797a24dc4b65d0e8773ee62b23394deb11dc"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "607c33386940f0e0d552647e87da4ab642b78afd93552fd6a8cb1cf8cd341ba0"
 dependencies = [
  "backtrace",
  "backtrace-ext",
