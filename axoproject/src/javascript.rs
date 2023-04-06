@@ -1,6 +1,6 @@
 //! Support for npm-based JavaScript projects
 
-use axoasset::{LocalAsset, SourceFile};
+use axoasset::{AxoassetError, LocalAsset, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
 use oro_common::{Manifest, Repository};
 use oro_package_spec::GitInfo;
@@ -12,9 +12,11 @@ use crate::{
 
 /// Try to find an npm/js workspace at the given path.
 ///
+/// See [`crate::get_workspaces`][] for the semantics.
+///
 /// This relies on orogene's understanding of npm packages.
-pub fn get_workspace(start_dir: &Utf8Path) -> WorkspaceSearch {
-    let manifest_path = match workspace_manifest(start_dir) {
+pub fn get_workspace(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> WorkspaceSearch {
+    let manifest_path = match workspace_manifest(root_dir, start_dir) {
         Ok(path) => path,
         Err(e) => {
             return WorkspaceSearch::Missing(e);
@@ -141,8 +143,29 @@ fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
 }
 
 /// Find the workspace root given this starting dir (potentially walking up to ancestor dirs)
-fn workspace_manifest(start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
+fn workspace_manifest(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
     let manifest = LocalAsset::search_ancestors(start_dir, "package.json")?;
+
+    if let Some(root_dir) = root_dir {
+        let root_dir = if root_dir.is_relative() {
+            let current_dir = LocalAsset::current_dir()?;
+            current_dir.join(root_dir)
+        } else {
+            root_dir.to_owned()
+        };
+
+        let improperly_nested = pathdiff::diff_utf8_paths(&manifest, root_dir)
+            .map(|p| p.starts_with(".."))
+            .unwrap_or(true);
+
+        if improperly_nested {
+            return Err(AxoassetError::SearchFailed {
+                start_dir: start_dir.to_owned(),
+                desired_filename: "package.json".to_owned(),
+            })?;
+        }
+    }
+
     Ok(manifest)
 }
 

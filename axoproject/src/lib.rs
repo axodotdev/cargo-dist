@@ -308,8 +308,14 @@ pub struct AutoIncludes {
     pub changelog: Option<Utf8PathBuf>,
 }
 
-/// Tries to find information about the project/workspace at the given path,
-/// walking up to ancestors as necessary.
+/// Tries to find information about the workspace at start_dir, walking up
+/// ancestors as necessary until we reach root_dir (or run out of ancestors).
+///
+/// Behaviour is unspecified if only part of the workspace is nested in root_dir.
+///
+/// In the future setting root_dir may cause the output's paths to be relative
+/// to that directory, but for now they're always absolute. The cli does this
+/// relativizing, but not the library.
 ///
 /// This can be either a cargo project or an npm project. Support for each
 /// one is behind feature flags:
@@ -319,12 +325,12 @@ pub struct AutoIncludes {
 ///
 /// Concepts of both will largely be conflated, the only distinction will be
 /// the top level [`WorkspaceKind`][].
-pub fn get_workspaces(start_dir: &Utf8Path) -> Workspaces {
+pub fn get_workspaces(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> Workspaces {
     Workspaces {
         #[cfg(feature = "cargo-projects")]
-        rust: rust::get_workspace(start_dir),
+        rust: rust::get_workspace(root_dir, start_dir),
         #[cfg(feature = "npm-projects")]
-        javascript: javascript::get_workspace(start_dir),
+        javascript: javascript::get_workspace(root_dir, start_dir),
     }
 }
 

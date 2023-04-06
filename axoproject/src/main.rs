@@ -28,7 +28,7 @@ fn real_main(app: &axocli::CliApp<Cli>) -> Result<(), Report> {
         .clone()
         .unwrap_or_else(|| LocalAsset::current_dir().unwrap());
 
-    let workspaces = axoproject::get_workspaces(&start_dir);
+    let workspaces = axoproject::get_workspaces(root_dir.as_deref(), &start_dir);
 
     match app.config.output_format {
         OutputFormat::Human => print_searches(workspaces),
