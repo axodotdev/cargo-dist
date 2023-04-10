@@ -57,10 +57,17 @@ jobs:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
       - uses: taiki-e/install-action@cargo-hack
-      # note that bare "--no-default-features" isn't supported, you must pick a backend!
+      # Note that bare "--no-default-features" isn't supported, you must pick a backend!
+      # Unfortunately just selecting the "cli" feature also runs into this problem. really
+      # we want to express "you must choose at least one of 'cargo-projects' or 'npm-projects'"
+      # but I don't see a good way of doing this.
+      #
+      # As a workaround I'm just going to make `check` not use 'cli', making this effectively
+      # testing of the library. The subsequent deeper tests hit the CI modes so we still have
+      # solid coverage.
       - name: Run cargo hack powerset
         run: |
-          cargo hack check --feature-powerset --no-dev-deps --exclude-no-default-features
+          cargo hack check --feature-powerset --no-dev-deps --exclude-no-default-features --skip=cli
   os-test:
     runs-on: ${{ matrix.os }}
     strategy:
