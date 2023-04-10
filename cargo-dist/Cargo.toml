@@ -27,7 +27,7 @@ clap = { version = "4.0.0", optional = true, features = ["derive"] }
 serde_json = { version = "1.0.85", optional = true }
 console = { version = "0.15.1", optional = true }
 clap-cargo = { version = "0.10.0", optional = true }
-axocli = { version = "0.1.0", git = "https://github.com/axodotdev/axocli", optional = true }
+axocli = { version = "0.1.0", optional = true }
 
 # Features used by the cli and library
 cargo-dist-schema = { version = "=0.0.5", path = "../cargo-dist-schema" }

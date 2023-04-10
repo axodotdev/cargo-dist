@@ -114,7 +114,8 @@ dependencies = [
 [[package]]
 name = "axocli"
 version = "0.1.0"
-source = "git+https://github.com/axodotdev/axocli#3a48797a24dc4b65d0e8773ee62b23394deb11dc"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "607c33386940f0e0d552647e87da4ab642b78afd93552fd6a8cb1cf8cd341ba0"
 dependencies = [
  "backtrace",
  "backtrace-ext",
