@@ -204,6 +204,14 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "unix-archive")]
     pub unix_archive: Option<ZipStyle>,
+
+    /// A namespace to prefix npm packages with.
+    ///
+    /// This is required if you're using an npm installer.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "npm-namespace")]
+    pub npm_namespace: Option<String>,
 }
 
 impl DistMetadata {
@@ -417,6 +425,7 @@ pub struct Binary {
 
 /// A build step we would like to perform
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum BuildStep {
     /// Do a cargo build (and copy the outputs to various locations)
     Cargo(CargoBuildStep),
@@ -547,6 +556,7 @@ pub struct Artifact {
 
 /// A kind of artifact (more specific fields)
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum ArtifactKind {
     /// An executable zip
     ExecutableZip(ExecutableZip),
@@ -579,6 +589,16 @@ pub struct Symbols {
 pub struct Release {
     /// The name of the app
     pub app_name: String,
+    /// A brief description of the app
+    pub app_desc: Option<String>,
+    /// The authors of the app
+    pub app_authors: Vec<String>,
+    /// The license of the app
+    pub app_license: Option<String>,
+    /// The license of the app
+    pub app_repository_url: Option<String>,
+    /// The license of the app
+    pub app_homepage_url: Option<String>,
     /// The version of the app
     pub version: Version,
     /// The unique id of the release (e.g. "my-app-v1.0.0")
@@ -730,8 +750,20 @@ pub struct NpmInstallerInfo {
     pub npm_package_name: String,
     /// The version of the npm package
     pub npm_package_version: String,
+    /// Short description of the package
+    pub npm_package_desc: Option<String>,
+    /// URL to repository
+    pub npm_package_repository_url: Option<String>,
+    /// URL to homepage
+    pub npm_package_homepage_url: Option<String>,
+    /// Short description of the package
+    pub npm_package_authors: Vec<String>,
+    /// Short description of the package
+    pub npm_package_license: Option<String>,
     /// Generic installer info
     pub inner: InstallerInfo,
+    /// Dir to build the package in
+    pub package_dir: Utf8PathBuf,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers
@@ -864,8 +896,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let package_info = self.workspace().package(pkg_idx);
         let package_config = self.package_metadata(pkg_idx);
 
-        let app_name = package_info.name.clone();
         let version = package_info.version.as_ref().unwrap().cargo().clone();
+        let app_name = package_info.name.clone();
+        let app_desc = package_info.description.clone();
+        let app_authors = package_info.authors.clone();
+        let app_license = package_info.license.clone();
+        let app_repository_url = package_info.repository_url.clone();
+        let app_homepage_url = package_info.homepage_url.clone();
+
         let windows_archive = package_config.windows_archive.unwrap_or(ZipStyle::Zip);
         let unix_archive = package_config
             .unix_archive
@@ -876,6 +914,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         info!("added release {id}");
         self.inner.releases.push(Release {
             app_name,
+            app_desc,
+            app_authors,
+            app_license,
+            app_repository_url,
+            app_homepage_url,
             version,
             id,
             global_artifacts: vec![],
@@ -1257,13 +1300,25 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping npm installer: couldn't compute a URL to download artifacts from");
             return;
         };
-        let npm_package_name = release.app_name.clone();
+        let Some(namespace) = &self.workspace_metadata.npm_namespace else {
+            warn!("skipping npm installer: missing workspace.metadata.npm-namespace");
+            return;
+        };
+        let npm_package_name = format!("{namespace}/{}", release.app_name);
         let npm_package_version = release.version.to_string();
-        let artifact_name = format!("{release_id}-npm-package.tar.xz");
+        let npm_package_desc = release.app_desc.clone();
+        let npm_package_authors = release.app_authors.clone();
+        let npm_package_license = release.app_license.clone();
+        let npm_package_repository_url = release.app_repository_url.clone();
+        let npm_package_homepage_url = release.app_homepage_url.clone();
+
+        let dir_name = format!("{release_id}-npm-package");
+        let dir_path = self.inner.dist_dir.join(&dir_name);
+        let artifact_name = format!("{dir_name}.tar.gz");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         // let installer_url = format!("{download_url}/{artifact_name}");
         let hint = format!("npm install {npm_package_name}@{npm_package_version}");
-        let desc = "Install prebuilt binaries via shell script".to_owned();
+        let desc = "Install prebuilt binaries into your npm project".to_owned();
 
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
@@ -1271,13 +1326,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
-            if target.contains("windows") {
-                continue;
-            }
             // Compute the artifact zip this variant *would* make *if* it were built
             // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
             // way to add artifacts to the graph and then say "ok but don't build it".
-            let (artifact, binaries) = self.make_executable_zip_for_variant(variant_idx);
+            let (artifact, binaries) = self.make_executable_zip_for_variant(to_release, variant_idx);
             let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
                 unreachable!();
             };
@@ -1300,13 +1352,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
-            dir_name: None,
-            dir_path: None,
+            dir_name: Some(dir_name),
+            dir_path: Some(dir_path.clone()),
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
             kind: ArtifactKind::Installer(InstallerImpl::Npm(NpmInstallerInfo {
                 npm_package_name,
                 npm_package_version,
+                npm_package_desc,
+                npm_package_authors,
+                npm_package_license,
+                npm_package_repository_url,
+                npm_package_homepage_url,
+                package_dir: dir_path,
                 inner: InstallerInfo {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),

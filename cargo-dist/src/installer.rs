@@ -2,8 +2,9 @@
 //!
 //! In the future this might get split up into submodules.
 
-use std::fs::File;
+use std::{fs::File, io::BufWriter};
 
+use camino::Utf8Path;
 use miette::{Context, IntoDiagnostic};
 use newline_converter::{dos2unix, unix2dos};
 
@@ -195,8 +196,156 @@ fn write_install_ps_script<W: std::io::Write>(
 ////////////////////////////////////////////////////////////////
 
 pub(crate) fn generate_install_npm_project(
-    dist: &DistGraph,
+    _dist: &DistGraph,
     info: &NpmInstallerInfo,
 ) -> Result<(), miette::Report> {
-    todo!()
+    const TEMPLATE1_NAME: &str = ".gitignore";
+    const TEMPLATE2_NAME: &str = "binary.js";
+    const TEMPLATE3_NAME: &str = "install.js";
+    const TEMPLATE4_NAME: &str = "package-lock.json";
+    const TEMPLATE5_NAME: &str = "package.json";
+    const TEMPLATE6_NAME: &str = "run.js";
+
+    const TEMPLATE1: &str = include_str!("../templates/npm/.gitignore");
+    const TEMPLATE2: &str = include_str!("../templates/npm/binary.js");
+    const TEMPLATE3: &str = include_str!("../templates/npm/install.js");
+    const TEMPLATE4: &str = include_str!("../templates/npm/package-lock.json");
+    const TEMPLATE5: &str = include_str!("../templates/npm/package.json");
+    const TEMPLATE6: &str = include_str!("../templates/npm/run.js");
+
+    let zip_dir = &info.package_dir;
+    std::fs::create_dir_all(zip_dir)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("Failed to create dir for installer {zip_dir}"))?;
+    apply_npm_templates(TEMPLATE1, zip_dir, TEMPLATE1_NAME, info)?;
+    apply_npm_templates(TEMPLATE2, zip_dir, TEMPLATE2_NAME, info)?;
+    apply_npm_templates(TEMPLATE3, zip_dir, TEMPLATE3_NAME, info)?;
+    apply_npm_templates(TEMPLATE4, zip_dir, TEMPLATE4_NAME, info)?;
+    apply_npm_templates(TEMPLATE5, zip_dir, TEMPLATE5_NAME, info)?;
+    apply_npm_templates(TEMPLATE6, zip_dir, TEMPLATE6_NAME, info)?;
+
+    crate::tar_dir(
+        zip_dir,
+        &info.inner.dest_path,
+        &crate::CompressionImpl::Gzip,
+    )?;
+
+    Ok(())
+}
+
+fn apply_npm_templates(
+    input: &str,
+    target_dir: &Utf8Path,
+    rel_path: &str,
+    info: &NpmInstallerInfo,
+) -> Result<(), miette::Report> {
+    let file_path = target_dir.join(rel_path);
+    let file = File::create(&file_path)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("Failed to create installer file {file_path}"))?;
+    let mut f = BufWriter::new(file);
+
+    // Not yet impl'd
+    let npm_package_keywords = Vec::<String>::new();
+
+    // FIXME: escape these strings!?
+
+    let name = &info.npm_package_name;
+    let version = &info.npm_package_version;
+    let desc = info
+        .npm_package_desc
+        .as_ref()
+        .map(|desc| format!(r#""description": "{desc}","#))
+        .unwrap_or_default();
+    let repository_url = info
+        .npm_package_repository_url
+        .as_ref()
+        .map(|url| format!(r#""repository": "{url}","#))
+        .unwrap_or_default();
+    let homepage_url = info
+        .npm_package_homepage_url
+        .as_ref()
+        .map(|url| format!(r#""homepage": "{url}","#))
+        .unwrap_or_default();
+    let license = info
+        .npm_package_license
+        .as_ref()
+        .map(|license| format!(r#""license": "{license}","#))
+        .unwrap_or_default();
+
+    let authors = match info.npm_package_authors.len() {
+        0 => String::new(),
+        1 => format!(r#""author": "{}","#, info.npm_package_authors[0]),
+        _ => format!(r#""contributors": "{:?}","#, info.npm_package_authors),
+    };
+
+    let keywords = if info.npm_package_authors.is_empty() {
+        String::new()
+    } else {
+        format!(r#""keywords": "{:?}","#, npm_package_keywords)
+    };
+
+    let platform_entry_template = r###"
+  "{{TARGET}}": {
+    "artifact_name": "{{ARTIFACT_NAME}}",
+    "bins": {{BINS}},
+    "zip_ext": "{{ZIP_EXT}}"
+  }"###;
+
+    let mut platform_info = String::new();
+    let last_platform = info.inner.artifacts.len() - 1;
+    for (idx, artifact) in info.inner.artifacts.iter().enumerate() {
+        use std::fmt::Write;
+
+        assert!(artifact.target_triples.len() == 1, "It's awesome you made multi-arch executable-zips, but now you need to implement support in the ps1 installer!");
+        let target = &artifact.target_triples[0];
+        let zip_ext = artifact.zip_style.ext();
+        let artifact_name = &artifact.id;
+
+        let mut bins = String::new();
+        let mut multi_bin = false;
+        bins.push('[');
+        for bin in &artifact.binaries {
+            // FIXME: we should really stop pervasively assuming things are copied to the root...
+            let rel_path = bin;
+            if multi_bin {
+                bins.push_str(", ");
+            } else {
+                multi_bin = true;
+            }
+            write!(bins, "\"{}\"", rel_path).unwrap();
+        }
+        bins.push(']');
+
+        let entry = platform_entry_template
+            .replace("{{TARGET}}", target)
+            .replace("{{ARTIFACT_NAME}}", artifact_name)
+            .replace("{{BINS}}", &bins)
+            .replace("{{ZIP_EXT}}", zip_ext);
+        platform_info.push_str(&entry);
+        if idx != last_platform {
+            platform_info.push(',');
+        }
+    }
+    let output = input
+        .replace("{{PACKAGE_NAME}}", name)
+        .replace("{{PACKAGE_VERSION}}", version)
+        .replace("{{KEY_DESCRIPTION}}", &desc)
+        .replace("{{KEY_REPOSITORY_URL}}", &repository_url)
+        .replace("{{KEY_AUTHORS}}", &authors)
+        .replace("{{KEY_LICENSE}}", &license)
+        .replace("{{KEY_HOMEPAGE_URL}}", &homepage_url)
+        .replace("{{KEY_KEYWORDS}}", &keywords)
+        .replace("/*APP_NAME*/", &info.inner.app_name)
+        .replace("/*ARTIFACT_DOWNLOAD_URL*/", &info.inner.base_url)
+        .replace("/*PLATFORM_INFO*/", &platform_info);
+
+    {
+        use std::io::Write;
+        f.write_all(dos2unix(&output).as_bytes())
+            .into_diagnostic()
+            .wrap_err_with(|| format!("Failed to write to installer file {file_path}"))?;
+    }
+
+    Ok(())
 }
