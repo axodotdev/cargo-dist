@@ -444,7 +444,11 @@ fn zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path, zip_style: &ZipStyle) -> R
     }
 }
 
-fn tar_dir(src_path: &Utf8Path, dest_path: &Utf8Path, compression: &CompressionImpl) -> Result<()> {
+pub(crate) fn tar_dir(
+    src_path: &Utf8Path,
+    dest_path: &Utf8Path,
+    compression: &CompressionImpl,
+) -> Result<()> {
     // Set up the archive/compression
     // The contents of the zip (e.g. a tar)
     let dir_name = src_path.file_name().unwrap();
@@ -701,6 +705,7 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
         auto_includes: None,
         windows_archive: None,
         unix_archive: None,
+        npm_namespace: None,
     };
 
     const KEY_RUST_VERSION: &str = "rust-toolchain-version";
@@ -739,6 +744,10 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
     const KEY_UNIX_ARCHIVE: &str = "unix-archive";
     const DESC_UNIX_ARCHIVE: &str =
         "# The archive format to use for non-windows builds (defaults .tar.xz)\n";
+
+    const KEY_NPM_NAMESPACE: &str = "npm-namespace";
+    const DESC_NPM_NAMESPACE: &str =
+        "# A namespace to use when publishing this package to the npm registry\n";
 
     let mut new_metadata = toml_edit::table();
     let table = new_metadata.as_table_mut().unwrap();
@@ -829,6 +838,13 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
             .key_decor_mut(KEY_UNIX_ARCHIVE)
             .unwrap()
             .set_prefix(DESC_UNIX_ARCHIVE);
+    }
+    if let Some(val) = meta.npm_namespace {
+        table.insert(KEY_NPM_NAMESPACE, value(val));
+        table
+            .key_decor_mut(KEY_NPM_NAMESPACE)
+            .unwrap()
+            .set_prefix(DESC_NPM_NAMESPACE);
     }
     table
         .decor_mut()
