@@ -226,6 +226,8 @@ pub enum InstallerStyle {
     Shell,
     /// Generates a powershell script that fetches/installs the right build
     Powershell,
+    /// Generates an npm project that fetches the right build to your node_modules
+    Npm,
 }
 
 impl InstallerStyle {
@@ -234,6 +236,7 @@ impl InstallerStyle {
         match self {
             InstallerStyle::Shell => cargo_dist::InstallerStyle::Shell,
             InstallerStyle::Powershell => cargo_dist::InstallerStyle::Powershell,
+            InstallerStyle::Npm => cargo_dist::InstallerStyle::Npm,
         }
     }
 }

@@ -191,7 +191,11 @@ fn manifest_artifact(
             description = None;
             kind = cargo_dist_schema::ArtifactKind::Symbols;
         }
-        ArtifactKind::Installer(InstallerImpl::Powershell(info) | InstallerImpl::Shell(info)) => {
+        ArtifactKind::Installer(
+            InstallerImpl::Powershell(info)
+            | InstallerImpl::Shell(info)
+            | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. }),
+        ) => {
             install_hint = Some(info.hint.clone());
             description = Some(info.desc.clone());
             kind = cargo_dist_schema::ArtifactKind::Installer;
@@ -774,6 +778,7 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
                     .map(|installer| match installer {
                         InstallerStyle::Powershell => "powershell",
                         InstallerStyle::Shell => "shell",
+                        InstallerStyle::Npm => "npm",
                     })
                     .collect(),
             ),
@@ -869,5 +874,6 @@ fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
     match style {
         InstallerImpl::Shell(info) => installer::generate_install_sh_script(dist, info),
         InstallerImpl::Powershell(info) => installer::generate_install_ps_script(dist, info),
+        InstallerImpl::Npm(info) => installer::generate_install_npm_project(dist, info),
     }
 }

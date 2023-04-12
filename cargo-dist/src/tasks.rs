@@ -296,6 +296,9 @@ pub enum InstallerStyle {
     /// Generate a powershell script that fetches from [`DistGraph::artifact_download_url`][]
     #[serde(rename = "powershell")]
     Powershell,
+    /// Generate an npm project that fetches from [`DistGraph::artifact_download_url`][]
+    #[serde(rename = "npm")]
+    Npm,
 }
 
 /// A unique id for a [`Artifact`][]
@@ -697,6 +700,8 @@ pub enum InstallerImpl {
     Shell(InstallerInfo),
     /// powershell installer script
     Powershell(InstallerInfo),
+    /// npm installer package
+    Npm(NpmInstallerInfo),
 }
 
 /// Generic info about an installer
@@ -716,6 +721,17 @@ pub struct InstallerInfo {
     pub desc: String,
     /// Hint for how to run the installer
     pub hint: String,
+}
+
+/// Info about an npm installer
+#[derive(Debug, Clone)]
+pub struct NpmInstallerInfo {
+    /// The name of the npm package
+    pub npm_package_name: String,
+    /// The version of the npm package
+    pub npm_package_version: String,
+    /// Generic installer info
+    pub inner: InstallerInfo,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers
@@ -1085,6 +1101,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         match installer {
             InstallerStyle::Shell => self.add_shell_installer(to_release),
             InstallerStyle::Powershell => self.add_powershell_installer(to_release),
+            InstallerStyle::Npm => self.add_npm_installer(to_release),
         }
     }
 
@@ -1224,6 +1241,81 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 artifacts,
                 hint,
                 desc,
+            })),
+        };
+
+        self.add_global_artifact(to_release, installer_artifact);
+    }
+
+    fn add_npm_installer(&mut self, to_release: ReleaseIdx) {
+        if !self.global_artifacts_enabled() {
+            return;
+        }
+        let release = self.release(to_release);
+        let release_id = &release.id;
+        let Some(download_url) = &self.inner.artifact_download_url else {
+            warn!("skipping npm installer: couldn't compute a URL to download artifacts from");
+            return;
+        };
+        let npm_package_name = release.app_name.clone();
+        let npm_package_version = release.version.to_string();
+        let artifact_name = format!("{release_id}-npm-package.tar.xz");
+        let artifact_path = self.inner.dist_dir.join(&artifact_name);
+        // let installer_url = format!("{download_url}/{artifact_name}");
+        let hint = format!("npm install {npm_package_name}@{npm_package_version}");
+        let desc = "Install prebuilt binaries via shell script".to_owned();
+
+        // Gather up the bundles the installer supports
+        let mut artifacts = vec![];
+        let mut target_triples = SortedSet::new();
+        for &variant_idx in &release.variants {
+            let variant = self.variant(variant_idx);
+            let target = &variant.target;
+            if target.contains("windows") {
+                continue;
+            }
+            // Compute the artifact zip this variant *would* make *if* it were built
+            // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
+            // way to add artifacts to the graph and then say "ok but don't build it".
+            let (artifact, binaries) = self.make_executable_zip_for_variant(variant_idx);
+            let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
+                unreachable!();
+            };
+            target_triples.insert(target.clone());
+            artifacts.push(ExecutableZipFragment {
+                id: artifact.id,
+                target_triples: artifact.target_triples,
+                zip_style: zip.zip_style,
+                binaries: binaries
+                    .into_iter()
+                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
+                    .collect(),
+            });
+        }
+        if artifacts.is_empty() {
+            warn!("skipping shell installer: not building any supported platforms (use --artifacts=global)");
+            return;
+        };
+
+        let installer_artifact = Artifact {
+            id: artifact_name,
+            target_triples: target_triples.into_iter().collect(),
+            dir_name: None,
+            dir_path: None,
+            file_path: artifact_path.clone(),
+            required_binaries: FastMap::new(),
+            kind: ArtifactKind::Installer(InstallerImpl::Npm(NpmInstallerInfo {
+                npm_package_name,
+                npm_package_version,
+                inner: InstallerInfo {
+                    dest_path: artifact_path,
+                    app_name: release.app_name.clone(),
+                    app_version: release.version.to_string(),
+                    base_url: download_url.clone(),
+                    artifacts,
+                    hint,
+                    desc,
+                },
             })),
         };
 
@@ -1506,7 +1598,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if !global_installers.is_empty() {
                 writeln!(gh_body, "## Install {heading_suffix}\n").unwrap();
                 for (_installer, details) in global_installers {
-                    let (InstallerImpl::Shell(info) | InstallerImpl::Powershell(info)) = details;
+                    let (InstallerImpl::Shell(info)
+                    | InstallerImpl::Powershell(info)
+                    | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. })) = details;
 
                     writeln!(&mut gh_body, "### {}\n", info.desc).unwrap();
                     writeln!(&mut gh_body, "```shell\n{}\n```\n", info.hint).unwrap();

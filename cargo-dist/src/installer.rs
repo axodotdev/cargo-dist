@@ -7,7 +7,7 @@ use std::fs::File;
 use miette::{Context, IntoDiagnostic};
 use newline_converter::{dos2unix, unix2dos};
 
-use crate::{DistGraph, InstallerInfo};
+use crate::{DistGraph, InstallerInfo, NpmInstallerInfo};
 
 ////////////////////////////////////////////////////////////////
 // Shell Installer
@@ -188,4 +188,15 @@ fn write_install_ps_script<W: std::io::Write>(
     f.write_all(unix2dos(&install_script).as_bytes())?;
 
     Ok(())
+}
+
+////////////////////////////////////////////////////////////////
+// NPM Installer
+////////////////////////////////////////////////////////////////
+
+pub(crate) fn generate_install_npm_project(
+    dist: &DistGraph,
+    info: &NpmInstallerInfo,
+) -> Result<(), miette::Report> {
+    todo!()
 }
