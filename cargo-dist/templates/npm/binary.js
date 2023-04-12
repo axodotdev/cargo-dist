@@ -53,7 +53,7 @@ const getPlatform = () => {
 
   if (!!platform) {
     error(
-      `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${supportedPlatforms}`
+      `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(supportedPlatforms).join(",")}`
     );
   }
 
