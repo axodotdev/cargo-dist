@@ -426,7 +426,7 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
     Ok(())
 }
 
-fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
     let _bytes_written = std::fs::copy(src_path, dest_path)
         .into_diagnostic()
         .wrap_err_with(|| format!("failed to copy file {src_path} => {dest_path}"))?;

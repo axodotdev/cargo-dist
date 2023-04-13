@@ -1304,6 +1304,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping npm installer: missing workspace.metadata.npm-namespace");
             return;
         };
+
         let npm_package_name = format!("{namespace}/{}", release.app_name);
         let npm_package_version = release.version.to_string();
         let npm_package_desc = release.app_desc.clone();
