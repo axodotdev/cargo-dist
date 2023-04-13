@@ -51,14 +51,14 @@ const getPlatform = () => {
   let target_triple = `${arch}-${os_type}`;
   let platform = supportedPlatforms[target_triple];
 
-  if (!!platform) {
+  if (!platform) {
     error(
       `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(supportedPlatforms).join(",")}`
     );
   }
 
   // These are both situation where you might toggle to unknown-linux-musl but we don't support that yet
-  if (supportedPlatform.TYPE === "Linux") {
+  if (raw_os_type === "Linux") {
     if (libc.isNonGlibcLinuxSync()) {
       error("This operating system does not support dynamic linking to glibc.");
     } else {
@@ -78,6 +78,8 @@ const getPlatform = () => {
       }
     }
   }
+
+  return platform;
 };
 
 const getBinary = () => {
@@ -96,6 +98,7 @@ const getBinary = () => {
 const install = () => {
   const binary = getBinary();
   const proxy = configureProxy(binary.url);
+  const suppressLogs = false;
 
   return binary.install(proxy, suppressLogs);
 };
