@@ -695,6 +695,8 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
         dist: None,
         include: vec![],
         auto_includes: None,
+        windows_archive: None,
+        unix_archive: None,
     };
 
     const KEY_RUST_VERSION: &str = "rust-toolchain-version";
@@ -725,6 +727,14 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
     const KEY_AUTO_INCLUDE: &str = "auto-includes";
     const DESC_AUTO_INCLUDE: &str =
         "# Whether to auto-include files like READMEs, LICENSEs, and CHANGELOGs (default true)\n";
+
+    const KEY_WIN_ARCHIVE: &str = "windows-archive";
+    const DESC_WIN_ARCHIVE: &str =
+        "# The archive format to use for windows builds (defaults .zip)\n";
+
+    const KEY_UNIX_ARCHIVE: &str = "unix-archive";
+    const DESC_UNIX_ARCHIVE: &str =
+        "# The archive format to use for non-windows builds (defaults .tar.xz)\n";
 
     let mut new_metadata = toml_edit::table();
     let table = new_metadata.as_table_mut().unwrap();
@@ -800,6 +810,20 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
             .key_decor_mut(KEY_AUTO_INCLUDE)
             .unwrap()
             .set_prefix(DESC_AUTO_INCLUDE);
+    }
+    if let Some(val) = meta.windows_archive {
+        table.insert(KEY_WIN_ARCHIVE, value(val.ext()));
+        table
+            .key_decor_mut(KEY_WIN_ARCHIVE)
+            .unwrap()
+            .set_prefix(DESC_WIN_ARCHIVE);
+    }
+    if let Some(val) = meta.unix_archive {
+        table.insert(KEY_UNIX_ARCHIVE, value(val.ext()));
+        table
+            .key_decor_mut(KEY_UNIX_ARCHIVE)
+            .unwrap()
+            .set_prefix(DESC_UNIX_ARCHIVE);
     }
     table
         .decor_mut()

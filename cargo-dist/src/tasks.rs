@@ -192,6 +192,18 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "auto-includes")]
     pub auto_includes: Option<bool>,
+
+    /// The archive format to use for windows builds (defaults .zip)
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "windows-archive")]
+    pub windows_archive: Option<ZipStyle>,
+
+    /// The archive format to use for non-windows builds (defaults .tar.xz)
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "unix-archive")]
+    pub unix_archive: Option<ZipStyle>,
 }
 
 impl DistMetadata {
@@ -221,6 +233,12 @@ impl DistMetadata {
         }
         if self.auto_includes.is_none() {
             self.auto_includes = workspace_config.auto_includes;
+        }
+        if self.windows_archive.is_none() {
+            self.windows_archive = workspace_config.windows_archive;
+        }
+        if self.unix_archive.is_none() {
+            self.unix_archive = workspace_config.unix_archive;
         }
         self.include
             .extend(workspace_config.include.iter().cloned());
@@ -575,6 +593,10 @@ pub struct Release {
     pub changelog_body: Option<String>,
     /// The title of the changelog for this release
     pub changelog_title: Option<String>,
+    /// Archive format to use on windows
+    pub windows_archive: ZipStyle,
+    /// Archive format to use on non-windows
+    pub unix_archive: ZipStyle,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -635,6 +657,35 @@ impl ZipStyle {
                 CompressionImpl::Xzip => ".tar.xz",
                 CompressionImpl::Zstd => ".tar.zstd",
             },
+        }
+    }
+}
+
+impl Serialize for ZipStyle {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.ext())
+    }
+}
+
+impl<'de> Deserialize<'de> for ZipStyle {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let ext = String::deserialize(deserializer)?;
+        match &*ext {
+            ".zip" => Ok(ZipStyle::Zip),
+            ".tar.gz" => Ok(ZipStyle::Tar(CompressionImpl::Gzip)),
+            ".tar.xz" => Ok(ZipStyle::Tar(CompressionImpl::Xzip)),
+            ".tar.zstd" => Ok(ZipStyle::Tar(CompressionImpl::Zstd)),
+            _ => Err(D::Error::custom(format!(
+                "unknown archive format {ext}, expected one of: .zip, .tar.gz, .tar.xz, .tar.zstd"
+            ))),
         }
     }
 }
@@ -793,7 +844,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.inner.ci_style = style;
     }
 
-    fn add_release(&mut self, app_name: String, version: Version) -> ReleaseIdx {
+    fn add_release(&mut self, pkg_idx: PackageIdx) -> ReleaseIdx {
+        let package_info = self.workspace().package(pkg_idx);
+        let package_config = self.package_metadata(pkg_idx);
+
+        let app_name = package_info.name.clone();
+        let version = package_info.version.as_ref().unwrap().cargo().clone();
+        let windows_archive = package_config.windows_archive.unwrap_or(ZipStyle::Zip);
+        let unix_archive = package_config
+            .unix_archive
+            .unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
+
         let idx = ReleaseIdx(self.inner.releases.len());
         let id = format!("{app_name}-v{version}");
         info!("added release {id}");
@@ -806,6 +867,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             variants: vec![],
             changelog_body: None,
             changelog_title: None,
+            windows_archive,
+            unix_archive,
         });
         idx
     }
@@ -892,7 +955,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let release = self.release(to_release);
         let variants = release.variants.clone();
         for variant_idx in variants {
-            let (zip_artifact, built_assets) = self.make_executable_zip_for_variant(variant_idx);
+            let (zip_artifact, built_assets) =
+                self.make_executable_zip_for_variant(to_release, variant_idx);
 
             let zip_artifact_idx = self.add_local_artifact(variant_idx, zip_artifact);
             for (binary, dest_path) in built_assets {
@@ -906,20 +970,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     /// This is useful for installers which want to know about *potential* executable zips
     fn make_executable_zip_for_variant(
         &self,
+        release_idx: ReleaseIdx,
         variant_idx: ReleaseVariantIdx,
     ) -> (Artifact, Vec<(BinaryIdx, Utf8PathBuf)>) {
         // This is largely just a lot of path/name computation
         let dist_dir = &self.inner.dist_dir;
+        let release = self.release(release_idx);
         let variant = self.variant(variant_idx);
 
-        // FIXME: this should be configurable
         let target_is_windows = variant.target.contains("windows");
         let zip_style = if target_is_windows {
-            // Windows loves them zips
-            ZipStyle::Zip
+            release.windows_archive
         } else {
-            // tar.xz is well-supported everywhere and much better than tar.gz
-            ZipStyle::Tar(CompressionImpl::Xzip)
+            release.unix_archive
         };
         let platform_exe_ext = if target_is_windows { ".exe" } else { "" };
 
@@ -1053,7 +1116,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Compute the artifact zip this variant *would* make *if* it were built
             // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
             // way to add artifacts to the graph and then say "ok but don't build it".
-            let (artifact, binaries) = self.make_executable_zip_for_variant(variant_idx);
+            let (artifact, binaries) =
+                self.make_executable_zip_for_variant(to_release, variant_idx);
             let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
                 unreachable!();
             };
@@ -1124,7 +1188,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Compute the artifact zip this variant *would* make *if* it were built
             // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
             // way to add artifacts to the graph and then say "ok but don't build it".
-            let (artifact, binaries) = self.make_executable_zip_for_variant(variant_idx);
+            let (artifact, binaries) =
+                self.make_executable_zip_for_variant(to_release, variant_idx);
             let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
                 unreachable!();
             };
@@ -1799,11 +1864,9 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         let package_info = graph.workspace().package(*pkg_idx);
         // FIXME: this clone is hacky but I'm in the middle of a nasty refactor
         let package_config = graph.package_metadata(*pkg_idx).clone();
-        let app_name = package_info.name.clone();
-        let version = package_info.version.as_ref().unwrap().cargo().clone();
 
         // Create a Release for this binary
-        let release = graph.add_release(app_name, version);
+        let release = graph.add_release(*pkg_idx);
 
         // Create variants for this Release for each target
         for target in triples {
