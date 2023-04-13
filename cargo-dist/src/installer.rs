@@ -98,7 +98,7 @@ fn write_install_sh_script<W: std::io::Write>(
         }
     }
 
-    let install_script = include_str!("installer.sh");
+    let install_script = include_str!("../templates/installer.sh");
     let install_script = install_script
         .replace("{{APP_NAME}}", app_name)
         .replace("{{APP_VERSION}}", app_version)
@@ -180,7 +180,7 @@ fn write_install_ps_script<W: std::io::Write>(
         entries.push_str(&entry);
     }
     let platform_info = platform_info_template.replace("{{ENTRIES}}", &entries);
-    let install_script = include_str!("installer.ps1");
+    let install_script = include_str!("../templates/installer.ps1");
     let install_script = install_script
         .replace("{{APP_NAME}}", app_name)
         .replace("{{APP_VERSION}}", app_version)
