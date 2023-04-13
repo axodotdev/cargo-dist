@@ -100,7 +100,7 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
     }
 
     // Finally write the final CI script to the Writer
-    let ci_yml = include_str!("ci.yml");
+    let ci_yml = include_str!("../templates/ci.yml");
     let ci_yml = ci_yml
         .replace("{{{{INSTALL_RUST}}}}", &install_rust)
         .replace("{{{{INSTALL_DIST_SH}}}}", &install_dist_sh)
