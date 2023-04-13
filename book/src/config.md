@@ -128,6 +128,29 @@ Example: `auto-includes = false`
 
 Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [executable-zips][]. Defaults to true.
 
+### windows-archive
+
+Example: `windows-archive = ".tar.gz"`
+
+Allows you to specify the file format to use for [executable-zips][] that target windows. The default is
+".zip". Supported values:
+
+* ".zip"
+* ".tar.gz"
+* ".tar.xz"
+* ".tar.zstd"
+
+See also unix-archive below.
+
+### unix-archive
+
+Example: `unix-archive = ".tar.gz"`
+
+Allows you to specify the file format to use for [executable-zips][] that target not-windows. The default is
+".tar.xz". See "windows-archive" above for a complete list of supported values.
+
+
+
 ### dist
 
 Example: `dist = false`
