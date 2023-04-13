@@ -7,7 +7,7 @@ use std::fs::File;
 use miette::{Context, IntoDiagnostic};
 use newline_converter::{dos2unix, unix2dos};
 
-use crate::{DistGraph, InstallerInfo, ZipStyle};
+use crate::{DistGraph, InstallerInfo};
 
 ////////////////////////////////////////////////////////////////
 // Shell Installer
@@ -43,6 +43,7 @@ fn write_install_sh_script<W: std::io::Write>(
     let platform_entry_template = r###"
         "{{TARGET}}")
             _artifact_name="{{ARTIFACT_NAME}}"
+            _root_artifact_dir="{{ROOT_ARTIFACT_DIR}}"
             _zip_ext="{{ZIP_EXT}}"
             _bins="{{BINS}}"
             ;;"###;
@@ -64,9 +65,9 @@ fn write_install_sh_script<W: std::io::Write>(
     for artifact in artifacts {
         assert!(artifact.target_triples.len() == 1, "It's awesome you made multi-arch executable-zips, but now you need to implement support in the sh installer!");
         let target = &artifact.target_triples[0];
-        assert_eq!(artifact.zip_style, ZipStyle::Tar(crate::CompressionImpl::Xzip), "If you're trying to make zip styles configurable, but now you need to implement support in the sh installer!");
         let zip_ext = artifact.zip_style.ext();
         let artifact_name = &artifact.id;
+        let root_artifact_dir = &artifact.dir_name;
 
         let mut bins = String::new();
         let mut multi_bin = false;
@@ -84,6 +85,7 @@ fn write_install_sh_script<W: std::io::Write>(
         let entry = platform_entry_template
             .replace("{{TARGET}}", target)
             .replace("{{ARTIFACT_NAME}}", artifact_name)
+            .replace("{{ROOT_ARTIFACT_DIR}}", root_artifact_dir)
             .replace("{{BINS}}", &bins)
             .replace("{{ZIP_EXT}}", zip_ext);
         entries.push_str(&entry);
@@ -155,7 +157,6 @@ fn write_install_ps_script<W: std::io::Write>(
     for artifact in artifacts {
         assert!(artifact.target_triples.len() == 1, "It's awesome you made multi-arch executable-zips, but now you need to implement support in the ps1 installer!");
         let target = &artifact.target_triples[0];
-        assert_eq!(artifact.zip_style, ZipStyle::Zip, "If you're trying to make zip styles configurable, but now you need to implement support in the ps1 installer!");
         let zip_ext = artifact.zip_style.ext();
         let artifact_name = &artifact.id;
 
