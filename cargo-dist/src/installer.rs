@@ -43,7 +43,6 @@ fn write_install_sh_script<W: std::io::Write>(
     let platform_entry_template = r###"
         "{{TARGET}}")
             _artifact_name="{{ARTIFACT_NAME}}"
-            _root_artifact_dir="{{ROOT_ARTIFACT_DIR}}"
             _zip_ext="{{ZIP_EXT}}"
             _bins="{{BINS}}"
             ;;"###;
@@ -67,7 +66,6 @@ fn write_install_sh_script<W: std::io::Write>(
         let target = &artifact.target_triples[0];
         let zip_ext = artifact.zip_style.ext();
         let artifact_name = &artifact.id;
-        let root_artifact_dir = &artifact.dir_name;
 
         let mut bins = String::new();
         let mut multi_bin = false;
@@ -85,7 +83,6 @@ fn write_install_sh_script<W: std::io::Write>(
         let entry = platform_entry_template
             .replace("{{TARGET}}", target)
             .replace("{{ARTIFACT_NAME}}", artifact_name)
-            .replace("{{ROOT_ARTIFACT_DIR}}", root_artifact_dir)
             .replace("{{BINS}}", &bins)
             .replace("{{ZIP_EXT}}", zip_ext);
         entries.push_str(&entry);

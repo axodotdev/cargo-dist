@@ -729,8 +729,6 @@ pub struct ExecutableZipFragment {
     pub binaries: Vec<String>,
     /// The style of zip this is
     pub zip_style: ZipStyle,
-    /// Name of the root dir inside the archive
-    pub dir_name: String,
 }
 
 /// Cargo features a cargo build should use.
@@ -1126,7 +1124,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             target_triples.insert(target.clone());
             artifacts.push(ExecutableZipFragment {
                 id: artifact.id,
-                dir_name: artifact.dir_name.clone().unwrap(),
                 target_triples: artifact.target_triples,
                 zip_style: zip.zip_style,
                 binaries: binaries
@@ -1199,7 +1196,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             target_triples.insert(target.clone());
             artifacts.push(ExecutableZipFragment {
                 id: artifact.id,
-                dir_name: artifact.dir_name.clone().unwrap(),
                 target_triples: artifact.target_triples,
                 zip_style: zip.zip_style,
                 binaries: binaries

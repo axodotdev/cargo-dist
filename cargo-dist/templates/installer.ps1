@@ -108,9 +108,6 @@ function Download($download_url, $platforms) {
 
   # Select the tool to unpack the files with.
   #
-  # Expand-Archive defaults to removing the root dir (convenient!), so we pass
-  # --strip-components 1 to tar to make them behave the same.
-  #
   # As of windows 10(?), powershell comes with tar preinstalled, but in practice
   # it only seems to support .tar.gz, and not xz/zstd. Still, we should try to
   # forward all tars to it in case the user has a machine that can handle it!
