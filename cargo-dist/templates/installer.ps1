@@ -104,11 +104,29 @@ function Download($download_url, $platforms) {
   $wc = New-Object Net.Webclient
   $wc.downloadFile($url, $dir_path)
 
-  # FIXME: this will probably need to do something else for a zip_ext != ?
-  # at worst we can just stop here and the file is fetched for the user?
   "Unpacking to $tmp" | Out-Host
-  Expand-Archive -Path $dir_path -DestinationPath "$tmp"
-  
+
+  # Select the tool to unpack the files with.
+  #
+  # Expand-Archive defaults to removing the root dir (convenient!), so we pass
+  # --strip-components 1 to tar to make them behave the same.
+  #
+  # As of windows 10(?), powershell comes with tar preinstalled, but in practice
+  # it only seems to support .tar.gz, and not xz/zstd. Still, we should try to
+  # forward all tars to it in case the user has a machine that can handle it!
+  switch -Wildcard ($zip_ext) {
+    ".zip" {
+      Expand-Archive -Path $dir_path -DestinationPath "$tmp";
+      Break
+    }
+    ".tar.*" {
+      tar xf $dir_path --strip-components 1 -C "$tmp";
+      Break
+    }
+    Default {
+      throw "ERROR: unknown archive format $zip_ext"
+    }
+  }
 
   # Let the next step know what to copy
   $bin_paths = @()
