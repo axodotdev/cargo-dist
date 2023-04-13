@@ -841,9 +841,12 @@ pub struct GenerateCiArgs {}
 /// Generate CI scripts (impl of `cargo dist generate-ci`)
 pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
     let dist = gather_work(cfg)?;
+    // Enforce cargo-dist-version, unless it's a magic vX.Y.Z-github-BRANCHNAME version,
+    // which we use for testing against a PR branch. In that case the current_version
+    // should be irrelevant (so sayeth the person who made and uses this feature).
     if let Some(desired_version) = &dist.desired_cargo_dist_version {
         let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
-        if desired_version != &current_version {
+        if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
             return Err(miette!("you're running cargo-dist {}, but 'cargo-dist-version = {}' is set in your Cargo.toml\n\nYou should update cargo-dist-version if you want to update to this version", current_version, desired_version));
         }
     }
