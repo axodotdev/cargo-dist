@@ -35,7 +35,7 @@ rust-toolchain-version = "1.67.1"
 # CI backends to support (see 'cargo dist generate-ci')
 ci = ["github"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ```
 
 ### The "dist" Profile
@@ -58,7 +58,7 @@ Next let's talk about `[workspace.metadata.dist]`. Cargo allows other tools to i
 
 `ci = ["github"]` is just `init` faithfully recording the fact that we passed it `--ci=github`. This lets subsequent runs of [generate-ci][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. ("github" is currently the only supported CI backend.)
 
-`targets = ...` is listing the [platforms][] to build your application for. In this case, because we didn't specify the targets with `--target`, [init][] has selected the "recommended desktop suite": "x64 linux", "x64 macos", and "x64 windows". In v0.0.3 these are the only properly supported choices, because we wanted to get the core of cargo-dist solid first. v0.0.4 should hopefully introduce proper support for important targets like "arm64 macos (apple silicon)" and "musl linux".
+`targets = ...` is listing the [platforms][] to build your application for. In this case, because we didn't specify the targets with `--target`, [init][] has selected the "recommended desktop suite": "x64 linux", "x64 macos", "x64 windows", and "arm64 macos (Apple silicon)". In v0.0.5 these are the only properly supported choices, because we wanted to get the core of cargo-dist solid first. Future versions should hopefully introduce proper support for important targets like "musl linux".
 
 The most important thing that this config *doesn't* have that you might want to include is "[installers][]". You can either manually add them to the [config][] or have [init][] do it for you with the `--installer` flag. Installers are intentionally excluded here to keep this example focused.
 
@@ -101,9 +101,10 @@ This output has two parts: "analyzing workspace" and "announcing"
 
 "analyzing workspace" describes what cargo-dist found in your workspace. In this case there's a package called "my-app" with a [binary target][bin] of the same name.
 
-"announcing v0.1.0" tells us the tag that should be pushed to announce a release of the current workspace ("v0.1.0"). Underneath it we see that the announcement will include "my-app 0.1.0" as expected. Underneath that we see 3 artifacts will be produced and uploaded:
+"announcing v0.1.0" tells us the tag that should be pushed to announce a release of the current workspace ("v0.1.0"). Underneath it we see that the announcement will include "my-app 0.1.0" as expected. Underneath that we see 4 artifacts will be produced and uploaded:
 
-* The macOS build: my-app-v0.1.0-x86_64-apple-darwin.tar.xz
+* The Intel macOS build: my-app-v0.1.0-x86_64-apple-darwin.tar.xz
+* The M1 macOS build: my-app-v0.1.0-aarch64-apple-darwin.tar.xz
 * The Windows build: my-app-v0.1.0-x86_64-pc-windows-msvc.zip
 * The Linux build: my-app-v0.1.0-x86_64-unknown-linux-gnu.tar.xz
 

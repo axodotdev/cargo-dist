@@ -20,8 +20,7 @@ Some notes on how we build your executables:
 * We currently [always build with default features][features-issue]
 * When targeting windows-msvc we will unconditionally [append "-Ctarget-feature=+crt-static"][crt-static-rfc] to your RUSTFLAGS, which should just be the default for rustc but isn't for legacy reasons
 * We don't yet [support cross-compilation][cross-issue]. We'll faithfully attempt the compile by passing `--target` to cargo as instructed but it will probably just fail.
-    * [arm64-apple-darwin (apple silicon) is slated for 0.0.4][arm64-apple-issue]
-    * [linux-musl is slated for 0.0.4][musl-issue]
+    * [linux-musl is slated for a future version][musl-issue]
 
 ## symbols
 
