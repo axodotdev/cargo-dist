@@ -68,7 +68,7 @@ The other 3 fields are defining the various Artifacts that should be produced fo
 
 For each entry in `targets` you will get a build of your App for [that platform][rust-platform] in the form of an [executable-zip][].
 
-For each entry in `installers` you get that kind of installer for your App. There are two classes of installer: "global" and "local". This will be explained further in [the section on artifact modes][], but the tl;dr is that "global" installers are one-per-App while "local" installers are one-per-platform-per-app, similar to a [Github CI Matrix](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs).
+For each entry in `installers` you get that kind of installer for your App. There are two classes of installer: "global" and "local". This will be explained further in [the section on artifact modes][artifact-modes-section], but the tl;dr is that "global" installers are one-per-App while "local" installers are one-per-platform-per-app, similar to a [Github CI Matrix](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs).
 
 "shell" and "powershell" are both global installers. There aren't currently any implemented local installers, but those would be things like a windows "msi" or macos "dmg", where you ostensibly want individual installers for each architecture.
 
