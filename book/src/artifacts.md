@@ -48,7 +48,7 @@ In the future installers should hopefully include things like:
 
 [rework-symbols]: https://github.com/axodotdev/cargo-dist/issues/136
 [config-targets]: ./config.md#targets
-[config-installers]: ./config.md#installers
+[installers config]: ./config.md#installers
 [config-include]: ./config.md#include
 [config-auto-includes]: ./config.md#auto-includes
 [msi-installer-issue]: https://github.com/axodotdev/cargo-dist/issues/23
