@@ -1,6 +1,6 @@
 # Using cargo-release
 
-> NOTE: It will be helpful to read [the section on cargo-dist Announcement Tags][announcement-tags], because that is the interface boundary between cargo-release and cargo-dist. TL;DR: cargo-dist interprets a git tag of "v1.0.0" as "Announce/Release the whole workspace" (Unified Announcement) and "my-app-v1.0.0" as "Announce/Release that one package" (Singular Announcement).
+> NOTE: It will be helpful to read [the section on cargo-dist Announcement Tags][announcements], because that is the interface boundary between cargo-release and cargo-dist. TL;DR: cargo-dist interprets a git tag of "v1.0.0" as "Announce/Release the whole workspace" (Unified Announcement) and "my-app-v1.0.0" as "Announce/Release that one package" (Singular Announcement).
 
 > NOTE: this guide assumes you're running [cargo-release v0.22.0][release-22] or greater, as that version made several significant changes to default behaviours (for the better!).
 
@@ -166,7 +166,7 @@ cargo release 1.0.0 --workspace
 
 --------------
 
-If you have a [non-virtual workspace][] (one where the root Cargo.toml is a package) and want everything in the workspace to be versioned/released in lockstep with a single Unified Announcement (One Big Github Release), then it's *almost* the same as the virtual case (see the previous section).
+If you have a non-virtual workspace (one where the root Cargo.toml is a package) and want everything in the workspace to be versioned/released in lockstep with a single Unified Announcement (One Big Github Release), then it's *almost* the same as the virtual case (see the previous section).
 
 The one caveat is that cargo-dist is consistent to a fault here, and even though we've explicitly told it things should be versioned/tagged in lockstep, **running it in the root of your project still only releases the root package**, and that's not what you want!
 
@@ -194,7 +194,7 @@ cargo release -p my-package 1.0.0
 
 -------------
 
-If you have a [non-virtual workspace][] (one where the root Cargo.toml is a package) and want everything in the workspace to be versioned/released independently, then the simplest approach is to make everything behave like it does in the [Virtual Workspace With Independent Versions][virtual-independent-section].
+If you have a non-virtual workspace (one where the root Cargo.toml is a package) and want everything in the workspace to be versioned/released independently, then the simplest approach is to make everything behave like it does in the [Virtual Workspace With Independent Versions][virtual-independent-section].
 
 However if you find yourself in this position it's likely that your workspace actually looks like:
 
