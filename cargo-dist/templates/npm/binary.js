@@ -25,7 +25,7 @@ const getPlatform = () => {
   // for a platform, so translate the "os" library's concepts into rust ones
   let os_type = "";
   switch (raw_os_type) {
-    case "Windows_NT": 
+    case "Windows_NT":
       os_type = "pc-windows-msvc";
       break;
     case "Darwin":

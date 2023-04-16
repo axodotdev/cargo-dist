@@ -113,7 +113,7 @@ install() {
         # unzip seems to need this chmod
         chmod +x "$_install_dir/$_bin_name"
     done
-    
+
     say "everything's installed!"
 }
 
