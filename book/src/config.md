@@ -179,7 +179,10 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
 [concepts]: ./concepts.md
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
+[generate-ci]: ./cli.md#cargo-dist-generate-ci
 [semver-version]: https://docs.rs/semver/latest/semver/struct.Version.html
+[rust-version]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field
+[rustup]: https://rust-lang.github.io/rustup/
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [executable-zips]: ./artifacts.md#executable-zip
-[artifacts-modes]: ./concepts.md#artifact-modes-selecting-artifacts
+[artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
