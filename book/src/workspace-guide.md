@@ -1,6 +1,6 @@
 # Guide: More Complex Workspaces
 
-Now that we've [looked at a simple example][] with `cargo new`, let's start looking at ways to make a [Cargo Workspace][] more complicated, and how cargo-dist will deal with them.
+Now that we've [looked at a simple example][simple-guide] with `cargo new`, let's start looking at ways to make a [Cargo Workspace][workspace] more complicated, and how cargo-dist will deal with them.
 
 But first, let's define some precise terminology: 
 
