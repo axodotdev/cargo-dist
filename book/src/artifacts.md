@@ -7,7 +7,7 @@ cargo-dist's primary role is to produce "Artifacts", either to use locally or to
 
 executable-zips are the primary output of cargo-dist: a zip (or tarball) containing prebuilt executables/binaries for an app, along with additional static files like READMEs, LICENSES, and CHANGELOGs.
 
-When you [tell us to build an App for a platform][] we will make an executable-zip for it. Universal installers will fetch and unpack executable zips from wherever you uploaded them (currently Github Releases).
+When you [tell us to build an App for a platform][apps] we will make an executable-zip for it. Universal installers will fetch and unpack executable zips from wherever you uploaded them (currently Github Releases).
 
 You can modify what files get included with the [include][config-include] and [auto-includes][config-auto-includes] configs.
 
@@ -46,6 +46,7 @@ In the future installers should hopefully include things like:
 (We should really flesh this section out more and make it the canonical listing of installers other places link to!)
 
 
+[apps]: ./concepts.md#defining-your-apps
 [rework-symbols]: https://github.com/axodotdev/cargo-dist/issues/136
 [config-targets]: ./config.md#targets
 [installers config]: ./config.md#installers
