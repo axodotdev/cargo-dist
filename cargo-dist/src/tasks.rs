@@ -205,13 +205,13 @@ pub struct DistMetadata {
     #[serde(rename = "unix-archive")]
     pub unix_archive: Option<ZipStyle>,
 
-    /// A namespace to prefix npm packages with.
+    /// A scope to prefix npm packages with (@ should be included).
     ///
     /// This is required if you're using an npm installer.
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "npm-namespace")]
-    pub npm_namespace: Option<String>,
+    #[serde(rename = "npm-scope")]
+    pub npm_scope: Option<String>,
 }
 
 impl DistMetadata {
@@ -247,6 +247,9 @@ impl DistMetadata {
         }
         if self.unix_archive.is_none() {
             self.unix_archive = workspace_config.unix_archive;
+        }
+        if self.npm_scope.is_none() {
+            self.npm_scope = workspace_config.npm_scope.clone();
         }
         self.include
             .extend(workspace_config.include.iter().cloned());
@@ -1300,12 +1303,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping npm installer: couldn't compute a URL to download artifacts from");
             return;
         };
-        let Some(namespace) = &self.workspace_metadata.npm_namespace else {
-            warn!("skipping npm installer: missing workspace.metadata.npm-namespace");
-            return;
-        };
 
-        let npm_package_name = format!("{namespace}/{}", release.app_name);
+        let npm_package_name = if let Some(scope) = &self.workspace_metadata.npm_scope {
+            format!("{scope}/{}", release.app_name)
+        } else {
+            release.app_name.clone()
+        };
         let npm_package_version = release.version.to_string();
         let npm_package_desc = release.app_desc.clone();
         let npm_package_authors = release.app_authors.clone();
@@ -1330,7 +1333,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Compute the artifact zip this variant *would* make *if* it were built
             // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
             // way to add artifacts to the graph and then say "ok but don't build it".
-            let (artifact, binaries) = self.make_executable_zip_for_variant(to_release, variant_idx);
+            let (artifact, binaries) =
+                self.make_executable_zip_for_variant(to_release, variant_idx);
             let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
                 unreachable!();
             };

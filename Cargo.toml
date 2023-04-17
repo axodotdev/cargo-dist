@@ -21,7 +21,10 @@ installers = ["shell", "powershell", "npm"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 # Namespace to publish packages to the npm registry with
-npm-namespace = "axodotdev"
+npm-scope = "@axodotdev"
+# Format to use for tarballs/zips -- .tar.gz is currently required for the npm installer
+windows-archive = ".tar.gz"
+unix-archive = ".tar.gz"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

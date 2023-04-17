@@ -705,7 +705,7 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
         auto_includes: None,
         windows_archive: None,
         unix_archive: None,
-        npm_namespace: None,
+        npm_scope: None,
     };
 
     const KEY_RUST_VERSION: &str = "rust-toolchain-version";
@@ -745,8 +745,8 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
     const DESC_UNIX_ARCHIVE: &str =
         "# The archive format to use for non-windows builds (defaults .tar.xz)\n";
 
-    const KEY_NPM_NAMESPACE: &str = "npm-namespace";
-    const DESC_NPM_NAMESPACE: &str =
+    const KEY_NPM_SCOPE: &str = "npm-scope";
+    const DESC_NPM_SCOPE: &str =
         "# A namespace to use when publishing this package to the npm registry\n";
 
     let mut new_metadata = toml_edit::table();
@@ -839,12 +839,12 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
             .unwrap()
             .set_prefix(DESC_UNIX_ARCHIVE);
     }
-    if let Some(val) = meta.npm_namespace {
-        table.insert(KEY_NPM_NAMESPACE, value(val));
+    if let Some(val) = meta.npm_scope {
+        table.insert(KEY_NPM_SCOPE, value(val));
         table
-            .key_decor_mut(KEY_NPM_NAMESPACE)
+            .key_decor_mut(KEY_NPM_SCOPE)
             .unwrap()
-            .set_prefix(DESC_NPM_NAMESPACE);
+            .set_prefix(DESC_NPM_SCOPE);
     }
     table
         .decor_mut()
