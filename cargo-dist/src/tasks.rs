@@ -534,17 +534,10 @@ pub struct Artifact {
     ///
     /// i.e. `x86_64-pc-windows-msvc`
     pub target_triples: Vec<TargetTriple>,
-    /// The name of the directory this artifact's contents will be stored in (if necessary).
-    ///
-    /// This directory is technically a transient thing but it will show up as the name of
-    /// the directory in a `tar`. Single file artifacts don't need this.
-    ///
-    /// i.e. `cargo-dist-v0.1.0-x86_64-pc-windows-msvc`
-    pub dir_name: Option<String>,
-    /// The path of the directory this artifact's contents will be stored in (if necessary).
-    ///
-    /// i.e. `/.../target/dist/cargo-dist-v0.1.0-x86_64-pc-windows-msvc/`
-    pub dir_path: Option<Utf8PathBuf>,
+    /// If constructing this artifact involves creating a directory,
+    /// copying static files into it, and then zip/tarring it, set this
+    /// value to automate those tasks.
+    pub archive: Option<Archive>,
     /// The path where the final artifact will appear in the dist dir.
     ///
     /// i.e. `/.../target/dist/cargo-dist-v0.1.0-x86_64-pc-windows-msvc.zip`
@@ -555,6 +548,29 @@ pub struct Artifact {
     pub required_binaries: FastMap<BinaryIdx, Utf8PathBuf>,
     /// The kind of artifact this is
     pub kind: ArtifactKind,
+}
+
+/// Info about an archive (zip/tarball) that should be made. Currently this is always part
+/// of an Artifact, and the final output will be [`Artifact::file_path`][].
+#[derive(Debug)]
+pub struct Archive {
+    /// The name of the directory this artifact's contents will be stored in.
+    ///
+    /// This directory is technically a transient thing but it will show up as the name of
+    /// the directory in a `tar`.
+    ///
+    /// i.e. `cargo-dist-v0.1.0-x86_64-pc-windows-msvc`
+    pub dir_name: String,
+    /// The path of the directory this artifact's contents will be stored in.
+    ///
+    /// i.e. `/.../target/dist/cargo-dist-v0.1.0-x86_64-pc-windows-msvc/`
+    pub dir_path: Utf8PathBuf,
+    /// The style of zip to make
+    pub zip_style: ZipStyle,
+    /// Static assets to copy to the root of the artifact's dir (path is src)
+    ///
+    /// In the future this might add a custom relative dest path
+    pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
 }
 
 /// A kind of artifact (more specific fields)
@@ -572,12 +588,7 @@ pub enum ArtifactKind {
 /// An ExecutableZip Artifact
 #[derive(Debug)]
 pub struct ExecutableZip {
-    /// The style of zip to make
-    pub zip_style: ZipStyle,
-    /// Static assets to copy to the root of the artifact's dir (path is src)
-    ///
-    /// In the future this might add a custom relative dest path
-    pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
+    // everything important is already part of Artifact
 }
 
 /// A Symbols/Debuginfo Artifact
@@ -623,6 +634,8 @@ pub struct Release {
     pub windows_archive: ZipStyle,
     /// Archive format to use on non-windows
     pub unix_archive: ZipStyle,
+    /// Static assets that should be included in bundles like executable-zips
+    pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -642,7 +655,7 @@ pub struct ReleaseVariant {
 }
 
 /// A particular kind of static asset we're interested in
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StaticAssetKind {
     /// A README file
     Readme,
@@ -912,6 +925,24 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .unix_archive
             .unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
 
+        // Add static assets
+        let mut static_assets = vec![];
+        let auto_includes_enabled = package_config.auto_includes.unwrap_or(true);
+        if auto_includes_enabled {
+            if let Some(readme) = &package_info.readme_file {
+                static_assets.push((StaticAssetKind::Readme, readme.clone()));
+            }
+            if let Some(changelog) = &package_info.changelog_file {
+                static_assets.push((StaticAssetKind::Changelog, changelog.clone()));
+            }
+            for license in &package_info.license_files {
+                static_assets.push((StaticAssetKind::License, license.clone()));
+            }
+        }
+        for static_asset in &package_config.include {
+            static_assets.push((StaticAssetKind::Other, static_asset.clone()));
+        }
+
         let idx = ReleaseIdx(self.inner.releases.len());
         let id = format!("{app_name}-v{version}");
         info!("added release {id}");
@@ -931,6 +962,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             changelog_title: None,
             windows_archive,
             unix_archive,
+            static_assets,
         });
         idx
     }
@@ -941,8 +973,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             id: release_id,
             variants,
             targets,
+            static_assets,
             ..
         } = self.release_mut(to_release);
+        let static_assets = static_assets.clone();
         let id = format!("{release_id}-{target}");
         info!("added variant {id}");
 
@@ -954,7 +988,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             id,
             local_artifacts: vec![],
             binaries: vec![],
-            static_assets: vec![],
+            static_assets,
         });
         idx
     }
@@ -992,16 +1026,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         self.variant_mut(to_variant).binaries.push(idx);
-    }
-
-    fn add_static_asset(
-        &mut self,
-        to_variant: ReleaseVariantIdx,
-        kind: StaticAssetKind,
-        path: Utf8PathBuf,
-    ) {
-        let ReleaseVariant { static_assets, .. } = self.variant_mut(to_variant);
-        static_assets.push((kind, path));
     }
 
     fn add_executable_zip(&mut self, to_release: ReleaseIdx) {
@@ -1067,14 +1091,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             Artifact {
                 id: artifact_name,
                 target_triples: vec![variant.target.clone()],
-                dir_name: Some(artifact_dir_name),
-                dir_path: Some(artifact_dir_path),
                 file_path: artifact_path,
                 required_binaries: FastMap::new(),
-                kind: ArtifactKind::ExecutableZip(ExecutableZip {
+                archive: Some(Archive {
+                    dir_name: artifact_dir_name,
+                    dir_path: artifact_dir_path,
                     zip_style,
                     static_assets,
                 }),
+                kind: ArtifactKind::ExecutableZip(ExecutableZip {}),
             },
             built_assets,
         )
@@ -1115,8 +1140,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 let artifact = Artifact {
                     id: dest_symbol_name,
                     target_triples: vec![binary.target.clone()],
-                    dir_name: None,
-                    dir_path: None,
+                    archive: None,
                     file_path: artifact_path.clone(),
                     required_binaries: FastMap::new(),
                     kind: ArtifactKind::Symbols(Symbols { kind: symbol_kind }),
@@ -1181,14 +1205,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // way to add artifacts to the graph and then say "ok but don't build it".
             let (artifact, binaries) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
-            let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
-                unreachable!();
-            };
             target_triples.insert(target.clone());
             artifacts.push(ExecutableZipFragment {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
-                zip_style: zip.zip_style,
+                zip_style: artifact.archive.as_ref().unwrap().zip_style,
                 binaries: binaries
                     .into_iter()
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
@@ -1203,8 +1224,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
-            dir_name: None,
-            dir_path: None,
+            archive: None,
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
             kind: ArtifactKind::Installer(InstallerImpl::Shell(InstallerInfo {
@@ -1253,14 +1273,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // way to add artifacts to the graph and then say "ok but don't build it".
             let (artifact, binaries) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
-            let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
-                unreachable!();
-            };
             target_triples.insert(target.clone());
             artifacts.push(ExecutableZipFragment {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
-                zip_style: zip.zip_style,
+                zip_style: artifact.archive.as_ref().unwrap().zip_style,
                 binaries: binaries
                     .into_iter()
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
@@ -1275,10 +1292,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
-            dir_name: None,
-            dir_path: None,
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
+            archive: None,
             kind: ArtifactKind::Installer(InstallerImpl::Powershell(InstallerInfo {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
@@ -1316,9 +1332,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let npm_package_repository_url = release.app_repository_url.clone();
         let npm_package_homepage_url = release.app_homepage_url.clone();
 
+        let static_assets = release.static_assets.clone();
         let dir_name = format!("{release_id}-npm-package");
         let dir_path = self.inner.dist_dir.join(&dir_name);
-        let artifact_name = format!("{dir_name}.tar.gz");
+        let zip_style = ZipStyle::Tar(CompressionImpl::Gzip);
+        let zip_ext = zip_style.ext();
+        let artifact_name = format!("{dir_name}{zip_ext}");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         // let installer_url = format!("{download_url}/{artifact_name}");
         let hint = format!("npm install {npm_package_name}@{npm_package_version}");
@@ -1327,6 +1346,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
         let mut target_triples = SortedSet::new();
+        let mut has_sketchy_archives = false;
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
@@ -1335,30 +1355,41 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // way to add artifacts to the graph and then say "ok but don't build it".
             let (artifact, binaries) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
-            let ArtifactKind::ExecutableZip(zip) = artifact.kind else {
-                unreachable!();
-            };
             target_triples.insert(target.clone());
+
+            let variant_zip_style = artifact.archive.as_ref().unwrap().zip_style;
+            if variant_zip_style != ZipStyle::Tar(CompressionImpl::Gzip) {
+                has_sketchy_archives = true;
+            }
+
             artifacts.push(ExecutableZipFragment {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
-                zip_style: zip.zip_style,
+                zip_style: variant_zip_style,
                 binaries: binaries
                     .into_iter()
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
             });
         }
+
+        if has_sketchy_archives {
+            warn!("the npm installer currently only knows how to unpack .tar.gz archives\n  consider setting windows-archive and unix-archive to .tar.gz in your config");
+        }
         if artifacts.is_empty() {
-            warn!("skipping shell installer: not building any supported platforms (use --artifacts=global)");
+            warn!("skipping npm installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
 
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
-            dir_name: Some(dir_name),
-            dir_path: Some(dir_path.clone()),
+            archive: Some(Archive {
+                dir_name,
+                dir_path: dir_path.clone(),
+                zip_style,
+                static_assets,
+            }),
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
             kind: ArtifactKind::Installer(InstallerImpl::Npm(NpmInstallerInfo {
@@ -1424,31 +1455,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         for artifact in &self.inner.artifacts {
             match &artifact.kind {
-                ArtifactKind::ExecutableZip(zip) => {
-                    let artifact_dir = artifact.dir_path.as_ref().unwrap();
-                    // Copy all the static assets
-                    for (_, src_path) in &zip.static_assets {
-                        let src_path = src_path.clone();
-                        let file_name = src_path.file_name().unwrap();
-                        let dest_path = artifact_dir.join(file_name);
-                        if src_path.is_dir() {
-                            build_steps.push(BuildStep::CopyDir(CopyDirStep {
-                                src_path,
-                                dest_path,
-                            }))
-                        } else {
-                            build_steps.push(BuildStep::CopyFile(CopyFileStep {
-                                src_path,
-                                dest_path,
-                            }))
-                        }
-                    }
-                    // Zip up the artifact
-                    build_steps.push(BuildStep::Zip(ZipDirStep {
-                        src_path: artifact_dir.to_owned(),
-                        dest_path: artifact.file_path.clone(),
-                        zip_style: zip.zip_style,
-                    }));
+                ArtifactKind::ExecutableZip(_zip) => {
+                    // compute_cargo_builds and artifact.archive handle everything
                 }
                 ArtifactKind::Symbols(symbols) => {
                     match symbols.kind {
@@ -1467,6 +1475,33 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     // Installer generation is complex enough that they just get monolithic impls
                     build_steps.push(BuildStep::GenerateInstaller(installer.clone()));
                 }
+            }
+
+            if let Some(archive) = &artifact.archive {
+                let artifact_dir = &archive.dir_path;
+                // Copy all the static assets
+                for (_, src_path) in &archive.static_assets {
+                    let src_path = src_path.clone();
+                    let file_name = src_path.file_name().unwrap();
+                    let dest_path = artifact_dir.join(file_name);
+                    if src_path.is_dir() {
+                        build_steps.push(BuildStep::CopyDir(CopyDirStep {
+                            src_path,
+                            dest_path,
+                        }))
+                    } else {
+                        build_steps.push(BuildStep::CopyFile(CopyFileStep {
+                            src_path,
+                            dest_path,
+                        }))
+                    }
+                }
+                // Zip up the artifact
+                build_steps.push(BuildStep::Zip(ZipDirStep {
+                    src_path: artifact_dir.to_owned(),
+                    dest_path: artifact.file_path.clone(),
+                    zip_style: archive.zip_style,
+                }));
             }
         }
 
@@ -2017,8 +2052,6 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
     // Create a Release for each package
     for (pkg_idx, binaries) in &rust_releases {
-        // FIXME: make app name configurable? Use some other fields in the PackageMetadata?
-        let package_info = graph.workspace().package(*pkg_idx);
         // FIXME: this clone is hacky but I'm in the middle of a nasty refactor
         let package_config = graph.package_metadata(*pkg_idx).clone();
 
@@ -2044,23 +2077,6 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             // Tell the variant to include this binary
             for binary in binaries {
                 graph.add_binary(variant, *pkg_idx, (*binary).clone());
-            }
-
-            // Add static assets
-            let auto_includes_enabled = package_config.auto_includes.unwrap_or(true);
-            if auto_includes_enabled {
-                if let Some(readme) = &package_info.readme_file {
-                    graph.add_static_asset(variant, StaticAssetKind::Readme, readme.clone());
-                }
-                if let Some(changelog) = &package_info.changelog_file {
-                    graph.add_static_asset(variant, StaticAssetKind::Changelog, changelog.clone());
-                }
-                for license in &package_info.license_files {
-                    graph.add_static_asset(variant, StaticAssetKind::License, license.clone());
-                }
-            }
-            for static_asset in &package_config.include {
-                graph.add_static_asset(variant, StaticAssetKind::Other, static_asset.clone())
             }
         }
         // Add executable zips to the Release
