@@ -17,17 +17,16 @@ stdout:
       "artifacts": [
         "cargo-dist-v1.0.0-FAKEVERSION-installer.sh",
         "cargo-dist-v1.0.0-FAKEVERSION-installer.ps1",
-        "cargo-dist-v1.0.0-FAKEVERSION-npm-package.tar.gz",
-        "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.gz",
-        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.gz",
-        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.tar.gz",
-        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.gz"
+        "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.xz",
+        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz",
+        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
+        "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.xz"
       ]
     }
   ],
   "artifacts": {
-    "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.gz": {
-      "name": "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.gz",
+    "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.xz": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-aarch64-apple-darwin.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "aarch64-apple-darwin"
@@ -80,42 +79,8 @@ stdout:
       "install_hint": "# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-v1.0.0-FAKEVERSION-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
-    "cargo-dist-v1.0.0-FAKEVERSION-npm-package.tar.gz": {
-      "name": "cargo-dist-v1.0.0-FAKEVERSION-npm-package.tar.gz",
-      "kind": "installer",
-      "target_triples": [
-        "aarch64-apple-darwin",
-        "x86_64-apple-darwin",
-        "x86_64-pc-windows-msvc",
-        "x86_64-unknown-linux-gnu"
-      ],
-      "assets": [
-        {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
-          "kind": "license"
-        },
-        {
-          "name": "README.md",
-          "path": "README.md",
-          "kind": "readme"
-        }
-      ],
-      "install_hint": "npm install @axodotdev/cargo-dist@1.0.0-FAKEVERSION",
-      "description": "Install prebuilt binaries into your npm project"
-    },
-    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.gz": {
-      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.gz",
+    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-apple-darwin.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-apple-darwin"
@@ -148,8 +113,8 @@ stdout:
         }
       ]
     },
-    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.tar.gz": {
-      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.tar.gz",
+    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-pc-windows-msvc.zip",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-pc-windows-msvc"
@@ -182,8 +147,8 @@ stdout:
         }
       ]
     },
-    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.gz": {
-      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.gz",
+    "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.xz": {
+      "name": "cargo-dist-v1.0.0-FAKEVERSION-x86_64-unknown-linux-gnu.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
