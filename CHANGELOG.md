@@ -1,3 +1,14 @@
+# Version 0.0.6 (under development)
+
+TODO: generate proper release notes for:
+
+* fix typo at README.md: https://github.com/axodotdev/cargo-dist/pull/203
+* factor out and use axoproject: https://github.com/axodotdev/cargo-dist/pull/207
+* factor out and use axocli: https://github.com/axodotdev/cargo-dist/pull/209
+* unlocked archive formats: https://github.com/axodotdev/cargo-dist/pull/211
+* npm installer: https://github.com/axodotdev/cargo-dist/pull/210
+
+
 # Version 0.0.5 (2023-03-15)
 
 This is a bug-fix release for an issue with cross-platform line endings that affected
