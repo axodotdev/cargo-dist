@@ -149,27 +149,29 @@ fn manifest_artifact(
             }
         });
 
-    let static_assets = match &artifact.kind {
-        ArtifactKind::ExecutableZip(zip) => zip
-            .static_assets
-            .iter()
-            .map(|(kind, asset)| {
-                let kind = match kind {
-                    StaticAssetKind::Changelog => AssetKind::Changelog,
-                    StaticAssetKind::License => AssetKind::License,
-                    StaticAssetKind::Readme => AssetKind::Readme,
-                    StaticAssetKind::Other => AssetKind::Unknown,
-                };
-                Asset {
-                    name: Some(asset.file_name().unwrap().to_owned()),
-                    path: Some(asset.file_name().unwrap().to_owned()),
-                    kind,
-                }
-            })
-            .collect(),
-        ArtifactKind::Installer(_) => vec![],
-        ArtifactKind::Symbols(_) => vec![],
-    };
+    let static_assets = artifact
+        .archive
+        .as_ref()
+        .map(|archive| {
+            archive
+                .static_assets
+                .iter()
+                .map(|(kind, asset)| {
+                    let kind = match kind {
+                        StaticAssetKind::Changelog => AssetKind::Changelog,
+                        StaticAssetKind::License => AssetKind::License,
+                        StaticAssetKind::Readme => AssetKind::Readme,
+                        StaticAssetKind::Other => AssetKind::Unknown,
+                    };
+                    Asset {
+                        name: Some(asset.file_name().unwrap().to_owned()),
+                        path: Some(asset.file_name().unwrap().to_owned()),
+                        kind,
+                    }
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
 
     assets.extend(built_assets);
     assets.extend(static_assets);
@@ -407,21 +409,21 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
             .wrap_err_with(|| format!("failed to delete old artifact {}", artifact.file_path))?;
     }
 
-    let Some(artifact_dir_path) = &artifact.dir_path else {
+    let Some(archive) = &artifact.archive else {
         // If there's no dir than we're done
         return Ok(());
     };
-    info!("recreating artifact dir: {artifact_dir_path}");
+    info!("recreating artifact dir: {}", archive.dir_path);
 
     // Clear out the dir we'll build the bundle up in
-    if artifact_dir_path.exists() {
-        std::fs::remove_dir_all(artifact_dir_path)
+    if archive.dir_path.exists() {
+        std::fs::remove_dir_all(&archive.dir_path)
             .into_diagnostic()
-            .wrap_err_with(|| format!("failed to delete old artifact dir {artifact_dir_path}"))?;
+            .wrap_err_with(|| format!("failed to delete old artifact dir {}", archive.dir_path))?;
     }
-    std::fs::create_dir(artifact_dir_path)
+    std::fs::create_dir(&archive.dir_path)
         .into_diagnostic()
-        .wrap_err_with(|| format!("failed to create artifact dir {artifact_dir_path}"))?;
+        .wrap_err_with(|| format!("failed to create artifact dir {}", archive.dir_path))?;
 
     Ok(())
 }
@@ -444,11 +446,7 @@ fn zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path, zip_style: &ZipStyle) -> R
     }
 }
 
-pub(crate) fn tar_dir(
-    src_path: &Utf8Path,
-    dest_path: &Utf8Path,
-    compression: &CompressionImpl,
-) -> Result<()> {
+fn tar_dir(src_path: &Utf8Path, dest_path: &Utf8Path, compression: &CompressionImpl) -> Result<()> {
     // Set up the archive/compression
     // The contents of the zip (e.g. a tar)
     let dir_name = src_path.file_name().unwrap();

@@ -214,21 +214,12 @@ pub(crate) fn generate_install_npm_project(
     const TEMPLATE6: &str = include_str!("../templates/npm/run.js");
 
     let zip_dir = &info.package_dir;
-    std::fs::create_dir_all(zip_dir)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("Failed to create dir for installer {zip_dir}"))?;
     apply_npm_templates(TEMPLATE1, zip_dir, TEMPLATE1_NAME, info)?;
     apply_npm_templates(TEMPLATE2, zip_dir, TEMPLATE2_NAME, info)?;
     apply_npm_templates(TEMPLATE3, zip_dir, TEMPLATE3_NAME, info)?;
     apply_npm_templates(TEMPLATE4, zip_dir, TEMPLATE4_NAME, info)?;
     apply_npm_templates(TEMPLATE5, zip_dir, TEMPLATE5_NAME, info)?;
     apply_npm_templates(TEMPLATE6, zip_dir, TEMPLATE6_NAME, info)?;
-
-    crate::tar_dir(
-        zip_dir,
-        &info.inner.dest_path,
-        &crate::CompressionImpl::Gzip,
-    )?;
 
     Ok(())
 }
