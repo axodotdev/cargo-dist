@@ -210,14 +210,14 @@ pub const NPM_PACKAGE_CONTENTS: &[&str] = &[
 const TEMPLATE1_NAME: &str = ".gitignore";
 const TEMPLATE2_NAME: &str = "binary.js";
 const TEMPLATE3_NAME: &str = "install.js";
-const TEMPLATE4_NAME: &str = "package-lock.json";
+const TEMPLATE4_NAME: &str = "npm-shrinkwrap.json";
 const TEMPLATE5_NAME: &str = "package.json";
 const TEMPLATE6_NAME: &str = "run.js";
 
 const TEMPLATE1: &str = include_str!("../templates/npm/.gitignore");
 const TEMPLATE2: &str = include_str!("../templates/npm/binary.js");
 const TEMPLATE3: &str = include_str!("../templates/npm/install.js");
-const TEMPLATE4: &str = include_str!("../templates/npm/package-lock.json");
+const TEMPLATE4: &str = include_str!("../templates/npm/npm-shrinkwrap.json");
 const TEMPLATE5: &str = include_str!("../templates/npm/package.json");
 const TEMPLATE6: &str = include_str!("../templates/npm/run.js");
 
