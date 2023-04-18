@@ -149,7 +149,7 @@ fn manifest_artifact(
             }
         });
 
-    let static_assets = artifact
+    let mut static_assets = artifact
         .archive
         .as_ref()
         .map(|archive| {
@@ -172,6 +172,20 @@ fn manifest_artifact(
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
+
+    // Record the files that we always add to an npm package
+    //
+    // These can't be pre-included in the normal static assets list above because
+    // they're generated from templates, and not copied from the user's project.
+    if let ArtifactKind::Installer(InstallerImpl::Npm(..)) = &artifact.kind {
+        for &asset in installer::NPM_PACKAGE_CONTENTS {
+            static_assets.push(Asset {
+                name: Some(asset.to_owned()),
+                path: Some(asset.to_owned()),
+                kind: AssetKind::Unknown,
+            });
+        }
+    }
 
     assets.extend(built_assets);
     assets.extend(static_assets);

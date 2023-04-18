@@ -619,6 +619,10 @@ pub struct Release {
     pub id: String,
     /// Targets this Release has artifacts for
     pub targets: Vec<TargetTriple>,
+    /// Binaries that every variant should ostensibly provide
+    ///
+    /// The string is the name of the binary under that package (without .exe extension)
+    pub bins: Vec<(PackageIdx, String)>,
     /// Artifacts that are shared "globally" across all variants (shell-installer, metadata...)
     ///
     /// They might still be limited to some subset of the targets (e.g. powershell scripts are
@@ -731,6 +735,7 @@ impl<'de> Deserialize<'de> for ZipStyle {
 
 /// A kind of an installer
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum InstallerImpl {
     /// shell installer script
     Shell(InstallerInfo),
@@ -776,10 +781,12 @@ pub struct NpmInstallerInfo {
     pub npm_package_authors: Vec<String>,
     /// Short description of the package
     pub npm_package_license: Option<String>,
-    /// Generic installer info
-    pub inner: InstallerInfo,
+    /// Name of the binary this package installs (without .exe extension)
+    pub bin: String,
     /// Dir to build the package in
     pub package_dir: Utf8PathBuf,
+    /// Generic installer info
+    pub inner: InstallerInfo,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers
@@ -956,6 +963,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             version,
             id,
             global_artifacts: vec![],
+            bins: vec![],
             targets: vec![],
             variants: vec![],
             changelog_body: None,
@@ -974,6 +982,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             variants,
             targets,
             static_assets,
+            bins,
             ..
         } = self.release_mut(to_release);
         let static_assets = static_assets.clone();
@@ -983,49 +992,49 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         variants.push(idx);
         targets.push(target.clone());
 
+        // Add all the binaries of the release to this variant
+        let mut binaries = vec![];
+        for (pkg_idx, binary_name) in bins.clone() {
+            let package = self.workspace.package(pkg_idx);
+            let version = package.version.as_ref().unwrap().cargo();
+            let pkg_id = package.cargo_package_id.clone().unwrap();
+            let id = format!("{binary_name}-v{version}-{target}");
+
+            // If we already are building this binary we don't need to do it again!
+            let idx = if let Some(&idx) = self.binaries_by_id.get(&id) {
+                idx
+            } else {
+                info!("added binary {id}");
+                let idx = BinaryIdx(self.inner.binaries.len());
+                let binary = Binary {
+                    id,
+                    pkg_id,
+                    name: binary_name,
+                    target: target.clone(),
+                    copy_exe_to: vec![],
+                    copy_symbols_to: vec![],
+                    symbols_artifact: None,
+                };
+                self.inner.binaries.push(binary);
+                idx
+            };
+
+            binaries.push(idx);
+        }
+
         self.inner.variants.push(ReleaseVariant {
             target,
             id,
             local_artifacts: vec![],
-            binaries: vec![],
+            binaries,
             static_assets,
         });
         idx
     }
 
-    fn add_binary(
-        &mut self,
-        to_variant: ReleaseVariantIdx,
-        pkg_idx: PackageIdx,
-        binary_name: String,
-    ) {
-        let variant = self.variant(to_variant);
-        let target = variant.target.clone();
-        let package = self.workspace.package(pkg_idx);
-        let version = package.version.as_ref().unwrap().cargo();
-        let pkg_id = package.cargo_package_id.clone().unwrap();
-        let id = format!("{binary_name}-v{version}-{target}");
-
-        // If we already are building this binary we don't need to do it again!
-        let idx = if let Some(&idx) = self.binaries_by_id.get(&id) {
-            idx
-        } else {
-            info!("added binary {id}");
-            let idx = BinaryIdx(self.inner.binaries.len());
-            let binary = Binary {
-                id,
-                pkg_id,
-                name: binary_name,
-                target: variant.target.clone(),
-                copy_exe_to: vec![],
-                copy_symbols_to: vec![],
-                symbols_artifact: None,
-            };
-            self.inner.binaries.push(binary);
-            idx
-        };
-
-        self.variant_mut(to_variant).binaries.push(idx);
+    fn add_binary(&mut self, to_release: ReleaseIdx, pkg_idx: PackageIdx, binary_name: String) {
+        let release = self.release_mut(to_release);
+        release.bins.push((pkg_idx, binary_name));
     }
 
     fn add_executable_zip(&mut self, to_release: ReleaseIdx) {
@@ -1320,6 +1329,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
+        if release.bins.len() > 1 {
+            warn!("skipping npm installer: packages with multiple binaries are unsupported\n  let us know if you have a use for this, and what should happen!");
+            return;
+        }
+        let bin = release.bins[0].1.clone();
+
         let npm_package_name = if let Some(scope) = &self.workspace_metadata.npm_scope {
             format!("{scope}/{}", release.app_name)
         } else {
@@ -1401,6 +1416,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 npm_package_repository_url,
                 npm_package_homepage_url,
                 package_dir: dir_path,
+                bin,
                 inner: InstallerInfo {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),
@@ -2058,6 +2074,11 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         // Create a Release for this binary
         let release = graph.add_release(*pkg_idx);
 
+        // Tell the Release to include these binaries
+        for binary in binaries {
+            graph.add_binary(release, *pkg_idx, (*binary).clone());
+        }
+
         // Create variants for this Release for each target
         for target in triples {
             let use_target = bypass_package_target_prefs
@@ -2072,12 +2093,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             }
 
             // Create the variant
-            let variant = graph.add_variant(release, target.clone());
-
-            // Tell the variant to include this binary
-            for binary in binaries {
-                graph.add_binary(variant, *pkg_idx, (*binary).clone());
-            }
+            graph.add_variant(release, target.clone());
         }
         // Add executable zips to the Release
         graph.add_executable_zip(release);

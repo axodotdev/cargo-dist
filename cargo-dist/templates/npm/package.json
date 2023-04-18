@@ -7,10 +7,7 @@
   {{KEY_AUTHORS}}
   {{KEY_LICENSE}}
   {{KEY_KEYWORDS}}
-  "main": "index.js",
-  "bin": {
-    "rover": "run.js"
-  },
+  {{KEY_BIN}}
   "scripts": {
     "postinstall": "node ./install.js",
     "fmt": "prettier --write **/*.js",

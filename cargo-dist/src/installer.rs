@@ -195,24 +195,35 @@ fn write_install_ps_script<W: std::io::Write>(
 // NPM Installer
 ////////////////////////////////////////////////////////////////
 
+/// Names of all the files we add to the npm installer's tarball,
+/// to add them to the manifest.
+pub const NPM_PACKAGE_CONTENTS: &[&str] = &[
+    TEMPLATE1_NAME,
+    TEMPLATE2_NAME,
+    TEMPLATE3_NAME,
+    TEMPLATE4_NAME,
+    TEMPLATE5_NAME,
+    TEMPLATE6_NAME,
+];
+
+const TEMPLATE1_NAME: &str = ".gitignore";
+const TEMPLATE2_NAME: &str = "binary.js";
+const TEMPLATE3_NAME: &str = "install.js";
+const TEMPLATE4_NAME: &str = "package-lock.json";
+const TEMPLATE5_NAME: &str = "package.json";
+const TEMPLATE6_NAME: &str = "run.js";
+
+const TEMPLATE1: &str = include_str!("../templates/npm/.gitignore");
+const TEMPLATE2: &str = include_str!("../templates/npm/binary.js");
+const TEMPLATE3: &str = include_str!("../templates/npm/install.js");
+const TEMPLATE4: &str = include_str!("../templates/npm/package-lock.json");
+const TEMPLATE5: &str = include_str!("../templates/npm/package.json");
+const TEMPLATE6: &str = include_str!("../templates/npm/run.js");
+
 pub(crate) fn generate_install_npm_project(
     _dist: &DistGraph,
     info: &NpmInstallerInfo,
 ) -> Result<(), miette::Report> {
-    const TEMPLATE1_NAME: &str = ".gitignore";
-    const TEMPLATE2_NAME: &str = "binary.js";
-    const TEMPLATE3_NAME: &str = "install.js";
-    const TEMPLATE4_NAME: &str = "package-lock.json";
-    const TEMPLATE5_NAME: &str = "package.json";
-    const TEMPLATE6_NAME: &str = "run.js";
-
-    const TEMPLATE1: &str = include_str!("../templates/npm/.gitignore");
-    const TEMPLATE2: &str = include_str!("../templates/npm/binary.js");
-    const TEMPLATE3: &str = include_str!("../templates/npm/install.js");
-    const TEMPLATE4: &str = include_str!("../templates/npm/package-lock.json");
-    const TEMPLATE5: &str = include_str!("../templates/npm/package.json");
-    const TEMPLATE6: &str = include_str!("../templates/npm/run.js");
-
     let zip_dir = &info.package_dir;
     apply_npm_templates(TEMPLATE1, zip_dir, TEMPLATE1_NAME, info)?;
     apply_npm_templates(TEMPLATE2, zip_dir, TEMPLATE2_NAME, info)?;
@@ -276,6 +287,13 @@ fn apply_npm_templates(
         format!(r#""keywords": "{:?}","#, npm_package_keywords)
     };
 
+    let bin = format!(
+        r#""bin": {{
+    "{}": "run.js"
+  }},"#,
+        info.bin
+    );
+
     let platform_entry_template = r###"
   "{{TARGET}}": {
     "artifact_name": "{{ARTIFACT_NAME}}",
@@ -327,6 +345,7 @@ fn apply_npm_templates(
         .replace("{{KEY_LICENSE}}", &license)
         .replace("{{KEY_HOMEPAGE_URL}}", &homepage_url)
         .replace("{{KEY_KEYWORDS}}", &keywords)
+        .replace("{{KEY_BIN}}", &bin)
         .replace("/*APP_NAME*/", &info.inner.app_name)
         .replace("/*ARTIFACT_DOWNLOAD_URL*/", &info.inner.base_url)
         .replace("/*PLATFORM_INFO*/", &platform_info);
