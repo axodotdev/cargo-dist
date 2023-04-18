@@ -7,6 +7,7 @@ use std::{fs::File, io::BufWriter};
 use camino::Utf8Path;
 use miette::{Context, IntoDiagnostic};
 use newline_converter::{dos2unix, unix2dos};
+use serde_json::json;
 
 use crate::{DistGraph, InstallerInfo, NpmInstallerInfo};
 
@@ -252,93 +253,80 @@ fn apply_npm_templates(
 
     // FIXME: escape these strings!?
 
-    let name = &info.npm_package_name;
-    let version = &info.npm_package_version;
+    let package_name = format!("{}", json!(&info.npm_package_name));
+    let package_version = format!("{}", json!(info.npm_package_version));
+    let app_name = format!("{}", json!(&info.inner.app_name));
+    let artifact_download_url = format!("{}", json!(&info.inner.base_url));
+
     let desc = info
         .npm_package_desc
         .as_ref()
-        .map(|desc| format!(r#""description": "{desc}","#))
+        .map(|desc| format!(r#""description": {},"#, json!(desc)))
         .unwrap_or_default();
     let repository_url = info
         .npm_package_repository_url
         .as_ref()
-        .map(|url| format!(r#""repository": "{url}","#))
+        .map(|url| format!(r#""repository": {},"#, json!(url)))
         .unwrap_or_default();
     let homepage_url = info
         .npm_package_homepage_url
         .as_ref()
-        .map(|url| format!(r#""homepage": "{url}","#))
+        .map(|url| format!(r#""homepage": {},"#, json!(url)))
         .unwrap_or_default();
     let license = info
         .npm_package_license
         .as_ref()
-        .map(|license| format!(r#""license": "{license}","#))
+        .map(|license| format!(r#""license": {},"#, json!(license)))
         .unwrap_or_default();
 
     let authors = match info.npm_package_authors.len() {
         0 => String::new(),
-        1 => format!(r#""author": "{}","#, info.npm_package_authors[0]),
-        _ => format!(r#""contributors": "{:?}","#, info.npm_package_authors),
+        1 => format!(r#""author": {},"#, json!(&info.npm_package_authors[0])),
+        _ => format!(r#""contributors": {},"#, json!(&info.npm_package_authors)),
     };
 
     let keywords = if info.npm_package_authors.is_empty() {
         String::new()
     } else {
-        format!(r#""keywords": "{:?}","#, npm_package_keywords)
+        format!(r#""keywords": {},"#, json!(npm_package_keywords))
     };
 
     let bin = format!(
         r#""bin": {{
-    "{}": "run.js"
+    {}: "run.js"
   }},"#,
-        info.bin
+        json!(info.bin)
     );
 
     let platform_entry_template = r###"
-  "{{TARGET}}": {
-    "artifact_name": "{{ARTIFACT_NAME}}",
+  {{TARGET}}: {
+    "artifact_name": {{ARTIFACT_NAME}},
     "bins": {{BINS}},
-    "zip_ext": "{{ZIP_EXT}}"
+    "zip_ext": {{ZIP_EXT}}
   }"###;
 
     let mut platform_info = String::new();
     let last_platform = info.inner.artifacts.len() - 1;
     for (idx, artifact) in info.inner.artifacts.iter().enumerate() {
-        use std::fmt::Write;
-
-        assert!(artifact.target_triples.len() == 1, "It's awesome you made multi-arch executable-zips, but now you need to implement support in the ps1 installer!");
+        assert!(artifact.target_triples.len() == 1, "It's awesome you made multi-arch executable-zips, but now you need to implement support in the npm installer!");
         let target = &artifact.target_triples[0];
         let zip_ext = artifact.zip_style.ext();
         let artifact_name = &artifact.id;
-
-        let mut bins = String::new();
-        let mut multi_bin = false;
-        bins.push('[');
-        for bin in &artifact.binaries {
-            // FIXME: we should really stop pervasively assuming things are copied to the root...
-            let rel_path = bin;
-            if multi_bin {
-                bins.push_str(", ");
-            } else {
-                multi_bin = true;
-            }
-            write!(bins, "\"{}\"", rel_path).unwrap();
-        }
-        bins.push(']');
-
         let entry = platform_entry_template
-            .replace("{{TARGET}}", target)
-            .replace("{{ARTIFACT_NAME}}", artifact_name)
-            .replace("{{BINS}}", &bins)
-            .replace("{{ZIP_EXT}}", zip_ext);
+            .replace("{{TARGET}}", &json!(target).to_string())
+            .replace("{{ARTIFACT_NAME}}", &json!(artifact_name).to_string())
+            .replace("{{BINS}}", &json!(&artifact.binaries).to_string())
+            .replace("{{ZIP_EXT}}", &json!(zip_ext).to_string());
         platform_info.push_str(&entry);
         if idx != last_platform {
             platform_info.push(',');
+        } else {
+            platform_info.push('\n');
         }
     }
     let output = input
-        .replace("{{PACKAGE_NAME}}", name)
-        .replace("{{PACKAGE_VERSION}}", version)
+        .replace("{{PACKAGE_NAME}}", &package_name)
+        .replace("{{PACKAGE_VERSION}}", &package_version)
         .replace("{{KEY_DESCRIPTION}}", &desc)
         .replace("{{KEY_REPOSITORY_URL}}", &repository_url)
         .replace("{{KEY_AUTHORS}}", &authors)
@@ -346,8 +334,8 @@ fn apply_npm_templates(
         .replace("{{KEY_HOMEPAGE_URL}}", &homepage_url)
         .replace("{{KEY_KEYWORDS}}", &keywords)
         .replace("{{KEY_BIN}}", &bin)
-        .replace("/*APP_NAME*/", &info.inner.app_name)
-        .replace("/*ARTIFACT_DOWNLOAD_URL*/", &info.inner.base_url)
+        .replace("\"{{APP_NAME}}\"", &app_name)
+        .replace("\"{{ARTIFACT_DOWNLOAD_URL}}\"", &artifact_download_url)
         .replace("/*PLATFORM_INFO*/", &platform_info);
 
     {

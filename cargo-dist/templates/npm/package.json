@@ -1,6 +1,6 @@
 {
-  "name": "{{PACKAGE_NAME}}",
-  "version": "{{PACKAGE_VERSION}}",
+  "name": {{PACKAGE_NAME}},
+  "version": {{PACKAGE_VERSION}},
   {{KEY_DESCRIPTION}}
   {{KEY_REPOSITORY_URL}}
   {{KEY_HOMEPAGE_URL}}

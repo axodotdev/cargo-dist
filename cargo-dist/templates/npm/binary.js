@@ -11,8 +11,8 @@ const error = (msg) => {
 
 const { version } = require("./package.json");
 // These are injected by cargo-dist
-const name = "/*APP_NAME*/";
-const artifact_download_url = "/*ARTIFACT_DOWNLOAD_URL*/"
+const name = "{{APP_NAME}}";
+const artifact_download_url = "{{ARTIFACT_DOWNLOAD_URL}}";
 
 // These are injected by cargo-dist
 const supportedPlatforms = {/*PLATFORM_INFO*/};
