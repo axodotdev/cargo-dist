@@ -95,10 +95,9 @@ const getBinary = () => {
   return binary;
 };
 
-const install = () => {
+const install = (suppressLogs) => {
   const binary = getBinary();
   const proxy = configureProxy(binary.url);
-  const suppressLogs = false;
 
   return binary.install(proxy, suppressLogs);
 };
