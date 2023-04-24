@@ -18,6 +18,7 @@ use std::{
     process::Command,
 };
 
+use axoproject::{errors::AxoprojectError, WorkspaceInfo};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Release};
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
@@ -613,7 +614,9 @@ pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
     } else {
         eprintln!("[profile.dist] already exists, nothing to do");
     }
-    if init_dist_metadata(cfg, &mut workspace_toml)? {
+
+    let (worked, gen_ci) = init_dist_metadata(cfg, &workspace, &mut workspace_toml)?;
+    if worked {
         eprintln!("added [workspace.metadata.dist] to your root Cargo.toml");
         did_anything = true;
     } else {
@@ -631,7 +634,7 @@ pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
             .into_diagnostic()
             .wrap_err("failed to write to Cargo.toml")?;
     }
-    if !cfg.ci.is_empty() {
+    if gen_ci {
         let ci_args = GenerateCiArgs {};
         do_generate_ci(cfg, &ci_args)?;
     }
@@ -681,7 +684,13 @@ fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
 /// Initialize [workspace.metadata.dist] with default values based on what was passed on the CLI
 ///
 /// Returns whether the initialization was actually done
-fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) -> Result<bool> {
+/// and whether ci was set
+fn init_dist_metadata(
+    cfg: &Config,
+    workspace_info: &WorkspaceInfo,
+    workspace_toml: &mut toml_edit::Document,
+) -> DistResult<(bool, bool)> {
+    use dialoguer::{theme::SimpleTheme, Confirm, Input, MultiSelect};
     use toml_edit::{value, Item};
     // Setup [workspace.metadata.dist]
     let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
@@ -693,33 +702,31 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
         t.set_implicit(true)
     }
     let dist_metadata = &mut metadata[METADATA_DIST];
-    if !dist_metadata.is_none() {
-        return Ok(false);
-    }
-
-    // We "pointlessly" make this struct so you remember to consider what init should
-    // do with any new config values!
-    let meta = DistMetadata {
-        // If they init with this version we're gonna try to stick to it!
-        cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
-        // latest stable release at this precise moment
-        // maybe there's something more clever we can do here, but, *shrug*
-        rust_toolchain_version: Some("1.67.1".to_owned()),
-        ci: cfg.ci.clone(),
-        installers: cfg
-            .installers
-            .is_empty()
-            .not()
-            .then(|| cfg.installers.clone()),
-        targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),
-        dist: None,
-        include: vec![],
-        auto_includes: None,
-        windows_archive: None,
-        unix_archive: None,
-        npm_scope: None,
+    let mut meta = if dist_metadata.is_none() {
+        DistMetadata {
+            // If they init with this version we're gonna try to stick to it!
+            cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
+            // latest stable release at this precise moment
+            // maybe there's something more clever we can do here, but, *shrug*
+            rust_toolchain_version: Some("1.67.1".to_owned()),
+            ci: vec![],
+            installers: None,
+            targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),
+            dist: None,
+            include: vec![],
+            auto_includes: None,
+            windows_archive: None,
+            unix_archive: None,
+            npm_scope: None,
+        }
+    } else {
+        tasks::parse_metadata_table(workspace_info.cargo_metadata_table.as_ref())
     };
 
+    // Clone this to simplify checking for settings changes
+    let orig_meta = meta.clone();
+
+    // Keys/descriptions
     const KEY_RUST_VERSION: &str = "rust-toolchain-version";
     const DESC_RUST_VERSION: &str =
         "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n";
@@ -761,8 +768,227 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
     const DESC_NPM_SCOPE: &str =
         "# A namespace to use when publishing this package to the npm registry\n";
 
-    let mut new_metadata = toml_edit::table();
-    let table = new_metadata.as_table_mut().unwrap();
+    // Now prompt the user interactively to initialize these...
+
+    let theme = SimpleTheme;
+
+    // Set cargo-dist-version
+    let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
+    if let Some(desired_version) = &meta.cargo_dist_version {
+        if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
+            let prompt = format!(
+                "update your project to this version of cargo-dist? ({} => {})",
+                desired_version, current_version
+            );
+            if Confirm::with_theme(&theme)
+                .with_prompt(prompt)
+                .default(true)
+                .interact()?
+            {
+                meta.cargo_dist_version = Some(current_version);
+            } else {
+                return Err(DistError::NoUpdateVersion {
+                    project_version: desired_version.clone(),
+                    running_version: current_version,
+                })?;
+            }
+        }
+    } else {
+        let prompt = format!(
+            "looks like you deleted the cargo-dist-version key, add it back? ({})",
+            current_version
+        );
+        if Confirm::with_theme(&theme)
+            .with_prompt(prompt)
+            .default(true)
+            .interact()?
+        {
+            meta.cargo_dist_version = Some(current_version);
+        } else {
+            // Not recommended but technically ok...
+        }
+    }
+
+    // Enable CI backends
+    {
+        let known = &[CiStyle::Github];
+        let mut defaults = vec![];
+        let mut keys = vec![];
+        for item in known {
+            // If this CI style is in their config, keep it
+            // If they passed it on the CLI, flip it on
+            let mut default = meta.ci.contains(item) || cfg.ci.contains(item);
+
+            // If they have a well-defined repo url and it's github, default enable it
+            #[allow(irrefutable_let_patterns)]
+            if let CiStyle::Github = item {
+                if let Some(repo_url) = &workspace_info.repository_url {
+                    if repo_url.contains("github.com") {
+                        default = true;
+                    }
+                }
+            }
+            defaults.push(default);
+            // This match is here to remind you to add new CiStyles
+            // to `known` above!
+            keys.push(match item {
+                CiStyle::Github => "github",
+            });
+        }
+
+        // Prompt the user
+        let prompt = "enable ci (select with arrow keys and space, submit with enter)";
+        let selected = MultiSelect::with_theme(&theme)
+            .items(&keys)
+            .defaults(&defaults)
+            .with_prompt(prompt)
+            .interact()?;
+
+        // Apply the results
+        meta.ci = selected.into_iter().map(|i| known[i]).collect();
+    }
+
+    // Enforce repository url right away
+    if meta.ci.contains(&CiStyle::Github) && workspace_info.repository_url.is_none() {
+        // If axoproject complained about inconsistency, forward that
+        // Massively jank manual implementation of "clone" here because lots of error types
+        // (like std::io::Error) don't implement Clone and so axoproject errors can't either
+        let conflict = workspace_info.warnings.iter().find_map(|w| {
+            if let AxoprojectError::InconsistentRepositoryKey {
+                file1,
+                url1,
+                file2,
+                url2,
+            } = w
+            {
+                Some(AxoprojectError::InconsistentRepositoryKey {
+                    file1: file1.clone(),
+                    url1: url1.clone(),
+                    file2: file2.clone(),
+                    url2: url2.clone(),
+                })
+            } else {
+                None
+            }
+        });
+        if let Some(inner) = conflict {
+            return Err(DistError::CantEnableGithubUrlInconsistent { inner })?;
+        } else {
+            // Otherwise assume no URL
+            return Err(DistError::CantEnableGithubNoUrl)?;
+        }
+    }
+
+    // Enable installer backends (if they have a CI backend that can provide URLs)
+    // In the future, "vendored" installers like MSIs could be enabled in this situation!
+    if !meta.ci.is_empty() {
+        let known = &[
+            InstallerStyle::Shell,
+            InstallerStyle::Powershell,
+            InstallerStyle::Npm,
+        ];
+        let mut defaults = vec![];
+        let mut keys = vec![];
+        for item in known {
+            // If this CI style is in their config, keep it
+            // If they passed it on the CLI, flip it on
+            let config_had_it = meta
+                .installers
+                .as_deref()
+                .unwrap_or_default()
+                .contains(item);
+            let cli_had_it = cfg.installers.contains(item);
+
+            let default = config_had_it || cli_had_it;
+            defaults.push(default);
+
+            // This match is here to remind you to add new InstallerStyles
+            // to `known` above!
+            keys.push(match item {
+                InstallerStyle::Shell => "shell",
+                InstallerStyle::Powershell => "powershell",
+                InstallerStyle::Npm => "npm",
+            });
+        }
+
+        // Prompt the user
+        let prompt = "enable installers (select with arrow keys and space, submit with enter)";
+        let selected = MultiSelect::with_theme(&theme)
+            .items(&keys)
+            .defaults(&defaults)
+            .with_prompt(prompt)
+            .interact()?;
+
+        // Apply the results
+        meta.installers = Some(selected.into_iter().map(|i| known[i]).collect());
+    } else {
+        eprintln!("no CI backends enabled, skipping installers which require URLs to fetch from");
+    }
+
+    // Special handling of the npm installer
+    if meta
+        .installers
+        .as_deref()
+        .unwrap_or_default()
+        .contains(&InstallerStyle::Npm)
+    {
+        const TAR_GZ: Option<ZipStyle> = Some(ZipStyle::Tar(CompressionImpl::Gzip));
+
+        // If npm is being newly enabled here, prompt for a @scope
+        let npm_is_new = !orig_meta
+            .installers
+            .as_deref()
+            .unwrap_or_default()
+            .contains(&InstallerStyle::Npm);
+        if npm_is_new {
+            let prompt = "you've enabled npm support, please enter the @scope you want to publish under (leave blank to publish globally)";
+            let scope: String = Input::with_theme(&theme)
+                .with_prompt(prompt)
+                .allow_empty(true)
+                .validate_with(|v: &String| {
+                    let v = v.trim();
+                    if v.is_empty() {
+                        Ok(())
+                    } else if let Some(v) = v.strip_prefix('@') {
+                        if v.is_empty() {
+                            Err("@ must be followed by something")
+                        } else {
+                            Ok(())
+                        }
+                    } else {
+                        Err("npm scopes must start with @")
+                    }
+                })
+                .interact_text()?;
+            let scope = scope.trim();
+            if scope.is_empty() {
+                meta.npm_scope = None;
+            } else {
+                meta.npm_scope = Some(scope.to_owned());
+            }
+        }
+
+        // FIXME (#226): If they have an npm installer, force on tar.gz compression
+        let prompt = "the npm installer currently requires all artifacts be .tar.gz, is that ok?";
+        let force_targz = Confirm::with_theme(&theme)
+            .with_prompt(prompt)
+            .default(true)
+            .interact()?;
+        if force_targz {
+            meta.unix_archive = TAR_GZ;
+            meta.windows_archive = TAR_GZ;
+        }
+    }
+
+    // Ok, we're done getting values, now edit the toml!!!
+
+    // If there's no table, make one
+    if !dist_metadata.is_table() {
+        *dist_metadata = toml_edit::table();
+    }
+
+    // Apply formatted/commented values
+    let table = dist_metadata.as_table_mut().unwrap();
     if let Some(val) = meta.cargo_dist_version {
         table.insert(KEY_DIST_VERSION, value(val.to_string()));
         table
@@ -862,9 +1088,7 @@ fn init_dist_metadata(cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
         .decor_mut()
         .set_prefix("\n# Config for 'cargo dist'\n");
 
-    dist_metadata.or_insert(new_metadata);
-
-    Ok(true)
+    Ok((true, !meta.ci.is_empty()))
 }
 
 /// Arguments for `cargo dist generate-ci` ([`do_generate_ci][])
