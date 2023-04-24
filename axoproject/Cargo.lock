@@ -126,6 +126,7 @@ dependencies = [
  "clap",
  "console",
  "guppy",
+ "itertools",
  "miette",
  "node-semver",
  "oro-common",

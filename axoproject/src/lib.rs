@@ -180,6 +180,13 @@ pub struct PackageInfo {
     ///
     /// Currently always true for npm packages.
     pub publish: bool,
+    /// Package keywords AND/OR categories.
+    ///
+    /// Specifically, Cargo has both the notion
+    /// of a "package keyword" (free-form text) and a "package category" (one of circa 70
+    /// predefined categories accepted by crates.io). We don't really care about validating
+    /// these, though, and just squash them together with the keywords.
+    pub keywords: Option<Vec<String>>,
     /// URL to the repository for this package
     ///
     /// This URL can be used by various CI/Installer helpers. In the future we

@@ -92,6 +92,13 @@ fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
         .collect::<Vec<_>>();
     binaries.sort();
 
+    let keywords = if manifest.keywords.is_empty() {
+        None
+    } else {
+        // `manifest.keywords` is a `Vec<String, Global>`, which we need to normalize.
+        Some(manifest.keywords.into_iter().collect::<Vec<String>>())
+    };
+
     let mut info = PackageInfo {
         name: package_name,
         version,
@@ -104,6 +111,7 @@ fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
         publish: true,
         repository_url: repository_url.clone(),
         homepage_url: manifest.homepage,
+        keywords,
         // FIXME: is there any JS equivalent to this?
         documentation_url: None,
         // FIXME: is there any JS equivalent to this?
