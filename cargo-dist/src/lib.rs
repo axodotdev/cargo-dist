@@ -606,35 +606,53 @@ pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
     // Load in the workspace toml to edit and write back
     let mut workspace_toml = tasks::load_root_cargo_toml(&workspace.manifest_path)?;
 
+    let check = console::style("✔".to_string()).for_stderr().green();
     // Init things
     let mut did_anything = false;
+    eprintln!("first let's setup your cargo build profile...");
     if init_dist_profile(cfg, &mut workspace_toml)? {
-        eprintln!("added [profile.dist] to your root Cargo.toml");
+        eprintln!("{check} added [profile.dist] to your root Cargo.toml");
         did_anything = true;
     } else {
-        eprintln!("[profile.dist] already exists, nothing to do");
+        eprintln!("{check} [profile.dist] already exists");
     }
+    eprintln!();
 
+    eprintln!("next let's setup your cargo-dist config...");
+    eprintln!();
     let (worked, gen_ci) = init_dist_metadata(cfg, &workspace, &mut workspace_toml)?;
     if worked {
-        eprintln!("added [workspace.metadata.dist] to your root Cargo.toml");
+        eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
         did_anything = true;
     } else {
-        eprintln!("[workspace.metadata.dist] already exists, nothing to do");
+        eprintln!("{check} [workspace.metadata.dist] already exists");
     }
+    eprintln!();
 
     if did_anything {
         use std::io::Write;
         let mut workspace_toml_file = File::options()
             .write(true)
+            .truncate(true)
             .open(&workspace.manifest_path)
             .into_diagnostic()
             .wrap_err("couldn't load root workspace Cargo.toml")?;
         write!(&mut workspace_toml_file, "{workspace_toml}")
             .into_diagnostic()
             .wrap_err("failed to write to Cargo.toml")?;
+        workspace_toml_file
+            .flush()
+            .into_diagnostic()
+            .wrap_err("failed to write to Cargo.toml")?;
     }
+
+    eprintln!("{check} cargo-dist is setup!");
+    eprintln!();
+
     if gen_ci {
+        eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
+        eprintln!();
+
         let ci_args = GenerateCiArgs {};
         do_generate_ci(cfg, &ci_args)?;
     }
@@ -690,7 +708,7 @@ fn init_dist_metadata(
     workspace_info: &WorkspaceInfo,
     workspace_toml: &mut toml_edit::Document,
 ) -> DistResult<(bool, bool)> {
-    use dialoguer::{theme::SimpleTheme, Confirm, Input, MultiSelect};
+    use dialoguer::{Confirm, Input, MultiSelect};
     use toml_edit::{value, Item};
     // Setup [workspace.metadata.dist]
     let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
@@ -770,14 +788,24 @@ fn init_dist_metadata(
 
     // Now prompt the user interactively to initialize these...
 
-    let theme = SimpleTheme;
+    // Tune the theming a bit
+    let theme = dialoguer::theme::ColorfulTheme {
+        checked_item_prefix: console::style("  [x]".to_string()).for_stderr().green(),
+        unchecked_item_prefix: console::style("  [ ]".to_string()).for_stderr().dim(),
+        active_item_style: console::Style::new().for_stderr().cyan().bold(),
+        ..dialoguer::theme::ColorfulTheme::default()
+    };
+    // Some indicators we'll use in a few places
+    let check = console::style("✔".to_string()).for_stderr().green();
+    let notice = console::style("⚠️".to_string()).for_stderr().yellow();
 
     // Set cargo-dist-version
     let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
     if let Some(desired_version) = &meta.cargo_dist_version {
         if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
             let prompt = format!(
-                "update your project to this version of cargo-dist? ({} => {})",
+                r#"update your project to this version of cargo-dist?
+    {} => {}"#,
                 desired_version, current_version
             );
             if Confirm::with_theme(&theme)
@@ -792,10 +820,13 @@ fn init_dist_metadata(
                     running_version: current_version,
                 })?;
             }
+            eprintln!();
         }
     } else {
         let prompt = format!(
-            "looks like you deleted the cargo-dist-version key, add it back? ({})",
+            r#"looks like you deleted the cargo-dist-version key, add it back?
+    this is the version of cargo-dist your releases should use
+    (you're currently running {})"#,
             current_version
         );
         if Confirm::with_theme(&theme)
@@ -807,13 +838,18 @@ fn init_dist_metadata(
         } else {
             // Not recommended but technically ok...
         }
+        eprintln!();
     }
 
     // Enable CI backends
     {
+        // FIXME: when there is more than one option this should be a proper
+        // multiselect like the installer selector is! For now we do
+        // most of the multi-select logic and then just give a prompt.
         let known = &[CiStyle::Github];
         let mut defaults = vec![];
         let mut keys = vec![];
+        let mut github_key = 0;
         for item in known {
             // If this CI style is in their config, keep it
             // If they passed it on the CLI, flip it on
@@ -822,6 +858,7 @@ fn init_dist_metadata(
             // If they have a well-defined repo url and it's github, default enable it
             #[allow(irrefutable_let_patterns)]
             if let CiStyle::Github = item {
+                github_key = 0;
                 if let Some(repo_url) = &workspace_info.repository_url {
                     if repo_url.contains("github.com") {
                         default = true;
@@ -837,15 +874,24 @@ fn init_dist_metadata(
         }
 
         // Prompt the user
-        let prompt = "enable ci (select with arrow keys and space, submit with enter)";
-        let selected = MultiSelect::with_theme(&theme)
-            .items(&keys)
-            .defaults(&defaults)
+        let prompt = r#"enable Github CI integration?
+    this creates a CI action which automates creating a Github Release,
+    builds all your binaries/archives, and then uploads them to the Release
+    it also unlocks the ability to generate installers which fetch those artifacts"#;
+        let github_selected = Confirm::with_theme(&theme)
             .with_prompt(prompt)
+            .default(defaults[github_key])
             .interact()?;
+
+        let selected = if github_selected {
+            vec![github_key]
+        } else {
+            vec![]
+        };
 
         // Apply the results
         meta.ci = selected.into_iter().map(|i| known[i]).collect();
+        eprintln!();
     }
 
     // Enforce repository url right away
@@ -912,7 +958,10 @@ fn init_dist_metadata(
         }
 
         // Prompt the user
-        let prompt = "enable installers (select with arrow keys and space, submit with enter)";
+        let prompt = r#"enable generating installers?
+    installers streamline fetching your app's prebuilt artifacts
+    see the docs for details on each one
+    (select with arrow keys and space, submit with enter)"#;
         let selected = MultiSelect::with_theme(&theme)
             .items(&keys)
             .defaults(&defaults)
@@ -921,8 +970,10 @@ fn init_dist_metadata(
 
         // Apply the results
         meta.installers = Some(selected.into_iter().map(|i| known[i]).collect());
+        eprintln!();
     } else {
-        eprintln!("no CI backends enabled, skipping installers which require URLs to fetch from");
+        eprintln!("{notice} no CI backends enabled, skipping installers");
+        eprintln!();
     }
 
     // Special handling of the npm installer
@@ -939,7 +990,9 @@ fn init_dist_metadata(
             .unwrap_or_default()
             .contains(&InstallerStyle::Npm);
         if npm_is_new {
-            let prompt = "you've enabled npm support, please enter the @scope you want to publish under (leave blank to publish globally)";
+            let prompt = r#"you've enabled npm support, please enter the @scope you want to use
+    this is the "namespace" the package will be published under
+    (leave blank to publish globally)"#;
             let scope: String = Input::with_theme(&theme)
                 .with_prompt(prompt)
                 .allow_empty(true)
@@ -960,17 +1013,21 @@ fn init_dist_metadata(
                 .interact_text()?;
             let scope = scope.trim();
             if scope.is_empty() {
+                eprintln!("{check} npm packages will be published globally");
                 meta.npm_scope = None;
             } else {
                 meta.npm_scope = Some(scope.to_owned());
+                eprintln!("{check} npm packages will be published under {scope}");
             }
+            eprintln!();
         }
 
         // FIXME (#226): If they have an npm installer, force on tar.gz compression
         const TAR_GZ: Option<ZipStyle> = Some(ZipStyle::Tar(CompressionImpl::Gzip));
         if meta.unix_archive != TAR_GZ || meta.windows_archive != TAR_GZ {
-            let prompt =
-                "the npm installer currently requires all artifacts be .tar.gz, is that ok?";
+            let prompt = r#"the npm installer requires binaries to be distributed as .tar.gz, is that ok?
+    otherwise we would distribute your binaries as .zip on windows, .tar.xz everywhere else
+    (this is a hopefully temporary limitation of the npm installer's implementation)"#;
             let force_targz = Confirm::with_theme(&theme)
                 .with_prompt(prompt)
                 .default(true)
@@ -981,6 +1038,7 @@ fn init_dist_metadata(
             } else {
                 return Err(DistError::MustEnableTarGz)?;
             }
+            eprintln!();
         }
     }
 
