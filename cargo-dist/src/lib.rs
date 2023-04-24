@@ -932,8 +932,6 @@ fn init_dist_metadata(
         .unwrap_or_default()
         .contains(&InstallerStyle::Npm)
     {
-        const TAR_GZ: Option<ZipStyle> = Some(ZipStyle::Tar(CompressionImpl::Gzip));
-
         // If npm is being newly enabled here, prompt for a @scope
         let npm_is_new = !orig_meta
             .installers
@@ -969,14 +967,20 @@ fn init_dist_metadata(
         }
 
         // FIXME (#226): If they have an npm installer, force on tar.gz compression
-        let prompt = "the npm installer currently requires all artifacts be .tar.gz, is that ok?";
-        let force_targz = Confirm::with_theme(&theme)
-            .with_prompt(prompt)
-            .default(true)
-            .interact()?;
-        if force_targz {
-            meta.unix_archive = TAR_GZ;
-            meta.windows_archive = TAR_GZ;
+        const TAR_GZ: Option<ZipStyle> = Some(ZipStyle::Tar(CompressionImpl::Gzip));
+        if meta.unix_archive != TAR_GZ || meta.windows_archive != TAR_GZ {
+            let prompt =
+                "the npm installer currently requires all artifacts be .tar.gz, is that ok?";
+            let force_targz = Confirm::with_theme(&theme)
+                .with_prompt(prompt)
+                .default(true)
+                .interact()?;
+            if force_targz {
+                meta.unix_archive = TAR_GZ;
+                meta.windows_archive = TAR_GZ;
+            } else {
+                return Err(DistError::MustEnableTarGz)?;
+            }
         }
     }
 

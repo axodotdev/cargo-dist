@@ -47,4 +47,7 @@ pub enum DistError {
     #[error("Github CI support requires you to specify the URL of your repository")]
     #[diagnostic(help(r#"Set the repository = "https://github.com/..." key in your Cargo.toml"#))]
     CantEnableGithubNoUrl,
+    /// User declined to force tar.gz with npm
+    #[error("Cannot enable npm support without forcing artifacts to be .tar.gz")]
+    MustEnableTarGz,
 }
