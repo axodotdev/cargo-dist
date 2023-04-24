@@ -210,6 +210,16 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         }
     }
 
+    let keywords_and_categories: Option<Vec<String>> =
+        if package.keywords().is_empty() && package.categories().is_empty() {
+            None
+        } else {
+            let categories = package.categories().to_vec();
+            let mut keywords = package.keywords().to_vec();
+            keywords.extend(categories);
+            Some(keywords)
+        };
+
     let mut info = PackageInfo {
         name: package.name().to_owned(),
         version: Some(Version::Cargo(package.version().clone())),
@@ -217,6 +227,7 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         package_root: package_root.clone(),
         description: package.description().map(ToOwned::to_owned),
         authors: package.authors().to_vec(),
+        keywords: keywords_and_categories,
         license: package.license().map(ToOwned::to_owned),
         publish: !package.publish().is_never(),
         repository_url: package.repository().map(ToOwned::to_owned),

@@ -1,2 +1,5 @@
 /target
 /tests/projects/*/target
+
+# why did you generate this in the first place vscode? huh? huh???
+.vscode/
