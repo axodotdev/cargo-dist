@@ -1,3 +1,8 @@
+# Version 0.3.0 (2023-04-24)
+
+* Added support for Cargo and NPM manifest keywords. For Cargo projects specifically, these will be squashed together
+  with the categories field for now, since the dual design is very unique to crates.io specifically.
+
 # Version 0.2.0 (2023-04-10)
 
 This version reworks the design of the primary interface:
