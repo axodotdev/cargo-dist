@@ -151,6 +151,10 @@ pub struct DistMetadata {
     /// vs msi is a good comparison here -- you want a universal shell script that figures
     /// out which binary to install, but you might end up with an msi for each supported arch!
     ///
+    /// The value is an Option to allow individual packages to override the workspace setting
+    /// if None (no key in the config), the workspace value is inherited. `installers = []`
+    /// instead discards all the workspace values.
+    ///
     /// Currently accepted values:
     ///
     /// * shell
@@ -2271,7 +2275,7 @@ fn find_tool(name: &str) -> Option<Tool> {
     })
 }
 
-fn parse_metadata_table(metadata_table: Option<&serde_json::Value>) -> DistMetadata {
+pub(crate) fn parse_metadata_table(metadata_table: Option<&serde_json::Value>) -> DistMetadata {
     metadata_table
         .and_then(|t| t.get(METADATA_DIST))
         .map(DistMetadata::deserialize)
@@ -2287,8 +2291,18 @@ pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
     match axoproject::rust::get_workspace(None, &start_dir) {
         WorkspaceSearch::Found(mut workspace) => {
-            for warning in workspace.warnings.drain(..) {
-                warn!("{:?}", Report::new(warning));
+            // This is a goofy as heck workaround for two facts:
+            //   * the convenient Report approach requires us to provide an Error by-val
+            //   * many error types (like std::io::Error) don't impl Clone, so we can't
+            //     clone axoproject Errors.
+            //
+            // So we temporarily take ownership of the warnings and then pull them back
+            // out of the Report with runtime reflection to put them back in :)
+            let mut warnings = std::mem::take(&mut workspace.warnings);
+            for warning in warnings.drain(..) {
+                let report = Report::new(warning);
+                warn!("{:?}", report);
+                workspace.warnings.push(report.downcast().unwrap());
             }
             Ok(workspace)
         }

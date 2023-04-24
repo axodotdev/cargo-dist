@@ -47,6 +47,7 @@ toml_edit = "0.15.0"
 parse-changelog = { version = "0.5.3", default-features = false }
 newline-converter = "0.2.2"
 axoproject = { version = "0.2.0", default-features = false, features = ["cargo-projects"] }
+dialoguer = "0.10.4"
 
 [dev-dependencies]
 insta = { version = "1.26.0", features = ["filters"] }
