@@ -12,6 +12,7 @@ use guppy::{
     graph::{BuildTargetId, BuildTargetKind, DependencyDirection, PackageGraph, PackageMetadata},
     MetadataCommand,
 };
+use itertools::{concat, Itertools};
 
 /// All the `[profile]` entries we found in the root Cargo.toml
 pub type CargoProfiles = BTreeMap<String, CargoProfile>;
@@ -215,9 +216,13 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
             None
         } else {
             let categories = package.categories().to_vec();
-            let mut keywords = package.keywords().to_vec();
-            keywords.extend(categories);
-            Some(keywords)
+            let keywords = package.keywords().to_vec();
+            Some(
+                concat(vec![categories, keywords])
+                    .into_iter()
+                    .unique()
+                    .collect::<Vec<String>>(),
+            )
         };
 
     let mut info = PackageInfo {
