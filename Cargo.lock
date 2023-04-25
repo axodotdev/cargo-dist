@@ -265,7 +265,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist"
-version = "0.0.6-prerelease.3"
+version = "0.0.6-prerelease.4"
 dependencies = [
  "axocli",
  "axoproject",
@@ -295,7 +295,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist-schema"
-version = "0.0.6-prerelease.3"
+version = "0.0.6-prerelease.4"
 dependencies = [
  "camino",
  "insta",
