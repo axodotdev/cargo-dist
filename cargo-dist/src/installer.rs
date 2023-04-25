@@ -282,7 +282,7 @@ fn apply_npm_templates(
         _ => format!(r#""contributors": {},"#, json!(&info.npm_package_authors)),
     };
 
-    let keywords = if info.npm_package_authors.is_empty() {
+    let keywords = if info.npm_package_keywords.is_none() {
         String::new()
     } else {
         format!(r#""keywords": {},"#, json!(&info.npm_package_keywords))
