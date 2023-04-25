@@ -248,9 +248,6 @@ fn apply_npm_templates(
         .wrap_err_with(|| format!("Failed to create installer file {file_path}"))?;
     let mut f = BufWriter::new(file);
 
-    // Not yet impl'd
-    let npm_package_keywords = Vec::<String>::new();
-
     // FIXME: escape these strings!?
 
     let package_name = format!("{}", json!(&info.npm_package_name));
@@ -288,7 +285,7 @@ fn apply_npm_templates(
     let keywords = if info.npm_package_authors.is_empty() {
         String::new()
     } else {
-        format!(r#""keywords": {},"#, json!(npm_package_keywords))
+        format!(r#""keywords": {},"#, json!(&info.npm_package_keywords))
     };
 
     let bin = format!(
