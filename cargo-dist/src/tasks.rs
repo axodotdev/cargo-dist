@@ -613,10 +613,12 @@ pub struct Release {
     pub app_authors: Vec<String>,
     /// The license of the app
     pub app_license: Option<String>,
-    /// The license of the app
+    /// The URL to the app's source repository
     pub app_repository_url: Option<String>,
-    /// The license of the app
+    /// The URL to the app's homepage
     pub app_homepage_url: Option<String>,
+    /// A list of the app's keywords
+    pub app_keywords: Option<Vec<String>>,
     /// The version of the app
     pub version: Version,
     /// The unique id of the release (e.g. "my-app-v1.0.0")
@@ -785,6 +787,8 @@ pub struct NpmInstallerInfo {
     pub npm_package_authors: Vec<String>,
     /// Short description of the package
     pub npm_package_license: Option<String>,
+    /// Array of keywords for this package
+    pub npm_package_keywords: Option<Vec<String>>,
     /// Name of the binary this package installs (without .exe extension)
     pub bin: String,
     /// Dir to build the package in
@@ -930,6 +934,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_license = package_info.license.clone();
         let app_repository_url = package_info.repository_url.clone();
         let app_homepage_url = package_info.homepage_url.clone();
+        let app_keywords = package_info.keywords.clone();
 
         let windows_archive = package_config.windows_archive.unwrap_or(ZipStyle::Zip);
         let unix_archive = package_config
@@ -964,6 +969,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             app_license,
             app_repository_url,
             app_homepage_url,
+            app_keywords,
             version,
             id,
             global_artifacts: vec![],
@@ -1350,6 +1356,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let npm_package_license = release.app_license.clone();
         let npm_package_repository_url = release.app_repository_url.clone();
         let npm_package_homepage_url = release.app_homepage_url.clone();
+        let npm_package_keywords = release.app_keywords.clone();
 
         let static_assets = release.static_assets.clone();
         let dir_name = format!("{release_id}-npm-package");
@@ -1419,6 +1426,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 npm_package_license,
                 npm_package_repository_url,
                 npm_package_homepage_url,
+                npm_package_keywords,
                 package_dir: dir_path,
                 bin,
                 inner: InstallerInfo {

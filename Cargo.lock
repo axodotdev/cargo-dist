@@ -139,15 +139,16 @@ dependencies = [
 
 [[package]]
 name = "axoproject"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08aed4961f036f687f5ccb9caf177fe2d06b18f5bec4ec2ec15171ddc39c3bf6"
+checksum = "db85ff14dd93eb45363fa28d270c5e599da0ead233bc90be773b1968b31547ec"
 dependencies = [
  "axoasset",
  "camino",
  "clap",
  "console",
  "guppy",
+ "itertools",
  "miette",
  "pathdiff",
  "semver",
