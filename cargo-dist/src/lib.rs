@@ -13,19 +13,16 @@
 use std::{
     collections::{BTreeMap, HashMap},
     fs::File,
-    io::BufReader,
     ops::Not,
     process::Command,
 };
 
+use axoasset::LocalAsset;
 use axoproject::{errors::AxoprojectError, WorkspaceInfo};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Release};
-use flate2::{write::ZlibEncoder, Compression, GzBuilder};
 use semver::Version;
 use tracing::{info, warn};
-use xz2::write::XzEncoder;
-use zip::ZipWriter;
 
 use errors::*;
 use miette::{miette, Context, IntoDiagnostic};
@@ -55,7 +52,7 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
 
     // First set up our target dirs so things don't have to race to do it later
     if !dist.dist_dir.exists() {
-        std::fs::create_dir_all(&dist.dist_dir)
+        LocalAsset::create_dir(dist.dist_dir.as_str())
             .into_diagnostic()
             .wrap_err_with(|| format!("couldn't create dist target dir at {}", dist.dist_dir))?;
     }
@@ -419,7 +416,7 @@ fn rustup_toolchain(_dist_graph: &DistGraph, cmd: &RustupStep) -> Result<()> {
 fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
     // Delete any existing bundle
     if artifact.file_path.exists() {
-        std::fs::remove_file(&artifact.file_path)
+        LocalAsset::remove_file(artifact.file_path.as_str())
             .into_diagnostic()
             .wrap_err_with(|| format!("failed to delete old artifact {}", artifact.file_path))?;
     }
@@ -432,11 +429,11 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
 
     // Clear out the dir we'll build the bundle up in
     if archive.dir_path.exists() {
-        std::fs::remove_dir_all(&archive.dir_path)
+        LocalAsset::remove_dir_all(archive.dir_path.as_str())
             .into_diagnostic()
             .wrap_err_with(|| format!("failed to delete old artifact dir {}", archive.dir_path))?;
     }
-    std::fs::create_dir(&archive.dir_path)
+    LocalAsset::create_dir(archive.dir_path.as_str())
         .into_diagnostic()
         .wrap_err_with(|| format!("failed to create artifact dir {}", archive.dir_path))?;
 
@@ -456,143 +453,21 @@ fn copy_dir(_src_path: &Utf8Path, _dest_path: &Utf8Path) -> Result<()> {
 
 fn zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path, zip_style: &ZipStyle) -> Result<()> {
     match zip_style {
-        ZipStyle::Zip => really_zip_dir(src_path, dest_path),
-        ZipStyle::Tar(compression) => tar_dir(src_path, dest_path, compression),
+        ZipStyle::Zip => {
+            LocalAsset::zip_dir(src_path.as_str(), dest_path.as_str()).into_diagnostic()
+        }
+        ZipStyle::Tar(compression) => match compression {
+            CompressionImpl::Gzip => {
+                LocalAsset::tar_gz_dir(src_path.as_str(), dest_path.as_str()).into_diagnostic()
+            }
+            CompressionImpl::Xzip => {
+                LocalAsset::tar_xz_dir(src_path.as_str(), dest_path.as_str()).into_diagnostic()
+            }
+            CompressionImpl::Zstd => {
+                LocalAsset::tar_zstd_dir(src_path.as_str(), dest_path.as_str()).into_diagnostic()
+            }
+        },
     }
-}
-
-fn tar_dir(src_path: &Utf8Path, dest_path: &Utf8Path, compression: &CompressionImpl) -> Result<()> {
-    // Set up the archive/compression
-    // The contents of the zip (e.g. a tar)
-    let dir_name = src_path.file_name().unwrap();
-    let zip_contents_name = format!("{dir_name}.tar");
-    let final_zip_file = File::create(dest_path)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to create file for artifact: {dest_path}"))?;
-
-    match compression {
-        CompressionImpl::Gzip => {
-            // Wrap our file in compression
-            let zip_output = GzBuilder::new()
-                .filename(zip_contents_name)
-                .write(final_zip_file, Compression::default());
-
-            // Write the tar to the compression stream
-            let mut tar = tar::Builder::new(zip_output);
-
-            // Add the whole dir to the tar
-            tar.append_dir_all(dir_name, src_path)
-                .into_diagnostic()
-                .wrap_err_with(|| {
-                    format!("failed to copy directory into tar: {src_path} => {dir_name}",)
-                })?;
-            // Finish up the tarring
-            let zip_output = tar
-                .into_inner()
-                .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write tar: {dest_path}"))?;
-            // Finish up the compression
-            let _zip_file = zip_output
-                .finish()
-                .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write archive: {dest_path}"))?;
-            // Drop the file to close it
-        }
-        CompressionImpl::Xzip => {
-            let zip_output = XzEncoder::new(final_zip_file, 9);
-            // Write the tar to the compression stream
-            let mut tar = tar::Builder::new(zip_output);
-
-            // Add the whole dir to the tar
-            tar.append_dir_all(dir_name, src_path)
-                .into_diagnostic()
-                .wrap_err_with(|| {
-                    format!("failed to copy directory into tar: {src_path} => {dir_name}",)
-                })?;
-            // Finish up the tarring
-            let zip_output = tar
-                .into_inner()
-                .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write tar: {dest_path}"))?;
-            // Finish up the compression
-            let _zip_file = zip_output
-                .finish()
-                .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write archive: {dest_path}"))?;
-            // Drop the file to close it
-        }
-        CompressionImpl::Zstd => {
-            // Wrap our file in compression
-            let zip_output = ZlibEncoder::new(final_zip_file, Compression::default());
-
-            // Write the tar to the compression stream
-            let mut tar = tar::Builder::new(zip_output);
-
-            // Add the whole dir to the tar
-            tar.append_dir_all(dir_name, src_path)
-                .into_diagnostic()
-                .wrap_err_with(|| {
-                    format!("failed to copy directory into tar: {src_path} => {dir_name}",)
-                })?;
-            // Finish up the tarring
-            let zip_output = tar
-                .into_inner()
-                .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write tar: {dest_path}"))?;
-            // Finish up the compression
-            let _zip_file = zip_output
-                .finish()
-                .into_diagnostic()
-                .wrap_err_with(|| format!("failed to write archive: {dest_path}"))?;
-            // Drop the file to close it
-        }
-    }
-
-    info!("artifact created at: {}", dest_path);
-    Ok(())
-}
-
-fn really_zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
-    // Set up the archive/compression
-    let final_zip_file = File::create(dest_path)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to create file for artifact: {dest_path}"))?;
-
-    // Wrap our file in compression
-    let mut zip = ZipWriter::new(final_zip_file);
-
-    let dir = std::fs::read_dir(src_path)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to read artifact dir: {src_path}"))?;
-    for entry in dir {
-        let entry = entry.into_diagnostic()?;
-        if entry.file_type().into_diagnostic()?.is_file() {
-            let options = zip::write::FileOptions::default()
-                .compression_method(zip::CompressionMethod::Stored);
-            let file = File::open(entry.path()).into_diagnostic()?;
-            let mut buf = BufReader::new(file);
-            let file_name = entry.file_name();
-            // FIXME: ...don't do this lossy conversion?
-            let utf8_file_name = file_name.to_string_lossy();
-            zip.start_file(utf8_file_name.clone(), options)
-                .into_diagnostic()
-                .wrap_err_with(|| {
-                    format!("failed to create file {utf8_file_name} in zip: {dest_path}")
-                })?;
-            std::io::copy(&mut buf, &mut zip).into_diagnostic()?;
-        } else {
-            todo!("implement zip subdirs! (or was this a symlink?)");
-        }
-    }
-
-    // Finish up the compression
-    let _zip_file = zip
-        .finish()
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to write archive: {dest_path}"))?;
-    // Drop the file to close it
-    info!("artifact created at: {}", dest_path);
-    Ok(())
 }
 
 /// Arguments for `cargo dist init` ([`do_init`][])

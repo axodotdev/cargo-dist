@@ -48,12 +48,9 @@
 //! Also note that the BuildSteps for installers are basically monolithic "build that installer"
 //! steps to give them the freedom to do whatever they need to do.
 
-use std::{
-    fs::File,
-    io::{BufReader, Read},
-    process::Command,
-};
+use std::process::Command;
 
+use axoasset::LocalAsset;
 use axoproject::{PackageIdx, WorkspaceInfo, WorkspaceSearch};
 use camino::{Utf8Path, Utf8PathBuf};
 use guppy::PackageId;
@@ -2161,15 +2158,7 @@ pub fn get_host_target(cargo: &str) -> Result<String> {
 
 /// Load the root workspace toml into toml-edit form
 pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
-    // FIXME: this should really be factored out into some sort of i/o module
-    let mut workspace_toml_file = File::open(manifest_path)
-        .into_diagnostic()
-        .wrap_err("couldn't load root workspace Cargo.toml")?;
-    let mut workspace_toml_str = String::new();
-    workspace_toml_file
-        .read_to_string(&mut workspace_toml_str)
-        .into_diagnostic()
-        .wrap_err("couldn't read root workspace Cargo.toml")?;
+    let workspace_toml_str = LocalAsset::load_string(manifest_path.as_str()).into_diagnostic()?;
     workspace_toml_str
         .parse::<toml_edit::Document>()
         .into_diagnostic()
@@ -2202,14 +2191,7 @@ fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
 
 /// Load a changelog to a string
 fn try_load_changelog(changelog_path: &Utf8Path) -> Result<String> {
-    let file = File::open(changelog_path)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to open changelog at {changelog_path}"))?;
-    let mut data = BufReader::new(file);
-    let mut changelog_str = String::new();
-    data.read_to_string(&mut changelog_str)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to read changelog at {changelog_path}"))?;
+    let changelog_str = LocalAsset::load_string(changelog_path.as_str()).into_diagnostic()?;
     Ok(changelog_str)
 }
 

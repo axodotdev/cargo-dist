@@ -2,9 +2,10 @@
 //!
 //! In the future this might get split up into submodules.
 
-use std::{fs::File, io::BufWriter};
+use std::fs::File;
 
-use camino::Utf8Path;
+use axoasset::{AxoassetError, LocalAsset};
+use camino::{Utf8Path, Utf8PathBuf};
 use miette::{Context, IntoDiagnostic};
 use newline_converter::{dos2unix, unix2dos};
 use serde_json::json;
@@ -20,20 +21,25 @@ pub(crate) fn generate_install_sh_script(
     info: &InstallerInfo,
 ) -> Result<(), miette::Report> {
     let installer_file = &info.dest_path;
-    let mut file = File::create(installer_file)
+    // Unwrapping here because the path is basically guaranteed to have a parent at this point
+    let dest_dir = installer_file.parent().unwrap();
+    // Potential FIXME: Have an axoasset method that _just_ creates a file, without writing
+    // anything (think `File::create`)
+    LocalAsset::write_new("", installer_file.as_str(), dest_dir.as_str())
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to create installer file {installer_file}"))?;
-    write_install_sh_script(&mut file, dist, info)
+    write_install_sh_script(installer_file, dest_dir, dist, info)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to write to installer file {installer_file}"))?;
     Ok(())
 }
 
-fn write_install_sh_script<W: std::io::Write>(
-    f: &mut W,
+fn write_install_sh_script(
+    installer_file: &Utf8PathBuf,
+    dest_dir: &Utf8Path,
     _dist: &DistGraph,
     info: &InstallerInfo,
-) -> Result<(), std::io::Error> {
+) -> Result<(), AxoassetError> {
     let InstallerInfo {
         app_name,
         app_version,
@@ -106,7 +112,11 @@ fn write_install_sh_script<W: std::io::Write>(
         .replace("{{ARTIFACT_DOWNLOAD_URL}}", base_url)
         .replace("{{PLATFORM_INFO}}", &entries);
 
-    f.write_all(dos2unix(&install_script).as_bytes())?;
+    LocalAsset::write_new(
+        &dos2unix(&install_script),
+        installer_file.as_str(),
+        dest_dir.as_str(),
+    )?;
 
     Ok(())
 }
@@ -243,10 +253,12 @@ fn apply_npm_templates(
     info: &NpmInstallerInfo,
 ) -> Result<(), miette::Report> {
     let file_path = target_dir.join(rel_path);
-    let file = File::create(&file_path)
+    // Fail early here before we spend a bunch of CPU time doing the rest of the work.
+    // Potential FIXME: Have an axoasset method that _just_ creates a file, without writing
+    // anything (think `File::create`)
+    LocalAsset::write_new("", file_path.as_str(), target_dir.as_str())
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to create installer file {file_path}"))?;
-    let mut f = BufWriter::new(file);
 
     // FIXME: escape these strings!?
 
@@ -335,12 +347,9 @@ fn apply_npm_templates(
         .replace("\"{{ARTIFACT_DOWNLOAD_URL}}\"", &artifact_download_url)
         .replace("/*PLATFORM_INFO*/", &platform_info);
 
-    {
-        use std::io::Write;
-        f.write_all(dos2unix(&output).as_bytes())
-            .into_diagnostic()
-            .wrap_err_with(|| format!("Failed to write to installer file {file_path}"))?;
-    }
+    LocalAsset::write_new(&dos2unix(&output), file_path.as_str(), target_dir.as_str())
+        .into_diagnostic()
+        .wrap_err_with(|| format!("Failed to write to installer file {file_path}"))?;
 
     Ok(())
 }

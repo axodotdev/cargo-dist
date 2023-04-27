@@ -4,6 +4,7 @@
 
 use std::fs::File;
 
+use axoasset::LocalAsset;
 use miette::{IntoDiagnostic, WrapErr};
 use newline_converter::dos2unix;
 use semver::Version;
@@ -23,7 +24,7 @@ pub fn generate_github_ci(dist: &DistGraph) -> Result<(), miette::Report> {
     let ci_file = ci_dir.join(GITHUB_CI_FILE);
 
     info!("generating Github CI at {ci_file}");
-    std::fs::create_dir_all(&ci_dir)
+    LocalAsset::create_dir_all(&ci_dir.as_str())
         .into_diagnostic()
         .wrap_err("Failed to create ci dir")?;
     let mut file = File::create(&ci_file)
