@@ -4,7 +4,6 @@ use clap::{
     builder::{PossibleValuesParser, TypedValueParser},
     Args, Parser, Subcommand, ValueEnum,
 };
-use semver::Version;
 use tracing::level_filters::LevelFilter;
 
 #[derive(Parser)]
@@ -27,17 +26,17 @@ pub enum FakeCli {
 pub struct Cli {
     /// Subcommands ("no subcommand" defaults to `build`)
     #[clap(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Commands,
 
     /// How verbose logging should be (log level)
-    #[clap(long)]
+    #[clap(long, short)]
     #[clap(default_value_t = LevelFilter::WARN)]
     #[clap(value_parser = PossibleValuesParser::new(["off", "error", "warn", "info", "debug", "trace"]).map(|s| s.parse::<LevelFilter>().expect("possible values are valid")))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub verbose: LevelFilter,
 
     /// The format of the output
-    #[clap(long, value_enum)]
+    #[clap(long, short, value_enum)]
     #[clap(default_value_t = OutputFormat::Human)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub output_format: OutputFormat,
@@ -55,7 +54,7 @@ pub struct Cli {
     ///
     /// If left unspecified we will use the values in [workspace.metadata.dist],
     /// except for `cargo dist init` which will select some "good defaults" for you.
-    #[clap(long)]
+    #[clap(long, short)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub target: Vec<String>,
 
@@ -63,7 +62,7 @@ pub struct Cli {
     ///
     /// If left unspecified we will use the values in [workspace.metadata.dist].
     ///  `cargo dist init` will persist the values you pass to that location.
-    #[clap(long)]
+    #[clap(long, short)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub installer: Vec<InstallerStyle>,
 
@@ -71,7 +70,7 @@ pub struct Cli {
     ///
     /// If left unspecified we will use the value in [workspace.metadata.dist].
     /// `cargo dist init` will persist the values you pass to that location.
-    #[clap(long)]
+    #[clap(long, short)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub ci: Vec<CiStyle>,
 
@@ -101,10 +100,6 @@ pub struct Cli {
     #[clap(long)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub tag: Option<String>,
-
-    // Add the args from the "real" build command
-    #[clap(flatten)]
-    pub build_args: BuildArgs,
 }
 
 #[derive(Subcommand)]
@@ -112,7 +107,11 @@ pub enum Commands {
     /// Build artifacts
     #[clap(disable_version_flag = true)]
     Build(BuildArgs),
-    /// Initialize default settings in your Cargo.toml
+    /// Setup or update cargo-dist
+    ///
+    /// This will interactively guide you through the process of selecting configuration options
+    /// and will also automatically run 'cargo dist generate-ci' afterwards as necessary. It will
+    /// also handle updating your project to a new version of cargo-dist if you're running one.
     #[clap(disable_version_flag = true)]
     Init(InitArgs),
     /// Generate CI scripts for orchestrating cargo-dist
@@ -136,15 +135,6 @@ pub enum Commands {
 }
 
 #[derive(Args)]
-pub struct ReleaseNotesArgs {
-    /// Get release notes for a specific version.
-    ///
-    /// Otherwise the app's current version will be used.
-    #[clap(long)]
-    pub version: Version,
-}
-
-#[derive(Args)]
 pub struct BuildArgs {
     /// Which subset of the Artifacts to build
     ///
@@ -164,7 +154,7 @@ pub struct BuildArgs {
     /// The specifics of "host" mode are intentionally unspecified to enable us to provider better
     /// out-of-the-box UX for local usage. In CI environments you should always specify "global"
     /// or "local" to get consistent behaviour!
-    #[clap(long, value_enum)]
+    #[clap(long, short, value_enum)]
     #[clap(default_value_t = ArtifactMode::Host)]
     pub artifacts: ArtifactMode,
 }

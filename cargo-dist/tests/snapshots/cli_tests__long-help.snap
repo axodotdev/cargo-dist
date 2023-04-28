@@ -14,7 +14,7 @@ Commands:
   build
           Build artifacts
   init
-          Initialize default settings in your Cargo.toml
+          Setup or update cargo-dist
   generate-ci
           Generate CI scripts for orchestrating cargo-dist
   manifest
@@ -23,25 +23,6 @@ Commands:
           Print this message or the help of the given subcommand(s)
 
 Options:
-      --artifacts <ARTIFACTS>
-          Which subset of the Artifacts to build
-          
-          Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, MSIs...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
-          
-          Having this distinction lets us run cargo-dist independently on multiple machines without collisions between the outputs.
-          
-          If let unspecified, we will pick a fuzzier "host" mode that builds "as much as possible" for the local system. This mode is appropriate for local testing/debugging/demoing. If no --target flags are passed on the CLI then "host" mode will try to intelligently guess which targets to build for, which may include building targets that aren't defined in your metadata.dist config (since that config may exclude the current machine!).
-          
-          The specifics of "host" mode are intentionally unspecified to enable us to provider better out-of-the-box UX for local usage. In CI environments you should always specify "global" or "local" to get consistent behaviour!
-          
-          [default: host]
-
-          Possible values:
-          - local:  Build target-specific artifacts like executable-zips and MSIs
-          - global: Build unique artifacts like curl-sh installers and npm packages
-          - host:   Fuzzily build "as much as possible" for the host system
-          - all:    Build all the artifacts; useful for `cargo dist manifest`
-
   -h, --help
           Print help (see a summary with '-h')
 
@@ -49,13 +30,13 @@ Options:
           Print version
 
 GLOBAL OPTIONS:
-      --verbose <VERBOSE>
+  -v, --verbose <VERBOSE>
           How verbose logging should be (log level)
           
           [default: warn]
           [possible values: off, error, warn, info, debug, trace]
 
-      --output-format <OUTPUT_FORMAT>
+  -o, --output-format <OUTPUT_FORMAT>
           The format of the output
           
           [default: human]
@@ -68,12 +49,12 @@ GLOBAL OPTIONS:
           
           `cargo dist manifest --artifacts=all --output-format=json --no-local-paths`
 
-      --target <TARGET>
+  -t, --target <TARGET>
           Target triples we want to build
           
           If left unspecified we will use the values in [workspace.metadata.dist], except for `cargo dist init` which will select some "good defaults" for you.
 
-      --installer <INSTALLER>
+  -i, --installer <INSTALLER>
           Installers we want to build
           
           If left unspecified we will use the values in [workspace.metadata.dist]. `cargo dist init` will persist the values you pass to that location.
@@ -83,7 +64,7 @@ GLOBAL OPTIONS:
           - powershell: Generates a powershell script that fetches/installs the right build
           - npm:        Generates an npm project that fetches the right build to your node_modules
 
-      --ci <CI>
+  -c, --ci <CI>
           CI we want to support
           
           If left unspecified we will use the value in [workspace.metadata.dist]. `cargo dist init` will persist the values you pass to that location.
