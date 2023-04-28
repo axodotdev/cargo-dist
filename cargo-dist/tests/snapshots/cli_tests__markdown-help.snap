@@ -20,22 +20,20 @@ cargo dist <COMMAND>
 
 ### Commands
 * [build](#cargo-dist-build): Build artifacts
-* [init](#cargo-dist-init): Initialize default settings in your Cargo.toml
+* [init](#cargo-dist-init): Setup or update cargo-dist
 * [generate-ci](#cargo-dist-generate-ci): Generate CI scripts for orchestrating cargo-dist
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
 
 ### Options
-This command is an alias for `cargo dist build`, refer to that
-
 ### GLOBAL OPTIONS
-#### `--verbose <VERBOSE>`
+#### `-v, --verbose <VERBOSE>`
 How verbose logging should be (log level)
 
 \[default: warn]  
 \[possible values: off, error, warn, info, debug, trace]  
 
-#### `--output-format <OUTPUT_FORMAT>`
+#### `-o, --output-format <OUTPUT_FORMAT>`
 The format of the output
 
 \[default: human]  
@@ -48,12 +46,12 @@ This is useful for generating a clean "full" manifest as follows:
 
 `cargo dist manifest --artifacts=all --output-format=json --no-local-paths`
 
-#### `--target <TARGET>`
+#### `-t, --target <TARGET>`
 Target triples we want to build
 
 If left unspecified we will use the values in [workspace.metadata.dist], except for `cargo dist init` which will select some "good defaults" for you.
 
-#### `--installer <INSTALLER>`
+#### `-i, --installer <INSTALLER>`
 Installers we want to build
 
 If left unspecified we will use the values in [workspace.metadata.dist]. `cargo dist init` will persist the values you pass to that location.
@@ -63,7 +61,7 @@ Possible values:
 - powershell: Generates a powershell script that fetches/installs the right build
 - npm:        Generates an npm project that fetches the right build to your node_modules
 
-#### `--ci <CI>`
+#### `-c, --ci <CI>`
 CI we want to support
 
 If left unspecified we will use the value in [workspace.metadata.dist]. `cargo dist init` will persist the values you pass to that location.
@@ -97,7 +95,7 @@ cargo dist build [OPTIONS]
 ```
 
 ### Options
-#### `--artifacts <ARTIFACTS>`
+#### `-a, --artifacts <ARTIFACTS>`
 Which subset of the Artifacts to build
 
 Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, MSIs...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
@@ -124,7 +122,9 @@ This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
 ## cargo dist init
-Initialize default settings in your Cargo.toml
+Setup or update cargo-dist
+
+This will interactively guide you through the process of selecting configuration options and will also automatically run 'cargo dist generate-ci' afterwards as necessary. It will also handle updating your project to a new version of cargo-dist if you're running one.
 
 ### Usage:
 
@@ -179,7 +179,7 @@ cargo dist manifest [OPTIONS]
 ```
 
 ### Options
-#### `--artifacts <ARTIFACTS>`
+#### `-a, --artifacts <ARTIFACTS>`
 Which subset of the Artifacts to build
 
 Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, MSIs...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
@@ -216,7 +216,7 @@ cargo dist help [COMMAND]
 
 ### Commands
 * [build](#cargo-dist-build): Build artifacts
-* [init](#cargo-dist-init): Initialize default settings in your Cargo.toml
+* [init](#cargo-dist-init): Setup or update cargo-dist
 * [generate-ci](#cargo-dist-generate-ci): Generate CI scripts for orchestrating cargo-dist
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)

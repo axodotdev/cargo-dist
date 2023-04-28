@@ -10,23 +10,22 @@ Usage: cargo dist [OPTIONS]
 
 Commands:
   build        Build artifacts
-  init         Initialize default settings in your Cargo.toml
+  init         Setup or update cargo-dist
   generate-ci  Generate CI scripts for orchestrating cargo-dist
   manifest     Generate the final build manifest without running any builds
   help         Print this message or the help of the given subcommand(s)
 
 Options:
-      --artifacts <ARTIFACTS>  Which subset of the Artifacts to build [default: host] [possible values: local, global, host, all]
-  -h, --help                   Print help (see more with '--help')
-  -V, --version                Print version
+  -h, --help     Print help (see more with '--help')
+  -V, --version  Print version
 
 GLOBAL OPTIONS:
-      --verbose <VERBOSE>              How verbose logging should be (log level) [default: warn] [possible values: off, error, warn, info, debug, trace]
-      --output-format <OUTPUT_FORMAT>  The format of the output [default: human] [possible values: human, json]
+  -v, --verbose <VERBOSE>              How verbose logging should be (log level) [default: warn] [possible values: off, error, warn, info, debug, trace]
+  -o, --output-format <OUTPUT_FORMAT>  The format of the output [default: human] [possible values: human, json]
       --no-local-paths                 Strip local paths from output (e.g. in the dist manifest json)
-      --target <TARGET>                Target triples we want to build
-      --installer <INSTALLER>          Installers we want to build [possible values: shell, powershell, npm]
-      --ci <CI>                        CI we want to support [possible values: github]
+  -t, --target <TARGET>                Target triples we want to build
+  -i, --installer <INSTALLER>          Installers we want to build [possible values: shell, powershell, npm]
+  -c, --ci <CI>                        CI we want to support [possible values: github]
       --tag <TAG>                      The (git) tag to use for the Announcement that each invocation of cargo-dist is performing
 
 stderr:

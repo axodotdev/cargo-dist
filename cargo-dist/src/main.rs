@@ -28,12 +28,11 @@ fn main() {
 fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
     let config = &cli.config;
     match &config.command {
-        Some(Commands::Init(args)) => cmd_init(config, args),
-        Some(Commands::GenerateCi(args)) => cmd_generate_ci(config, args),
-        Some(Commands::Manifest(args)) => cmd_manifest(config, args),
-        Some(Commands::HelpMarkdown(args)) => cmd_help_md(config, args),
-        Some(Commands::Build(args)) => cmd_dist(config, args),
-        None => cmd_dist(config, &config.build_args),
+        Commands::Init(args) => cmd_init(config, args),
+        Commands::GenerateCi(args) => cmd_generate_ci(config, args),
+        Commands::Manifest(args) => cmd_manifest(config, args),
+        Commands::HelpMarkdown(args) => cmd_help_md(config, args),
+        Commands::Build(args) => cmd_dist(config, args),
     }
 }
 
@@ -280,12 +279,6 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
 
                     writeln!(out, "### {heading}")?;
 
-                    if in_normal_options && is_full_command {
-                        writeln!(
-                            out,
-                            "This command is an alias for `cargo dist build`, refer to that\n"
-                        )?;
-                    }
                     if in_global_options && !is_full_command {
                         writeln!(
                             out,
