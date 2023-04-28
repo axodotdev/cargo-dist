@@ -597,10 +597,15 @@ fn really_zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
 
 /// Arguments for `cargo dist init` ([`do_init`][])
 #[derive(Debug)]
-pub struct InitArgs {}
+pub struct InitArgs {
+    /// Whether to auto-accept the default values for interactive prompts
+    pub yes: bool,
+    /// Don't automatically generate ci
+    pub no_generate_ci: bool,
+}
 
 /// Run 'cargo dist init'
-pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
+pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     let workspace = tasks::get_project()?;
 
     // Load in the workspace toml to edit and write back
@@ -610,6 +615,7 @@ pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
     // Init things
     let mut did_anything = false;
     eprintln!("first let's setup your cargo build profile...");
+    eprintln!();
     if init_dist_profile(cfg, &mut workspace_toml)? {
         eprintln!("{check} added [profile.dist] to your root Cargo.toml");
         did_anything = true;
@@ -620,7 +626,7 @@ pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
 
     eprintln!("next let's setup your cargo-dist config...");
     eprintln!();
-    let (worked, gen_ci) = init_dist_metadata(cfg, &workspace, &mut workspace_toml)?;
+    let (worked, gen_ci) = init_dist_metadata(cfg, args, &workspace, &mut workspace_toml)?;
     if worked {
         eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
         did_anything = true;
@@ -649,7 +655,7 @@ pub fn do_init(cfg: &Config, _args: &InitArgs) -> Result<()> {
     eprintln!("{check} cargo-dist is setup!");
     eprintln!();
 
-    if gen_ci {
+    if gen_ci && !args.no_generate_ci {
         eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
         eprintln!();
 
@@ -705,6 +711,7 @@ fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
 /// and whether ci was set
 fn init_dist_metadata(
     cfg: &Config,
+    args: &InitArgs,
     workspace_info: &WorkspaceInfo,
     workspace_toml: &mut toml_edit::Document,
 ) -> DistResult<(bool, bool)> {
@@ -803,16 +810,24 @@ fn init_dist_metadata(
     let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
     if let Some(desired_version) = &meta.cargo_dist_version {
         if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
+            let default = true;
             let prompt = format!(
                 r#"update your project to this version of cargo-dist?
     {} => {}"#,
                 desired_version, current_version
             );
-            if Confirm::with_theme(&theme)
-                .with_prompt(prompt)
-                .default(true)
-                .interact()?
-            {
+            let response = if args.yes {
+                default
+            } else {
+                let res = Confirm::with_theme(&theme)
+                    .with_prompt(prompt)
+                    .default(default)
+                    .interact()?;
+                eprintln!();
+                res
+            };
+
+            if response {
                 meta.cargo_dist_version = Some(current_version);
             } else {
                 return Err(DistError::NoUpdateVersion {
@@ -820,7 +835,6 @@ fn init_dist_metadata(
                     running_version: current_version,
                 })?;
             }
-            eprintln!();
         }
     } else {
         let prompt = format!(
@@ -829,16 +843,23 @@ fn init_dist_metadata(
     (you're currently running {})"#,
             current_version
         );
-        if Confirm::with_theme(&theme)
-            .with_prompt(prompt)
-            .default(true)
-            .interact()?
-        {
+        let default = true;
+
+        let response = if args.yes {
+            default
+        } else {
+            let res = Confirm::with_theme(&theme)
+                .with_prompt(prompt)
+                .default(default)
+                .interact()?;
+            eprintln!();
+            res
+        };
+        if response {
             meta.cargo_dist_version = Some(current_version);
         } else {
             // Not recommended but technically ok...
         }
-        eprintln!();
     }
 
     // Enable CI backends
@@ -878,10 +899,18 @@ fn init_dist_metadata(
     this creates a CI action which automates creating a Github Release,
     builds all your binaries/archives, and then uploads them to the Release
     it also unlocks the ability to generate installers which fetch those artifacts"#;
-        let github_selected = Confirm::with_theme(&theme)
-            .with_prompt(prompt)
-            .default(defaults[github_key])
-            .interact()?;
+        let default = defaults[github_key];
+
+        let github_selected = if args.yes {
+            default
+        } else {
+            let res = Confirm::with_theme(&theme)
+                .with_prompt(prompt)
+                .default(default)
+                .interact()?;
+            eprintln!();
+            res
+        };
 
         let selected = if github_selected {
             vec![github_key]
@@ -891,7 +920,6 @@ fn init_dist_metadata(
 
         // Apply the results
         meta.ci = selected.into_iter().map(|i| known[i]).collect();
-        eprintln!();
     }
 
     // Enforce repository url right away
@@ -962,15 +990,24 @@ fn init_dist_metadata(
     installers streamline fetching your app's prebuilt artifacts
     see the docs for details on each one
     (select with arrow keys and space, submit with enter)"#;
-        let selected = MultiSelect::with_theme(&theme)
-            .items(&keys)
-            .defaults(&defaults)
-            .with_prompt(prompt)
-            .interact()?;
+        let selected = if args.yes {
+            defaults
+                .iter()
+                .enumerate()
+                .filter_map(|(idx, enabled)| enabled.then_some(idx))
+                .collect()
+        } else {
+            let res = MultiSelect::with_theme(&theme)
+                .items(&keys)
+                .defaults(&defaults)
+                .with_prompt(prompt)
+                .interact()?;
+            eprintln!();
+            res
+        };
 
         // Apply the results
         meta.installers = Some(selected.into_iter().map(|i| known[i]).collect());
-        eprintln!();
     } else {
         eprintln!("{notice} no CI backends enabled, skipping installers");
         eprintln!();
@@ -993,24 +1030,32 @@ fn init_dist_metadata(
             let prompt = r#"you've enabled npm support, please enter the @scope you want to use
     this is the "namespace" the package will be published under
     (leave blank to publish globally)"#;
-            let scope: String = Input::with_theme(&theme)
-                .with_prompt(prompt)
-                .allow_empty(true)
-                .validate_with(|v: &String| {
-                    let v = v.trim();
-                    if v.is_empty() {
-                        Ok(())
-                    } else if let Some(v) = v.strip_prefix('@') {
+            let default = "".to_string();
+
+            let scope: String = if args.yes {
+                default
+            } else {
+                let res = Input::with_theme(&theme)
+                    .with_prompt(prompt)
+                    .allow_empty(true)
+                    .validate_with(|v: &String| {
+                        let v = v.trim();
                         if v.is_empty() {
-                            Err("@ must be followed by something")
-                        } else {
                             Ok(())
+                        } else if let Some(v) = v.strip_prefix('@') {
+                            if v.is_empty() {
+                                Err("@ must be followed by something")
+                            } else {
+                                Ok(())
+                            }
+                        } else {
+                            Err("npm scopes must start with @")
                         }
-                    } else {
-                        Err("npm scopes must start with @")
-                    }
-                })
-                .interact_text()?;
+                    })
+                    .interact_text()?;
+                eprintln!();
+                res
+            };
             let scope = scope.trim();
             if scope.is_empty() {
                 eprintln!("{check} npm packages will be published globally");
@@ -1028,17 +1073,23 @@ fn init_dist_metadata(
             let prompt = r#"the npm installer requires binaries to be distributed as .tar.gz, is that ok?
     otherwise we would distribute your binaries as .zip on windows, .tar.xz everywhere else
     (this is a hopefully temporary limitation of the npm installer's implementation)"#;
-            let force_targz = Confirm::with_theme(&theme)
-                .with_prompt(prompt)
-                .default(true)
-                .interact()?;
+            let default = true;
+            let force_targz = if args.yes {
+                default
+            } else {
+                let res = Confirm::with_theme(&theme)
+                    .with_prompt(prompt)
+                    .default(default)
+                    .interact()?;
+                eprintln!();
+                res
+            };
             if force_targz {
                 meta.unix_archive = TAR_GZ;
                 meta.windows_archive = TAR_GZ;
             } else {
                 return Err(DistError::MustEnableTarGz)?;
             }
-            eprintln!();
         }
     }
 

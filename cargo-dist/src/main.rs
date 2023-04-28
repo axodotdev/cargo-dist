@@ -160,7 +160,7 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
     Ok(())
 }
 
-fn cmd_init(cli: &Cli, _args: &InitArgs) -> Result<(), miette::Report> {
+fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     // This command is more automagic, so provide default targets if none are chosen
     let targets = if cli.target.is_empty() {
         default_desktop_targets()
@@ -176,7 +176,10 @@ fn cmd_init(cli: &Cli, _args: &InitArgs) -> Result<(), miette::Report> {
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
     };
-    let args = cargo_dist::InitArgs {};
+    let args = cargo_dist::InitArgs {
+        yes: args.yes,
+        no_generate_ci: args.no_generate_ci,
+    };
     do_init(&config, &args)
 }
 

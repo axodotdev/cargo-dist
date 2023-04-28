@@ -195,7 +195,17 @@ impl ArtifactMode {
 }
 
 #[derive(Args)]
-pub struct InitArgs {}
+pub struct InitArgs {
+    /// Automatically accept all recommended/default values
+    ///
+    /// This is equivalent to just mashing ENTER over and over
+    /// during the interactive prompts.
+    #[clap(long, short)]
+    pub yes: bool,
+    /// Don't automatically invoke 'cargo dist generate-ci' at the end
+    #[clap(long)]
+    pub no_generate_ci: bool,
+}
 
 #[derive(Args)]
 pub struct GenerateCiArgs {}

@@ -133,6 +133,14 @@ cargo dist init [OPTIONS]
 ```
 
 ### Options
+#### `-y, --yes`
+Automatically accept all recommended/default values
+
+This is equivalent to just mashing ENTER over and over during the interactive prompts.
+
+#### `--no-generate-ci`
+Don't automatically invoke 'cargo dist generate-ci' at the end
+
 #### `-h, --help`
 Print help (see a summary with '-h')
 
