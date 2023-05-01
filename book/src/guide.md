@@ -12,32 +12,8 @@ Gonna be blunt and say that cargo-dist is still in early days and we still need 
 
 The guide will start by explaining the simple case, and then explain the more complicated cases.
 
-
-
-
-[simple-app-manifest]: ./img/simple-app-manifest.png
-[simple-app-manifest-with-files]: ./img/simple-app-manifest-with-files.png
-
-[install]: ./install.md
 [concepts]: ./concepts.md
 [way-too-quickstart]: ./way-too-quickstart.md
 [issues]: https://github.com/axodotdev/cargo-dist/issues
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
 [installers]: ./artifacts.md#installers
-[bin]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
-[config]: ./config.md
-[cargo-release]: https://github.com/crate-ci/cargo-release
-[git-tag]: https://git-scm.com/book/en/v2/Git-Basics-Tagging
-[init]: ./cli.md#cargo-dist-init
-[generate-ci]: ./cli.md#cargo-dist-generate-ci
-[cargo-profile]: https://doc.rust-lang.org/cargo/reference/profiles.html
-[thin-lto]: https://doc.rust-lang.org/cargo/reference/profiles.html#lto
-[workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table
-[rust-version]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field
-[rustup]: https://rustup.rs/
-[platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-[release-yml]: https://github.com/axodotdev/cargo-dist/blob/main/.github/workflows/release.yml
-[jq]: https://stedolan.github.io/jq/
-[manifest]: ./cli.md#cargo-dist-manifest
-[build]: ./cli.md#cargo-dist-build
-[artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
