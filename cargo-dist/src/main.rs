@@ -9,7 +9,7 @@ use camino::Utf8PathBuf;
 use cargo_dist::*;
 use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
-use cli::{Cli, Commands, FakeCli, HelpMarkdownArgs, ManifestArgs, OutputFormat};
+use cli::{Cli, Commands, FakeCli, HelpMarkdownArgs, ManifestArgs, OutputFormat, StatusArgs};
 use console::Term;
 use miette::IntoDiagnostic;
 
@@ -31,6 +31,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::Init(args) => cmd_init(config, args),
         Commands::GenerateCi(args) => cmd_generate_ci(config, args),
         Commands::Manifest(args) => cmd_manifest(config, args),
+        Commands::Status(args) => cmd_status(config, args),
         Commands::HelpMarkdown(args) => cmd_help_md(config, args),
         Commands::Build(args) => cmd_dist(config, args),
     }
@@ -157,6 +158,20 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
         OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
     }
     Ok(())
+}
+
+fn cmd_status(cli: &Cli, _args: &StatusArgs) -> Result<(), miette::Report> {
+    // Force --no-local-paths and --artifacts=all
+    // No need to force --output-format=human
+    let mut new_cli = cli.clone();
+    new_cli.no_local_paths = true;
+    let args = &ManifestArgs {
+        build_args: BuildArgs {
+            artifacts: cli::ArtifactMode::All,
+        },
+    };
+
+    cmd_manifest(&new_cli, args)
 }
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
