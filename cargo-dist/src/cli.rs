@@ -15,7 +15,7 @@ pub enum FakeCli {
     Dist(Cli),
 }
 
-#[derive(Args)]
+#[derive(Args, Clone, Debug)]
 #[clap(version)]
 #[clap(bin_name = "cargo dist")]
 #[clap(args_conflicts_with_subcommands = true)]
@@ -102,7 +102,7 @@ pub struct Cli {
     pub tag: Option<String>,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Clone, Debug)]
 pub enum Commands {
     /// Build artifacts
     #[clap(disable_version_flag = true)]
@@ -132,9 +132,20 @@ pub enum Commands {
     #[clap(disable_version_flag = true)]
     #[clap(hide = true)]
     HelpMarkdown(HelpMarkdownArgs),
+    /// Get a quick summary of the status of your project
+    ///
+    /// If you want to know what running your cargo-dist CI will produce,
+    /// this is the command for you! It should run the exact same logic and do some
+    /// basic integrity checks.
+    ///
+    /// This is roughly an alias for:
+    ///
+    ///     cargo dist manifest --artifacts=all --no-local-paths
+    #[clap(disable_version_flag = true)]
+    Status(StatusArgs),
 }
 
-#[derive(Args)]
+#[derive(Args, Clone, Debug)]
 pub struct BuildArgs {
     /// Which subset of the Artifacts to build
     ///
@@ -184,7 +195,7 @@ impl ArtifactMode {
     }
 }
 
-#[derive(Args)]
+#[derive(Args, Clone, Debug)]
 pub struct InitArgs {
     /// Automatically accept all recommended/default values
     ///
@@ -197,14 +208,14 @@ pub struct InitArgs {
     pub no_generate_ci: bool,
 }
 
-#[derive(Args)]
+#[derive(Args, Clone, Debug)]
 pub struct GenerateCiArgs {}
 
-#[derive(clap::Args)]
+#[derive(Args, Clone, Debug)]
 pub struct HelpMarkdownArgs {}
 
 /// A style of CI to generate
-#[derive(ValueEnum, Clone, Copy)]
+#[derive(ValueEnum, Clone, Copy, Debug)]
 pub enum CiStyle {
     /// Generate github CI that uploads to github releases
     Github,
@@ -241,12 +252,15 @@ impl InstallerStyle {
     }
 }
 
-#[derive(Args)]
+#[derive(Args, Clone, Debug)]
 pub struct ManifestArgs {
     // Add the args from the "real" build command
     #[clap(flatten)]
     pub build_args: BuildArgs,
 }
+
+#[derive(Args, Clone, Debug)]
+pub struct StatusArgs {}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum OutputFormat {
