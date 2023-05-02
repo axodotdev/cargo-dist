@@ -23,11 +23,6 @@ pub(crate) fn generate_install_sh_script(
     let installer_file = &info.dest_path;
     // Unwrapping here because the path is basically guaranteed to have a parent at this point
     let dest_dir = installer_file.parent().unwrap();
-    // Potential FIXME: Have an axoasset method that _just_ creates a file, without writing
-    // anything (think `File::create`)
-    LocalAsset::write_new("", installer_file.as_str(), dest_dir.as_str())
-        .into_diagnostic()
-        .wrap_err_with(|| format!("Failed to create installer file {installer_file}"))?;
     write_install_sh_script(installer_file, dest_dir, dist, info)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to write to installer file {installer_file}"))?;
@@ -114,7 +109,7 @@ fn write_install_sh_script(
 
     LocalAsset::write_new(
         &dos2unix(&install_script),
-        installer_file.as_str(),
+        installer_file.file_name().unwrap(),
         dest_dir.as_str(),
     )?;
 
@@ -253,12 +248,6 @@ fn apply_npm_templates(
     info: &NpmInstallerInfo,
 ) -> Result<(), miette::Report> {
     let file_path = target_dir.join(rel_path);
-    // Fail early here before we spend a bunch of CPU time doing the rest of the work.
-    // Potential FIXME: Have an axoasset method that _just_ creates a file, without writing
-    // anything (think `File::create`)
-    LocalAsset::write_new("", file_path.as_str(), target_dir.as_str())
-        .into_diagnostic()
-        .wrap_err_with(|| format!("Failed to create installer file {file_path}"))?;
 
     // FIXME: escape these strings!?
 
@@ -347,9 +336,13 @@ fn apply_npm_templates(
         .replace("\"{{ARTIFACT_DOWNLOAD_URL}}\"", &artifact_download_url)
         .replace("/*PLATFORM_INFO*/", &platform_info);
 
-    LocalAsset::write_new(&dos2unix(&output), file_path.as_str(), target_dir.as_str())
-        .into_diagnostic()
-        .wrap_err_with(|| format!("Failed to write to installer file {file_path}"))?;
+    LocalAsset::write_new(
+        &dos2unix(&output),
+        file_path.file_name().unwrap(),
+        target_dir.as_str(),
+    )
+    .into_diagnostic()
+    .wrap_err_with(|| format!("Failed to write to installer file {file_path}"))?;
 
     Ok(())
 }
