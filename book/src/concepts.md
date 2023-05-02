@@ -9,7 +9,7 @@ An invocation of cargo-dist has 4 major inputs:
 * The "announcement tag" (e.g. `--tag=v1.0.0`) 
 * The "artifact mode" (e.g. `--artifacts=all`)
 
-The first two define the full "Universe" of your project -- the platforms/binaries/installers that cargo-dist wants to build. The second two tell cargo-dist what subset of the Universe to actually bother with.
+The first two define the full "Universe" of your project -- the platforms/binaries/[installers][] that cargo-dist wants to build. The second two tell cargo-dist what subset of the Universe to actually bother with.
 
 It's important to the structure of cargo-dist that every invocation is aware of the full Universe and how it's being subsetted, because for instance if you want a shell script installer that does platform detection and fetches binaries, it needs to know about all the binaries/platforms it has to select from, even if this *particular* run of cargo-dist won't build them all!
 
@@ -28,7 +28,7 @@ The summary includes a list of every package in your workspace. If that package 
 
 In the above example the available Apps are "evil-workspace", "many-bin", and "third-bin". "many-bin" defines two binaries, while the other two Apps only define one.
 
-To match cargo-install's behaviour, if a package defines multiple binaries then they will be considered part of the same App and zips/installers for it will contain/install all of them. We figure if you went out of your way to have multiple binaries under one package (as opposed to separate packages for each), you did that for a reason! If you don't want that, make separate packages. There is currently no way to group multiple packages into a single App, although there probably will be one day.
+To match cargo-install's behaviour, if a package defines multiple binaries then they will be considered part of the same App and zips/[installers][] for it will contain/install all of them. We figure if you went out of your way to have multiple binaries under one package (as opposed to separate packages for each), you did that for a reason! If you don't want that, make separate packages. There is currently no way to group multiple packages into a single App, although there probably will be one day.
 
 If you don't want a package-with-binaries to be considered an App that cargo-dist should care about, you can use Cargo's own builtin [publish = false][publish-false]. You can also use `dist = false` or `dist = true` in [cargo-dist's own config][config-dist], which when defined will take priority over `publish`.
 
@@ -38,7 +38,7 @@ Things like [cdylibs][] are not picked up by cargo-dist, even though they're sim
 
 # Defining Your Artifacts
 
-Ok so you've defined your App, but what should we actually build for it? Let's look at what `cargo dist init --ci=github --installer=shell --installer=powershell` dumps into your root Cargo.toml:
+Ok so you've defined your App, but what should we actually build for it? Let's look at what `cargo dist init --ci=github --installer=shell --installer=powershell --yes` dumps into your root Cargo.toml:
 
 ```toml
 # Config for 'cargo dist'
@@ -68,7 +68,7 @@ The other 3 fields are defining the various Artifacts that should be produced fo
 
 For each entry in `targets` you will get a build of your App for [that platform][rust-platform] in the form of an [executable-zip][].
 
-For each entry in `installers` you get that kind of installer for your App. There are two classes of installer: "global" and "local". This will be explained further in [the section on artifact modes][artifact-modes-section], but the tl;dr is that "global" installers are one-per-App while "local" installers are one-per-platform-per-app, similar to a [Github CI Matrix](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs).
+For each entry in `installers` you get that kind of [installer][installers] for your App. There are two classes of installer: "global" and "local". This will be explained further in [the section on artifact modes][artifact-modes-section], but the tl;dr is that "global" installers are one-per-App while "local" installers are one-per-platform-per-app, similar to a [Github CI Matrix](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs).
 
 "shell" and "powershell" are both global installers. There aren't currently any implemented local installers, but those would be things like a windows "msi" or macos "dmg", where you ostensibly want individual installers for each architecture.
 
@@ -81,7 +81,7 @@ cargo-dist's self-generated CI is triggered by pushing git tags with specific fo
 
 1 Git Tag = 1 cargo-dist Announcement = 1 Github Release
 
-Even when not running in CI, this concept of a coherent Announcement Tag is important enough that we will always try to guess one even if none is provided. The "build" and "manifest" commands will refuse to run if a coherent Announcement Tag can't be determined to help you catch problems before you start pushing to CI. If this happens you will get a printout telling you some options:
+Even when not running in CI, this concept of a coherent Announcement Tag is important enough that we will always try to guess one even if none is provided. The "build", "manifest", and "status" commands will refuse to run if a coherent Announcement Tag can't be determined to help you catch problems before you start pushing to CI. If this happens you will get a printout telling you some options:
 
 ![the error printout, described below][announce-error]
 
@@ -152,6 +152,15 @@ cargo dist manifest --tag=v0.5.0 --artifacts=all --no-local-paths --output-forma
 
 This is the only way that CI uses the flag, but you could also use "all" with `build` (the default cargo-dist command) if you want to get all the artifacts built at once, although you should probably filter the `--target`s as discussed in the section on "local".
 
+`cargo dist manifest --artifacts=all --no-local-paths` is so useful/common that we provide an alias for it: `cargo dist status`. The above can be simplified to:
+
+```sh
+cargo dist status --tag=v0.5.0
+```
+
+```sh
+cargo dist status --tag=v0.5.0 -ojson
+```
 
 
 ## Global Artifacts Mode
@@ -213,7 +222,7 @@ Ok so here's what goes through cargo-dist's brains when you run it:
 6. Add all the enabled Installers to each Release (local ones broadcasted to each Variant, filtered by Artifact Mode)
 7. Compute the Build Steps necessary to produce each Artifact ("run cargo, copy this file, ...")
 8. Generate top-level Announcement info like the body for a Github Release
-9. run the Build Steps (ignored by `manifest`)
+9. run the Build Steps (ignored by `manifest`/`status`)
 10. print a manifest of the computed Announcement/Releases/Artifacts
 
 CI will parse the resulting (`--output-format=json`) manifest of each `build` invocation to know what artifacts were produced and need to be uploaded to the Github Release.
@@ -248,3 +257,4 @@ CI will just invoke cargo-dist in the following sequence:
 [cargo-metadata]: https://doc.rust-lang.org/cargo/commands/cargo-metadata.html
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
 [guide]: ./guide.html
+[installers]: ./installers.md

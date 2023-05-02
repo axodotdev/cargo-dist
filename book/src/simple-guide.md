@@ -8,15 +8,17 @@ The workflow will be triggered whenever you push a [Git Tag][git-tag] specifying
 
 > TO BE EXTREMELY PEDANTIC: The workflow will trigger whenever Github sees that the git tag *and* the commit it refers to are part of the repo *and* the timestamp(?) of both(?) is *after* the commit that introduced the workflow's yml file. That last part is an absolute headache, and may require you to delete the tag *both locally and on github* if you created it before the workflow. Basically, setup cargo-dist *before* you start cutting releases!
 
-## Setup
+## Setup (and Updates)
 
-To setup cargo-dist on our project (after we've [installed it][install]), we "need" to run `cargo dist init`. In this case we're going to streamline things a bit and tell it that we want to also setup the Github CI with `--ci=github`:
+To setup cargo-dist on our project (after we've [installed it][install]), we "need" to run `cargo dist init`, which will provide us with a series of interactive prompts and explanations to configure our project. The recommended option can always be selected by hitting ENTER, and you can automate that by just passing `--yes`.
+
+You can rerun `init` as many times as you want, as it also functions as an "update" command for your config. This is especially convenient for updating your project to the version of cargo-dist you're running, as it will prompt you to do that whenever the versions don't match (refusing to proceed if declined).
 
 ```sh
-cargo dist init --ci=github
+cargo dist init
 ```
 
-[init][] on its own just edits your Cargo.toml to include the recommended defaults. When we include `--ci=github` it will also invoke `cargo dist generate-ci` after setting things up. If you ever want to regenerate your CI after updating cargo-dist or changing your config, use [generate-ci][] directly.
+[`init`][] on its own just edits your Cargo.toml to include the recommended defaults. If you have enabled CI support, it will also run `cargo dist generate-ci` after setting things up. This ensures your config and your CI scripts are in sync, but will unfortunately clobber any hand-edits you made to the scripts.
 
 Let's look at those defaults that were added (yes those comments are generated too, you will never stop me from adding more docs!!!):
 
@@ -29,14 +31,18 @@ lto = "thin"
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.0.3"
+cargo-dist-version = "0.0.6"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
 rust-toolchain-version = "1.67.1"
 # CI backends to support (see 'cargo dist generate-ci')
 ci = ["github"]
+# The installers to generate for each app
+installers = []
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ```
+
+> If your config doesn't have `ci = ["github"]` by default, then you probably don't have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). The rest of this guide will assume you did. cargo-dist will work fine without it, you just won't get Github CI integration or [installers][].
 
 ### The "dist" Profile
 
@@ -52,21 +58,21 @@ cargo-dist uses the existence of `[profile.dist]` in your Cargo.toml to detect i
 
 Next let's talk about `[workspace.metadata.dist]`. Cargo allows other tools to include their own project-wide settings in this kind of [metadata table][workspace-metadata]. See [config][] for the full set of options, but here we'll look at the defaults.
 
-`cargo-dist-version = "0.0.3"` is cargo-dist recording its own version in your config for the sake of reproducibility and documentation. When you run [generate-ci][] the resulting CI scripts will use that version of cargo-dist.
+`cargo-dist-version = "0.0.6"` is cargo-dist recording its own version in your config for the sake of reproducibility and documentation. When you run [generate-ci][] the resulting CI scripts will use that version of cargo-dist.
 
 `rust-toolchain-version = "1.67.1"` is the Rust toolchain that is considered "ideal" for building your application, recorded for the sake of reproducibility and documentation. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate-ci][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
 
-`ci = ["github"]` is just `init` faithfully recording the fact that we passed it `--ci=github`. This lets subsequent runs of [generate-ci][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. ("github" is currently the only supported CI backend.)
+`ci = ["github"]` lets subsequent runs of [generate-ci][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. It will be enabled by default if you have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). ("github" is currently the only supported CI backend.) 
 
-`targets = ...` is listing the [platforms][] to build your application for. In this case, because we didn't specify the targets with `--target`, [init][] has selected the "recommended desktop suite": "x64 linux", "x64 macos", "x64 windows", and "arm64 macos (Apple silicon)". In v0.0.5 these are the only properly supported choices, because we wanted to get the core of cargo-dist solid first. Future versions should hopefully introduce proper support for important targets like "musl linux".
+`installer = []` is just saying that we haven't enabled any [installers][]. Installers are intentionally excluded here to keep this example focused.
 
-The most important thing that this config *doesn't* have that you might want to include is "[installers][]". You can either manually add them to the [config][] or have [init][] do it for you with the `--installer` flag. Installers are intentionally excluded here to keep this example focused.
+`targets = ...` is listing the [platforms][] to build your application for. In this case, because we didn't specify the targets with `--target`, [init][] has selected the "recommended desktop suite": "x64 linux", "x64 macos", "x64 windows", and "arm64 macos (Apple silicon)". In v0.0.6 these are the only properly supported choices, because we wanted to get the core of cargo-dist solid first. Future versions should hopefully introduce proper support for important targets like "musl linux".
 
 
 
 ### The CI Script
 
-Because we passed `--ci=github`, [init][] invoked [generate-ci][] for us. creating the Github CI workflow we wanted at `.github/workflows/release.yml`. Rather than including the full text here, I'll just link [cargo-dist's own release.yml][release-yml], because cargo-dist is self-hosting and has an extremely boring build/config that is basically equivalent to the one we're looking at in this example.
+Because we set `ci = ["github"]`, [init][] invoked [generate-ci][] for us. Creating the Github CI workflow we wanted at `.github/workflows/release.yml`. Rather than including the full text here, I'll just link [cargo-dist's own release.yml][release-yml], because cargo-dist is self-hosting and has an extremely boring build/config that is basically equivalent to the one we're looking at in this example.
 
 The first thing you might notice is that there's a *lot* of comments describing the script. As always: you will never stop me from writing more docs and shoving them in your face. Actually ok you *can* stop me because I need to write a lot of docs here and those comments are already decent docs. Feel free to peruse them to get a feel for it.
 
@@ -85,17 +91,17 @@ git commit -am "wow cool new cargo-dist CI!"
 git push
 ```
 
-Actually wait we should... probably test that we set things up properly? The devil's always in the details when it comes to CI, but we can do some initial checking of things with the [manifest][] command:
+Actually wait we should... probably test that we set things up properly? The devil's always in the details when it comes to CI, but we can do some initial checking of things with the [status][] command:
 
 ```sh
-cargo dist manifest --artifacts=all --no-local-paths
+cargo dist status
 ```
 
-[manifest][] is the same as [build][] but it doesn't actually *run* the build ([build][] is the proper name of the default cargo-dist subcommand). This makes it ideal for asking cargo-dist about the full Announcement a CI run would produce. We pass `--artifacts=all` to tell it that we want to know about everything, and not just what can be built locally (see "[Artifact Modes][artifact-modes]". We pass `--no-local-paths` to avoid the output getting clogged up with predicted build output paths that we don't care about right now.
+[status][] is the same as [build][] but it doesn't actually *run* the build and defaults to reporting info for all platforms. This makes it ideal for asking cargo-dist about the full Announcement a CI run would produce.
 
 If everything went right, you should see something like the following:
 
-![The result of running the manifest command, described below][simple-app-manifest].
+![The result of running the status command, described below][simple-app-manifest].
 
 This output has two parts: "analyzing workspace" and "announcing"
 
@@ -123,10 +129,10 @@ With all our one-time setup done, we're ready to cut a release! This can be stre
 
 The first step is to do all the things you would do to prep a release: update docs, update release notes, bump version numbers in Cargo.tomls, run tests, and so on.
 
-At this point we're confident and want to release things for real. Once again, we can check what cargo-dist thinks should happen with the [manifest][] command:
+At this point we're confident and want to release things for real. Once again, we can check what cargo-dist thinks should happen with the [status][] command:
 
 ```sh
-cargo dist manifest --artifacts=all --no-local-paths
+cargo dist status
 ```
 
 Similarly you can check that `cargo publish` will work with the `--dry-run` flag:
@@ -135,7 +141,7 @@ Similarly you can check that `cargo publish` will work with the `--dry-run` flag
 cargo publish --dry-run
 ```
 
-If both of those seem happy, you're ready to release! All we need to do is push up a commit that has the [Git Tag][git-tag] that [manifest][] suggested. As we've seen in previous sections, it's recommending "v0.1.0" for our example app, so let's use that:
+If both of those seem happy, you're ready to release! All we need to do is push up a commit that has the [Git Tag][git-tag] that [status][] suggested. As we've seen in previous sections, it's recommending "v0.1.0" for our example app, so let's use that:
 
 ```sh
 # Publish to a Github Release with cargo-dist
@@ -183,7 +189,7 @@ parse-changelog also has support for a special `# Unreleased` heading, but we do
 [way-too-quickstart]: ./way-too-quickstart.md
 [issues]: https://github.com/axodotdev/cargo-dist/issues
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[installers]: ./artifacts.md#installers
+[installers]: ./installers.md
 [bin]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
 [config]: ./config.html
 [cargo-release]: https://github.com/crate-ci/cargo-release
@@ -198,7 +204,7 @@ parse-changelog also has support for a special `# Unreleased` heading, but we do
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [release-yml]: https://github.com/axodotdev/cargo-dist/blob/main/.github/workflows/release.yml
 [jq]: https://stedolan.github.io/jq/
-[manifest]:  ./cli.md#cargo-dist-manifest
+[status]:  ./cli.md#cargo-dist-status
 [build]: ./cli.md#cargo-dist-build
 [artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
 [parse-changelog]: https://github.com/taiki-e/parse-changelog

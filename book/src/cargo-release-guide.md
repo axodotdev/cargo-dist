@@ -44,6 +44,8 @@ If you don't want some of these behaviours, you can disable them permanently wit
 * Don't want to push? Set `push = false` in the config or pass `--no-push`
 * Don't want to tag? Set `tag = false` in the config or pass `--no-tag`
 
+See [this section for specific details on using cargo-release with github pull requests (PRs)][with-pr].
+
 Note also that you can use `[package.metadata.release]` to set configs on individual packages and not the whole workspace.
 
 
@@ -266,11 +268,77 @@ That should end with a line that looks like "Pushing main, v1.0.0 to origin". Th
 cargo release 1.0.0 --execute --no-push --no-tag --no-publish
 
 # ask cargo-dist what should be produced for the given tag
-cargo dist manifest --artifacts=all --tag=<tag-you-want-to-check>
+cargo dist status --tag=<tag-you-want-to-check>
 ```
 
 If that runs successfully and prints out the artifacts you expect, that's pretty good sign running cargo-release For Real will work! (You can also try `cargo dist build` if you're worried about the actual build failing.)
 
+
+
+
+## Using cargo-release with Pull Requests
+
+> In this section we will be using `$BRANCH` and `$VERSION` as placeholders for the branch you make your PR on and the version you want to release.
+
+Many teams have policies that prevent pushing to main, and require you to open pull requests instead. This conflicts with the *default* behaviour of cargo-release, but it works fine with some extra flags to encourage it to defer the steps until later. Specifically, use the following to "partially" run cargo-release:
+
+```sh
+cargo release --no-publish --no-tag --allow-branch=$BRANCH $VERSION
+```
+
+The release process then has the following steps:
+
+* step 0: create a new branch for the PR
+* step 1: < finalize things like changelogs and commit >
+* step 2: **partially** run `cargo release ...` to update your Cargo.tomls and push your branch
+* step 3: < open a pr, review, merge >
+* step 4: **fully** run `cargo release` on main to complete the process (publish and tag)
+
+Crucially, neither invocation of `cargo release` will modify your main branch directly. Step 4 will only push a git tag for the commit that is already on main.
+
+Here's what this looks in practice:
+
+
+```sh
+# step 0: make a branch
+git checkout -b $BRANCH
+
+
+# step 1: update things like the changelog
+# < edit some files or whatever here >
+git commit -am "prep release"
+
+
+# step 2: have cargo-release handle tedious mechanical stuff
+# this will:
+#  * do some safety checks like "git index is clean"
+#  * update version numbers in your crates (and handle inter-dependencies)
+#  * git commit -am "chore: release $NAME $VERSION" (one commit for the whole workspace)
+#  * git push (remember we're on a branch)
+cargo release --no-publish --no-tag --allow-branch=$BRANCH $VERSION
+
+
+# step 3: open a PR and review/merge to main
+# NOTE: the above steps will result in two commits
+#       we recommend using github's "merge and squash" feature to clean up
+# ...
+
+
+# step 4: remove the shackles from cargo release and RUN ON MAIN
+# this will:
+#  * tag the commit
+#  * push the tag
+#  * publish all crates to crates.io (handles waiting for dep publishes to propagate)
+#  * trigger cargo-dist when it sees the tag (if applicable)
+# THIS WON'T CREATE NEW COMMITS
+#
+# running "cargo dist status" is totally optional, but this is is the best time to check
+# that your cargo-dist release CI will produce the desired result when you push the tag
+git checkout main
+git pull
+cargo dist status
+cargo release
+```
 
 [cargo-release]: https://github.com/crate-ci/cargo-release
 [simple-guide]: ./simple-guide.md
@@ -284,3 +352,4 @@ If that runs successfully and prints out the artifacts you expect, that's pretty
 [all-libs-section]: #non-virtual-workspace-with-independent-libraries
 [non-virtual-unified-section]: #non-virtual-workspace-with-unified-versions
 [lib-hack]: ./workspace-guide.md#singular-library-hack
+[with-pr]: #using-cargo-release-with-pull-requests
