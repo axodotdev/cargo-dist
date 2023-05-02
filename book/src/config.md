@@ -27,7 +27,7 @@ If you set `publish = false` in your Cargo.toml we will treat this as a hint tha
 
 ### repository
 
-cargo-dist has an internal notion of an "artifact download URL" that is required for things like installers that detect the current platform and fetch binaries. If your CI backend is "github" then we will base the "artifact download URL" on the "repository" key. To be safe, we will only do this if your workspace agrees on this value. It's fine if only some packages bother setting "repository", as long as the ones that do use the exact same string. If they don't we will fail to compute an "artifact download URL", emit a warning, and ignore your request for installers that require it. (This might want to be a hard error in the future.)
+cargo-dist has an internal notion of an "artifact download URL" that is required for things like [installers][] that detect the current platform and fetch binaries. If your CI backend is "github" then we will base the "[artifact download URL][artifact-url]" on the "repository" key. To be safe, we will only do this if your workspace agrees on this value. It's fine if only some packages bother setting "repository", as long as the ones that do use the exact same string. If they don't we will fail to compute an "artifact download URL", emit a warning, and ignore your request for installers that require it. (This might want to be a hard error in the future.)
 
 ### readme
 
@@ -79,7 +79,7 @@ Example: `ci = ["github"]`
 
 **This can only be set globally**
 
-This is a list of CI backends you want to support, allowing subsequent runs of [generate-ci][] to know what CI scripts to generate. Its presence also enables certain CI-specific features. For instance if "github" is included we'll try to generate the body for a Github Release and tell installers to fetch binaries from a Github Release.  Once we introduce more CI backends we'll need to more completely rationalize what that means. In all likelihood each set of CI scripts will need to explicitly select just its own CI by passing `--ci=...` for every invocation.
+This is a list of CI backends you want to support, allowing subsequent runs of [generate-ci][] to know what CI scripts to generate. Its presence also enables certain CI-specific features. For instance if "github" is included we'll try to generate the body for a Github Release and tell [installers][] to fetch binaries from a Github Release.  Once we introduce more CI backends we'll need to more completely rationalize what that means. In all likelihood each set of CI scripts will need to explicitly select just its own CI by passing `--ci=...` for every invocation.
 
 "github" is currently the only supported CI backend.
 
@@ -106,13 +106,7 @@ By default all runs of `cargo-dist` will be trying to handle all platforms speci
 
 Example: `installers = ["shell", "powershell"]`
 
-This is a list of installers you want to be made for your application(s). In principle this can be overridden on a per-package basis but that is not well tested.
-
-The currently supported values are:
-
-* "shell" (global installer, one per app): a shell script that detects the current platform and fetches and installs binaries from the release's "Artifact Download URL". Ideal for `curl | sh` installation. Currently this always tries to install in `~/.cargo/bin/`.
-
-* "powershell" (global installer, one per app): a powershell script that detects the current platform and fetches and installs binaries from the release's "Artifact Download URL". Ideal for `irm | iex` installation (that's Windows' version of `curl | sh`). Currently this always tries to install in `~/.cargo/bin/`.
+This is a list of installers you want to be made for your application(s). In principle this can be overridden on a per-package basis but that is not well tested. See [the full docs on installers for the full list of values][].
 
 See "repository" for some discussion on the "Artifact Download URL".
 
@@ -159,6 +153,14 @@ Example: `dist = false`
 Specifies whether cargo-dist should ignore this package. It primarily exists as an alternative for `publish=false` or an override for `publish=false`.
 
 
+### npm-scope
+
+Example `npm-scope = "@axodotdev"`
+
+Specifies that [npm installers][] should be published under the given [scope][]. The leading `@` is mandatory. If you newly enable the npm installer in `cargo dist init`'s interactive UI, then it will give you an opportunity to add the scope.
+
+If no scope is specified the package will be global.
+
 
 ## Subsetting CI Flags
 
@@ -186,3 +188,7 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [executable-zips]: ./artifacts.md#executable-zip
 [artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
+[installers]: ./installers.md
+[artifact-url]: ./installers.md#artifact-download-url
+[scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
+[npm installers]: ./installers.md#npm

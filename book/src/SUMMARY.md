@@ -11,5 +11,6 @@
   - [Concepts](./concepts.md)
   - [Config](./config.md)
   - [Artifacts](./artifacts.md)
+  - [Installers](./installers.md)
   - [CLI Manual](./cli.md)
   - [dist-manifest.json](./schema.md)

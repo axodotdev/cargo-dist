@@ -16,19 +16,19 @@ into this:
 Locally, cargo-dist can do the following:
 
 * Picking good build flags for "shippable binaries"
-* Making zips and installers for the resulting binaries
+* Making zips and [installers][] for the resulting binaries
 * Generating machine-readable manifests so other tools can understand the results
 
 Being able to build a zip on your own machine is nice and all, but in practice you probably want to have infrastructure for building and hosting the binaries for all the platforms you care about. To help streamline this, cargo-dist has builtin support for bringing up your infra (currently only Github CI and Github Releases, but we intended to support other platforms in subsequent releases)!
 
-Just run `cargo dist init --ci=github` and it will **generate its own CI scripts** which:
+Just run `cargo dist init` and it will **generate its own CI scripts** which:
 
 * Waits for you to push a git tag for a new version (v1.0.0, my-app-v1.0.0, ...)
 * Selects what apps in your workspace to announce new releases for based on that tag 
 * Creates a draft Github Release to announce the apps in and host the downloads
 * Adds the relevant release notes from your RELEASES or CHANGELOG file
 * Spins up machines to build the selected apps for your supported platforms
-* Uploads the various zips/installers to the Github Release
+* Uploads the various zips/[installers][] to the Github Release
 * On success, publishes the Github Releases
 
 The scripts are intentionally minimal, and each machine's job roughly amounts to "install cargo-dist", "run it exactly once", "upload the artifacts it reported". It will always be *easier* to do builds in CI, but we want to shrink that gap as much as possible. 
@@ -42,3 +42,4 @@ The main obstacle to this is "[cross-compilation is hard][cross-comp]", but othe
 
 [cross-comp]: https://github.com/axodotdev/cargo-dist/issues/74
 [simple-release]: ./img/simple-github-release.png
+[installers]: ./installers.md

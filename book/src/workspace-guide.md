@@ -18,7 +18,7 @@ A *[Crate][]* is the actual unit of compilation that *rustc* thinks about, like 
 
 So here's where the difference between a "Package" and a "Crate" is most relevant: [Cargo lets a single Package define multiple binaries][bins]. See those docs for all the details. This can be convenient if you want to produce a single logical application that provides a suite of CLIs. For instance, you might want to make a standalone "my-tool" CLI that can be invoked as `cargo my-tool` as well. The easiest way to do this is to define a second "cargo-my-tool" binary as part of the "my-tool" Package. Once you do, `cargo install my-tool` will install both!
 
-cargo-dist tries to respect this semantic. If you define multiple binaries in a Package, we will treat the Package as one "Application" and bundle both binaries in all zips and installers for that App. There is no way to override this behaviour -- if you don't want two binaries to be considered part of the same App, you should use separate Packages.
+cargo-dist tries to respect this semantic. If you define multiple binaries in a Package, we will treat the Package as one "Application" and bundle both binaries in all zips and [installers][] for that App. There is no way to override this behaviour -- if you don't want two binaries to be considered part of the same App, you should use separate Packages.
 
 
 ## Multiple Packages In A Workspace
@@ -88,3 +88,4 @@ See [the dedicated guide to using cargo-release with cargo-dist][cargo-release-g
 [publish-config]: ./config.md#publish
 [dist-config]: ./config.md#dist
 [cargo-release-guide]: ./cargo-release-guide.md
+[installers]: ./installers.md
