@@ -295,7 +295,7 @@ pub enum ArtifactMode {
 }
 
 /// The style of CI we should generate
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CiStyle {
     /// Generate Github CI
     #[serde(rename = "github")]
@@ -1890,10 +1890,15 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         }
     }
 
+    // Prefer the CLI (cfg) if it's non-empty, but only select a subset
+    // of what the workspace supports if it's non-empty
     if cfg.ci.is_empty() {
         graph.set_ci_style(graph.workspace_metadata.ci.clone());
     } else {
-        graph.set_ci_style(cfg.ci.clone());
+        let cfg_ci = SortedSet::from_iter(cfg.ci.clone());
+        let workspace_ci = SortedSet::from_iter(graph.workspace_metadata.ci.clone());
+        let shared_ci = cfg_ci.intersection(&workspace_ci).cloned().collect();
+        graph.set_ci_style(shared_ci);
     }
 
     // If no targets were specified, just use the host target
@@ -2073,6 +2078,8 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
         // Create variants for this Release for each target
         for target in triples {
+            // This logic ensures that (outside of host mode) we only select targets that are a
+            // subset of the ones the package claims to support
             let use_target = bypass_package_target_prefs
                 || package_config
                     .targets
@@ -2091,12 +2098,27 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         graph.add_executable_zip(release);
 
         // Add installers to the Release
+        // Prefer the CLI's choices (`cfg`) if they're non-empty
         let installers = if cfg.installers.is_empty() {
             package_config.installers.as_deref().unwrap_or_default()
         } else {
             &cfg.installers[..]
         };
+
         for installer in installers {
+            // This logic ensures that (outside of host mode) we only select installers that are a
+            // subset of the ones the package claims to support
+            let use_installer = package_config
+                .installers
+                .as_deref()
+                .unwrap_or_default()
+                .iter()
+                .any(|i| i == installer);
+            if !use_installer {
+                continue;
+            }
+
+            // Create the variant
             graph.add_installer(release, installer);
         }
     }
