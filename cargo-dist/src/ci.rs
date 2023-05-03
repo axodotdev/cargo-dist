@@ -195,6 +195,9 @@ const SELF_DIST_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// The first epoch of cargo-dist, after this version a bunch of things changed
 /// and we don't support generating CI for that design anymore!
 const DIST_EPOCH_1: &str = "0.0.2";
+/// Second epoch of cargo-dist, after this we stopped putting versions in artifact ids.
+/// This changes the download URL, but everything else works the same.
+const DIST_EPOCH_2: &str = "0.0.5";
 /// The base URL to fetch cargo-dist artifacts from (tag gets appended)
 const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/releases/download";
 
@@ -204,7 +207,10 @@ fn install_dist_sh_for_version(version: &Version) -> String {
         return git;
     }
     let epoch1 = Version::parse(DIST_EPOCH_1).unwrap();
-    let installer_name = if version > &epoch1 {
+    let epoch2 = Version::parse(DIST_EPOCH_2).unwrap();
+    let installer_name = if version > &epoch2 {
+        "cargo-dist-installer.sh".to_owned()
+    } else if version > &epoch1 {
         format!("cargo-dist-v{version}-installer.sh")
     } else {
         // FIXME: we should probably do this check way higher up and produce a proper err...
@@ -223,7 +229,10 @@ fn install_dist_ps1_for_version(version: &Version) -> String {
         return git;
     }
     let epoch1 = Version::parse(DIST_EPOCH_1).unwrap();
-    let installer_name = if version > &epoch1 {
+    let epoch2 = Version::parse(DIST_EPOCH_2).unwrap();
+    let installer_name = if version > &epoch2 {
+        "cargo-dist-installer.ps1".to_owned()
+    } else if version > &epoch1 {
         format!("cargo-dist-v{version}-installer.ps1")
     } else {
         // FIXME: we should probably do this check way higher up and produce a proper err...

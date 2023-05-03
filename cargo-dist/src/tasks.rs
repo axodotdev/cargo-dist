@@ -960,7 +960,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
 
         let idx = ReleaseIdx(self.inner.releases.len());
-        let id = format!("{app_name}-v{version}");
+        let id = app_name.clone();
         info!("added release {id}");
         self.inner.releases.push(Release {
             app_name,
@@ -1207,7 +1207,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact_name = format!("{release_id}-installer.sh");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
-        let hint = format!("# WARNING: this installer is experimental\ncurl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh");
+        let hint = format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
 
         // Gather up the bundles the installer supports
@@ -1275,7 +1275,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact_name = format!("{release_id}-installer.ps1");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
-        let hint = format!("# WARNING: this installer is experimental\nirm {installer_url} | iex");
+        let hint = format!("irm {installer_url} | iex");
         let desc = "Install prebuilt binaries via powershell script".to_owned();
 
         // Gather up the bundles the installer supports
