@@ -124,4 +124,3 @@ For more details on using cargo-release with cargo-dist, see [the guide for that
 [installers]: ./installers.md
 [build]: ./cli.md#cargo-dist-build
 [plan]: ./cli.md#cargo-dist-plan
-[a]: 
