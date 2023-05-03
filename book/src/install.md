@@ -12,7 +12,7 @@ cargo binstall cargo-dist
 ## Build From Source With Cargo
 
 ```sh
-cargo install cargo-dist --profile=dist
+cargo install cargo-dist --locked --profile=dist
 ```
 
 (`--profile=dist` is the profile we build our shippable binaries with, it's optional.)
