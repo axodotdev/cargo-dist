@@ -91,17 +91,17 @@ git commit -am "wow cool new cargo-dist CI!"
 git push
 ```
 
-Actually wait we should... probably test that we set things up properly? The devil's always in the details when it comes to CI, but we can do some initial checking of things with the [status][] command:
+Actually wait we should... probably test that we set things up properly? The devil's always in the details when it comes to CI, but we can do some initial checking of things with the [plan][] command:
 
 ```sh
-cargo dist status
+cargo dist plan
 ```
 
-[status][] is the same as [build][] but it doesn't actually *run* the build and defaults to reporting info for all platforms. This makes it ideal for asking cargo-dist about the full Announcement a CI run would produce.
+[plan][] is the same as [build][] but it doesn't actually *run* the build and defaults to reporting info for all platforms. This makes it ideal for asking cargo-dist about the full Announcement a CI run would produce.
 
 If everything went right, you should see something like the following:
 
-![The result of running the status command, described below][simple-app-manifest].
+![The result of running the plan command, described below][simple-app-manifest].
 
 This output has two parts: "analyzing workspace" and "announcing"
 
@@ -129,10 +129,10 @@ With all our one-time setup done, we're ready to cut a release! This can be stre
 
 The first step is to do all the things you would do to prep a release: update docs, update release notes, bump version numbers in Cargo.tomls, run tests, and so on.
 
-At this point we're confident and want to release things for real. Once again, we can check what cargo-dist thinks should happen with the [status][] command:
+At this point we're confident and want to release things for real. Once again, we can check what cargo-dist thinks should happen with the [plan][] command:
 
 ```sh
-cargo dist status
+cargo dist plan
 ```
 
 Similarly you can check that `cargo publish` will work with the `--dry-run` flag:
@@ -141,7 +141,7 @@ Similarly you can check that `cargo publish` will work with the `--dry-run` flag
 cargo publish --dry-run
 ```
 
-If both of those seem happy, you're ready to release! All we need to do is push up a commit that has the [Git Tag][git-tag] that [status][] suggested. As we've seen in previous sections, it's recommending "v0.1.0" for our example app, so let's use that:
+If both of those seem happy, you're ready to release! All we need to do is push up a commit that has the [Git Tag][git-tag] that [plan][] suggested. As we've seen in previous sections, it's recommending "v0.1.0" for our example app, so let's use that:
 
 ```sh
 # Publish to a Github Release with cargo-dist
@@ -204,7 +204,7 @@ parse-changelog also has support for a special `# Unreleased` heading, but we do
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [release-yml]: https://github.com/axodotdev/cargo-dist/blob/main/.github/workflows/release.yml
 [jq]: https://stedolan.github.io/jq/
-[status]:  ./cli.md#cargo-dist-status
+[plan]:  ./cli.md#cargo-dist-plan
 [build]: ./cli.md#cargo-dist-build
 [artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
 [parse-changelog]: https://github.com/taiki-e/parse-changelog

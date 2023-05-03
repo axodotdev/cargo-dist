@@ -268,7 +268,7 @@ That should end with a line that looks like "Pushing main, v1.0.0 to origin". Th
 cargo release 1.0.0 --execute --no-push --no-tag --no-publish
 
 # ask cargo-dist what should be produced for the given tag
-cargo dist status --tag=<tag-you-want-to-check>
+cargo dist plan --tag=<tag-you-want-to-check>
 ```
 
 If that runs successfully and prints out the artifacts you expect, that's pretty good sign running cargo-release For Real will work! (You can also try `cargo dist build` if you're worried about the actual build failing.)
@@ -332,11 +332,11 @@ cargo release --no-publish --no-tag --allow-branch=$BRANCH $VERSION
 #  * trigger cargo-dist when it sees the tag (if applicable)
 # THIS WON'T CREATE NEW COMMITS
 #
-# running "cargo dist status" is totally optional, but this is is the best time to check
+# running "cargo dist plan" is totally optional, but this is is the best time to check
 # that your cargo-dist release CI will produce the desired result when you push the tag
 git checkout main
 git pull
-cargo dist status
+cargo dist plan
 cargo release
 ```
 
