@@ -18,6 +18,7 @@ TODO: generate proper release notes for:
 * 0.0.6 docs blitz: https://github.com/axodotdev/cargo-dist/pull/231
 * rename "status" to "plan": https://github.com/axodotdev/cargo-dist/pull/232
 * fix config subsetting: https://github.com/axodotdev/cargo-dist/pull/234
+* remove versions from ids https://github.com/axodotdev/cargo-dist/commit/8a417f239ef8f8e3ab66c46cf7c3d26afaba1c87
 
 highlights:
 
@@ -26,6 +27,7 @@ highlights:
 * `cargo dist init` is now interactive / rerunnable for updates
 * `cargo dist plan` added
 * bare `cargo dist` is no longer a synonym for `cargo dist build`
+* remove versions from ids
 * great cleanups from external contributors
 
 # Version 0.0.5 (2023-03-15)
