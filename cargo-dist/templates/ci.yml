@@ -57,8 +57,8 @@ jobs:
         run: {{{{INSTALL_DIST_SH}}}}
       - id: create-release
         run: |
-          cargo dist manifest --tag=${{ github.ref_name }} --artifacts=all --no-local-paths --output-format=json > dist-manifest.json
-          echo "dist manifest ran successfully"
+          cargo dist plan --tag=${{ github.ref_name }} --output-format=json > dist-manifest.json
+          echo "dist plan ran successfully"
           cat dist-manifest.json
 
           # Create the Github Release™ based on what cargo-dist thinks it should be
