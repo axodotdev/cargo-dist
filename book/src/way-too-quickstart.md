@@ -48,7 +48,7 @@ cargo dist build
 
 ![Running "cargo dist build" on a project, resulting in the application getting built and bundled into a .zip, and an "installer.ps1" script getting generated. Paths to these files are printed along with some metadata.][quickstart-build]
 
-A bare `cargo dist build` will fuzzily try to build things for the computer you're running it on. So if you run it on linux you might get a `tar.xz` containing your binary and an installer shell script, but if you run it on windows you might get a `zip` and an installer *power*shell script.
+The [build command][build] will by default try to build things for the computer you're running it on. So if you run it on linux you might get a `tar.xz` containing your binary and an installer shell script, but if you run it on windows you might get a `zip` and an installer *power*shell script.
 
 cargo-dist will then spit out paths to the files it created, so you can inspect their contents and try running them (**note that installer scripts probably won't be locally runnable, because they will try to fetch their binaries from Github**).
 
@@ -65,7 +65,7 @@ cargo dist plan
 
 ![Running "cargo dist plan" on a project, producing a full printout of the tarballs/zips that will be produced for all platforms (mac, linux, windows), and all installers (shell, powershell)][quickstart-build]
 
-This should be running the exact same logic that cargo-dist's generated CI will run, but without actually building anything. This lets you quickly check what cutting a new release will produce. It will also try to catch any inconsistencies that could make the CI error out.
+The [plan command][plan] should be running the exact same logic that cargo-dist's generated CI will run, but without actually building anything. This lets you quickly check what cutting a new release will produce. It will also try to catch any inconsistencies that could make the CI error out.
 
 
 
@@ -122,3 +122,6 @@ For more details on using cargo-release with cargo-dist, see [the guide for that
 [quickstart-plan]: ./img/quickstart-plan.png
 [artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
 [installers]: ./installers.md
+[build]: ./cli.md#cargo-dist-build
+[plan]: ./cli.md#cargo-dist-plan
+[a]: 
