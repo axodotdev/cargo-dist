@@ -11,18 +11,17 @@ This can be used to parse the machine-readable manifests produced by cargo-dist.
 
 This compatibility is fairly important as one tool may need to look at releases spread over *years*. Also cargo-dist is self-hosting from previous releases, so when looking at cargo-dist's own releases there will always be (at least) an off-by-one in the manifest and the tool that manifest describes.
 
-There are currently two epochs to dist-manifest.json:
+There are currently 3 epochs to dist-manifest.json:
 
-* epoch 1: <= 0.0.2
-* epoch 2: >= 0.0.3-prerelease10
+* epoch 1 <= 0.0.2
+* 0.0.3-prerelease9 <= epoch2 <= 0.0.6-prerelease6
+* 0.0.3-prerelease8 <= epoch3
 
-Epoch 1 was initial experimentation, and Epoch 2 made some breaking changes once we had a better sense for the constraints of the design. Most notable artifacts were pull into a top-level Object that Releases simply refer to by key. This makes it possible for different releases to share an Artifact (such as debuginfo/symbol files for shared binaries).
+Epoch 1 was initial experimentation, and is no longer supported.
 
-(The gap between the two epochs is a fuzzy zone with inadvisable-to-use prerelease copies of cargo-dist. 0.0.3-prerelease10 is where things got solidified and should be the same as 0.0.3 proper.)
+Epoch 2 made some breaking changes once we had a better sense for the constraints of the design. Most notable artifacts were pull into a top-level Object that Releases simply refer to by key. This makes it possible for different releases to share an Artifact (such as debuginfo/symbol files for shared binaries). The version gap between Epoch 1 and 2 is a fuzzy zone with inadvisable-to-use prerelease copies of cargo-dist. We believe 0.0.3-prerelease9 is where things got solidified and should be the same as 0.0.3 proper.
 
-All tooling from Epoch 2 only supports Epoch 2.
-
-
+Epoch 3 has the exact same format but we removed versions from artifact id names, changing the format of URLs. This largely only affects cargo-dist's ability to fetch itself, and created a single transitory release (0.0.6-prerelease7) which is unable to fetch itself, because it was built with an epoch2 version (0.0.5). This version is intentionally not published on crates.io. The CI was manually updated to use the right URLs to bootstrap 0.0.6-prerelease8, which is fully in epoch3.
 
 ## A Brief Aside On Self-Hosting/Bootstrapping
 
