@@ -2,12 +2,30 @@
 
 TODO: generate proper release notes for:
 
-* fix typo at README.md: https://github.com/axodotdev/cargo-dist/pull/203
+* (AlexITC) fix typo at README.md: https://github.com/axodotdev/cargo-dist/pull/203
 * factor out and use axoproject: https://github.com/axodotdev/cargo-dist/pull/207
 * factor out and use axocli: https://github.com/axodotdev/cargo-dist/pull/209
 * unlocked archive formats: https://github.com/axodotdev/cargo-dist/pull/211
 * npm installer: https://github.com/axodotdev/cargo-dist/pull/210
+* (jwodder) remove trailing spaces from templates: https://github.com/axodotdev/cargo-dist/pull/213
+* (jwodder) fix broken links in book: https://github.com/axodotdev/cargo-dist/pull/215
+* npm installer fixups: https://github.com/axodotdev/cargo-dist/pull/219
+* (jwodder) remove useless uses of cat: https://github.com/axodotdev/cargo-dist/pull/223
+* (frol) supress npm installer logs https://github.com/axodotdev/cargo-dist/pull/224
+* interactive init: https://github.com/axodotdev/cargo-dist/pull/227
+* (shadows-withall) support keywords in npm installer: https://github.com/axodotdev/cargo-dist/pull/228
+* cli cleanup: https://github.com/axodotdev/cargo-dist/pull/230
+* 0.0.6 docs blitz: https://github.com/axodotdev/cargo-dist/pull/231
+* rename "status" to "plan": https://github.com/axodotdev/cargo-dist/pull/232
 
+highlights:
+
+* npm installer
+* ability to set archive extension
+* `cargo dist init` is now interactive / rerunnable for updates
+* `cargo dist plan` added
+* bare `cargo dist` is no longer a synonym for `cargo dist build`
+* great cleanups from external contributors
 
 # Version 0.0.5 (2023-03-15)
 
