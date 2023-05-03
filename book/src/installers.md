@@ -99,7 +99,7 @@ npm install @axodotdev/cargodisttest@0.2.0
 * locally after downloading with `npm publish PATH_TO_TARBALL`
 * locally after unpacking with `npm publish`
 
-(In testing we've seen some inconsistent results on Windows where the README isn't properly detected by npm's website when publishing remotely, but is when run on the unpacked results... No Idea What's Up With That, let us know if you can reproduce/isolate the issue.)
+(In testing we've seen some inconsistent results on Windows where the README isn't properly detected by npm's website when publishing remotely, but is when run on the unpacked results... No Idea What's Up With That, [let us know if you can reproduce/isolate the issue][issue-npm-readme].)
 
 [You can set the @scope the package is published under with the npm-scope cargo-dist config][npm-scope].
 
@@ -187,6 +187,8 @@ cargo-dist projects can also theoretically be installed with the following, thro
 * [cargo-install][] (just [cargo publish][] like normal)
 * [cargo-binstall][] (the URL schema we use for Github Releases is auto-detected)
 
+In the future we might [support displaying these kinds of install methods][issue-info-install].
+
 Note that cargo-install is just building from the uploaded source with the --release profile, and so if you're relying on cargo-dist or unpublished files for some key behaviours, this may cause problems. [It also disrespects your lockfile unless you pass --locked][install-locked]. You can more closely approximate cargo-dist's build with:
 
 ```sh
@@ -198,8 +200,8 @@ Although that's still missing things like [Windows crt-static workarounds][crt-s
 
 
 
-
-
+[issue-info-install]: https://github.com/axodotdev/cargo-dist/issues/72
+[issue-npm-readme]: https://github.com/axodotdev/cargo-dist/issues/238
 [linux-pm-issue]: https://github.com/axodotdev/cargo-dist/issues/76
 [windows-pm-issue]: https://github.com/axodotdev/cargo-dist/issues/87
 [msi-installer-issue]: https://github.com/axodotdev/cargo-dist/issues/23

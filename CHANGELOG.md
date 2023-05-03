@@ -17,6 +17,7 @@ TODO: generate proper release notes for:
 * cli cleanup: https://github.com/axodotdev/cargo-dist/pull/230
 * 0.0.6 docs blitz: https://github.com/axodotdev/cargo-dist/pull/231
 * rename "status" to "plan": https://github.com/axodotdev/cargo-dist/pull/232
+* fix config subsetting: https://github.com/axodotdev/cargo-dist/pull/234
 
 highlights:
 
