@@ -81,7 +81,7 @@ cargo-dist's self-generated CI is triggered by pushing git tags with specific fo
 
 1 Git Tag = 1 cargo-dist Announcement = 1 Github Release
 
-Even when not running in CI, this concept of a coherent Announcement Tag is important enough that we will always try to guess one even if none is provided. The "build", "manifest", and "status" commands will refuse to run if a coherent Announcement Tag can't be determined to help you catch problems before you start pushing to CI. If this happens you will get a printout telling you some options:
+Even when not running in CI, this concept of a coherent Announcement Tag is important enough that we will always try to guess one even if none is provided. The "build", "manifest", and "plan" commands will refuse to run if a coherent Announcement Tag can't be determined to help you catch problems before you start pushing to CI. If this happens you will get a printout telling you some options:
 
 ![the error printout, described below][announce-error]
 
@@ -152,14 +152,14 @@ cargo dist manifest --tag=v0.5.0 --artifacts=all --no-local-paths --output-forma
 
 This is the only way that CI uses the flag, but you could also use "all" with `build` (the default cargo-dist command) if you want to get all the artifacts built at once, although you should probably filter the `--target`s as discussed in the section on "local".
 
-`cargo dist manifest --artifacts=all --no-local-paths` is so useful/common that we provide an alias for it: `cargo dist status`. The above can be simplified to:
+`cargo dist manifest --artifacts=all --no-local-paths` is so useful/common that we provide an alias for it: `cargo dist plan`. The above can be simplified to:
 
 ```sh
-cargo dist status --tag=v0.5.0
+cargo dist plan --tag=v0.5.0
 ```
 
 ```sh
-cargo dist status --tag=v0.5.0 -ojson
+cargo dist plan --tag=v0.5.0 -ojson
 ```
 
 
@@ -222,7 +222,7 @@ Ok so here's what goes through cargo-dist's brains when you run it:
 6. Add all the enabled Installers to each Release (local ones broadcasted to each Variant, filtered by Artifact Mode)
 7. Compute the Build Steps necessary to produce each Artifact ("run cargo, copy this file, ...")
 8. Generate top-level Announcement info like the body for a Github Release
-9. run the Build Steps (ignored by `manifest`/`status`)
+9. run the Build Steps (ignored by `manifest`/`plan`)
 10. print a manifest of the computed Announcement/Releases/Artifacts
 
 CI will parse the resulting (`--output-format=json`) manifest of each `build` invocation to know what artifacts were produced and need to be uploaded to the Github Release.

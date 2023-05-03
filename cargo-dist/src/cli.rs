@@ -119,11 +119,17 @@ pub enum Commands {
     GenerateCi(GenerateCiArgs),
     /// Generate the final build manifest without running any builds.
     ///
-    /// Everything will be computed based on what cargo-dist *expects*
-    /// the output of a build to be, so this may produce several paths
-    /// to nowhere without the actual build to populate them!
+    /// This command is designed to match the exact behaviour of
+    /// 'cargo dist build' when passed the same flags, which is nice
+    /// for consistency but annoying for anyone who doesn't understand
+    /// cargo-dist's design really well.
     ///
-    /// This is most useful when paired with `--artifacts=all`.
+    /// Notably it will default to only talking about artifacts
+    /// for the host system, and will produce paths to the build dir
+    /// that may not exist (since the build wasn't run).
+    ///
+    /// 'cargo dist plan' is an alias for this command that picks nicer defaults
+    /// by forcing a couple flags to have specific values. You probably want that.  
     #[clap(disable_version_flag = true)]
     Manifest(ManifestArgs),
     /// Print --help as markdown (for generating docs)
@@ -132,17 +138,20 @@ pub enum Commands {
     #[clap(disable_version_flag = true)]
     #[clap(hide = true)]
     HelpMarkdown(HelpMarkdownArgs),
-    /// Get a quick summary of the status of your project
+    /// Get a plan of what to build (and check project status)
     ///
     /// If you want to know what running your cargo-dist CI will produce,
-    /// this is the command for you! It should run the exact same logic and do some
-    /// basic integrity checks.
+    /// this is the command for you! This is the exact command that CI will
+    /// run to make its build plan and generate dist-manifest.json
+    /// (although it adds --output-format=json so that it's machine-readable).
     ///
-    /// This is roughly an alias for:
+    /// This is an alias for the lower-level 'manifest' command with the
+    /// appropriate flags forced for asking for "everything":
     ///
     ///     cargo dist manifest --artifacts=all --no-local-paths
+    ///
     #[clap(disable_version_flag = true)]
-    Status(StatusArgs),
+    Plan(PlanArgs),
 }
 
 #[derive(Args, Clone, Debug)]
@@ -260,7 +269,7 @@ pub struct ManifestArgs {
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct StatusArgs {}
+pub struct PlanArgs {}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum OutputFormat {

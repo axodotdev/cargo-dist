@@ -35,7 +35,7 @@ The one-time setup will add a decent default configuration to your root Cargo.to
 When testing out cargo-dist locally, the two biggest things you might be interested in are:
 
 1. build for the current platform (`cargo dist build`)
-2. check what CI will build (`cargo dist status`)
+2. check what CI will build (`cargo dist plan`)
 
 
 
@@ -60,10 +60,10 @@ See [artifact modes][artifact-modes] for more advanced details on selecting what
 ### Check What CI Will Build
 
 ```sh
-cargo dist status
+cargo dist plan
 ```
 
-![Running "cargo dist status" on a project, producing a full printout of the tarballs/zips that will be produced for all platforms (mac, linux, windows), and all installers (shell, powershell)][quickstart-build]
+![Running "cargo dist plan" on a project, producing a full printout of the tarballs/zips that will be produced for all platforms (mac, linux, windows), and all installers (shell, powershell)][quickstart-build]
 
 This should be running the exact same logic that cargo-dist's generated CI will run, but without actually building anything. This lets you quickly check what cutting a new release will produce. It will also try to catch any inconsistencies that could make the CI error out.
 
@@ -119,6 +119,6 @@ For more details on using cargo-release with cargo-dist, see [the guide for that
 [cargo-release-guide]: ./cargo-release-guide.md
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
 [quickstart-build]: ./img/quickstart-build.png
-[quickstart-status]: ./img/quickstart-build.png
+[quickstart-plan]: ./img/quickstart-plan.png
 [artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
 [installers]: ./installers.md
