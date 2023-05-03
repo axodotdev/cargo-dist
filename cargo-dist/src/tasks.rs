@@ -1943,34 +1943,14 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         let pkg_name = &pkg.name;
 
         // Determine if this package's binaries should be Released
-        let mut disabled_reason = None;
-        if pkg.binaries.is_empty() {
-            // Nothing to publish if there's no binaries!
-            disabled_reason = Some("no binaries".to_owned());
-        } else if let Some(do_dist) = graph.package_metadata(pkg_id).dist {
-            // If [metadata.dist].dist is explicitly set, respect it!
-            if !do_dist {
-                disabled_reason = Some("dist = false".to_owned());
-            }
-        } else if !pkg.publish {
-            // Otherwise defer to Cargo's `publish = false`
-            disabled_reason = Some("publish = false".to_owned());
-        } else if let Some(id) = announcing_package {
-            // If we're announcing a package, reject every other package
-            if pkg_id != id {
-                disabled_reason = Some(format!(
-                    "didn't match tag {}",
-                    announcement_tag.as_ref().unwrap()
-                ));
-            }
-        } else if let Some(ver) = &announcing_version {
-            if pkg.version.as_ref().unwrap().cargo() != ver {
-                disabled_reason = Some(format!(
-                    "didn't match tag {}",
-                    announcement_tag.as_ref().unwrap()
-                ));
-            }
-        }
+        let disabled_reason = check_dist_package(
+            &graph,
+            pkg_id,
+            pkg,
+            announcement_tag.as_deref(),
+            announcing_package,
+            announcing_version.as_ref(),
+        );
 
         // Report our conclusion/discoveries
         let sty;
@@ -2128,6 +2108,62 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     graph.compute_build_steps();
 
     Ok(graph.inner)
+}
+
+/// See if we should dist this package
+///
+/// Some(disabled_reason) is returned if it shouldn't be
+fn check_dist_package(
+    graph: &DistGraphBuilder,
+    pkg_id: PackageIdx,
+    pkg: &axoproject::PackageInfo,
+    announcement_tag: Option<&str>,
+    announcing_package: Option<PackageIdx>,
+    announcing_version: Option<&Version>,
+) -> Option<String> {
+    // Nothing to publish if there's no binaries!
+    if pkg.binaries.is_empty() {
+        return Some("no binaries".to_owned());
+    }
+
+    // If [metadata.dist].dist is explicitly set, respect it!
+    let override_publish = if let Some(do_dist) = graph.package_metadata(pkg_id).dist {
+        if !do_dist {
+            return Some("dist = false".to_owned());
+        } else {
+            true
+        }
+    } else {
+        false
+    };
+
+    // Otherwise defer to Cargo's `publish = false`
+    if !pkg.publish && !override_publish {
+        return Some("publish = false".to_owned());
+    }
+
+    // If we're announcing a package, reject every other package
+    if let Some(id) = announcing_package {
+        if pkg_id != id {
+            return Some(format!(
+                "didn't match tag {}",
+                announcement_tag.as_ref().unwrap()
+            ));
+        }
+    }
+
+    // If we're announcing a version, ignore everything that doesn't match that
+    if let Some(ver) = &announcing_version {
+        if pkg.version.as_ref().unwrap().cargo() != *ver {
+            return Some(format!(
+                "didn't match tag {}",
+                announcement_tag.as_ref().unwrap()
+            ));
+        }
+    }
+
+    // If it passes the guantlet, dist it
+    None
 }
 
 /// Get the path/command to invoke Cargo
