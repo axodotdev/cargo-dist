@@ -61,9 +61,9 @@ jobs:
           override: true
 
       # OPTIONAL: build your mdbook
-      # Note that "./docs/" is the directory in our repo where the book.toml is
+      # Note that "./book/" is the directory in our repo where the book.toml is
       # and we pass that to mdbook. You also need to tell oranda.json this with
-      #   "md_book": "./docs/book/" 
+      #   "md_book": "./book/book/"
       # ("book" being the dir where mdbook writes is output)
       - name: Install mdbook
         run: |
@@ -72,14 +72,16 @@ jobs:
           echo `pwd`/mdbook >> $GITHUB_PATH
       - name: Run mdbook build
         run: |
-          mdbook build docs
+          mdbook build book
       
       # Install and run oranda
       # This will write all output to ./public/ (including copying mdbook's output to there)
       - name: Install and run oranda
         # Currently installing from git pending 0.0.3's release
+        # we need to cd into cargo-dist because oranda doesn't want to run in the full workspace :(
         run: |
           cargo install oranda --locked --profile=dist --git=https://github.com/axodotdev/oranda
+          cd cargo-dist
           oranda build
 
       # Deploy to our gh-pages branch (making it if it doesn't exist)

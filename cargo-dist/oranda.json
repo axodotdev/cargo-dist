@@ -2,7 +2,9 @@
   "readme_path": "../README.md",
   "favicon": "https://www.axo.dev/favicon.ico",
   "path_prefix": "cargo-dist",
-  "additional_pages": ["../CHANGELOG.md"],
+  "additional_pages": {
+    "changelog": "../CHANGELOG.md"
+  },
   "social": {
     "image": "https://www.axo.dev/meta_small.jpeg",
     "image_alt": "axo",
