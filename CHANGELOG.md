@@ -2,7 +2,7 @@
 
 This release is a pretty big improvement to cargo-dist's UX!
 
-* `cargo dist init` is now interactive and useful for updating your config/install. This is especially useful for updating your project to a new version of cargo-dist, or enabling new installers, as the interactive UI will automatically prompt you to do so and help you keep your config coherent. It also reduces the chances of your CI script getting out of sync, as it runs generate-ci at the end for you. If you won't the old non-interactive behaviour, just pass `--yes` which auto-accepts all recommendations.
+* `cargo dist init` is now interactive and useful for updating your config/install. This is especially useful for updating your project to a new version of cargo-dist, or enabling new installers, as the interactive UI will automatically prompt you to do so and help you keep your config coherent. It also reduces the chances of your CI script getting out of sync, as it runs generate-ci at the end for you. If you want the old non-interactive behaviour, just pass `--yes` which auto-accepts all recommendations.
     * [docs](https://opensource.axo.dev/cargo-dist/book/way-too-quickstart.html#setup)
     * impl
         * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/227)
@@ -14,7 +14,7 @@ This release is a pretty big improvement to cargo-dist's UX!
         * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/210)
         * @gankra [fixups](https://github.com/axodotdev/cargo-dist/pull/219)
         * @frol [fix logging](https://github.com/axodotdev/cargo-dist/pull/224)
-        * @shadows-withall [support package.json keywords](https://github.com/axodotdev/cargo-dist/pull/228)
+        * @shadows-withal [support package.json keywords](https://github.com/axodotdev/cargo-dist/pull/228)
 
 
 * `cargo dist plan` is a new command for getting a local preview of what your release CI will build. (This is just a synonym for `cargo dist manifest` but with nicer defaults for what you *usually* want.)
