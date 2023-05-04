@@ -15,7 +15,7 @@ on:
   # Note that the "Deploy to Github Pages" step won't run in this mode,
   # so this won't have any side-effects. But it will tell you if a PR
   # completely broke oranda/mdbook. Sadly we don't provide previews (yet)!
-  pull-request:
+  pull_request:
 
   # Whenever something gets pushed to main, update the docs!
   # This is great for getting docs changes live without cutting a full release.
