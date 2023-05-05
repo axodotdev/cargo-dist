@@ -28,9 +28,9 @@ on:
   # cargo-dist, and so this half-published state will only last for ~10 minutes.
   #
   # If you only want docs to update with releases, disable this one.
-  #push:
-  #  branches:
-  #    - main
+  push:
+    branches:
+      - main
   
   # Whenever a workflow called "Release" completes, update the docs!
   #
@@ -96,6 +96,6 @@ jobs:
         with:
           branch: gh-pages
           # Gotta tell the action where to find oranda's output
-          folder: public
+          folder: cargo-dist/public
           token: ${{ secrets.GITHUB_TOKEN }}
           single-commit: true
