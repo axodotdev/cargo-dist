@@ -77,10 +77,8 @@ jobs:
       # Install and run oranda
       # This will write all output to ./public/ (including copying mdbook's output to there)
       - name: Install and run oranda
-        # Currently installing from git pending 0.0.3's release
-        # we need to cd into cargo-dist because oranda doesn't want to run in the full workspace :(
         run: |
-          cargo install oranda --locked --profile=dist --git=https://github.com/axodotdev/oranda
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/download/v0.0.3/oranda-installer.sh | sh
           cd cargo-dist
           oranda build
 
