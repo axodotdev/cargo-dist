@@ -1,34 +1,49 @@
-# Version 0.0.6 (under development)
+# Version 0.0.6 (2023-05-03)
 
-TODO: generate proper release notes for:
+This release is a pretty big improvement to cargo-dist's UX!
 
-* (AlexITC) fix typo at README.md: https://github.com/axodotdev/cargo-dist/pull/203
-* factor out and use axoproject: https://github.com/axodotdev/cargo-dist/pull/207
-* factor out and use axocli: https://github.com/axodotdev/cargo-dist/pull/209
-* unlocked archive formats: https://github.com/axodotdev/cargo-dist/pull/211
-* npm installer: https://github.com/axodotdev/cargo-dist/pull/210
-* (jwodder) remove trailing spaces from templates: https://github.com/axodotdev/cargo-dist/pull/213
-* (jwodder) fix broken links in book: https://github.com/axodotdev/cargo-dist/pull/215
-* npm installer fixups: https://github.com/axodotdev/cargo-dist/pull/219
-* (jwodder) remove useless uses of cat: https://github.com/axodotdev/cargo-dist/pull/223
-* (frol) supress npm installer logs https://github.com/axodotdev/cargo-dist/pull/224
-* interactive init: https://github.com/axodotdev/cargo-dist/pull/227
-* (shadows-withall) support keywords in npm installer: https://github.com/axodotdev/cargo-dist/pull/228
-* cli cleanup: https://github.com/axodotdev/cargo-dist/pull/230
-* 0.0.6 docs blitz: https://github.com/axodotdev/cargo-dist/pull/231
-* rename "status" to "plan": https://github.com/axodotdev/cargo-dist/pull/232
-* fix config subsetting: https://github.com/axodotdev/cargo-dist/pull/234
-* remove versions from ids https://github.com/axodotdev/cargo-dist/commit/8a417f239ef8f8e3ab66c46cf7c3d26afaba1c87
+* `cargo dist init` is now interactive and useful for updating your config/install. This is especially useful for updating your project to a new version of cargo-dist, or enabling new installers, as the interactive UI will automatically prompt you to do so and help you keep your config coherent. It also reduces the chances of your CI script getting out of sync, as it runs generate-ci at the end for you. If you want the old non-interactive behaviour, just pass `--yes` which auto-accepts all recommendations.
+    * [docs](https://opensource.axo.dev/cargo-dist/book/way-too-quickstart.html#setup)
+    * impl
+        * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/227)
+        * @gankra [fixups](https://github.com/axodotdev/cargo-dist/pull/230)
 
-highlights:
+* Support for generating an npm project that installs your app into node_modules! Just add "npm" to your installers (using `cargo dist init` for this is recommended, as it will prompt you to make any other necessary changes to your config).
+    * [docs](https://opensource.axo.dev/cargo-dist/book/installers.html#npm)
+    * impl:
+        * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/210)
+        * @gankra [fixups](https://github.com/axodotdev/cargo-dist/pull/219)
+        * @frol [fix logging](https://github.com/axodotdev/cargo-dist/pull/224)
+        * @shadows-withal [support package.json keywords](https://github.com/axodotdev/cargo-dist/pull/228)
 
-* npm installer
-* ability to set archive extension
-* `cargo dist init` is now interactive / rerunnable for updates
-* `cargo dist plan` added
-* bare `cargo dist` is no longer a synonym for `cargo dist build`
-* remove versions from ids
-* great cleanups from external contributors
+
+* `cargo dist plan` is a new command for getting a local preview of what your release CI will build. (This is just a synonym for `cargo dist manifest` but with nicer defaults for what you *usually* want.)
+    * [docs](https://opensource.axo.dev/cargo-dist/book/way-too-quickstart.html#check-what-ci-will-build)
+    * impl
+        * @gankra [initial impl as "status"](https://github.com/axodotdev/cargo-dist/pull/230)
+        * @gankra [rename "status" to "plan"](https://github.com/axodotdev/cargo-dist/pull/232)
+
+* Bare `cargo dist` is no longer a synonym for `build` and now just prints help. This makes it a bit nicer to get your footing with cargo-dist, as we don't suddenly do builds or complain about not being initialized on first run.
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/230)
+
+* Artifact names no longer contain redundant version numbers, so `my-app-v1.0.0-installer.sh` is now just `my-app-installer.sh`. This makes it possible to statically link the "latest" build with this format: https://github.com/axodotdev/cargo-dist/releases/latests/download/cargo-dist-installer.sh
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/commit/8a417f239ef8f8e3ab66c46cf7c3d26afaba1c87)
+
+* The compression format used for executable-zips can now be set with `windows-archive` and `unix-archive` configs. Supported values include ".tar.gz", ".tar.xz", ".tar.zstd", and ".zip". The defaults (.zip on windows, .tar.xz elsewhere) are unchanged, as we believe those have the best balance of UX and compatibility.
+    * [docs](https://opensource.axo.dev/cargo-dist/book/config.html#windows-archive)
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/211)
+
+* other great cleanups/fixes
+    * @AlexITC [fix typo at README.md](https://github.com/axodotdev/cargo-dist/pull/203)
+    * @jwodder [remove trailing spaces from templates](https://github.com/axodotdev/cargo-dist/pull/213)
+    * @jwodder [fix broken links in book](https://github.com/axodotdev/cargo-dist/pull/215)
+    * @jwodder [remove useless uses of cat from release.yml](https://github.com/axodotdev/cargo-dist/pull/223)
+    * @gankra [factor out and use axoproject](https://github.com/axodotdev/cargo-dist/pull/207)
+    * @gankra [factor out and use axocli](https://github.com/axodotdev/cargo-dist/pull/209)
+    * @gankra [0.0.6 docs blitz](https://github.com/axodotdev/cargo-dist/pull/231)
+    * @gankra [fix config subsetting](https://github.com/axodotdev/cargo-dist/pull/234)
+
+
 
 # Version 0.0.5 (2023-03-15)
 
