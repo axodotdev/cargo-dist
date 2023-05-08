@@ -18,9 +18,13 @@ stdout:
         "cargo-dist-installer.sh",
         "cargo-dist-installer.ps1",
         "cargo-dist-aarch64-apple-darwin.tar.xz",
+        "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
         "cargo-dist-x86_64-apple-darwin.tar.xz",
+        "cargo-dist-x86_64-apple-darwin.tar.xz.sha256",
         "cargo-dist-x86_64-pc-windows-msvc.zip",
-        "cargo-dist-x86_64-unknown-linux-gnu.tar.xz"
+        "cargo-dist-x86_64-pc-windows-msvc.zip.sha256",
+        "cargo-dist-x86_64-unknown-linux-gnu.tar.xz",
+        "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256"
       ]
     }
   ],
@@ -57,6 +61,14 @@ stdout:
           "path": "cargo-dist",
           "kind": "executable"
         }
+      ],
+      "checksum": "cargo-dist-aarch64-apple-darwin.tar.xz.sha256"
+    },
+    "cargo-dist-aarch64-apple-darwin.tar.xz.sha256": {
+      "name": "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-apple-darwin"
       ]
     },
     "cargo-dist-installer.ps1": {
@@ -111,6 +123,14 @@ stdout:
           "path": "cargo-dist",
           "kind": "executable"
         }
+      ],
+      "checksum": "cargo-dist-x86_64-apple-darwin.tar.xz.sha256"
+    },
+    "cargo-dist-x86_64-apple-darwin.tar.xz.sha256": {
+      "name": "cargo-dist-x86_64-apple-darwin.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-apple-darwin"
       ]
     },
     "cargo-dist-x86_64-pc-windows-msvc.zip": {
@@ -145,6 +165,14 @@ stdout:
           "path": "cargo-dist.exe",
           "kind": "executable"
         }
+      ],
+      "checksum": "cargo-dist-x86_64-pc-windows-msvc.zip.sha256"
+    },
+    "cargo-dist-x86_64-pc-windows-msvc.zip.sha256": {
+      "name": "cargo-dist-x86_64-pc-windows-msvc.zip.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
       ]
     },
     "cargo-dist-x86_64-unknown-linux-gnu.tar.xz": {
@@ -179,6 +207,14 @@ stdout:
           "path": "cargo-dist",
           "kind": "executable"
         }
+      ],
+      "checksum": "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256"
+    },
+    "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
       ]
     }
   }

@@ -446,6 +446,8 @@ pub enum BuildStep {
     Zip(ZipDirStep),
     /// Generate some kind of installer
     GenerateInstaller(InstallerImpl),
+    /// Checksum a file
+    Checksum(ChecksumImpl),
     // FIXME: For macos universal builds we'll want
     // Lipo(LipoStep)
 }
@@ -507,6 +509,35 @@ pub struct CopyDirStep {
     pub dest_path: Utf8PathBuf,
 }
 
+/// Create a checksum
+#[derive(Debug, Clone)]
+pub struct ChecksumImpl {
+    /// the checksumming algorithm
+    pub checksum: ChecksumStyle,
+    /// of this file
+    pub src_path: Utf8PathBuf,
+    /// and write it to here
+    pub dest_path: Utf8PathBuf,
+}
+
+/// A checksumming algorithm
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ChecksumStyle {
+    /// sha256sum (using the sha2 crate)
+    Sha256,
+    /// sha512sum (using the sha2 crate)
+    Sha512,
+}
+
+impl ChecksumStyle {
+    fn ext(self) -> &'static str {
+        match self {
+            ChecksumStyle::Sha256 => "sha256",
+            ChecksumStyle::Sha512 => "sha512",
+        }
+    }
+}
+
 /// A kind of symbols (debuginfo)
 #[derive(Copy, Clone, Debug)]
 pub enum SymbolKind {
@@ -554,6 +585,8 @@ pub struct Artifact {
     pub required_binaries: FastMap<BinaryIdx, Utf8PathBuf>,
     /// The kind of artifact this is
     pub kind: ArtifactKind,
+    /// A checksum for this artifact, if any
+    pub checksum: Option<ArtifactIdx>,
 }
 
 /// Info about an archive (zip/tarball) that should be made. Currently this is always part
@@ -589,6 +622,8 @@ pub enum ArtifactKind {
     Symbols(Symbols),
     /// An installer
     Installer(InstallerImpl),
+    /// A checksum
+    Checksum(ChecksumImpl),
 }
 
 /// An ExecutableZip Artifact
@@ -1069,7 +1104,41 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             for (binary, dest_path) in built_assets {
                 self.require_binary(zip_artifact_idx, variant_idx, binary, dest_path);
             }
+
+            self.add_artifact_checksum(variant_idx, zip_artifact_idx, ChecksumStyle::Sha256);
         }
+    }
+
+    fn add_artifact_checksum(
+        &mut self,
+        to_variant: ReleaseVariantIdx,
+        artifact_idx: ArtifactIdx,
+        checksum: ChecksumStyle,
+    ) -> ArtifactIdx {
+        let artifact = self.artifact(artifact_idx);
+        let checksum_artifact = {
+            let checksum_ext = checksum.ext();
+            let checksum_id = format!("{}.{}", artifact.id, checksum_ext);
+            let checksum_path = artifact.file_path.parent().unwrap().join(&checksum_id);
+            Artifact {
+                id: checksum_id,
+                kind: ArtifactKind::Checksum(ChecksumImpl {
+                    checksum,
+                    src_path: artifact.file_path.clone(),
+                    dest_path: checksum_path.clone(),
+                }),
+
+                target_triples: artifact.target_triples.clone(),
+                archive: None,
+                file_path: checksum_path,
+                required_binaries: Default::default(),
+                // Who checksums the checksummers...
+                checksum: None,
+            }
+        };
+        let checksum_idx = self.add_local_artifact(to_variant, checksum_artifact);
+        self.artifact_mut(artifact_idx).checksum = Some(checksum_idx);
+        checksum_idx
     }
 
     /// Make an executable zip for a variant, but don't yet integrate it into the graph
@@ -1121,6 +1190,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     static_assets,
                 }),
                 kind: ArtifactKind::ExecutableZip(ExecutableZip {}),
+                // May get filled in later
+                checksum: None,
             },
             built_assets,
         )
@@ -1165,6 +1236,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     file_path: artifact_path.clone(),
                     required_binaries: FastMap::new(),
                     kind: ArtifactKind::Symbols(Symbols { kind: symbol_kind }),
+                    checksum: None,
                 };
 
                 // FIXME: strictly speaking a binary could plausibly be shared between Releases,
@@ -1248,6 +1320,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             archive: None,
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
+            checksum: None,
             kind: ArtifactKind::Installer(InstallerImpl::Shell(InstallerInfo {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
@@ -1316,6 +1389,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
             archive: None,
+            checksum: None,
             kind: ArtifactKind::Installer(InstallerImpl::Powershell(InstallerInfo {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
@@ -1421,6 +1495,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }),
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
+            checksum: None,
             kind: ArtifactKind::Installer(InstallerImpl::Npm(NpmInstallerInfo {
                 npm_package_name,
                 npm_package_version,
@@ -1505,6 +1580,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ArtifactKind::Installer(installer) => {
                     // Installer generation is complex enough that they just get monolithic impls
                     build_steps.push(BuildStep::GenerateInstaller(installer.clone()));
+                }
+                ArtifactKind::Checksum(checksum) => {
+                    build_steps.push(BuildStep::Checksum(checksum.clone()));
                 }
             }
 
@@ -1699,12 +1777,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let mut local_installers = vec![];
             let mut bundles = vec![];
             let mut symbols = vec![];
+            let mut checksums = vec![];
 
             for &artifact_idx in &release.global_artifacts {
                 let artifact = self.artifact(artifact_idx);
                 match &artifact.kind {
                     ArtifactKind::ExecutableZip(zip) => bundles.push((artifact, zip)),
                     ArtifactKind::Symbols(syms) => symbols.push((artifact, syms)),
+                    ArtifactKind::Checksum(checksum) => checksums.push((artifact, checksum)),
                     ArtifactKind::Installer(installer) => {
                         global_installers.push((artifact, installer))
                     }
@@ -1718,6 +1798,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     match &artifact.kind {
                         ArtifactKind::ExecutableZip(zip) => bundles.push((artifact, zip)),
                         ArtifactKind::Symbols(syms) => symbols.push((artifact, syms)),
+                        ArtifactKind::Checksum(checksum) => checksums.push((artifact, checksum)),
                         ArtifactKind::Installer(installer) => {
                             local_installers.push((artifact, installer))
                         }
@@ -1737,6 +1818,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
             }
 
+            // TODO: checksums...
             let other_artifacts: Vec<_> = bundles
                 .iter()
                 .map(|i| i.0)
@@ -1763,6 +1845,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         ArtifactKind::ExecutableZip(_) => "tarball",
                         ArtifactKind::Symbols(_) => "symbols",
                         ArtifactKind::Installer(_) => "installer",
+                        ArtifactKind::Checksum(_) => "checksum",
                     };
                     let name = &artifact.id;
                     let artifact_download_url = format!("{download_url}/{name}");

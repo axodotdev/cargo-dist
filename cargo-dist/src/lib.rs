@@ -217,7 +217,14 @@ fn manifest_artifact(
             description = Some(info.desc.clone());
             kind = cargo_dist_schema::ArtifactKind::Installer;
         }
+        ArtifactKind::Checksum(_) => {
+            install_hint = None;
+            description = None;
+            kind = cargo_dist_schema::ArtifactKind::Checksum;
+        }
     };
+
+    let checksum = artifact.checksum.map(|idx| dist.artifact(idx).id.clone());
 
     cargo_dist_schema::Artifact {
         name: Some(artifact.id.clone()),
@@ -231,6 +238,7 @@ fn manifest_artifact(
         description,
         assets,
         kind,
+        checksum,
     }
 }
 
@@ -254,7 +262,47 @@ fn run_build_step(dist_graph: &DistGraph, target: &BuildStep) -> Result<()> {
             dir_name,
         }) => zip_dir(src_path, dest_path, zip_style, dir_name),
         BuildStep::GenerateInstaller(installer) => generate_installer(dist_graph, installer),
+        BuildStep::Checksum(ChecksumImpl {
+            checksum,
+            src_path,
+            dest_path,
+        }) => Ok(generate_checksum(checksum, src_path, dest_path)?),
     }
+}
+
+/// Generate a checksum for the src_path to dest_path
+fn generate_checksum(
+    checksum: &ChecksumStyle,
+    src_path: &Utf8Path,
+    dest_path: &Utf8Path,
+) -> DistResult<()> {
+    use sha2::Digest;
+    use std::fmt::Write;
+
+    let file_bytes = axoasset::LocalAsset::load_bytes(src_path.as_str())?;
+
+    let hash = match checksum {
+        ChecksumStyle::Sha256 => {
+            let mut hasher = sha2::Sha256::new();
+            hasher.update(&file_bytes);
+            hasher.finalize().as_slice().to_owned()
+        }
+        ChecksumStyle::Sha512 => {
+            let mut hasher = sha2::Sha512::new();
+            hasher.update(&file_bytes);
+            hasher.finalize().as_slice().to_owned()
+        }
+    };
+    let mut output = String::new();
+    for byte in hash {
+        write!(&mut output, "{:02x}", byte).unwrap();
+    }
+    axoasset::LocalAsset::write_new(
+        &output,
+        dest_path.file_name().unwrap(),
+        dest_path.parent().unwrap().as_str(),
+    )?;
+    Ok(())
 }
 
 /// Build a cargo target
