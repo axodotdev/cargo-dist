@@ -22,6 +22,11 @@ pub enum DistError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
 
+    /// random axoasset error
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    Asset(#[from] axoasset::AxoassetError),
+
     /// User declined to update cargo-dist, refuse to make progress
     #[error(
         "to update your cargo-dist config you must use the version your project is configured for"

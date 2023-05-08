@@ -110,6 +110,21 @@
           }
         },
         {
+          "description": "A checksum of another artifact",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "checksum"
+              ]
+            }
+          }
+        },
+        {
           "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
           "type": "object",
           "required": [
@@ -132,6 +147,13 @@
           "items": {
             "$ref": "#/definitions/Asset"
           }
+        },
+        "checksum": {
+          "description": "id of an that contains the checksum for this artifact",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "description": {
           "description": "A brief description of what this artifact is",

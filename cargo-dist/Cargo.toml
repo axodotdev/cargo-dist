@@ -48,6 +48,8 @@ parse-changelog = { version = "0.5.3", default-features = false }
 newline-converter = "0.2.2"
 axoproject = { version = "0.3.0", default-features = false, features = ["cargo-projects"] }
 dialoguer = "0.10.4"
+axoasset = "0.2.0"
+sha2 = "0.10.6"
 
 [dev-dependencies]
 insta = { version = "1.26.0", features = ["filters"] }

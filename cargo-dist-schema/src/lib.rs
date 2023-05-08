@@ -112,6 +112,10 @@ pub struct Artifact {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub description: Option<String>,
+    /// id of an that contains the checksum for this artifact
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub checksum: Option<String>,
 }
 
 /// An asset contained in an artifact (executable, license, etc.)
@@ -169,6 +173,9 @@ pub enum ArtifactKind {
     /// Installer
     #[serde(rename = "installer")]
     Installer,
+    /// A checksum of another artifact
+    #[serde(rename = "checksum")]
+    Checksum,
     /// Unknown to this version of cargo-dist-schema
     ///
     /// This is a fallback for forward/backward-compat
