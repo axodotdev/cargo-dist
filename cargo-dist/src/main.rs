@@ -56,21 +56,13 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
         )?;
         for artifact_id in &release.artifacts {
             let artifact = &manifest.artifacts[artifact_id];
-            // Print out the name or path of the artifact (path is more useful by noisier)
-            if let Some(path) = &artifact.path {
-                // Try to highlight the actual filename for easier scanning
-                let path = Utf8PathBuf::from(path);
-                let file = path.file_name().unwrap();
-                let parent = path.as_str().strip_suffix(file);
-                if let Some(parent) = parent {
-                    write!(out, "    {}", parent)?;
-                    writeln!(out, "{}", out.style().green().apply_to(file))?;
-                } else {
-                    write!(out, "    {}", out.style().green().apply_to(path))?;
-                }
-            } else if let Some(name) = &artifact.name {
-                writeln!(out, "    {}", out.style().green().apply_to(name))?;
+            if let cargo_dist_schema::ArtifactKind::Checksum = &artifact.kind {
+                // Don't print shasums at top-level
+                continue;
             }
+
+            write!(out, "    ")?;
+            print_human_artifact_path(out, artifact)?;
 
             // Print out all the binaries first, those are the money!
             for asset in &artifact.assets {
@@ -103,7 +95,36 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
             if printed_asset {
                 writeln!(out)?;
             }
+
+            // Mention the presence of a checksum if it exists
+            if let Some(checksum_id) = &artifact.checksum {
+                let checksum_artifact = &manifest.artifacts[checksum_id];
+                write!(out, "      [checksum] ")?;
+                print_human_artifact_path(out, checksum_artifact)?;
+            }
         }
+    }
+    Ok(())
+}
+
+fn print_human_artifact_path(
+    out: &mut Term,
+    artifact: &cargo_dist_schema::Artifact,
+) -> Result<(), std::io::Error> {
+    // Print out the name or path of the artifact (path is more useful by noisier)
+    if let Some(path) = &artifact.path {
+        // Try to highlight the actual filename for easier scanning
+        let path = Utf8PathBuf::from(path);
+        let file = path.file_name().unwrap();
+        let parent = path.as_str().strip_suffix(file);
+        if let Some(parent) = parent {
+            write!(out, "{}", parent)?;
+            writeln!(out, "{}", out.style().green().apply_to(file))?;
+        } else {
+            write!(out, "{}", out.style().green().apply_to(path))?;
+        }
+    } else if let Some(name) = &artifact.name {
+        writeln!(out, "{}", out.style().green().apply_to(name))?;
     }
     Ok(())
 }
