@@ -155,6 +155,7 @@ fn get_new_dist_metadata(
             windows_archive: None,
             unix_archive: None,
             npm_scope: None,
+            checksum: None,
         }
     };
 
@@ -509,6 +510,9 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
     const DESC_NPM_SCOPE: &str =
         "# A namespace to use when publishing this package to the npm registry\n";
 
+    const KEY_CHECKSUM: &str = "checksum";
+    const DESC_CHECKSUM: &str = "# Checksums to generate for each App\n";
+
     let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
     if let Some(t) = workspace.as_table_mut() {
         t.set_implicit(true)
@@ -630,6 +634,14 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
             .key_decor_mut(KEY_NPM_SCOPE)
             .unwrap()
             .set_prefix(DESC_NPM_SCOPE);
+    }
+
+    if let Some(val) = &meta.checksum {
+        table.insert(KEY_CHECKSUM, value(val.ext()));
+        table
+            .key_decor_mut(KEY_CHECKSUM)
+            .unwrap()
+            .set_prefix(DESC_CHECKSUM);
     }
 
     table

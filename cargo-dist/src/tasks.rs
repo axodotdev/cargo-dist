@@ -216,6 +216,13 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "npm-scope")]
     pub npm_scope: Option<String>,
+
+    /// A scope to prefix npm packages with (@ should be included).
+    ///
+    /// This is required if you're using an npm installer.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub checksum: Option<ChecksumStyle>,
 }
 
 impl DistMetadata {
@@ -254,6 +261,9 @@ impl DistMetadata {
         }
         if self.npm_scope.is_none() {
             self.npm_scope = workspace_config.npm_scope.clone();
+        }
+        if self.checksum.is_none() {
+            self.checksum = workspace_config.checksum;
         }
         self.include
             .extend(workspace_config.include.iter().cloned());
@@ -519,19 +529,26 @@ pub struct ChecksumImpl {
 }
 
 /// A checksumming algorithm
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum ChecksumStyle {
     /// sha256sum (using the sha2 crate)
+    #[serde(rename = "sha256")]
     Sha256,
     /// sha512sum (using the sha2 crate)
+    #[serde(rename = "sha512")]
     Sha512,
+    /// Do not checksum
+    #[serde(rename = "false")]
+    False,
 }
 
 impl ChecksumStyle {
-    fn ext(self) -> &'static str {
+    /// Get the extension of a checksum
+    pub fn ext(self) -> &'static str {
         match self {
             ChecksumStyle::Sha256 => "sha256",
             ChecksumStyle::Sha512 => "sha512",
+            ChecksumStyle::False => "false",
         }
     }
 }
@@ -679,6 +696,8 @@ pub struct Release {
     pub windows_archive: ZipStyle,
     /// Archive format to use on non-windows
     pub unix_archive: ZipStyle,
+    /// Style of checksum to produce
+    pub checksum: ChecksumStyle,
     /// Static assets that should be included in bundles like executable-zips
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
 }
@@ -975,6 +994,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let unix_archive = package_config
             .unix_archive
             .unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
+        let checksum = package_config.checksum.unwrap_or(ChecksumStyle::Sha256);
 
         // Add static assets
         let mut static_assets = vec![];
@@ -1016,6 +1036,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             windows_archive,
             unix_archive,
             static_assets,
+            checksum,
         });
         idx
     }
@@ -1094,6 +1115,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Create an executable-zip for each Variant
         let release = self.release(to_release);
         let variants = release.variants.clone();
+        let checksum = release.checksum;
         for variant_idx in variants {
             let (zip_artifact, built_assets) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
@@ -1103,7 +1125,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 self.require_binary(zip_artifact_idx, variant_idx, binary, dest_path);
             }
 
-            self.add_artifact_checksum(variant_idx, zip_artifact_idx, ChecksumStyle::Sha256);
+            if checksum != ChecksumStyle::False {
+                self.add_artifact_checksum(variant_idx, zip_artifact_idx, checksum);
+            }
         }
     }
 
