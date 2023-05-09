@@ -1797,14 +1797,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let mut local_installers = vec![];
             let mut bundles = vec![];
             let mut symbols = vec![];
-            let mut checksums = vec![];
 
             for &artifact_idx in &release.global_artifacts {
                 let artifact = self.artifact(artifact_idx);
                 match &artifact.kind {
                     ArtifactKind::ExecutableZip(zip) => bundles.push((artifact, zip)),
                     ArtifactKind::Symbols(syms) => symbols.push((artifact, syms)),
-                    ArtifactKind::Checksum(checksum) => checksums.push((artifact, checksum)),
+                    ArtifactKind::Checksum(_) => {}
                     ArtifactKind::Installer(installer) => {
                         global_installers.push((artifact, installer))
                     }
@@ -1818,7 +1817,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     match &artifact.kind {
                         ArtifactKind::ExecutableZip(zip) => bundles.push((artifact, zip)),
                         ArtifactKind::Symbols(syms) => symbols.push((artifact, syms)),
-                        ArtifactKind::Checksum(checksum) => checksums.push((artifact, checksum)),
+                        ArtifactKind::Checksum(_) => {}
                         ArtifactKind::Installer(installer) => {
                             local_installers.push((artifact, installer))
                         }
@@ -1834,7 +1833,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. })) = details;
 
                     writeln!(&mut gh_body, "### {}\n", info.desc).unwrap();
-                    writeln!(&mut gh_body, "```shell\n{}\n```\n", info.hint).unwrap();
+                    writeln!(&mut gh_body, "```sh\n{}\n```\n", info.hint).unwrap();
                 }
             }
 
@@ -1848,8 +1847,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if !other_artifacts.is_empty() && download_url.is_some() {
                 let download_url = download_url.as_ref().unwrap();
                 writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();
-                gh_body.push_str("| target | kind | download |\n");
-                gh_body.push_str("|--------|------|----------|\n");
+                gh_body.push_str("|        |        |\n");
+                gh_body.push_str("|--------|--------|\n");
 
                 for artifact in other_artifacts {
                     let mut targets = String::new();
@@ -1861,16 +1860,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         targets.push_str(target);
                         multi_target = true;
                     }
-                    let kind = match artifact.kind {
-                        ArtifactKind::ExecutableZip(_) => "tarball",
-                        ArtifactKind::Symbols(_) => "symbols",
-                        ArtifactKind::Installer(_) => "installer",
-                        ArtifactKind::Checksum(_) => "checksum",
-                    };
                     let name = &artifact.id;
                     let artifact_download_url = format!("{download_url}/{name}");
                     let download = format!("[{name}]({artifact_download_url})");
-                    writeln!(&mut gh_body, "| {targets} | {kind} | {download} |").unwrap();
+                    let checksum = if let Some(checksum_idx) = artifact.checksum {
+                        let checksum_name = &self.artifact(checksum_idx).id;
+                        let checksum_download_url = format!("{download_url}/{checksum_name}");
+                        format!("[checksum]({checksum_download_url})")
+                    } else {
+                        String::new()
+                    };
+                    writeln!(&mut gh_body, "| {download} | {checksum} |").unwrap();
                 }
                 writeln!(&mut gh_body).unwrap();
             }
