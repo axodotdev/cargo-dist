@@ -483,6 +483,8 @@ pub struct ZipDirStep {
     pub src_path: Utf8PathBuf,
     /// The final file path for the output zip
     pub dest_path: Utf8PathBuf,
+    /// The name of the dir the tarball/zip will contain
+    pub dir_name: String,
     /// The kind of zip/tarball to make
     pub zip_style: ZipStyle,
 }
@@ -1411,7 +1413,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
             archive: Some(Archive {
-                dir_name,
+                // npm specifically expects the dir inside the tarball to be called "package"
+                dir_name: "package".to_owned(),
                 dir_path: dir_path.clone(),
                 zip_style,
                 static_assets,
@@ -1528,6 +1531,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 build_steps.push(BuildStep::Zip(ZipDirStep {
                     src_path: artifact_dir.to_owned(),
                     dest_path: artifact.file_path.clone(),
+                    dir_name: archive.dir_name.clone(),
                     zip_style: archive.zip_style,
                 }));
             }

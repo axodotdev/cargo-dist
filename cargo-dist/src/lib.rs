@@ -251,7 +251,8 @@ fn run_build_step(dist_graph: &DistGraph, target: &BuildStep) -> Result<()> {
             src_path,
             dest_path,
             zip_style,
-        }) => zip_dir(src_path, dest_path, zip_style),
+            dir_name,
+        }) => zip_dir(src_path, dest_path, zip_style, dir_name),
         BuildStep::GenerateInstaller(installer) => generate_installer(dist_graph, installer),
     }
 }
@@ -454,17 +455,26 @@ fn copy_dir(_src_path: &Utf8Path, _dest_path: &Utf8Path) -> Result<()> {
     todo!("copy_dir isn't implemented yet")
 }
 
-fn zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path, zip_style: &ZipStyle) -> Result<()> {
+fn zip_dir(
+    src_path: &Utf8Path,
+    dest_path: &Utf8Path,
+    zip_style: &ZipStyle,
+    dir_name: &str,
+) -> Result<()> {
     match zip_style {
-        ZipStyle::Zip => really_zip_dir(src_path, dest_path),
-        ZipStyle::Tar(compression) => tar_dir(src_path, dest_path, compression),
+        ZipStyle::Zip => really_zip_dir(src_path, dest_path, dir_name),
+        ZipStyle::Tar(compression) => tar_dir(src_path, dest_path, compression, dir_name),
     }
 }
 
-fn tar_dir(src_path: &Utf8Path, dest_path: &Utf8Path, compression: &CompressionImpl) -> Result<()> {
+fn tar_dir(
+    src_path: &Utf8Path,
+    dest_path: &Utf8Path,
+    compression: &CompressionImpl,
+    dir_name: &str,
+) -> Result<()> {
     // Set up the archive/compression
     // The contents of the zip (e.g. a tar)
-    let dir_name = src_path.file_name().unwrap();
     let zip_contents_name = format!("{dir_name}.tar");
     let final_zip_file = File::create(dest_path)
         .into_diagnostic()
@@ -552,7 +562,10 @@ fn tar_dir(src_path: &Utf8Path, dest_path: &Utf8Path, compression: &CompressionI
     Ok(())
 }
 
-fn really_zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+fn really_zip_dir(src_path: &Utf8Path, dest_path: &Utf8Path, _dir_name: &str) -> Result<()> {
+    // FIXME: we don't respect dir_name in that we don't add an extra wrapper dir
+    // ...but now things expect that and honestly that's more convenient for how
+    // we use these (installers --strip-prefix=1 our tarballs but there's no such option for unzip).
     // Set up the archive/compression
     let final_zip_file = File::create(dest_path)
         .into_diagnostic()
