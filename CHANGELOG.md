@@ -1,3 +1,14 @@
+# Version 0.0.7 (2023-05-09)
+
+This is just a quick little release that makes the npm package tarballs we can generate
+look like "properly" packed tarballs that can be directly published to npm without unpacking them.
+This allows you to `npm publish URL_TO_TARBALL` directly without any issues.
+
+@gankra [impl](https://github.com/axodotdev/cargo-dist/pull/246)
+
+
+
+
 # Version 0.0.6 (2023-05-03)
 
 This release is a pretty big improvement to cargo-dist's UX!

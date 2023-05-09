@@ -22,6 +22,8 @@ These keys can be specified via [`installer` in your cargo-dist config][installe
 
 ### shell
 
+> since 0.0.3
+
 This provides a shell script (installer.sh) which detects the current platform, fetches the best possible [executable-zip][] from your [artifact download URL][artifact-download-url], and copies the binary into your [cargo home][], where presumably it will end up on your PATH.
 
 This kind of installer is ideal for bootstrapping setup on a fairly bare-bones system.
@@ -51,6 +53,8 @@ In an ideal world all of these caveats improve (except for maybe relying on tar/
 
 
 ### powershell
+
+> since 0.0.3
 
 This provides a powershell script (installer.ps1) which detects the current platform, fetches the best possible [executable-zip][] from your [artifact download URL][artifact-download-url], and copies the binary into your [cargo home][], where presumably it will end up on your PATH.
 
@@ -83,7 +87,9 @@ In an ideal world most of these caveats improve (except for maybe the requiremen
 
 ### npm
 
-This provides a tarball containing an npm package (npm-package.tar.gz) which when installed into an npm project: detects the current platform, fetches the best possible [executable-zip][] from your [artifact download URL][artifact-download-url], and copies the binary into your node_modules, where it can be run with things like `npx`.
+> since 0.0.6
+
+This provides a tarball containing an npm package (npm-package.tar.gz) which when installed into an npm project: detects the current platform, fetches the best possible [executable-zip][] from your [artifact download URL][artifact-download-url], and copies the binary into your node_modules. This can be used to install the binaries like any other npm package, or to run them with `npx`.
 
 This kind of installer is ideal for making a native Rust tool available to JS devs.
 
@@ -93,13 +99,27 @@ An "installer hint" will be provided that shows how to install via `npm` like so
 npm install @axodotdev/cargodisttest@0.2.0
 ```
 
-**cargo-dist does not publish the package for you, you need to do that manually once the tarball is built.** You can do this in one of 3 ways:
+**cargo-dist does not publish the package for you, you need to do that manually once the tarball is built.** Conveniently, npm supports publishing from a url-to-a-tarball directly, and since 0.0.7 we make our tarballs look like "proper" npm package tarballs, so you can just do this:
 
-* remotely with `npm publish URL_TO_TARBALL` (yes npm genuinely supports this!)
-* locally after downloading with `npm publish PATH_TO_TARBALL`
-* locally after unpacking with `npm publish`
+```sh
+npm publish URL_TO_TARBALL
+```
 
-(In testing we've seen some inconsistent results on Windows where the README isn't properly detected by npm's website when publishing remotely, but is when run on the unpacked results... No Idea What's Up With That, [let us know if you can reproduce/isolate the issue][issue-npm-readme].)
+You can find the URL to the tarball at the bottom of the Github Release, inside the collapsible "assets" dropdown (*-npm-package.tar.gz). The format of the url is:
+
+```text
+<repo>/releases/download/<tag>/<app-name>-npm-package.tar.gz
+```
+
+Example:
+
+https://github.com/axodotdev/oranda/releases/download/v0.0.3/oranda-npm-package.tar.gz
+
+If you're cutting a stable release (not-prerelease), you can use the "latest" URL format:
+
+https://github.com/axodotdev/oranda/releases/latest/download/oranda-npm-package.tar.gz
+
+In the future we may [introduce more streamlined CI-based publishing workflows][issue-npm-ci].
 
 [You can set the @scope the package is published under with the npm-scope cargo-dist config][npm-scope].
 
@@ -202,6 +222,7 @@ Although that's still missing things like [Windows crt-static workarounds][crt-s
 
 [issue-info-install]: https://github.com/axodotdev/cargo-dist/issues/72
 [issue-npm-readme]: https://github.com/axodotdev/cargo-dist/issues/238
+[issue-npm-install]: https://github.com/axodotdev/cargo-dist/issues/245
 [linux-pm-issue]: https://github.com/axodotdev/cargo-dist/issues/76
 [windows-pm-issue]: https://github.com/axodotdev/cargo-dist/issues/87
 [msi-installer-issue]: https://github.com/axodotdev/cargo-dist/issues/23
