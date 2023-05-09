@@ -292,6 +292,9 @@ fn generate_checksum(
             hasher.update(&file_bytes);
             hasher.finalize().as_slice().to_owned()
         }
+        ChecksumStyle::False => {
+            unreachable!()
+        }
     };
     let mut output = String::new();
     for byte in hash {
