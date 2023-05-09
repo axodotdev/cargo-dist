@@ -162,6 +162,21 @@ Specifies that [npm installers][] should be published under the given [scope][].
 If no scope is specified the package will be global.
 
 
+### checksum
+
+Example `checksum = "sha512"`
+
+Specifies how to checksum [executable-zips][]. Supported values:
+
+* "sha256" (default) - generate a .sha256 file for each archive
+* "sha512" - generate a .sha512 file for each archive
+* "false" - do not generate any checksums
+
+The hashes should match the result that sha256sum and sha512sum generate. The current format is just a file containing the hash of that file and nothing else.
+
+Future work is planned to [support more robust signed checksums][issue-sigstore].
+
+
 ## Subsetting CI Flags
 
 Several `metadata.dist` configs have globally available CLI equivalents. These can be used to select a subset of `metadata.dist` list for that run. If you don't pass any, it will be as-if you passed all the values in `metadata.dist`. You can pass these flags multiple times to provide a list. This includes:
@@ -192,3 +207,4 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [artifact-url]: ./installers.md#artifact-download-url
 [scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
 [npm installers]: ./installers.md#npm
+[issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
