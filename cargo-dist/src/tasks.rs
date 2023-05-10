@@ -1750,14 +1750,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         // Try to extract the changelog entry for the announcing version.
-        // First, try to find the exact version. If that fails, try to find this version without
-        // the prerelease suffix.
+        //
+        // First, try to find the exact version.
+        //
+        // If that fails, try to find this version without the prerelease suffix.
         // Because releasing a prerelease for a version that was already published before does not
         // make much sense it is fairly safe to assume that this entry is in fact just our WIP state
         // of the release notes.
+        //
+        // If that fails, try to find a section called "Unreleased" and use that (if it's a prerelease).
         let Some((title, notes)) =
             try_extract_changelog_exact(&changelogs, announcing_version)
                 .or_else(|| try_extract_changelog_normalized(&changelogs, announcing_version))
+                .or_else(|| try_extract_changelog_unreleased(&changelogs, announcing_version))
             else {
                 info!("failed to find {announcing_version} in changelogs, skipping changelog generation");
                 return;
@@ -2434,6 +2439,23 @@ fn try_extract_changelog_normalized(
     );
 
     Some((title.trim().to_string(), release_notes.notes.to_string()))
+}
+
+// Tries to find the "Unreleased" changelog heading and replaces it with "Version {version}"
+//
+// Noop if the given version isn't a prerelease.
+fn try_extract_changelog_unreleased(
+    changelogs: &parse_changelog::Changelog,
+    version: &Version,
+) -> Option<(String, String)> {
+    if version.pre.is_empty() {
+        return None;
+    }
+
+    let release_notes = changelogs.get("Unreleased")?;
+    let title = format!("Version {version}");
+
+    Some((title, release_notes.notes.to_string()))
 }
 
 fn tool_info() -> Tools {
