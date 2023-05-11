@@ -1,6 +1,18 @@
 # Unreleased
 
-placeholder
+This should become 0.1.0, representing the TRUE MVP of cargo-dist!
+
+* archive checksum support (sha256 on by default, sha512 available)
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/243)
+    * [docs](https://opensource.axo.dev/cargo-dist/book/config.html#checksum)
+
+* submodule checkouts
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/248)
+
+* changelog "Unreleased" section
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/250)
+
+
 
 # Version 0.0.7 (2023-05-09)
 
