@@ -51,6 +51,8 @@ Cargo allows other tools to include their own project-wide settings in [metadata
 
 ### cargo-dist-version
 
+> since 0.0.3
+
 Example: `cargo-dist-version = "0.0.3"` 
 
 **This can only be set globally**
@@ -62,6 +64,8 @@ The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a V
 If you delete the key, generate-ci will just use the version of cargo-dist that's currently running.
 
 ### rust-toolchain-version
+
+> since 0.0.3
 
 Example: `rust-toolchain-version = "1.67.1"` 
 
@@ -75,6 +79,8 @@ If you delete the key, generate-ci will just use "stable" which will drift over 
 
 ### ci
 
+> since 0.0.3
+
 Example: `ci = ["github"]`
 
 **This can only be set globally**
@@ -86,6 +92,8 @@ This is a list of CI backends you want to support, allowing subsequent runs of [
 `cargo dist init` can set this if you pass `--ci=...`
 
 ### targets
+
+> since 0.0.3
 
 Example: `targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc"]`
 
@@ -104,6 +112,8 @@ By default all runs of `cargo-dist` will be trying to handle all platforms speci
 
 ### installers
 
+> since 0.0.3
+
 Example: `installers = ["shell", "powershell"]`
 
 This is a list of installers you want to be made for your application(s). In principle this can be overridden on a per-package basis but that is not well tested. See [the full docs on installers for the full list of values][].
@@ -113,17 +123,23 @@ See "repository" for some discussion on the "Artifact Download URL".
 
 ### include
 
+> since 0.0.3
+
 Example: `include = ["my-cool-file.txt", "../other-cool-file.txt"]`
 
 This is a list of additional *files* (directory support TBD) to copy into the root of all [executable-zips][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
 
 ### auto-includes
 
+> since 0.0.3
+
 Example: `auto-includes = false`
 
 Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [executable-zips][]. Defaults to true.
 
 ### windows-archive
+
+> since 0.0.5
 
 Example: `windows-archive = ".tar.gz"`
 
@@ -139,6 +155,8 @@ See also unix-archive below.
 
 ### unix-archive
 
+> since 0.0.5
+
 Example: `unix-archive = ".tar.gz"`
 
 Allows you to specify the file format to use for [executable-zips][] that target not-windows. The default is
@@ -148,12 +166,16 @@ Allows you to specify the file format to use for [executable-zips][] that target
 
 ### dist
 
+> since 0.0.3
+
 Example: `dist = false`
 
 Specifies whether cargo-dist should ignore this package. It primarily exists as an alternative for `publish=false` or an override for `publish=false`.
 
 
 ### npm-scope
+
+> since 0.0.6
 
 Example `npm-scope = "@axodotdev"`
 
@@ -163,6 +185,8 @@ If no scope is specified the package will be global.
 
 
 ### checksum
+
+> since 0.1.0
 
 Example `checksum = "sha512"`
 
