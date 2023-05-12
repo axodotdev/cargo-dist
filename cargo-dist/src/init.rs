@@ -101,7 +101,7 @@ fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
         // that enormous applications like chromium can become unbuildable), but definitely
         // eeks out a bit more from your binaries.
         //
-        // In principle cargo-dist is targetting True Shippable Binaries and so it's
+        // In principle cargo-dist is targeting True Shippable Binaries and so it's
         // worth it to go nuts getting every last drop out of your binaries... but a lot
         // of people are going to build binaries that might never even be used, so really
         // we're just burning a bunch of CI time for nothing.

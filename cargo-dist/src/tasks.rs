@@ -29,7 +29,7 @@
 //!    * global Artifacts: artifacts that have only one version across all platforms
 //!    * ReleaseVariants: a target-specific part of a Release (my-app-v1.0.0-x86_64-apple-darwin)
 //!      * local Artifacts: artifacts that are per-Variant
-//!      * Binaries: a binary that should be built for a specifc Variant
+//!      * Binaries: a binary that should be built for a specific Variant
 //!   * BuildSteps: steps we should take to build the artifacts
 //!
 //! Note that much of this hierarchy is rearranged/simplified in dist-manifest.json!
@@ -729,7 +729,7 @@ pub enum StaticAssetKind {
     License,
     /// A CHANGLEOG or RELEASES file
     Changelog,
-    /// Some other miscellanious file
+    /// Some other miscellaneous file
     Other,
 }
 
@@ -1768,7 +1768,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 return;
             };
 
-        info!("succesfully parsed changelog!");
+        info!("successfully parsed changelog!");
         self.inner.announcement_title = Some(title);
         self.inner.announcement_changelog = Some(notes);
     }
@@ -1885,7 +1885,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
         }
 
-        info!("succesfully generated github release body!");
+        info!("successfully generated github release body!");
         // self.inner.artifact_download_url = Some(download_url);
         self.inner.announcement_github_body = Some(gh_body);
     }
