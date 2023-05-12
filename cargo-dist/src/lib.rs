@@ -51,7 +51,7 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
     // bundling up an executable the moment it's built! Note however that you shouldn't
     // parallelize Cargo invocations because it has global state that can get clobbered.
     // Most problematically if you do two builds with different feature flags the final
-    // binaries will get copied to the same location and clobber eachother :(
+    // binaries will get copied to the same location and clobber each other :(
 
     // First set up our target dirs so things don't have to race to do it later
     if !dist.dist_dir.exists() {
