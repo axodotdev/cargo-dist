@@ -24,29 +24,22 @@ jobs:
   fmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          profile: minimal
           components: rustfmt
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+      - run: cargo fmt --all -- --check
 
   # Check that clippy is appeased
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          profile: minimal
           components: clippy
-          override: true
       - uses: actions-rs/clippy-check@v1
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
@@ -61,17 +54,12 @@ jobs:
      RUSTDOCFLAGS: -Dwarnings
    steps:
      - uses: actions/checkout@master
-     - uses: actions-rs/toolchain@v1
+     - uses: dtolnay/rust-toolchain@master
        with:
          toolchain: stable
-         profile: minimal
          components: rust-docs
-         override: true
      - uses: swatinem/rust-cache@v1
-     - uses: actions-rs/cargo@v1
-       with:
-         command: doc
-         args: --workspace --no-deps
+     - run: cargo doc --workspace --no-deps
 
   # Build and run tests/doctests/examples on all platforms
   # FIXME: look into `cargo-hack` which lets you more aggressively
@@ -86,37 +74,23 @@ jobs:
     steps:
       # Setup tools
       - uses: actions/checkout@master
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          profile: minimal
-          override: true
       - uses: swatinem/rust-cache@v1
       # Run the tests/doctests (default features)
-      - uses: actions-rs/cargo@v1
+      - run: cargo test --workspace
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
-        with:
-          command: test
-          args: --workspace
       # Run the tests/doctests (all features)
-      - uses: actions-rs/cargo@v1
+      - run: cargo test --workspace --all-features
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
-        with:
-          command: test
-          args: --workspace --all-features
       # Test the examples (default features)
-      - uses: actions-rs/cargo@v1
+      - run: cargo test --workspace --examples --bins
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
-        with:
-          command: test
-          args: --workspace --examples --bins
       # Test the examples (all features)
-      - uses: actions-rs/cargo@v1
+      - run: cargo test --workspace --all-features --examples --bins
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
-        with:
-          command: test
-          args: --workspace --all-features --examples --bins
