@@ -14,4 +14,3 @@ edit-url-template = "https://github.com/axodotdev/cargo-dist/edit/main/book/{pat
 
 [preprocessor.toc]
 command = "mdbook-toc"
-marker = "<!-- toc -->"
