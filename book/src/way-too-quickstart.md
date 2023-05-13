@@ -1,14 +1,10 @@
 # Way-Too-Quickstart
 
+<!-- toc -->
+
 > TLDR: cargo-dist is a souped up version of `cargo build` which handles building tarballs/zips and [installers][]. It also knows how to generate Github CI for orchestrating itself and uploading its output to a new Github Release. You can use cargo-dist if you don't care about that CI stuff, but this guide assumes that you do.
 >
 > This quickstart is a bit *too* quick because there's some important nuances to "announcing and building releases" that depend on the way you like to structure and version your workspace. We will blatantly ignore those nuances and show you the Happiest Happy Path (a workspace with one crate that defines a binary). Checkout [the guide][guide] for more details on what you should *actually* do.
-
-The quickstart has three parts: 
-
-1. setting up cargo-dist
-2. testing locally
-3. cutting a release of your project on Github
 
 
 

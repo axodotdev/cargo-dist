@@ -59,6 +59,7 @@ jobs:
         with:
           toolchain: stable
           override: true
+      - uses: swatinem/rust-cache@v2
 
       # OPTIONAL: build your mdbook
       # Note that "./book/" is the directory in our repo where the book.toml is
@@ -68,8 +69,13 @@ jobs:
       - name: Install mdbook
         run: |
           mkdir mdbook
-          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.14/mdbook-v0.4.14-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook
+          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.27/mdbook-v0.4.27-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook
           echo `pwd`/mdbook >> $GITHUB_PATH
+      # These could use binstall or caches...
+      - name: Install mdbook plugins
+        run: |
+          cargo install --locked mdbook-toc@0.11.2
+          cargo install --locked mdbook-linkcheck@0.7.7
       - name: Run mdbook build
         run: |
           mdbook build book

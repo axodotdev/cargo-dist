@@ -11,9 +11,9 @@ Shippable packaging for Rust.
 
 When run without a subcommand, `cargo dist` will invoke the `build` subcommand. See `cargo dist help build` for more details.
 
-### Usage:
+### Usage
 
-```
+```text
 cargo dist [OPTIONS]
 ```
 cargo dist <COMMAND>
@@ -89,9 +89,9 @@ In the future we may try to make this look at the current git tags or something?
 ## cargo dist build
 Build artifacts
 
-### Usage:
+### Usage
 
-```
+```text
 cargo dist build [OPTIONS]
 ```
 
@@ -127,9 +127,9 @@ Setup or update cargo-dist
 
 This will interactively guide you through the process of selecting configuration options and will also automatically run 'cargo dist generate-ci' afterwards as necessary. It will also handle updating your project to a new version of cargo-dist if you're running one.
 
-### Usage:
+### Usage
 
-```
+```text
 cargo dist init [OPTIONS]
 ```
 
@@ -152,9 +152,9 @@ This subcommand accepts all the [global options](#global-options)
 ## cargo dist generate-ci
 Generate CI scripts for orchestrating cargo-dist
 
-### Usage:
+### Usage
 
-```
+```text
 cargo dist generate-ci [OPTIONS]
 ```
 
@@ -175,9 +175,9 @@ Notably it will default to only talking about artifacts for the host system, and
 
 'cargo dist plan' is an alias for this command that picks nicer defaults by forcing a couple flags to have specific values. You probably want that.
 
-### Usage:
+### Usage
 
-```
+```text
 cargo dist manifest [OPTIONS]
 ```
 
@@ -213,13 +213,13 @@ Get a plan of what to build (and check project status)
 
 If you want to know what running your cargo-dist CI will produce, this is the command for you! This is the exact command that CI will run to make its build plan and generate dist-manifest.json (although it adds --output-format=json so that it's machine-readable).
 
-### This is an alias for the lower-level 'manifest' command with the appropriate flags forced for asking for "everything"
+This is an alias for the lower-level 'manifest' command with the appropriate flags forced for asking for "everything"
 
 cargo dist manifest --artifacts=all --no-local-paths
 
-### Usage:
+### Usage
 
-```
+```text
 cargo dist plan [OPTIONS]
 ```
 
@@ -234,9 +234,9 @@ This subcommand accepts all the [global options](#global-options)
 ## cargo dist help
 Print this message or the help of the given subcommand(s)
 
-### Usage:
+### Usage
 
-```
+```text
 cargo dist help [COMMAND]
 ```
 

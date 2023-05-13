@@ -297,9 +297,9 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
         let mut in_normal_options = false;
         for line in lines {
             if let Some(usage) = line.strip_prefix("Usage: ") {
-                writeln!(out, "### Usage:")?;
+                writeln!(out, "### Usage")?;
                 writeln!(out)?;
-                writeln!(out, "```")?;
+                writeln!(out, "```text")?;
                 writeln!(out, "{usage}")?;
                 writeln!(out, "```")?;
                 continue;

@@ -146,7 +146,7 @@ pub enum Commands {
     /// (although it adds --output-format=json so that it's machine-readable).
     ///
     /// This is an alias for the lower-level 'manifest' command with the
-    /// appropriate flags forced for asking for "everything":
+    /// appropriate flags forced for asking for "everything"
     ///
     ///     cargo dist manifest --artifacts=all --no-local-paths
     ///

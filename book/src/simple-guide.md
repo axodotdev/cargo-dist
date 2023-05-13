@@ -1,5 +1,7 @@
 # Guide: A Simple Application
 
+<!-- toc -->
+
 Let's start with the kind of simple [Cargo Workspace][workspace] you would get from `cargo new my-app` (or `cargo init my-app`): a single package that defines a [binary target][bin]. This is exactly the situation the [Way-Too-Quickstart][way-too-quickstart] should work perfectly for. Here we're going to take it a bit slower.
 
 Our goal will be to setup a Github CI workflow that announces a new release of our application with a Github Release. The workflow will also build our application for the 3 major desktop platforms, wrap the binaries in zips/tarballs, and upload them to the Github Release. The Github Release's text will also include the relevant release notes from our RELEASES.md file.
@@ -18,7 +20,7 @@ You can rerun `init` as many times as you want, as it also functions as an "upda
 cargo dist init
 ```
 
-[`init`][] on its own just edits your Cargo.toml to include the recommended defaults. If you have enabled CI support, it will also run `cargo dist generate-ci` after setting things up. This ensures your config and your CI scripts are in sync, but will unfortunately clobber any hand-edits you made to the scripts.
+[`init`][init] on its own just edits your Cargo.toml to include the recommended defaults. If you have enabled CI support, it will also run `cargo dist generate-ci` after setting things up. This ensures your config and your CI scripts are in sync, but will unfortunately clobber any hand-edits you made to the scripts.
 
 Let's look at those defaults that were added (yes those comments are generated too, you will never stop me from adding more docs!!!):
 
