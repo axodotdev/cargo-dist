@@ -20,9 +20,8 @@ pub enum FakeCli {
 #[clap(bin_name = "cargo dist")]
 #[clap(args_conflicts_with_subcommands = true)]
 /// Shippable packaging for Rust.
-///
-/// When run without a subcommand, `cargo dist` will invoke the `build`
-/// subcommand. See `cargo dist help build` for more details.
+/// 
+/// See 'init', 'build' and 'plan' for the 3 most important subcommands.
 pub struct Cli {
     /// Subcommands ("no subcommand" defaults to `build`)
     #[clap(subcommand)]

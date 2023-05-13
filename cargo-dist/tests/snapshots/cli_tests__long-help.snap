@@ -5,7 +5,7 @@ expression: format_outputs(&output)
 stdout:
 Shippable packaging for Rust.
 
-When run without a subcommand, `cargo dist` will invoke the `build` subcommand. See `cargo dist help build` for more details.
+See 'init', 'build' and 'plan' for the 3 most important subcommands.
 
 Usage: cargo dist [OPTIONS]
        cargo dist <COMMAND>
