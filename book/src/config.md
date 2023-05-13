@@ -1,5 +1,7 @@
 # Config
 
+<!-- toc -->
+
 cargo-dist accepts configuration from the following sources, in order of increasing preference (that is, CLI flags generally replace things specified in your Cargo.toml):
 
 * Relevant [Cargo.toml fields][cargo-manifest] like "repository" and "readme"
@@ -116,7 +118,7 @@ By default all runs of `cargo-dist` will be trying to handle all platforms speci
 
 Example: `installers = ["shell", "powershell"]`
 
-This is a list of installers you want to be made for your application(s). In principle this can be overridden on a per-package basis but that is not well tested. See [the full docs on installers for the full list of values][].
+This is a list of installers you want to be made for your application(s). In principle this can be overridden on a per-package basis but that is not well tested. See [the full docs on installers for the full list of values][installers].
 
 See "repository" for some discussion on the "Artifact Download URL".
 

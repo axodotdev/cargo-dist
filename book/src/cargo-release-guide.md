@@ -1,5 +1,7 @@
 # Using cargo-release
 
+<!-- toc -->
+
 > NOTE: It will be helpful to read [the section on cargo-dist Announcement Tags][announcements], because that is the interface boundary between cargo-release and cargo-dist. TL;DR: cargo-dist interprets a git tag of "v1.0.0" as "Announce/Release the whole workspace" (Unified Announcement) and "my-app-v1.0.0" as "Announce/Release that one package" (Singular Announcement).
 
 > NOTE: this guide assumes you're running [cargo-release v0.22.0][release-22] or greater, as that version made several significant changes to default behaviours (for the better!).

@@ -1,5 +1,7 @@
 # Concepts
 
+<!-- toc -->
+
 Here's the section where I use a bunch of words Capitalized Words to indicate they are a Special Concept in cargo-dist as I try to explain how it works. These are the "advanced" docs of cargo-dist, for the "beginner" docs see [the guide][guide] for the "beginner" docs.
 
 An invocation of cargo-dist has 4 major inputs:

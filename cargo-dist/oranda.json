@@ -8,7 +8,7 @@
     "image_alt": "axo",
     "twitter_account": "@axodotdev"
   },
-  "md_book": "../book/book",
+  "md_book": "../book/book/",
   "artifacts": {
     "cargo_dist": true,
     "package_managers": {

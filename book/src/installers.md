@@ -1,5 +1,7 @@
 # Installers
 
+<!-- toc -->
+
 The core functionality of cargo-dist is to build your binaries and produce tarballs/zips containing them. Basically every other kind of file it produces is considered an "installer" that helps download/install those binaries.
 
 > Currently all supported installers are "global"/"universal" installers that detect the current platform and download and unpack the appropriate tarball/zip. This currently requires CI support to be enabled so we can ensure the files are hosted somewhere and now where to fetch them from.
@@ -221,8 +223,7 @@ Although that's still missing things like [Windows crt-static workarounds][crt-s
 
 
 [issue-info-install]: https://github.com/axodotdev/cargo-dist/issues/72
-[issue-npm-readme]: https://github.com/axodotdev/cargo-dist/issues/238
-[issue-npm-install]: https://github.com/axodotdev/cargo-dist/issues/245
+[issue-npm-ci]: https://github.com/axodotdev/cargo-dist/issues/245
 [linux-pm-issue]: https://github.com/axodotdev/cargo-dist/issues/76
 [windows-pm-issue]: https://github.com/axodotdev/cargo-dist/issues/87
 [msi-installer-issue]: https://github.com/axodotdev/cargo-dist/issues/23

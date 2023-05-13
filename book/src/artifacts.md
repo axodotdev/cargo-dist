@@ -1,5 +1,7 @@
 # Artifacts
 
+<!-- toc -->
+
 cargo-dist's primary role is to produce "Artifacts", either to use locally or to upload as part of a release announcement. Here's a listing of the supported kinds!
 
 
@@ -31,7 +33,7 @@ This feature is currently disabled [pending a rework][rework-symbols], but basic
 
 Most other kinds of artifact are referred to as "installers", because they generally exist as ways of downloading and installing the binaries that were made for the executable-zips.
 
-[See the full docs on installers for details][installers-docs].
+[See the full docs on installers for details][installers].
 
 
 
