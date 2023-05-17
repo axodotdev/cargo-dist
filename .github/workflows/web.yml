@@ -61,30 +61,17 @@ jobs:
           override: true
       - uses: swatinem/rust-cache@v2
 
-      # OPTIONAL: build your mdbook
-      # Note that "./book/" is the directory in our repo where the book.toml is
-      # and we pass that to mdbook. You also need to tell oranda.json this with
-      #   "md_book": "./book/book/"
-      # ("book" being the dir where mdbook writes is output)
-      - name: Install mdbook
-        run: |
-          mkdir mdbook
-          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.27/mdbook-v0.4.27-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook
-          echo `pwd`/mdbook >> $GITHUB_PATH
-      # These could use binstall or caches...
+      # Install mdbook plugins
       - name: Install mdbook plugins
         run: |
           cargo install --locked mdbook-toc@0.11.2
           cargo install --locked mdbook-linkcheck@0.7.7
-      - name: Run mdbook build
-        run: |
-          mdbook build book
-      
-      # Install and run oranda
+
+      # Install and run oranda (and mdbook)
       # This will write all output to ./public/ (including copying mdbook's output to there)
       - name: Install and run oranda
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/download/v0.0.3/oranda-installer.sh | sh
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/download/v0.1.0-prerelease.1/oranda-installer.sh | sh
           cd cargo-dist
           oranda build
 
