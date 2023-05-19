@@ -58,7 +58,7 @@ fn print_search(search: WorkspaceSearch, name: &str) {
             cause,
         } => {
             let err = Report::new(cause).wrap_err(format!(
-                "We found a broken {name} project at {manifest_path}"
+                "We found a potential {name} project at {manifest_path}, but there was an issue"
             ));
             eprintln!("{:?}", err);
         }
@@ -181,9 +181,12 @@ enum JsonWorkspaceSearch {
     #[serde(rename = "found")]
     Found(JsonWorkspaceInfo),
     #[serde(rename = "missing")]
-    Missing(serde_json::Value),
+    Missing { cause: serde_json::Value },
     #[serde(rename = "broken")]
-    Broken(serde_json::Value),
+    Broken {
+        manifest_path: JsonRelPath,
+        cause: serde_json::Value,
+    },
 }
 
 impl JsonWorkspaceSearch {
@@ -193,12 +196,15 @@ impl JsonWorkspaceSearch {
                 JsonWorkspaceSearch::Found(JsonWorkspaceInfo::from_real(root, info))
             }
             WorkspaceSearch::Broken {
-                manifest_path: _,
+                manifest_path,
                 cause,
-            } => JsonWorkspaceSearch::Broken(json_diagnostic_from_real(root, cause)),
-            WorkspaceSearch::Missing(e) => {
-                JsonWorkspaceSearch::Missing(json_diagnostic_from_real(root, e))
-            }
+            } => JsonWorkspaceSearch::Broken {
+                manifest_path: JsonRelPath::from_real(root, manifest_path),
+                cause: json_diagnostic_from_real(root, cause),
+            },
+            WorkspaceSearch::Missing(e) => JsonWorkspaceSearch::Missing {
+                cause: json_diagnostic_from_real(root, e),
+            },
         }
     }
 }
