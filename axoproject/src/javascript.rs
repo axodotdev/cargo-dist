@@ -1,6 +1,6 @@
 //! Support for npm-based JavaScript projects
 
-use axoasset::{AxoassetError, LocalAsset, SourceFile};
+use axoasset::SourceFile;
 use camino::{Utf8Path, Utf8PathBuf};
 use oro_common::{Manifest, Repository};
 use oro_package_spec::GitInfo;
@@ -15,22 +15,25 @@ use crate::{
 /// See [`crate::get_workspaces`][] for the semantics.
 ///
 /// This relies on orogene's understanding of npm packages.
-pub fn get_workspace(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> WorkspaceSearch {
-    let manifest_path = match workspace_manifest(root_dir, start_dir) {
+pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> WorkspaceSearch {
+    let manifest_path = match workspace_manifest(start_dir, clamp_to_dir) {
         Ok(path) => path,
         Err(e) => {
             return WorkspaceSearch::Missing(e);
         }
     };
-    match read_workspace(manifest_path) {
+    match read_workspace(&manifest_path) {
         Ok(workspace) => WorkspaceSearch::Found(workspace),
-        Err(e) => WorkspaceSearch::Broken(e),
+        Err(e) => WorkspaceSearch::Broken {
+            manifest_path,
+            cause: e,
+        },
     }
 }
 
-fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
+fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
     let root = manifest_path.parent().unwrap().to_owned();
-    let manifest = load_manifest(&manifest_path)?;
+    let manifest = load_manifest(manifest_path)?;
 
     // For now this code is fairly naive and doesn't understand workspaces.
     // We assume the first package.json we find is "the root package" and
@@ -43,7 +46,7 @@ fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
 
     // Not having a name is common for virtual manifests, but we don't handle those!
     let Some(package_name) = manifest.name else {
-        return Err(crate::errors::AxoprojectError::NamelessNpmPackage { manifest: manifest_path });
+        return Err(crate::errors::AxoprojectError::NamelessNpmPackage { manifest: manifest_path.to_owned() });
     };
     let version = manifest.version.map(Version::Npm);
     let authors = manifest
@@ -79,9 +82,9 @@ fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
     // Also arguably we shouldn't hard fail if we fail to make sense of the
     // binaries... except the whole point of axoproject is to find binaries?
     let build_manifest =
-        oro_common::BuildManifest::from_path(&manifest_path).map_err(|details| {
+        oro_common::BuildManifest::from_path(manifest_path).map_err(|details| {
             AxoprojectError::BuildInfoParse {
-                manifest_path: manifest_path.clone(),
+                manifest_path: manifest_path.to_owned(),
                 details,
             }
         })?;
@@ -102,7 +105,7 @@ fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
     let mut info = PackageInfo {
         name: package_name,
         version,
-        manifest_path: manifest_path.clone(),
+        manifest_path: manifest_path.to_owned(),
         package_root: root.clone(),
         description: manifest.description,
         authors,
@@ -139,7 +142,7 @@ fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
         target_dir,
         workspace_dir: root,
         package_info,
-        manifest_path,
+        manifest_path: manifest_path.to_owned(),
         repository_url,
         root_auto_includes,
         warnings: vec![],
@@ -150,31 +153,13 @@ fn read_workspace(manifest_path: Utf8PathBuf) -> Result<WorkspaceInfo> {
     })
 }
 
-/// Find the workspace root given this starting dir (potentially walking up to ancestor dirs)
-fn workspace_manifest(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
-    let manifest = LocalAsset::search_ancestors(start_dir, "package.json")?;
-
-    if let Some(root_dir) = root_dir {
-        let root_dir = if root_dir.is_relative() {
-            let current_dir = LocalAsset::current_dir()?;
-            current_dir.join(root_dir)
-        } else {
-            root_dir.to_owned()
-        };
-
-        let improperly_nested = pathdiff::diff_utf8_paths(&manifest, root_dir)
-            .map(|p| p.starts_with(".."))
-            .unwrap_or(true);
-
-        if improperly_nested {
-            return Err(AxoassetError::SearchFailed {
-                start_dir: start_dir.to_owned(),
-                desired_filename: "package.json".to_owned(),
-            })?;
-        }
-    }
-
-    Ok(manifest)
+/// Find a package.json, starting at the given dir and walking up to ancestor dirs,
+/// optionally clamped to a given ancestor dir
+fn workspace_manifest(
+    start_dir: &Utf8Path,
+    clamp_to_dir: Option<&Utf8Path>,
+) -> Result<Utf8PathBuf> {
+    crate::find_file("package.json", start_dir, clamp_to_dir)
 }
 
 /// Load and parse a package.json

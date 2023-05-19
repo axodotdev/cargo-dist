@@ -7,6 +7,7 @@
 
 use std::fmt::Display;
 
+use axoasset::{AxoassetError, LocalAsset};
 use camino::{Utf8Path, Utf8PathBuf};
 use errors::{AxoprojectError, Result};
 use tracing::info;
@@ -67,7 +68,15 @@ pub enum WorkspaceSearch {
     /// We found it
     Found(WorkspaceInfo),
     /// We found something that looks like a workspace but there's something wrong with it
-    Broken(AxoprojectError),
+    Broken {
+        /// Path to the closest manifest we found.
+        ///
+        /// Note that for workspaces we may have had a parsing error with a different file,
+        /// but at least this is the file we found that made us discover that workspace!
+        manifest_path: Utf8PathBuf,
+        /// The error we encountered
+        cause: AxoprojectError,
+    },
     /// We found no hint of this kind of workspace
     Missing(AxoprojectError),
 }
@@ -332,12 +341,12 @@ pub struct AutoIncludes {
 ///
 /// Concepts of both will largely be conflated, the only distinction will be
 /// the top level [`WorkspaceKind`][].
-pub fn get_workspaces(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> Workspaces {
+pub fn get_workspaces(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> Workspaces {
     Workspaces {
         #[cfg(feature = "cargo-projects")]
-        rust: rust::get_workspace(root_dir, start_dir),
+        rust: rust::get_workspace(start_dir, clamp_to_dir),
         #[cfg(feature = "npm-projects")]
-        javascript: javascript::get_workspace(root_dir, start_dir),
+        javascript: javascript::get_workspace(start_dir, clamp_to_dir),
     }
 }
 
@@ -440,6 +449,38 @@ pub fn merge_auto_includes(info: &mut PackageInfo, auto_includes: &AutoIncludes)
     if info.license_files.is_empty() {
         info.license_files = auto_includes.licenses.clone();
     }
+}
+
+/// Find a file with the given name, starting at the given dir and walking up to ancestor dirs,
+/// optionally clamped to a given ancestor dir
+pub fn find_file(
+    name: &str,
+    start_dir: &Utf8Path,
+    clamp_to_dir: Option<&Utf8Path>,
+) -> Result<Utf8PathBuf> {
+    let manifest = LocalAsset::search_ancestors(start_dir, name)?;
+
+    if let Some(root_dir) = clamp_to_dir {
+        let root_dir = if root_dir.is_relative() {
+            let current_dir = LocalAsset::current_dir()?;
+            current_dir.join(root_dir)
+        } else {
+            root_dir.to_owned()
+        };
+
+        let improperly_nested = pathdiff::diff_utf8_paths(&manifest, root_dir)
+            .map(|p| p.starts_with(".."))
+            .unwrap_or(true);
+
+        if improperly_nested {
+            return Err(AxoassetError::SearchFailed {
+                start_dir: start_dir.to_owned(),
+                desired_filename: name.to_owned(),
+            })?;
+        }
+    }
+
+    Ok(manifest)
 }
 
 /*

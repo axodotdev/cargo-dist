@@ -28,7 +28,7 @@ fn real_main(app: &axocli::CliApp<Cli>) -> Result<(), Report> {
         .clone()
         .unwrap_or_else(|| LocalAsset::current_dir().unwrap());
 
-    let workspaces = axoproject::get_workspaces(root_dir.as_deref(), &start_dir);
+    let workspaces = axoproject::get_workspaces(&start_dir, root_dir.as_deref());
 
     match app.config.output_format {
         OutputFormat::Human => print_searches(workspaces),
@@ -53,8 +53,13 @@ fn print_search(search: WorkspaceSearch, name: &str) {
             let err = Report::new(e).wrap_err(format!("Couldn't find a {name} project"));
             eprintln!("{:?}", err);
         }
-        WorkspaceSearch::Broken(e) => {
-            let err = Report::new(e).wrap_err(format!("Your {name} project has some issues"));
+        WorkspaceSearch::Broken {
+            manifest_path,
+            cause,
+        } => {
+            let err = Report::new(cause).wrap_err(format!(
+                "We found a broken {name} project at {manifest_path}"
+            ));
             eprintln!("{:?}", err);
         }
     }
@@ -187,9 +192,10 @@ impl JsonWorkspaceSearch {
             WorkspaceSearch::Found(info) => {
                 JsonWorkspaceSearch::Found(JsonWorkspaceInfo::from_real(root, info))
             }
-            WorkspaceSearch::Broken(e) => {
-                JsonWorkspaceSearch::Broken(json_diagnostic_from_real(root, e))
-            }
+            WorkspaceSearch::Broken {
+                manifest_path: _,
+                cause,
+            } => JsonWorkspaceSearch::Broken(json_diagnostic_from_real(root, cause)),
             WorkspaceSearch::Missing(e) => {
                 JsonWorkspaceSearch::Missing(json_diagnostic_from_real(root, e))
             }

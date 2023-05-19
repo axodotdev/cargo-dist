@@ -6,7 +6,7 @@ use crate::{
     errors::AxoprojectError, PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind,
     WorkspaceSearch,
 };
-use axoasset::{AxoassetError, LocalAsset, SourceFile};
+use axoasset::SourceFile;
 use camino::{Utf8Path, Utf8PathBuf};
 use guppy::{
     graph::{BuildTargetId, BuildTargetKind, DependencyDirection, PackageGraph, PackageMetadata},
@@ -22,19 +22,25 @@ pub type CargoProfiles = BTreeMap<String, CargoProfile>;
 /// See [`crate::get_workspaces`][] for the semantics.
 ///
 /// This relies on `cargo metadata` so will only work if you have `cargo` installed.
-pub fn get_workspace(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> WorkspaceSearch {
-    // The call to `workspace_manifest` here is redundant with what cargo-metadata will
+pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> WorkspaceSearch {
+    // The call to `workspace_manifest` here is technically redundant with what cargo-metadata will
     // do, but doing it ourselves makes it really easy to distinguish between
-    // "no workspace at all" and "workspace is busted".
-    if let Err(e) = workspace_manifest(root_dir, start_dir) {
-        return WorkspaceSearch::Missing(e);
-    }
+    // "no workspace at all" and "workspace is busted", and to provide better context in the latter.
+    let manifest_path = match workspace_manifest(start_dir, clamp_to_dir) {
+        Ok(path) => path,
+        Err(e) => {
+            return WorkspaceSearch::Missing(e);
+        }
+    };
 
     // There's definitely some kind of Cargo workspace, now try to make sense of it
     let workspace = package_graph(start_dir).and_then(|graph| workspace_info(&graph));
     match workspace {
         Ok(workspace) => WorkspaceSearch::Found(workspace),
-        Err(e) => WorkspaceSearch::Broken(e),
+        Err(e) => WorkspaceSearch::Broken {
+            manifest_path,
+            cause: e,
+        },
     }
 }
 
@@ -272,30 +278,13 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
     Ok(info)
 }
 
-/// Find the potential workspace root given this starting dir (potentially walking up to ancestor dirs)
-
-fn workspace_manifest(root_dir: Option<&Utf8Path>, start_dir: &Utf8Path) -> Result<Utf8PathBuf> {
-    let manifest = LocalAsset::search_ancestors(start_dir, "Cargo.toml")?;
-
-    if let Some(root_dir) = root_dir {
-        let root_dir = if root_dir.is_relative() {
-            let current_dir = LocalAsset::current_dir()?;
-            current_dir.join(root_dir)
-        } else {
-            root_dir.to_owned()
-        };
-        let improperly_nested = pathdiff::diff_utf8_paths(&manifest, root_dir)
-            .map(|p| p.starts_with(".."))
-            .unwrap_or(true);
-        if improperly_nested {
-            return Err(AxoassetError::SearchFailed {
-                start_dir: start_dir.to_owned(),
-                desired_filename: "Cargo.toml".to_owned(),
-            })?;
-        }
-    }
-
-    Ok(manifest)
+/// Find a Cargo.toml, starting at the given dir and walking up to ancestor dirs,
+/// optionally clamped to a given ancestor dir
+fn workspace_manifest(
+    start_dir: &Utf8Path,
+    clamp_to_dir: Option<&Utf8Path>,
+) -> Result<Utf8PathBuf> {
+    crate::find_file("Cargo.toml", start_dir, clamp_to_dir)
 }
 
 /// Load the root workspace toml into toml-edit form
