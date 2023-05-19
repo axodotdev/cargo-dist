@@ -1,3 +1,9 @@
+# Version 0.4.0 (2023-05-19)
+
+* the "root_dir" argument has been made the second argument in a ton of APIs, and renamed to "clamp_to_dir"
+* the find_file API has been factored out and exposed as public
+* Broken now includes a path to the manifest we found, to help with error messages and disambiguation
+
 # Version 0.3.0 (2023-04-24)
 
 * Added support for Cargo and NPM manifest keywords. For Cargo projects specifically, these will be squashed together
