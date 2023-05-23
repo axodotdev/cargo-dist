@@ -1,3 +1,7 @@
+# Version 0.4.1 (2023-05-23)
+
+Just updating deps to get improvements to axoasset
+
 # Version 0.4.0 (2023-05-19)
 
 * the "root_dir" argument has been made the second argument in a ton of APIs, and renamed to "clamp_to_dir"
