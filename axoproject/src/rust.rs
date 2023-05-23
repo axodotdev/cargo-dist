@@ -290,20 +290,8 @@ fn workspace_manifest(
 /// Load the root workspace toml into toml-edit form
 pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
     let manifest_src = SourceFile::load_local(manifest_path)?;
-    // FIXME: upstream better toml-edit support into axoasset..?
-    manifest_src
-        .contents()
-        .parse::<toml_edit::Document>()
-        .map_err(|details| {
-            let span = details
-                .line_col()
-                .and_then(|(line, col)| manifest_src.span_for_line_col(line, col));
-            AxoprojectError::ParseCargoToml {
-                source: manifest_src,
-                span,
-                details,
-            }
-        })
+    let manifest = manifest_src.deserialize_toml_edit()?;
+    Ok(manifest)
 }
 
 fn get_profiles(manifest_path: &Utf8Path) -> Result<BTreeMap<String, CargoProfile>> {

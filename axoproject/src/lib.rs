@@ -4,6 +4,7 @@
 //! The main entry point is [`get_workspaces`][].
 
 #![deny(missing_docs)]
+#![allow(clippy::result_large_err)]
 
 use std::fmt::Display;
 
