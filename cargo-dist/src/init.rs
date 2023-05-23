@@ -26,7 +26,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     let workspace = tasks::get_project()?;
 
     // Load in the workspace toml to edit and write back
-    let mut workspace_toml = tasks::load_root_cargo_toml(&workspace.manifest_path)?;
+    let mut workspace_toml = axoproject::rust::load_root_cargo_toml(&workspace.manifest_path)?;
 
     let check = console::style("✔".to_string()).for_stderr().green();
 

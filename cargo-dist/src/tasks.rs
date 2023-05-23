@@ -2333,23 +2333,6 @@ pub fn get_host_target(cargo: &str) -> Result<String> {
     ))
 }
 
-/// Load the root workspace toml into toml-edit form
-pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
-    // FIXME: this should really be factored out into some sort of i/o module
-    let mut workspace_toml_file = File::open(manifest_path)
-        .into_diagnostic()
-        .wrap_err("couldn't load root workspace Cargo.toml")?;
-    let mut workspace_toml_str = String::new();
-    workspace_toml_file
-        .read_to_string(&mut workspace_toml_str)
-        .into_diagnostic()
-        .wrap_err("couldn't read root workspace Cargo.toml")?;
-    workspace_toml_str
-        .parse::<toml_edit::Document>()
-        .into_diagnostic()
-        .wrap_err("couldn't parse root workspace Cargo.toml")
-}
-
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
     #[allow(clippy::if_same_then_else)]
     if target.contains("windows-msvc") {
@@ -2488,7 +2471,7 @@ pub(crate) fn parse_metadata_table(metadata_table: Option<&serde_json::Value>) -
 pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
-    match axoproject::rust::get_workspace(None, &start_dir) {
+    match axoproject::rust::get_workspace(&start_dir, None) {
         WorkspaceSearch::Found(mut workspace) => {
             // This is a goofy as heck workaround for two facts:
             //   * the convenient Report approach requires us to provide an Error by-val
@@ -2506,8 +2489,11 @@ pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
             Ok(workspace)
         }
         WorkspaceSearch::Missing(e) => Err(Report::new(e).wrap_err("no cargo workspace found")),
-        WorkspaceSearch::Broken(e) => {
-            Err(Report::new(e).wrap_err("your cargo workspace has an issue"))
-        }
+        WorkspaceSearch::Broken {
+            manifest_path,
+            cause,
+        } => Err(Report::new(cause).wrap_err(format!(
+            "We found a potential Rust project at {manifest_path} but there were issues"
+        ))),
     }
 }

@@ -300,11 +300,7 @@ fn generate_checksum(
     for byte in hash {
         write!(&mut output, "{:02x}", byte).unwrap();
     }
-    axoasset::LocalAsset::write_new(
-        &output,
-        dest_path.file_name().unwrap(),
-        dest_path.parent().unwrap().as_str(),
-    )?;
+    axoasset::LocalAsset::write_new(&output, dest_path)?;
     Ok(())
 }
 
