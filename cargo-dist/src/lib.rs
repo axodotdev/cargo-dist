@@ -18,7 +18,7 @@ use std::{
 };
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Release};
+use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
 use semver::Version;
 use tracing::{info, warn};
@@ -111,7 +111,7 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
         }
 
         // And report the release
-        releases.push(Release {
+        releases.push(cargo_dist_schema::Release {
             app_name: release.app_name.clone(),
             app_version: release.version.to_string(),
             artifacts,
