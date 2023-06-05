@@ -192,13 +192,6 @@ fn install_dist_for_github_runner<'a>(
 
 /// The current version of cargo-dist
 const SELF_DIST_VERSION: &str = env!("CARGO_PKG_VERSION");
-/// The first epoch of cargo-dist, after this version a bunch of things changed
-/// and we don't support generating CI for that design anymore!
-const DIST_EPOCH_1: &str = "0.0.2";
-/// Second epoch of cargo-dist, after this we stopped putting versions in artifact ids.
-/// This changes the download URL, but everything else works the same.
-const DIST_EPOCH_2: &str = "0.0.5";
-/// The base URL to fetch cargo-dist artifacts from (tag gets appended)
 const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/releases/download";
 
 /// Get the command to invoke to install cargo-dist via sh script
@@ -206,15 +199,14 @@ fn install_dist_sh_for_version(version: &Version) -> String {
     if let Some(git) = install_dist_git(version) {
         return git;
     }
-    let epoch1 = Version::parse(DIST_EPOCH_1).unwrap();
-    let epoch2 = Version::parse(DIST_EPOCH_2).unwrap();
-    let installer_name = if version > &epoch2 {
-        "cargo-dist-installer.sh".to_owned()
-    } else if version > &epoch1 {
+    let format = cargo_dist_schema::format_of_version(version);
+    let installer_name = if format.unsupported() {
+        // FIXME: we should probably do this check way higher up and produce a proper err...
+        panic!("requested cargo-dist v{version}, which is not supported by the this copy of cargo-dist ({SELF_DIST_VERSION})");
+    } else if format.artifact_names_contain_versions() {
         format!("cargo-dist-v{version}-installer.sh")
     } else {
-        // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested cargo-dist <= {DIST_EPOCH_1}, which is not supported by the this copy of cargo-dist ({SELF_DIST_VERSION})");
+        "cargo-dist-installer.sh".to_owned()
     };
 
     // FIXME: it would be nice if these values were somehow using all the machinery
@@ -228,15 +220,14 @@ fn install_dist_ps1_for_version(version: &Version) -> String {
     if let Some(git) = install_dist_git(version) {
         return git;
     }
-    let epoch1 = Version::parse(DIST_EPOCH_1).unwrap();
-    let epoch2 = Version::parse(DIST_EPOCH_2).unwrap();
-    let installer_name = if version > &epoch2 {
-        "cargo-dist-installer.ps1".to_owned()
-    } else if version > &epoch1 {
+    let format = cargo_dist_schema::format_of_version(version);
+    let installer_name = if format.unsupported() {
+        // FIXME: we should probably do this check way higher up and produce a proper err...
+        panic!("requested cargo-dist v{version}, which is not supported by the this copy of cargo-dist ({SELF_DIST_VERSION})");
+    } else if format.artifact_names_contain_versions() {
         format!("cargo-dist-v{version}-installer.ps1")
     } else {
-        // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested cargo-dist <= {DIST_EPOCH_1}, which is not supported by this copy of cargo-dist ({SELF_DIST_VERSION})");
+        "cargo-dist-installer.ps1".to_owned()
     };
 
     // FIXME: it would be nice if these values were somehow using all the machinery

@@ -11,6 +11,7 @@
 use std::collections::BTreeMap;
 
 use schemars::JsonSchema;
+use semver::Version;
 use serde::{Deserialize, Serialize};
 
 /// A local system path on the machine cargo-dist was run.
@@ -193,6 +194,49 @@ pub struct ExecutableAsset {
     pub symbols_artifact: Option<String>,
 }
 
+/// Info about a manifest version
+pub struct VersionInfo {
+    /// The version
+    pub version: Version,
+    /// The rough epoch of the format
+    pub format: Format,
+}
+
+/// The current version of cargo-dist-schema
+pub const SELF_VERSION: &str = env!("CARGO_PKG_VERSION");
+/// The first epoch of cargo-dist, after this version a bunch of things changed
+/// and we don't support that design anymore!
+pub const DIST_EPOCH_1_MAX: &str = "0.0.3-prerelease8";
+/// Second epoch of cargo-dist, after this we stopped putting versions in artifact ids.
+/// This changes the download URL, but everything else works the same.
+pub const DIST_EPOCH_2_MAX: &str = "0.0.6-prerelease6";
+
+/// More coarse-grained version info, indicating periods when significant changes were made
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Format {
+    /// THE BEFORE TIMES -- Unsupported
+    Epoch1,
+    /// First stable versions; during this epoch artifact names/ids contained their version numbers.
+    Epoch2,
+    /// Same as Epoch2, but now artifact names/ids don't include the version number,
+    /// making /latest/ a stable path/url you can perma-link. This only affects download URLs.
+    Epoch3,
+    /// The version is newer than this version of cargo-dist-schema, so we don't know. Most
+    /// likely it's compatible/readable, but maybe a breaking change was made?
+    Future,
+}
+
+impl Format {
+    /// Whether this format is too old to be supported
+    pub fn unsupported(&self) -> bool {
+        self <= &Format::Epoch1
+    }
+    /// Whether this format has version numbers in artifact names
+    pub fn artifact_names_contain_versions(&self) -> bool {
+        self <= &Format::Epoch2
+    }
+}
+
 impl DistManifest {
     /// Create a new DistManifest
     pub fn new(releases: Vec<Release>, artifacts: BTreeMap<String, Artifact>) -> Self {
@@ -211,6 +255,66 @@ impl DistManifest {
     /// Get the JSON Schema for a DistManifest
     pub fn json_schema() -> schemars::schema::RootSchema {
         schemars::schema_for!(DistManifest)
+    }
+
+    /// Get the format of the manifest
+    ///
+    /// If anything goes wrong we'll default to Format::Future
+    pub fn format(&self) -> Format {
+        self.dist_version
+            .as_ref()
+            .and_then(|v| v.parse().ok())
+            .map(|v| format_of_version(&v))
+            .unwrap_or(Format::Future)
+    }
+
+    /// Convenience for iterating artifacts
+    pub fn artifacts_for_release<'a>(
+        &'a self,
+        release: &'a Release,
+    ) -> impl Iterator<Item = (&'a str, &'a Artifact)> {
+        release
+            .artifacts
+            .iter()
+            .filter_map(|k| Some((&**k, self.artifacts.get(k)?)))
+    }
+}
+
+/// Helper to read the raw version from serialized json
+fn dist_version(input: &str) -> Option<Version> {
+    #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+    struct PartialDistManifest {
+        /// The version of cargo-dist that generated this
+        #[serde(default)]
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub dist_version: Option<String>,
+    }
+
+    let manifest: PartialDistManifest = serde_json::from_str(input).ok()?;
+    let version: Version = manifest.dist_version?.parse().ok()?;
+    Some(version)
+}
+
+/// Take serialized json and minimally parse out version info
+pub fn check_version(input: &str) -> Option<VersionInfo> {
+    let version = dist_version(input)?;
+    let format = format_of_version(&version);
+    Some(VersionInfo { version, format })
+}
+
+/// Get the format for a given version
+pub fn format_of_version(version: &Version) -> Format {
+    let epoch1 = Version::parse(DIST_EPOCH_1_MAX).unwrap();
+    let epoch2 = Version::parse(DIST_EPOCH_2_MAX).unwrap();
+    let self_ver = Version::parse(SELF_VERSION).unwrap();
+    if version > &self_ver {
+        Format::Future
+    } else if version > &epoch2 {
+        Format::Epoch3
+    } else if version > &epoch1 {
+        Format::Epoch2
+    } else {
+        Format::Epoch1
     }
 }
 
