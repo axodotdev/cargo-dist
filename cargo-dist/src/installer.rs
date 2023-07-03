@@ -42,12 +42,12 @@ fn write_install_sh_script<W: std::io::Write>(
         ..
     } = info;
 
-    let platform_entry_template = r###"
+    let platform_entry_template = r#"
         "{{TARGET}}")
             _artifact_name="{{ARTIFACT_NAME}}"
             _zip_ext="{{ZIP_EXT}}"
             _bins="{{BINS}}"
-            ;;"###;
+            ;;"#;
 
     let mut entries = String::new();
 
@@ -145,12 +145,12 @@ fn write_install_ps_script<W: std::io::Write>(
 
     let platform_info_template = r###"@{{{ENTRIES}}
   }"###;
-    let platform_entry_template = r###"
+    let platform_entry_template = r#"
     "{{TARGET}}" = @{
       "artifact_name" = "{{ARTIFACT_NAME}}"
       "bins" = {{BINS}}
       "zip_ext" = "{{ZIP_EXT}}"
-    }"###;
+    }"#;
 
     let mut entries = String::new();
     for artifact in artifacts {
@@ -295,12 +295,12 @@ fn apply_npm_templates(
         json!(info.bin)
     );
 
-    let platform_entry_template = r###"
+    let platform_entry_template = r#"
   {{TARGET}}: {
     "artifact_name": {{ARTIFACT_NAME}},
     "bins": {{BINS}},
     "zip_ext": {{ZIP_EXT}}
-  }"###;
+  }"#;
 
     let mut platform_info = String::new();
     let last_platform = info.inner.artifacts.len() - 1;

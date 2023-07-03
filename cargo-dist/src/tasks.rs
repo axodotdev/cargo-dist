@@ -1368,7 +1368,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let release = self.release(to_release);
         let release_id = &release.id;
         let Some(download_url) = &self.inner.artifact_download_url else {
-            warn!("skipping powershell installer: couldn't compute a URL to download artifacts from");
+            warn!(
+                "skipping powershell installer: couldn't compute a URL to download artifacts from"
+            );
             return;
         };
         let artifact_name = format!("{release_id}-installer.ps1");
@@ -1581,7 +1583,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let mut build_steps = vec![];
         let cargo_builds = self.compute_cargo_builds();
-        build_steps.extend(cargo_builds.into_iter());
+        build_steps.extend(cargo_builds);
 
         for artifact in &self.inner.artifacts {
             match &artifact.kind {
@@ -1759,14 +1761,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // of the release notes.
         //
         // If that fails, try to find a section called "Unreleased" and use that (if it's a prerelease).
-        let Some((title, notes)) =
-            try_extract_changelog_exact(&changelogs, announcing_version)
-                .or_else(|| try_extract_changelog_normalized(&changelogs, announcing_version))
-                .or_else(|| try_extract_changelog_unreleased(&changelogs, announcing_version))
-            else {
-                info!("failed to find {announcing_version} in changelogs, skipping changelog generation");
-                return;
-            };
+        let Some((title, notes)) = try_extract_changelog_exact(&changelogs, announcing_version)
+            .or_else(|| try_extract_changelog_normalized(&changelogs, announcing_version))
+            .or_else(|| try_extract_changelog_unreleased(&changelogs, announcing_version))
+        else {
+            info!(
+                "failed to find {announcing_version} in changelogs, skipping changelog generation"
+            );
+            return;
+        };
 
         info!("successfully parsed changelog!");
         self.inner.announcement_title = Some(title);

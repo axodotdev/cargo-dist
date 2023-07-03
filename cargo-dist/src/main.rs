@@ -336,13 +336,26 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
 
             if in_subcommands_listing && !line.starts_with("     ") {
                 // subcommand names are list items
-                let own_subcommand_name = line.trim();
-                if !own_subcommand_name.is_empty() {
-                    write!(
-                        out,
-                        "* [{own_subcommand_name}](#{app_name}-{own_subcommand_name}): "
-                    )?;
-                    continue;
+                let subcommand_line = line.trim();
+                if let Some((first, rest)) = subcommand_line.split_once(' ') {
+                    let own_subcommand_name = first.trim();
+                    let desc = rest.trim();
+                    if !own_subcommand_name.is_empty() {
+                        writeln!(
+                            out,
+                            "* [{own_subcommand_name}](#{app_name}-{own_subcommand_name}): {desc}"
+                        )?;
+                        continue;
+                    }
+                } else {
+                    let own_subcommand_name = subcommand_line;
+                    if !own_subcommand_name.is_empty() {
+                        write!(
+                            out,
+                            "* [{own_subcommand_name}](#{app_name}-{own_subcommand_name}): "
+                        )?;
+                        continue;
+                    }
                 }
             }
             // The rest is indented, get rid of that

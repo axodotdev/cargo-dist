@@ -1,5 +1,6 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
+assertion_line: 154
 expression: format_outputs(&output)
 ---
 stdout:
@@ -10,7 +11,6 @@ analyzing workspace:
   cargo-dist (didn't match tag v1.0.0-FAKEVERSION)
     [bin] cargo-dist
   cargo-dist-schema (no binaries)
-
 
   × This workspace doesn't have anything for cargo-dist to Release!
 
