@@ -31,7 +31,7 @@ on:
   push:
     branches:
       - main
-  
+
   # Whenever a workflow called "Release" completes, update the docs!
   #
   # If you're using cargo-dist, this is recommended, as it will ensure that
@@ -57,7 +57,7 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: swatinem/rust-cache@v2
-      
+
       # Install mdbook plugins
       - name: Install mdbook plugins
         run: |
@@ -68,7 +68,7 @@ jobs:
       # This will write all output to ./public/ (including copying mdbook's output to there)
       - name: Install and run oranda
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/download/v0.1.0-prerelease.1/oranda-installer.sh | sh
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/download/v0.1.0/oranda-installer.sh | sh
           cd cargo-dist
           oranda build
 
@@ -89,3 +89,4 @@ jobs:
           folder: cargo-dist/public
           token: ${{ secrets.GITHUB_TOKEN }}
           single-commit: true
+
