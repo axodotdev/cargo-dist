@@ -381,7 +381,11 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
     // Collect up the compiler messages to find out where binaries ended up
     let reader = std::io::BufReader::new(task.stdout.take().unwrap());
     for message in cargo_metadata::Message::parse_stream(reader) {
-        let Ok(message) = message.into_diagnostic().wrap_err("failed to parse cargo json message").map_err(|e| warn!("{:?}", e)) else {
+        let Ok(message) = message
+            .into_diagnostic()
+            .wrap_err("failed to parse cargo json message")
+            .map_err(|e| warn!("{:?}", e))
+        else {
             // It's ok for there to be messages we don't understand if we don't care about them.
             // At the end we'll check if we got the messages we *do* need.
             continue;
