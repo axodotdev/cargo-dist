@@ -1,25 +1,37 @@
 {
-  "readme_path": "../README.md",
-  "favicon": "https://www.axo.dev/favicon.ico",
-  "path_prefix": "cargo-dist",
-  "changelog": true,
-  "social": {
-    "image": "https://www.axo.dev/meta_small.jpeg",
-    "image_alt": "axo",
-    "twitter_account": "@axodotdev"
+  "project": {
+    "readme_path": "../README.md"
   },
-  "mdbook": {
-    "path": "../book"
+  "build": {
+    "path_prefix": "cargo-dist"
   },
-  "artifacts": {
-    "cargo_dist": true,
-    "package_managers": {
-        "crates.io": "cargo install cargo-dist --locked --profile=dist"
+  "marketing": {
+    "social": {
+      "image": "https://www.axo.dev/meta_small.jpeg",
+      "image_alt": "axo",
+      "twitter_account": "@axodotdev"
+    },
+    "analytics": {
+      "plausible": {
+        "domain": "opensource.axo.dev"
+      }
     }
   },
-  "analytics": {
-    "plausible": {
-      "domain": "opensource.axo.dev"
+  "styles": {
+    "theme": "axo_dark",
+    "favicon": "https://www.axo.dev/favicon.ico"
+  },
+  "components": {
+    "changelog": true,
+    "mdbook": {
+      "path": "../book"
+    },
+    "artifacts": {
+      "package_managers": {
+        "preferred": {
+          "crates.io": "cargo install cargo-dist"
+        }
+      }
     }
   }
 }
