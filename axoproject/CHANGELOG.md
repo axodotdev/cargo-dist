@@ -1,3 +1,8 @@
+# Version 0.4.2 (2023-07-04)
+
+Updating dependencies, specifically axoasset, to remove OpenSSL dependency.
+
+
 # Version 0.4.1 (2023-05-23)
 
 Just updating deps to get improvements to axoasset
