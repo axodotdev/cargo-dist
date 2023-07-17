@@ -9,6 +9,9 @@ stdout:
   "announcement_is_prerelease": "CENSORED"
   "announcement_title": "CENSORED"
   "announcement_github_body": "CENSORED"
+  "system_info": {
+    "cargo_version_line": "CENSORED"
+  }
 }
 
 stderr:

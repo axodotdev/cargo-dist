@@ -125,6 +125,9 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
     manifest.announcement_title = dist.announcement_title.clone();
     manifest.announcement_changelog = dist.announcement_changelog.clone();
     manifest.announcement_github_body = dist.announcement_github_body.clone();
+    manifest.system_info = Some(cargo_dist_schema::SystemInfo {
+        cargo_version_line: dist.tools.cargo.version_line.clone(),
+    });
     manifest
 }
 
@@ -315,7 +318,7 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         target.target_triple, target.profile
     );
 
-    let mut command = Command::new(&dist_graph.cargo);
+    let mut command = Command::new(&dist_graph.tools.cargo.cmd);
     command
         .arg("build")
         .arg("--profile")

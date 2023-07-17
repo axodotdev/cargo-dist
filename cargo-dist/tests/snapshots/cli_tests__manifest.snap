@@ -10,6 +10,9 @@ stdout:
   "announcement_title": "CENSORED"
   "announcement_changelog": "CENSORED"
   "announcement_github_body": "CENSORED"
+  "system_info": {
+    "cargo_version_line": "CENSORED"
+  },
   "releases": [
     {
       "app_name": "cargo-dist",
