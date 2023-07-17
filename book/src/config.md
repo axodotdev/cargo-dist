@@ -226,6 +226,20 @@ If that downside is big enough for you, this setting is a good idea.
 [workspace-hack]: https://docs.rs/cargo-hakari/latest/cargo_hakari/about/index.html
 
 
+### merge-tasks
+
+> since 0.1.0
+
+Example `merge-tasks = true`
+
+Whether we should try to merge otherwise-parallelizable tasks onto the same machine, sacrificing latency and fault-isolation for more the sake of minor effeciency gains.
+
+For example, if you build for x64 macos and arm64 macos, by default we will generate ci which builds those independently on separate logical machines. With this enabled we will build both of those platforms together on the same machine, making it take twice as long as any other build and making it impossible for only one of them to succeed.
+
+The default is `false`. Before 0.1.0 it was always `true` and couldn't be changed, making releases annoyingly slow (and technically less fault-isolated). This config was added to allow you to restore the old behaviour, if you really want.
+
+
+
 ## Subsetting CI Flags
 
 Several `metadata.dist` configs have globally available CLI equivalents. These can be used to select a subset of `metadata.dist` list for that run. If you don't pass any, it will be as-if you passed all the values in `metadata.dist`. You can pass these flags multiple times to provide a list. This includes:

@@ -156,6 +156,7 @@ fn get_new_dist_metadata(
             npm_scope: None,
             checksum: None,
             precise_builds: None,
+            merge_tasks: None,
         }
     };
 
@@ -516,6 +517,10 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
     const KEY_PRECISE_BUILDS: &str = "precise-builds";
     const DESC_PRECISE_BUILDS: &str = "# Build only the required packages, and individually\n";
 
+    const KEY_MERGE_TASKS: &str = "merge-tasks";
+    const DESC_MERGE_TASKS: &str =
+        "# Whether to run otherwise-parallelizable tasks on the same machine\n";
+
     let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
     if let Some(t) = workspace.as_table_mut() {
         t.set_implicit(true)
@@ -653,6 +658,14 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
             .key_decor_mut(KEY_PRECISE_BUILDS)
             .unwrap()
             .set_prefix(DESC_PRECISE_BUILDS);
+    }
+
+    if let Some(val) = meta.merge_tasks {
+        table.insert(KEY_MERGE_TASKS, value(val));
+        table
+            .key_decor_mut(KEY_MERGE_TASKS)
+            .unwrap()
+            .set_prefix(DESC_MERGE_TASKS);
     }
 
     table

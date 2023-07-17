@@ -95,7 +95,11 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
     }
 
     // Figure out what Local Artifact tasks we need
-    let local_runs = distribute_targets_to_runners(local_targets);
+    let local_runs = if dist.merge_tasks {
+        distribute_targets_to_runners_merged(local_targets)
+    } else {
+        distribute_targets_to_runners_split(local_targets)
+    };
     for (runner, targets) in local_runs {
         use std::fmt::Write;
         let install_dist =
@@ -142,10 +146,20 @@ fn push_github_artifacts_matrix_entry(
 }
 
 /// Given a set of targets we want to build local artifacts for, map them to Github Runners
-fn distribute_targets_to_runners<'a>(
-    targets: SortedSet<&'a TargetTriple>,
-) -> impl Iterator<Item = (GithubRunner, Vec<&'a TargetTriple>)> {
-    let mut groups = SortedMap::<GithubRunner, Vec<&'a TargetTriple>>::new();
+/// while preferring to merge builds that can happen on the same machine.
+///
+/// This optimizes for machine-hours, at the cost of latency and fault-isolation.
+///
+/// Typically this will result in both x64 macos and arm64 macos getting shoved onto
+/// the same runner, making the entire release process get bottlenecked on the twice-as-long
+/// macos builds. It also makes it impossible to have one macos build fail and the other
+/// succeed (uploading itself to the draft release).
+///
+/// In priniciple it does remove some duplicated setup work, so this is ostensibly "cheaper".
+fn distribute_targets_to_runners_merged(
+    targets: SortedSet<&TargetTriple>,
+) -> std::vec::IntoIter<(GithubRunner, Vec<&TargetTriple>)> {
+    let mut groups = SortedMap::<GithubRunner, Vec<&TargetTriple>>::new();
     for target in targets {
         let runner = github_runner_for_target(target);
         let runner = runner.unwrap_or_else(|| {
@@ -154,6 +168,26 @@ fn distribute_targets_to_runners<'a>(
             default
         });
         groups.entry(runner).or_default().push(target);
+    }
+    // This extra into_iter+collect is needed to make this have the same
+    // return type as distribute_targets_to_runners_split
+    groups.into_iter().collect::<Vec<_>>().into_iter()
+}
+
+/// Given a set of targets we want to build local artifacts for, map them to Github Runners
+/// while preferring each target gets its own runner for latency and fault-isolation.
+fn distribute_targets_to_runners_split(
+    targets: SortedSet<&TargetTriple>,
+) -> std::vec::IntoIter<(GithubRunner, Vec<&TargetTriple>)> {
+    let mut groups = vec![];
+    for target in targets {
+        let runner = github_runner_for_target(target);
+        let runner = runner.unwrap_or_else(|| {
+            let default = GITHUB_LINUX_RUNNER;
+            warn!("not sure which github runner should be used for {target}, assuming {default}");
+            default
+        });
+        groups.push((runner, vec![target]));
     }
     groups.into_iter()
 }

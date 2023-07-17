@@ -250,6 +250,20 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "precise-builds")]
     pub precise_builds: Option<bool>,
+
+    /// Whether we should try to merge otherwise-parallelizable tasks onto the same machine,
+    /// sacrificing latency and fault-isolation for more the sake of minor effeciency gains.
+    ///
+    /// (defaults to false)
+    ///
+    /// For example, if you build for x64 macos and arm64 macos, by default we will generate ci
+    /// which builds those independently on separate logical machines. With this enabled we will
+    /// build both of those platforms together on the same machine, making it take twice as long
+    /// as any other build and making it impossible for only one of them to succeed.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "merge-tasks")]
+    pub merge_tasks: Option<bool>,
 }
 
 impl DistMetadata {
@@ -268,6 +282,7 @@ impl DistMetadata {
         // * rust_toolchain_version
         // * ci
         // * precise_builds
+        // * merge_tasks
 
         if self.installers.is_none() {
             self.installers = workspace_config.installers.clone();
@@ -391,6 +406,8 @@ pub struct DistGraph {
     pub dist_dir: Utf8PathBuf,
     /// Whether to bother using --package instead of --workspace when building apps
     pub precise_builds: bool,
+    /// Whether to try to merge otherwise-parallelizable tasks the same machine
+    pub merge_tasks: bool,
     /// The desired cargo-dist version for handling this project
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
@@ -966,6 +983,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
         }
         let precise_builds = workspace_metadata.precise_builds.unwrap_or(false);
+        let merge_tasks = workspace_metadata.merge_tasks.unwrap_or(false);
 
         let mut package_metadata = vec![];
         for package in &workspace.package_info {
@@ -975,7 +993,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if package_config.cargo_dist_version.is_some() {
                 warn!("package.metadata.dist.cargo-dist-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
             }
-            if package_config.cargo_dist_version.is_some() {
+            if package_config.rust_toolchain_version.is_some() {
                 warn!("package.metadata.dist.rust-toolchain-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
             }
             if !package_config.ci.is_empty() {
@@ -983,6 +1001,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
             if package_config.precise_builds.is_some() {
                 warn!("package.metadata.dist.precise-builds is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
+            }
+            if package_config.merge_tasks.is_some() {
+                warn!("package.metadata.dist.merge-tasks is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
             }
 
             package_config.make_relative_to(&package.package_root);
@@ -997,6 +1018,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 workspace_dir,
                 dist_dir,
                 precise_builds,
+                merge_tasks,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
                 tools,
