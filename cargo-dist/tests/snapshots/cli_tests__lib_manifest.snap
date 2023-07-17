@@ -13,6 +13,7 @@ stdout:
 
 stderr:
 analyzing workspace:
+ WARN rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains
   cargo-dist (didn't match tag cargo-dist-schema-v1.0.0-FAKEVERSION)
     [bin] cargo-dist
   cargo-dist-schema (no binaries)
