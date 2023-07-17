@@ -53,6 +53,10 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announcement_github_body: Option<String>,
+    /// Info about the toolchain used to build this announcement
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system_info: Option<SystemInfo>,
     /// App releases we're distributing
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -61,6 +65,26 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub artifacts: BTreeMap<ArtifactId, Artifact>,
+}
+
+/// Info about the system/toolchain used to build this announcement.
+///
+/// Note that this is info from the machine that generated this file,
+/// which *ideally* should be similar to the machines that built all the artifacts, but
+/// we can't guarantee that.
+///
+/// dist-manifest.json is by default generated at the start of the build process,
+/// and typically on a linux machine because that's usually the fastest/cheapest
+/// part of CI infra.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SystemInfo {
+    /// The version of Cargo used (first line of cargo -vV)
+    ///
+    /// Note that this is the version used on the machine that generated this file,
+    /// which presumably should be the same version used on all the machines that
+    /// built all the artifacts, but maybe not! It's more likely to be correct
+    /// if rust-toolchain.toml is used with a specific pinned version.
+    pub cargo_version_line: Option<String>,
 }
 
 /// A Release of an Application
@@ -247,6 +271,7 @@ impl DistManifest {
             announcement_title: None,
             announcement_changelog: None,
             announcement_github_body: None,
+            system_info: None,
             releases,
             artifacts,
         }

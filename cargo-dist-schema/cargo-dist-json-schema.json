@@ -57,6 +57,17 @@
       "items": {
         "$ref": "#/definitions/Release"
       }
+    },
+    "system_info": {
+      "description": "Info about the toolchain used to build this announcement",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SystemInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "definitions": {
@@ -318,6 +329,19 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "SystemInfo": {
+      "description": "Info about the system/toolchain used to build this announcement.\n\nNote that this is info from the machine that generated this file, which *ideally* should be similar to the machines that built all the artifacts, but we can't guarantee that.\n\ndist-manifest.json is by default generated at the start of the build process, and typically on a linux machine because that's usually the fastest/cheapest part of CI infra.",
+      "type": "object",
+      "properties": {
+        "cargo_version_line": {
+          "description": "The version of Cargo used (first line of cargo -vV)\n\nNote that this is the version used on the machine that generated this file, which presumably should be the same version used on all the machines that built all the artifacts, but maybe not! It's more likely to be correct if rust-toolchain.toml is used with a specific pinned version.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

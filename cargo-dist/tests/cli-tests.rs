@@ -90,6 +90,7 @@ fn test_manifest() {
         (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
         (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
         (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
+        (r#""cargo_version_line": .*"#, r#""cargo_version_line": "CENSORED""#),
     ]}, {
         insta::assert_snapshot!(format_outputs(&output));
     });
@@ -121,6 +122,7 @@ fn test_lib_manifest() {
         (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
         (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
         (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
+        (r#""cargo_version_line": .*"#, r#""cargo_version_line": "CENSORED""#),
     ]}, {
         insta::assert_snapshot!(format_outputs(&output));
     });
@@ -150,6 +152,7 @@ fn test_error_manifest() {
         (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
         (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
         (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
+        (r#""cargo_version_line": .*"#, r#""cargo_version_line": "CENSORED""#),
     ]}, {
         insta::assert_snapshot!(format_outputs(&output));
     });

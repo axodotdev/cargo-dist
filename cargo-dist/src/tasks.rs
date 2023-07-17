@@ -352,9 +352,9 @@ pub struct DistGraph {
     /// Whether it looks like `cargo dist init` has been run
     pub is_init: bool,
 
-    // Some simple global facts
-    /// The executable cargo told us to find itself at.
-    pub cargo: String,
+    /// Info about the tools we're using to build
+    pub tools: Tools,
+
     /// The cargo target dir.
     pub target_dir: Utf8PathBuf,
     /// The root directory of the current cargo workspace.
@@ -365,11 +365,6 @@ pub struct DistGraph {
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
     pub desired_rust_toolchain: Option<String>,
-    /// The desired ci backends for this project
-    pub tools: Tools,
-    /// The target triple of the current system
-    pub host_target: String,
-
     /// Styles of CI we want to support
     pub ci_style: Vec<CiStyle>,
     /// The git tag used for the announcement (e.g. v1.0.0)
@@ -400,10 +395,23 @@ pub struct DistGraph {
 }
 
 /// Various tools we have found installed on the system
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Tools {
+    /// Info on cargo, which must exist
+    pub cargo: CargoInfo,
     /// rustup, useful for getting specific toolchains
     pub rustup: Option<Tool>,
+}
+
+/// Info about the cargo toolchain we're using
+#[derive(Debug, Clone)]
+pub struct CargoInfo {
+    /// The path/command used to refer to cargo (usually from the CARGO env var)
+    pub cmd: String,
+    /// The first line of running cargo with `-vV`, should be version info
+    pub version_line: Option<String>,
+    /// The host target triple (obtained from `-vV`)
+    pub host_target: String,
 }
 
 /// A tool we have found installed on the system
@@ -904,10 +912,9 @@ struct DistGraphBuilder<'pkg_graph> {
 
 impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     fn new(
-        cargo: String,
+        tools: Tools,
         workspace: &'pkg_graph WorkspaceInfo,
         artifact_mode: ArtifactMode,
-        host_target: String,
     ) -> Self {
         let target_dir = workspace.target_dir.clone();
         let workspace_dir = workspace.workspace_dir.clone();
@@ -945,14 +952,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         Self {
             inner: DistGraph {
                 is_init: dist_profile.is_some(),
-                cargo,
                 target_dir,
                 workspace_dir,
                 dist_dir,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
-                tools: Tools::default(),
-                host_target,
+                tools,
                 announcement_tag: None,
                 announcement_is_prerelease: false,
                 announcement_changelog: None,
@@ -1681,8 +1686,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // If we're trying to cross-compile on macOS, ensure the rustup toolchain
             // is setup!
             if target.ends_with("apple-darwin")
-                && self.inner.host_target.ends_with("apple-darwin")
-                && target != self.inner.host_target
+                && self.inner.tools.cargo.host_target.ends_with("apple-darwin")
+                && target != self.inner.tools.cargo.host_target
             {
                 if let Some(rustup) = self.inner.tools.rustup.clone() {
                     builds.push(BuildStep::Rustup(RustupStep {
@@ -1963,11 +1968,9 @@ impl DistGraph {
 /// Precompute all the work this invocation will need to do
 pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     eprintln!("analyzing workspace:");
-    let cargo = cargo()?;
+    let tools = tool_info()?;
     let workspace = crate::get_project()?;
-    let host_target = get_host_target(&cargo)?;
-    let mut graph = DistGraphBuilder::new(cargo, &workspace, cfg.artifact_mode, host_target);
-    graph.inner.tools = tool_info();
+    let mut graph = DistGraphBuilder::new(tools, &workspace, cfg.artifact_mode);
 
     // First thing's first: if they gave us an announcement tag then we should try to parse it
     let mut announcing_package = None;
@@ -2024,7 +2027,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
 
     // If no targets were specified, just use the host target
-    let host_target_triple = [graph.inner.host_target.clone()];
+    let host_target_triple = [graph.inner.tools.cargo.host_target.clone()];
     // If all targets specified, union together the targets our packages support
     // Note that this uses BTreeSet as an intermediate to make the order stable
     let all_target_triples = graph
@@ -2317,8 +2320,8 @@ pub fn cargo() -> Result<String> {
 }
 
 /// Get the host target triple from cargo
-pub fn get_host_target(cargo: &str) -> Result<String> {
-    let mut command = Command::new(cargo);
+pub fn get_host_target(cargo: String) -> Result<CargoInfo> {
+    let mut command = Command::new(&cargo);
     command.arg("-vV");
     info!("exec: {:?}", command);
     let output = command
@@ -2328,10 +2331,16 @@ pub fn get_host_target(cargo: &str) -> Result<String> {
     let output = String::from_utf8(output.stdout)
         .into_diagnostic()
         .wrap_err("'cargo -vV' wasn't utf8? Really?")?;
-    for line in output.lines() {
+    let mut lines = output.lines();
+    let version_line = lines.next().map(|s| s.to_owned());
+    for line in lines {
         if let Some(target) = line.strip_prefix("host: ") {
             info!("host target is {target}");
-            return Ok(target.to_owned());
+            return Ok(CargoInfo {
+                cmd: cargo,
+                version_line,
+                host_target: target.to_owned(),
+            });
         }
     }
     Err(miette!(
@@ -2464,10 +2473,13 @@ fn try_extract_changelog_unreleased(
     Some((title, release_notes.notes.to_string()))
 }
 
-fn tool_info() -> Tools {
-    Tools {
+fn tool_info() -> Result<Tools> {
+    let cargo_cmd = cargo()?;
+    let cargo = get_host_target(cargo_cmd)?;
+    Ok(Tools {
+        cargo,
         rustup: find_tool("rustup"),
-    }
+    })
 }
 
 fn find_tool(name: &str) -> Option<Tool> {
