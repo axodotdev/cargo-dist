@@ -111,12 +111,15 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
         push_github_artifacts_matrix_entry(&mut artifacts_matrix, runner, &dist_args, install_dist);
     }
 
+    let fail_fast = format!("{}", dist.fail_fast);
+
     // Finally write the final CI script to the Writer
     let ci_yml = include_str!("../templates/ci.yml");
     let ci_yml = ci_yml
         .replace("{{{{INSTALL_RUST}}}}", &install_rust)
         .replace("{{{{INSTALL_DIST_SH}}}}", &install_dist_sh)
-        .replace("{{{{ARTIFACTS_MATRIX}}}}", &artifacts_matrix);
+        .replace("{{{{ARTIFACTS_MATRIX}}}}", &artifacts_matrix)
+        .replace("{{{{FAIL_FAST}}}}", &fail_fast);
 
     f.write_all(dos2unix(&ci_yml).as_bytes())?;
 
