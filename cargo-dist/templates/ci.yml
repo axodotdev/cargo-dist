@@ -82,6 +82,7 @@ jobs:
     needs: create-release
     if: ${{ needs.create-release.outputs.has-releases == 'true' }}
     strategy:
+      fail-fast: {{{{FAIL_FAST}}}}
       matrix:
         # For these target platforms
         {{{{ARTIFACTS_MATRIX}}}}

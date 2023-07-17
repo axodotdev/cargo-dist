@@ -264,6 +264,30 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "merge-tasks")]
     pub merge_tasks: Option<bool>,
+
+    /// Whether failing tasks should make us give up on all other tasks
+    ///
+    /// (defaults to false)
+    ///
+    /// When building a release you might discover that an obscure platform's build is broken.
+    /// When this happens you have two options: give up on the release entirely (`fail-fast = true`),
+    /// or keep trying to build all the other platforms anyway (`fail-fast = false`).
+    ///
+    /// cargo-dist was designed around the "keep trying" approach, as we create a draft Release
+    /// and upload results to it over time, undrafting the release only if all tasks succeeded.
+    /// The idea is that even if a platform fails to build, you can decide that's acceptable
+    /// and manually undraft the release with some missing platforms.
+    ///
+    /// (Note that the dist-manifest.json is produced before anything else, and so it will assume
+    /// that all tasks succeeded when listing out supported platforms/artifacts. This may make
+    /// you sad if you do this kind of undrafting and also trust the dist-manifest to be correct.)
+    ///
+    /// Prior to 0.1.0 we didn't set the correct flags in our CI scripts to do this, but now we do.
+    /// This flag was introduced to allow you to restore the old behaviour if you prefer.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "fail-fast")]
+    pub fail_fast: Option<bool>,
 }
 
 impl DistMetadata {
@@ -283,6 +307,7 @@ impl DistMetadata {
         // * ci
         // * precise_builds
         // * merge_tasks
+        // * fail_fast
 
         if self.installers.is_none() {
             self.installers = workspace_config.installers.clone();
@@ -408,6 +433,8 @@ pub struct DistGraph {
     pub precise_builds: bool,
     /// Whether to try to merge otherwise-parallelizable tasks the same machine
     pub merge_tasks: bool,
+    /// Whether failing tasks should make us give up on all other tasks
+    pub fail_fast: bool,
     /// The desired cargo-dist version for handling this project
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
@@ -984,6 +1011,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let precise_builds = workspace_metadata.precise_builds.unwrap_or(false);
         let merge_tasks = workspace_metadata.merge_tasks.unwrap_or(false);
+        let fail_fast = workspace_metadata.merge_tasks.unwrap_or(false);
 
         let mut package_metadata = vec![];
         for package in &workspace.package_info {
@@ -1005,6 +1033,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if package_config.merge_tasks.is_some() {
                 warn!("package.metadata.dist.merge-tasks is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
             }
+            if package_config.fail_fast.is_some() {
+                warn!("package.metadata.dist.fail-fast is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
+            }
 
             package_config.make_relative_to(&package.package_root);
             package_config.merge_workspace_config(&workspace_metadata);
@@ -1018,6 +1049,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 workspace_dir,
                 dist_dir,
                 precise_builds,
+                fail_fast,
                 merge_tasks,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,

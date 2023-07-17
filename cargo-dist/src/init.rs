@@ -157,6 +157,7 @@ fn get_new_dist_metadata(
             checksum: None,
             precise_builds: None,
             merge_tasks: None,
+            fail_fast: None,
         }
     };
 
@@ -521,6 +522,10 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
     const DESC_MERGE_TASKS: &str =
         "# Whether to run otherwise-parallelizable tasks on the same machine\n";
 
+    const KEY_FAIL_FAST: &str = "fail-fast";
+    const DESC_FAIL_FAST: &str =
+        "# Whether failing tasks should make us give up on all other tasks\n";
+
     let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
     if let Some(t) = workspace.as_table_mut() {
         t.set_implicit(true)
@@ -666,6 +671,14 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
             .key_decor_mut(KEY_MERGE_TASKS)
             .unwrap()
             .set_prefix(DESC_MERGE_TASKS);
+    }
+
+    if let Some(val) = meta.fail_fast {
+        table.insert(KEY_FAIL_FAST, value(val));
+        table
+            .key_decor_mut(KEY_FAIL_FAST)
+            .unwrap()
+            .set_prefix(DESC_FAIL_FAST);
     }
 
     table

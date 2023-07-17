@@ -238,6 +238,27 @@ For example, if you build for x64 macos and arm64 macos, by default we will gene
 
 The default is `false`. Before 0.1.0 it was always `true` and couldn't be changed, making releases annoyingly slow (and technically less fault-isolated). This config was added to allow you to restore the old behaviour, if you really want.
 
+### fail-fast
+
+> since 0.1.0
+
+Example `fail-fast = true`
+
+Whether failing tasks should make us give up on all other tasks. (defaults to false)
+
+When building a release you might discover that an obscure platform's build is broken. When this happens you have two options: give up on the release entirely (`fail-fast = true`), or keep trying to build all the other platforms anyway (`fail-fast = false`).
+
+cargo-dist was designed around the "keep trying" approach, as we create a draft Release
+and upload results to it over time, undrafting the release only if all tasks succeeded.
+The idea is that even if a platform fails to build, you can decide that's acceptable
+and manually undraft the release with some missing platforms.
+
+(Note that the dist-manifest.json is produced before anything else, and so it will assume
+that all tasks succeeded when listing out supported platforms/artifacts. This may make
+you sad if you do this kind of undrafting and also trust the dist-manifest to be correct.)
+
+Prior to 0.1.0 we didn't set the correct flags in our CI scripts to do this, but now we do.
+This flag was introduced to allow you to restore the old behaviour if you prefer.
 
 
 ## Subsetting CI Flags
