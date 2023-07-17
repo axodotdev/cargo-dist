@@ -113,7 +113,7 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo_dist_version: Option<Version>,
 
-    /// The intended version of Rust/Cargo to build with (rustup toolchain syntax)
+    /// (deprecated) The intended version of Rust/Cargo to build with (rustup toolchain syntax)
     ///
     /// When generating full tasks graphs (such as CI scripts) we will pick this version.
     #[serde(rename = "rust-toolchain-version")]
@@ -918,6 +918,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         workspace_metadata.make_relative_to(&workspace.workspace_dir);
         let desired_cargo_dist_version = workspace_metadata.cargo_dist_version.clone();
         let desired_rust_toolchain = workspace_metadata.rust_toolchain_version.clone();
+        if desired_rust_toolchain.is_some() {
+            warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
+        }
 
         let mut package_metadata = vec![];
         for package in &workspace.package_info {

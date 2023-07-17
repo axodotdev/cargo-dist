@@ -143,9 +143,8 @@ fn get_new_dist_metadata(
         DistMetadata {
             // If they init with this version we're gonna try to stick to it!
             cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
-            // latest stable release at this precise moment
-            // maybe there's something more clever we can do here, but, *shrug*
-            rust_toolchain_version: Some("1.67.1".to_owned()),
+            // deprecated, default to not emitting it
+            rust_toolchain_version: None,
             ci: vec![],
             installers: None,
             targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),

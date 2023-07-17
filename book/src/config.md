@@ -67,9 +67,11 @@ If you delete the key, generate-ci will just use the version of cargo-dist that'
 
 ### rust-toolchain-version
 
-> since 0.0.3
+> since 0.0.3 (deprecated in 0.1.0)
 
 Example: `rust-toolchain-version = "1.67.1"` 
+
+> Deprecation reason: [rust-toolchain.toml](https://rust-lang.github.io/rustup/overrides.html#the-toolchain-file) is a more standard/universal mechanism for pinning toolchain versions for reproducibility. Teams without dedicated release engineers will likely benefit from unpinning their toolchain and letting the underlying CI vendor silently update them to "some recent stable toolchain", as they will get updates/improvements and are unlikely to have regressions.
 
 **This can only be set globally**
 
@@ -77,7 +79,7 @@ This is added automatically by `cargo dist init`, recorded for the sake of repro
 
 The syntax must be a valid rustup toolchain like "1.60.0" or "stable" (should not specify the platform, we want to install this toolchain on all platforms).
 
-If you delete the key, generate-ci will just use "stable" which will drift over time as new stable releases occur.
+If you delete the key, generate-ci won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal). Before being deprecated the default was to `rustup update stable`, but this is no longer the case.
 
 ### ci
 
