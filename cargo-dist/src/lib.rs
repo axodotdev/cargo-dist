@@ -313,8 +313,8 @@ fn generate_checksum(
 
 /// Build a cargo target
 fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result<()> {
-    eprintln!(
-        "building cargo target ({}/{})",
+    eprint!(
+        "building cargo target ({}/{}",
         target.target_triple, target.profile
     );
 
@@ -347,9 +347,11 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
     match &target.package {
         CargoTargetPackages::Workspace => {
             command.arg("--workspace");
+            eprintln!(" --workspace)");
         }
         CargoTargetPackages::Package(package) => {
-            command.arg("--package").arg(package.to_string());
+            command.arg("--package").arg(package);
+            eprintln!(" --package={})", package);
         }
     }
     info!("exec: {:?}", command);

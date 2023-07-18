@@ -223,6 +223,33 @@ pub struct DistMetadata {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checksum: Option<ChecksumStyle>,
+
+    /// Build only the required packages, and individually (since 0.1.0) (default: false)
+    ///
+    /// By default when we need to build anything in your workspace, we build your entire workspace
+    /// with --workspace. This setting tells cargo-dist to instead build each app individually.
+    ///
+    /// On balance, the Rust experts we've consulted with find building with --workspace to
+    /// be a safer/better default, as it provides some of the benefits of a more manual
+    /// [workspace-hack][], without the user needing to be aware that this is a thing.
+    ///
+    /// TL;DR: cargo prefers building one copy of each dependency in a build, so if two apps in
+    /// your workspace depend on e.g. serde with different features, building with --workspace,
+    /// will build serde once with the features unioned together. However if you build each
+    /// package individually it will more precisely build two copies of serde with different
+    /// feature sets.
+    ///
+    /// The downside of using --workspace is that if your workspace has lots of example/test
+    /// crates, or if you release only parts of your workspace at a time, we build a lot of
+    /// gunk that's not needed, and potentially bloat up your app with unnecessary features.
+    ///
+    /// If that downside is big enough for you, this setting is a good idea.
+    ///
+    /// [workspace-hack]: https://docs.rs/cargo-hakari/latest/cargo_hakari/about/index.html
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "precise-builds")]
+    pub precise_builds: Option<bool>,
 }
 
 impl DistMetadata {
@@ -240,6 +267,7 @@ impl DistMetadata {
         // * cargo_dist_version
         // * rust_toolchain_version
         // * ci
+        // * precise_builds
 
         if self.installers.is_none() {
             self.installers = workspace_config.installers.clone();
@@ -361,6 +389,8 @@ pub struct DistGraph {
     pub workspace_dir: Utf8PathBuf,
     /// cargo-dist's target dir (generally nested under `target_dir`).
     pub dist_dir: Utf8PathBuf,
+    /// Whether to bother using --package instead of --workspace when building apps
+    pub precise_builds: bool,
     /// The desired cargo-dist version for handling this project
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
@@ -431,7 +461,12 @@ pub struct Binary {
     /// (e.g. my-binary-v1.0.0-x86_64-pc-windows-msvc)
     pub id: String,
     /// The package this binary is defined by
+    ///
+    /// This is an "opaque" string that will show up in things like cargo machine-readable output,
+    /// but **this is not the format that cargo -p flags expect**. Use pkg_spec for that.
     pub pkg_id: PackageId,
+    /// An ideally unambiguous way to refer to a package for the purpose of cargo -p flags.
+    pub pkg_spec: String,
     /// The name of the binary (as defined by the Cargo.toml)
     pub name: String,
     /// The target triple to build it for
@@ -898,7 +933,9 @@ pub enum CargoTargetPackages {
     /// Build the workspace
     Workspace,
     /// Just build a package
-    Package(PackageId),
+    ///
+    /// Inner string is [`Binary::pkg_spec`][]
+    Package(String),
 }
 
 struct DistGraphBuilder<'pkg_graph> {
@@ -928,6 +965,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         if desired_rust_toolchain.is_some() {
             warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
         }
+        let precise_builds = workspace_metadata.precise_builds.unwrap_or(false);
 
         let mut package_metadata = vec![];
         for package in &workspace.package_info {
@@ -943,6 +981,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if !package_config.ci.is_empty() {
                 warn!("package.metadata.dist.ci is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
             }
+            if package_config.precise_builds.is_some() {
+                warn!("package.metadata.dist.precise-builds is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
+            }
 
             package_config.make_relative_to(&package.package_root);
             package_config.merge_workspace_config(&workspace_metadata);
@@ -955,6 +996,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 target_dir,
                 workspace_dir,
                 dist_dir,
+                precise_builds,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
                 tools,
@@ -1074,6 +1116,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let package = self.workspace.package(pkg_idx);
             let version = package.version.as_ref().unwrap().cargo();
             let pkg_id = package.cargo_package_id.clone().unwrap();
+            // For now we just use the name of the package as its package_spec.
+            // I'm not sure if there are situations where this is ambiguous when
+            // referring to a package in your workspace that you want to build an app for.
+            // If they do exist, that's deeply cursed and I want a user to tell me about it.
+            let pkg_spec = package.name.clone();
             let id = format!("{binary_name}-v{version}-{target}");
 
             // If we already are building this binary we don't need to do it again!
@@ -1085,6 +1132,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 let binary = Binary {
                     id,
                     pkg_id,
+                    pkg_spec,
                     name: binary_name,
                     target: target.clone(),
                     copy_exe_to: vec![],
@@ -1698,19 +1746,44 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     warn!("You're trying to cross-compile on macOS, but I can't find rustup to ensure you have the rust toolchains for it!")
                 }
             }
-            builds.push(BuildStep::Cargo(CargoBuildStep {
-                target_triple: target.clone(),
-                // Just build the whole workspace for now
-                package: CargoTargetPackages::Workspace,
-                // Just use the default build for now
-                features: CargoTargetFeatures {
-                    no_default_features: false,
-                    features: CargoTargetFeatureList::List(vec![]),
-                },
-                rustflags,
-                profile: String::from(PROFILE_DIST),
-                expected_binaries: binaries,
-            }));
+
+            if self.inner.precise_builds {
+                let mut builds_by_pkg_spec = SortedMap::new();
+                for bin_idx in binaries {
+                    let bin = self.binary(bin_idx);
+                    builds_by_pkg_spec
+                        .entry(bin.pkg_spec.clone())
+                        .or_insert(vec![])
+                        .push(bin_idx);
+                }
+                for (pkg_spec, expected_binaries) in builds_by_pkg_spec {
+                    builds.push(BuildStep::Cargo(CargoBuildStep {
+                        target_triple: target.clone(),
+                        package: CargoTargetPackages::Package(pkg_spec),
+                        // Just use the default build for now
+                        features: CargoTargetFeatures {
+                            no_default_features: false,
+                            features: CargoTargetFeatureList::List(vec![]),
+                        },
+                        rustflags: rustflags.clone(),
+                        profile: String::from(PROFILE_DIST),
+                        expected_binaries,
+                    }));
+                }
+            } else {
+                builds.push(BuildStep::Cargo(CargoBuildStep {
+                    target_triple: target.clone(),
+                    package: CargoTargetPackages::Workspace,
+                    // Just use the default build for now
+                    features: CargoTargetFeatures {
+                        no_default_features: false,
+                        features: CargoTargetFeatureList::List(vec![]),
+                    },
+                    rustflags,
+                    profile: String::from(PROFILE_DIST),
+                    expected_binaries: binaries,
+                }));
+            }
         }
         builds
     }
