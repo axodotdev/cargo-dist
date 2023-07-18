@@ -3,6 +3,7 @@ use std::ops::Not;
 
 use axoproject::errors::AxoprojectError;
 use axoproject::WorkspaceInfo;
+use camino::Utf8PathBuf;
 use miette::{Context, IntoDiagnostic};
 use semver::Version;
 
@@ -19,6 +20,8 @@ pub struct InitArgs {
     pub yes: bool,
     /// Don't automatically generate ci
     pub no_generate_ci: bool,
+    /// A path to a json file containing values to set in workspace.metadata.dist
+    pub with_json_config: Option<Utf8PathBuf>,
 }
 
 /// Run 'cargo dist init'
@@ -130,6 +133,12 @@ fn get_new_dist_metadata(
 ) -> DistResult<DistMetadata> {
     use dialoguer::{Confirm, Input, MultiSelect};
     // Setup [workspace.metadata.dist]
+
+    if let Some(json_path) = &args.with_json_config {
+        let src = axoasset::SourceFile::load_local(json_path)?;
+        let meta: DistMetadata = src.deserialize_json()?;
+        return Ok(meta);
+    }
 
     let has_config = workspace_info
         .cargo_metadata_table

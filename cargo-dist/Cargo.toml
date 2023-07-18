@@ -48,7 +48,7 @@ parse-changelog = { version = "0.5.3", default-features = false }
 newline-converter = "0.2.2"
 axoproject = { version = "0.3.0", default-features = false, features = ["cargo-projects"] }
 dialoguer = "0.10.4"
-axoasset = "0.2.0"
+axoasset = { version = "0.4.0", features = ["json-serde", "toml-serde", "toml-edit"] }
 sha2 = "0.10.6"
 
 [dev-dependencies]

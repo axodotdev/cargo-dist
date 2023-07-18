@@ -142,6 +142,9 @@ This is equivalent to just mashing ENTER over and over during the interactive pr
 #### `--no-generate-ci`
 Don't automatically invoke 'cargo dist generate-ci' at the end
 
+#### `--with-json-config <WITH_JSON_CONFIG>`
+A path to a json file containing values to set in workspace.metadata.dist
+
 #### `-h, --help`
 Print help (see a summary with '-h')
 
