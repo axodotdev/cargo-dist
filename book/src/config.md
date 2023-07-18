@@ -205,6 +205,27 @@ The hashes should match the result that sha256sum and sha512sum generate. The cu
 Future work is planned to [support more robust signed checksums][issue-sigstore].
 
 
+### precise-builds
+
+> since 0.1.0
+
+Example `precise-builds = true`
+
+Build only the required packages, and individually (default: false)
+
+By default when we need to build anything in your workspace, we build your entire workspace with --workspace. This setting tells cargo-dist to instead build each app individually.
+
+On balance, the Rust experts we've consulted with find building with --workspace to be a safer/better default, as it provides some of the benefits of a more manual [workspace-hack][], without the user needing to be aware that this is a thing.
+
+TL;DR: cargo prefers building one copy of each dependency in a build, so if two apps in your workspace depend on e.g. serde with different features, building with --workspace, will build serde once with the features unioned together. However if you build each package individually it will more precisely build two copies of serde with different feature sets.
+
+The downside of using --workspace is that if your workspace has lots of example/test crates, or if you release only parts of your workspace at a time, we build a lot of gunk that's not needed, and potentially bloat up your app with unnecessary features.
+
+If that downside is big enough for you, this setting is a good idea.
+
+[workspace-hack]: https://docs.rs/cargo-hakari/latest/cargo_hakari/about/index.html
+
+
 ## Subsetting CI Flags
 
 Several `metadata.dist` configs have globally available CLI equivalents. These can be used to select a subset of `metadata.dist` list for that run. If you don't pass any, it will be as-if you passed all the values in `metadata.dist`. You can pass these flags multiple times to provide a list. This includes:

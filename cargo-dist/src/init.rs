@@ -155,6 +155,7 @@ fn get_new_dist_metadata(
             unix_archive: None,
             npm_scope: None,
             checksum: None,
+            precise_builds: None,
         }
     };
 
@@ -512,6 +513,9 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
     const KEY_CHECKSUM: &str = "checksum";
     const DESC_CHECKSUM: &str = "# Checksums to generate for each App\n";
 
+    const KEY_PRECISE_BUILDS: &str = "precise-builds";
+    const DESC_PRECISE_BUILDS: &str = "# Build only the required packages, and individually\n";
+
     let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
     if let Some(t) = workspace.as_table_mut() {
         t.set_implicit(true)
@@ -641,6 +645,14 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
             .key_decor_mut(KEY_CHECKSUM)
             .unwrap()
             .set_prefix(DESC_CHECKSUM);
+    }
+
+    if let Some(val) = meta.precise_builds {
+        table.insert(KEY_PRECISE_BUILDS, value(val));
+        table
+            .key_decor_mut(KEY_PRECISE_BUILDS)
+            .unwrap()
+            .set_prefix(DESC_PRECISE_BUILDS);
     }
 
     table
