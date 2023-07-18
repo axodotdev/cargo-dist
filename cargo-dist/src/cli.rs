@@ -1,5 +1,6 @@
 //! All the clap stuff for parsing/documenting the cli
 
+use camino::Utf8PathBuf;
 use clap::{
     builder::{PossibleValuesParser, TypedValueParser},
     Args, Parser, Subcommand, ValueEnum,
@@ -214,6 +215,9 @@ pub struct InitArgs {
     /// Don't automatically invoke 'cargo dist generate-ci' at the end
     #[clap(long)]
     pub no_generate_ci: bool,
+    /// A path to a json file containing values to set in workspace.metadata.dist
+    #[clap(long)]
+    pub with_json_config: Option<Utf8PathBuf>,
 }
 
 #[derive(Args, Clone, Debug)]
