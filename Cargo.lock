@@ -320,7 +320,7 @@ dependencies = [
  "sha2",
  "tar",
  "thiserror",
- "toml_edit 0.15.0",
+ "toml_edit 0.19.14",
  "tracing",
  "xz2",
  "zip",

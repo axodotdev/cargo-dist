@@ -1,16 +1,15 @@
-use std::fs::File;
 use std::ops::Not;
 
 use axoproject::errors::AxoprojectError;
 use axoproject::WorkspaceInfo;
 use camino::Utf8PathBuf;
-use miette::{Context, IntoDiagnostic};
 use semver::Version;
+use serde::Deserialize;
 
 use crate::errors::{DistError, DistResult, Result};
 use crate::{
     do_generate_ci, tasks, CiStyle, CompressionImpl, Config, DistMetadata, GenerateCiArgs,
-    InstallerStyle, ZipStyle, METADATA_DIST, PROFILE_DIST,
+    InstallerStyle, SortedMap, ZipStyle, METADATA_DIST, PROFILE_DIST,
 };
 
 /// Arguments for `cargo dist init` ([`do_init`][])
@@ -24,12 +23,26 @@ pub struct InitArgs {
     pub with_json_config: Option<Utf8PathBuf>,
 }
 
+/// Input for --with-json-config
+///
+/// Contains a DistMetadata for the workspace.metadata.dist and
+/// then optionally ones for each package.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MultiDistMetadata {
+    /// `[workspace.metadata.dist]`
+    workspace: Option<DistMetadata>,
+    /// package_name => `[package.metadata.dist]`
+    #[serde(default)]
+    packages: SortedMap<String, DistMetadata>,
+}
+
 /// Run 'cargo dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     let workspace = tasks::get_project()?;
 
     // Load in the workspace toml to edit and write back
-    let mut workspace_toml = tasks::load_root_cargo_toml(&workspace.manifest_path)?;
+    let mut workspace_toml = tasks::load_cargo_toml(&workspace.manifest_path)?;
 
     let check = console::style("✔".to_string()).for_stderr().green();
 
@@ -46,33 +59,49 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     eprintln!("next let's setup your cargo-dist config...");
     eprintln!();
 
-    let meta = get_new_dist_metadata(cfg, args, &workspace)?;
-    update_toml_metadata(&mut workspace_toml, &meta);
+    let multi_meta = if let Some(json_path) = &args.with_json_config {
+        // json update path, read from a file and apply all requested updates verbatim
+        let src = axoasset::SourceFile::load_local(json_path)?;
+        let multi_meta: MultiDistMetadata = src.deserialize_json()?;
+        multi_meta
+    } else {
+        // run (potentially interactive) init logic
+        let meta = get_new_dist_metadata(cfg, args, &workspace)?;
+        MultiDistMetadata {
+            workspace: Some(meta),
+            packages: SortedMap::new(),
+        }
+    };
 
+    if let Some(meta) = &multi_meta.workspace {
+        update_toml_metadata(&mut workspace_toml, meta, true);
+    }
+
+    // Save the workspace toml (potentially an effective no-op if we made no edits)
     eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
     eprintln!();
+    tasks::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
 
-    {
-        use std::io::Write;
-        let mut workspace_toml_file = File::options()
-            .write(true)
-            .truncate(true)
-            .open(&workspace.manifest_path)
-            .into_diagnostic()
-            .wrap_err("couldn't load root workspace Cargo.toml")?;
-        write!(&mut workspace_toml_file, "{workspace_toml}")
-            .into_diagnostic()
-            .wrap_err("failed to write to Cargo.toml")?;
-        workspace_toml_file
-            .flush()
-            .into_diagnostic()
-            .wrap_err("failed to write to Cargo.toml")?;
+    // Now that we've done the stuff that's definitely part of the root Cargo.toml,
+    // Optionally apply updates to packages (currently only applies with --with-json-config)
+    for (package_name, meta) in &multi_meta.packages {
+        for (_idx, package) in workspace.packages() {
+            if &package.name == package_name {
+                let mut package_toml = tasks::load_cargo_toml(&package.manifest_path)?;
+                update_toml_metadata(&mut package_toml, meta, false);
+                eprintln!("{check} added [package.metadata.dist] to {package_name}'s Cargo.toml");
+                eprintln!();
+                tasks::save_cargo_toml(&package.manifest_path, package_toml)?;
+                break;
+            }
+        }
     }
 
     eprintln!("{check} cargo-dist is setup!");
     eprintln!();
 
-    if let Some(ci) = &meta.ci {
+    // If there's CI stuff, regenerate it
+    if let Some(ci) = multi_meta.workspace.as_ref().and_then(|w| w.ci.as_ref()) {
         if !ci.is_empty() && !args.no_generate_ci {
             eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
             eprintln!();
@@ -135,13 +164,6 @@ fn get_new_dist_metadata(
 ) -> DistResult<DistMetadata> {
     use dialoguer::{Confirm, Input, MultiSelect};
     // Setup [workspace.metadata.dist]
-
-    if let Some(json_path) = &args.with_json_config {
-        let src = axoasset::SourceFile::load_local(json_path)?;
-        let meta: DistMetadata = src.deserialize_json()?;
-        return Ok(meta);
-    }
-
     let has_config = workspace_info
         .cargo_metadata_table
         .as_ref()
@@ -490,9 +512,14 @@ fn get_new_dist_metadata(
     Ok(meta)
 }
 
-fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMetadata) {
+fn update_toml_metadata(
+    workspace_toml: &mut toml_edit::Document,
+    meta: &DistMetadata,
+    is_workspace: bool,
+) {
     // Walk down/prepare the components...
-    let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
+    let root_key = if is_workspace { "workspace" } else { "package" };
+    let workspace = workspace_toml[root_key].or_insert(toml_edit::table());
     if let Some(t) = workspace.as_table_mut() {
         t.set_implicit(true)
     }
