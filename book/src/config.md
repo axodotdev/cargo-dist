@@ -47,9 +47,9 @@ Note that the Cargo license-file flag only accepts one path, so it can't handle 
 
 
 
-## metadata.dist
+## workspace.metadata.dist
 
-Cargo allows other tools to include their own project-wide settings in [metadata tables][workspace-metadata]. The one cargo-dist uses is `[workspace.metadata.dist]`, which must appear in your root Cargo.toml (whether or not it's [virtual][workspace]). All settings specified here apply to all packages in your project. You can override them on a per-package basis with `[package.metadata.dist]`, which accepts all the same fields (except for those which must be specified once globally, see the docs for each individual option).
+Cargo allows other tools to include their own project-wide settings in [metadata tables][workspace-metadata]. The one cargo-dist uses is `[workspace.metadata.dist]`, which must appear in your root Cargo.toml (whether or not it's [virtual][workspace]). You can override them on a per-package basis with `[package.metadata.dist]`, which accepts all the same fields (except for those which must be specified once globally, see the docs for each individual option).
 
 ### cargo-dist-version
 
@@ -211,6 +211,8 @@ Future work is planned to [support more robust signed checksums][issue-sigstore]
 
 Example `precise-builds = true`
 
+**This can only be set globally**
+
 Build only the required packages, and individually (default: false)
 
 By default when we need to build anything in your workspace, we build your entire workspace with --workspace. This setting tells cargo-dist to instead build each app individually.
@@ -232,6 +234,8 @@ If that downside is big enough for you, this setting is a good idea.
 
 Example `merge-tasks = true`
 
+**This can only be set globally**
+
 Whether we should try to merge otherwise-parallelizable tasks onto the same machine, sacrificing latency and fault-isolation for more the sake of minor effeciency gains.
 
 For example, if you build for x64 macos and arm64 macos, by default we will generate ci which builds those independently on separate logical machines. With this enabled we will build both of those platforms together on the same machine, making it take twice as long as any other build and making it impossible for only one of them to succeed.
@@ -243,6 +247,8 @@ The default is `false`. Before 0.1.0 it was always `true` and couldn't be change
 > since 0.1.0
 
 Example `fail-fast = true`
+
+**This can only be set globally**
 
 Whether failing tasks should make us give up on all other tasks. (defaults to false)
 
