@@ -72,12 +72,14 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     eprintln!("{check} cargo-dist is setup!");
     eprintln!();
 
-    if !meta.ci.is_empty() && !args.no_generate_ci {
-        eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
-        eprintln!();
+    if let Some(ci) = &meta.ci {
+        if !ci.is_empty() && !args.no_generate_ci {
+            eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
+            eprintln!();
 
-        let ci_args = GenerateCiArgs {};
-        do_generate_ci(cfg, &ci_args)?;
+            let ci_args = GenerateCiArgs {};
+            do_generate_ci(cfg, &ci_args)?;
+        }
     }
     Ok(())
 }
@@ -154,11 +156,11 @@ fn get_new_dist_metadata(
             cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
             // deprecated, default to not emitting it
             rust_toolchain_version: None,
-            ci: vec![],
+            ci: None,
             installers: None,
             targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),
             dist: None,
-            include: vec![],
+            include: None,
             auto_includes: None,
             windows_archive: None,
             unix_archive: None,
@@ -254,7 +256,12 @@ fn get_new_dist_metadata(
         for item in known {
             // If this CI style is in their config, keep it
             // If they passed it on the CLI, flip it on
-            let mut default = meta.ci.contains(item) || cfg.ci.contains(item);
+            let mut default = meta
+                .ci
+                .as_ref()
+                .map(|ci| ci.contains(item))
+                .unwrap_or(false)
+                || cfg.ci.contains(item);
 
             // If they have a well-defined repo url and it's github, default enable it
             #[allow(irrefutable_let_patterns)]
@@ -299,11 +306,17 @@ fn get_new_dist_metadata(
         };
 
         // Apply the results
-        meta.ci = selected.into_iter().map(|i| known[i]).collect();
+        let ci: Vec<_> = selected.into_iter().map(|i| known[i]).collect();
+        meta.ci = if ci.is_empty() { None } else { Some(ci) };
     }
 
     // Enforce repository url right away
-    if meta.ci.contains(&CiStyle::Github) && workspace_info.repository_url.is_none() {
+    let has_github_ci = meta
+        .ci
+        .as_ref()
+        .map(|ci| ci.contains(&CiStyle::Github))
+        .unwrap_or(false);
+    if has_github_ci && workspace_info.repository_url.is_none() {
         // If axoproject complained about inconsistency, forward that
         // Massively jank manual implementation of "clone" here because lots of error types
         // (like std::io::Error) don't implement Clone and so axoproject errors can't either
@@ -335,7 +348,8 @@ fn get_new_dist_metadata(
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // In the future, "vendored" installers like MSIs could be enabled in this situation!
-    if !meta.ci.is_empty() {
+    let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
+    if has_ci {
         let known = &[
             InstallerStyle::Shell,
             InstallerStyle::Powershell,
@@ -477,64 +491,7 @@ fn get_new_dist_metadata(
 }
 
 fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMetadata) {
-    use toml_edit::{value, Item};
-
-    // Keys/descriptions
-    const KEY_RUST_VERSION: &str = "rust-toolchain-version";
-    const DESC_RUST_VERSION: &str =
-        "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n";
-
-    const KEY_DIST_VERSION: &str = "cargo-dist-version";
-    const DESC_DIST_VERSION: &str =
-        "# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)\n";
-
-    const KEY_CI: &str = "ci";
-    const DESC_CI: &str = "# CI backends to support (see 'cargo dist generate-ci')\n";
-
-    const KEY_INSTALLERS: &str = "installers";
-    const DESC_INSTALLERS: &str = "# The installers to generate for each app\n";
-
-    const KEY_TARGETS: &str = "targets";
-    const DESC_TARGETS: &str = "# Target platforms to build apps for (Rust target-triple syntax)\n";
-
-    const KEY_DIST: &str = "dist";
-    const DESC_DIST: &str =
-        "# Whether to consider the binaries in a package for distribution (defaults true)\n";
-
-    const KEY_INCLUDE: &str = "include";
-    const DESC_INCLUDE: &str =
-        "# Extra static files to include in each App (path relative to this Cargo.toml's dir)\n";
-
-    const KEY_AUTO_INCLUDE: &str = "auto-includes";
-    const DESC_AUTO_INCLUDE: &str =
-        "# Whether to auto-include files like READMEs, LICENSEs, and CHANGELOGs (default true)\n";
-
-    const KEY_WIN_ARCHIVE: &str = "windows-archive";
-    const DESC_WIN_ARCHIVE: &str =
-        "# The archive format to use for windows builds (defaults .zip)\n";
-
-    const KEY_UNIX_ARCHIVE: &str = "unix-archive";
-    const DESC_UNIX_ARCHIVE: &str =
-        "# The archive format to use for non-windows builds (defaults .tar.xz)\n";
-
-    const KEY_NPM_SCOPE: &str = "npm-scope";
-    const DESC_NPM_SCOPE: &str =
-        "# A namespace to use when publishing this package to the npm registry\n";
-
-    const KEY_CHECKSUM: &str = "checksum";
-    const DESC_CHECKSUM: &str = "# Checksums to generate for each App\n";
-
-    const KEY_PRECISE_BUILDS: &str = "precise-builds";
-    const DESC_PRECISE_BUILDS: &str = "# Build only the required packages, and individually\n";
-
-    const KEY_MERGE_TASKS: &str = "merge-tasks";
-    const DESC_MERGE_TASKS: &str =
-        "# Whether to run otherwise-parallelizable tasks on the same machine\n";
-
-    const KEY_FAIL_FAST: &str = "fail-fast";
-    const DESC_FAIL_FAST: &str =
-        "# Whether failing tasks should make us give up on all other tasks\n";
-
+    // Walk down/prepare the components...
     let workspace = workspace_toml["workspace"].or_insert(toml_edit::table());
     if let Some(t) = workspace.as_table_mut() {
         t.set_implicit(true)
@@ -552,145 +509,169 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
 
     // Apply formatted/commented values
     let table = dist_metadata.as_table_mut().unwrap();
-    if let Some(val) = &meta.cargo_dist_version {
-        table.insert(KEY_DIST_VERSION, value(val.to_string()));
-        table
-            .key_decor_mut(KEY_DIST_VERSION)
-            .unwrap()
-            .set_prefix(DESC_DIST_VERSION);
-    }
 
-    if let Some(val) = &meta.rust_toolchain_version {
-        table.insert(KEY_RUST_VERSION, value(val));
-        table
-            .key_decor_mut(KEY_RUST_VERSION)
-            .unwrap()
-            .set_prefix(DESC_RUST_VERSION);
-    }
+    // This is intentionally written awkwardly to make you update this
+    let DistMetadata {
+        cargo_dist_version,
+        rust_toolchain_version,
+        dist,
+        ci,
+        installers,
+        targets,
+        include,
+        auto_includes,
+        windows_archive,
+        unix_archive,
+        npm_scope,
+        checksum,
+        precise_builds,
+        merge_tasks,
+        fail_fast,
+    } = &meta;
 
-    if !meta.ci.is_empty() {
-        table.insert(
-            KEY_CI,
-            Item::Value(
-                meta.ci
-                    .iter()
-                    .map(|ci| match ci {
-                        CiStyle::Github => "github",
-                    })
-                    .collect(),
-            ),
-        );
-        table.key_decor_mut(KEY_CI).unwrap().set_prefix(DESC_CI);
-    }
+    apply_optional_value(
+        table,
+        "cargo-dist-version",
+        "# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)\n",
+        cargo_dist_version.as_ref().map(|v| v.to_string()),
+    );
 
-    if let Some(val) = &meta.installers {
-        table.insert(
-            KEY_INSTALLERS,
-            Item::Value(
-                val.iter()
-                    .map(|installer| match installer {
-                        InstallerStyle::Powershell => "powershell",
-                        InstallerStyle::Shell => "shell",
-                        InstallerStyle::Npm => "npm",
-                    })
-                    .collect(),
-            ),
-        );
-        table
-            .key_decor_mut(KEY_INSTALLERS)
-            .unwrap()
-            .set_prefix(DESC_INSTALLERS);
-    }
+    apply_optional_value(
+        table,
+        "rust-toolchain-version",
+        "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n",
+        rust_toolchain_version.as_deref(),
+    );
 
-    if let Some(val) = &meta.targets {
-        table.insert(KEY_TARGETS, Item::Value(val.iter().collect()));
-        table
-            .key_decor_mut(KEY_TARGETS)
-            .unwrap()
-            .set_prefix(DESC_TARGETS);
-    }
+    apply_string_list(
+        table,
+        "ci",
+        "# CI backends to support (see 'cargo dist generate-ci')\n",
+        ci.as_ref(),
+    );
 
-    if let Some(val) = meta.dist {
-        table.insert(KEY_DIST, value(val));
-        table.key_decor_mut(KEY_DIST).unwrap().set_prefix(DESC_DIST);
-    }
+    // TODO: this is an Option<Vec<_>> and we only ignored it when None
+    //
+    // Is there semantic meaning to this..?
+    apply_string_list(
+        table,
+        "installers",
+        "# The installers to generate for each app\n",
+        installers.as_ref(),
+    );
 
-    if !meta.include.is_empty() {
-        table.insert(
-            KEY_INCLUDE,
-            Item::Value(meta.include.iter().map(ToString::to_string).collect()),
-        );
-        table
-            .key_decor_mut(KEY_INCLUDE)
-            .unwrap()
-            .set_prefix(DESC_INCLUDE);
-    }
+    // TODO: this is an Option<Vec<_>> and we only ignored it when None
+    //
+    // Is there semantic meaning to this..?
+    apply_string_list(
+        table,
+        "targets",
+        "# Target platforms to build apps for (Rust target-triple syntax)\n",
+        targets.as_ref(),
+    );
 
-    if let Some(val) = meta.auto_includes {
-        table.insert(KEY_AUTO_INCLUDE, value(val));
-        table
-            .key_decor_mut(KEY_AUTO_INCLUDE)
-            .unwrap()
-            .set_prefix(DESC_AUTO_INCLUDE);
-    }
+    apply_optional_value(
+        table,
+        "dist",
+        "# Whether to consider the binaries in a package for distribution (defaults true)\n",
+        *dist,
+    );
 
-    if let Some(val) = meta.windows_archive {
-        table.insert(KEY_WIN_ARCHIVE, value(val.ext()));
-        table
-            .key_decor_mut(KEY_WIN_ARCHIVE)
-            .unwrap()
-            .set_prefix(DESC_WIN_ARCHIVE);
-    }
+    apply_string_list(
+        table,
+        "include",
+        "# Extra static files to include in each App (path relative to this Cargo.toml's dir)\n",
+        include.as_ref(),
+    );
 
-    if let Some(val) = meta.unix_archive {
-        table.insert(KEY_UNIX_ARCHIVE, value(val.ext()));
-        table
-            .key_decor_mut(KEY_UNIX_ARCHIVE)
-            .unwrap()
-            .set_prefix(DESC_UNIX_ARCHIVE);
-    }
+    apply_optional_value(
+        table,
+        "auto-includes",
+        "# Whether to auto-include files like READMEs, LICENSEs, and CHANGELOGs (default true)\n",
+        *auto_includes,
+    );
 
-    if let Some(val) = &meta.npm_scope {
-        table.insert(KEY_NPM_SCOPE, value(val));
-        table
-            .key_decor_mut(KEY_NPM_SCOPE)
-            .unwrap()
-            .set_prefix(DESC_NPM_SCOPE);
-    }
+    apply_optional_value(
+        table,
+        "windows-archive",
+        "# The archive format to use for windows builds (defaults .zip)\n",
+        windows_archive.map(|a| a.ext()),
+    );
 
-    if let Some(val) = &meta.checksum {
-        table.insert(KEY_CHECKSUM, value(val.ext()));
-        table
-            .key_decor_mut(KEY_CHECKSUM)
-            .unwrap()
-            .set_prefix(DESC_CHECKSUM);
-    }
+    apply_optional_value(
+        table,
+        "unix-archive",
+        "# The archive format to use for non-windows builds (defaults .tar.xz)\n",
+        unix_archive.map(|a| a.ext()),
+    );
 
-    if let Some(val) = meta.precise_builds {
-        table.insert(KEY_PRECISE_BUILDS, value(val));
-        table
-            .key_decor_mut(KEY_PRECISE_BUILDS)
-            .unwrap()
-            .set_prefix(DESC_PRECISE_BUILDS);
-    }
+    apply_optional_value(
+        table,
+        "npm-scope",
+        "# A namespace to use when publishing this package to the npm registry\n",
+        npm_scope.as_deref(),
+    );
 
-    if let Some(val) = meta.merge_tasks {
-        table.insert(KEY_MERGE_TASKS, value(val));
-        table
-            .key_decor_mut(KEY_MERGE_TASKS)
-            .unwrap()
-            .set_prefix(DESC_MERGE_TASKS);
-    }
+    apply_optional_value(
+        table,
+        "checksum",
+        "# Checksums to generate for each App\n",
+        checksum.map(|c| c.ext()),
+    );
 
-    if let Some(val) = meta.fail_fast {
-        table.insert(KEY_FAIL_FAST, value(val));
-        table
-            .key_decor_mut(KEY_FAIL_FAST)
-            .unwrap()
-            .set_prefix(DESC_FAIL_FAST);
-    }
+    apply_optional_value(
+        table,
+        "precise-builds",
+        "# Build only the required packages, and individually\n",
+        *precise_builds,
+    );
 
+    apply_optional_value(
+        table,
+        "merge-tasks",
+        "# Whether to run otherwise-parallelizable tasks on the same machine\n",
+        *merge_tasks,
+    );
+
+    apply_optional_value(
+        table,
+        "fail-fast",
+        "# Whether failing tasks should make us give up on all other tasks\n",
+        *fail_fast,
+    );
+
+    // Finalize the table
     table
         .decor_mut()
         .set_prefix("\n# Config for 'cargo dist'\n");
+}
+
+fn apply_optional_value<I>(table: &mut toml_edit::Table, key: &str, desc: &str, val: Option<I>)
+where
+    I: Into<toml_edit::Value>,
+{
+    if let Some(val) = val {
+        table.insert(key, toml_edit::value(val));
+        table.key_decor_mut(key).unwrap().set_prefix(desc);
+    } else {
+        table.remove(key);
+    }
+}
+
+fn apply_string_list<I>(table: &mut toml_edit::Table, key: &str, desc: &str, list: Option<I>)
+where
+    I: IntoIterator,
+    I::Item: std::fmt::Display,
+{
+    if let Some(list) = list {
+        let items = list.into_iter().map(|i| i.to_string()).collect::<Vec<_>>();
+        if !items.is_empty() {
+            table.insert(key, toml_edit::Item::Value(items.into_iter().collect()));
+            table.key_decor_mut(key).unwrap().set_prefix(desc);
+        } else {
+            table.remove(key);
+        }
+    } else {
+        table.remove(key);
+    }
 }

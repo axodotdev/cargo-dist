@@ -109,7 +109,6 @@ pub struct DistMetadata {
     /// Really want to have the exact version when running generate-ci to avoid generating
     /// things other cargo-dist versions can't handle!
     #[serde(rename = "cargo-dist-version")]
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo_dist_version: Option<Version>,
 
@@ -117,7 +116,6 @@ pub struct DistMetadata {
     ///
     /// When generating full tasks graphs (such as CI scripts) we will pick this version.
     #[serde(rename = "rust-toolchain-version")]
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rust_toolchain_version: Option<String>,
 
@@ -128,7 +126,6 @@ pub struct DistMetadata {
     /// workspace -- we just won't bundle it up and report it.
     ///
     /// FIXME: maybe you should also be allowed to make this a list of binary names..?
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist: Option<bool>,
 
@@ -137,9 +134,10 @@ pub struct DistMetadata {
     /// Currently only accepts "github".
     ///
     /// When running `generate-ci` with no arguments this list will be used.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub ci: Vec<CiStyle>,
+    ///
+    /// This value isn't Optional because it's global, and therefore can't be overriden by packages.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ci: Option<Vec<CiStyle>>,
 
     /// The full set of installers you would like to produce
     ///
@@ -151,15 +149,10 @@ pub struct DistMetadata {
     /// vs msi is a good comparison here -- you want a universal shell script that figures
     /// out which binary to install, but you might end up with an msi for each supported arch!
     ///
-    /// The value is an Option to allow individual packages to override the workspace setting
-    /// if None (no key in the config), the workspace value is inherited. `installers = []`
-    /// instead discards all the workspace values.
-    ///
     /// Currently accepted values:
     ///
     /// * shell
     /// * powershell
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<InstallerStyle>>,
 
@@ -175,7 +168,6 @@ pub struct DistMetadata {
     /// them into a "universal" binary that can run on either arch (using apple's `lipo` tool).
     ///
     /// FIXME: Allow higher level requests like "[macos, windows, linux] x [x86_64, aarch64]"?
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<String>>,
 
@@ -185,26 +177,22 @@ pub struct DistMetadata {
     ///
     /// Files like `README*`, `(UN)LICENSE*`, `RELEASES*`, and `CHANGELOG*` are already
     /// automatically detected and included (use [`DistMetadata::auto_includes`][] to prevent this).
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub include: Vec<Utf8PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include: Option<Vec<Utf8PathBuf>>,
 
     /// Whether to auto-include files like `README*`, `(UN)LICENSE*`, `RELEASES*`, and `CHANGELOG*`
     ///
     /// Defaults to true.
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "auto-includes")]
     pub auto_includes: Option<bool>,
 
     /// The archive format to use for windows builds (defaults .zip)
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "windows-archive")]
     pub windows_archive: Option<ZipStyle>,
 
     /// The archive format to use for non-windows builds (defaults .tar.xz)
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "unix-archive")]
     pub unix_archive: Option<ZipStyle>,
@@ -212,7 +200,6 @@ pub struct DistMetadata {
     /// A scope to prefix npm packages with (@ should be included).
     ///
     /// This is required if you're using an npm installer.
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "npm-scope")]
     pub npm_scope: Option<String>,
@@ -220,7 +207,6 @@ pub struct DistMetadata {
     /// A scope to prefix npm packages with (@ should be included).
     ///
     /// This is required if you're using an npm installer.
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checksum: Option<ChecksumStyle>,
 
@@ -293,48 +279,110 @@ pub struct DistMetadata {
 impl DistMetadata {
     /// Apply the base path to any relative paths contained in this DistMetadata
     fn make_relative_to(&mut self, base_path: &Utf8Path) {
-        for include in &mut self.include {
-            *include = base_path.join(&*include);
+        // This is intentionally written awkwardly to make you update it
+        let DistMetadata {
+            cargo_dist_version: _,
+            rust_toolchain_version: _,
+            dist: _,
+            ci: _,
+            installers: _,
+            targets: _,
+            include,
+            auto_includes: _,
+            windows_archive: _,
+            unix_archive: _,
+            npm_scope: _,
+            checksum: _,
+            precise_builds: _,
+            fail_fast: _,
+            merge_tasks: _,
+        } = self;
+        if let Some(include) = include {
+            for include in include {
+                *include = base_path.join(&*include);
+            }
         }
     }
 
-    fn merge_workspace_config(&mut self, workspace_config: &Self) {
-        // These fields omitted because they should only be set globally at the workspace root
-        // and we should just error if you set them multiple times or locally!
-        //
-        // * cargo_dist_version
-        // * rust_toolchain_version
-        // * ci
-        // * precise_builds
-        // * merge_tasks
-        // * fail_fast
+    fn merge_workspace_config(
+        &mut self,
+        workspace_config: &Self,
+        package_manifest_path: &Utf8Path,
+    ) {
+        // This is intentionally written awkwardly to make you update it
+        let DistMetadata {
+            cargo_dist_version,
+            rust_toolchain_version,
+            dist,
+            ci,
+            installers,
+            targets,
+            include,
+            auto_includes,
+            windows_archive,
+            unix_archive,
+            npm_scope,
+            checksum,
+            precise_builds,
+            merge_tasks,
+            fail_fast,
+        } = self;
 
-        if self.installers.is_none() {
-            self.installers = workspace_config.installers.clone();
+        // Check for global settings on local packages
+        if cargo_dist_version.is_some() {
+            warn!("package.metadata.dist.cargo-dist-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        if self.targets.is_none() {
-            self.targets = workspace_config.targets.clone();
+        if rust_toolchain_version.is_some() {
+            warn!("package.metadata.dist.rust-toolchain-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        if self.dist.is_none() {
-            self.dist = workspace_config.dist;
+        if ci.is_some() {
+            warn!("package.metadata.dist.ci is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        if self.auto_includes.is_none() {
-            self.auto_includes = workspace_config.auto_includes;
+        if precise_builds.is_some() {
+            warn!("package.metadata.dist.precise-builds is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        if self.windows_archive.is_none() {
-            self.windows_archive = workspace_config.windows_archive;
+        if merge_tasks.is_some() {
+            warn!("package.metadata.dist.merge-tasks is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        if self.unix_archive.is_none() {
-            self.unix_archive = workspace_config.unix_archive;
+        if fail_fast.is_some() {
+            warn!("package.metadata.dist.fail-fast is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        if self.npm_scope.is_none() {
-            self.npm_scope = workspace_config.npm_scope.clone();
+
+        // Merge non-global settings
+        if installers.is_none() {
+            *installers = workspace_config.installers.clone();
         }
-        if self.checksum.is_none() {
-            self.checksum = workspace_config.checksum;
+        if targets.is_none() {
+            *targets = workspace_config.targets.clone();
         }
-        self.include
-            .extend(workspace_config.include.iter().cloned());
+        if dist.is_none() {
+            *dist = workspace_config.dist;
+        }
+        if auto_includes.is_none() {
+            *auto_includes = workspace_config.auto_includes;
+        }
+        if windows_archive.is_none() {
+            *windows_archive = workspace_config.windows_archive;
+        }
+        if unix_archive.is_none() {
+            *unix_archive = workspace_config.unix_archive;
+        }
+        if npm_scope.is_none() {
+            *npm_scope = workspace_config.npm_scope.clone();
+        }
+        if checksum.is_none() {
+            *checksum = workspace_config.checksum;
+        }
+
+        // This was historically implemented as extend, but I'm not convinced the
+        // inconsistency is worth the inconvenience...
+        if let Some(include) = include {
+            if let Some(workspace_include) = &workspace_config.include {
+                include.extend(workspace_include.iter().cloned());
+            }
+        } else {
+            *include = workspace_config.include.clone();
+        }
     }
 }
 
@@ -380,6 +428,15 @@ pub enum CiStyle {
     Github,
 }
 
+impl std::fmt::Display for CiStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            CiStyle::Github => "github",
+        };
+        string.fmt(f)
+    }
+}
+
 /// The style of Installer we should generate
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum InstallerStyle {
@@ -392,6 +449,17 @@ pub enum InstallerStyle {
     /// Generate an npm project that fetches from [`DistGraph::artifact_download_url`][]
     #[serde(rename = "npm")]
     Npm,
+}
+
+impl std::fmt::Display for InstallerStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            InstallerStyle::Shell => "shell",
+            InstallerStyle::Powershell => "powershell",
+            InstallerStyle::Npm => "npm",
+        };
+        string.fmt(f)
+    }
 }
 
 /// A unique id for a [`Artifact`][]
@@ -1001,44 +1069,67 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let workspace_dir = workspace.workspace_dir.clone();
         let dist_dir = target_dir.join(TARGET_DIST);
 
+        // Read the global config
         let dist_profile = workspace.cargo_profiles.get(PROFILE_DIST);
         let mut workspace_metadata = parse_metadata_table(workspace.cargo_metadata_table.as_ref());
         workspace_metadata.make_relative_to(&workspace.workspace_dir);
-        let desired_cargo_dist_version = workspace_metadata.cargo_dist_version.clone();
-        let desired_rust_toolchain = workspace_metadata.rust_toolchain_version.clone();
+
+        // This is intentionally written awkwardly to make you update this
+        //
+        // This is the ideal place in the code to map/check global config once.
+        // It's fine to just lower it to an identical field on DistGraph, but you might
+        // want to e.g. `unwrap_or(false)` an `Option<bool>` here.
+        let DistMetadata {
+            cargo_dist_version,
+            rust_toolchain_version,
+            precise_builds,
+            merge_tasks,
+            fail_fast,
+            // Processed elsewhere
+            //
+            // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
+            // after this function, seems like we should finish the job..? (Doing a big
+            // refactor already, don't want to mess with this right now.)
+            ci: _,
+            // Only the final value merged into a package_config matters
+            //
+            // Note that we do *use* an auto-include from the workspace when doing
+            // changelogs, but we don't consult this config, and just unconditionally use it.
+            // That seems *fine*, but I wanted to note that here.
+            auto_includes: _,
+            // Only the final value merged into a package_config matters
+            targets: _,
+            // Only the final value merged into a package_config matters
+            dist: _,
+            // Only the final value merged into a package_config matters
+            installers: _,
+            // Only the final value merged into a package_config matters
+            windows_archive: _,
+            // Only the final value merged into a package_config matters
+            unix_archive: _,
+            // Only the final value merged into a package_config matters
+            include: _,
+            // Only the final value merged into a package_config matters
+            npm_scope: _,
+            // Only the final value merged into a package_config matters
+            checksum: _,
+        } = &workspace_metadata;
+
+        let desired_cargo_dist_version = cargo_dist_version.clone();
+        let desired_rust_toolchain = rust_toolchain_version.clone();
         if desired_rust_toolchain.is_some() {
             warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
         }
-        let precise_builds = workspace_metadata.precise_builds.unwrap_or(false);
-        let merge_tasks = workspace_metadata.merge_tasks.unwrap_or(false);
-        let fail_fast = workspace_metadata.merge_tasks.unwrap_or(false);
+        let precise_builds = precise_builds.unwrap_or(false);
+        let merge_tasks = merge_tasks.unwrap_or(false);
+        let fail_fast = fail_fast.unwrap_or(false);
 
+        // Compute/merge package configs
         let mut package_metadata = vec![];
         for package in &workspace.package_info {
             let mut package_config = parse_metadata_table(package.cargo_metadata_table.as_ref());
-
-            // Check for global settings on local packages
-            if package_config.cargo_dist_version.is_some() {
-                warn!("package.metadata.dist.cargo-dist-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
-            }
-            if package_config.rust_toolchain_version.is_some() {
-                warn!("package.metadata.dist.rust-toolchain-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
-            }
-            if !package_config.ci.is_empty() {
-                warn!("package.metadata.dist.ci is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
-            }
-            if package_config.precise_builds.is_some() {
-                warn!("package.metadata.dist.precise-builds is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
-            }
-            if package_config.merge_tasks.is_some() {
-                warn!("package.metadata.dist.merge-tasks is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
-            }
-            if package_config.fail_fast.is_some() {
-                warn!("package.metadata.dist.fail-fast is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package.manifest_path);
-            }
-
             package_config.make_relative_to(&package.package_root);
-            package_config.merge_workspace_config(&workspace_metadata);
+            package_config.merge_workspace_config(&workspace_metadata, &package.manifest_path);
             package_metadata.push(package_config);
         }
 
@@ -1116,8 +1207,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 static_assets.push((StaticAssetKind::License, license.clone()));
             }
         }
-        for static_asset in &package_config.include {
-            static_assets.push((StaticAssetKind::Other, static_asset.clone()));
+        if let Some(include) = &package_config.include {
+            for static_asset in include {
+                static_assets.push((StaticAssetKind::Other, static_asset.clone()));
+            }
         }
 
         let idx = ReleaseIdx(self.inner.releases.len());
@@ -2144,11 +2237,12 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
     // Prefer the CLI (cfg) if it's non-empty, but only select a subset
     // of what the workspace supports if it's non-empty
+    let workspace_ci = graph.workspace_metadata.ci.clone().unwrap_or_default();
     if cfg.ci.is_empty() {
-        graph.set_ci_style(graph.workspace_metadata.ci.clone());
+        graph.set_ci_style(workspace_ci);
     } else {
         let cfg_ci = SortedSet::from_iter(cfg.ci.clone());
-        let workspace_ci = SortedSet::from_iter(graph.workspace_metadata.ci.clone());
+        let workspace_ci = SortedSet::from_iter(workspace_ci);
         let shared_ci = cfg_ci.intersection(&workspace_ci).cloned().collect();
         graph.set_ci_style(shared_ci);
     }
