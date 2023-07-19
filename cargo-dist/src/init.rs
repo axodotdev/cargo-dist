@@ -550,9 +550,6 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
         ci.as_ref(),
     );
 
-    // TODO: this is an Option<Vec<_>> and we only ignored it when None
-    //
-    // Is there semantic meaning to this..?
     apply_string_list(
         table,
         "installers",
@@ -560,9 +557,6 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
         installers.as_ref(),
     );
 
-    // TODO: this is an Option<Vec<_>> and we only ignored it when None
-    //
-    // Is there semantic meaning to this..?
     apply_string_list(
         table,
         "targets",
@@ -646,6 +640,14 @@ fn update_toml_metadata(workspace_toml: &mut toml_edit::Document, meta: &DistMet
         .set_prefix("\n# Config for 'cargo dist'\n");
 }
 
+/// Update the toml table to add/remove this value
+///
+/// If the value is Some we will set the value and hang a description comment off of it.
+/// If the given key already existed in the table, this will update it in place and overwrite
+/// whatever comment was above it. If the given key is new, it will appear at the end of the
+/// table.
+///
+/// If the value is None, we delete it (and any comment above it).
 fn apply_optional_value<I>(table: &mut toml_edit::Table, key: &str, desc: &str, val: Option<I>)
 where
     I: Into<toml_edit::Value>,
@@ -658,6 +660,7 @@ where
     }
 }
 
+/// Same as [`apply_optional_value`][] but with a list of items to `.to_string()`
 fn apply_string_list<I>(table: &mut toml_edit::Table, key: &str, desc: &str, list: Option<I>)
 where
     I: IntoIterator,
@@ -665,12 +668,8 @@ where
 {
     if let Some(list) = list {
         let items = list.into_iter().map(|i| i.to_string()).collect::<Vec<_>>();
-        if !items.is_empty() {
-            table.insert(key, toml_edit::Item::Value(items.into_iter().collect()));
-            table.key_decor_mut(key).unwrap().set_prefix(desc);
-        } else {
-            table.remove(key);
-        }
+        table.insert(key, toml_edit::Item::Value(items.into_iter().collect()));
+        table.key_decor_mut(key).unwrap().set_prefix(desc);
     } else {
         table.remove(key);
     }
