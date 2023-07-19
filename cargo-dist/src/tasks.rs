@@ -232,7 +232,6 @@ pub struct DistMetadata {
     /// If that downside is big enough for you, this setting is a good idea.
     ///
     /// [workspace-hack]: https://docs.rs/cargo-hakari/latest/cargo_hakari/about/index.html
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "precise-builds")]
     pub precise_builds: Option<bool>,
@@ -246,7 +245,6 @@ pub struct DistMetadata {
     /// which builds those independently on separate logical machines. With this enabled we will
     /// build both of those platforms together on the same machine, making it take twice as long
     /// as any other build and making it impossible for only one of them to succeed.
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "merge-tasks")]
     pub merge_tasks: Option<bool>,
@@ -270,7 +268,6 @@ pub struct DistMetadata {
     ///
     /// Prior to 0.1.0 we didn't set the correct flags in our CI scripts to do this, but now we do.
     /// This flag was introduced to allow you to restore the old behaviour if you prefer.
-    #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "fail-fast")]
     pub fail_fast: Option<bool>,
@@ -2569,21 +2566,18 @@ pub fn get_host_target(cargo: String) -> Result<CargoInfo> {
     ))
 }
 
-/// Load the root workspace toml into toml-edit form
-pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
-    // FIXME: this should really be factored out into some sort of i/o module
-    let mut workspace_toml_file = File::open(manifest_path)
-        .into_diagnostic()
-        .wrap_err("couldn't load root workspace Cargo.toml")?;
-    let mut workspace_toml_str = String::new();
-    workspace_toml_file
-        .read_to_string(&mut workspace_toml_str)
-        .into_diagnostic()
-        .wrap_err("couldn't read root workspace Cargo.toml")?;
-    workspace_toml_str
-        .parse::<toml_edit::Document>()
-        .into_diagnostic()
-        .wrap_err("couldn't parse root workspace Cargo.toml")
+/// Load a Cargo.toml into toml-edit form
+pub fn load_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
+    let src = axoasset::SourceFile::load_local(manifest_path)?;
+    let toml = src.deserialize_toml_edit()?;
+    Ok(toml)
+}
+
+/// Save a Cargo.toml from toml-edit form
+pub fn save_cargo_toml(manifest_path: &Utf8Path, toml: toml_edit::Document) -> Result<()> {
+    let toml_text = toml.to_string();
+    axoasset::LocalAsset::write_new(&toml_text, manifest_path)?;
+    Ok(())
 }
 
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {

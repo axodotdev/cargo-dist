@@ -43,7 +43,7 @@ xz2 = "0.1.7"
 guppy = "0.15.0"
 camino = "1.1.1"
 semver = "1.0.14"
-toml_edit = "0.15.0"
+toml_edit = "0.19.0"
 parse-changelog = { version = "0.5.3", default-features = false }
 newline-converter = "0.2.2"
 axoproject = { version = "0.3.0", default-features = false, features = ["cargo-projects"] }
