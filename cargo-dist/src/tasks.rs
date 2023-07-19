@@ -852,6 +852,8 @@ pub struct Release {
     pub unix_archive: ZipStyle,
     /// Style of checksum to produce
     pub checksum: ChecksumStyle,
+    /// The @scope to include in NPM packages
+    pub npm_scope: Option<String>,
     /// Static assets that should be included in bundles like executable-zips
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
 }
@@ -1183,6 +1185,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_repository_url = package_info.repository_url.clone();
         let app_homepage_url = package_info.homepage_url.clone();
         let app_keywords = package_info.keywords.clone();
+        let npm_scope = package_config.npm_scope.clone();
 
         let windows_archive = package_config.windows_archive.unwrap_or(ZipStyle::Zip);
         let unix_archive = package_config
@@ -1233,6 +1236,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             unix_archive,
             static_assets,
             checksum,
+            npm_scope,
         });
         idx
     }
@@ -1647,7 +1651,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let bin = release.bins[0].1.clone();
 
-        let npm_package_name = if let Some(scope) = &self.workspace_metadata.npm_scope {
+        let npm_package_name = if let Some(scope) = &release.npm_scope {
             format!("{scope}/{}", release.app_name)
         } else {
             release.app_name.clone()
