@@ -9,8 +9,8 @@ title = "cargo-dist"
 git-repository-url = "https://github.com/axodotdev/cargo-dist"
 edit-url-template = "https://github.com/axodotdev/cargo-dist/edit/main/book/{path}"
 
-# [output.linkcheck]
-# warning-policy = "error"
+[output.linkcheck]
+warning-policy = "error"
 
 [preprocessor.toc]
 command = "mdbook-toc"
