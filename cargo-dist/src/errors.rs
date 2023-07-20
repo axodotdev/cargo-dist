@@ -7,6 +7,7 @@
 //! If we ever change this decision, this will be a lot more important!
 
 use axoproject::errors::AxoprojectError;
+use camino::Utf8PathBuf;
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -26,6 +27,16 @@ pub enum DistError {
     #[error(transparent)]
     #[diagnostic(transparent)]
     Asset(#[from] axoasset::AxoassetError),
+
+    /// Error parsing metadata in Cargo.toml (json because it's from cargo-metadata)
+    #[error("Malformed metadata.dist in {manifest_path}")]
+    CargoTomlParse {
+        /// path to file
+        manifest_path: Utf8PathBuf,
+        /// Inner error
+        #[source]
+        cause: serde_json::Error,
+    },
 
     /// User declined to update cargo-dist, refuse to make progress
     #[error(
@@ -55,4 +66,24 @@ pub enum DistError {
     /// User declined to force tar.gz with npm
     #[error("Cannot enable npm support without forcing artifacts to be .tar.gz")]
     MustEnableTarGz,
+
+    /// Completely unknown format to install-path
+    ///
+    /// NOTE: we can't use `diagnostic(help)` here because this will get crammed into
+    /// a serde_json error, reducing it to a String. So we inline the help!
+    #[error(r#"install-path = "{path}" has an unknown format (it can either be "CARGO_HOME", "~/subdir/", or "$ENV_VAR/subdir/")"#)]
+    InstallPathInvalid {
+        /// The full value passed to install-path
+        path: String,
+    },
+
+    /// Being pedantic about the env-var mode of install-path to be consistent
+    ///
+    /// NOTE: we can't use `diagnostic(help)` here because this will get crammed into
+    /// a serde_json error, reducing it to a String. So we inline the help!
+    #[error(r#"install-path = "{path}" is missing a subdirectory (add a trailing slash if you want no subdirectory)"#)]
+    InstallPathEnvSlash {
+        /// The full value passed to install-path
+        path: String,
+    },
 }

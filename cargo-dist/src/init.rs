@@ -171,7 +171,10 @@ fn get_new_dist_metadata(
         .map(|t| t.contains_key(METADATA_DIST))
         .unwrap_or(false);
     let mut meta = if has_config {
-        tasks::parse_metadata_table(workspace_info.cargo_metadata_table.as_ref())
+        tasks::parse_metadata_table(
+            &workspace_info.manifest_path,
+            workspace_info.cargo_metadata_table.as_ref(),
+        )?
     } else {
         DistMetadata {
             // If they init with this version we're gonna try to stick to it!
@@ -191,6 +194,7 @@ fn get_new_dist_metadata(
             precise_builds: None,
             merge_tasks: None,
             fail_fast: None,
+            install_path: None,
         }
     };
 
@@ -554,6 +558,7 @@ fn update_toml_metadata(
         precise_builds,
         merge_tasks,
         fail_fast,
+        install_path,
     } = &meta;
 
     apply_optional_value(
@@ -659,6 +664,13 @@ fn update_toml_metadata(
         "fail-fast",
         "# Whether failing tasks should make us give up on all other tasks\n",
         *fail_fast,
+    );
+
+    apply_optional_value(
+        table,
+        "install-path",
+        "# Path that installers should place binaries in\n",
+        install_path.as_ref().map(|p| p.to_string()),
     );
 
     // Finalize the table
