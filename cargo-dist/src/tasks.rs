@@ -62,7 +62,7 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
-use crate::errors::Result;
+use crate::errors::{DistError, DistResult, Result};
 
 /// Key in workspace.metadata or package.metadata for our config
 pub const METADATA_DIST: &str = "dist";
@@ -271,6 +271,11 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "fail-fast")]
     pub fail_fast: Option<bool>,
+
+    /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "install-path")]
+    pub install_path: Option<InstallPathStrategy>,
 }
 
 impl DistMetadata {
@@ -293,6 +298,7 @@ impl DistMetadata {
             precise_builds: _,
             fail_fast: _,
             merge_tasks: _,
+            install_path: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -323,6 +329,7 @@ impl DistMetadata {
             precise_builds,
             merge_tasks,
             fail_fast,
+            install_path,
         } = self;
 
         // Check for global settings on local packages
@@ -369,6 +376,9 @@ impl DistMetadata {
         }
         if checksum.is_none() {
             *checksum = workspace_config.checksum;
+        }
+        if install_path.is_none() {
+            *install_path = workspace_config.install_path.clone();
         }
 
         // This was historically implemented as extend, but I'm not convinced the
@@ -856,6 +866,8 @@ pub struct Release {
     pub npm_scope: Option<String>,
     /// Static assets that should be included in bundles like executable-zips
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
+    /// TODO: ??? Path to install binaries in
+    pub install_path: InstallPathStrategy,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -978,6 +990,8 @@ pub struct InstallerInfo {
     pub desc: String,
     /// Hint for how to run the installer
     pub hint: String,
+    /// Where to install binaries
+    pub install_path: InstallPathStrategy,
 }
 
 /// Info about an npm installer
@@ -1005,6 +1019,92 @@ pub struct NpmInstallerInfo {
     pub package_dir: Utf8PathBuf,
     /// Generic installer info
     pub inner: InstallerInfo,
+}
+
+/// key for the install-path config that selects [`InstallPathStrategyCargoHome`][]
+const CARGO_HOME_INSTALL_PATH: &str = "CARGO_HOME";
+
+/// Strategy for install binaries
+#[derive(Debug, Clone)]
+pub enum InstallPathStrategy {
+    /// install to $CARGO_HOME, falling back to ~/.cargo/
+    CargoHome,
+    /// install to this subdir of the user's home
+    ///
+    /// syntax: `~/subdir`
+    HomeSubdir {
+        /// The subdir of home to install to
+        subdir: String,
+    },
+    /// install to this subdir of this env var
+    ///
+    /// syntax: `$ENV_VAR/subdir`
+    EnvSubdir {
+        /// The env var to get the base of the path from
+        env_key: String,
+        /// The subdir to install to
+        subdir: String,
+    },
+}
+
+impl std::str::FromStr for InstallPathStrategy {
+    type Err = DistError;
+    fn from_str(s: &str) -> DistResult<Self> {
+        let path = s.trim();
+        if path == CARGO_HOME_INSTALL_PATH {
+            Ok(InstallPathStrategy::CargoHome)
+        } else if let Some(subdir) = path.strip_prefix("~/") {
+            Ok(InstallPathStrategy::HomeSubdir {
+                subdir: subdir.to_owned(),
+            })
+        } else if let Some(val) = path.strip_prefix('$') {
+            if let Some((env_key, subdir)) = val.split_once('/') {
+                Ok(InstallPathStrategy::EnvSubdir {
+                    env_key: env_key.to_owned(),
+                    subdir: subdir.to_owned(),
+                })
+            } else {
+                Err(DistError::InstallPathEnvSlash {
+                    path: path.to_owned(),
+                })
+            }
+        } else {
+            Err(DistError::InstallPathInvalid {
+                path: path.to_owned(),
+            })
+        }
+    }
+}
+
+impl std::fmt::Display for InstallPathStrategy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InstallPathStrategy::CargoHome => write!(f, "{}", CARGO_HOME_INSTALL_PATH),
+            InstallPathStrategy::HomeSubdir { subdir } => write!(f, "~/{subdir}"),
+            InstallPathStrategy::EnvSubdir { env_key, subdir } => write!(f, "${env_key}/{subdir}"),
+        }
+    }
+}
+
+impl serde::Serialize for InstallPathStrategy {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for InstallPathStrategy {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let path = String::deserialize(deserializer)?;
+        path.parse().map_err(|e| D::Error::custom(format!("{e}")))
+    }
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers
@@ -1063,14 +1163,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         tools: Tools,
         workspace: &'pkg_graph WorkspaceInfo,
         artifact_mode: ArtifactMode,
-    ) -> Self {
+    ) -> DistResult<Self> {
         let target_dir = workspace.target_dir.clone();
         let workspace_dir = workspace.workspace_dir.clone();
         let dist_dir = target_dir.join(TARGET_DIST);
 
         // Read the global config
         let dist_profile = workspace.cargo_profiles.get(PROFILE_DIST);
-        let mut workspace_metadata = parse_metadata_table(workspace.cargo_metadata_table.as_ref());
+        let mut workspace_metadata = parse_metadata_table(
+            &workspace.manifest_path,
+            workspace.cargo_metadata_table.as_ref(),
+        )?;
         workspace_metadata.make_relative_to(&workspace.workspace_dir);
 
         // This is intentionally written awkwardly to make you update this
@@ -1112,6 +1215,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             npm_scope: _,
             // Only the final value merged into a package_config matters
             checksum: _,
+            // Only the final value merged into a package_config matters
+            install_path: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -1126,13 +1231,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Compute/merge package configs
         let mut package_metadata = vec![];
         for package in &workspace.package_info {
-            let mut package_config = parse_metadata_table(package.cargo_metadata_table.as_ref());
+            let mut package_config = parse_metadata_table(
+                &package.manifest_path,
+                package.cargo_metadata_table.as_ref(),
+            )?;
             package_config.make_relative_to(&package.package_root);
             package_config.merge_workspace_config(&workspace_metadata, &package.manifest_path);
             package_metadata.push(package_config);
         }
 
-        Self {
+        Ok(Self {
             inner: DistGraph {
                 is_init: dist_profile.is_some(),
                 target_dir,
@@ -1162,7 +1270,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             workspace,
             binaries_by_id: FastMap::new(),
             artifact_mode,
-        }
+        })
     }
 
     fn package_metadata(&self, idx: PackageIdx) -> &DistMetadata {
@@ -1186,6 +1294,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_homepage_url = package_info.homepage_url.clone();
         let app_keywords = package_info.keywords.clone();
         let npm_scope = package_config.npm_scope.clone();
+        let install_path = package_config
+            .install_path
+            .clone()
+            .unwrap_or(InstallPathStrategy::CargoHome);
 
         let windows_archive = package_config.windows_archive.unwrap_or(ZipStyle::Zip);
         let unix_archive = package_config
@@ -1237,6 +1349,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             static_assets,
             checksum,
             npm_scope,
+            install_path,
         });
         idx
     }
@@ -1553,6 +1666,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
+                install_path: release.install_path.clone(),
                 base_url: download_url.clone(),
                 artifacts,
                 hint,
@@ -1624,6 +1738,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
+                install_path: release.install_path.clone(),
                 base_url: download_url.clone(),
                 artifacts,
                 hint,
@@ -1741,6 +1856,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),
                     app_version: release.version.to_string(),
+                    install_path: release.install_path.clone(),
                     base_url: download_url.clone(),
                     artifacts,
                     hint,
@@ -2191,7 +2307,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     eprintln!("analyzing workspace:");
     let tools = tool_info()?;
     let workspace = crate::get_project()?;
-    let mut graph = DistGraphBuilder::new(tools, &workspace, cfg.artifact_mode);
+    let mut graph = DistGraphBuilder::new(tools, &workspace, cfg.artifact_mode)?;
 
     // First thing's first: if they gave us an announcement tag then we should try to parse it
     let mut announcing_package = None;
@@ -2711,14 +2827,19 @@ fn find_tool(name: &str) -> Option<Tool> {
     })
 }
 
-pub(crate) fn parse_metadata_table(metadata_table: Option<&serde_json::Value>) -> DistMetadata {
-    metadata_table
+pub(crate) fn parse_metadata_table(
+    manifest_path: &Utf8Path,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<DistMetadata> {
+    Ok(metadata_table
         .and_then(|t| t.get(METADATA_DIST))
         .map(DistMetadata::deserialize)
         .transpose()
-        .ok()
-        .unwrap_or_default()
-        .unwrap_or_default()
+        .map_err(|cause| DistError::CargoTomlParse {
+            manifest_path: manifest_path.to_owned(),
+            cause,
+        })?
+        .unwrap_or_default())
 }
 
 /// Get the general info about the project (via axo-project)

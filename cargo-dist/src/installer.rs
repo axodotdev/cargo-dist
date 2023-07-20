@@ -9,16 +9,14 @@ use miette::{Context, IntoDiagnostic};
 use newline_converter::{dos2unix, unix2dos};
 use serde_json::json;
 
+use crate::errors::*;
 use crate::{DistGraph, InstallerInfo, NpmInstallerInfo};
 
 ////////////////////////////////////////////////////////////////
 // Shell Installer
 ////////////////////////////////////////////////////////////////
 
-pub(crate) fn generate_install_sh_script(
-    dist: &DistGraph,
-    info: &InstallerInfo,
-) -> Result<(), miette::Report> {
+pub(crate) fn generate_install_sh_script(dist: &DistGraph, info: &InstallerInfo) -> Result<()> {
     let installer_file = &info.dest_path;
     let mut file = File::create(installer_file)
         .into_diagnostic()
@@ -33,7 +31,7 @@ fn write_install_sh_script<W: std::io::Write>(
     f: &mut W,
     _dist: &DistGraph,
     info: &InstallerInfo,
-) -> Result<(), std::io::Error> {
+) -> std::result::Result<(), std::io::Error> {
     let InstallerInfo {
         app_name,
         app_version,
@@ -115,10 +113,7 @@ fn write_install_sh_script<W: std::io::Write>(
 // Powershell Installer
 ////////////////////////////////////////////////////////////////
 
-pub(crate) fn generate_install_ps_script(
-    dist: &DistGraph,
-    info: &InstallerInfo,
-) -> Result<(), miette::Report> {
+pub(crate) fn generate_install_ps_script(dist: &DistGraph, info: &InstallerInfo) -> Result<()> {
     let installer_file = &info.dest_path;
     let mut file = File::create(installer_file)
         .into_diagnostic()
@@ -133,7 +128,7 @@ fn write_install_ps_script<W: std::io::Write>(
     f: &mut W,
     _dist: &DistGraph,
     info: &InstallerInfo,
-) -> Result<(), std::io::Error> {
+) -> std::result::Result<(), std::io::Error> {
     use std::fmt::Write;
     let InstallerInfo {
         app_name,
@@ -224,7 +219,7 @@ const TEMPLATE6: &str = include_str!("../templates/npm/run.js");
 pub(crate) fn generate_install_npm_project(
     _dist: &DistGraph,
     info: &NpmInstallerInfo,
-) -> Result<(), miette::Report> {
+) -> Result<()> {
     let zip_dir = &info.package_dir;
     apply_npm_templates(TEMPLATE1, zip_dir, TEMPLATE1_NAME, info)?;
     apply_npm_templates(TEMPLATE2, zip_dir, TEMPLATE2_NAME, info)?;
@@ -241,7 +236,7 @@ fn apply_npm_templates(
     target_dir: &Utf8Path,
     rel_path: &str,
     info: &NpmInstallerInfo,
-) -> Result<(), miette::Report> {
+) -> Result<()> {
     let file_path = target_dir.join(rel_path);
     let file = File::create(&file_path)
         .into_diagnostic()
