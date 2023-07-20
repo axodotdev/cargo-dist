@@ -1,0 +1,48 @@
+# Publishes a release to crates.io
+#
+# To trigger this:
+#
+# - go to Actions > PublishRelease
+# - click the Run Workflow dropdown in the top-right
+# - enter the tag of the release as “Release Tag” (e.g. v0.3.18)
+name: PublishRelease
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag'
+        required: true
+        type: string
+
+jobs:
+  # This is a bit convoluted so that the other parts of this workflow remain
+  # the same even if the way the tag is defined is more complicated
+  download-tag:
+    runs-on: ubuntu-latest
+    outputs:
+        tag: ${{ steps.print-tag.outputs.tag }}
+    steps:
+      - id: print-tag
+        run: echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+
+  # publish the current repo state to crates.io
+  cargo-publish:
+    runs-on: ubuntu-latest
+    needs: download-tag
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          ref: ${{needs.download-tag.outputs.tag}}
+          fetch-depth: 0
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - run: cargo publish -p cargo-dist-schema --token ${CRATES_TOKEN}
+        env:
+          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+      - run: cargo publish -p cargo-dist --token ${CRATES_TOKEN}
+        env:
+          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
