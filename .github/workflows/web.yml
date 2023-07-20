@@ -68,7 +68,7 @@ jobs:
       # This will write all output to ./public/ (including copying mdbook's output to there)
       - name: Install and run oranda
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/download/v0.1.0/oranda-installer.sh | sh
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/download/v0.2.0/oranda-installer.sh | sh
           cd cargo-dist
           oranda build
 
