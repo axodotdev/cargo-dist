@@ -138,6 +138,10 @@ pub enum Commands {
     #[clap(disable_version_flag = true)]
     #[clap(hide = true)]
     HelpMarkdown(HelpMarkdownArgs),
+    /// Print the json schema for dist-manifest.json
+    #[clap(disable_version_flag = true)]
+    #[clap(hide = true)]
+    ManifestSchema(ManifestSchemaArgs),
     /// Get a plan of what to build (and check project status)
     ///
     /// If you want to know what running your cargo-dist CI will produce,
@@ -279,3 +283,6 @@ pub enum OutputFormat {
     Human,
     Json,
 }
+
+#[derive(Args, Clone, Debug)]
+pub struct ManifestSchemaArgs {}
