@@ -1,0 +1,40 @@
+# After a release is successfully created, upload extra assets to it
+name: AppendRelease
+
+# We're going to edit a gh release, so we need that permission
+permissions:
+  contents: write
+
+on:
+  # Whenever a workflow called "Release" completes, run this!
+  workflow_run:
+    workflows: ["Release"]
+    types:
+        - completed
+
+# Alright, let's do it!
+jobs:
+  # Generate dist-manifest-schema.json and upload it to the release
+  schema:
+    name: Add schema to release
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      # Setup
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      # We get the tag of the release in github.event.workflow_run.head_branch
+      # No idea why it's stored there with that name, but, it is?
+      - name: Install cargo-dist and upload schema
+        run: |
+          echo "uploading schema to ${{ github.event.workflow_run.head_branch }}"
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/${{ github.event.workflow_run.head_branch }}/cargo-dist-installer.sh | sh
+          cargo dist manifest-schema > dist-manifest-schema.json
+          gh release upload ${{ github.event.workflow_run.head_branch }} dist-manifest-schema.json

@@ -33,6 +33,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::Manifest(args) => cmd_manifest(config, args),
         Commands::Plan(args) => cmd_plan(config, args),
         Commands::HelpMarkdown(args) => cmd_help_md(config, args),
+        Commands::ManifestSchema(args) => cmd_manifest_schema(config, args),
         Commands::Build(args) => cmd_dist(config, args),
     }
 }
@@ -401,5 +402,15 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
         }
     }
 
+    Ok(())
+}
+
+fn cmd_manifest_schema(
+    _config: &Cli,
+    _args: &cli::ManifestSchemaArgs,
+) -> Result<(), miette::ErrReport> {
+    let schema = cargo_dist_schema::DistManifest::json_schema();
+    let json_schema = serde_json::to_string_pretty(&schema).expect("failed to stringify schema!?");
+    println!("{json_schema}");
     Ok(())
 }
