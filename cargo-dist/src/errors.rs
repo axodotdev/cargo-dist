@@ -28,6 +28,21 @@ pub enum DistError {
     #[diagnostic(transparent)]
     Asset(#[from] axoasset::AxoassetError),
 
+    /// A problem with a jinja template, which is always a cargo-dist bug
+    #[error("Failed to render template")]
+    #[diagnostic(help("this is a bug in cargo-dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new"))]
+    Jinja {
+        /// The SourceFile we were try to parse
+        #[source_code]
+        source: String,
+        /// The range the error was found on
+        #[label]
+        span: Option<miette::SourceSpan>,
+        /// Details of the error
+        #[source]
+        details: minijinja::Error,
+    },
+
     /// Error parsing metadata in Cargo.toml (json because it's from cargo-metadata)
     #[error("Malformed metadata.dist in {manifest_path}")]
     CargoTomlParse {
@@ -86,4 +101,16 @@ pub enum DistError {
         /// The full value passed to install-path
         path: String,
     },
+}
+
+impl From<minijinja::Error> for DistError {
+    fn from(details: minijinja::Error) -> Self {
+        let source: String = details.template_source().unwrap_or_default().to_owned();
+        let span = details.range().map(|r| r.into());
+        DistError::Jinja {
+            source,
+            span,
+            details,
+        }
+    }
 }

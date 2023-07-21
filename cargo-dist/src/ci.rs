@@ -2,6 +2,8 @@
 //!
 //! In the future this may get split up into submodules.
 
+// FIXME(#283): migrate this to minijinja (steal logic from oranda to load a whole dir)
+
 use std::fs::File;
 
 use miette::{IntoDiagnostic, WrapErr};
