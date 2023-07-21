@@ -497,6 +497,8 @@ pub struct DistGraph {
 
     /// Info about the tools we're using to build
     pub tools: Tools,
+    /// Minijinja templates we might want to render
+    pub templates: minijinja::Environment<'static>,
 
     /// The cargo target dir.
     pub target_dir: Utf8PathBuf,
@@ -974,7 +976,7 @@ pub enum InstallerImpl {
 }
 
 /// Generic info about an installer
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct InstallerInfo {
     /// The path to generate the installer at
     pub dest_path: Utf8PathBuf,
@@ -995,7 +997,7 @@ pub struct InstallerInfo {
 }
 
 /// Info about an npm installer
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct NpmInstallerInfo {
     /// The name of the npm package
     pub npm_package_name: String,
@@ -1107,8 +1109,52 @@ impl<'de> serde::Deserialize<'de> for InstallPathStrategy {
     }
 }
 
+/// Strategy for install binaries (replica to have different Serialize for jinja)
+///
+/// The serialize/deserialize impls are already required for loading/saving the config
+/// from toml/json, and that serialize impl just creates a plain string again. To allow
+/// jinja templates to have richer context we have use duplicate type with a more
+/// conventional derived serialize.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "kind")]
+pub enum JinjaInstallPathStrategy {
+    /// install to $CARGO_HOME, falling back to ~/.cargo/
+    CargoHome,
+    /// install to this subdir of the user's home
+    ///
+    /// syntax: `~/subdir`
+    HomeSubdir {
+        /// The subdir of home to install to
+        subdir: String,
+    },
+    /// install to this subdir of this env var
+    ///
+    /// syntax: `$ENV_VAR/subdir`
+    EnvSubdir {
+        /// The env var to get the base of the path from
+        env_key: String,
+        /// The subdir to install to
+        subdir: String,
+    },
+}
+
+impl InstallPathStrategy {
+    /// Convert this into a jinja-friendly form
+    pub fn into_jinja(self) -> JinjaInstallPathStrategy {
+        match self {
+            InstallPathStrategy::CargoHome => JinjaInstallPathStrategy::CargoHome,
+            InstallPathStrategy::HomeSubdir { subdir } => {
+                JinjaInstallPathStrategy::HomeSubdir { subdir }
+            }
+            InstallPathStrategy::EnvSubdir { env_key, subdir } => {
+                JinjaInstallPathStrategy::EnvSubdir { env_key, subdir }
+            }
+        }
+    }
+}
+
 /// A fake fragment of an ExecutableZip artifact for installers
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ExecutableZipFragment {
     /// The id of the artifact
     pub id: String,
@@ -1240,6 +1286,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             package_metadata.push(package_config);
         }
 
+        let templates = make_template_env();
+
         Ok(Self {
             inner: DistGraph {
                 is_init: dist_profile.is_some(),
@@ -1252,6 +1300,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
                 tools,
+                templates,
                 announcement_tag: None,
                 announcement_is_prerelease: false,
                 announcement_changelog: None,
@@ -1625,6 +1674,28 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let hint = format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
 
+        // If they have an x64 macos build but not an arm64 one, add a fallback entry
+        // to try to install x64 on arm64 and let rosetta2 deal with it.
+        //
+        // (This isn't strictly correct because rosetta2 isn't installed by default
+        // on macos, and the auto-installer only triggers for "real" apps, and not CLIs.
+        // Still, we think this is better than not trying at all.)
+        const X64_MACOS: &str = "x86_64-apple-darwin";
+        const ARM64_MACOS: &str = "aarch64-apple-darwin";
+        let mut has_x64_apple = false;
+        let mut has_arm_apple = false;
+        for &variant_idx in &release.variants {
+            let variant = self.variant(variant_idx);
+            let target = &variant.target;
+            if target == X64_MACOS {
+                has_x64_apple = true;
+            }
+            if target == ARM64_MACOS {
+                has_arm_apple = true;
+            }
+        }
+        let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
+
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
         let mut target_triples = SortedSet::new();
@@ -1640,7 +1711,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let (artifact, binaries) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
             target_triples.insert(target.clone());
-            artifacts.push(ExecutableZipFragment {
+            let fragment = ExecutableZipFragment {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
                 zip_style: artifact.archive.as_ref().unwrap().zip_style,
@@ -1648,7 +1719,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .into_iter()
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
-            });
+            };
+            if do_rosetta_fallback && target == X64_MACOS {
+                // Copy the info but respecify it to be arm64 macos
+                let mut arm_fragment = fragment.clone();
+                arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
+                artifacts.push(arm_fragment);
+            }
+            artifacts.push(fragment);
         }
         if artifacts.is_empty() {
             warn!("skipping shell installer: not building any supported platforms (use --artifacts=global)");
@@ -2868,4 +2946,26 @@ pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
             Err(Report::new(e).wrap_err("your cargo workspace has an issue"))
         }
     }
+}
+
+/// Name of the installer.sh template
+pub const TEMPLATE_INSTALLER_SH: &str = "installer.sh";
+/// Name of the installer.ps1 template
+pub const TEMPLATE_INSTALLER_PS: &str = "installer.ps1";
+
+/// Load+parse templates for various things (ideally done only once and then reused)
+pub fn make_template_env() -> minijinja::Environment<'static> {
+    let mut env = minijinja::Environment::new();
+    env.set_debug(true);
+    env.add_template(
+        TEMPLATE_INSTALLER_SH,
+        include_str!("../templates/installer.sh.j2"),
+    )
+    .expect("failed to load installer.sh template from binary");
+    env.add_template(
+        TEMPLATE_INSTALLER_PS,
+        include_str!("../templates/installer.ps1.j2"),
+    )
+    .expect("failed to load installer.sh template from binary");
+    env
 }

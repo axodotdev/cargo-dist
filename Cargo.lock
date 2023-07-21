@@ -312,6 +312,7 @@ dependencies = [
  "guppy",
  "insta",
  "miette",
+ "minijinja",
  "newline-converter",
  "parse-changelog",
  "semver",
@@ -1275,6 +1276,15 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "minijinja"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f75e6f2b03d9292f6e18aaeeda21d58c91f6943a58ea19a2e8672dcf9d91d5b"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "miniz_oxide"

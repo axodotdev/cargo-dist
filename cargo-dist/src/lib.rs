@@ -697,8 +697,11 @@ pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
 /// Build a cargo target
 fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
     match style {
-        InstallerImpl::Shell(info) => installer::generate_install_sh_script(dist, info),
-        InstallerImpl::Powershell(info) => installer::generate_install_ps_script(dist, info),
-        InstallerImpl::Npm(info) => installer::generate_install_npm_project(dist, info),
+        InstallerImpl::Shell(info) => installer::write_install_sh_script(&dist.templates, info)?,
+        InstallerImpl::Powershell(info) => {
+            installer::write_install_ps_script(&dist.templates, info)?
+        }
+        InstallerImpl::Npm(info) => installer::write_install_npm_project(&dist.templates, info)?,
     }
+    Ok(())
 }
