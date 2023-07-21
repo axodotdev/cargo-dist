@@ -993,7 +993,7 @@ pub struct InstallerInfo {
     /// Hint for how to run the installer
     pub hint: String,
     /// Where to install binaries
-    pub install_path: InstallPathStrategy,
+    pub install_path: JinjaInstallPathStrategy,
 }
 
 /// Info about an npm installer
@@ -1744,7 +1744,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
-                install_path: release.install_path.clone(),
+                install_path: release.install_path.clone().into_jinja(),
                 base_url: download_url.clone(),
                 artifacts,
                 hint,
@@ -1816,7 +1816,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
-                install_path: release.install_path.clone(),
+                install_path: release.install_path.clone().into_jinja(),
                 base_url: download_url.clone(),
                 artifacts,
                 hint,
@@ -1934,7 +1934,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),
                     app_version: release.version.to_string(),
-                    install_path: release.install_path.clone(),
+                    install_path: release.install_path.clone().into_jinja(),
                     base_url: download_url.clone(),
                     artifacts,
                     hint,
@@ -2957,6 +2957,16 @@ pub const TEMPLATE_INSTALLER_PS: &str = "installer.ps1";
 pub fn make_template_env() -> minijinja::Environment<'static> {
     let mut env = minijinja::Environment::new();
     env.set_debug(true);
+
+    fn jinja_error(details: String) -> std::result::Result<String, minijinja::Error> {
+        Err(minijinja::Error::new(
+            minijinja::ErrorKind::EvalBlock,
+            details,
+        ))
+    }
+
+    env.add_function("error", jinja_error);
+
     env.add_template(
         TEMPLATE_INSTALLER_SH,
         include_str!("../templates/installer.sh.j2"),
