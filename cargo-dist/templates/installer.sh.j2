@@ -102,9 +102,33 @@ download_binary_and_run_installer() {
 }
 
 install() {
-    # FIXME: prefer $CARGO_HOME over $HOME/.cargo/ if available
-    # FIXME: let the user choose the dir to install to
-    local _install_dir="$HOME/.cargo/bin/"
+    local _install_dir=""
+{% if install_path.kind == "CargoHome" %}
+    # first try CARGO_HOME, then fallback to HOME
+    if [[ -z $CARGO_HOME ]]; then
+        _install_dir="$CARGO_HOME/bin/"
+    elif [[ -z $HOME ]]; then
+        _install_dir="$HOME/.cargo/bin/"
+    else
+        err "could not find your CARGO_HOME or HOME dir to install binaries to"
+    fi
+{% elif install_path.kind == "HomeSubdir" %}
+    # Install to this subdir of the user's home dir
+    if [[ -z $HOME ]]; then
+        _install_dir="$HOME/{{ install_path.subdir }}"
+    else
+        err "could not find your HOME dir to install binaries to"
+    fi
+{% elif install_path.kind == "EnvSubdir" %}
+    # Install to this subdir of the user's {{ install_path.env_key }} dir
+    if [[ -z ${{ install_path.env_key }} ]]; then
+        _install_dir="${{ install_path.env_key }}/{{ install_path.subdir }}"
+    else
+        err "could not find your {{ install_path.env_key }} dir to install binaries to"
+    fi
+{% else %}
+    {{ error("unimplemented install_path format: " ~ install_path.kind) }}
+{% endif %}
     say "installing to $_install_dir"
     mkdir -p "$_install_dir"
 
