@@ -101,6 +101,16 @@ pub enum DistError {
         /// The full value passed to install-path
         path: String,
     },
+
+    /// Being pedantic about the home mode of install-path to be consistent
+    ///
+    /// NOTE: we can't use `diagnostic(help)` here because this will get crammed into
+    /// a serde_json error, reducing it to a String. So we inline the help!
+    #[error(r#"install-path = "{path}" is missing a subdirectory (installing directly to home isn't allowed)"#)]
+    InstallPathHomeSubdir {
+        /// The full value passed to install-path
+        path: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

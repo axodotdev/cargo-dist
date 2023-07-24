@@ -272,7 +272,15 @@ pub struct DistMetadata {
     #[serde(rename = "fail-fast")]
     pub fail_fast: Option<bool>,
 
-    /// TODO
+    /// The strategy to use for selecting a path to install things at:
+    ///
+    /// * `CARGO_HOME`: (default) install as if cargo did
+    ///   (try `$CARGO_HOME/bin/`, but if `$CARGO_HOME` isn't set use `$HOME/.cargo/bin/`)
+    /// * `~/some/subdir/`: install to the given subdir of the user's `$HOME`
+    /// * `$SOME_VAR/some/subdir`: install to the given subdir of the dir defined by `$SOME_VAR`
+    ///
+    /// All of these error out if the required env-vars aren't set. In the future this may
+    /// allow for the input to be an array of options to try in sequence.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "install-path")]
     pub install_path: Option<InstallPathStrategy>,
@@ -868,7 +876,7 @@ pub struct Release {
     pub npm_scope: Option<String>,
     /// Static assets that should be included in bundles like executable-zips
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
-    /// TODO: ??? Path to install binaries in
+    /// Strategy for selecting paths to install to
     pub install_path: InstallPathStrategy,
 }
 
@@ -1051,14 +1059,19 @@ pub enum InstallPathStrategy {
 
 impl std::str::FromStr for InstallPathStrategy {
     type Err = DistError;
-    fn from_str(s: &str) -> DistResult<Self> {
-        let path = s.trim();
+    fn from_str(path: &str) -> DistResult<Self> {
         if path == CARGO_HOME_INSTALL_PATH {
             Ok(InstallPathStrategy::CargoHome)
         } else if let Some(subdir) = path.strip_prefix("~/") {
-            Ok(InstallPathStrategy::HomeSubdir {
-                subdir: subdir.to_owned(),
-            })
+            if subdir.is_empty() {
+                Err(DistError::InstallPathHomeSubdir {
+                    path: path.to_owned(),
+                })
+            } else {
+                Ok(InstallPathStrategy::HomeSubdir {
+                    subdir: subdir.to_owned(),
+                })
+            }
         } else if let Some(val) = path.strip_prefix('$') {
             if let Some((env_key, subdir)) = val.split_once('/') {
                 Ok(InstallPathStrategy::EnvSubdir {
@@ -2272,7 +2285,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
             }
 
-            // TODO: checksums...
             let other_artifacts: Vec<_> = bundles
                 .iter()
                 .map(|i| i.0)
