@@ -192,7 +192,7 @@ If no scope is specified the package will be global.
 
 > since 0.1.0
 
-Example `checksum = "sha512"`
+Example: `checksum = "sha512"`
 
 Specifies how to checksum [executable-zips][]. Supported values:
 
@@ -209,7 +209,7 @@ Future work is planned to [support more robust signed checksums][issue-sigstore]
 
 > since 0.1.0
 
-Example `precise-builds = true`
+Example: `precise-builds = true`
 
 **This can only be set globally**
 
@@ -232,7 +232,7 @@ If that downside is big enough for you, this setting is a good idea.
 
 > since 0.1.0
 
-Example `merge-tasks = true`
+Example: `merge-tasks = true`
 
 **This can only be set globally**
 
@@ -242,11 +242,12 @@ For example, if you build for x64 macos and arm64 macos, by default we will gene
 
 The default is `false`. Before 0.1.0 it was always `true` and couldn't be changed, making releases annoyingly slow (and technically less fault-isolated). This config was added to allow you to restore the old behaviour, if you really want.
 
+
 ### fail-fast
 
 > since 0.1.0
 
-Example `fail-fast = true`
+Example: `fail-fast = true`
 
 **This can only be set globally**
 
@@ -265,6 +266,28 @@ you sad if you do this kind of undrafting and also trust the dist-manifest to be
 
 Prior to 0.1.0 we didn't set the correct flags in our CI scripts to do this, but now we do.
 This flag was introduced to allow you to restore the old behaviour if you prefer.
+
+
+### install-path
+
+> since 0.1.0
+
+Example: `install-path = "~/.my-app/"`
+
+The strategy to use for selecting a path to install things at, with 3 possible syntaxes:
+
+* `CARGO_HOME`: (default) installs as if `cargo install` did it (tries `$CARGO_HOME/bin/`, but if `$CARGO_HOME` isn't set uses `$HOME/.cargo/bin/`). Note that we do not (yet) properly update some of the extra metadata files Cargo maintains, so Cargo may be confused if you ask it to manage the binary.
+
+* `~/some/subdir/`: installs to the given subdir of the user's `$HOME`
+
+* `$SOME_VAR/some/subdir`: installs to the given subdir of the dir defined by `$SOME_VAR`
+
+> NOTE: `$HOME/some/subdir` is technically valid syntax but it won't behave the way you want on Windows, because `$HOME` isn't a proper environment variable. Let us handle those details for you and just use `~/subdir/`.
+
+All of these error out if none of the required env-vars are set to a non-empty value. In the future we may expand this setting to allow you to pass an array of options that are tried in sequence until one succeeds.
+
+We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. `~/My cargo-dist Documents/bin/` works), but we won't be surprised if things misbehave on Interesting Inputs.
+
 
 
 ## Subsetting CI Flags
