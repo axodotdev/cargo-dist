@@ -179,6 +179,7 @@ function Invoke-Installer($bin_paths) {
 
   Write-Host "Everything's installed!"
   if (Add-Path $dest_dir) {
+      Write-Host ""
       Write-Host "$dest_dir was added to your PATH, you may need to restart your shell for that to take effect."
   }
 }
@@ -215,13 +216,9 @@ function Add-Path($OrigPathToAdd) {
   # Check if the path is already there
   #
   # We don't want to incorrectly match "C:\blah\" to "C:\blah\blah\", so we include the semicolon
-  # delimiters when searching, ensuring exact matches. This produces 4 cases:
-  #
-  # * the only value in PATH is this one
-  # * the value in the middle of the list
-  # * the value at the start of the list
-  # * the value at the end of the list
-  if (($OldPath -eq $OrigPathToAdd) -or ($OldPath -like "*;$OrigPathToAdd;*") -or ($OldPath -like "$OrigPathToAdd;*") -or ($OldPath -like "*;$OrigPathToAdd")) {
+  # delimiters when searching, ensuring exact matches. To avoid corner cases we add semicolons to
+  # both sides of the input, allowing us to pretend we're always in the middle of a list.
+  if (";$OldPath;" -like "*;$OrigPathToAdd;*") {
     # Already on path, nothing to do
     Write-Verbose "install dir already on PATH, all done!"
     return $false
