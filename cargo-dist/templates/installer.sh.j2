@@ -6,13 +6,6 @@
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
-# This is just a little script that can be downloaded from the internet to
-# install $APP_NAME. It downloads the tarball from ARTIFACT_DOWNLOAD_URL,
-# and extracts it to an appropriate directory.
-#
-# In the future this script will gain extra features, but for now it's
-# intentionally very simplistic to avoid shipping broken things.
-
 if [ "$KSH_VERSION" = 'Version JM 93t+ 2010-03-05' ]; then
     # The version of ksh93 that ships with many illumos systems does not
     # support the "local" extension.  Print a message rather than fail in
@@ -25,21 +18,107 @@ set -u
 
 APP_NAME="{{ app_name }}"
 APP_VERSION="{{ app_version }}"
-ARTIFACT_DOWNLOAD_URL="{{ base_url }}"
+ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-{{ base_url }}}"
+PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
+PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
+NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
+
+usage() {
+    # print help (this cat/EOF stuff is a "heredoc" string)
+    cat <<EOF
+{{ app_name }}-installer.sh
+
+The installer for {{ app_name }} {{ app_version }}
+
+This script detects what platform you're on and fetches an appropriate archive from
+{{ base_url }}
+then unpacks the binaries and installs them to {% if install_path.kind == "CargoHome" -%}
+    \$CARGO_HOME/bin (\$HOME/.cargo/bin)
+{%- elif install_path.kind == "HomeSubdir" -%}
+    \$HOME/{{ install_path.subdir }}
+{%- elif install_path.kind == "EnvSubdir" -%}
+    \${{ install_path.env_key }}/{{ install_path.subdir }}
+{%- else -%}
+    {{ error("unimplemented install_path format: " ~ install_path.kind) }}
+{%- endif %}
+
+It will then add that dir to PATH by adding the appropriate line to \$HOME/.profile
+
+USAGE:
+    {{ app_name }}-installer.sh [OPTIONS]
+
+OPTIONS:
+    -v, --verbose
+            Enable verbose output
+
+    -q, --quiet
+            Disable progress output
+
+        --no-modify-path
+            Don't configure the PATH environment variable
+
+    -h, --help
+            Print help information
+EOF
+}
 
 download_binary_and_run_installer() {
     downloader --check
+    need_cmd uname
     need_cmd mktemp
     need_cmd chmod
     need_cmd mkdir
     need_cmd rm
-    need_cmd rmdir
     need_cmd tar
     need_cmd which
-    need_cmd dirname
-    need_cmd awk
-    need_cmd cut
+    need_cmd grep
+    need_cmd cat
 
+    for arg in "$@"; do
+        case "$arg" in
+            --help)
+                usage
+                exit 0
+                ;;
+            --quiet)
+                PRINT_QUIET=1
+                ;;
+            --verbose)
+                PRINT_VERBOSE=1
+                ;;
+            --no-modify-path)
+                NO_MODIFY_PATH=1
+                ;;
+            *)
+                OPTIND=1
+                if [ "${arg%%--*}" = "" ]; then
+                    err "unknown option $arg"
+                    continue
+                fi
+                while getopts :hvq sub_arg "$arg"; do
+                    case "$sub_arg" in
+                        h)
+                            usage
+                            exit 0
+                            ;;
+                        v)
+                            # user wants to skip the prompt --
+                            # we don't need /dev/tty
+                            PRINT_VERBOSE=1
+                            ;;
+                        q)
+                            # user wants to skip the prompt --
+                            # we don't need /dev/tty
+                            PRINT_QUIET=1
+                            ;;
+                        *)
+                            err "unknown option -$OPTARG"
+                            ;;
+                        esac
+                done
+                ;;
+        esac
+    done
 
     get_architecture || return 1
     local _arch="$RETVAL"
@@ -72,8 +151,8 @@ download_binary_and_run_installer() {
     local _file="$_dir/input$_zip_ext"
 
     say "downloading $APP_NAME $APP_VERSION ${_arch}" 1>&2
-    # say "  from $_url" 1>&2
-    # say "  to $_file" 1>&2
+    say_verbose "  from $_url" 1>&2
+    say_verbose "  to $_file" 1>&2
 
     ensure mkdir -p "$_dir"
     
@@ -82,7 +161,7 @@ download_binary_and_run_installer() {
       say "this may be a standard network error, but it may also indicate"
       say "that $APP_NAME's release process is not working. When in doubt"
       say "please feel free to open an issue!"
-      # say "$REPO/issues/new/choose"
+      say_verbose "$REPO/issues/new/choose"
       exit 1
     fi
 
@@ -208,22 +287,24 @@ install() {
     {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {% endif %}
     say "installing to $_install_dir"
-    mkdir -p "$_install_dir"
+    ensure mkdir -p "$_install_dir"
 
     # copy all the binaries to the install dir
     local _src_dir="$1"
     local _bins="$2"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
-        cp "$_bin" "$_install_dir"
+        ensure cp "$_bin" "$_install_dir"
         # unzip seems to need this chmod
-        chmod +x "$_install_dir/$_bin_name"
+        ensure chmod +x "$_install_dir/$_bin_name"
         say "  $_bin_name"
     done
 
     say "everything's installed!"
 
-    add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr"
+    if [ "0" = "$NO_MODIFY_PATH" ]; then
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr"
+    fi
 }
 
 add_install_dir_to_path() {
@@ -240,6 +321,7 @@ add_install_dir_to_path() {
     if [ -n "${HOME:-}" ]; then
         local _rcfile="$HOME/.profile"
         local _line_to_add=". \"$_env_script_path_expr\""
+        local _legacy_line="source \"$_env_script_path_expr\""
 
         # Check if the line is already in the file
         # grep: 0 if matched, 1 if no match, and 2 if an error occurred
@@ -247,21 +329,29 @@ add_install_dir_to_path() {
         # Ideally we could use quiet grep (-q), but that makes "match" and "error"
         # have the same behaviour, when we want "no match" and "error" to be the same
         # (on error we want to create the file, which >> conveniently does)
-        if ! grep -F "$_line_to_add" "$_rcfile" > /dev/null 2>/dev/null; then 
+        if ! grep -F "$_line_to_add" "$_rcfile" > /dev/null 2>/dev/null && \
+           ! grep -F "$_legacy_line" "$_rcfile" > /dev/null 2>/dev/null
+        then 
             # Ok we definitely want to add the source line, but first write the script
             # but only if it doesn't already exist, to be safe.
             if [ ! -f "$_env_script_path" ]; then 
+                say_verbose "creating $_env_script_path"
                 write_env_script "$_install_dir_expr" "$_env_script_path"
+            else
+                say_verbose "$_env_script_path already exists"
             fi
 
             # If the script now exists, add the line to source it to the rcfile
             # (This will also create the rcfile if it doesn't exist)
             if [ -f "$_env_script_path" ]; then 
-                echo "$_line_to_add" >> "$_rcfile"
+                say_verbose "adding $_line_to_add to $_rcfile"
+                ensure echo "$_line_to_add" >> "$_rcfile"
                 say ""
                 say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
                 say ". \"$_env_script_path_expr\""
             fi
+        else
+            say_verbose "$_install_dir already on PATH"
         fi
     fi
 }
@@ -270,7 +360,7 @@ write_env_script() {
     # write this env script to the given path (this cat/EOF stuff is a "heredoc" string)
     local _install_dir_expr="$1"
     local _env_script_path="$2"
-    cat <<EOF > "$_env_script_path"
+    ensure cat <<EOF > "$_env_script_path"
 #!/bin/sh
 # add binaries to PATH if they aren't added yet
 # affix colons on either side of \$PATH to simplify matching
@@ -548,15 +638,25 @@ get_architecture() {
 }
 
 say() {
-    echo "$1"
+    if [ "0" = "$PRINT_QUIET" ]; then
+        echo "$1"
+    fi
+}
+
+say_verbose() {
+    if [ "1" = "$PRINT_VERBOSE" ]; then
+        echo "$1"
+    fi
 }
 
 err() {
-    local red
-    local reset
-    red=$(tput setaf 1 2>/dev/null || echo '')
-    reset=$(tput sgr0 2>/dev/null || echo '')
-    say "${red}ERROR${reset}: $1" >&2
+    if [ "0" = "$PRINT_QUIET" ]; then
+        local red
+        local reset
+        red=$(tput setaf 1 2>/dev/null || echo '')
+        reset=$(tput sgr0 2>/dev/null || echo '')
+        say "${red}ERROR${reset}: $1" >&2
+    fi
     exit 1
 }
 
