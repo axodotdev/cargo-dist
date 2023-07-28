@@ -22,7 +22,7 @@ then unpacks the binaries and installs them to {% if install_path.kind == "Cargo
     {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {%- endif %}
 
-It will then add that dir to PATH by editing your Environment.Path registry key 
+It will then add that dir to PATH by editing your Environment.Path registry key
 
 .PARAMETER ArtifactDownloadUrl
 The URL of the directory where artifacts can be fetched from
@@ -69,7 +69,7 @@ function Install-Binary($install_args) {
     }
   {%- endfor %}
   }
-     
+
   $fetched = Download "$ArtifactDownloadUrl" $platforms
   # FIXME: add a flag that lets the user not do this step
   Invoke-Installer $fetched "$install_args"
@@ -139,7 +139,7 @@ function Download($download_url, $platforms) {
 
   # Download and unpack!
   $url = "$download_url/$artifact_name"
-  Write-Host "Downloading $app_name $app_version ($arch)"
+  Write-Information "Downloading $app_name $app_version ($arch)"
   Write-Verbose "  from $url"
   Write-Verbose "  to $dir_path"
   $wc = New-Object Net.Webclient
@@ -179,23 +179,23 @@ function Invoke-Installer($bin_paths) {
 {% if install_path.kind == "CargoHome" %}
   # first try CARGO_HOME, then fallback to HOME
   # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
-  $dest_dir = if ($base_dir = $env:CARGO_HOME) {
+  $dest_dir = if (($base_dir = $env:CARGO_HOME)) {
     Join-Path $base_dir "bin"
-  } elseif ($base_dir = $HOME) {
+  } elseif (($base_dir = $HOME)) {
     Join-Path $base_dir ".cargo\bin"
   } else {
     throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
   }
 {% elif install_path.kind == "HomeSubdir" %}
   # Install to this subdir of the user's home dir
-  $dest_dir = if ($base_dir = $HOME) {
+  $dest_dir = if (($base_dir = $HOME)) {
     Join-Path $base_dir "{{ install_path.subdir }}"
   } else {
     throw "ERROR: could not find your HOME dir to install binaries to"
   }
 {% elif install_path.kind == "EnvSubdir" %}
   # Install to this subdir of the user's {{ install_path.env_key }} dir
-  $dest_dir = if ($base_dir = $env:{{ install_path.env_key }}) {
+  $dest_dir = if (($base_dir = $env:{{ install_path.env_key }})) {
     Join-Path $base_dir "{{ install_path.subdir }}"
   } else {
     throw "ERROR: could not find your {{ install_path.env_key }} dir to install binaries to"
@@ -204,20 +204,20 @@ function Invoke-Installer($bin_paths) {
   {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {% endif %}
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
-  Write-Host "Installing to $dest_dir"
+  Write-Information "Installing to $dest_dir"
   # Just copy the binaries from the temp location to the install dir
   foreach ($bin_path in $bin_paths) {
     $installed_file = Split-Path -Path "$bin_path" -Leaf
     Copy-Item "$bin_path" -Destination "$dest_dir"
     Remove-Item "$bin_path" -Recurse -Force
-    Write-Host "  $installed_file"
+    Write-Information "  $installed_file"
   }
 
-  Write-Host "Everything's installed!"
+  Write-Information "Everything's installed!"
   if (-not $NoModifyPath) {
     if (Add-Path $dest_dir) {
-        Write-Host ""
-        Write-Host "$dest_dir was added to your PATH, you may need to restart your shell for that to take effect."
+        Write-Information ""
+        Write-Information "$dest_dir was added to your PATH, you may need to restart your shell for that to take effect."
     }
   }
 }
@@ -303,4 +303,6 @@ function New-Temp-Dir() {
   New-Item -ItemType Directory -Path (Join-Path $parent $name)
 }
 
+# PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
+$Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
 Install-Binary "$Args"
