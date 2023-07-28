@@ -1,6 +1,5 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
-assertion_line: 54
 expression: format_outputs(&output)
 ---
 stdout:
