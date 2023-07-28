@@ -312,7 +312,7 @@ add_install_dir_to_path() {
     #
     # We do this slightly indirectly by creating an "env" shell script which checks if install_dir
     # is on $PATH already, and prepends it if not. The actual line we then add to rcfiles
-    # is to just run that script. This allows us to blast it into lots of different rcfiles and
+    # is to just source that script. This allows us to blast it into lots of different rcfiles and
     # have it run multiple times without causing problems. It's also specifically compatible
     # with the system rustup uses, so that we don't conflict with it.
     local _install_dir_expr="$1"
@@ -320,35 +320,43 @@ add_install_dir_to_path() {
     local _env_script_path_expr="$3"
     if [ -n "${HOME:-}" ]; then
         local _rcfile="$HOME/.profile"
-        local _line_to_add=". \"$_env_script_path_expr\""
-        local _legacy_line="source \"$_env_script_path_expr\""
+        # `source x` is an alias for `. x`, and the latter is more portable/actually-posix.
+        # This apparently comes up a lot on freebsd. It's easy enough to always add
+        # the more robust line to rcfiles, but when telling the user to apply the change
+        # to their current shell ". x" is pretty easy to misread/miscopy, so we use the
+        # prettier "source x" line there. Hopefully people with Weird Shells are aware
+        # this is a thing and know to tweak it (or just restart their shell).
+        local _robust_line=". \"$_env_script_path_expr\""
+        local _pretty_line="source \"$_env_script_path_expr\""
 
-        # Check if the line is already in the file
+        # Add the env script if it doesn't already exist
+        if [ ! -f "$_env_script_path" ]; then 
+            say_verbose "creating $_env_script_path"
+            write_env_script "$_install_dir_expr" "$_env_script_path"
+        else
+            say_verbose "$_env_script_path already exists"
+        fi
+
+        # Check if the line is already in the rcfile
         # grep: 0 if matched, 1 if no match, and 2 if an error occurred
         #
         # Ideally we could use quiet grep (-q), but that makes "match" and "error"
         # have the same behaviour, when we want "no match" and "error" to be the same
         # (on error we want to create the file, which >> conveniently does)
-        if ! grep -F "$_line_to_add" "$_rcfile" > /dev/null 2>/dev/null && \
-           ! grep -F "$_legacy_line" "$_rcfile" > /dev/null 2>/dev/null
+        #
+        # We search for both kinds of line here just to do the right thing in more cases.
+        if ! grep -F "$_robust_line" "$_rcfile" > /dev/null 2>/dev/null && \
+           ! grep -F "$_pretty_line" "$_rcfile" > /dev/null 2>/dev/null
         then 
-            # Ok we definitely want to add the source line, but first write the script
-            # but only if it doesn't already exist, to be safe.
-            if [ ! -f "$_env_script_path" ]; then 
-                say_verbose "creating $_env_script_path"
-                write_env_script "$_install_dir_expr" "$_env_script_path"
-            else
-                say_verbose "$_env_script_path already exists"
-            fi
-
             # If the script now exists, add the line to source it to the rcfile
             # (This will also create the rcfile if it doesn't exist)
             if [ -f "$_env_script_path" ]; then 
-                say_verbose "adding $_line_to_add to $_rcfile"
-                ensure echo "$_line_to_add" >> "$_rcfile"
+                say_verbose "adding $_robust_line to $_rcfile"
+                ensure echo "$_robust_line" >> "$_rcfile"
                 say ""
                 say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
-                say ". \"$_env_script_path_expr\""
+                say ""
+                say "    $_pretty_line"
             fi
         else
             say_verbose "$_install_dir already on PATH"
