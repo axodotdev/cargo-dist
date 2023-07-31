@@ -17,6 +17,7 @@ use std::{
     process::Command,
 };
 
+use axoasset::LocalAsset;
 use backend::installer::{self, npm::NpmInstallerInfo, InstallerImpl};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
@@ -58,9 +59,7 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
 
     // First set up our target dirs so things don't have to race to do it later
     if !dist.dist_dir.exists() {
-        std::fs::create_dir_all(&dist.dist_dir)
-            .into_diagnostic()
-            .wrap_err_with(|| format!("couldn't create dist target dir at {}", dist.dist_dir))?;
+        LocalAsset::create_dir_all(&dist.dist_dir)?;
     }
 
     for artifact in &dist.artifacts {
@@ -479,9 +478,7 @@ fn rustup_toolchain(_dist_graph: &DistGraph, cmd: &RustupStep) -> Result<()> {
 fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
     // Delete any existing bundle
     if artifact.file_path.exists() {
-        std::fs::remove_file(&artifact.file_path)
-            .into_diagnostic()
-            .wrap_err_with(|| format!("failed to delete old artifact {}", artifact.file_path))?;
+        LocalAsset::remove_file(&artifact.file_path)?;
     }
 
     let Some(archive) = &artifact.archive else {
@@ -492,21 +489,15 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
 
     // Clear out the dir we'll build the bundle up in
     if archive.dir_path.exists() {
-        std::fs::remove_dir_all(&archive.dir_path)
-            .into_diagnostic()
-            .wrap_err_with(|| format!("failed to delete old artifact dir {}", archive.dir_path))?;
+        LocalAsset::remove_dir_all(&archive.dir_path)?;
     }
-    std::fs::create_dir(&archive.dir_path)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to create artifact dir {}", archive.dir_path))?;
+    LocalAsset::create_dir(&archive.dir_path)?;
 
     Ok(())
 }
 
 pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
-    let _bytes_written = std::fs::copy(src_path, dest_path)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to copy file {src_path} => {dest_path}"))?;
+    LocalAsset::copy(src_path, dest_path)?;
     Ok(())
 }
 

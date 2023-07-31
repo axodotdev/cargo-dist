@@ -345,24 +345,7 @@ pub fn format_of_version(version: &Version) -> Format {
 
 #[test]
 fn emit() {
-    use std::fs::File;
-    use std::io::BufWriter;
-    use std::io::Write;
-    use std::path::PathBuf;
-
     let schema = DistManifest::json_schema();
     let json_schema = serde_json::to_string_pretty(&schema).unwrap();
     insta::assert_snapshot!(json_schema);
-
-    // FIXME: (?) we should use something like xtask to update the schema, but this works ok.
-    let root = std::env!("CARGO_MANIFEST_DIR");
-    let schema = PathBuf::from(root).join("cargo-dist-json-schema.json");
-    let file = File::options()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .open(schema)
-        .unwrap();
-    let mut file = BufWriter::new(file);
-    writeln!(&mut file, "{json_schema}").unwrap();
 }

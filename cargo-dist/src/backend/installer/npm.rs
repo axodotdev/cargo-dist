@@ -2,10 +2,8 @@
 
 // FIXME(#283): migrate this to minijinja (steal logic from oranda to load a whole dir)
 
-use std::{fs::File, io::BufWriter};
-
+use axoasset::LocalAsset;
 use camino::{Utf8Path, Utf8PathBuf};
-use miette::{Context, IntoDiagnostic};
 use newline_converter::dos2unix;
 use serde::Serialize;
 use serde_json::json;
@@ -86,12 +84,6 @@ fn apply_npm_templates(
     rel_path: &str,
     info: &NpmInstallerInfo,
 ) -> Result<()> {
-    let file_path = target_dir.join(rel_path);
-    let file = File::create(&file_path)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("Failed to create installer file {file_path}"))?;
-    let mut f = BufWriter::new(file);
-
     // FIXME: escape these strings!?
 
     let package_name = format!("{}", json!(&info.npm_package_name));
@@ -179,12 +171,9 @@ fn apply_npm_templates(
         .replace("\"{{ARTIFACT_DOWNLOAD_URL}}\"", &artifact_download_url)
         .replace("/*PLATFORM_INFO*/", &platform_info);
 
-    {
-        use std::io::Write;
-        f.write_all(dos2unix(&output).as_bytes())
-            .into_diagnostic()
-            .wrap_err_with(|| format!("Failed to write to installer file {file_path}"))?;
-    }
+    let output = dos2unix(&output);
+    let file_path = target_dir.join(rel_path);
+    LocalAsset::write_new(&output, file_path)?;
 
     Ok(())
 }
