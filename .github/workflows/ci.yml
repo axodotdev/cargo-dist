@@ -66,6 +66,9 @@ jobs:
   # probe all your features and rust versions (see tracing's ci)
   test:
     runs-on: ${{ matrix.os }}
+    env:
+      # runtest the installer scripts
+      RUIN_MY_COMPUTER_WITH_INSTALLERS: true
     strategy:
       # Test the cross-product of these platforms+toolchains
       matrix:
