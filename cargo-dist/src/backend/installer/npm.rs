@@ -1,79 +1,17 @@
-//! Installer Generation
-//!
-//! In the future this might get split up into submodules.
+//! Code for generating npm-installer.tar.gz
+
+// FIXME(#283): migrate this to minijinja (steal logic from oranda to load a whole dir)
 
 use std::{fs::File, io::BufWriter};
 
-use axoasset::LocalAsset;
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use miette::{Context, IntoDiagnostic};
 use newline_converter::dos2unix;
 use serde::Serialize;
 use serde_json::json;
 
-use crate::{errors::*, TEMPLATE_INSTALLER_PS, TEMPLATE_INSTALLER_SH};
-use crate::{InstallerInfo, NpmInstallerInfo};
-
-#[derive(Serialize)]
-struct PlatformEntry {
-    target: String,
-    artifact_name: String,
-    zip_ext: String,
-    bins: Vec<String>,
-}
-
-////////////////////////////////////////////////////////////////
-// Shell Installer
-////////////////////////////////////////////////////////////////
-
-pub(crate) fn write_install_sh_script(
-    templates: &minijinja::Environment,
-    info: &InstallerInfo,
-) -> DistResult<()> {
-    let script = generate_install_sh_script(templates, info)?;
-    LocalAsset::write_new(&script, &info.dest_path)?;
-    Ok(())
-}
-
-fn generate_install_sh_script(
-    templates: &minijinja::Environment,
-    info: &InstallerInfo,
-) -> DistResult<String> {
-    let tmpl = templates.get_template(TEMPLATE_INSTALLER_SH)?;
-    let rendered = tmpl.render(info)?;
-    let final_script = dos2unix(&rendered).into_owned();
-    Ok(final_script)
-}
-
-////////////////////////////////////////////////////////////////
-// Powershell Installer
-////////////////////////////////////////////////////////////////
-
-pub(crate) fn write_install_ps_script(
-    templates: &minijinja::Environment,
-    info: &InstallerInfo,
-) -> DistResult<()> {
-    let script = generate_install_ps_script(templates, info)?;
-    LocalAsset::write_new(&script, &info.dest_path)?;
-    Ok(())
-}
-
-fn generate_install_ps_script(
-    templates: &minijinja::Environment,
-    info: &InstallerInfo,
-) -> DistResult<String> {
-    let tmpl = templates.get_template(TEMPLATE_INSTALLER_PS)?;
-    let rendered = tmpl.render(info)?;
-    // Intentionally making unixy newlines in powershell, it's supported and nice to be uniform
-    let final_script = dos2unix(&rendered).into_owned();
-    Ok(final_script)
-}
-
-////////////////////////////////////////////////////////////////
-// NPM Installer
-////////////////////////////////////////////////////////////////
-
-// FIXME(#283): migrate this to minijinja (steal logic from oranda to load a whole dir)
+use super::InstallerInfo;
+use crate::errors::Result;
 
 /// Names of all the files we add to the npm installer's tarball,
 /// to add them to the manifest.
@@ -99,6 +37,33 @@ const TEMPLATE3: &str = include_str!("../templates/npm/install.js");
 const TEMPLATE4: &str = include_str!("../templates/npm/npm-shrinkwrap.json");
 const TEMPLATE5: &str = include_str!("../templates/npm/package.json");
 const TEMPLATE6: &str = include_str!("../templates/npm/run.js");
+
+/// Info about an npm installer
+#[derive(Debug, Clone, Serialize)]
+pub struct NpmInstallerInfo {
+    /// The name of the npm package
+    pub npm_package_name: String,
+    /// The version of the npm package
+    pub npm_package_version: String,
+    /// Short description of the package
+    pub npm_package_desc: Option<String>,
+    /// URL to repository
+    pub npm_package_repository_url: Option<String>,
+    /// URL to homepage
+    pub npm_package_homepage_url: Option<String>,
+    /// Short description of the package
+    pub npm_package_authors: Vec<String>,
+    /// Short description of the package
+    pub npm_package_license: Option<String>,
+    /// Array of keywords for this package
+    pub npm_package_keywords: Option<Vec<String>>,
+    /// Name of the binary this package installs (without .exe extension)
+    pub bin: String,
+    /// Dir to build the package in
+    pub package_dir: Utf8PathBuf,
+    /// Generic installer info
+    pub inner: InstallerInfo,
+}
 
 pub(crate) fn write_install_npm_project(
     _templates: &minijinja::Environment,

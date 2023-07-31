@@ -8,7 +8,6 @@ use std::fs::File;
 
 use miette::{IntoDiagnostic, WrapErr};
 use newline_converter::dos2unix;
-use semver::Version;
 use tracing::{info, warn};
 
 use crate::{DistGraph, SortedMap, SortedSet, TargetTriple};
@@ -44,7 +43,7 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
     let rust_version = dist.desired_rust_toolchain.as_deref();
 
     // If they don't specify a cargo-dist version, use this one
-    let self_dist_version = SELF_DIST_VERSION.parse().unwrap();
+    let self_dist_version = super::SELF_DIST_VERSION.parse().unwrap();
     let dist_version = dist
         .desired_cargo_dist_version
         .as_ref()
@@ -78,8 +77,8 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
         .unwrap_or(String::new());
 
     // Get the platform-specific installation methods
-    let install_dist_sh = install_dist_sh_for_version(dist_version);
-    let install_dist_ps1 = install_dist_ps1_for_version(dist_version);
+    let install_dist_sh = super::install_dist_sh_for_version(dist_version);
+    let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
 
     // Build up the task matrix for building Artifacts
     let mut artifacts_matrix = String::from("include:");
@@ -235,58 +234,4 @@ fn install_dist_for_github_runner<'a>(
     } else {
         unreachable!("internal error: unknown github runner!?")
     }
-}
-
-/// The current version of cargo-dist
-const SELF_DIST_VERSION: &str = env!("CARGO_PKG_VERSION");
-const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/releases/download";
-
-/// Get the command to invoke to install cargo-dist via sh script
-fn install_dist_sh_for_version(version: &Version) -> String {
-    if let Some(git) = install_dist_git(version) {
-        return git;
-    }
-    let format = cargo_dist_schema::format_of_version(version);
-    let installer_name = if format.unsupported() {
-        // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested cargo-dist v{version}, which is not supported by the this copy of cargo-dist ({SELF_DIST_VERSION})");
-    } else if format.artifact_names_contain_versions() {
-        format!("cargo-dist-v{version}-installer.sh")
-    } else {
-        "cargo-dist-installer.sh".to_owned()
-    };
-
-    // FIXME: it would be nice if these values were somehow using all the machinery
-    // to compute these values for packages we build *BUT* it's messy and not that important
-    let installer_url = format!("{BASE_DIST_FETCH_URL}/v{version}/{installer_name}");
-    format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh")
-}
-
-/// Get the command to invoke to install cargo-dist via ps1 script
-fn install_dist_ps1_for_version(version: &Version) -> String {
-    if let Some(git) = install_dist_git(version) {
-        return git;
-    }
-    let format = cargo_dist_schema::format_of_version(version);
-    let installer_name = if format.unsupported() {
-        // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested cargo-dist v{version}, which is not supported by the this copy of cargo-dist ({SELF_DIST_VERSION})");
-    } else if format.artifact_names_contain_versions() {
-        format!("cargo-dist-v{version}-installer.ps1")
-    } else {
-        "cargo-dist-installer.ps1".to_owned()
-    };
-
-    // FIXME: it would be nice if these values were somehow using all the machinery
-    // to compute these values for packages we build *BUT* it's messy and not that important
-    let installer_url = format!("{BASE_DIST_FETCH_URL}/v{version}/{installer_name}");
-    format!("irm  {installer_url} | iex")
-}
-
-/// Cute little hack for developing dist itself: if we see a version like "0.0.3-github-config"
-/// then install from the main github repo with branch=config!
-fn install_dist_git(version: &Version) -> Option<String> {
-    version.pre.strip_prefix("github-").map(|branch| {
-        format!("cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} cargo-dist")
-    })
 }

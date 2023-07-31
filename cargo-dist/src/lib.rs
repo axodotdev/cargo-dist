@@ -17,8 +17,10 @@ use std::{
     process::Command,
 };
 
+use backend::installer::{self, npm::NpmInstallerInfo, InstallerImpl};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
+use config::{ChecksumStyle, CiStyle, CompressionImpl, Config, ZipStyle};
 use flate2::{write::ZlibEncoder, Compression, GzBuilder};
 use semver::Version;
 use tracing::{info, warn};
@@ -30,10 +32,11 @@ pub use init::{do_init, InitArgs};
 use miette::{miette, Context, IntoDiagnostic};
 pub use tasks::*;
 
-pub mod ci;
+pub mod backend;
+pub mod changelog;
+pub mod config;
 pub mod errors;
 mod init;
-pub mod installer;
 pub mod tasks;
 #[cfg(test)]
 mod tests;
@@ -182,7 +185,7 @@ fn manifest_artifact(
     // These can't be pre-included in the normal static assets list above because
     // they're generated from templates, and not copied from the user's project.
     if let ArtifactKind::Installer(InstallerImpl::Npm(..)) = &artifact.kind {
-        for &asset in installer::NPM_PACKAGE_CONTENTS {
+        for &asset in backend::installer::npm::NPM_PACKAGE_CONTENTS {
             static_assets.push(Asset {
                 name: Some(asset.to_owned()),
                 path: Some(asset.to_owned()),
@@ -688,7 +691,7 @@ pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
 
     for style in &dist.ci_style {
         match style {
-            CiStyle::Github => ci::generate_github_ci(&dist)?,
+            CiStyle::Github => backend::ci::github::generate_github_ci(&dist)?,
         }
     }
     Ok(())
@@ -697,11 +700,15 @@ pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
 /// Build a cargo target
 fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
     match style {
-        InstallerImpl::Shell(info) => installer::write_install_sh_script(&dist.templates, info)?,
-        InstallerImpl::Powershell(info) => {
-            installer::write_install_ps_script(&dist.templates, info)?
+        InstallerImpl::Shell(info) => {
+            installer::shell::write_install_sh_script(&dist.templates, info)?
         }
-        InstallerImpl::Npm(info) => installer::write_install_npm_project(&dist.templates, info)?,
+        InstallerImpl::Powershell(info) => {
+            installer::powershell::write_install_ps_script(&dist.templates, info)?
+        }
+        InstallerImpl::Npm(info) => {
+            installer::npm::write_install_npm_project(&dist.templates, info)?
+        }
     }
     Ok(())
 }

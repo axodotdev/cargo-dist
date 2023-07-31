@@ -6,10 +6,11 @@ use camino::Utf8PathBuf;
 use semver::Version;
 use serde::Deserialize;
 
-use crate::errors::{DistError, DistResult, Result};
 use crate::{
-    do_generate_ci, tasks, CiStyle, CompressionImpl, Config, DistMetadata, GenerateCiArgs,
-    InstallerStyle, SortedMap, ZipStyle, METADATA_DIST, PROFILE_DIST,
+    config::{self, CiStyle, CompressionImpl, Config, DistMetadata, InstallerStyle, ZipStyle},
+    do_generate_ci,
+    errors::{DistError, DistResult, Result},
+    GenerateCiArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
 /// Arguments for `cargo dist init` ([`do_init`][])
@@ -39,10 +40,10 @@ struct MultiDistMetadata {
 
 /// Run 'cargo dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
-    let workspace = tasks::get_project()?;
+    let workspace = config::get_project()?;
 
     // Load in the workspace toml to edit and write back
-    let mut workspace_toml = tasks::load_cargo_toml(&workspace.manifest_path)?;
+    let mut workspace_toml = config::load_cargo_toml(&workspace.manifest_path)?;
 
     let check = console::style("✔".to_string()).for_stderr().green();
 
@@ -80,18 +81,18 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     // Save the workspace toml (potentially an effective no-op if we made no edits)
     eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
     eprintln!();
-    tasks::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
+    config::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
 
     // Now that we've done the stuff that's definitely part of the root Cargo.toml,
     // Optionally apply updates to packages (currently only applies with --with-json-config)
     for (package_name, meta) in &multi_meta.packages {
         for (_idx, package) in workspace.packages() {
             if &package.name == package_name {
-                let mut package_toml = tasks::load_cargo_toml(&package.manifest_path)?;
+                let mut package_toml = config::load_cargo_toml(&package.manifest_path)?;
                 update_toml_metadata(&mut package_toml, meta, false);
                 eprintln!("{check} added [package.metadata.dist] to {package_name}'s Cargo.toml");
                 eprintln!();
-                tasks::save_cargo_toml(&package.manifest_path, package_toml)?;
+                config::save_cargo_toml(&package.manifest_path, package_toml)?;
                 break;
             }
         }
@@ -171,7 +172,7 @@ fn get_new_dist_metadata(
         .map(|t| t.contains_key(METADATA_DIST))
         .unwrap_or(false);
     let mut meta = if has_config {
-        tasks::parse_metadata_table(
+        config::parse_metadata_table(
             &workspace_info.manifest_path,
             workspace_info.cargo_metadata_table.as_ref(),
         )?

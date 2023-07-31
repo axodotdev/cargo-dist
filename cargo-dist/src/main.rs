@@ -137,7 +137,7 @@ fn print_json(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Erro
 }
 
 fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::Config {
+    let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: true,
         artifact_mode: args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
@@ -156,7 +156,7 @@ fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::Config {
+    let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: true,
         artifact_mode: args.build_args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
@@ -203,9 +203,9 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     } else {
         cli.target.clone()
     };
-    let config = cargo_dist::Config {
+    let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: false,
-        artifact_mode: cargo_dist::ArtifactMode::All,
+        artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         targets,
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
@@ -221,9 +221,9 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_generate_ci(cli: &Cli, _args: &GenerateCiArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::Config {
+    let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: false,
-        artifact_mode: cargo_dist::ArtifactMode::All,
+        artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
