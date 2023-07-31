@@ -198,12 +198,12 @@ pub enum ArtifactMode {
 
 impl ArtifactMode {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::ArtifactMode {
+    pub fn to_lib(self) -> cargo_dist::config::ArtifactMode {
         match self {
-            ArtifactMode::Local => cargo_dist::ArtifactMode::Local,
-            ArtifactMode::Global => cargo_dist::ArtifactMode::Global,
-            ArtifactMode::Host => cargo_dist::ArtifactMode::Host,
-            ArtifactMode::All => cargo_dist::ArtifactMode::All,
+            ArtifactMode::Local => cargo_dist::config::ArtifactMode::Local,
+            ArtifactMode::Global => cargo_dist::config::ArtifactMode::Global,
+            ArtifactMode::Host => cargo_dist::config::ArtifactMode::Host,
+            ArtifactMode::All => cargo_dist::config::ArtifactMode::All,
         }
     }
 }
@@ -239,9 +239,9 @@ pub enum CiStyle {
 
 impl CiStyle {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::CiStyle {
+    pub fn to_lib(self) -> cargo_dist::config::CiStyle {
         match self {
-            CiStyle::Github => cargo_dist::CiStyle::Github,
+            CiStyle::Github => cargo_dist::config::CiStyle::Github,
         }
     }
 }
@@ -259,11 +259,11 @@ pub enum InstallerStyle {
 
 impl InstallerStyle {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::InstallerStyle {
+    pub fn to_lib(self) -> cargo_dist::config::InstallerStyle {
         match self {
-            InstallerStyle::Shell => cargo_dist::InstallerStyle::Shell,
-            InstallerStyle::Powershell => cargo_dist::InstallerStyle::Powershell,
-            InstallerStyle::Npm => cargo_dist::InstallerStyle::Npm,
+            InstallerStyle::Shell => cargo_dist::config::InstallerStyle::Shell,
+            InstallerStyle::Powershell => cargo_dist::config::InstallerStyle::Powershell,
+            InstallerStyle::Npm => cargo_dist::config::InstallerStyle::Npm,
         }
     }
 }
