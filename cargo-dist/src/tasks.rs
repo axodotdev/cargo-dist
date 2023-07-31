@@ -293,7 +293,7 @@ pub struct ZipDirStep {
     /// The final file path for the output zip
     pub dest_path: Utf8PathBuf,
     /// The name of the dir the tarball/zip will contain
-    pub dir_name: String,
+    pub with_root: Option<Utf8PathBuf>,
     /// The kind of zip/tarball to make
     pub zip_style: ZipStyle,
 }
@@ -382,13 +382,9 @@ pub struct Artifact {
 /// of an Artifact, and the final output will be [`Artifact::file_path`][].
 #[derive(Debug)]
 pub struct Archive {
-    /// The name of the directory this artifact's contents will be stored in.
-    ///
-    /// This directory is technically a transient thing but it will show up as the name of
-    /// the directory in a `tar`.
-    ///
-    /// i.e. `cargo-dist-v0.1.0-x86_64-pc-windows-msvc`
-    pub dir_name: String,
+    /// An optional prefix path to nest all the archive contents under
+    /// If None then all the archive's contents will be placed in the root
+    pub with_root: Option<Utf8PathBuf>,
     /// The path of the directory this artifact's contents will be stored in.
     ///
     /// i.e. `/.../target/dist/cargo-dist-v0.1.0-x86_64-pc-windows-msvc/`
@@ -910,6 +906,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             built_assets.push((binary_idx, artifact_dir_path.join(exe_filename)));
         }
 
+        // When unpacking we currently rely on zips being flat, but --strip-prefix=1 tarballs.
+        // This is kinda inconsistent, so maybe we should make both flat?
+        // (It's hard to strip-prefix zips, so making them both have an extra dir is annoying)
+        let with_root = if let ZipStyle::Zip = zip_style {
+            None
+        } else {
+            Some(Utf8PathBuf::from(artifact_dir_name.clone()))
+        };
+
         (
             Artifact {
                 id: artifact_name,
@@ -917,7 +922,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 file_path: artifact_path,
                 required_binaries: FastMap::new(),
                 archive: Some(Archive {
-                    dir_name: artifact_dir_name,
+                    with_root,
                     dir_path: artifact_dir_path,
                     zip_style,
                     static_assets,
@@ -1254,7 +1259,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             target_triples: target_triples.into_iter().collect(),
             archive: Some(Archive {
                 // npm specifically expects the dir inside the tarball to be called "package"
-                dir_name: "package".to_owned(),
+                with_root: Some("package".into()),
                 dir_path: dir_path.clone(),
                 zip_style,
                 static_assets,
@@ -1372,11 +1377,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         }))
                     }
                 }
+
                 // Zip up the artifact
                 build_steps.push(BuildStep::Zip(ZipDirStep {
                     src_path: artifact_dir.to_owned(),
                     dest_path: artifact.file_path.clone(),
-                    dir_name: archive.dir_name.clone(),
+                    with_root: archive.with_root.clone(),
                     zip_style: archive.zip_style,
                 }));
             }
