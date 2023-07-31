@@ -37,7 +37,7 @@ The installer for axolotlsay 0.1.0
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
-then unpacks the binaries and installs them to \$MY_ENV_VAR/bin/
+then unpacks the binaries and installs them to \$MY_ENV_VAR/bin
 
 It will then add that dir to PATH by adding the appropriate line to \$HOME/.profile
 
@@ -128,18 +128,18 @@ download_binary_and_run_installer() {
     # Lookup what to download/unpack based on platform
     case "$_arch" in 
         "aarch64-apple-darwin")
-            _artifact_name="axolotlsay-aarch64-apple-darwin.tar.xz"
-            _zip_ext=".tar.xz"
+            _artifact_name="axolotlsay-aarch64-apple-darwin.tar.gz"
+            _zip_ext=".tar.gz"
             _bins="axolotlsay"
             ;;
         "x86_64-apple-darwin")
-            _artifact_name="axolotlsay-x86_64-apple-darwin.tar.xz"
-            _zip_ext=".tar.xz"
+            _artifact_name="axolotlsay-x86_64-apple-darwin.tar.gz"
+            _zip_ext=".tar.gz"
             _bins="axolotlsay"
             ;;
         "x86_64-unknown-linux-gnu")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.xz"
-            _zip_ext=".tar.xz"
+            _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
+            _zip_ext=".tar.gz"
             _bins="axolotlsay"
             ;;
         *)
@@ -244,8 +244,8 @@ install() {
     # Install to this subdir of the user's MY_ENV_VAR dir.
     # In this case we want to be early-bound, as the env-var can't be trusted longterm.
     if [ -n "${MY_ENV_VAR:-}" ]; then
-        _install_dir="$MY_ENV_VAR/bin/"
-        _env_script_path="$MY_ENV_VAR/bin//env"
+        _install_dir="$MY_ENV_VAR/bin"
+        _env_script_path="$MY_ENV_VAR/bin/env"
         _install_dir_expr="$_install_dir"
         _env_script_path_expr="$_env_script_path"
     else
@@ -701,7 +701,7 @@ The installer for axolotlsay 0.1.0
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
-then unpacks the binaries and installs them to $env:MY_ENV_VAR\bin/
+then unpacks the binaries and installs them to $env:MY_ENV_VAR\bin
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -741,9 +741,9 @@ function Install-Binary($install_args) {
   # Platform info injected by cargo-dist
   $platforms = @{
     "x86_64-pc-windows-msvc" = @{
-      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.zip"
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = "axolotlsay.exe"
-      "zip_ext" = ".zip"
+      "zip_ext" = ".tar.gz"
     }
   }
 
@@ -856,7 +856,7 @@ function Invoke-Installer($bin_paths) {
 
   # Install to this subdir of the user's MY_ENV_VAR dir
   $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
-    Join-Path $base_dir "bin/"
+    Join-Path $base_dir "bin"
   } else {
     throw "ERROR: could not find your MY_ENV_VAR dir to install binaries to"
   }

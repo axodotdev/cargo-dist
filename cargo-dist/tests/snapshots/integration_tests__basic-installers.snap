@@ -128,18 +128,18 @@ download_binary_and_run_installer() {
     # Lookup what to download/unpack based on platform
     case "$_arch" in 
         "aarch64-apple-darwin")
-            _artifact_name="axolotlsay-aarch64-apple-darwin.tar.xz"
-            _zip_ext=".tar.xz"
+            _artifact_name="axolotlsay-aarch64-apple-darwin.tar.gz"
+            _zip_ext=".tar.gz"
             _bins="axolotlsay"
             ;;
         "x86_64-apple-darwin")
-            _artifact_name="axolotlsay-x86_64-apple-darwin.tar.xz"
-            _zip_ext=".tar.xz"
+            _artifact_name="axolotlsay-x86_64-apple-darwin.tar.gz"
+            _zip_ext=".tar.gz"
             _bins="axolotlsay"
             ;;
         "x86_64-unknown-linux-gnu")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.xz"
-            _zip_ext=".tar.xz"
+            _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
+            _zip_ext=".tar.gz"
             _bins="axolotlsay"
             ;;
         *)
@@ -758,9 +758,9 @@ function Install-Binary($install_args) {
   # Platform info injected by cargo-dist
   $platforms = @{
     "x86_64-pc-windows-msvc" = @{
-      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.zip"
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = "axolotlsay.exe"
-      "zip_ext" = ".zip"
+      "zip_ext" = ".tar.gz"
     }
   }
 
