@@ -276,8 +276,8 @@ install() {
     # Install to this subdir of the user's {{ install_path.env_key }} dir.
     # In this case we want to be early-bound, as the env-var can't be trusted longterm.
     if [ -n "{{ "${" }}{{ install_path.env_key }}:-}" ]; then
-        _install_dir="${{ install_path.env_key }}/{{ install_path.subdir }}"
-        _env_script_path="${{ install_path.env_key }}/{{ install_path.subdir }}/env"
+        _install_dir="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}"
+        _env_script_path="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}/env"
         _install_dir_expr="$_install_dir"
         _env_script_path_expr="$_env_script_path"
     else

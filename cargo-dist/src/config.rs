@@ -494,14 +494,16 @@ impl std::str::FromStr for InstallPathStrategy {
                 })
             } else {
                 Ok(InstallPathStrategy::HomeSubdir {
-                    subdir: subdir.to_owned(),
+                    // If there's a trailing slash, strip it to be uniform
+                    subdir: subdir.strip_suffix('/').unwrap_or(subdir).to_owned(),
                 })
             }
         } else if let Some(val) = path.strip_prefix('$') {
             if let Some((env_key, subdir)) = val.split_once('/') {
                 Ok(InstallPathStrategy::EnvSubdir {
                     env_key: env_key.to_owned(),
-                    subdir: subdir.to_owned(),
+                    // If there's a trailing slash, strip it to be uniform
+                    subdir: subdir.strip_suffix('/').unwrap_or(subdir).to_owned(),
                 })
             } else {
                 Err(DistError::InstallPathEnvSlash {
