@@ -23,7 +23,6 @@
 //! In the future we may also further generalize this into a "gallery" of test projects
 //! with support for testing other tools like oranda.
 
-use axoasset::LocalAsset;
 use camino::Utf8PathBuf;
 use miette::miette;
 use miette::Context;
@@ -35,6 +34,7 @@ use std::sync::Mutex;
 ///
 /// If everything's working right, then no problem.
 /// Otherwise MEGA DANGER in messing up your computer.
+#[allow(dead_code)]
 const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
 
 #[test]
@@ -443,6 +443,8 @@ impl TestContext {
             .map(|s| !s.is_empty())
             .unwrap_or(false)
         {
+            use axoasset::LocalAsset;
+
             eprintln!("running installer.sh...");
             // Make installer.sh executable
             use std::os::unix::prelude::PermissionsExt;
@@ -606,6 +608,7 @@ impl CommandInfo {
     }
 
     /// Create a new command, don't check that it works
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     fn new_unchecked(name: &str, path: Option<&str>) -> Self {
         let cmd = path.unwrap_or(name).to_owned();
 
