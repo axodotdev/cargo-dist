@@ -4,9 +4,7 @@
 
 // FIXME(#283): migrate this to minijinja (steal logic from oranda to load a whole dir)
 
-use std::fs::File;
-
-use miette::{IntoDiagnostic, WrapErr};
+use axoasset::LocalAsset;
 use newline_converter::dos2unix;
 use tracing::{info, warn};
 
@@ -24,21 +22,15 @@ pub fn generate_github_ci(dist: &DistGraph) -> Result<(), miette::Report> {
     let ci_file = ci_dir.join(GITHUB_CI_FILE);
 
     info!("generating Github CI at {ci_file}");
-    std::fs::create_dir_all(&ci_dir)
-        .into_diagnostic()
-        .wrap_err("Failed to create ci dir")?;
-    let mut file = File::create(&ci_file)
-        .into_diagnostic()
-        .wrap_err("Failed to create ci file")?;
-    write_github_ci(&mut file, dist)
-        .into_diagnostic()
-        .wrap_err("Failed to write to CI file")?;
+    let output = write_github_ci(dist);
+    LocalAsset::write_new_all(&output, &ci_file)?;
     eprintln!("generated Github CI to {}", ci_file);
+
     Ok(())
 }
 
 /// Write the Github CI to something
-fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(), std::io::Error> {
+fn write_github_ci(dist: &DistGraph) -> String {
     // If they don't specify a Rust version, just go for "stable"
     let rust_version = dist.desired_rust_toolchain.as_deref();
 
@@ -122,9 +114,7 @@ fn write_github_ci<W: std::io::Write>(f: &mut W, dist: &DistGraph) -> Result<(),
         .replace("{{{{ARTIFACTS_MATRIX}}}}", &artifacts_matrix)
         .replace("{{{{FAIL_FAST}}}}", &fail_fast);
 
-    f.write_all(dos2unix(&ci_yml).as_bytes())?;
-
-    Ok(())
+    dos2unix(&ci_yml).into_owned()
 }
 
 /// Add an entry to a Github Matrix (for the Artifacts tasks)

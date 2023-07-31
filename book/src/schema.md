@@ -11,5 +11,5 @@ As a matter of forward-compat and back-compat, basically every field in the form
 Here is the JSON Schema which will *hopefully* be stable going forward.
 
 ```json
-{{#include ../../cargo-dist-schema/cargo-dist-json-schema.json}}
+{{#include ../../cargo-dist-schema/src/snapshots/cargo_dist_schema__emit.snap:5:}}
 ```
