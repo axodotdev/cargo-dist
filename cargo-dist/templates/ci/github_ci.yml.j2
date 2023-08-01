@@ -52,9 +52,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: recursive{{{{INSTALL_RUST}}}}
+          submodules: recursive
+      {{%- if rust_version %}}
+      - name: Install Rust
+        run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}"#
+      {{%- endif %}}
       - name: Install cargo-dist
-        run: {{{{INSTALL_DIST_SH}}}}
+        run: {{{ install_dist_sh }}}
       - id: create-release
         run: |
           cargo dist plan --tag=${{ github.ref_name }} --output-format=json > dist-manifest.json
@@ -82,10 +86,15 @@ jobs:
     needs: create-release
     if: ${{ needs.create-release.outputs.has-releases == 'true' }}
     strategy:
-      fail-fast: {{{{FAIL_FAST}}}}
+      fail-fast: {{{ fail_fast }}}
       matrix:
         # For these target platforms
-        {{{{ARTIFACTS_MATRIX}}}}
+        include:
+        {{%- for task in tasks %}}
+        - os: {{{ task.runner }}}
+          dist-args: {{{ task.dist_args }}}
+          install-dist: {{{ task.install_dist }}}
+        {{%- endfor %}}
 
     runs-on: ${{ matrix.os }}
     env:
@@ -93,7 +102,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: recursive{{{{INSTALL_RUST}}}}
+          submodules: recursive
+      {{%- if rust_version %}}
+      - name: Install Rust
+        run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}"#
+      {{%- endif %}}
       - name: Install cargo-dist
         run: ${{ matrix.install-dist }}
       - name: Run cargo-dist
@@ -129,3 +142,4 @@ jobs:
       - name: mark release as non-draft
         run: |
           gh release edit ${{ github.ref_name }} --draft=false
+

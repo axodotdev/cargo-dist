@@ -55,22 +55,31 @@ pub struct TemplateDir {
     /// relative path of the dir from [`TEMPLATE_DIR`]
     ///
     /// (This is also the [`TemplateId`][] for this dir)
-    path: Utf8PathBuf,
+    pub path: Utf8PathBuf,
     /// children
-    entries: SortedMap<String, TemplateEntry>,
+    pub entries: SortedMap<String, TemplateEntry>,
 }
 
 /// A file in the template dir
 #[derive(Debug)]
 pub struct TemplateFile {
     /// name of the file
-    _name: String,
+    pub name: String,
     /// relative path of the file from [`TEMPLATE_DIR`]
     ///
     /// (This is also the [`TemplateId`][] for this file)
-    path: Utf8PathBuf,
+    pub path: Utf8PathBuf,
     /// which Environment will render this
     env: EnvId,
+}
+
+impl TemplateFile {
+    /// Gets the relative path to this file from the ancestor directory
+    pub fn path_from_ancestor(&self, ancestor: &TemplateDir) -> &Utf8Path {
+        self.path
+            .strip_prefix(&ancestor.path)
+            .expect("jinja2 template path wasn't properly nested under parent")
+    }
 }
 
 impl Templates {
@@ -83,7 +92,19 @@ impl Templates {
             envs.insert(ENV_MISC, misc_env);
         }
         {
-            let yaml_env = Environment::new();
+            // Github CI ymls already use {{ }} as delimiters so add an extra layer
+            // of braces to disambiguate without needing tons of escaping
+            let mut yaml_env = Environment::new();
+            yaml_env
+                .set_syntax(minijinja::Syntax {
+                    block_start: "{{%".into(),
+                    block_end: "%}}".into(),
+                    variable_start: "{{{".into(),
+                    variable_end: "}}}".into(),
+                    comment_start: "{{#".into(),
+                    comment_end: "#}}".into(),
+                })
+                .expect("failed to change jinja2 syntax for yaml files");
             envs.insert(ENV_YAML, yaml_env);
         }
         for env in envs.values_mut() {
@@ -139,7 +160,7 @@ impl Templates {
     }
 
     /// Get the entry for a template by key (the TEMPLATE_* consts), and require it to be a file
-    fn get_template_file(&self, key: TemplateId) -> DistResult<&TemplateFile> {
+    pub fn get_template_file(&self, key: TemplateId) -> DistResult<&TemplateFile> {
         if let TemplateEntry::File(file) = self.get_template_entry(key)? {
             Ok(file)
         } else {
@@ -148,7 +169,7 @@ impl Templates {
     }
 
     /// Get the entry for a template by key (the TEMPLATE_* consts), and require it to be a dir
-    fn get_template_dir(&self, key: TemplateId) -> DistResult<&TemplateDir> {
+    pub fn get_template_dir(&self, key: TemplateId) -> DistResult<&TemplateDir> {
         if let TemplateEntry::Dir(dir) = self.get_template_entry(key)? {
             Ok(dir)
         } else {
@@ -190,28 +211,25 @@ impl Templates {
     ) -> DistResult<SortedMap<Utf8PathBuf, String>> {
         let root_dir = self.get_template_dir(key)?;
         let mut output = SortedMap::new();
-        self.render_dir_to_clean_strings_inner(&mut output, &root_dir.path, root_dir, val)?;
+        self.render_dir_to_clean_strings_inner(&mut output, root_dir, root_dir, val)?;
         Ok(output)
     }
 
     fn render_dir_to_clean_strings_inner(
         &self,
         output: &mut SortedMap<Utf8PathBuf, String>,
-        root_path: &Utf8Path,
+        root_dir: &TemplateDir,
         dir: &TemplateDir,
         val: &impl Serialize,
     ) -> DistResult<()> {
         for entry in dir.entries.values() {
             match entry {
                 TemplateEntry::Dir(subdir) => {
-                    self.render_dir_to_clean_strings_inner(output, root_path, subdir, val)?
+                    self.render_dir_to_clean_strings_inner(output, root_dir, subdir, val)?
                 }
                 TemplateEntry::File(file) => {
                     let rendered = self.render_file_to_clean_string_inner(file, val)?;
-                    let relpath = file
-                        .path
-                        .strip_prefix(root_path)
-                        .expect("jinja2 template path wasn't properly nested under parent");
+                    let relpath = file.path_from_ancestor(root_dir);
                     output.insert(relpath.to_owned(), rendered);
                 }
             }
@@ -254,11 +272,7 @@ impl Templates {
                     .expect("failed to add jinja2 template");
                 parent.entries.insert(
                     name.clone(),
-                    TemplateEntry::File(TemplateFile {
-                        _name: name,
-                        path,
-                        env,
-                    }),
+                    TemplateEntry::File(TemplateFile { name, path, env }),
                 );
             }
             if let Some(dir) = entry.as_dir() {
@@ -293,7 +307,6 @@ mod test {
         templates.get_template_file(TEMPLATE_INSTALLER_PS1).unwrap();
         templates.get_template_dir(TEMPLATE_INSTALLER_NPM).unwrap();
 
-        // TODO:
-        // templates.get_template_dir(TEMPLATE_CI_GITHUB).unwrap();
+        templates.get_template_file(TEMPLATE_CI_GITHUB).unwrap();
     }
 }

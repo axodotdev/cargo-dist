@@ -5,10 +5,28 @@
 // FIXME(#283): migrate this to minijinja (steal logic from oranda to load a whole dir)
 
 use axoasset::LocalAsset;
-use newline_converter::dos2unix;
-use tracing::{info, warn};
+use serde::Serialize;
+use tracing::warn;
 
-use crate::{DistGraph, SortedMap, SortedSet, TargetTriple};
+use crate::{
+    backend::templates::TEMPLATE_CI_GITHUB, DistGraph, SortedMap, SortedSet, TargetTriple,
+};
+
+#[derive(Debug, Serialize)]
+struct CiInfo {
+    rust_version: Option<String>,
+    install_dist_sh: String,
+    install_dist_ps1: String,
+    fail_fast: bool,
+    tasks: Vec<CiTask>,
+}
+
+#[derive(Debug, Serialize)]
+struct CiTask {
+    runner: String,
+    dist_args: String,
+    install_dist: String,
+}
 
 /// Generate CI for Github
 ///
@@ -20,19 +38,21 @@ pub fn generate_github_ci(dist: &DistGraph) -> Result<(), miette::Report> {
     // FIXME: should we try to avoid clobbering old files..?
     let ci_dir = dist.workspace_dir.join(GITHUB_CI_DIR);
     let ci_file = ci_dir.join(GITHUB_CI_FILE);
+    let ci_info = compute_ci_info(dist);
 
-    info!("generating Github CI at {ci_file}");
-    let output = write_github_ci(dist);
-    LocalAsset::write_new_all(&output, &ci_file)?;
+    let rendered = dist
+        .templates
+        .render_file_to_clean_string(TEMPLATE_CI_GITHUB, &ci_info)?;
+    LocalAsset::write_new_all(&rendered, &ci_file)?;
     eprintln!("generated Github CI to {}", ci_file);
 
     Ok(())
 }
 
 /// Write the Github CI to something
-fn write_github_ci(dist: &DistGraph) -> String {
-    // If they don't specify a Rust version, just go for "stable"
-    let rust_version = dist.desired_rust_toolchain.as_deref();
+fn compute_ci_info(dist: &DistGraph) -> CiInfo {
+    // Legacy deprecated support for
+    let rust_version = dist.desired_rust_toolchain.clone();
 
     // If they don't specify a cargo-dist version, use this one
     let self_dist_version = super::SELF_DIST_VERSION.parse().unwrap();
@@ -40,8 +60,9 @@ fn write_github_ci(dist: &DistGraph) -> String {
         .desired_cargo_dist_version
         .as_ref()
         .unwrap_or(&self_dist_version);
+    let fail_fast = dist.fail_fast;
 
-    // Figue out what builds we need to do
+    // Figure out what builds we need to do
     let mut needs_global_build = false;
     let mut local_targets = SortedSet::new();
     for release in &dist.releases {
@@ -51,40 +72,22 @@ fn write_github_ci(dist: &DistGraph) -> String {
         local_targets.extend(release.targets.iter());
     }
 
-    // Install Rust with rustup (deprecated, use rust-toolchain.toml)
-    //
-    // We pass --no-self-update to work around https://github.com/rust-lang/rustup/issues/2441
-    //
-    // If not specified we just let default toolchains on the system be used
-    // (rust-toolchain.toml will override things automagically if the system uses rustup,
-    // because rustup intercepts all commands like `cargo` and `rustc` to reselect the toolchain)
-    let install_rust = rust_version
-        .map(|rust_version| {
-            format!(
-                r#"
-      - name: Install Rust
-        run: rustup update {rust_version} --no-self-update && rustup default {rust_version}"#
-            )
-        })
-        .unwrap_or(String::new());
-
     // Get the platform-specific installation methods
     let install_dist_sh = super::install_dist_sh_for_version(dist_version);
     let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
 
     // Build up the task matrix for building Artifacts
-    let mut artifacts_matrix = String::from("include:");
+    let mut tasks = vec![];
 
     // If we have Global Artifacts, we need one task for that. If we've done a Good Job
     // then these artifacts should be possible to build on *any* platform. Linux is usually
     // fast/cheap, so that's a reasonable choice.s
     if needs_global_build {
-        push_github_artifacts_matrix_entry(
-            &mut artifacts_matrix,
-            GITHUB_LINUX_RUNNER,
-            "--artifacts=global",
-            &install_dist_sh,
-        );
+        tasks.push(CiTask {
+            runner: GITHUB_LINUX_RUNNER.into(),
+            dist_args: "--artifacts=global".into(),
+            install_dist: install_dist_sh.clone(),
+        });
     }
 
     // Figure out what Local Artifact tasks we need
@@ -101,42 +104,20 @@ fn write_github_ci(dist: &DistGraph) -> String {
         for target in targets {
             write!(dist_args, " --target={target}").unwrap();
         }
-        push_github_artifacts_matrix_entry(&mut artifacts_matrix, runner, &dist_args, install_dist);
+        tasks.push(CiTask {
+            runner: runner.to_owned(),
+            dist_args,
+            install_dist: install_dist.to_owned(),
+        });
     }
 
-    let fail_fast = format!("{}", dist.fail_fast);
-
-    // Finally write the final CI script to the Writer
-    let ci_yml = include_str!("../../../templates/ci/github_ci.yml");
-    let ci_yml = ci_yml
-        .replace("{{{{INSTALL_RUST}}}}", &install_rust)
-        .replace("{{{{INSTALL_DIST_SH}}}}", &install_dist_sh)
-        .replace("{{{{ARTIFACTS_MATRIX}}}}", &artifacts_matrix)
-        .replace("{{{{FAIL_FAST}}}}", &fail_fast);
-
-    dos2unix(&ci_yml).into_owned()
-}
-
-/// Add an entry to a Github Matrix (for the Artifacts tasks)
-fn push_github_artifacts_matrix_entry(
-    matrix: &mut String,
-    runner: &str,
-    dist_args: &str,
-    install_dist: &str,
-) {
-    use std::fmt::Write;
-
-    const MATRIX_ENTRY_TEMPLATE: &str = r###"
-        - os: {{{{GITHUB_RUNNER}}}}
-          dist-args: {{{{DIST_ARGS}}}}
-          install-dist: {{{{INSTALL_DIST}}}}"###;
-
-    let entry = MATRIX_ENTRY_TEMPLATE
-        .replace("{{{{GITHUB_RUNNER}}}}", runner)
-        .replace("{{{{DIST_ARGS}}}}", dist_args)
-        .replace("{{{{INSTALL_DIST}}}}", install_dist);
-
-    write!(matrix, "{}", entry).unwrap();
+    CiInfo {
+        rust_version,
+        install_dist_sh,
+        install_dist_ps1,
+        fail_fast,
+        tasks,
+    }
 }
 
 /// Given a set of targets we want to build local artifacts for, map them to Github Runners
