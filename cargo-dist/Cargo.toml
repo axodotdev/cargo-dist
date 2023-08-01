@@ -50,7 +50,7 @@ axoproject = { version = "0.3.0", default-features = false, features = ["cargo-p
 dialoguer = "0.10.4"
 axoasset = { version = "0.4.0", features = ["json-serde", "toml-serde", "toml-edit"] }
 sha2 = "0.10.6"
-minijinja = { version = "1.0.5", features = ["debug", "loader"] }
+minijinja = { version = "1.0.5", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.3"
 
 [dev-dependencies]

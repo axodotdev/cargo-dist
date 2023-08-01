@@ -1,13 +1,15 @@
 {
-  "name": {{PACKAGE_NAME}},
-  "version": {{PACKAGE_VERSION}},
+  "name": {{ npm_package_name }},
+  "version": {{ npm_package_version }},
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
-      "name": {{PACKAGE_NAME}},
-      "version": {{PACKAGE_VERSION}},
-      {{KEY_LICENSE}}
+      "name": {{ npm_package_name }},
+      "version": {{ npm_package_version }},
+{%- if npm_package_license %}
+      "license": {{ npm_package_license }},
+{%- endif %}
       "hasInstallScript": true,
       "dependencies": {
         "axios-proxy-builder": "^0.1.1",

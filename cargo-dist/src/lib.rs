@@ -18,7 +18,10 @@ use std::{
 };
 
 use axoasset::LocalAsset;
-use backend::installer::{self, npm::NpmInstallerInfo, InstallerImpl};
+use backend::{
+    installer::{self, npm::NpmInstallerInfo, InstallerImpl},
+    templates::{TemplateEntry, TEMPLATE_INSTALLER_NPM},
+};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
 use config::{ChecksumStyle, CiStyle, CompressionImpl, Config, ZipStyle};
@@ -184,12 +187,26 @@ fn manifest_artifact(
     // These can't be pre-included in the normal static assets list above because
     // they're generated from templates, and not copied from the user's project.
     if let ArtifactKind::Installer(InstallerImpl::Npm(..)) = &artifact.kind {
-        for &asset in backend::installer::npm::NPM_PACKAGE_CONTENTS {
-            static_assets.push(Asset {
-                name: Some(asset.to_owned()),
-                path: Some(asset.to_owned()),
-                kind: AssetKind::Unknown,
-            });
+        let root_dir = dist
+            .templates
+            .get_template_dir(TEMPLATE_INSTALLER_NPM)
+            .expect("npm template missing!?");
+        let mut queue = vec![root_dir];
+        while let Some(dir) = queue.pop() {
+            for entry in dir.entries.values() {
+                match entry {
+                    TemplateEntry::Dir(dir) => {
+                        queue.push(dir);
+                    }
+                    TemplateEntry::File(file) => {
+                        static_assets.push(Asset {
+                            name: Some(file.name.clone()),
+                            path: Some(file.path_from_ancestor(root_dir).to_string()),
+                            kind: AssetKind::Unknown,
+                        });
+                    }
+                }
+            }
         }
     }
 
@@ -702,9 +719,7 @@ fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
         InstallerImpl::Powershell(info) => {
             installer::powershell::write_install_ps_script(&dist.templates, info)?
         }
-        InstallerImpl::Npm(info) => {
-            installer::npm::write_install_npm_project(&dist.templates, info)?
-        }
+        InstallerImpl::Npm(info) => installer::npm::write_npm_project(&dist.templates, info)?,
     }
     Ok(())
 }
