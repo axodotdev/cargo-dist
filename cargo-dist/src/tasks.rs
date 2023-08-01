@@ -60,7 +60,7 @@ use tracing::{info, warn};
 use crate::{
     backend::{
         installer::{npm::NpmInstallerInfo, ExecutableZipFragment, InstallerImpl, InstallerInfo},
-        make_template_env,
+        templates::Templates,
     },
     config::{
         self, ArtifactMode, ChecksumStyle, CiStyle, CompressionImpl, Config, DistMetadata,
@@ -131,7 +131,7 @@ pub struct DistGraph {
     /// Info about the tools we're using to build
     pub tools: Tools,
     /// Minijinja templates we might want to render
-    pub templates: minijinja::Environment<'static>,
+    pub templates: Templates,
 
     /// The cargo target dir.
     pub target_dir: Utf8PathBuf,
@@ -629,7 +629,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             package_metadata.push(package_config);
         }
 
-        let templates = make_template_env();
+        let templates = Templates::new()?;
 
         Ok(Self {
             inner: DistGraph {

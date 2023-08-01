@@ -107,7 +107,7 @@ fn write_github_ci(dist: &DistGraph) -> String {
     let fail_fast = format!("{}", dist.fail_fast);
 
     // Finally write the final CI script to the Writer
-    let ci_yml = include_str!("../templates/ci.yml");
+    let ci_yml = include_str!("../../../templates/ci/github_ci.yml");
     let ci_yml = ci_yml
         .replace("{{{{INSTALL_RUST}}}}", &install_rust)
         .replace("{{{{INSTALL_DIST_SH}}}}", &install_dist_sh)
