@@ -2112,7 +2112,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     );
     graph.inner.announcement_tag = announcement_tag;
     graph.inner.announcement_is_prerelease = announcing_prerelease;
-    if let Some(repo_url) = workspace.repository_url.as_ref() {
+    if let Some(repo_url) = workspace.web_url()?.as_ref() {
         let tag = graph.inner.announcement_tag.as_ref().unwrap();
         graph.inner.artifact_download_url = Some(format!("{repo_url}/releases/download/{tag}"));
     }
