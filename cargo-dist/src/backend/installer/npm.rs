@@ -9,7 +9,7 @@ use serde::Serialize;
 use serde_json::json;
 
 use super::InstallerInfo;
-use crate::errors::Result;
+use crate::{backend::templates::Templates, errors::Result};
 
 /// Names of all the files we add to the npm installer's tarball,
 /// to add them to the manifest.
@@ -29,12 +29,12 @@ const TEMPLATE4_NAME: &str = "npm-shrinkwrap.json";
 const TEMPLATE5_NAME: &str = "package.json";
 const TEMPLATE6_NAME: &str = "run.js";
 
-const TEMPLATE1: &str = include_str!("../templates/npm/.gitignore");
-const TEMPLATE2: &str = include_str!("../templates/npm/binary.js");
-const TEMPLATE3: &str = include_str!("../templates/npm/install.js");
-const TEMPLATE4: &str = include_str!("../templates/npm/npm-shrinkwrap.json");
-const TEMPLATE5: &str = include_str!("../templates/npm/package.json");
-const TEMPLATE6: &str = include_str!("../templates/npm/run.js");
+const TEMPLATE1: &str = include_str!("../../../templates/installer/npm/.gitignore");
+const TEMPLATE2: &str = include_str!("../../../templates/installer/npm/binary.js");
+const TEMPLATE3: &str = include_str!("../../../templates/installer/npm/install.js");
+const TEMPLATE4: &str = include_str!("../../../templates/installer/npm/npm-shrinkwrap.json");
+const TEMPLATE5: &str = include_str!("../../../templates/installer/npm/package.json");
+const TEMPLATE6: &str = include_str!("../../../templates/installer/npm/run.js");
 
 /// Info about an npm installer
 #[derive(Debug, Clone, Serialize)]
@@ -64,7 +64,7 @@ pub struct NpmInstallerInfo {
 }
 
 pub(crate) fn write_install_npm_project(
-    _templates: &minijinja::Environment,
+    _templates: &Templates,
     info: &NpmInstallerInfo,
 ) -> Result<()> {
     let zip_dir = &info.package_dir;
