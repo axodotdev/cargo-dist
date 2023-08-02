@@ -52,7 +52,7 @@ pub enum TemplateEntry {
 pub struct TemplateDir {
     /// name of the dir
     _name: String,
-    /// relative path of the dir from [`TEMPLATE_DIR`]
+    /// relative path of the dir from `TEMPLATE_DIR`
     ///
     /// (This is also the [`TemplateId`][] for this dir)
     pub path: Utf8PathBuf,
@@ -65,7 +65,7 @@ pub struct TemplateDir {
 pub struct TemplateFile {
     /// name of the file
     pub name: String,
-    /// relative path of the file from [`TEMPLATE_DIR`]
+    /// relative path of the file from `TEMPLATE_DIR`
     ///
     /// (This is also the [`TemplateId`][] for this file)
     pub path: Utf8PathBuf,
