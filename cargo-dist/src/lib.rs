@@ -497,7 +497,12 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
 }
 
 pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
-    LocalAsset::copy(src_path, dest_path)?;
+    assert_eq!(
+        src_path.file_name(),
+        dest_path.file_name(),
+        "oops axoasset's LocalAsset::copy isn't usable for us"
+    );
+    LocalAsset::copy(src_path, dest_path.parent().unwrap())?;
     Ok(())
 }
 
