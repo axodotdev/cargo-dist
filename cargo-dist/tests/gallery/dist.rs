@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::sync::Mutex;
 
 use axoasset::LocalAsset;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -18,15 +19,30 @@ const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
 const ENV_RUNTIME_CARGO_DIST_BIN: &str = "OVERRIDE_CARGO_BIN_EXE_cargo-dist";
 const STATIC_CARGO_DIST_BIN: &str = env!("CARGO_BIN_EXE_cargo-dist");
 const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
+static TOOLS: Mutex<Option<Tools>> = Mutex::new(None);
 
 /// axolotlsay 0.1.0 is a nice simple project with shell+powershell+npm installers in its release
-pub static AXOLOTLSAY: TestContextLock<Tools> = TestContextLock::new(&Repo {
-    repo_owner: "axodotdev",
-    repo_name: "axolotlsay",
-    commit_sha: "6b8337fb742908e506296eab3371bb71b76283d7",
-    app_name: "axolotlsay",
-    bins: &["axolotlsay"],
-});
+pub static AXOLOTLSAY: TestContextLock<Tools> = TestContextLock::new(
+    &TOOLS,
+    &Repo {
+        repo_owner: "axodotdev",
+        repo_name: "axolotlsay",
+        commit_sha: "6b8337fb742908e506296eab3371bb71b76283d7",
+        app_name: "axolotlsay",
+        bins: &["axolotlsay"],
+    },
+);
+/// akaikatana-repack 0.2.0 has multiple bins!
+pub static AKAIKATANA_REPACK: TestContextLock<Tools> = TestContextLock::new(
+    &TOOLS,
+    &Repo {
+        repo_owner: "mistydemeo",
+        repo_name: "akaikatana-repack",
+        commit_sha: "9516f77ab81b7833e0d66de766ecf802e056f91f",
+        app_name: "akaikatana-repack",
+        bins: &["akextract", "akmetadata", "akrepack"],
+    },
+);
 
 pub struct Tools {
     pub git: CommandInfo,
@@ -79,7 +95,7 @@ pub struct DistResult {
     npm_installer_package_path: Option<Utf8PathBuf>,
 }
 
-impl TestContext<Tools> {
+impl<'a> TestContext<'a, Tools> {
     /// Run 'cargo dist build -aglobal' with the toml patched
     /// and return paths to various files that were generated
     pub fn cargo_dist_build_global(&self, test_name: &str, new_toml: String) -> Result<DistResult> {
@@ -250,10 +266,10 @@ impl DistResult {
             let script = CommandInfo::new_unchecked("installer.sh", Some(shell_path.as_str()));
 
             // Create/clobber a temp dir in target
-            let cur_dir =
-                Utf8PathBuf::from_path_buf(std::env::current_dir().unwrap()).expect("non-utf8 cwd");
-            let parent = cur_dir.parent().unwrap();
-            let tempdir = parent.join(format!("{app_name}__{test_name}"));
+            let repo_dir = &ctx.repo_dir;
+            let repo_id = &ctx.repo_id;
+            let parent = repo_dir.parent().unwrap();
+            let tempdir = parent.join(format!("{repo_id}__{test_name}"));
             if tempdir.exists() {
                 std::fs::remove_dir_all(&tempdir).unwrap();
             }
