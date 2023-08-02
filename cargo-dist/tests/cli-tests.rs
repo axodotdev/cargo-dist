@@ -2,6 +2,10 @@ use std::process::{Command, Output, Stdio};
 
 static BIN: &str = env!("CARGO_BIN_EXE_cargo-dist");
 
+#[allow(dead_code)]
+mod gallery;
+use gallery::*;
+
 fn format_outputs(output: &Output) -> String {
     let stdout = std::str::from_utf8(&output.stdout).unwrap();
     let stderr = std::str::from_utf8(&output.stderr).unwrap();
@@ -51,7 +55,9 @@ fn test_long_help() {
         .output()
         .unwrap();
 
-    insta::assert_snapshot!("long-help", format_outputs(&output));
+    snapshot_settings().bind(|| {
+        insta::assert_snapshot!("long-help", format_outputs(&output));
+    });
     assert!(output.status.success(), "{}", output.status);
 }
 
@@ -65,7 +71,9 @@ fn test_short_help() {
         .output()
         .unwrap();
 
-    insta::assert_snapshot!("short-help", format_outputs(&output));
+    snapshot_settings().bind(|| {
+        insta::assert_snapshot!("short-help", format_outputs(&output));
+    });
     assert!(output.status.success(), "{}", output.status);
 }
 
@@ -83,15 +91,7 @@ fn test_manifest() {
         .unwrap();
 
     // We don't want this to churn every time we do a version bump
-    insta::with_settings!({filters => vec![
-        (r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?", "1.0.0-FAKEVERSION"),
-        (r#""announcement_tag": .*"#, r#""announcement_tag": "CENSORED","#),
-        (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
-        (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
-        (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
-        (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
-        (r#""cargo_version_line": .*"#, r#""cargo_version_line": "CENSORED""#),
-    ]}, {
+    snapshot_settings_with_dist_manifest_filter().bind(|| {
         insta::assert_snapshot!(format_outputs(&output));
     });
 
@@ -115,15 +115,7 @@ fn test_lib_manifest() {
         .unwrap();
 
     // We don't want this to churn every time we do a version bump
-    insta::with_settings!({filters => vec![
-        (r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?", "1.0.0-FAKEVERSION"),
-        (r#""announcement_tag": .*"#, r#""announcement_tag": "CENSORED","#),
-        (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
-        (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
-        (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
-        (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
-        (r#""cargo_version_line": .*"#, r#""cargo_version_line": "CENSORED""#),
-    ]}, {
+    snapshot_settings_with_dist_manifest_filter().bind(|| {
         insta::assert_snapshot!(format_outputs(&output));
     });
 
@@ -145,15 +137,7 @@ fn test_error_manifest() {
         .unwrap();
 
     // We don't want this to churn every time we do a version bump
-    insta::with_settings!({filters => vec![
-        (r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?", "1.0.0-FAKEVERSION"),
-        (r#""announcement_tag": .*"#, r#""announcement_tag": "CENSORED","#),
-        (r#""announcement_title": .*"#, r#""announcement_title": "CENSORED""#),
-        (r#""announcement_changelog": .*"#, r#""announcement_changelog": "CENSORED""#),
-        (r#""announcement_github_body": .*"#, r#""announcement_github_body": "CENSORED""#),
-        (r#""announcement_is_prerelease": .*"#, r#""announcement_is_prerelease": "CENSORED""#),
-        (r#""cargo_version_line": .*"#, r#""cargo_version_line": "CENSORED""#),
-    ]}, {
+    snapshot_settings_with_dist_manifest_filter().bind(|| {
         insta::assert_snapshot!(format_outputs(&output));
     });
 
@@ -170,6 +154,8 @@ fn test_markdown_help() {
         .output()
         .unwrap();
 
-    insta::assert_snapshot!("markdown-help", format_outputs(&output));
+    snapshot_settings().bind(|| {
+        insta::assert_snapshot!("markdown-help", format_outputs(&output));
+    });
     assert!(output.status.success(), "{}", output.status);
 }
