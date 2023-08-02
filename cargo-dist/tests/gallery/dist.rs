@@ -17,6 +17,7 @@ const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
 /// Set this at runtime to override STATIC_CARGO_DIST_BIN
 const ENV_RUNTIME_CARGO_DIST_BIN: &str = "OVERRIDE_CARGO_BIN_EXE_cargo-dist";
 const STATIC_CARGO_DIST_BIN: &str = env!("CARGO_BIN_EXE_cargo-dist");
+const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
 /// axolotlsay 0.1.0 is a nice simple project with shell+powershell+npm installers in its release
 pub static AXOLOTLSAY: TestContextLock<Tools> = TestContextLock::new(&Repo {
@@ -354,7 +355,9 @@ impl DistResult {
         )?;
 
         let test_name = &self.test_name;
-        insta::assert_snapshot!(format!("{test_name}-installers"), &snapshots);
+        snapshot_settings().bind(|| {
+            insta::assert_snapshot!(format!("{test_name}-installers"), &snapshots);
+        });
         Ok(())
     }
 
@@ -416,8 +419,55 @@ impl DistResult {
     fn append_snapshot_string(out: &mut String, name: &str, val: &str) -> Result<()> {
         use std::fmt::Write;
 
-        writeln!(out, "\n\n================ {name} ================").unwrap();
+        writeln!(out, "================ {name} ================").unwrap();
         writeln!(out, "{val}").unwrap();
         Ok(())
     }
+}
+
+pub fn snapshot_settings() -> insta::Settings {
+    let mut settings = insta::Settings::clone_current();
+    let snapshot_dir = Utf8Path::new(ROOT_DIR).join("tests").join("snapshots");
+    settings.set_snapshot_path(snapshot_dir);
+    settings.set_prepend_module_to_snapshot(false);
+    settings
+}
+
+pub fn snapshot_settings_with_version_filter() -> insta::Settings {
+    let mut settings = snapshot_settings();
+    settings.add_filter(
+        r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?",
+        "1.0.0-FAKEVERSION",
+    );
+    settings
+}
+
+#[allow(dead_code)]
+pub fn snapshot_settings_with_dist_manifest_filter() -> insta::Settings {
+    let mut settings = snapshot_settings_with_version_filter();
+    settings.add_filter(
+        r#""announcement_tag": .*"#,
+        r#""announcement_tag": "CENSORED","#,
+    );
+    settings.add_filter(
+        r#""announcement_title": .*"#,
+        r#""announcement_title": "CENSORED""#,
+    );
+    settings.add_filter(
+        r#""announcement_changelog": .*"#,
+        r#""announcement_changelog": "CENSORED""#,
+    );
+    settings.add_filter(
+        r#""announcement_github_body": .*"#,
+        r#""announcement_github_body": "CENSORED""#,
+    );
+    settings.add_filter(
+        r#""announcement_is_prerelease": .*"#,
+        r#""announcement_is_prerelease": "CENSORED""#,
+    );
+    settings.add_filter(
+        r#""cargo_version_line": .*"#,
+        r#""cargo_version_line": "CENSORED""#,
+    );
+    settings
 }

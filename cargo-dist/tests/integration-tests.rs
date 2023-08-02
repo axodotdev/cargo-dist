@@ -69,9 +69,7 @@ scope = "@axodotdev"
 
 "#))?;
 
-        insta::with_settings!({filters => vec![
-            (r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?", "1.0.0-FAKEVERSION"),
-        ]}, {
+        snapshot_settings_with_version_filter().bind(|| {
             assert_snapshot!(format!("{test_name}-github-ci"), results);
         });
 
