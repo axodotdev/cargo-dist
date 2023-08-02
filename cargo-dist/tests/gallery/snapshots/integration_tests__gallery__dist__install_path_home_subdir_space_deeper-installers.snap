@@ -1,7 +1,9 @@
 ---
-source: cargo-dist/tests/integration-tests.rs
-expression: "&shell_snapshots"
+source: cargo-dist/tests/gallery/dist.rs
+expression: "&snapshots"
 ---
+
+
 ================ installer.sh ================
 #!/bin/sh
 # shellcheck shell=dash
@@ -37,7 +39,7 @@ The installer for axolotlsay 0.1.0
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
-then unpacks the binaries and installs them to \$MY_ENV_VAR/
+then unpacks the binaries and installs them to \$HOME/My Axolotlsay Documents/bin
 
 It will then add that dir to PATH by adding the appropriate line to \$HOME/.profile
 
@@ -240,15 +242,15 @@ install() {
     local _env_script_path_expr
 
 
-    # Install to this subdir of the user's MY_ENV_VAR dir.
-    # In this case we want to be early-bound, as the env-var can't be trusted longterm.
-    if [ -n "${MY_ENV_VAR:-}" ]; then
-        _install_dir="$MY_ENV_VAR"
-        _env_script_path="$MY_ENV_VAR/env"
-        _install_dir_expr="$_install_dir"
-        _env_script_path_expr="$_env_script_path"
+    # Install to this subdir of the user's home dir
+    # In this case we want to be late-bound, as $HOME is reliable/nice.
+    if [ -n "${HOME:-}" ]; then
+        _install_dir="$HOME/My Axolotlsay Documents/bin"
+        _env_script_path="$HOME/My Axolotlsay Documents/bin/env"
+        _install_dir_expr='$HOME/My Axolotlsay Documents/bin'
+        _env_script_path_expr='$HOME/My Axolotlsay Documents/bin/env'
     else
-        err "could not find your MY_ENV_VAR dir to install binaries to"
+        err "could not find your HOME dir to install binaries to"
     fi
 
     say "installing to $_install_dir"
@@ -700,7 +702,7 @@ The installer for axolotlsay 0.1.0
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
-then unpacks the binaries and installs them to $env:MY_ENV_VAR\
+then unpacks the binaries and installs them to $HOME\My Axolotlsay Documents/bin
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -853,11 +855,11 @@ function Download($download_url, $platforms) {
 
 function Invoke-Installer($bin_paths) {
 
-  # Install to this subdir of the user's MY_ENV_VAR dir
-  $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
-    Join-Path $base_dir ""
+  # Install to this subdir of the user's home dir
+  $dest_dir = if (($base_dir = $HOME)) {
+    Join-Path $base_dir "My Axolotlsay Documents/bin"
   } else {
-    throw "ERROR: could not find your MY_ENV_VAR dir to install binaries to"
+    throw "ERROR: could not find your HOME dir to install binaries to"
   }
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
@@ -963,3 +965,4 @@ function New-Temp-Dir() {
 # PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
 $Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
 Install-Binary "$Args"
+

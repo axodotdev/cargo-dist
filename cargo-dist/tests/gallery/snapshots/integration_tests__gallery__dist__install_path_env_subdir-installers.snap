@@ -1,7 +1,9 @@
 ---
-source: cargo-dist/tests/integration-tests.rs
-expression: "&shell_snapshots"
+source: cargo-dist/tests/gallery/dist.rs
+expression: "&snapshots"
 ---
+
+
 ================ installer.sh ================
 #!/bin/sh
 # shellcheck shell=dash
@@ -963,3 +965,4 @@ function New-Temp-Dir() {
 # PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
 $Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
 Install-Binary "$Args"
+
