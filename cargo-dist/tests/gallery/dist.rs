@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use axoasset::LocalAsset;
 use camino::{Utf8Path, Utf8PathBuf};
 use miette::miette;
@@ -368,6 +370,9 @@ impl DistResult {
             return Ok(());
         };
 
+        // We shove everything in a BTreeMap to keep ordering stable
+        let mut results = BTreeMap::new();
+
         let file = LocalAsset::load_bytes(src_path)?;
         let gz_decoder = flate2::read::GzDecoder::new(&file[..]);
         let mut tar_decoder = tar::Archive::new(gz_decoder);
@@ -384,8 +389,12 @@ impl DistResult {
                 entry
                     .read_to_string(&mut val)
                     .expect("couldn't read tarred file to string");
-                Self::append_snapshot_string(out, &format!("{name}/{path}"), &val)?;
+                results.insert(path, val);
             }
+        }
+
+        for (path, val) in &results {
+            Self::append_snapshot_string(out, &format!("{name}/{path}"), val)?;
         }
         Ok(())
     }
