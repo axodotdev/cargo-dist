@@ -683,6 +683,7 @@ downloader() {
 }
 
 download_binary_and_run_installer "$@" || exit 1
+
 ================ installer.ps1 ================
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
@@ -961,4 +962,5 @@ function New-Temp-Dir() {
 # PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
 $Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
 Install-Binary "$Args"
+
 

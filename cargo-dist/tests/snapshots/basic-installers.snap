@@ -700,6 +700,7 @@ downloader() {
 }
 
 download_binary_and_run_installer "$@" || exit 1
+
 ================ installer.ps1 ================
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
@@ -981,6 +982,7 @@ function New-Temp-Dir() {
 # PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
 $Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
 Install-Binary "$Args"
+
 ================ npm-package.tar.gz/package/.gitignore ================
 /node_modules
 
@@ -1263,11 +1265,9 @@ const error = (msg) => {
 };
 
 const { version } = require("./package.json");
-// These are injected by cargo-dist
 const name = "axolotlsay";
 const artifact_download_url = "https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0";
 
-// These are injected by cargo-dist
 const supportedPlatforms = {
   "aarch64-apple-darwin": {
     "artifact_name": "axolotlsay-aarch64-apple-darwin.tar.gz",
@@ -1755,10 +1755,7 @@ install(false);
   "version": "0.1.0",
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "repository": "https://github.com/axodotdev/axolotlsay",
-  
-  
   "license": "MIT OR Apache-2.0",
-  
   "bin": {
     "axolotlsay": "run.js"
   },
@@ -1791,4 +1788,5 @@ install(false);
 
 const { run, install: maybeInstall } = require("./binary");
 maybeInstall(true).then(run);
+
 
