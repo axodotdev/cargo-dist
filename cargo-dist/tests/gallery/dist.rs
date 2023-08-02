@@ -233,8 +233,6 @@ impl DistResult {
             .map(|s| !s.is_empty())
             .unwrap_or(false)
         {
-            use axoasset::LocalAsset;
-
             let app_name = ctx.repo.app_name;
             let test_name = &self.test_name;
 
