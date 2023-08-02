@@ -78,6 +78,27 @@ scope = "@axodotdev"
 }
 
 #[test]
+fn akaikatana_basic() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AKAIKATANA_REPACK.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+
+        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+rust-toolchain-version = "1.67.1"
+ci = ["github"]
+installers = ["shell", "powershell"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+
+"#))?;
+        results.check_all(ctx, ".cargo/bin/")?;
+
+        Ok(())
+    })
+}
+
+#[test]
 fn install_path_cargo_home() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
