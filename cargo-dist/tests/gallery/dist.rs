@@ -111,6 +111,7 @@ pub struct BuildAndPlanResult {
 }
 
 pub struct Snapshots {
+    settings: insta::Settings,
     name: String,
     payload: String,
 }
@@ -401,6 +402,7 @@ impl DistResult {
 
         let test_name = &self.test_name;
         Ok(Snapshots {
+            settings: snapshot_settings(),
             name: format!("{test_name}-installers"),
             payload: snapshots,
         })
@@ -429,6 +431,7 @@ impl PlanResult {
 
         let test_name = &self.test_name;
         Ok(Snapshots {
+            settings: snapshot_settings_with_light_dist_manifest_filter(),
             name: format!("{test_name}-dist-manifest"),
             payload: snapshots,
         })
@@ -441,8 +444,8 @@ impl BuildAndPlanResult {
         let plan_snaps = self.plan.check_all()?;
 
         // Merge snapshots
-        let snaps = build_snaps.join(plan_snaps);
-        // snaps.name = self.test_name.clone();
+        let mut snaps = build_snaps.join(plan_snaps);
+        snaps.settings = snapshot_settings_with_light_dist_manifest_filter();
         Ok(snaps)
     }
 }
@@ -466,6 +469,7 @@ impl GenerateCiResult {
 
         let test_name = &self.test_name;
         Ok(Snapshots {
+            settings: snapshot_settings(),
             name: format!("{test_name}-generate-ci"),
             payload: snapshots,
         })
@@ -474,7 +478,7 @@ impl GenerateCiResult {
 
 impl Snapshots {
     pub fn snap(self) {
-        snapshot_settings().bind(|| {
+        self.settings.bind(|| {
             insta::assert_snapshot!(self.name, self.payload);
         })
     }
@@ -502,6 +506,22 @@ pub fn snapshot_settings_with_version_filter() -> insta::Settings {
     settings
 }
 
+/// Only filter parts that are specific to the toolchains being used to build the result
+///
+/// This is used for checking gallery entries
+pub fn snapshot_settings_with_light_dist_manifest_filter() -> insta::Settings {
+    let mut settings = snapshot_settings();
+    settings.add_filter(r#""dist_version": .*"#, r#""dist_version": "CENSORED","#);
+    settings.add_filter(
+        r#""cargo_version_line": .*"#,
+        r#""cargo_version_line": "CENSORED""#,
+    );
+    settings
+}
+
+/// Filter anything that will regularly change in the process of a release
+///
+/// This is used for checking `main` against itself.
 #[allow(dead_code)]
 pub fn snapshot_settings_with_dist_manifest_filter() -> insta::Settings {
     let mut settings = snapshot_settings_with_version_filter();
@@ -529,6 +549,7 @@ pub fn snapshot_settings_with_dist_manifest_filter() -> insta::Settings {
         r#""cargo_version_line": .*"#,
         r#""cargo_version_line": "CENSORED""#,
     );
+
     settings
 }
 
