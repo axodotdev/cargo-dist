@@ -43,7 +43,7 @@ scope = "@axodotdev"
         
 "#
         ))?;
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".cargo/bin/")?.snap();
 
         Ok(())
@@ -92,7 +92,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".cargo/bin/")?.snap();
 
         Ok(())
@@ -118,7 +118,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".cargo/bin/")?.snap();
 
         Ok(())
@@ -144,7 +144,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".axolotlsay/")?.snap();
 
         Ok(())
@@ -170,7 +170,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".axolotlsay/bins")?.snap();
 
         Ok(())
@@ -196,7 +196,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, "My Axolotlsay Documents/")?.snap();
 
         Ok(())
@@ -221,7 +221,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, "My Axolotlsay Documents/bin/")?.snap();
 
         Ok(())
@@ -247,7 +247,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".axolotlsay/")?.snap();
 
         Ok(())
@@ -273,7 +273,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".axolotlsay/bin/")?.snap();
 
         Ok(())
@@ -299,7 +299,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/")?.snap();
 
         Ok(())
@@ -325,7 +325,7 @@ windows-archive = ".tar.gz"
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_global(test_name)?;
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
         results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/bin/")?.snap();
 
         Ok(())
@@ -351,7 +351,7 @@ windows-archive = ".tar.gz"
 
 "#
         ))?;
-        ctx.cargo_dist_build_global(test_name).unwrap();
+        ctx.cargo_dist_build_and_plan(test_name).unwrap();
 
         Ok(())
     }).unwrap();
@@ -376,7 +376,7 @@ windows-archive = ".tar.gz"
 
 "#
         ))?;
-        ctx.cargo_dist_build_global(test_name).unwrap();
+        ctx.cargo_dist_build_and_plan(test_name).unwrap();
 
         Ok(())
     }).unwrap();
