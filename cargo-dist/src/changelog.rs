@@ -70,7 +70,9 @@ impl DistGraphBuilder<'_> {
 
         info!("successfully parsed changelog!");
         self.inner.announcement_title = Some(title);
-        self.inner.announcement_changelog = Some(notes);
+        // Those windows newlines get everywhere...
+        let clean_notes = newline_converter::dos2unix(&notes);
+        self.inner.announcement_changelog = Some(clean_notes.into_owned());
     }
 }
 
