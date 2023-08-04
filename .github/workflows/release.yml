@@ -126,7 +126,7 @@ jobs:
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json > uploads.txt
           echo "uploading..."
           cat uploads.txt
-          gh release upload ${{ github.ref_name }} $(cat uploads.txt)
+          gh release upload ${{ github.ref_name }} "$(cat uploads.txt)"
           echo "uploaded!"
 
   # Mark the Github Release™ as a non-draft now that everything has succeeded!
