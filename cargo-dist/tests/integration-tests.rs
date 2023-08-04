@@ -27,7 +27,7 @@ mod gallery;
 use gallery::*;
 
 #[test]
-fn basic() -> Result<(), miette::Report> {
+fn axolotlsay_basic() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
