@@ -400,10 +400,9 @@ impl DistResult {
             self.npm_installer_package_path.as_deref(),
         )?;
 
-        let test_name = &self.test_name;
         Ok(Snapshots {
             settings: snapshot_settings_with_gallery_filter(),
-            name: format!("{test_name}-installers"),
+            name: self.test_name.to_owned(),
             payload: snapshots,
         })
     }
@@ -429,10 +428,9 @@ impl PlanResult {
 
         append_snapshot_string(&mut snapshots, "dist-manifest.json", &self.raw_json)?;
 
-        let test_name = &self.test_name;
         Ok(Snapshots {
             settings: snapshot_settings_with_gallery_filter(),
-            name: format!("{test_name}-dist-manifest"),
+            name: self.test_name.to_owned(),
             payload: snapshots,
         })
     }
@@ -466,10 +464,9 @@ impl GenerateCiResult {
             self.github_ci_path.as_deref(),
         )?;
 
-        let test_name = &self.test_name;
         Ok(Snapshots {
             settings: snapshot_settings_with_gallery_filter(),
-            name: format!("{test_name}-generate-ci"),
+            name: self.test_name.to_owned(),
             payload: snapshots,
         })
     }
