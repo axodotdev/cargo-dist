@@ -43,34 +43,15 @@ scope = "@axodotdev"
         
 "#
         ))?;
-        let results = ctx.cargo_dist_build_and_plan(test_name)?;
-        results.check_all(ctx, ".cargo/bin/")?.snap();
 
-        Ok(())
-    })
-}
-
-#[test]
-fn basic_generate_github_ci() -> Result<(), miette::Report> {
-    let test_name = _function_name!();
-    AXOLOTLSAY.run_test(|ctx| {
-        let dist_version = ctx.tools.cargo_dist.version().unwrap();
-
-        ctx.patch_cargo_toml(format!(r#"
-[workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell", "npm"]
-targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
-ci = ["github"]
-unix-archive = ".tar.gz"
-windows-archive = ".tar.gz"
-scope = "@axodotdev"
-
-"#
-        ))?;
-        let ci_results = ctx.cargo_dist_generate_ci(test_name)?;
-        ci_results.check_all()?.snap();
-
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
+        // Check generate-ci
+        let ci_result = ctx.cargo_dist_generate_ci(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
         Ok(())
     })
 }
@@ -92,9 +73,14 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 "#
         ))?;
 
-        let results = ctx.cargo_dist_build_and_plan(test_name)?;
-        results.check_all(ctx, ".cargo/bin/")?.snap();
-
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
+        // Check generate-ci
+        let ci_result = ctx.cargo_dist_generate_ci(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
         Ok(())
     })
 }
