@@ -106,7 +106,6 @@ pub struct GenerateCiResult {
 }
 
 pub struct BuildAndPlanResult {
-    test_name: String,
     build: DistResult,
     plan: PlanResult,
 }
@@ -122,11 +121,7 @@ impl<'a> TestContext<'a, Tools> {
         let build = self.cargo_dist_build_global(test_name)?;
         let plan = self.cargo_dist_plan(test_name)?;
 
-        Ok(BuildAndPlanResult {
-            test_name: test_name.to_owned(),
-            build,
-            plan,
-        })
+        Ok(BuildAndPlanResult { build, plan })
     }
 
     /// Run 'cargo dist plan --output-format=json' and return dist-manifest.json
@@ -441,13 +436,13 @@ impl PlanResult {
 }
 
 impl BuildAndPlanResult {
-    fn check_all(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<Snapshots> {
+    pub fn check_all(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<Snapshots> {
         let build_snaps = self.build.check_all(ctx, expected_bin_dir)?;
         let plan_snaps = self.plan.check_all()?;
 
         // Merge snapshots
-        let mut snaps = build_snaps.join(plan_snaps);
-        snaps.name = self.test_name.clone();
+        let snaps = build_snaps.join(plan_snaps);
+        // snaps.name = self.test_name.clone();
         Ok(snaps)
     }
 }
