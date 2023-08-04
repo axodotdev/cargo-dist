@@ -105,7 +105,31 @@ pub struct GenerateCiResult {
     github_ci_path: Option<Utf8PathBuf>,
 }
 
+pub struct BuildAndPlanResult {
+    test_name: String,
+    build: DistResult,
+    plan: PlanResult,
+}
+
+pub struct Snapshots {
+    name: String,
+    payload: String,
+}
+
 impl<'a> TestContext<'a, Tools> {
+    /// Run `cargo_dist_plan` and `cargo_dist_build_global`
+    pub fn cargo_dist_build_and_plan(&self, test_name: &str) -> Result<BuildAndPlanResult> {
+        let build = self.cargo_dist_build_global(test_name)?;
+        let plan = self.cargo_dist_plan(test_name)?;
+
+        Ok(BuildAndPlanResult {
+            test_name: test_name.to_owned(),
+            build,
+            plan,
+        })
+    }
+
+    /// Run 'cargo dist plan --output-format=json' and return dist-manifest.json
     pub fn cargo_dist_plan(&self, test_name: &str) -> Result<PlanResult> {
         let output = self
             .tools
@@ -118,8 +142,7 @@ impl<'a> TestContext<'a, Tools> {
             raw_json,
         })
     }
-    /// Run 'cargo dist build -aglobal' with the toml patched
-    /// and return paths to various files that were generated
+    /// Run 'cargo dist build -aglobal' and return paths to various files that were generated
     pub fn cargo_dist_build_global(&self, test_name: &str) -> Result<DistResult> {
         // If the cargo-dist target dir exists, delete it to avoid cross-contamination
         let out_path = Utf8Path::new("target/distrib/");
@@ -135,8 +158,7 @@ impl<'a> TestContext<'a, Tools> {
 
         self.load_dist_results(test_name)
     }
-    /// Run 'cargo dist generate-ci' with the toml patched
-    /// and return the contents of .github/workflows/release.yml
+    /// Run 'cargo dist generate-ci' and return paths to various files that were generated
     pub fn cargo_dist_generate_ci(&self, test_name: &str) -> Result<GenerateCiResult> {
         let github_ci_path = Utf8Path::new(".github/workflows/release.yml").to_owned();
         // Delete ci.yml if it already exists
@@ -195,7 +217,7 @@ impl<'a> TestContext<'a, Tools> {
 }
 
 impl DistResult {
-    pub fn check_all(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<()> {
+    pub fn check_all(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<Snapshots> {
         // If we have shellcheck, check our shell script
         self.shellcheck(ctx)?;
 
@@ -206,9 +228,7 @@ impl DistResult {
         self.runtest_shell_installer(ctx, expected_bin_dir)?;
 
         // Now that all other checks have passed, it's safe to check snapshots
-        self.snapshot()?;
-
-        Ok(())
+        self.snapshot()
     }
 
     /// Run shellcheck on the shell scripts
@@ -363,7 +383,7 @@ impl DistResult {
     }
 
     // Run cargo-insta on everything we care to snapshot
-    pub fn snapshot(&self) -> Result<()> {
+    pub fn snapshot(&self) -> Result<Snapshots> {
         // We make a single uber-snapshot for both scripts to avoid the annoyances of having multiple snapshots
         // in one test (necessitating rerunning it multiple times or passing special flags to get all the changes)
         let mut snapshots = String::new();
@@ -385,18 +405,17 @@ impl DistResult {
         )?;
 
         let test_name = &self.test_name;
-        snapshot_settings().bind(|| {
-            insta::assert_snapshot!(format!("{test_name}-installers"), &snapshots);
-        });
-        Ok(())
+        Ok(Snapshots {
+            name: format!("{test_name}-installers"),
+            payload: snapshots,
+        })
     }
 }
 
 impl PlanResult {
-    pub fn check_all(&self) -> Result<()> {
+    pub fn check_all(&self) -> Result<Snapshots> {
         self.parse()?;
-        self.snapshot()?;
-        Ok(())
+        self.snapshot()
     }
 
     pub fn parse(&self) -> Result<cargo_dist_schema::DistManifest> {
@@ -406,7 +425,7 @@ impl PlanResult {
     }
 
     // Run cargo-insta on everything we care to snapshot
-    pub fn snapshot(&self) -> Result<()> {
+    pub fn snapshot(&self) -> Result<Snapshots> {
         // We make a single uber-snapshot for both scripts to avoid the annoyances of having multiple snapshots
         // in one test (necessitating rerunning it multiple times or passing special flags to get all the changes)
         let mut snapshots = String::new();
@@ -414,21 +433,32 @@ impl PlanResult {
         append_snapshot_string(&mut snapshots, "dist-manifest.json", &self.raw_json)?;
 
         let test_name = &self.test_name;
-        snapshot_settings().bind(|| {
-            insta::assert_snapshot!(format!("{test_name}-plan"), &snapshots);
-        });
-        Ok(())
+        Ok(Snapshots {
+            name: format!("{test_name}-dist-manifest"),
+            payload: snapshots,
+        })
+    }
+}
+
+impl BuildAndPlanResult {
+    fn check_all(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<Snapshots> {
+        let build_snaps = self.build.check_all(ctx, expected_bin_dir)?;
+        let plan_snaps = self.plan.check_all()?;
+
+        // Merge snapshots
+        let mut snaps = build_snaps.join(plan_snaps);
+        snaps.name = self.test_name.clone();
+        Ok(snaps)
     }
 }
 
 impl GenerateCiResult {
-    pub fn check_all(&self) -> Result<()> {
-        self.snapshot()?;
-        Ok(())
+    pub fn check_all(&self) -> Result<Snapshots> {
+        self.snapshot()
     }
 
     // Run cargo-insta on everything we care to snapshot
-    pub fn snapshot(&self) -> Result<()> {
+    pub fn snapshot(&self) -> Result<Snapshots> {
         // We make a single uber-snapshot for both scripts to avoid the annoyances of having multiple snapshots
         // in one test (necessitating rerunning it multiple times or passing special flags to get all the changes)
         let mut snapshots = String::new();
@@ -440,10 +470,23 @@ impl GenerateCiResult {
         )?;
 
         let test_name = &self.test_name;
+        Ok(Snapshots {
+            name: format!("{test_name}-generate-ci"),
+            payload: snapshots,
+        })
+    }
+}
+
+impl Snapshots {
+    pub fn snap(self) {
         snapshot_settings().bind(|| {
-            insta::assert_snapshot!(format!("{test_name}-generate-ci"), &snapshots);
-        });
-        Ok(())
+            insta::assert_snapshot!(self.name, self.payload);
+        })
+    }
+
+    pub fn join(mut self, other: Self) -> Self {
+        self.payload.push_str(&other.payload);
+        self
     }
 }
 

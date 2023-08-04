@@ -44,7 +44,7 @@ scope = "@axodotdev"
 "#
         ))?;
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".cargo/bin/")?;
+        results.check_all(ctx, ".cargo/bin/")?.snap();
 
         Ok(())
     })
@@ -69,7 +69,7 @@ scope = "@axodotdev"
 "#
         ))?;
         let ci_results = ctx.cargo_dist_generate_ci(test_name)?;
-        ci_results.check_all()?;
+        ci_results.check_all()?.snap();
 
         Ok(())
     })
@@ -93,7 +93,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".cargo/bin/")?;
+        results.check_all(ctx, ".cargo/bin/")?.snap();
 
         Ok(())
     })
@@ -119,7 +119,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".cargo/bin/")?;
+        results.check_all(ctx, ".cargo/bin/")?.snap();
 
         Ok(())
     })
@@ -145,7 +145,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".axolotlsay/")?;
+        results.check_all(ctx, ".axolotlsay/")?.snap();
 
         Ok(())
     })
@@ -171,7 +171,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".axolotlsay/bins")?;
+        results.check_all(ctx, ".axolotlsay/bins")?.snap();
 
         Ok(())
     })
@@ -197,7 +197,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, "My Axolotlsay Documents/")?;
+        results.check_all(ctx, "My Axolotlsay Documents/")?.snap();
 
         Ok(())
     })
@@ -222,7 +222,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, "My Axolotlsay Documents/bin/")?;
+        results.check_all(ctx, "My Axolotlsay Documents/bin/")?.snap();
 
         Ok(())
     })
@@ -248,7 +248,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".axolotlsay/")?;
+        results.check_all(ctx, ".axolotlsay/")?.snap();
 
         Ok(())
     })
@@ -274,7 +274,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".axolotlsay/bin/")?;
+        results.check_all(ctx, ".axolotlsay/bin/")?.snap();
 
         Ok(())
     })
@@ -300,7 +300,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/")?;
+        results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/")?.snap();
 
         Ok(())
     })
@@ -326,7 +326,7 @@ windows-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_global(test_name)?;
-        results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/bin/")?;
+        results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/bin/")?.snap();
 
         Ok(())
     })
