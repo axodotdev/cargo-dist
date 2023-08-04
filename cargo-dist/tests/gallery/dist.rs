@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use axoasset::LocalAsset;
+use axoasset::{LocalAsset, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
 use miette::miette;
 
@@ -95,14 +95,32 @@ pub struct DistResult {
     npm_installer_package_path: Option<Utf8PathBuf>,
 }
 
+pub struct PlanResult {
+    test_name: String,
+    raw_json: String,
+}
+
+pub struct GenerateCiResult {
+    test_name: String,
+    github_ci_path: Option<Utf8PathBuf>,
+}
+
 impl<'a> TestContext<'a, Tools> {
+    pub fn cargo_dist_plan(&self, test_name: &str) -> Result<PlanResult> {
+        let output = self
+            .tools
+            .cargo_dist
+            .output_checked(|cmd| cmd.arg("dist").arg("plan").arg("--output-format=json"))?;
+        let raw_json = String::from_utf8(output.stdout).expect("plan wasn't utf8!?");
+
+        Ok(PlanResult {
+            test_name: test_name.to_owned(),
+            raw_json,
+        })
+    }
     /// Run 'cargo dist build -aglobal' with the toml patched
     /// and return paths to various files that were generated
-    pub fn cargo_dist_build_global(&self, test_name: &str, new_toml: String) -> Result<DistResult> {
-        eprintln!("\n=============== running test: {test_name} =================");
-        // patch the Cargo.toml
-        self.patch_cargo_toml(new_toml)?;
-
+    pub fn cargo_dist_build_global(&self, test_name: &str) -> Result<DistResult> {
         // If the cargo-dist target dir exists, delete it to avoid cross-contamination
         let out_path = Utf8Path::new("target/distrib/");
         if out_path.exists() {
@@ -119,15 +137,11 @@ impl<'a> TestContext<'a, Tools> {
     }
     /// Run 'cargo dist generate-ci' with the toml patched
     /// and return the contents of .github/workflows/release.yml
-    pub fn cargo_dist_generate_ci(&self, test_name: &str, new_toml: String) -> Result<String> {
-        eprintln!("\n=============== running test: {test_name} =================");
-        // patch the Cargo.toml
-        self.patch_cargo_toml(new_toml)?;
-
-        let ci_path = Utf8Path::new(".github/workflows/release.yml");
+    pub fn cargo_dist_generate_ci(&self, test_name: &str) -> Result<GenerateCiResult> {
+        let github_ci_path = Utf8Path::new(".github/workflows/release.yml").to_owned();
         // Delete ci.yml if it already exists
-        if ci_path.exists() {
-            LocalAsset::remove_file(ci_path)?;
+        if github_ci_path.exists() {
+            LocalAsset::remove_file(&github_ci_path)?;
         }
 
         // run generate-ci
@@ -136,10 +150,10 @@ impl<'a> TestContext<'a, Tools> {
             .cargo_dist
             .output_checked(|cmd| cmd.arg("dist").arg("generate-ci"))?;
 
-        // load the contents
-        let result = LocalAsset::load_string(ci_path)?;
-
-        Ok(result)
+        Ok(GenerateCiResult {
+            test_name: test_name.to_owned(),
+            github_ci_path: github_ci_path.exists().then_some(github_ci_path),
+        })
     }
 
     fn load_dist_results(&self, test_name: &str) -> Result<DistResult> {
@@ -159,7 +173,7 @@ impl<'a> TestContext<'a, Tools> {
         })
     }
 
-    fn patch_cargo_toml(&self, new_toml: String) -> Result<()> {
+    pub fn patch_cargo_toml(&self, new_toml: String) -> Result<()> {
         eprintln!("loading Cargo.toml...");
         let toml_src = axoasset::SourceFile::load_local("Cargo.toml")?;
         let mut toml = toml_src.deserialize_toml_edit()?;
@@ -354,17 +368,17 @@ impl DistResult {
         // in one test (necessitating rerunning it multiple times or passing special flags to get all the changes)
         let mut snapshots = String::new();
 
-        Self::append_snapshot_file(
+        append_snapshot_file(
             &mut snapshots,
             "installer.sh",
             self.shell_installer_path.as_deref(),
         )?;
-        Self::append_snapshot_file(
+        append_snapshot_file(
             &mut snapshots,
             "installer.ps1",
             self.powershell_installer_path.as_deref(),
         )?;
-        Self::append_snapshot_tarball(
+        append_snapshot_tarball(
             &mut snapshots,
             "npm-package.tar.gz",
             self.npm_installer_package_path.as_deref(),
@@ -376,67 +390,59 @@ impl DistResult {
         });
         Ok(())
     }
+}
 
-    fn append_snapshot_tarball(
-        out: &mut String,
-        name: &str,
-        src_path: Option<&Utf8Path>,
-    ) -> Result<()> {
-        use std::io::Read;
-
-        // Skip snapshotting this file if absent
-        let Some(src_path) = src_path else {
-            return Ok(());
-        };
-
-        // We shove everything in a BTreeMap to keep ordering stable
-        let mut results = BTreeMap::new();
-
-        let file = LocalAsset::load_bytes(src_path)?;
-        let gz_decoder = flate2::read::GzDecoder::new(&file[..]);
-        let mut tar_decoder = tar::Archive::new(gz_decoder);
-        let entries = tar_decoder.entries().expect("couldn't read tar");
-        for entry in entries {
-            let mut entry = entry.expect("couldn't read tar entry");
-            if entry.header().entry_type() == tar::EntryType::Regular {
-                let path = entry
-                    .path()
-                    .expect("couldn't get tarred file's path")
-                    .to_string_lossy()
-                    .into_owned();
-                let mut val = String::new();
-                entry
-                    .read_to_string(&mut val)
-                    .expect("couldn't read tarred file to string");
-                results.insert(path, val);
-            }
-        }
-
-        for (path, val) in &results {
-            Self::append_snapshot_string(out, &format!("{name}/{path}"), val)?;
-        }
+impl PlanResult {
+    pub fn check_all(&self) -> Result<()> {
+        self.parse()?;
+        self.snapshot()?;
         Ok(())
     }
 
-    fn append_snapshot_file(
-        out: &mut String,
-        name: &str,
-        src_path: Option<&Utf8Path>,
-    ) -> Result<()> {
-        // Skip snapshotting this file if absent
-        let Some(src_path) = src_path else {
-            return Ok(());
-        };
-
-        let src = axoasset::LocalAsset::load_string(src_path)?;
-        Self::append_snapshot_string(out, name, &src)
+    pub fn parse(&self) -> Result<cargo_dist_schema::DistManifest> {
+        let src = SourceFile::new("dist-manifest.json", self.raw_json.clone());
+        let val = src.deserialize_json()?;
+        Ok(val)
     }
 
-    fn append_snapshot_string(out: &mut String, name: &str, val: &str) -> Result<()> {
-        use std::fmt::Write;
+    // Run cargo-insta on everything we care to snapshot
+    pub fn snapshot(&self) -> Result<()> {
+        // We make a single uber-snapshot for both scripts to avoid the annoyances of having multiple snapshots
+        // in one test (necessitating rerunning it multiple times or passing special flags to get all the changes)
+        let mut snapshots = String::new();
 
-        writeln!(out, "================ {name} ================").unwrap();
-        writeln!(out, "{val}").unwrap();
+        append_snapshot_string(&mut snapshots, "dist-manifest.json", &self.raw_json)?;
+
+        let test_name = &self.test_name;
+        snapshot_settings().bind(|| {
+            insta::assert_snapshot!(format!("{test_name}-plan"), &snapshots);
+        });
+        Ok(())
+    }
+}
+
+impl GenerateCiResult {
+    pub fn check_all(&self) -> Result<()> {
+        self.snapshot()?;
+        Ok(())
+    }
+
+    // Run cargo-insta on everything we care to snapshot
+    pub fn snapshot(&self) -> Result<()> {
+        // We make a single uber-snapshot for both scripts to avoid the annoyances of having multiple snapshots
+        // in one test (necessitating rerunning it multiple times or passing special flags to get all the changes)
+        let mut snapshots = String::new();
+
+        append_snapshot_file(
+            &mut snapshots,
+            "github-ci.yml",
+            self.github_ci_path.as_deref(),
+        )?;
+
+        let test_name = &self.test_name;
+        snapshot_settings().bind(|| {
+            insta::assert_snapshot!(format!("{test_name}-generate-ci"), &snapshots);
+        });
         Ok(())
     }
 }
@@ -486,4 +492,63 @@ pub fn snapshot_settings_with_dist_manifest_filter() -> insta::Settings {
         r#""cargo_version_line": "CENSORED""#,
     );
     settings
+}
+
+fn append_snapshot_tarball(
+    out: &mut String,
+    name: &str,
+    src_path: Option<&Utf8Path>,
+) -> Result<()> {
+    use std::io::Read;
+
+    // Skip snapshotting this file if absent
+    let Some(src_path) = src_path else {
+        return Ok(());
+    };
+
+    // We shove everything in a BTreeMap to keep ordering stable
+    let mut results = BTreeMap::new();
+
+    let file = LocalAsset::load_bytes(src_path)?;
+    let gz_decoder = flate2::read::GzDecoder::new(&file[..]);
+    let mut tar_decoder = tar::Archive::new(gz_decoder);
+    let entries = tar_decoder.entries().expect("couldn't read tar");
+    for entry in entries {
+        let mut entry = entry.expect("couldn't read tar entry");
+        if entry.header().entry_type() == tar::EntryType::Regular {
+            let path = entry
+                .path()
+                .expect("couldn't get tarred file's path")
+                .to_string_lossy()
+                .into_owned();
+            let mut val = String::new();
+            entry
+                .read_to_string(&mut val)
+                .expect("couldn't read tarred file to string");
+            results.insert(path, val);
+        }
+    }
+
+    for (path, val) in &results {
+        append_snapshot_string(out, &format!("{name}/{path}"), val)?;
+    }
+    Ok(())
+}
+
+fn append_snapshot_file(out: &mut String, name: &str, src_path: Option<&Utf8Path>) -> Result<()> {
+    // Skip snapshotting this file if absent
+    let Some(src_path) = src_path else {
+        return Ok(());
+    };
+
+    let src = axoasset::LocalAsset::load_string(src_path)?;
+    append_snapshot_string(out, name, &src)
+}
+
+fn append_snapshot_string(out: &mut String, name: &str, val: &str) -> Result<()> {
+    use std::fmt::Write;
+
+    writeln!(out, "================ {name} ================").unwrap();
+    writeln!(out, "{val}").unwrap();
+    Ok(())
 }

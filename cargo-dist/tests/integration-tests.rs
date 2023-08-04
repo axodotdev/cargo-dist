@@ -25,15 +25,13 @@
 
 mod gallery;
 use gallery::*;
-use insta::assert_snapshot;
 
 #[test]
 fn basic() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
-
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell", "npm"]
@@ -42,9 +40,10 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 scope = "@axodotdev"
-
-"#))?;
-
+        
+"#
+        ))?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
         results.check_all(ctx, ".cargo/bin/")?;
 
         Ok(())
@@ -57,7 +56,7 @@ fn basic_generate_github_ci() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_generate_ci(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell", "npm"]
@@ -67,11 +66,10 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 scope = "@axodotdev"
 
-"#))?;
-
-        snapshot_settings_with_version_filter().bind(|| {
-            assert_snapshot!(format!("{test_name}-github-ci"), results);
-        });
+"#
+        ))?;
+        let ci_results = ctx.cargo_dist_generate_ci(test_name)?;
+        ci_results.check_all()?;
 
         Ok(())
     })
@@ -83,7 +81,7 @@ fn akaikatana_basic() -> Result<(), miette::Report> {
     AKAIKATANA_REPACK.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
 rust-toolchain-version = "1.67.1"
@@ -91,7 +89,10 @@ ci = ["github"]
 installers = ["shell", "powershell"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 
-"#))?;
+"#
+        ))?;
+
+        let results = ctx.cargo_dist_build_global(test_name)?;
         results.check_all(ctx, ".cargo/bin/")?;
 
         Ok(())
@@ -104,7 +105,7 @@ fn install_path_cargo_home() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -114,9 +115,11 @@ install-path = "CARGO_HOME"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, ".cargo/bin/")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, ".cargo/bin/")?;
 
         Ok(())
     })
@@ -128,7 +131,7 @@ fn install_path_home_subdir_min() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -138,9 +141,11 @@ install-path = "~/.axolotlsay/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, ".axolotlsay/")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, ".axolotlsay/")?;
 
         Ok(())
     })
@@ -152,7 +157,7 @@ fn install_path_home_subdir_deeper() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -162,9 +167,11 @@ install-path = "~/.axolotlsay/bins"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, ".axolotlsay/bins")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, ".axolotlsay/bins")?;
 
         Ok(())
     })
@@ -176,7 +183,7 @@ fn install_path_home_subdir_space() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -186,9 +193,11 @@ install-path = "~/My Axolotlsay Documents"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, "My Axolotlsay Documents/")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, "My Axolotlsay Documents/")?;
 
         Ok(())
     })
@@ -199,8 +208,7 @@ fn install_path_home_subdir_space_deeper() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
-
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -210,9 +218,11 @@ install-path = "~/My Axolotlsay Documents/bin/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, "My Axolotlsay Documents/bin/")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, "My Axolotlsay Documents/bin/")?;
 
         Ok(())
     })
@@ -224,7 +234,7 @@ fn install_path_env_no_subdir() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -234,9 +244,11 @@ install-path = "$MY_ENV_VAR/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, ".axolotlsay/")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, ".axolotlsay/")?;
 
         Ok(())
     })
@@ -248,7 +260,7 @@ fn install_path_env_subdir() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -258,9 +270,11 @@ install-path = "$MY_ENV_VAR/bin/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, ".axolotlsay/bin/")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, ".axolotlsay/bin/")?;
 
         Ok(())
     })
@@ -272,7 +286,7 @@ fn install_path_env_subdir_space() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -282,9 +296,11 @@ install-path = "$MY_ENV_VAR/My Axolotlsay Documents"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/")?;
 
         Ok(())
     })
@@ -296,7 +312,7 @@ fn install_path_env_subdir_space_deeper() -> Result<(), miette::Report> {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        let results = ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -306,9 +322,11 @@ install-path = "$MY_ENV_VAR/My Axolotlsay Documents/bin"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#))?;
+"#
+        ))?;
 
-results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/bin/")?;
+        let results = ctx.cargo_dist_build_global(test_name)?;
+        results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/bin/")?;
 
         Ok(())
     })
@@ -321,7 +339,7 @@ fn install_path_invalid() {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -331,7 +349,9 @@ install-path = "~/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#)).unwrap();
+"#
+        ))?;
+        ctx.cargo_dist_build_global(test_name).unwrap();
 
         Ok(())
     }).unwrap();
@@ -344,7 +364,7 @@ fn env_path_invalid() {
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
 
-        ctx.cargo_dist_build_global(test_name, format!(r#"
+        ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"   
 installers = ["shell", "powershell"]
@@ -354,7 +374,9 @@ install-path = "$MY_ENV"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 
-"#)).unwrap();
+"#
+        ))?;
+        ctx.cargo_dist_build_global(test_name).unwrap();
 
         Ok(())
     }).unwrap();
