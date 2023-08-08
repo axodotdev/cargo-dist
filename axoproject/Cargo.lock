@@ -148,6 +148,7 @@ dependencies = [
  "thiserror",
  "toml_edit",
  "tracing",
+ "url",
 ]
 
 [[package]]
