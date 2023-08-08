@@ -509,17 +509,13 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
 }
 
 pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
-    assert_eq!(
-        src_path.file_name(),
-        dest_path.file_name(),
-        "oops axoasset's LocalAsset::copy isn't usable for us"
-    );
-    LocalAsset::copy(src_path, dest_path.parent().unwrap())?;
+    LocalAsset::copy_named(src_path, dest_path)?;
     Ok(())
 }
 
-fn copy_dir(_src_path: &Utf8Path, _dest_path: &Utf8Path) -> Result<()> {
-    todo!("copy_dir isn't implemented yet")
+pub(crate) fn copy_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+    LocalAsset::copy_dir_named(src_path, dest_path)?;
+    Ok(())
 }
 
 fn zip_dir(
