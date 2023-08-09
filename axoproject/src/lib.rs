@@ -154,6 +154,20 @@ impl WorkspaceInfo {
             .enumerate()
             .map(|(i, k)| (PackageIdx(i), k))
     }
+
+    /// Returns a struct which contains the repository's owner and name.
+    pub fn github_repo(&self) -> Result<Option<GithubRepo>> {
+        match self.repository_url.clone() {
+            None => Ok(None),
+            Some(url) => Ok(Some(GithubRepoInput::new(url)?.parse()?)),
+        }
+    }
+
+    /// Returns a web version of the repository URL,
+    /// converted from SSH if necessary, with .git suffix trimmed.
+    pub fn web_url(&self) -> Result<Option<String>> {
+        Ok(self.github_repo()?.map(|repo| repo.web_url()))
+    }
 }
 
 /// Computed info about a package
