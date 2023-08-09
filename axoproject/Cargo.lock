@@ -100,9 +100,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "axoasset"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26659fc6821b625ef4e2887e7236ad32247fe690c19ba2d7ec76db1421b5d098"
+checksum = "e85821647adf8212563f921ee791cbc75c0247d579a5ace3abcd6ab2cf87fe8d"
 dependencies = [
  "camino",
  "image",
@@ -113,6 +113,7 @@ dependencies = [
  "thiserror",
  "toml_edit",
  "url",
+ "walkdir",
 ]
 
 [[package]]
