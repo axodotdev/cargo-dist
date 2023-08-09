@@ -20,6 +20,7 @@ pub struct GithubRepo {
 }
 
 impl GithubRepo {
+    /// Returns a URL suitable for web access to the repository.
     pub fn web_url(&self) -> String {
         format!("https://github.com/{}/{}", self.owner, self.name)
     }
