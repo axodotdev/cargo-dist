@@ -79,4 +79,32 @@ pub enum AxoprojectError {
         #[source]
         details: std::io::Error,
     },
+
+    /// An error that occurred while trying to parse a repository string
+    #[error("Your repository URL {url} couldn't be parsed.")]
+    #[diagnostic(help("only git-compatible URLs are supported."))]
+    UnknownRepoStyle {
+        /// URL to the repository
+        url: String,
+    },
+
+    /// An error that occurred because a repository string could not be parsed for a specific reason
+    #[error("failed to parse your repo, current config has repo as: {repo}")]
+    #[diagnostic(help("We found a repo url but we had trouble parsing it. Please make sure it's entered correctly. This may be an error, and if so you should file an issue."))]
+    RepoParseError {
+        /// URL to the repository
+        repo: String,
+    },
+
+    /// An error that occurred when parsing a repository string
+    #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
+
+    /// An error returned when a non-GitHub URL is parsed
+    #[error("Your repository URL {url} couldn't be parsed.")]
+    #[diagnostic(help("Only GitHub URLs are supported at the moment."))]
+    NotGitHubError {
+        /// URL to the repository
+        url: String,
+    },
 }

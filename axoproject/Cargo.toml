@@ -46,6 +46,7 @@ thiserror = "1.0.40"
 clap = { version = "4.2.1", features = ["derive"] }
 pathdiff = { version = "0.2.1", features = ["camino"] }
 itertools = "0.10.5"
+url = "2.4.0"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
@@ -64,4 +65,3 @@ ci = ["github"]
 installers = ["shell", "powershell"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
-
