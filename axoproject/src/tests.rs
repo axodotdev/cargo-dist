@@ -1,4 +1,6 @@
-use crate::WorkspaceKind;
+use camino::Utf8PathBuf;
+
+use crate::{changelog::ChangelogInfo, errors::AxoprojectError, Version, WorkspaceKind};
 
 #[cfg(feature = "cargo-projects")]
 #[test]
@@ -249,4 +251,260 @@ fn test_rooted_npm_good() {
     assert_eq!(package.binaries.len(), 1);
     let binary = &package.binaries[0];
     assert_eq!(binary, "npm-init-legacy");
+}
+
+fn kitchen_sink_changelog() -> &'static str {
+    r####"
+# Changelog
+
+## Unreleased
+
+Coming soon..!
+
+
+## 3.2.1 - THE FINAL CHANGETIER
+
+WOW!
+
+
+## 3.2.0
+
+Great changelog here
+
+
+## v1.2.1 the BEST version
+
+WOW CHANGLOGS!!
+
+
+## v1.2.0
+
+changelog here
+
+
+
+
+## Version 1.0.1 - July 3rd, 2025
+
+And THAT's
+
+THE
+
+FACTS
+
+
+
+## Version 1.0.0
+
+I'm changelogin' here!
+
+
+
+## Version 0.1.0-prerelease.1+buildgunk - neato!
+
+Wow what a first release
+
+#### Features
+
+some features!
+
+
+"####
+}
+
+fn no_unreleased_changelog() -> &'static str {
+    r##"
+# v1.0.0
+
+neat
+"##
+}
+
+fn doubled_changelog() -> &'static str {
+    r##"
+# v1.0.0
+
+neat
+
+# v1.0.0
+
+still neat
+"##
+}
+
+fn ver(ver: &str) -> Version {
+    Version::Cargo(ver.parse().unwrap())
+}
+
+#[test]
+fn test_changelog_basic() {
+    use crate::changelog::changelog_for_version_inner as test;
+    let text = kitchen_sink_changelog();
+    let path = Utf8PathBuf::from("CHANGELOG.md");
+
+    // Test exact matches
+    assert_eq!(
+        test(&path, text, &ver("0.1.0-prerelease.1+buildgunk"))
+            .unwrap()
+            .unwrap(),
+        ChangelogInfo {
+            title: "Version 0.1.0-prerelease.1+buildgunk - neato!".to_owned(),
+            body: "Wow what a first release\n\n#### Features\n\nsome features!".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("1.0.0")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "Version 1.0.0".to_owned(),
+            body: "I'm changelogin' here!".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("1.0.1")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "Version 1.0.1 - July 3rd, 2025".to_owned(),
+            body: "And THAT's\n\nTHE\n\nFACTS".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("1.2.0")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "v1.2.0".to_owned(),
+            body: "changelog here".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("1.2.1")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "v1.2.1 the BEST version".to_owned(),
+            body: "WOW CHANGLOGS!!".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("3.2.0")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "3.2.0".to_owned(),
+            body: "Great changelog here".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("3.2.1")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "3.2.1 - THE FINAL CHANGETIER".to_owned(),
+            body: "WOW!".to_owned()
+        }
+    );
+}
+
+#[test]
+fn test_changelog_normalize() {
+    use crate::changelog::changelog_for_version_inner as test;
+    let text = kitchen_sink_changelog();
+    let path = Utf8PathBuf::from("CHANGELOG.md");
+
+    // Test searching for prereleases when there's only a stable version,
+    // which should make us do a match while rewriting the title to use that version
+    assert_eq!(
+        test(&path, text, &ver("1.0.0-prerelease.2"))
+            .unwrap()
+            .unwrap(),
+        ChangelogInfo {
+            title: "Version 1.0.0-prerelease.2".to_owned(),
+            body: "I'm changelogin' here!".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("1.0.1-alpha+buildgunk"))
+            .unwrap()
+            .unwrap(),
+        ChangelogInfo {
+            title: "Version 1.0.1-alpha+buildgunk - July 3rd, 2025".to_owned(),
+            body: "And THAT's\n\nTHE\n\nFACTS".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("1.2.0-beta")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "v1.2.0-beta".to_owned(),
+            body: "changelog here".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("1.2.1-preprerelease"))
+            .unwrap()
+            .unwrap(),
+        ChangelogInfo {
+            title: "v1.2.1-preprerelease the BEST version".to_owned(),
+            body: "WOW CHANGLOGS!!".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("3.2.0-omg")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "3.2.0-omg".to_owned(),
+            body: "Great changelog here".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("3.2.1-sadness")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "3.2.1-sadness - THE FINAL CHANGETIER".to_owned(),
+            body: "WOW!".to_owned()
+        }
+    );
+}
+
+#[test]
+fn test_changelog_unreleased() {
+    use crate::changelog::changelog_for_version_inner as test;
+    let text = kitchen_sink_changelog();
+    let path = Utf8PathBuf::from("CHANGELOG.md");
+
+    // Test searching for prereleases when there's no match, but there is an Unreleased
+    // which should make us do a match while rewriting the title to use that version
+    assert_eq!(
+        test(&path, text, &ver("4.0.0-prerelease.2"))
+            .unwrap()
+            .unwrap(),
+        ChangelogInfo {
+            title: "Version 4.0.0-prerelease.2".to_owned(),
+            body: "Coming soon..!".to_owned()
+        }
+    );
+    assert_eq!(
+        test(&path, text, &ver("4.0.0-prerelease.2+buildgunkz"))
+            .unwrap()
+            .unwrap(),
+        ChangelogInfo {
+            title: "Version 4.0.0-prerelease.2+buildgunkz".to_owned(),
+            body: "Coming soon..!".to_owned()
+        }
+    );
+}
+
+#[test]
+fn test_changelog_errors() {
+    use crate::changelog::changelog_for_version_inner as test;
+    let changelog = kitchen_sink_changelog();
+    let no_unreleased_changelog = no_unreleased_changelog();
+    let doubled_changelog = doubled_changelog();
+    let path = Utf8PathBuf::from("CHANGELOG.md");
+
+    // Searching for a stable version that doesn't exist
+    assert!(matches!(
+        test(&path, changelog, &ver("4.0.0")),
+        Err(AxoprojectError::ChangelogVersionNotFound { .. })
+    ));
+
+    // Searching for an unstable version without unreleased fallback
+    assert!(matches!(
+        test(&path, no_unreleased_changelog, &ver("4.0.0-prerelease.2")),
+        Err(AxoprojectError::ChangelogVersionNotFound { .. })
+    ));
+
+    // Parse-changelog doesn't like changelogs with repeated entries
+    assert!(matches!(
+        test(&path, doubled_changelog, &ver("1.0.0")),
+        Err(AxoprojectError::ParseChangelog(..))
+    ));
 }

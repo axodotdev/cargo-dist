@@ -13,6 +13,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use errors::{AxoprojectError, Result};
 use tracing::info;
 
+pub mod changelog;
 pub mod errors;
 #[cfg(feature = "npm-projects")]
 pub mod javascript;
@@ -329,6 +330,32 @@ impl Version {
             v
         } else {
             panic!("Version wasn't in the npm format")
+        }
+    }
+
+    /// Returns whether the version is stable (no pre/build component)
+    pub fn is_stable(&self) -> bool {
+        match self {
+            #[cfg(feature = "cargo-projects")]
+            Version::Cargo(v) => v.pre.is_empty() && v.build.is_empty(),
+            #[cfg(feature = "npm-projects")]
+            Version::Npm(v) => v.pre_release.is_empty() && v.build.is_empty(),
+        }
+    }
+
+    /// Gets a copy of the version with only the stable parts (pre/build components stripped)
+    pub fn stable_part(&self) -> Self {
+        match self {
+            #[cfg(feature = "cargo-projects")]
+            Version::Cargo(v) => Version::Cargo(semver::Version::new(v.major, v.minor, v.patch)),
+            #[cfg(feature = "npm-projects")]
+            Version::Npm(v) => Version::Npm(node_semver::Version {
+                major: v.major,
+                minor: v.minor,
+                patch: v.patch,
+                build: vec![],
+                pre_release: vec![],
+            }),
         }
     }
 }

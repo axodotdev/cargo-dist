@@ -47,6 +47,7 @@ clap = { version = "4.2.1", features = ["derive"] }
 pathdiff = { version = "0.2.1", features = ["camino"] }
 itertools = "0.10.5"
 url = "2.4.0"
+parse-changelog = "0.6.1"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

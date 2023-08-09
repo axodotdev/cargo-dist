@@ -4,6 +4,8 @@ use camino::Utf8PathBuf;
 use miette::Diagnostic;
 use thiserror::Error;
 
+use crate::Version;
+
 /// A Result returned by Axoproject
 pub type Result<T> = std::result::Result<T, AxoprojectError>;
 
@@ -20,6 +22,10 @@ pub enum AxoprojectError {
     #[cfg(feature = "cargo-projects")]
     #[error(transparent)]
     CargoMetadata(#[from] guppy::Error),
+
+    /// An error occured in parse_changelog
+    #[error(transparent)]
+    ParseChangelog(#[from] parse_changelog::Error),
 
     /// An error parsing a Cargo.toml
     #[cfg(feature = "cargo-projects")]
@@ -106,5 +112,14 @@ pub enum AxoprojectError {
     NotGitHubError {
         /// URL to the repository
         url: String,
+    },
+
+    /// We searched a changelog file but found no result
+    #[error("couldn't find a suitable changelog entry for {version} in {path}")]
+    ChangelogVersionNotFound {
+        /// Path of the file
+        path: Utf8PathBuf,
+        /// Version we were looking for
+        version: Version,
     },
 }
