@@ -1,3 +1,10 @@
+# Version 0.4.3 (2023-08-09)
+
+* Updated dependencies.
+* PackageInfo can now parse the owner and repository name from a URL.
+* PackageInfo can now return a normalized web URL for a GitHub repository.
+* PackageInfo and WorkspaceInfo now have a "changelog_for_version" method based on the version from cargo-dist.
+
 # Version 0.4.2 (2023-07-04)
 
 Updating dependencies, specifically axoasset, to remove OpenSSL dependency.
