@@ -1,16 +1,141 @@
 # Unreleased
 
-This should become 0.1.0, representing the TRUE MVP of cargo-dist!
+The standout features of this release are custom install paths ("install my app to `~/.my-app` and add that to PATH"), archive checksums (releases should now include `my-app.tar.xz.sha256`), and refined builds (builds are more fault-tolerant, lower latency, and you can opt out of building `--workspace`).
 
-* archive checksum support (sha256 on by default, sha512 available)
-    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/243)
-    * [docs](https://opensource.axo.dev/cargo-dist/book/config.html#checksum)
+To update your cargo-dist config and release.yml [install cargo dist 0.1.0](https://opensource.axo.dev/cargo-dist/) and run `cargo dist init` (you should also remove rust-toolchain-version from your config, it's deprecated).
 
-* submodule checkouts
-    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/248)
+The codebase also got some major cleanups to make it easier to contribute and iterate on installers. All templates are now migrated to jinja2 (as opposed to adhoc string replace), and we have integration tests that can validate that installers work as intended.
 
-* changelog "Unreleased" section
-    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/250)
+
+
+## Features
+
+### custom install paths
+
+One of our most frequently requested features is here, custom install paths! (And also installers adding things to PATH!)
+
+When using cargo-dist's script installers (`shell` and `powershell`), we need to unpack the binaries to somewhere that will be useful for the user. By default cargo-dist will install to `$CARGO_HOME` (`~/.cargo/bin/`), because for our userbase (and many CI environments) that tends to be a user-local directory that's already on PATH (and yes we now properly check and respect `$CARGO_HOME`!).
+
+With this feature not only can you customize where binaries get installed to, but the installer scripts now also understand how to check if that directory is on PATH, and if not register it in the appropriate places (and tell the user how to refresh PATH).
+
+The new install-path config currently takes 3 possible formats (that we will surely expand with a lot more options very quickly):
+
+* "CARGO_HOME": explicitly requests the default behaviour
+* "~/.myapp/some/subdir": install to the given subdirectory of $HOME
+* "$MY_ENV_VAR/some/subdir/" install to the given subdirectory of $MY_ENV_VAR
+
+(Note that `$HOME/some/subdir` is not equivalent to `~/some/subdir` for various reasons, just always use the latter and we'll take care of those details for you.)
+
+See the docs for finer details, caveats, and future plans.
+
+* docs
+    * [install-path](https://opensource.axo.dev/cargo-dist/book/config.html#install-path)
+    * [shell installer](https://opensource.axo.dev/cargo-dist/book/installers.html#shell)
+    * [powershell installer](https://opensource.axo.dev/cargo-dist/book/installers.html#powershell) 
+* impl
+    * @gankra [add install-path](https://github.com/axodotdev/cargo-dist/pull/284)
+    * @gankra [teach scripts to edit PATH](https://github.com/axodotdev/cargo-dist/pull/293) 
+
+
+### archive checksums
+
+By default all archives will get a paired checksum file generated and uploaded to the release (default sha256). So for instance if you produce `my-app-x86_64-unknown-linux-gnu.tar.gz` then there will also be `my-app-x86_64-unknown-linux-gnu.tar.gz.sha256`. This can be configured with the new `checksum` config.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/config.html#checksum)
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/243)
+
+
+
+### refined builds
+
+Several changes were made to the way we build your projects, and more knobs were added to the `[workspace.metadata.dist]` config to allow you to tune the build to suit your needs.
+
+By default we now:
+
+* Build all target platforms on separate machines/tasks, improving concurrency and fault-tolerance (**GitHub Releases should now be twice as fast!**). Previously we would attempt to merge tasks to reduce the number of machines, infamously making both x64 mac and arm64 mac share a machine, doubling the latency of releases. You can get the old behaviour by setting `merge-tasks = true`.
+
+* Allow all build tasks to continue running, even if one of them fails (the GitHub Release will only be auto-undrafted if *all* builds pass). This allows you to salvage as much of a release as possible if only one of your target platforms has a broken build, potentially manually rerunning the task. You can get the old behaviour be setting `fail-fast = true`.
+
+* Recursively checkout submodules when fetching your project to build (seems harmless if you don't need it, and makes us work with more projects).
+
+* Do not try to set the toolchain in rustup when rust-toolchain-version isn't set (and that config is now deprecated, so you should unset it). Pinning of compiler toolchains is really common in major projects like Firefox with dedicated release engineers, but it's kinda overkill for smaller projects. On balance we think letting your release toolchain silently update over time as your infra updates is a better default for most projects (especially since Rust is really good at stability). Anyone who really wants toolchain pinning would be better served by using rust-toolchain.toml (so that integration tests and local dev also check the toolchain used for releases).
+
+In addition, you can now set `precise-builds = true` if you don't want us to build your apps with `--workspace`. There's a lot of complicated factors involved here but basically the difference is in how feature selection works in Cargo when you have multiple packages sharing a workspace. `--workspace` gets you a maximal default, precise-builds gets you a minimal default. For most projects there won't be a difference.
+
+* docs
+    * [precise-builds](https://opensource.axo.dev/cargo-dist/book/config.html#precise-builds)
+    * [merge-tasks](https://opensource.axo.dev/cargo-dist/book/config.html#merge-tasks)
+    * [fail-fast](https://opensource.axo.dev/cargo-dist/book/config.html#fail-fast)
+    * [rust-toolchain-version](https://opensource.axo.dev/cargo-dist/book/config.html#rust-toolchain-version)
+* impl
+    * @gankra [precise-builds + merge-tasks](https://github.com/axodotdev/cargo-dist/pull/277)
+    * @gankra [fail-fast](https://github.com/axodotdev/cargo-dist/pull/276)
+    * @gankra [recursively checkout submodules](https://github.com/axodotdev/cargo-dist/pull/248)
+    * @gankra [deprecate rust-toolchain-version](https://github.com/axodotdev/cargo-dist/pull/275)
+
+
+
+### orchestration features
+
+A few new CLI features were added to cargo-dist to enable more programmatic manipulation of it. These are mostly uninteresting to normal users, and exist to enable future axo.dev tools that build on top of cargo-dist.
+
+* `cargo dist init --with-json-config=path/to/config.json`
+    * [docs](https://opensource.axo.dev/cargo-dist/book/cli.html#--with-json-config-with_json_config)
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/279)
+* The dist-manifest-schema.json is now properly hosted in releases
+    * [docs](https://opensource.axo.dev/cargo-dist/book/schema.html)
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/280)
+
+
+### changelog "Unreleased" section
+
+When parsing your changelog, prereleases can now also match the special "Unreleased" heading,
+making it easier to keep a changelog for the upcoming release without committing to its version.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/simple-guide.html#release-notes)
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/250)
+
+
+
+## Fixes
+
+### including directories
+
+The `include` config will now work properly if you provide it a path to a directory
+(the functionality was stubbed out but never implemented).
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/config.html#include)
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/295)
+
+
+### release.yml license
+
+At the request of end users, we've added a small legal notice at the top of the generated github release.yml file to indicate that the contents of the file are permissibly licensed. This hopefully makes it easier for package distributors and employees at large companies w/legal review to confidentally use cargo-dist!
+
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/310)
+
+## Maintenance
+
+* codebase broken up into more files
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/294)
+
+* more code pulled out to axoasset
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/295)
+
+* migrated all generated files to jinja2 templates
+    * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/297)
+
+* added an integration test "gallery" of projects that use cargo-dist
+    * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/292)
+    * @gankra [improvements](https://github.com/axodotdev/cargo-dist/pull/296)
+    * @gankra [improvements](https://github.com/axodotdev/cargo-dist/pull/299)
+    * @gankra [improvements](https://github.com/axodotdev/cargo-dist/pull/300)
+    * @gankra [improvements](https://github.com/axodotdev/cargo-dist/pull/302)
+
+* other great cleanups/fixes
+    *  @striezel [fix typos](https://github.com/axodotdev/cargo-dist/pull/254)
+
+
 
 
 

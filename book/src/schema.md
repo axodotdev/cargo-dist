@@ -8,8 +8,6 @@ Many cargo-dist commands when run with `--output-format=json` will output to std
 
 As a matter of forward-compat and back-compat, basically every field in the format should be treated as optional (which the schema reflects).
 
-Here is the JSON Schema which will *hopefully* be stable going forward.
+The latest schema can be found at:
 
-```json
-{{#include ../../cargo-dist-schema/src/snapshots/cargo_dist_schema__emit.snap:5:}}
-```
+https://github.com/axodotdev/cargo-dist/releases/latest/download/dist-manifest-schema.json

@@ -26,7 +26,7 @@ These keys can be specified via [`installer` in your cargo-dist config][installe
 
 > since 0.0.3
 
-This provides a shell script (installer.sh) which detects the current platform, fetches the best possible [executable-zip][] from your [artifact download URL][artifact-download-url], and copies the binary into your [cargo home][], where presumably it will end up on your PATH.
+This provides a shell script (installer.sh) which detects the current platform, fetches the best possible [executable-zip][] from your [artifact download URL][artifact-download-url], copies the binary into your [install-path][], and attempts to add that path to the user's PATH (see the next section for details).
 
 This kind of installer is ideal for bootstrapping setup on a fairly bare-bones system.
 
@@ -36,7 +36,6 @@ An "installer hint" will be provided that shows how to install via `curl | sh`, 
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.5/cargo-dist-v0.0.5-installer.sh | sh
 ```
 
-
 Limitations/Caveats:
 
 * Requires a well-defined [artifact download URL][artifact-download-url]
@@ -44,13 +43,33 @@ Limitations/Caveats:
 * [Cannot detect situations where musl-based builds are appropriate][musl] (static or dynamic) 
 * [Relies on the user's installation of `tar` and `unzip` to unpack the files][unpacking]
 * Relies on the the user's installation of `curl` or `wget` to fetch the files
-* [Cannot install anywhere other than cargo home][better-installer]
-* Hardcodes `~/.cargo/bin/` as the path to install to, instead of sourcing $CARGO_HOME
-* Will create `~/.cargo/bin/` if it doesn't exist, but won't put it on the user's PATH
-* Will throw out all files except for the binary, so the binary can't rely on assets included in the archive
+* [Will throw out all files except for the binary, so the binary can't rely on assets included in the archive][issue-unpack-all]
 * Cannot run any kind of custom install logic
 
 In an ideal world all of these caveats improve (except for maybe relying on tar/unzip/curl/wget, that's kinda fundamental).
+
+
+#### shell: adding things to PATH
+
+Here is a more fleshed out description of how the shell installer attempts to add the [install-path][] to the user's PATH, and the limitations of that process.
+
+The most fundamental limitation is that installers fundamentally cannot edit the PATH of the currently running shell (it's a parent process). Only an explicit `source some_file` (or the more portable `. some_file`) can do that. As such, it benefits an installer to try to install to a directory that will already be on PATH (such as [CARGO_HOME][cargo home]). Otherwise all we can do is prompt the user to run `source` themselves after the installer has run (or restart their shell to freshly source rcfiles).
+
+The process we use to add [install-path][] to the user's PATH is roughly the same process that rustup uses (hopefully making us harmonious with running rustup before/after one of our installer scripts). In the following description we will use `$install-path` as a placeholder for the path computed at install-time where the binaries get installed. Its actual value will likely look something like `$HOME/.myapp` or `$HOME/.cargo/bin`.
+
+* we generate a shell script and write it to `$install-path/env` (let's call this `$env-path`)
+    * the script checks if `$install-path` is in PATH already, and prepends it if not
+    * prepending is used to ideally override system-installed binaries, as that is assumed to be desired when explicitly installing with not-your-system-package-manager
+    * the `env` script will only be added if it doesn't already exist
+    * if `install-path = "CARGO_HOME"`, then `$env-path` will actually be in the parent directory, mirroring the behaviour of rustup
+* we add `. $env-path` to `$HOME/.profile`
+    * this is just a more portable version of `source $install-path/env`
+    * this line will only be added if it doesn't exist (we also check for the `source` equivalent)
+    * the file is created if it doesn't exist
+    * [rustup shotgun blasts this line into many more files like .bashrc and .zshenv](https://github.com/rust-lang/rustup/blob/bcfac6278c7c2f16a41294f7533aeee2f7f88d07/src/cli/self_update/shell.rs#L70-L76), while still [lacking proper support for fish](https://github.com/rust-lang/rustup/issues/478) and other more obscure shells -- we opted to start conservative with just .profile
+* if `$HOME/.profile` was edited, we prompt the user to `source "$env-path"` or restart their shell
+    * although this is less portable than `. "$env-path"`, it's very easy to misread/miscopy the portable version (not as much of a concern for an rcfile, but an issue for humans)
+    * hopefully folks on platforms where this matters are aware of this issue (or they can restart their shell)
 
 
 
@@ -58,7 +77,7 @@ In an ideal world all of these caveats improve (except for maybe relying on tar/
 
 > since 0.0.3
 
-This provides a powershell script (installer.ps1) which detects the current platform, fetches the best possible [executable-zip][] from your [artifact download URL][artifact-download-url], and copies the binary into your [cargo home][], where presumably it will end up on your PATH.
+This provides a powershell script (installer.ps1) which detects the current platform, fetches the best possible [executable-zip][] from your [artifact download URL][artifact-download-url], copies the binary into your [install-path][], and attempts to add that path to the user's PATH (see the next section for details).
 
 This kind of installer is ideal for bootstrapping setup on a fairly bare-bones system.
 
@@ -75,15 +94,30 @@ Limitations/Caveats:
 * [Cannot detect situations where musl-based builds are appropriate][musl] (static or dynamic) 
 * [Relies on the user's installation of `tar` and `Expand-Archive` to unpack the files][unpacking]
 * Relies on the the user's installation of `Net.Webclient` to fetch the files
-* [Cannot install anywhere other than cargo home][better-installer]
-* Hardcodes `~/.cargo/bin/` as the path to install to, instead of sourcing $CARGO_HOME
-* Will create `~/.cargo/bin/` if it doesn't exist, but won't put it on the user's PATH
-* Will throw out all files except for the binary, so the binary can't rely on assets included in the archive
+* [Won't work if run in cmd instead of powershell][issue-irm-iex]
+* [Will throw out all files except for the binary, so the binary can't rely on assets included in the archive][issue-unpack-all]
 * Cannot run any kind of custom install logic
 
 On the scale of Windows (where many people are still running Windows 7) commands like "Expand-Archive" and "tar" are in fact relatively new innovations. Any system that predates 2016 (PowerShell 5.0) certainly has no hope of working. I believe that someone running Windows 10 is basically guaranteed to work, and anything before that gets sketchier.
 
 In an ideal world most of these caveats improve (except for maybe the requirement of PowerShell >= 5.0 which is not pleasant to push past).
+
+
+#### powershell: adding things to PATH
+
+Here is a more fleshed out description of how the powershell installer attempts to add the [install-path][] to the user's PATH, and the limitations of that process.
+
+The most fundamental limitation is that installers fundamentally cannot edit the PATH of the currently running shell (it's a parent process). Powershell does not have an equivalent of `source`, so to the best of our knowledge restarting the shell is the only option (which if using Windows Terminal seems to mean opening a whole new window, tabs aren't good enough). As such, it benefits an installer to try to install to a directory that will already be on PATH (such as [CARGO_HOME][cargo home]). ([rustup also sends a broadcast WM_SETTINGCHANGE message](https://github.com/rust-lang/rustup/blob/bcfac6278c7c2f16a41294f7533aeee2f7f88d07/src/cli/self_update/windows.rs#L397-L409), but we couldn't find any evidence that this does anything useful.)
+
+The process we use to add [install-path][] to the user's PATH is roughly the same process that rustup uses (hopefully making us harmonious with running rustup before/after one of our installer scripts). In the following description we will use `$install-path` as a placeholder for the path computed at install-time where the binaries get installed. Its actual value will likely look something like `C:\Users\axo\.myapp` or `C:\Users\.cargo\bin`.
+
+* we load from the registry `HKCU:\Environment`'s "Path" Item
+* we check if `$install-path` is contained within it already
+* if not, we prepend it and write the value back
+    * prepending is used to ideally override system-installed binaries, as that is assumed to be desired when explicitly installing with not-your-system-package-manager
+* if we edited the registry, we prompt the user to restart their shell
+
+
 
 
 
@@ -228,6 +262,8 @@ Although that's still missing things like [Windows crt-static workarounds][crt-s
 [windows-pm-issue]: https://github.com/axodotdev/cargo-dist/issues/87
 [msi-installer-issue]: https://github.com/axodotdev/cargo-dist/issues/23
 [dmg-installer-issue]: https://github.com/axodotdev/cargo-dist/issues/24
+[issue-unpack-all]: https://github.com/axodotdev/cargo-dist/issues/307
+[issue-irm-iex]: https://github.com/axodotdev/oranda/issues/393
 [installer-config]: ./config.md#installers
 [executable-zip]: ./artifacts.md#executable-zip
 [executable-zips]: ./artifacts.md#executable-zip
@@ -240,12 +276,12 @@ Although that's still missing things like [Windows crt-static workarounds][crt-s
 [unpacking]: #unpacking-files
 [npm-targz]: https://github.com/axodotdev/cargo-dist/issues/226
 [musl]: https://github.com/axodotdev/cargo-dist/issues/75
-[better-installer]: https://github.com/axodotdev/cargo-dist/issues/41
 [npm-scope]: ./config.md#npm-scope
 [unix-archive]: ./config.md#unix-archive
 [windows-archive]: ./config.md#windows-archive
 [github-ci]: ./config.md#ci
 [repository-url]: ./config.md#repository
+[install-path]: ./config.md#install-path
 [cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
 [install-locked]: https://doc.rust-lang.org/cargo/commands/cargo-install.html#dealing-with-the-lockfile
 [crt-static]: https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md
