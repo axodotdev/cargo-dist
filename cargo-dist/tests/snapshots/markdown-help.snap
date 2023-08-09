@@ -143,7 +143,9 @@ This is equivalent to just mashing ENTER over and over during the interactive pr
 Don't automatically invoke 'cargo dist generate-ci' at the end
 
 #### `--with-json-config <WITH_JSON_CONFIG>`
-A path to a json file containing values to set in workspace.metadata.dist
+A path to a json file containing values to set in workspace.metadata.dist and package.metadata.dist, for building tools that edit these configs.
+
+This is the same toml => json format that `cargo metadata` produces when reporting `workspace.metadata.dist`. There is some additional hierarchy for specifying which values go to which packages, but this is currently intentionally undocumented to give us some flexibility to change it.
 
 #### `-h, --help`
 Print help (see a summary with '-h')

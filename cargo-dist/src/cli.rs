@@ -220,6 +220,12 @@ pub struct InitArgs {
     #[clap(long)]
     pub no_generate_ci: bool,
     /// A path to a json file containing values to set in workspace.metadata.dist
+    /// and package.metadata.dist, for building tools that edit these configs.
+    ///
+    /// This is the same toml => json format that `cargo metadata` produces
+    /// when reporting `workspace.metadata.dist`. There is some additional
+    /// hierarchy for specifying which values go to which packages, but this
+    /// is currently intentionally undocumented to give us some flexibility to change it.
     #[clap(long)]
     pub with_json_config: Option<Utf8PathBuf>,
 }
