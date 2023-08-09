@@ -24,6 +24,12 @@ impl GithubRepo {
     pub fn web_url(&self) -> String {
         format!("https://github.com/{}/{}", self.owner, self.name)
     }
+
+    /// Constructs a new Github repository from a "owner/name" string. Notably, this does not check
+    /// whether the repo actually exists.
+    pub fn from_url(repo_url: &str) -> Result<Self> {
+        GithubRepoInput::new(repo_url.to_string())?.parse()
+    }
 }
 
 impl fmt::Display for GithubRepo {
