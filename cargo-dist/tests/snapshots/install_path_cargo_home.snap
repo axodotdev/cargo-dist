@@ -981,6 +981,8 @@ function New-Temp-Dir() {
 
 # PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
 $Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
+# Make Write-Information statements be visible
+$InformationPreference = "Continue"
 Install-Binary "$Args"
 
 ================ dist-manifest.json ================
