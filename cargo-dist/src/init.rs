@@ -185,6 +185,8 @@ fn get_new_dist_metadata(
             ci: None,
             installers: None,
             targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),
+            features: None,
+            default_features: true,
             dist: None,
             include: None,
             auto_includes: None,
@@ -550,6 +552,8 @@ fn update_toml_metadata(
         ci,
         installers,
         targets,
+        features,
+        default_features: _,
         include,
         auto_includes,
         windows_archive,
@@ -595,6 +599,13 @@ fn update_toml_metadata(
         "targets",
         "# Target platforms to build apps for (Rust target-triple syntax)\n",
         targets.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "features",
+        "# Feature flags to build with\n",
+        features.as_ref(),
     );
 
     apply_optional_value(

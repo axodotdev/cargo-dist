@@ -87,6 +87,17 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<String>>,
 
+    /// The feature flags to be passed to the cargo build step.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features: Option<Vec<String>>,
+
+    /// Enable default features for cargo build.
+    #[serde(
+        skip_serializing_if = "default_features::skip_condition",
+        default = "default_features::default"
+    )]
+    pub default_features: bool,
+
     /// Include the following static files in bundles like executable-zips.
     ///
     /// Paths are relative to the Cargo.toml this is defined in.
@@ -202,6 +213,17 @@ pub struct DistMetadata {
     pub install_path: Option<InstallPathStrategy>,
 }
 
+/// A helper module for default values.
+mod default_features {
+    pub fn default() -> bool {
+        true
+    }
+
+    pub fn skip_condition(state: &bool) -> bool {
+        !state
+    }
+}
+
 impl DistMetadata {
     /// Apply the base path to any relative paths contained in this DistMetadata
     pub fn make_relative_to(&mut self, base_path: &Utf8Path) {
@@ -213,6 +235,8 @@ impl DistMetadata {
             ci: _,
             installers: _,
             targets: _,
+            features: _,
+            default_features: _,
             include,
             auto_includes: _,
             windows_archive: _,
@@ -245,6 +269,8 @@ impl DistMetadata {
             ci,
             installers,
             targets,
+            features,
+            default_features: _,
             include,
             auto_includes,
             windows_archive,
@@ -283,6 +309,9 @@ impl DistMetadata {
         }
         if targets.is_none() {
             *targets = workspace_config.targets.clone();
+        }
+        if features.is_none() {
+            *features = workspace_config.features.clone();
         }
         if dist.is_none() {
             *dist = workspace_config.dist;

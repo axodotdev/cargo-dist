@@ -221,6 +221,8 @@ pub struct Binary {
     pub pkg_id: PackageId,
     /// An ideally unambiguous way to refer to a package for the purpose of cargo -p flags.
     pub pkg_spec: String,
+    /// The package index associated with this binary.
+    pub pkg_idx: PackageIdx,
     /// The name of the binary (as defined by the Cargo.toml)
     pub name: String,
     /// The target triple to build it for
@@ -234,7 +236,10 @@ pub struct Binary {
     pub copy_exe_to: Vec<Utf8PathBuf>,
     /// Places the symbols need to be copied to
     pub copy_symbols_to: Vec<Utf8PathBuf>,
-    // In the future this might include feature-flags
+    /// Feature flags to pass to cargo build
+    pub features: Vec<String>,
+    /// Wether or not to pass default feature flags to cargo build
+    pub default_features: bool,
 }
 
 /// A build step we would like to perform
@@ -450,7 +455,7 @@ pub struct Release {
     /// Binaries that every variant should ostensibly provide
     ///
     /// The string is the name of the binary under that package (without .exe extension)
-    pub bins: Vec<(PackageIdx, String)>,
+    pub bins: Vec<(PackageIdx, String, Vec<String>, bool)>,
     /// Artifacts that are shared "globally" across all variants (shell-installer, metadata...)
     ///
     /// They might still be limited to some subset of the targets (e.g. powershell scripts are
@@ -586,6 +591,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             auto_includes: _,
             // Only the final value merged into a package_config matters
             targets: _,
+            // Only the final value merged into a package_config matters
+            features: _,
+            // Only the final value merged into a package_config matters
+            default_features: _,
             // Only the final value merged into a package_config matters
             dist: _,
             // Only the final value merged into a package_config matters
@@ -761,7 +770,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         // Add all the binaries of the release to this variant
         let mut binaries = vec![];
-        for (pkg_idx, binary_name) in bins.clone() {
+        for (pkg_idx, binary_name, features, default_features) in bins.clone() {
             let package = self.workspace.package(pkg_idx);
             let version = package.version.as_ref().unwrap().cargo();
             let pkg_id = package.cargo_package_id.clone().unwrap();
@@ -782,11 +791,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     id,
                     pkg_id,
                     pkg_spec,
+                    pkg_idx,
                     name: binary_name,
                     target: target.clone(),
                     copy_exe_to: vec![],
                     copy_symbols_to: vec![],
                     symbols_artifact: None,
+                    features,
+                    default_features,
                 };
                 self.inner.binaries.push(binary);
                 idx
@@ -805,9 +817,18 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         idx
     }
 
-    fn add_binary(&mut self, to_release: ReleaseIdx, pkg_idx: PackageIdx, binary_name: String) {
+    fn add_binary(
+        &mut self,
+        to_release: ReleaseIdx,
+        pkg_idx: PackageIdx,
+        binary_name: String,
+        features: Vec<String>,
+        default_features: bool,
+    ) {
         let release = self.release_mut(to_release);
-        release.bins.push((pkg_idx, binary_name));
+        release
+            .bins
+            .push((pkg_idx, binary_name, features, default_features));
     }
 
     fn add_executable_zip(&mut self, to_release: ReleaseIdx) {
@@ -912,7 +933,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let with_root = if let ZipStyle::Zip = zip_style {
             None
         } else {
-            Some(Utf8PathBuf::from(artifact_dir_name.clone()))
+            Some(Utf8PathBuf::from(artifact_dir_name))
         };
 
         (
@@ -1437,24 +1458,26 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     warn!("You're trying to cross-compile on macOS, but I can't find rustup to ensure you have the rust toolchains for it!")
                 }
             }
-
             if self.inner.precise_builds {
                 let mut builds_by_pkg_spec = SortedMap::new();
                 for bin_idx in binaries {
                     let bin = self.binary(bin_idx);
                     builds_by_pkg_spec
-                        .entry(bin.pkg_spec.clone())
+                        .entry((bin.pkg_idx, bin.pkg_spec.clone()))
                         .or_insert(vec![])
                         .push(bin_idx);
                 }
-                for (pkg_spec, expected_binaries) in builds_by_pkg_spec {
+                for ((pkg_idx, pkg_spec), expected_binaries) in builds_by_pkg_spec {
+                    let package_meta = self.package_metadata(pkg_idx);
                     builds.push(BuildStep::Cargo(CargoBuildStep {
                         target_triple: target.clone(),
                         package: CargoTargetPackages::Package(pkg_spec),
                         // Just use the default build for now
                         features: CargoTargetFeatures {
-                            no_default_features: false,
-                            features: CargoTargetFeatureList::List(vec![]),
+                            no_default_features: !package_meta.default_features,
+                            features: CargoTargetFeatureList::List(
+                                package_meta.features.clone().unwrap_or_default(),
+                            ),
                         },
                         rustflags: rustflags.clone(),
                         profile: String::from(PROFILE_DIST),
@@ -1467,8 +1490,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     package: CargoTargetPackages::Workspace,
                     // Just use the default build for now
                     features: CargoTargetFeatures {
-                        no_default_features: false,
-                        features: CargoTargetFeatureList::List(vec![]),
+                        no_default_features: !self.workspace_metadata.default_features,
+                        features: CargoTargetFeatureList::List(
+                            self.workspace_metadata.features.clone().unwrap_or_default(),
+                        ),
                     },
                     rustflags,
                     profile: String::from(PROFILE_DIST),
@@ -1901,7 +1926,13 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
         // Tell the Release to include these binaries
         for binary in binaries {
-            graph.add_binary(release, *pkg_idx, (*binary).clone());
+            graph.add_binary(
+                release,
+                *pkg_idx,
+                (*binary).clone(),
+                package_config.features.clone().unwrap_or_default(),
+                package_config.default_features,
+            );
         }
 
         // Create variants for this Release for each target
