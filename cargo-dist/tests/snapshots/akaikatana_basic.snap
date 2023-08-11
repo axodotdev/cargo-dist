@@ -1,6 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist.rs
-expression: "&snapshots"
+expression: self.payload
 ---
 ================ installer.sh ================
 #!/bin/sh
@@ -21,9 +21,9 @@ fi
 
 set -u
 
-APP_NAME="axolotlsay"
-APP_VERSION="0.1.0"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0}"
+APP_NAME="akaikatana-repack"
+APP_VERSION="0.2.0"
+ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
@@ -31,18 +31,18 @@ NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
     cat <<EOF
-axolotlsay-installer.sh
+akaikatana-repack-installer.sh
 
-The installer for axolotlsay 0.1.0
+The installer for akaikatana-repack 0.2.0
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
-then unpacks the binaries and installs them to \$HOME/My Axolotlsay Documents/bin
+https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0
+then unpacks the binaries and installs them to \$CARGO_HOME/bin (\$HOME/.cargo/bin)
 
 It will then add that dir to PATH by adding the appropriate line to \$HOME/.profile
 
 USAGE:
-    axolotlsay-installer.sh [OPTIONS]
+    akaikatana-repack-installer.sh [OPTIONS]
 
 OPTIONS:
     -v, --verbose
@@ -128,19 +128,19 @@ download_binary_and_run_installer() {
     # Lookup what to download/unpack based on platform
     case "$_arch" in 
         "aarch64-apple-darwin")
-            _artifact_name="axolotlsay-aarch64-apple-darwin.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
+            _artifact_name="akaikatana-repack-aarch64-apple-darwin.tar.xz"
+            _zip_ext=".tar.xz"
+            _bins="akextract akmetadata akrepack"
             ;;
         "x86_64-apple-darwin")
-            _artifact_name="axolotlsay-x86_64-apple-darwin.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
+            _artifact_name="akaikatana-repack-x86_64-apple-darwin.tar.xz"
+            _zip_ext=".tar.xz"
+            _bins="akextract akmetadata akrepack"
             ;;
         "x86_64-unknown-linux-gnu")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
+            _artifact_name="akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz"
+            _zip_ext=".tar.xz"
+            _bins="akextract akmetadata akrepack"
             ;;
         *)
             err "there isn't a package for $_arch"
@@ -240,15 +240,32 @@ install() {
     local _env_script_path_expr
 
 
-    # Install to this subdir of the user's home dir
-    # In this case we want to be late-bound, as $HOME is reliable/nice.
-    if [ -n "${HOME:-}" ]; then
-        _install_dir="$HOME/My Axolotlsay Documents/bin"
-        _env_script_path="$HOME/My Axolotlsay Documents/bin/env"
-        _install_dir_expr='$HOME/My Axolotlsay Documents/bin'
-        _env_script_path_expr='$HOME/My Axolotlsay Documents/bin/env'
+    # first try CARGO_HOME, then fallback to HOME
+    if [ -n "${CARGO_HOME:-}" ]; then
+        _install_dir="$CARGO_HOME/bin"
+        _env_script_path="$CARGO_HOME/env"
+        # If CARGO_HOME was set but it ended up being the default $HOME-based path,
+        # then keep things late-bound. Otherwise bake the value for safety.
+        # This is what rustup does, and accurately reproducing it is useful.
+        if [ -n "${HOME:-}" ]; then
+            if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
+                _install_dir_expr='$HOME/.cargo/bin'
+                _env_script_path_expr='$HOME/.cargo/env'
+            else
+                _install_dir_expr="$_install_dir"
+                _env_script_path_expr="$_env_script_path"
+            fi
+        else
+            _install_dir_expr="$_install_dir"
+            _env_script_path_expr="$_env_script_path"
+        fi
+    elif [ -n "${HOME:-}" ]; then
+        _install_dir="$HOME/.cargo/bin"
+        _env_script_path="$HOME/.cargo/env"
+        _install_dir_expr='$HOME/.cargo/bin'
+        _env_script_path_expr='$HOME/.cargo/env'
     else
-        err "could not find your HOME dir to install binaries to"
+        err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
 
     say "installing to $_install_dir"
@@ -693,13 +710,13 @@ download_binary_and_run_installer "$@" || exit 1
 <#
 .SYNOPSIS
 
-The installer for axolotlsay 0.1.0
+The installer for akaikatana-repack 0.2.0
 
 .DESCRIPTION
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
-then unpacks the binaries and installs them to $HOME\My Axolotlsay Documents/bin
+https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0
+then unpacks the binaries and installs them to $env:CARGO_HOME\bin ($HOME\.cargo\bin)
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -716,15 +733,15 @@ Print help
 
 param (
     [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
-    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0',
+    [string]$ArtifactDownloadUrl = 'https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0',
     [Parameter(HelpMessage = "Don't add the install directory to PATH")]
     [switch]$NoModifyPath,
     [Parameter(HelpMessage = "Print Help")]
     [switch]$Help
 )
 
-$app_name = 'axolotlsay'
-$app_version = '0.1.0'
+$app_name = 'akaikatana-repack'
+$app_version = '0.2.0'
 
 function Install-Binary($install_args) {
   if ($Help) {
@@ -739,9 +756,9 @@ function Install-Binary($install_args) {
   # Platform info injected by cargo-dist
   $platforms = @{
     "x86_64-pc-windows-msvc" = @{
-      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
-      "bins" = "axolotlsay.exe"
-      "zip_ext" = ".tar.gz"
+      "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc.zip"
+      "bins" = "akextract.exe", "akmetadata.exe", "akrepack.exe"
+      "zip_ext" = ".zip"
     }
   }
 
@@ -852,11 +869,14 @@ function Download($download_url, $platforms) {
 
 function Invoke-Installer($bin_paths) {
 
-  # Install to this subdir of the user's home dir
-  $dest_dir = if (($base_dir = $HOME)) {
-    Join-Path $base_dir "My Axolotlsay Documents/bin"
+  # first try CARGO_HOME, then fallback to HOME
+  # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
+  $dest_dir = if (($base_dir = $env:CARGO_HOME)) {
+    Join-Path $base_dir "bin"
+  } elseif (($base_dir = $HOME)) {
+    Join-Path $base_dir ".cargo\bin"
   } else {
-    throw "ERROR: could not find your HOME dir to install binaries to"
+    throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
   }
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
@@ -961,6 +981,383 @@ function New-Temp-Dir() {
 
 # PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
 $Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
+# Make Write-Information statements be visible
+$InformationPreference = "Continue"
 Install-Binary "$Args"
+
+================ dist-manifest.json ================
+{
+  "dist_version": "CENSORED",
+  "announcement_tag": "v0.2.0",
+  "announcement_is_prerelease": false,
+  "announcement_title": "v0.2.0",
+  "announcement_github_body": "## Install akaikatana-repack 0.2.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.ps1 | iex\n```\n\n## Download akaikatana-repack 0.2.0\n\n|        |        |\n|--------|--------|\n| [akaikatana-repack-aarch64-apple-darwin.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz) | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256) |\n| [akaikatana-repack-x86_64-apple-darwin.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz) | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256) |\n| [akaikatana-repack-x86_64-pc-windows-msvc.zip](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-pc-windows-msvc.zip) | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256) |\n| [akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz) | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
+  "system_info": {
+    "cargo_version_line": "CENSORED"
+  },
+  "releases": [
+    {
+      "app_name": "akaikatana-repack",
+      "app_version": "0.2.0",
+      "artifacts": [
+        "akaikatana-repack-installer.sh",
+        "akaikatana-repack-installer.ps1",
+        "akaikatana-repack-aarch64-apple-darwin.tar.xz",
+        "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256",
+        "akaikatana-repack-x86_64-apple-darwin.tar.xz",
+        "akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256",
+        "akaikatana-repack-x86_64-pc-windows-msvc.zip",
+        "akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256",
+        "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz",
+        "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256"
+      ]
+    }
+  ],
+  "artifacts": {
+    "akaikatana-repack-aarch64-apple-darwin.tar.xz": {
+      "name": "akaikatana-repack-aarch64-apple-darwin.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "akextract",
+          "path": "akextract",
+          "kind": "executable"
+        },
+        {
+          "name": "akmetadata",
+          "path": "akmetadata",
+          "kind": "executable"
+        },
+        {
+          "name": "akrepack",
+          "path": "akrepack",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256"
+    },
+    "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256": {
+      "name": "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ]
+    },
+    "akaikatana-repack-installer.ps1": {
+      "name": "akaikatana-repack-installer.ps1",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "install_hint": "irm https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.ps1 | iex",
+      "description": "Install prebuilt binaries via powershell script"
+    },
+    "akaikatana-repack-installer.sh": {
+      "name": "akaikatana-repack-installer.sh",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.sh | sh",
+      "description": "Install prebuilt binaries via shell script"
+    },
+    "akaikatana-repack-x86_64-apple-darwin.tar.xz": {
+      "name": "akaikatana-repack-x86_64-apple-darwin.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "akextract",
+          "path": "akextract",
+          "kind": "executable"
+        },
+        {
+          "name": "akmetadata",
+          "path": "akmetadata",
+          "kind": "executable"
+        },
+        {
+          "name": "akrepack",
+          "path": "akrepack",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256"
+    },
+    "akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256": {
+      "name": "akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ]
+    },
+    "akaikatana-repack-x86_64-pc-windows-msvc.zip": {
+      "name": "akaikatana-repack-x86_64-pc-windows-msvc.zip",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "assets": [
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "akextract",
+          "path": "akextract.exe",
+          "kind": "executable"
+        },
+        {
+          "name": "akmetadata",
+          "path": "akmetadata.exe",
+          "kind": "executable"
+        },
+        {
+          "name": "akrepack",
+          "path": "akrepack.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256"
+    },
+    "akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256": {
+      "name": "akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ]
+    },
+    "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz": {
+      "name": "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "akextract",
+          "path": "akextract",
+          "kind": "executable"
+        },
+        {
+          "name": "akmetadata",
+          "path": "akmetadata",
+          "kind": "executable"
+        },
+        {
+          "name": "akrepack",
+          "path": "akrepack",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256"
+    },
+    "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ]
+    }
+  }
+}
+
+================ github-ci.yml ================
+# Copyright 2022-2023, axodotdev
+# SPDX-License-Identifier: MIT or Apache-2.0
+#
+# CI that:
+#
+# * checks for a Git Tag that looks like a release
+# * creates a Github Release™ and fills in its text
+# * builds artifacts with cargo-dist (executable-zips, installers)
+# * uploads those artifacts to the Github Release™
+#
+# Note that the Github Release™ will be created before the artifacts,
+# so there will be a few minutes where the release has no artifacts
+# and then they will slowly trickle in, possibly failing. To make
+# this more pleasant we mark the release as a "draft" until all
+# artifacts have been successfully uploaded. This allows you to
+# choose what to do with partial successes and avoids spamming
+# anyone with notifications before the release is actually ready.
+name: Release
+
+permissions:
+  contents: write
+
+# This task will run whenever you push a git tag that looks like a version
+# like "v1", "v1.2.0", "v0.1.0-prerelease01", "my-app-v1.0.0", etc.
+# The version will be roughly parsed as ({PACKAGE_NAME}-)?v{VERSION}, where
+# PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
+# must be a Cargo-style SemVer Version.
+#
+# If PACKAGE_NAME is specified, then we will create a Github Release™ for that
+# package (erroring out if it doesn't have the given version or isn't cargo-dist-able).
+#
+# If PACKAGE_NAME isn't specified, then we will create a Github Release™ for all
+# (cargo-dist-able) packages in the workspace with that version (this is mode is
+# intended for workspaces with only one dist-able package, or with all dist-able
+# packages versioned/released in lockstep).
+#
+# If you push multiple tags at once, separate instances of this workflow will
+# spin up, creating an independent Github Release™ for each one.
+#
+# If there's a prerelease-style suffix to the version then the Github Release™
+# will be marked as a prerelease.
+on:
+  push:
+    tags:
+      - '*-?v[0-9]+*'
+
+jobs:
+  # Create the Github Release™ so the packages have something to be uploaded to
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      has-releases: ${{ steps.create-release.outputs.has-releases }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Install Rust
+        run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1""#
+      - name: Install cargo-dist
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      - id: create-release
+        run: |
+          cargo dist plan --tag=${{ github.ref_name }} --output-format=json > dist-manifest.json
+          echo "dist plan ran successfully"
+          cat dist-manifest.json
+
+          # Create the Github Release™ based on what cargo-dist thinks it should be
+          ANNOUNCEMENT_TITLE=$(jq --raw-output ".announcement_title" dist-manifest.json)
+          IS_PRERELEASE=$(jq --raw-output ".announcement_is_prerelease" dist-manifest.json)
+          jq --raw-output ".announcement_github_body" dist-manifest.json > new_dist_announcement.md
+          gh release create ${{ github.ref_name }} --draft --prerelease="$IS_PRERELEASE" --title="$ANNOUNCEMENT_TITLE" --notes-file=new_dist_announcement.md
+          echo "created announcement!"
+
+          # Upload the manifest to the Github Release™
+          gh release upload ${{ github.ref_name }} dist-manifest.json
+          echo "uploaded manifest!"
+
+          # Disable all the upload-artifacts tasks if we have no actual releases
+          HAS_RELEASES=$(jq --raw-output ".releases != null" dist-manifest.json)
+          echo "has-releases=$HAS_RELEASES" >> "$GITHUB_OUTPUT"
+
+  # Build and packages all the things
+  upload-artifacts:
+    # Let the initial task tell us to not run (currently very blunt)
+    needs: create-release
+    if: ${{ needs.create-release.outputs.has-releases == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # For these target platforms
+        include:
+        - os: "ubuntu-20.04"
+          dist-args: "--artifacts=global"
+          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+        - os: "macos-11"
+          dist-args: "--artifacts=local --target=aarch64-apple-darwin"
+          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+        - os: "macos-11"
+          dist-args: "--artifacts=local --target=x86_64-apple-darwin"
+          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+        - os: "windows-2019"
+          dist-args: "--artifacts=local --target=x86_64-pc-windows-msvc"
+          install-dist: "irm  https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
+        - os: "ubuntu-20.04"
+          dist-args: "--artifacts=local --target=x86_64-unknown-linux-gnu"
+          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+
+    runs-on: ${{ matrix.os }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Install Rust
+        run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1""#
+      - name: Install cargo-dist
+        run: ${{ matrix.install-dist }}
+      - name: Run cargo-dist
+        # This logic is a bit janky because it's trying to be a polyglot between
+        # powershell and bash since this will run on windows, macos, and linux!
+        # The two platforms don't agree on how to talk about env vars but they
+        # do agree on 'cat' and '$()' so we use that to marshal values between commands.
+        run: |
+          # Actually do builds and make zips and whatnot
+          cargo dist build --tag=${{ github.ref_name }} --output-format=json ${{ matrix.dist-args }} > dist-manifest.json
+          echo "dist ran successfully"
+          cat dist-manifest.json
+
+          # Parse out what we just built and upload it to the Github Release™
+          jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json > uploads.txt
+          echo "uploading..."
+          cat uploads.txt
+          gh release upload ${{ github.ref_name }} $(cat uploads.txt)
+          echo "uploaded!"
+
+  # Mark the Github Release™ as a non-draft now that everything has succeeded!
+  publish-release:
+    # Only run after all the other tasks, but it's ok if upload-artifacts was skipped
+    needs: [create-release, upload-artifacts]
+    if: ${{ always() && needs.create-release.result == 'success' && (needs.upload-artifacts.result == 'skipped' || needs.upload-artifacts.result == 'success') }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: mark release as non-draft
+        run: |
+          gh release edit ${{ github.ref_name }} --draft=false
 
 

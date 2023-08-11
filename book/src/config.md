@@ -129,9 +129,9 @@ See "repository" for some discussion on the "Artifact Download URL".
 
 > since 0.0.3
 
-Example: `include = ["my-cool-file.txt", "../other-cool-file.txt"]`
+Example: `include = ["my-cool-file.txt", "../other-cool-file.txt", "./some/dir/"]`
 
-This is a list of additional *files* (directory support TBD) to copy into the root of all [executable-zips][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
+This is a list of additional *files* or *directories* to copy into the root of all [executable-zips][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
 
 ### auto-includes
 
@@ -274,7 +274,7 @@ This flag was introduced to allow you to restore the old behaviour if you prefer
 
 Example: `install-path = "~/.my-app/"`
 
-The strategy to use for selecting a path to install things at, with 3 possible syntaxes:
+The strategy that script installers ([shell][shell-installer], [powershell][powershell-installer]) should use for selecting a path to install things at, with 3 possible syntaxes:
 
 * `CARGO_HOME`: (default) installs as if `cargo install` did it (tries `$CARGO_HOME/bin/`, but if `$CARGO_HOME` isn't set uses `$HOME/.cargo/bin/`). Note that we do not (yet) properly update some of the extra metadata files Cargo maintains, so Cargo may be confused if you ask it to manage the binary.
 
@@ -284,10 +284,17 @@ The strategy to use for selecting a path to install things at, with 3 possible s
 
 > NOTE: `$HOME/some/subdir` is technically valid syntax but it won't behave the way you want on Windows, because `$HOME` isn't a proper environment variable. Let us handle those details for you and just use `~/subdir/`.
 
-All of these error out if none of the required env-vars are set to a non-empty value. In the future we may expand this setting to allow you to pass an array of options that are tried in sequence until one succeeds.
+All of these error out if none of the required env-vars are set to a non-empty value. 
 
 We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. `~/My cargo-dist Documents/bin/` works), but we won't be surprised if things misbehave on Interesting Inputs.
 
+Future Improvements:
+
+* In the future [we may expand this setting to allow you to pass an array of options that are tried in sequence until one succeeds](https://github.com/axodotdev/cargo-dist/issues/286).
+* In the future [we may support XDG dirs](https://github.com/axodotdev/cargo-dist/issues/287)
+* In the future [we may support %windows dirs%](https://github.com/axodotdev/cargo-dist/issues/288)
+
+(Please file an issue if you have other requirements!)
 
 
 ## Subsetting CI Flags
@@ -317,6 +324,8 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [executable-zips]: ./artifacts.md#executable-zip
 [artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
 [installers]: ./installers.md
+[shell-installer]: ./installers.md#shell
+[powershell-installer]: ./installers.md#powershell
 [artifact-url]: ./installers.md#artifact-download-url
 [scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
 [npm installers]: ./installers.md#npm

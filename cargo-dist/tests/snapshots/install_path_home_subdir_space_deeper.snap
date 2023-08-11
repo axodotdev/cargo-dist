@@ -1,6 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist.rs
-expression: "&snapshots"
+expression: self.payload
 ---
 ================ installer.sh ================
 #!/bin/sh
@@ -37,7 +37,7 @@ The installer for axolotlsay 0.1.0
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
-then unpacks the binaries and installs them to \$MY_ENV_VAR/bin
+then unpacks the binaries and installs them to \$HOME/My Axolotlsay Documents/bin
 
 It will then add that dir to PATH by adding the appropriate line to \$HOME/.profile
 
@@ -240,15 +240,15 @@ install() {
     local _env_script_path_expr
 
 
-    # Install to this subdir of the user's MY_ENV_VAR dir.
-    # In this case we want to be early-bound, as the env-var can't be trusted longterm.
-    if [ -n "${MY_ENV_VAR:-}" ]; then
-        _install_dir="$MY_ENV_VAR/bin"
-        _env_script_path="$MY_ENV_VAR/bin/env"
-        _install_dir_expr="$_install_dir"
-        _env_script_path_expr="$_env_script_path"
+    # Install to this subdir of the user's home dir
+    # In this case we want to be late-bound, as $HOME is reliable/nice.
+    if [ -n "${HOME:-}" ]; then
+        _install_dir="$HOME/My Axolotlsay Documents/bin"
+        _env_script_path="$HOME/My Axolotlsay Documents/bin/env"
+        _install_dir_expr='$HOME/My Axolotlsay Documents/bin'
+        _env_script_path_expr='$HOME/My Axolotlsay Documents/bin/env'
     else
-        err "could not find your MY_ENV_VAR dir to install binaries to"
+        err "could not find your HOME dir to install binaries to"
     fi
 
     say "installing to $_install_dir"
@@ -699,7 +699,7 @@ The installer for axolotlsay 0.1.0
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
-then unpacks the binaries and installs them to $env:MY_ENV_VAR\bin
+then unpacks the binaries and installs them to $HOME\My Axolotlsay Documents/bin
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -852,11 +852,11 @@ function Download($download_url, $platforms) {
 
 function Invoke-Installer($bin_paths) {
 
-  # Install to this subdir of the user's MY_ENV_VAR dir
-  $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
-    Join-Path $base_dir "bin"
+  # Install to this subdir of the user's home dir
+  $dest_dir = if (($base_dir = $HOME)) {
+    Join-Path $base_dir "My Axolotlsay Documents/bin"
   } else {
-    throw "ERROR: could not find your MY_ENV_VAR dir to install binaries to"
+    throw "ERROR: could not find your HOME dir to install binaries to"
   }
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
@@ -961,6 +961,229 @@ function New-Temp-Dir() {
 
 # PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
 $Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
+# Make Write-Information statements be visible
+$InformationPreference = "Continue"
 Install-Binary "$Args"
+
+================ dist-manifest.json ================
+{
+  "dist_version": "CENSORED",
+  "announcement_tag": "v0.1.0",
+  "announcement_is_prerelease": false,
+  "announcement_title": "Version 0.1.0",
+  "announcement_changelog": "```text\n         +------------------------+\n         | the initial release!!! |\n         +------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +------------------------+\n         | the initial release!!! |\n         +------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.1.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.ps1 | iex\n```\n\n## Download axolotlsay 0.1.0\n\n|        |        |\n|--------|--------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz) | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz) | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
+  "system_info": {
+    "cargo_version_line": "CENSORED"
+  },
+  "releases": [
+    {
+      "app_name": "axolotlsay",
+      "app_version": "0.1.0",
+      "artifacts": [
+        "axolotlsay-installer.sh",
+        "axolotlsay-installer.ps1",
+        "axolotlsay-aarch64-apple-darwin.tar.gz",
+        "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-x86_64-apple-darwin.tar.gz",
+        "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
+      ]
+    }
+  ],
+  "artifacts": {
+    "axolotlsay-aarch64-apple-darwin.tar.gz": {
+      "name": "axolotlsay-aarch64-apple-darwin.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256"
+    },
+    "axolotlsay-aarch64-apple-darwin.tar.gz.sha256": {
+      "name": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ]
+    },
+    "axolotlsay-installer.ps1": {
+      "name": "axolotlsay-installer.ps1",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "install_hint": "irm https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.ps1 | iex",
+      "description": "Install prebuilt binaries via powershell script"
+    },
+    "axolotlsay-installer.sh": {
+      "name": "axolotlsay-installer.sh",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.sh | sh",
+      "description": "Install prebuilt binaries via shell script"
+    },
+    "axolotlsay-x86_64-apple-darwin.tar.gz": {
+      "name": "axolotlsay-x86_64-apple-darwin.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-apple-darwin.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ]
+    },
+    "axolotlsay-x86_64-pc-windows-msvc.tar.gz": {
+      "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ]
+    },
+    "axolotlsay-x86_64-unknown-linux-gnu.tar.gz": {
+      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ]
+    }
+  }
+}
 
 
