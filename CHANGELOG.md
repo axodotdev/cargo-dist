@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.1.0 (2023-08-11)
+
 The standout features of this release are custom install paths ("install my app to `~/.my-app` and add that to PATH"), archive checksums (releases should now include `my-app.tar.xz.sha256`), and refined builds (builds are more fault-tolerant, lower latency, and you can opt out of building `--workspace`).
 
 To update your cargo-dist config and release.yml [install cargo dist 0.1.0](https://opensource.axo.dev/cargo-dist/) and run `cargo dist init` (you should also remove rust-toolchain-version from your config, it's deprecated).
