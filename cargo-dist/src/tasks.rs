@@ -66,7 +66,7 @@ use crate::{
         self, ArtifactMode, ChecksumStyle, CiStyle, CompressionImpl, Config, DistMetadata,
         InstallPathStrategy, InstallerStyle, ZipStyle,
     },
-    errors::{DistResult, Result},
+    errors::{DistError, DistResult, Result},
 };
 
 /// Key in workspace.metadata or package.metadata for our config
@@ -234,7 +234,8 @@ pub struct Binary {
     pub copy_exe_to: Vec<Utf8PathBuf>,
     /// Places the symbols need to be copied to
     pub copy_symbols_to: Vec<Utf8PathBuf>,
-    // In the future this might include feature-flags
+    /// feature flags!
+    pub features: CargoTargetFeatures,
 }
 
 /// A build step we would like to perform
@@ -506,7 +507,7 @@ pub enum StaticAssetKind {
 }
 
 /// Cargo features a cargo build should use.
-#[derive(Debug)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CargoTargetFeatures {
     /// Whether to disable default features
     pub no_default_features: bool,
@@ -515,12 +516,18 @@ pub struct CargoTargetFeatures {
 }
 
 /// A list of features to build with
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CargoTargetFeatureList {
     /// All of them
     All,
     /// Some of them
     List(Vec<String>),
+}
+
+impl Default for CargoTargetFeatureList {
+    fn default() -> Self {
+        Self::List(vec![])
+    }
 }
 
 /// Whether to build a package or workspace
@@ -602,6 +609,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             checksum: _,
             // Only the final value merged into a package_config matters
             install_path: _,
+            features,
+            no_default_features,
+            all_features,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -609,10 +619,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         if desired_rust_toolchain.is_some() {
             warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
         }
-        let precise_builds = precise_builds.unwrap_or(false);
         let merge_tasks = merge_tasks.unwrap_or(false);
         let fail_fast = fail_fast.unwrap_or(false);
-
+        let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
         let mut package_metadata = vec![];
         for package in &workspace.package_info {
@@ -622,8 +631,30 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             )?;
             package_config.make_relative_to(&package.package_root);
             package_config.merge_workspace_config(&workspace_metadata, &package.manifest_path);
+
+            // Only do workspace builds if all the packages agree with the workspace feature settings
+            if &package_config.features != features
+                || &package_config.all_features != all_features
+                || &package_config.no_default_features != no_default_features
+            {
+                packages_with_mismatched_features.push(package.name.clone());
+            }
+
             package_metadata.push(package_config);
         }
+
+        let requires_precise = !packages_with_mismatched_features.is_empty();
+        let precise_builds = if let Some(precise_builds) = *precise_builds {
+            if !precise_builds && requires_precise {
+                return Err(DistError::PreciseImpossible {
+                    packages: packages_with_mismatched_features,
+                });
+            }
+            precise_builds
+        } else {
+            info!("force-enabling precise-builds to handle your build features");
+            requires_precise
+        };
 
         let templates = Templates::new()?;
 
@@ -763,6 +794,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut binaries = vec![];
         for (pkg_idx, binary_name) in bins.clone() {
             let package = self.workspace.package(pkg_idx);
+            let package_metadata = self.package_metadata(pkg_idx);
             let version = package.version.as_ref().unwrap().cargo();
             let pkg_id = package.cargo_package_id.clone().unwrap();
             // For now we just use the name of the package as its package_spec.
@@ -771,6 +803,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // If they do exist, that's deeply cursed and I want a user to tell me about it.
             let pkg_spec = package.name.clone();
             let id = format!("{binary_name}-v{version}-{target}");
+
+            let features = CargoTargetFeatures {
+                no_default_features: package_metadata.no_default_features.unwrap_or(false),
+                features: if let Some(true) = package_metadata.all_features {
+                    CargoTargetFeatureList::All
+                } else {
+                    CargoTargetFeatureList::List(
+                        package_metadata.features.clone().unwrap_or_default(),
+                    )
+                },
+            };
 
             // If we already are building this binary we don't need to do it again!
             let idx = if let Some(&idx) = self.binaries_by_id.get(&id) {
@@ -787,6 +830,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     copy_exe_to: vec![],
                     copy_symbols_to: vec![],
                     symbols_artifact: None,
+                    features,
                 };
                 self.inner.binaries.push(binary);
                 idx
@@ -1439,37 +1483,37 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
 
             if self.inner.precise_builds {
+                // `(target, package, features)` uniquely identifies a build we need to do,
+                // so group all the binaries under those buckets and add a build for each one
+                // (targets is handled by the loop we're in)
                 let mut builds_by_pkg_spec = SortedMap::new();
                 for bin_idx in binaries {
                     let bin = self.binary(bin_idx);
                     builds_by_pkg_spec
-                        .entry(bin.pkg_spec.clone())
+                        .entry((bin.pkg_spec.clone(), bin.features.clone()))
                         .or_insert(vec![])
                         .push(bin_idx);
                 }
-                for (pkg_spec, expected_binaries) in builds_by_pkg_spec {
+                for ((pkg_spec, features), expected_binaries) in builds_by_pkg_spec {
                     builds.push(BuildStep::Cargo(CargoBuildStep {
                         target_triple: target.clone(),
                         package: CargoTargetPackages::Package(pkg_spec),
-                        // Just use the default build for now
-                        features: CargoTargetFeatures {
-                            no_default_features: false,
-                            features: CargoTargetFeatureList::List(vec![]),
-                        },
+                        features,
                         rustflags: rustflags.clone(),
                         profile: String::from(PROFILE_DIST),
                         expected_binaries,
                     }));
                 }
             } else {
+                // If we think a workspace build is possible, every binary agrees on the features, so take an arbitrary one
+                let features = binaries
+                    .first()
+                    .map(|&idx| self.binary(idx).features.clone())
+                    .unwrap_or_default();
                 builds.push(BuildStep::Cargo(CargoBuildStep {
                     target_triple: target.clone(),
                     package: CargoTargetPackages::Workspace,
-                    // Just use the default build for now
-                    features: CargoTargetFeatures {
-                        no_default_features: false,
-                        features: CargoTargetFeatureList::List(vec![]),
-                    },
+                    features,
                     rustflags,
                     profile: String::from(PROFILE_DIST),
                     expected_binaries: binaries,

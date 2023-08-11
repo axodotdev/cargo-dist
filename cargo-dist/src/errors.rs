@@ -111,6 +111,14 @@ pub enum DistError {
         /// The full value passed to install-path
         path: String,
     },
+
+    /// Use explicitly requested workspace builds, but had packages with custom feature settings
+    #[error("precise-builds = false was set, but some packages have custom build features, making it impossible")]
+    #[help("these packages customized either features, no-default-features, or all-features: {packages:?}")]
+    PreciseImpossible {
+        /// names of problem packages
+        packages: Vec<String>,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

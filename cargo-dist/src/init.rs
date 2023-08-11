@@ -196,6 +196,9 @@ fn get_new_dist_metadata(
             merge_tasks: None,
             fail_fast: None,
             install_path: None,
+            features: None,
+            no_default_features: None,
+            all_features: None,
         }
     };
 
@@ -560,6 +563,9 @@ fn update_toml_metadata(
         merge_tasks,
         fail_fast,
         install_path,
+        features,
+        all_features,
+        no_default_features,
     } = &meta;
 
     apply_optional_value(
@@ -672,6 +678,27 @@ fn update_toml_metadata(
         "install-path",
         "# Path that installers should place binaries in\n",
         install_path.as_ref().map(|p| p.to_string()),
+    );
+
+    apply_string_list(
+        table,
+        "features",
+        "# Features to pass to cargo build\n",
+        features.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "no-default-features",
+        "# Whether to pass --no-default-features to cargo build\n",
+        *no_default_features,
+    );
+
+    apply_optional_value(
+        table,
+        "all-features",
+        "# Whether to pass --all-features to cargo build\n",
+        *all_features,
     );
 
     // Finalize the table
