@@ -40,6 +40,7 @@ jobs:
         with:
           toolchain: stable
           components: clippy
+      - uses: swatinem/rust-cache@v2
       - uses: actions-rs/clippy-check@v1
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
@@ -58,7 +59,7 @@ jobs:
        with:
          toolchain: stable
          components: rust-docs
-     - uses: swatinem/rust-cache@v1
+     - uses: swatinem/rust-cache@v2
      - run: cargo doc --workspace --no-deps
 
   # Build and run tests/doctests/examples on all platforms
@@ -80,7 +81,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-      - uses: swatinem/rust-cache@v1
+      - uses: swatinem/rust-cache@v2
       # Run the tests/doctests (default features)
       - run: cargo test --workspace
         env:
