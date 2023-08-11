@@ -185,6 +185,10 @@ pub struct Tools {
     pub cargo: CargoInfo,
     /// rustup, useful for getting specific toolchains
     pub rustup: Option<Tool>,
+    /// cargo-cross, one potential cross-compilation backend
+    pub cross: Option<Tool>,
+    /// cargo-zigbuild, another potential cross-compilation backend
+    pub cargo_zigbuild: Option<Tool>,
 }
 
 /// Info about the cargo toolchain we're using
@@ -274,6 +278,17 @@ pub struct CargoBuildStep {
     pub rustflags: String,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+    /// What to use to help with cross-compiling
+    pub cross_with: Option<CrossHelper>,
+}
+
+/// What to use to help with cross compiles
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum CrossHelper {
+    /// cargo zigbuild
+    CargoZigbuild,
+    /// cross-rs
+    Cross,
 }
 
 /// A cargo build (and copy the outputs to various locations)
@@ -1422,19 +1437,31 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 rustflags.push_str(" -Ctarget-feature=+crt-static");
             }
 
-            // If we're trying to cross-compile on macOS, ensure the rustup toolchain
-            // is setup!
-            if target.ends_with("apple-darwin")
-                && self.inner.tools.cargo.host_target.ends_with("apple-darwin")
-                && target != self.inner.tools.cargo.host_target
-            {
+            let mut cross_with = None;
+            // If we're trying to cross-compile, ensure the rustup toolchain is setup!
+            if target != self.inner.tools.cargo.host_target {
                 if let Some(rustup) = self.inner.tools.rustup.clone() {
                     builds.push(BuildStep::Rustup(RustupStep {
                         rustup,
                         target: target.clone(),
                     }));
                 } else {
-                    warn!("You're trying to cross-compile on macOS, but I can't find rustup to ensure you have the rust toolchains for it!")
+                    warn!("You're trying to cross-compile, but I can't find rustup to ensure you have the rust toolchains for it!")
+                }
+
+                // macos => macos cross-compiles are trivial and require no additional work
+                let cross_is_trivial = target.ends_with("apple-darwin")
+                    && self.inner.tools.cargo.host_target.ends_with("apple-darwin");
+
+                if !cross_is_trivial {
+                    if self.inner.tools.cargo_zigbuild.is_some() {
+                        cross_with = Some(CrossHelper::CargoZigbuild)
+                    } else if self.inner.tools.cross.is_some() {
+                        cross_with = Some(CrossHelper::Cross)
+                    } else {
+                        // TODO: make this not show up in `cargo plan` so it can be a warning
+                        info!("You're trying to cross-compile, but I can't find any tools to help with that")
+                    }
                 }
             }
 
@@ -1459,6 +1486,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         rustflags: rustflags.clone(),
                         profile: String::from(PROFILE_DIST),
                         expected_binaries,
+                        cross_with,
                     }));
                 }
             } else {
@@ -1473,6 +1501,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     rustflags,
                     profile: String::from(PROFILE_DIST),
                     expected_binaries: binaries,
+                    cross_with,
                 }));
             }
         }
@@ -2079,6 +2108,8 @@ fn tool_info() -> Result<Tools> {
     let cargo_cmd = cargo()?;
     let cargo = get_host_target(cargo_cmd)?;
     Ok(Tools {
+        cross: find_tool("cross"),
+        cargo_zigbuild: find_tool("cargo-zigbuild"),
         cargo,
         rustup: find_tool("rustup"),
     })

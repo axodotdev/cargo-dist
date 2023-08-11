@@ -328,9 +328,28 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         target.target_triple, target.profile
     );
 
-    let mut command = Command::new(&dist_graph.tools.cargo.cmd);
+    // Choose
+    let mut command;
+    match target.cross_with {
+        Some(CrossHelper::Cross) => {
+            let helper = dist_graph
+                .tools
+                .cross
+                .as_ref()
+                .expect("We thought we had 'cross' but we didn't");
+            command = Command::new(&helper.cmd);
+            command.arg("build");
+        }
+        Some(CrossHelper::CargoZigbuild) => {
+            command = Command::new(&dist_graph.tools.cargo.cmd);
+            command.arg("zigbuild");
+        }
+        None => {
+            command = Command::new(&dist_graph.tools.cargo.cmd);
+            command.arg("build");
+        }
+    };
     command
-        .arg("build")
         .arg("--profile")
         .arg(&target.profile)
         .arg("--message-format=json")
