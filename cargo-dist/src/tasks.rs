@@ -52,6 +52,7 @@ use std::process::Command;
 
 use axoproject::{PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
+use cruet::to_class_case;
 use guppy::PackageId;
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
@@ -59,7 +60,10 @@ use tracing::{info, warn};
 
 use crate::{
     backend::{
-        installer::{npm::NpmInstallerInfo, ExecutableZipFragment, InstallerImpl, InstallerInfo},
+        installer::{
+            homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, ExecutableZipFragment,
+            InstallerImpl, InstallerInfo,
+        },
         templates::Templates,
     },
     config::{
@@ -1003,6 +1007,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             InstallerStyle::Shell => self.add_shell_installer(to_release),
             InstallerStyle::Powershell => self.add_powershell_installer(to_release),
             InstallerStyle::Npm => self.add_npm_installer(to_release),
+            InstallerStyle::Homebrew => self.add_homebrew_installer(to_release),
         }
     }
 
@@ -1097,6 +1102,134 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 artifacts,
                 hint,
                 desc,
+            })),
+        };
+
+        self.add_global_artifact(to_release, installer_artifact);
+    }
+
+    fn add_homebrew_installer(&mut self, to_release: ReleaseIdx) {
+        if !self.global_artifacts_enabled() {
+            return;
+        }
+        let release = self.release(to_release);
+        let release_id = &release.id;
+        let Some(download_url) = &self.inner.artifact_download_url else {
+            warn!("skipping Homebrew formula: couldn't compute a URL to download artifacts from");
+            return;
+        };
+        // TODO ensure this is Homebrew-legal
+        let artifact_name = format!("{release_id}.rb");
+        let artifact_path = self.inner.dist_dir.join(&artifact_name);
+        let hint = format!("brew install {artifact_name}");
+        let desc = "Install prebuilt binaries via Homebrew".to_owned();
+
+        // If they have an x64 macos build but not an arm64 one, add a fallback entry
+        // to try to install x64 on arm64 and let rosetta2 deal with it.
+        //
+        // (This isn't strictly correct because rosetta2 isn't installed by default
+        // on macos, and the auto-installer only triggers for "real" apps, and not CLIs.
+        // Still, we think this is better than not trying at all.)
+        const X64_MACOS: &str = "x86_64-apple-darwin";
+        const ARM64_MACOS: &str = "aarch64-apple-darwin";
+        let mut has_x64_apple = false;
+        let mut has_arm_apple = false;
+        for &variant_idx in &release.variants {
+            let variant = self.variant(variant_idx);
+            let target = &variant.target;
+            if target == X64_MACOS {
+                has_x64_apple = true;
+            }
+            if target == ARM64_MACOS {
+                has_arm_apple = true;
+            }
+        }
+        let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
+
+        let mut arm64 = None;
+        let mut x86_64 = None;
+
+        // Gather up the bundles the installer supports
+        let mut artifacts = vec![];
+        let mut target_triples = SortedSet::new();
+        for &variant_idx in &release.variants {
+            let variant = self.variant(variant_idx);
+            let target = &variant.target;
+            if target.contains("windows") || target.contains("linux-gnu") {
+                continue;
+            }
+            // Compute the artifact zip this variant *would* make *if* it were built
+            // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
+            // way to add artifacts to the graph and then say "ok but don't build it".
+            let (artifact, binaries) =
+                self.make_executable_zip_for_variant(to_release, variant_idx);
+            target_triples.insert(target.clone());
+            let fragment = ExecutableZipFragment {
+                id: artifact.id,
+                target_triples: artifact.target_triples,
+                zip_style: artifact.archive.as_ref().unwrap().zip_style,
+                binaries: binaries
+                    .into_iter()
+                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
+                    .collect(),
+            };
+
+            if target == X64_MACOS {
+                x86_64 = Some(fragment.clone());
+            }
+            if target == ARM64_MACOS {
+                arm64 = Some(fragment.clone());
+            }
+
+            if do_rosetta_fallback && target == X64_MACOS {
+                // Copy the info but respecify it to be arm64 macos
+                let mut arm_fragment = fragment.clone();
+                arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
+                artifacts.push(arm_fragment.clone());
+                arm64 = Some(arm_fragment);
+            }
+            artifacts.push(fragment);
+        }
+        if artifacts.is_empty() {
+            warn!("skipping Homebrew installer: not building any supported platforms (use --artifacts=global)");
+            return;
+        };
+
+        let release = self.release(to_release);
+        let app_name = release.app_name.clone();
+        let app_desc = release.app_desc.clone();
+        let app_license = release.app_license.clone();
+        let app_homepage_url = release.app_homepage_url.clone();
+
+        let formula_name = to_class_case(&app_name);
+
+        let installer_artifact = Artifact {
+            id: artifact_name,
+            target_triples: target_triples.into_iter().collect(),
+            archive: None,
+            file_path: artifact_path.clone(),
+            required_binaries: FastMap::new(),
+            checksum: None,
+            kind: ArtifactKind::Installer(InstallerImpl::Homebrew(HomebrewInstallerInfo {
+                arm64,
+                arm64_sha256: None,
+                x86_64,
+                x86_64_sha256: None,
+                name: app_name,
+                formula_class: formula_name,
+                desc: app_desc,
+                license: app_license,
+                homepage: app_homepage_url,
+                inner: InstallerInfo {
+                    dest_path: artifact_path,
+                    app_name: release.app_name.clone(),
+                    app_version: release.version.to_string(),
+                    install_path: release.install_path.clone().into_jinja(),
+                    base_url: download_url.clone(),
+                    artifacts,
+                    hint,
+                    desc,
+                },
             })),
         };
 
@@ -1552,6 +1685,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 writeln!(gh_body, "## Install {heading_suffix}\n").unwrap();
                 for (_installer, details) in global_installers {
                     let (InstallerImpl::Shell(info)
+                    | InstallerImpl::Homebrew(HomebrewInstallerInfo { inner: info, .. })
                     | InstallerImpl::Powershell(info)
                     | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. })) = details;
 

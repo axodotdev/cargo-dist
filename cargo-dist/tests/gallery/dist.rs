@@ -49,6 +49,7 @@ pub struct Tools {
     pub cargo_dist: CommandInfo,
     pub shellcheck: Option<CommandInfo>,
     pub psanalyzer: Option<CommandInfo>,
+    pub homebrew: Option<CommandInfo>,
 }
 
 impl Tools {
@@ -67,12 +68,14 @@ impl Tools {
             .expect("couldn't parse cargo-dist version!?");
         let shellcheck = CommandInfo::new("shellcheck", None);
         let psanalyzer = CommandInfo::new_powershell_command("Invoke-ScriptAnalyzer");
+        let homebrew = CommandInfo::new("brew", None);
 
         Self {
             git,
             cargo_dist,
             shellcheck,
             psanalyzer,
+            homebrew,
         }
     }
 }
@@ -91,6 +94,7 @@ impl Default for Tools {
 pub struct DistResult {
     test_name: String,
     shell_installer_path: Option<Utf8PathBuf>,
+    homebrew_installer_path: Option<Utf8PathBuf>,
     powershell_installer_path: Option<Utf8PathBuf>,
     npm_installer_package_path: Option<Utf8PathBuf>,
 }
@@ -180,6 +184,7 @@ impl<'a> TestContext<'a, Tools> {
         let app_name = &self.repo.app_name;
         let ps_installer = Utf8PathBuf::from(format!("target/distrib/{app_name}-installer.ps1"));
         let sh_installer = Utf8PathBuf::from(format!("target/distrib/{app_name}-installer.sh"));
+        let rb_installer = Utf8PathBuf::from(format!("target/distrib/{app_name}.rb"));
         let npm_installer =
             Utf8PathBuf::from(format!("target/distrib/{app_name}-npm-package.tar.gz"));
 
@@ -187,6 +192,7 @@ impl<'a> TestContext<'a, Tools> {
             test_name: test_name.to_owned(),
             shell_installer_path: sh_installer.exists().then_some(sh_installer),
             powershell_installer_path: ps_installer.exists().then_some(ps_installer),
+            homebrew_installer_path: rb_installer.exists().then_some(rb_installer),
             npm_installer_package_path: npm_installer.exists().then_some(npm_installer),
         })
     }
@@ -222,6 +228,9 @@ impl DistResult {
 
         // If we can, run the script in a temp HOME
         self.runtest_shell_installer(ctx, expected_bin_dir)?;
+
+        // If we can, run the script in a temp HOME
+        self.runtest_homebrew_installer(ctx)?;
 
         // Now that all other checks have passed, it's safe to check snapshots
         self.snapshot()
@@ -378,6 +387,48 @@ impl DistResult {
         Ok(())
     }
 
+    // Runs the installer script in the system's Homebrew installation
+    #[allow(unused_variables)]
+    pub fn runtest_homebrew_installer(&self, ctx: &TestContext<Tools>) -> Result<()> {
+        // Only do this on macOS, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
+        #[cfg(target_os = "macos")]
+        if std::env::var(ENV_RUIN_ME)
+            .map(|s| !s.is_empty())
+            .unwrap_or(false)
+        {
+            // only do this if the formula exists
+            let Some(formula_path) = &self.homebrew_installer_path else {
+                return Ok(());
+            };
+
+            // Only do this if Homebrew is installed
+            let Some(homebrew) = &ctx.tools.homebrew else {
+                return Ok(());
+            };
+
+            // The ./ at the start ensures Homebrew sees this as a path
+            // reference and doesn't misinrepret it as a reference to a
+            // formula in a tap.
+            let relative_formula_path = format!("./{formula_path}");
+
+            eprintln!("running brew install...");
+            homebrew.output_checked(|cmd| cmd.arg("install").arg(&relative_formula_path))?;
+            let prefix_output =
+                homebrew.output_checked(|cmd| cmd.arg("--prefix").arg(&relative_formula_path))?;
+            let prefix_raw = String::from_utf8(prefix_output.stdout).unwrap();
+            let prefix = prefix_raw.strip_suffix("\n").unwrap();
+            let bin = Utf8PathBuf::from(&prefix).join("bin");
+
+            for bin_name in ctx.repo.bins {
+                let bin_path = bin.join(bin_name);
+                assert!(bin_path.exists(), "bin wasn't created");
+            }
+
+            homebrew.output_checked(|cmd| cmd.arg("uninstall").arg(relative_formula_path))?;
+        }
+        Ok(())
+    }
+
     // Run cargo-insta on everything we care to snapshot
     pub fn snapshot(&self) -> Result<Snapshots> {
         // We make a single uber-snapshot for both scripts to avoid the annoyances of having multiple snapshots
@@ -388,6 +439,11 @@ impl DistResult {
             &mut snapshots,
             "installer.sh",
             self.shell_installer_path.as_deref(),
+        )?;
+        append_snapshot_file(
+            &mut snapshots,
+            "formula.rb",
+            self.homebrew_installer_path.as_deref(),
         )?;
         append_snapshot_file(
             &mut snapshots,

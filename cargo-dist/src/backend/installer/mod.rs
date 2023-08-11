@@ -10,8 +10,10 @@ use crate::{
     TargetTriple,
 };
 
+use self::homebrew::HomebrewInstallerInfo;
 use self::npm::NpmInstallerInfo;
 
+pub mod homebrew;
 pub mod npm;
 pub mod powershell;
 pub mod shell;
@@ -26,6 +28,8 @@ pub enum InstallerImpl {
     Powershell(InstallerInfo),
     /// npm installer package
     Npm(NpmInstallerInfo),
+    /// Homebrew formula
+    Homebrew(HomebrewInstallerInfo),
 }
 
 /// Generic info about an installer

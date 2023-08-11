@@ -59,6 +59,7 @@ GLOBAL OPTIONS:
           - shell:      Generates a shell script that fetches/installs the right build
           - powershell: Generates a powershell script that fetches/installs the right build
           - npm:        Generates an npm project that fetches the right build to your node_modules
+          - homebrew:   Generates a Homebrew formula
 
   -c, --ci <CI>
           CI we want to support

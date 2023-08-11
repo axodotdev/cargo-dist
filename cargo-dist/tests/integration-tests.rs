@@ -33,14 +33,14 @@ fn axolotlsay_basic() -> Result<(), miette::Report> {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell", "npm"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew", "npm"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 scope = "@axodotdev"
-        
+
 "#
         ))?;
 
@@ -67,7 +67,7 @@ fn akaikatana_basic() -> Result<(), miette::Report> {
 cargo-dist-version = "{dist_version}"
 rust-toolchain-version = "1.67.1"
 ci = ["github"]
-installers = ["shell", "powershell"]
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 
 "#
@@ -93,8 +93,8 @@ fn install_path_cargo_home() -> Result<(), miette::Report> {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "CARGO_HOME"
@@ -119,8 +119,8 @@ fn install_path_home_subdir_min() -> Result<(), miette::Report> {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "~/.axolotlsay/"
@@ -145,8 +145,8 @@ fn install_path_home_subdir_deeper() -> Result<(), miette::Report> {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "~/.axolotlsay/bins"
@@ -171,8 +171,8 @@ fn install_path_home_subdir_space() -> Result<(), miette::Report> {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "~/My Axolotlsay Documents"
@@ -196,8 +196,8 @@ fn install_path_home_subdir_space_deeper() -> Result<(), miette::Report> {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "~/My Axolotlsay Documents/bin/"
@@ -222,8 +222,8 @@ fn install_path_env_no_subdir() -> Result<(), miette::Report> {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "$MY_ENV_VAR/"
@@ -248,8 +248,8 @@ fn install_path_env_subdir() -> Result<(), miette::Report> {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "$MY_ENV_VAR/bin/"
@@ -274,8 +274,8 @@ fn install_path_env_subdir_space() -> Result<(), miette::Report> {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "$MY_ENV_VAR/My Axolotlsay Documents"
@@ -300,8 +300,8 @@ fn install_path_env_subdir_space_deeper() -> Result<(), miette::Report> {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "$MY_ENV_VAR/My Axolotlsay Documents/bin"
@@ -327,8 +327,8 @@ fn install_path_invalid() {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "~/"
@@ -352,8 +352,8 @@ fn env_path_invalid() {
 
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
-cargo-dist-version = "{dist_version}"   
-installers = ["shell", "powershell"]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 install-path = "$MY_ENV"

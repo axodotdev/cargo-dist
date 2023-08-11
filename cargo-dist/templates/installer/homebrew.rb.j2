@@ -1,0 +1,53 @@
+class {{ formula_class }} < Formula
+  {%- if desc %}
+  desc "{{ desc }}"
+  {%- endif %}
+  {%- if homepage %}
+  homepage "{{ homepage }}"
+  {%- endif %}
+  {#- #}
+  {#- If arm64/x86_64 builds are the same, skip the Hardware::CPU.type if statement #}
+  {%- if arm64.id == x86_64.id %}
+  url "{{ inner.base_url }}/{{ arm64.id }}"
+  {%- if arm64_sha256 %}
+  sha256 "{{ arm64_sha256 }}"
+  {%- endif %}
+  {%- else %}
+  if Hardware::CPU.type == :arm
+    url "{{ inner.base_url }}/{{ arm64.id }}"
+    {%- if arm64_sha256 %}
+    sha256 "{{ arm64_sha256 }}"
+    {%- endif %}
+  else
+    url "{{ inner.base_url }}/{{ x86_64.id }}"
+    {%- if x86_64_sha256 %}
+    sha256 "{{ x86_64_sha256 }}"
+    {%- endif %}
+  end
+  {%- endif %}
+  {#- #}
+  {%- if license %}
+  license "{{ license }}"
+  {%- endif %}
+
+  def install
+    {#- Like the URL case above, write out a single install line in the case that the binary artifacts are the same across architectures #}
+    {%- if arm64.binaries == x86_64.binaries %}
+    bin.install {% for binary in arm64.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+    {%- else %}
+    if Hardware::CPU.type == :arm
+      bin.install {% for binary in arm64.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+    else
+      bin.install {% for binary in x86_64.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+    end
+    {%- endif %}
+
+    # Homebrew will automatically install these, so we don't need to do that
+    doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
+    leftover_contents = Dir["*"] - doc_files
+
+    # Install any leftover files in pkgshare; these are probably config or
+    # sample files.
+    pkgshare.install *leftover_contents unless leftover_contents.empty?
+  end
+end

@@ -25,7 +25,7 @@ GLOBAL OPTIONS:
   -o, --output-format <OUTPUT_FORMAT>  The format of the output [default: human] [possible values: human, json]
       --no-local-paths                 Strip local paths from output (e.g. in the dist manifest json)
   -t, --target <TARGET>                Target triples we want to build
-  -i, --installer <INSTALLER>          Installers we want to build [possible values: shell, powershell, npm]
+  -i, --installer <INSTALLER>          Installers we want to build [possible values: shell, powershell, npm, homebrew]
   -c, --ci <CI>                        CI we want to support [possible values: github]
       --tag <TAG>                      The (git) tag to use for the Announcement that each invocation of cargo-dist is performing
 
