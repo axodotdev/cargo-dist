@@ -200,6 +200,18 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "install-path")]
     pub install_path: Option<InstallPathStrategy>,
+    /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "features")]
+    pub features: Option<Vec<String>>,
+    /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "no-default-features")]
+    pub no_default_features: Option<bool>,
+    /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "all-features")]
+    pub all_features: Option<bool>,
 }
 
 impl DistMetadata {
@@ -223,6 +235,9 @@ impl DistMetadata {
             fail_fast: _,
             merge_tasks: _,
             install_path: _,
+            features: _,
+            no_default_features: _,
+            all_features: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -255,6 +270,9 @@ impl DistMetadata {
             merge_tasks,
             fail_fast,
             install_path,
+            features,
+            no_default_features,
+            all_features,
         } = self;
 
         // Check for global settings on local packages
@@ -304,6 +322,15 @@ impl DistMetadata {
         }
         if install_path.is_none() {
             *install_path = workspace_config.install_path.clone();
+        }
+        if features.is_none() {
+            *features = workspace_config.features.clone();
+        }
+        if no_default_features.is_none() {
+            *no_default_features = workspace_config.no_default_features;
+        }
+        if all_features.is_none() {
+            *all_features = workspace_config.all_features;
         }
 
         // This was historically implemented as extend, but I'm not convinced the
