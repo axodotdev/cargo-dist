@@ -20,12 +20,12 @@ cargo install cargo-dist --locked --profile=dist
 (`--profile=dist` is the profile we build our shippable binaries with, it's optional.)
 
 
-## Install From The AUR
+## Installation on Arch Linux
 
-Arch Linux users can install `cargo-dist` from the [AUR](https://aur.archlinux.org/packages?O=0&SeB=nd&K=cargo-dist&outdated=&SB=p&SO=d&PP=50&submit=Go) using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers). For example:
+Arch Linux users can install `cargo-dist` from the [extra repository](https://archlinux.org/packages/extra/x86_64/cargo-dist/) using [pacman](https://wiki.archlinux.org/title/Pacman):
 
 ```sh
-paru -S cargo-dist
+pacman -S cargo-dist
 ```
 
 ## Download Prebuilt Binaries From Github Releases
