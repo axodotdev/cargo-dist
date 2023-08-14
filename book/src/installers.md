@@ -4,7 +4,7 @@
 
 The core functionality of cargo-dist is to build your binaries and produce tarballs/zips containing them. Basically every other kind of file it produces is considered an "installer" that helps download/install those binaries.
 
-> Currently all supported installers are "global"/"universal" installers that detect the current platform and download and unpack the appropriate tarball/zip. This currently requires CI support to be enabled so we can ensure the files are hosted somewhere and now where to fetch them from.
+> Currently all supported installers are "global"/"universal" installers that detect the current platform and download and unpack the appropriate tarball/zip. This currently requires CI support to be enabled so we can ensure the files are hosted somewhere and know where to fetch them from.
 >
 > In the future we will allow you to specify the download URL manually, and will enable more self-contained "vendored" installers like [Windows .msi][msi-installer-issue] and [macOS .dmg/.app][dmg-installer-issue], as well as [various][linux-pm-issue] [package-managers][windows-pm-issue].
 
