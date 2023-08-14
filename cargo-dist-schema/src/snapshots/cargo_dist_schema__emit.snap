@@ -48,6 +48,17 @@ expression: json_schema
         "$ref": "#/definitions/Artifact"
       }
     },
+    "ci": {
+      "description": "ci backend info",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CiInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "dist_version": {
       "description": "The version of cargo-dist that generated this",
       "type": [
@@ -304,6 +315,80 @@ expression: json_schema
         },
         "path": {
           "description": "The path of the asset relative to the root of the artifact",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "CiInfo": {
+      "description": "CI backend info",
+      "type": "object",
+      "properties": {
+        "github": {
+          "description": "GitHub CI backend",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GithubCiInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GithubCiInfo": {
+      "description": "Github CI backend",
+      "type": "object",
+      "properties": {
+        "artifacts-matrix": {
+          "description": "Github CI Matrix for upload-artifacts",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GithubMatrix"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GithubMatrix": {
+      "description": "Github CI Matrix",
+      "type": "object",
+      "properties": {
+        "include": {
+          "description": "define each task manually rather than doing cross-product stuff",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GithubMatrixEntry"
+          }
+        }
+      }
+    },
+    "GithubMatrixEntry": {
+      "description": "Entry for a github matrix",
+      "type": "object",
+      "properties": {
+        "dist-args": {
+          "description": "Arguments to pass to cargo-dist",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "install-dist": {
+          "description": "Expression to execute to install cargo-dist",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runner": {
+          "description": "Github Runner to user",
           "type": [
             "string",
             "null"

@@ -5,6 +5,7 @@
 // FIXME(#283): migrate this to minijinja (steal logic from oranda to load a whole dir)
 
 use axoasset::LocalAsset;
+use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
 use serde::Serialize;
 use tracing::warn;
 
@@ -12,111 +13,109 @@ use crate::{
     backend::templates::TEMPLATE_CI_GITHUB, DistGraph, SortedMap, SortedSet, TargetTriple,
 };
 
+/// Info about running cargo-dist in Github CI
 #[derive(Debug, Serialize)]
-struct CiInfo {
-    rust_version: Option<String>,
-    install_dist_sh: String,
-    install_dist_ps1: String,
-    fail_fast: bool,
-    tasks: Vec<CiTask>,
+pub struct GithubCiInfo {
+    /// Version of rust toolchain to install (deprecated)
+    pub rust_version: Option<String>,
+    /// expression to use for installing cargo-dist via shell script
+    pub install_dist_sh: String,
+    /// expression to use for installing cargo-dist via powershell script
+    pub install_dist_ps1: String,
+    /// Whether to fail-fast
+    pub fail_fast: bool,
+    /// Matrix for upload-artifacts
+    pub artifacts_matrix: cargo_dist_schema::GithubMatrix,
 }
 
-#[derive(Debug, Serialize)]
-struct CiTask {
-    runner: String,
-    dist_args: String,
-    install_dist: String,
-}
+impl GithubCiInfo {
+    /// Compute the Github CI stuff
+    pub fn new(dist: &DistGraph) -> GithubCiInfo {
+        // Legacy deprecated support for
+        let rust_version = dist.desired_rust_toolchain.clone();
 
-/// Generate CI for Github
-///
-/// This actually creates a file and writes to disk!
-pub fn generate_github_ci(dist: &DistGraph) -> Result<(), miette::Report> {
-    const GITHUB_CI_DIR: &str = ".github/workflows/";
-    const GITHUB_CI_FILE: &str = "release.yml";
+        // If they don't specify a cargo-dist version, use this one
+        let self_dist_version = super::SELF_DIST_VERSION.parse().unwrap();
+        let dist_version = dist
+            .desired_cargo_dist_version
+            .as_ref()
+            .unwrap_or(&self_dist_version);
+        let fail_fast = dist.fail_fast;
 
-    // FIXME: should we try to avoid clobbering old files..?
-    let ci_dir = dist.workspace_dir.join(GITHUB_CI_DIR);
-    let ci_file = ci_dir.join(GITHUB_CI_FILE);
-    let ci_info = compute_ci_info(dist);
-
-    let rendered = dist
-        .templates
-        .render_file_to_clean_string(TEMPLATE_CI_GITHUB, &ci_info)?;
-    LocalAsset::write_new_all(&rendered, &ci_file)?;
-    eprintln!("generated Github CI to {}", ci_file);
-
-    Ok(())
-}
-
-/// Write the Github CI to something
-fn compute_ci_info(dist: &DistGraph) -> CiInfo {
-    // Legacy deprecated support for
-    let rust_version = dist.desired_rust_toolchain.clone();
-
-    // If they don't specify a cargo-dist version, use this one
-    let self_dist_version = super::SELF_DIST_VERSION.parse().unwrap();
-    let dist_version = dist
-        .desired_cargo_dist_version
-        .as_ref()
-        .unwrap_or(&self_dist_version);
-    let fail_fast = dist.fail_fast;
-
-    // Figure out what builds we need to do
-    let mut needs_global_build = false;
-    let mut local_targets = SortedSet::new();
-    for release in &dist.releases {
-        if !release.global_artifacts.is_empty() {
-            needs_global_build = true;
+        // Figure out what builds we need to do
+        let mut needs_global_build = false;
+        let mut local_targets = SortedSet::new();
+        for release in &dist.releases {
+            if !release.global_artifacts.is_empty() {
+                needs_global_build = true;
+            }
+            local_targets.extend(release.targets.iter());
         }
-        local_targets.extend(release.targets.iter());
-    }
 
-    // Get the platform-specific installation methods
-    let install_dist_sh = super::install_dist_sh_for_version(dist_version);
-    let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
+        // Get the platform-specific installation methods
+        let install_dist_sh = super::install_dist_sh_for_version(dist_version);
+        let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
 
-    // Build up the task matrix for building Artifacts
-    let mut tasks = vec![];
+        // Build up the task matrix for building Artifacts
+        let mut tasks = vec![];
 
-    // If we have Global Artifacts, we need one task for that. If we've done a Good Job
-    // then these artifacts should be possible to build on *any* platform. Linux is usually
-    // fast/cheap, so that's a reasonable choice.s
-    if needs_global_build {
-        tasks.push(CiTask {
-            runner: GITHUB_LINUX_RUNNER.into(),
-            dist_args: "--artifacts=global".into(),
-            install_dist: install_dist_sh.clone(),
-        });
-    }
-
-    // Figure out what Local Artifact tasks we need
-    let local_runs = if dist.merge_tasks {
-        distribute_targets_to_runners_merged(local_targets)
-    } else {
-        distribute_targets_to_runners_split(local_targets)
-    };
-    for (runner, targets) in local_runs {
-        use std::fmt::Write;
-        let install_dist =
-            install_dist_for_github_runner(runner, &install_dist_sh, &install_dist_ps1);
-        let mut dist_args = String::from("--artifacts=local");
-        for target in targets {
-            write!(dist_args, " --target={target}").unwrap();
+        // If we have Global Artifacts, we need one task for that. If we've done a Good Job
+        // then these artifacts should be possible to build on *any* platform. Linux is usually
+        // fast/cheap, so that's a reasonable choice.s
+        if needs_global_build {
+            tasks.push(GithubMatrixEntry {
+                runner: Some(GITHUB_LINUX_RUNNER.into()),
+                dist_args: Some("--artifacts=global".into()),
+                install_dist: Some(install_dist_sh.clone()),
+            });
         }
-        tasks.push(CiTask {
-            runner: runner.to_owned(),
-            dist_args,
-            install_dist: install_dist.to_owned(),
-        });
+
+        // Figure out what Local Artifact tasks we need
+        let local_runs = if dist.merge_tasks {
+            distribute_targets_to_runners_merged(local_targets)
+        } else {
+            distribute_targets_to_runners_split(local_targets)
+        };
+        for (runner, targets) in local_runs {
+            use std::fmt::Write;
+            let install_dist =
+                install_dist_for_github_runner(runner, &install_dist_sh, &install_dist_ps1);
+            let mut dist_args = String::from("--artifacts=local");
+            for target in targets {
+                write!(dist_args, " --target={target}").unwrap();
+            }
+            tasks.push(GithubMatrixEntry {
+                runner: Some(runner.to_owned()),
+                dist_args: Some(dist_args),
+                install_dist: Some(install_dist.to_owned()),
+            });
+        }
+
+        GithubCiInfo {
+            rust_version,
+            install_dist_sh,
+            install_dist_ps1,
+            fail_fast,
+            artifacts_matrix: GithubMatrix { include: tasks },
+        }
     }
 
-    CiInfo {
-        rust_version,
-        install_dist_sh,
-        install_dist_ps1,
-        fail_fast,
-        tasks,
+    /// Write release.yml to disk
+    pub fn write_to_disk(&self, dist: &DistGraph) -> Result<(), miette::Report> {
+        const GITHUB_CI_DIR: &str = ".github/workflows/";
+        const GITHUB_CI_FILE: &str = "release.yml";
+
+        // FIXME: should we try to avoid clobbering old files..?
+        let ci_dir = dist.workspace_dir.join(GITHUB_CI_DIR);
+        let ci_file = ci_dir.join(GITHUB_CI_FILE);
+
+        let rendered = dist
+            .templates
+            .render_file_to_clean_string(TEMPLATE_CI_GITHUB, self)?;
+        LocalAsset::write_new_all(&rendered, &ci_file)?;
+        eprintln!("generated Github CI to {}", ci_file);
+
+        Ok(())
     }
 }
 

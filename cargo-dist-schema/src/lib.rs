@@ -65,6 +65,52 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub artifacts: BTreeMap<ArtifactId, Artifact>,
+    /// ci backend info
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ci: Option<CiInfo>,
+}
+
+/// CI backend info
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct CiInfo {
+    /// GitHub CI backend
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github: Option<GithubCiInfo>,
+}
+
+/// Github CI backend
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GithubCiInfo {
+    /// Github CI Matrix for upload-artifacts
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "artifacts-matrix")]
+    pub artifacts_matrix: Option<GithubMatrix>,
+}
+
+/// Github CI Matrix
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GithubMatrix {
+    /// define each task manually rather than doing cross-product stuff
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub include: Vec<GithubMatrixEntry>,
+}
+
+/// Entry for a github matrix
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GithubMatrixEntry {
+    /// Github Runner to user
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub runner: Option<String>,
+    /// Expression to execute to install cargo-dist
+    #[serde(rename = "install-dist")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_dist: Option<String>,
+    /// Arguments to pass to cargo-dist
+    #[serde(rename = "dist-args")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dist_args: Option<String>,
 }
 
 /// Info about the system/toolchain used to build this announcement.
@@ -274,6 +320,7 @@ impl DistManifest {
             system_info: None,
             releases,
             artifacts,
+            ci: None,
         }
     }
 

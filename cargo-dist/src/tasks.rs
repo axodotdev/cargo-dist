@@ -14,7 +14,7 @@
 //!   2. add installers, each one decides if it's global or local
 //! 7. compute actual BuildSteps from the current graph (a Binary will only induce an actual `cargo build`
 //!    here if one of the Artifacts that was added requires outputs from it!)
-//! 8. (NOT YET IMPLEMENTED) generate release/announcement notes
+//! 8. generate release/announcement notes
 //!
 //! During step 6 a lot of extra magic happens:
 //!
@@ -59,6 +59,7 @@ use tracing::{info, warn};
 
 use crate::{
     backend::{
+        ci::{github::GithubCiInfo, CiInfo},
         installer::{npm::NpmInstallerInfo, ExecutableZipFragment, InstallerImpl, InstallerInfo},
         templates::Templates,
     },
@@ -176,6 +177,8 @@ pub struct DistGraph {
     pub variants: Vec<ReleaseVariant>,
     /// Logical releases that artifacts are grouped under
     pub releases: Vec<Release>,
+    /// Info about CI backends
+    pub ci: CiInfo,
 }
 
 /// Various tools we have found installed on the system
@@ -652,6 +655,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 binaries: vec![],
                 variants: vec![],
                 releases: vec![],
+                ci: CiInfo::default(),
             },
             package_metadata,
             workspace_metadata,
@@ -1603,6 +1607,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.inner.announcement_github_body = Some(gh_body);
     }
 
+    fn compute_ci(&mut self) {
+        for ci in &self.inner.ci_style {
+            match ci {
+                CiStyle::Github => {
+                    self.inner.ci.github = Some(GithubCiInfo::new(&self.inner));
+                }
+            }
+        }
+    }
+
     fn workspace(&self) -> &'pkg_graph WorkspaceInfo {
         self.workspace
     }
@@ -1956,6 +1970,8 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
     // Finally compute all the build steps!
     graph.compute_build_steps();
+
+    graph.compute_ci();
 
     Ok(graph.inner)
 }

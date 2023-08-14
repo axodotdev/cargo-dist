@@ -1183,6 +1183,39 @@ Install-Binary "$Args"
         "x86_64-unknown-linux-gnu"
       ]
     }
+  },
+  "ci": {
+    "github": {
+      "artifacts-matrix": {
+        "include": [
+          {
+            "runner": "ubuntu-20.04",
+            "install-dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "dist-args": "--artifacts=global"
+          },
+          {
+            "runner": "macos-11",
+            "install-dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "dist-args": "--artifacts=local --target=aarch64-apple-darwin"
+          },
+          {
+            "runner": "macos-11",
+            "install-dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "dist-args": "--artifacts=local --target=x86_64-apple-darwin"
+          },
+          {
+            "runner": "windows-2019",
+            "install-dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex",
+            "dist-args": "--artifacts=local --target=x86_64-pc-windows-msvc"
+          },
+          {
+            "runner": "ubuntu-20.04",
+            "install-dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "dist-args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
+          }
+        ]
+      }
+    }
   }
 }
 
