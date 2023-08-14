@@ -1,7 +1,7 @@
 # Contributing
 
 Thanks so much for your interest in contributing to `cargo-dist`. We are excited
-about the building a community of contributors to the project. Here's some
+about building a community of contributors to the project. Here's some
 guiding principles for working with us:
 
 **1. File an issue first!**
@@ -14,7 +14,7 @@ don't want folks wasting time on directions we don't want to take the project.
 **2. Write tests, or at least detailed reproduction steps**
 
 If you find a bug, the best way to prioritize getting it fixed is to open a PR
-with a failing test! If you a opening a bug fix PR, please add a test to show
+with a failing test! If you are opening a bug fix PR, please add a test to show
 that your fix works.
 
 **3. Overcommunicate**
