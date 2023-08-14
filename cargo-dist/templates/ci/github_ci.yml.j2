@@ -4,17 +4,12 @@
 # CI that:
 #
 # * checks for a Git Tag that looks like a release
-# * creates a Github Release™ and fills in its text
-# * builds artifacts with cargo-dist (executable-zips, installers)
-# * uploads those artifacts to the Github Release™
+# * builds artifacts with cargo-dist (binaries and installers)
+# * creates a Github Release™ and with those artifacts
 #
-# Note that the Github Release™ will be created before the artifacts,
-# so there will be a few minutes where the release has no artifacts
-# and then they will slowly trickle in, possibly failing. To make
-# this more pleasant we mark the release as a "draft" until all
-# artifacts have been successfully uploaded. This allows you to
-# choose what to do with partial successes and avoids spamming
-# anyone with notifications before the release is actually ready.
+# Note that if any artifact tasks fails, the Github Release™ will still be created
+# with as many values as possible, but will be marked as a "draft" so that you can
+# inspect it and decide what to do.
 name: Release
 
 permissions:
@@ -35,7 +30,8 @@ permissions:
 # packages versioned/released in lockstep).
 #
 # If you push multiple tags at once, separate instances of this workflow will
-# spin up, creating an independent Github Release™ for each one.
+# spin up, creating an independent Github Release™ for each one (unfortunately
+# github will drop some tags on the ground if you push more than 3 at once).
 #
 # If there's a prerelease-style suffix to the version then the Github Release™
 # will be marked as a prerelease.
@@ -45,12 +41,11 @@ on:
       - '*-?v[0-9]+*'
 
 jobs:
-  create-release:
-    # Create the Github Release™ so the packages have something to be uploaded to
+  plan:
+    # run cargo dist plan to figure out what we're doing
     runs-on: ubuntu-latest
     outputs:
-      has-releases: ${{ steps.create-release.outputs.has-releases }}
-      ci: ${{ steps.create-release.outputs.matrix }}
+      val: ${{ steps.plan.outputs.manifest }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -63,35 +58,25 @@ jobs:
       {{%- endif %}}
       - name: Install cargo-dist
         run: {{{ install_dist_sh }}}
-      - id: create-release
+      - id: plan
         run: |
           cargo dist plan --tag=${{ github.ref_name }} --output-format=json > dist-manifest.json
-          echo "dist plan ran successfully"
+          echo "cargo dist plan ran successfully"
           cat dist-manifest.json
+          echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
+      - name: "Upload dist-manifest.json"
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: dist-manifest.json
 
-          # Create the Github Release™ based on what cargo-dist thinks it should be
-          ANNOUNCEMENT_TITLE=$(jq --raw-output ".announcement_title" dist-manifest.json)
-          IS_PRERELEASE=$(jq --raw-output ".announcement_is_prerelease" dist-manifest.json)
-          jq --raw-output ".announcement_github_body" dist-manifest.json > new_dist_announcement.md
-          gh release create ${{ github.ref_name }} --draft --prerelease="$IS_PRERELEASE" --title="$ANNOUNCEMENT_TITLE" --notes-file=new_dist_announcement.md
-          echo "created announcement!"
-
-          # Upload the manifest to the Github Release™
-          gh release upload ${{ github.ref_name }} dist-manifest.json
-          echo "uploaded manifest!"
-
-          # Disable all the upload-artifacts tasks if we have no actual releases
-          HAS_RELEASES=$(jq --raw-output ".releases != null" dist-manifest.json)
-          echo "has-releases=$HAS_RELEASES" >> "$GITHUB_OUTPUT"
-          echo "ci=$(jq -c ".ci.github" dist-manifest.json)" >> "$GITHUB_OUTPUT"
-
-  upload-artifacts:
+  upload-dist-artifacts:
     # Build and packages all the things
-    needs: create-release
+    needs: plan
     # Let the initial task tell us to not run (currently very blunt)
-    if: ${{ needs.create-release.outputs.has-releases == 'true' }}
+    if: ${{ fromJson(needs.plan.outputs.val).releases != null }}
     strategy:
-      fail-fast: {{{ fail_fast }}}
+      fail-fast: false
       # Target platforms/runners are computed by cargo-dist in create-release.
       # Each member of the matrix has the following arguments:
       #
@@ -102,7 +87,7 @@ jobs:
       # Typically there will be:
       # - 1 "global" task that builds universal installers
       # - N "local" tasks that build each platform's binaries and platform-specific installers
-      matrix: ${{ fromJson(needs.create-release.outputs.ci).artifacts_matrix }}   
+      matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts-matrix }}
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -114,34 +99,37 @@ jobs:
       - name: Install Rust
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}"#
       {{%- endif %}}
+      - uses: swatinem/rust-cache@v2
       - name: Install cargo-dist
         run: ${{ matrix.install-dist }}
-      - name: Run cargo-dist
-        # This logic is a bit janky because it's trying to be a polyglot between
-        # powershell and bash since this will run on windows, macos, and linux!
-        # The two platforms don't agree on how to talk about env vars but they
-        # do agree on 'cat' and '$()' so we use that to marshal values between commands.
+      - id: cargo-dist
+        # We force bash here just because github makes it really hard to get values up
+        # to "real" actions without writing to env-vars, and writing to env-vars has
+        # inconsistent syntax between shell and powershell. cargo-dist and jq work fine
+        # in powershell.
+        shell: bash
         run: |
           # Actually do builds and make zips and whatnot
           cargo dist build --tag=${{ github.ref_name }} --output-format=json ${{ matrix.dist-args }} > dist-manifest.json
-          echo "dist ran successfully"
-          cat dist-manifest.json
+          echo "cargo dist ran successfully"
 
           # Parse out what we just built and upload it to the Github Release™
-          jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json > uploads.txt
-          echo "uploading..."
-          cat uploads.txt
-          gh release upload ${{ github.ref_name }} $(cat uploads.txt)
-          echo "uploaded!"
+          echo "paths<<EOF" >> "$GITHUB_OUTPUT"
+          jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+      - name: "Upload artifacts"
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: ${{ steps.cargo-dist.outputs.paths }}
 
   publish-release:
-    # Mark the Github Release™ as a non-draft now that everything has succeeded!
-    #
-    # Only run after all the other tasks, but it's ok if upload-artifacts was skipped
+    # Create a Github Release with all the results once everything is done,
+    # regardless of success. The release is only marked as non-draft if all tasks succeeded.
     needs:
-      - create-release
-      - upload-artifacts
-    if: ${{ always() && needs.create-release.result == 'success' && (needs.upload-artifacts.result == 'skipped' || needs.upload-artifacts.result == 'success') }}
+      - plan
+      - upload-dist-artifacts
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -149,7 +137,18 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: mark release as non-draft
-        run: |
-          gh release edit ${{ github.ref_name }} --draft=false
+      - name: "Download artifacts"
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: artifacts
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref }}
+          name: ${{ fromJson(needs.plan.outputs.val).announcement_title }}
+          body: ${{ fromJson(needs.plan.outputs.val).announcement_github_body }}
+          draft: ${{ github.action_status != 'success' }}
+          prerelease: ${{ fromJson(needs.plan.outputs.val).announcement_is_prerelease }}
+          artifacts: "artifacts/*"
 
