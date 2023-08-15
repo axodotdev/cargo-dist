@@ -18,7 +18,8 @@ struct CiInfo {
     install_dist_sh: String,
     install_dist_ps1: String,
     fail_fast: bool,
-    tasks: Vec<CiTask>,
+    local_tasks: Vec<CiTask>,
+    global_task: Option<CiTask>,
 }
 
 #[derive(Debug, Serialize)]
@@ -77,18 +78,20 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
     let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
 
     // Build up the task matrix for building Artifacts
-    let mut tasks = vec![];
+    let mut local_tasks = vec![];
 
     // If we have Global Artifacts, we need one task for that. If we've done a Good Job
     // then these artifacts should be possible to build on *any* platform. Linux is usually
     // fast/cheap, so that's a reasonable choice.s
-    if needs_global_build {
-        tasks.push(CiTask {
+    let global_task = if needs_global_build {
+        Some(CiTask {
             runner: GITHUB_LINUX_RUNNER.into(),
             dist_args: "--artifacts=global".into(),
             install_dist: install_dist_sh.clone(),
-        });
-    }
+        })
+    } else {
+        None
+    };
 
     // Figure out what Local Artifact tasks we need
     let local_runs = if dist.merge_tasks {
@@ -104,7 +107,7 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
         for target in targets {
             write!(dist_args, " --target={target}").unwrap();
         }
-        tasks.push(CiTask {
+        local_tasks.push(CiTask {
             runner: runner.to_owned(),
             dist_args,
             install_dist: install_dist.to_owned(),
@@ -116,7 +119,8 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
         install_dist_sh,
         install_dist_ps1,
         fail_fast,
-        tasks,
+        local_tasks,
+        global_task,
     }
 }
 
