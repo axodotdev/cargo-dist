@@ -380,6 +380,8 @@ pub struct Artifact {
     pub kind: ArtifactKind,
     /// A checksum for this artifact, if any
     pub checksum: Option<ArtifactIdx>,
+    /// Indicates whether the artifact is local or global
+    pub is_global: bool,
 }
 
 /// Info about an archive (zip/tarball) that should be made. Currently this is always part
@@ -867,6 +869,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 required_binaries: Default::default(),
                 // Who checksums the checksummers...
                 checksum: None,
+                is_global: false,
             }
         };
         let checksum_idx = self.add_local_artifact(to_variant, checksum_artifact);
@@ -934,6 +937,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 kind: ArtifactKind::ExecutableZip(ExecutableZip {}),
                 // May get filled in later
                 checksum: None,
+                is_global: false,
             },
             built_assets,
         )
@@ -979,6 +983,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     required_binaries: FastMap::new(),
                     kind: ArtifactKind::Symbols(Symbols { kind: symbol_kind }),
                     checksum: None,
+                    is_global: false,
                 };
 
                 // FIXME: strictly speaking a binary could plausibly be shared between Releases,
@@ -1103,6 +1108,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 hint,
                 desc,
             })),
+            is_global: true,
         };
 
         self.add_global_artifact(to_release, installer_artifact);
@@ -1231,6 +1237,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     desc,
                 },
             })),
+            is_global: true,
         };
 
         self.add_global_artifact(to_release, installer_artifact);
@@ -1303,6 +1310,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 hint,
                 desc,
             })),
+            is_global: true,
         };
 
         self.add_global_artifact(to_release, installer_artifact);
@@ -1422,6 +1430,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     desc,
                 },
             })),
+            is_global: true,
         };
 
         self.add_global_artifact(to_release, installer_artifact);
@@ -1464,7 +1473,30 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let cargo_builds = self.compute_cargo_builds();
         build_steps.extend(cargo_builds);
 
-        for artifact in &self.inner.artifacts {
+        Self::add_build_steps_for_artifacts(
+            &self
+                .inner
+                .artifacts
+                .iter()
+                .filter(|a| !a.is_global)
+                .collect(),
+            &mut build_steps,
+        );
+        Self::add_build_steps_for_artifacts(
+            &self
+                .inner
+                .artifacts
+                .iter()
+                .filter(|a| a.is_global)
+                .collect(),
+            &mut build_steps,
+        );
+
+        self.inner.build_steps = build_steps;
+    }
+
+    fn add_build_steps_for_artifacts(artifacts: &Vec<&Artifact>, build_steps: &mut Vec<BuildStep>) {
+        for artifact in artifacts {
             match &artifact.kind {
                 ArtifactKind::ExecutableZip(_zip) => {
                     // compute_cargo_builds and artifact.archive handle everything
@@ -1520,8 +1552,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }));
             }
         }
-
-        self.inner.build_steps = build_steps;
     }
 
     fn compute_cargo_builds(&mut self) -> Vec<BuildStep> {
