@@ -516,7 +516,7 @@ pub enum StaticAssetKind {
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CargoTargetFeatures {
     /// Whether to disable default features
-    pub no_default_features: bool,
+    pub default_features: bool,
     /// Features to enable
     pub features: CargoTargetFeatureList,
 }
@@ -616,7 +616,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Only the final value merged into a package_config matters
             install_path: _,
             features,
-            no_default_features,
+            default_features: no_default_features,
             all_features,
         } = &workspace_metadata;
 
@@ -641,7 +641,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Only do workspace builds if all the packages agree with the workspace feature settings
             if &package_config.features != features
                 || &package_config.all_features != all_features
-                || &package_config.no_default_features != no_default_features
+                || &package_config.default_features != no_default_features
             {
                 packages_with_mismatched_features.push(package.name.clone());
             }
@@ -811,7 +811,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let id = format!("{binary_name}-v{version}-{target}");
 
             let features = CargoTargetFeatures {
-                no_default_features: package_metadata.no_default_features.unwrap_or(false),
+                default_features: package_metadata.default_features.unwrap_or(true),
                 features: if let Some(true) = package_metadata.all_features {
                     CargoTargetFeatureList::All
                 } else {

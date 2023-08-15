@@ -213,9 +213,11 @@ Example: `precise-builds = true`
 
 **This can only be set globally**
 
-Build only the required packages, and individually (default: false)
+Build only the required packages, and individually.
 
-By default when we need to build anything in your workspace, we build your entire workspace with --workspace. This setting tells cargo-dist to instead build each app individually.
+[See "inferring precise-builds" for the default behaviour.](#inferring-precise-builds)
+
+By default when we need to build anything in your workspace, we try to build your entire workspace with --workspace. This setting tells cargo-dist to instead build each app individually.
 
 On balance, the Rust experts we've consulted with find building with --workspace to be a safer/better default, as it provides some of the benefits of a more manual [workspace-hack][], without the user needing to be aware that this is a thing.
 
@@ -226,6 +228,31 @@ The downside of using --workspace is that if your workspace has lots of example/
 If that downside is big enough for you, this setting is a good idea.
 
 [workspace-hack]: https://docs.rs/cargo-hakari/latest/cargo_hakari/about/index.html
+
+
+#### inferring precise-builds
+
+Although cargo-dist prefers `--workspace` builds ([precise-builds](#precise-builds) = `false`) for the reasons stated above, it *will* attempt to check if that's possible, and use `--package` builds if necessary (`precise-builds = true`).
+
+If you explicitly set `precise-builds = false` and we determine --package builds are required, cargo-dist will produce an error. `precise-builds = true` will never produce an error.
+
+Precise-builds are considered required when you use any of [features](#features), [all-features](#all-features), or [default-features](#default-features) *and* not all of the packages in your workspace have the same values set.
+
+So for instance if you have several packages in your workspace and only one sets:
+
+```toml
+[package.metadata.dist] 
+all-features = true
+```
+
+Then we will require precise-builds, and will pass `--all-features` to only the `cargo build` for that package. This setting, on the other hand:
+
+```toml
+[workspace.metadata.dist] 
+all-features = true
+```
+
+Will just make us pass `--all-features` to `cargo build --workspace`.
 
 
 ### merge-tasks
@@ -295,6 +322,47 @@ Future Improvements:
 * In the future [we may support %windows dirs%](https://github.com/axodotdev/cargo-dist/issues/288)
 
 (Please file an issue if you have other requirements!)
+
+
+### features
+
+> since 0.2.0
+
+Example: `features = ["serde-support", "fancy-output"]`
+
+Specifies feature-flags that should be passed to a package when building it. This lets you enable features that should on be on "in production" but for whatever reason shouldn't be on by default.
+
+For instance for packages that are a library and a CLI binary, some developers prefer to make the library the default and the CLI opt-in. In such a case you would want to add `features = ["cli"]` to your `[package.metadata.dist]`.
+
+If you use this you *probably* want to set it on `[package.metadata.dist]` and
+not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
+
+
+### default-features
+
+> since 0.2.0
+
+Example: `default-features = false`
+
+Specifies that default features for a package should be enabled when building it (when set to false, this tells us to pass `--no-default-features` to Cargo).
+
+Defaults true.
+
+If you use this you *probably* want to set it on `[package.metadata.dist]` and not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
+
+
+### all-features
+
+> since 0.2.0
+
+Example: `all-features = true`
+
+Specifies that all features for a package should be enabled when building it (when set to true this tells us to pass --all-features to Cargo).
+
+Defaults false.
+
+If you use this you *probably* want to set it on `[package.metadata.dist]` and
+not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
 
 
 ## Subsetting CI Flags
