@@ -1339,7 +1339,30 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let cargo_builds = self.compute_cargo_builds();
         build_steps.extend(cargo_builds);
 
-        for artifact in &self.inner.artifacts {
+        Self::add_build_steps_for_artifacts(
+            &self
+                .inner
+                .artifacts
+                .iter()
+                .filter(|a| !a.is_global)
+                .collect(),
+            &mut build_steps,
+        );
+        Self::add_build_steps_for_artifacts(
+            &self
+                .inner
+                .artifacts
+                .iter()
+                .filter(|a| a.is_global)
+                .collect(),
+            &mut build_steps,
+        );
+
+        self.inner.build_steps = build_steps;
+    }
+
+    fn add_build_steps_for_artifacts(artifacts: &Vec<&Artifact>, build_steps: &mut Vec<BuildStep>) {
+        for artifact in artifacts {
             match &artifact.kind {
                 ArtifactKind::ExecutableZip(_zip) => {
                     // compute_cargo_builds and artifact.archive handle everything
@@ -1395,8 +1418,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }));
             }
         }
-
-        self.inner.build_steps = build_steps;
     }
 
     fn compute_cargo_builds(&mut self) -> Vec<BuildStep> {
