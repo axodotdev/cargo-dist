@@ -197,7 +197,7 @@ fn get_new_dist_metadata(
             fail_fast: None,
             install_path: None,
             features: None,
-            no_default_features: None,
+            default_features: None,
             all_features: None,
         }
     };
@@ -565,7 +565,7 @@ fn update_toml_metadata(
         install_path,
         features,
         all_features,
-        no_default_features,
+        default_features,
     } = &meta;
 
     apply_optional_value(
@@ -689,9 +689,9 @@ fn update_toml_metadata(
 
     apply_optional_value(
         table,
-        "no-default-features",
-        "# Whether to pass --no-default-features to cargo build\n",
-        *no_default_features,
+        "default-features",
+        "# Whether default-features should be enabled with cargo build\n",
+        *default_features,
     );
 
     apply_optional_value(

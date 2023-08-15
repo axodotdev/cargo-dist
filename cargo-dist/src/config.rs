@@ -200,15 +200,21 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "install-path")]
     pub install_path: Option<InstallPathStrategy>,
-    /// TODO
+    /// A list of features to enable when building a package with cargo-dist
+    ///
+    /// (defaults to none)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "features")]
     pub features: Option<Vec<String>>,
-    /// TODO
+    /// Whether to enable when building a package with cargo-dist
+    ///
+    /// (defaults to true)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "no-default-features")]
-    pub no_default_features: Option<bool>,
-    /// TODO
+    #[serde(rename = "default-features")]
+    pub default_features: Option<bool>,
+    /// Whether to enable all features building a package with cargo-dist
+    ///
+    /// (defaults to false)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "all-features")]
     pub all_features: Option<bool>,
@@ -236,7 +242,7 @@ impl DistMetadata {
             merge_tasks: _,
             install_path: _,
             features: _,
-            no_default_features: _,
+            default_features: _,
             all_features: _,
         } = self;
         if let Some(include) = include {
@@ -271,7 +277,7 @@ impl DistMetadata {
             fail_fast,
             install_path,
             features,
-            no_default_features,
+            default_features,
             all_features,
         } = self;
 
@@ -326,8 +332,8 @@ impl DistMetadata {
         if features.is_none() {
             *features = workspace_config.features.clone();
         }
-        if no_default_features.is_none() {
-            *no_default_features = workspace_config.no_default_features;
+        if default_features.is_none() {
+            *default_features = workspace_config.default_features;
         }
         if all_features.is_none() {
             *all_features = workspace_config.all_features;

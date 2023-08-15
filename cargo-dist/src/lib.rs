@@ -338,7 +338,7 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         .arg(&target.target_triple)
         .env("RUSTFLAGS", &target.rustflags)
         .stdout(std::process::Stdio::piped());
-    if target.features.no_default_features {
+    if !target.features.default_features {
         command.arg("--no-default-features");
     }
     match &target.features.features {
