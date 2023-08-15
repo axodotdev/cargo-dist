@@ -42,7 +42,7 @@ Hey neat that's basically everything I listed at the start of this section! And 
 
 If you don't want some of these behaviours, you can disable them permanently with `[workspace.metadata.release]` in your Cargo.toml, or disable temporarily with CLI flags. See the [cargo-release reference][cargo-release-ref] for all the details but here's some important ones to only get a subset of the behaviours:
 
-* Don't want to publish? Set `publish = false` in the config or pass `--no-publish` 
+* Don't want to publish? Set `publish = false` in the config or pass `--no-publish`
 * Don't want to push? Set `push = false` in the config or pass `--no-push`
 * Don't want to tag? Set `tag = false` in the config or pass `--no-tag`
 
@@ -119,7 +119,7 @@ cargo release -p my-package 1.0.0
 
 If you have a [virtual workspace][] (one where the root Cargo.toml isn't an actual package) and want everything in the workspace to be versioned/released independently, then cargo-dist will default to operating on all your packages at once, and you should do the same thing you would do if you were running `cargo publish`: either use `-p` to select the relevant packages or `cd` into the subdir of that package before running the command.
 
-Each tag will induce cargo-dist to produce an independent Announcement (Github Release) for that package. 
+Each tag will induce cargo-dist to produce an independent Announcement (Github Release) for that package.
 
 If the package is a library the Github Release won't have any builds/artifacts uploaded. [See here for details][lib-hack].
 
@@ -145,7 +145,7 @@ cargo release 1.0.0
 
 ----------------
 
-If you have a [virtual workspace][] (one where the root Cargo.toml isn't an actual package) and want everything in the workspace to be versioned/released in lockstep with a single Unified Announcement (One Big Github Release), then you're going to need to configure cargo-release as above. 
+If you have a [virtual workspace][] (one where the root Cargo.toml isn't an actual package) and want everything in the workspace to be versioned/released in lockstep with a single Unified Announcement (One Big Github Release), then you're going to need to configure cargo-release as above.
 
 After that it works perfectly, and cargo-release will even automagically handle publishing your packages to crates.io in the right sequence and waiting for the publishes to propagate before running the next one (no more "oops sorry the package you just published isn't actually propagated to the registry yet so the package that depends on it can't be published").
 
@@ -241,9 +241,9 @@ cargo-dist really isn't designed for this but technically you can use the [Singu
 
 ## Previewing Your Release
 
-cargo-release defaults to dry-run semantics, only doing side-effectful operations if you pass it `--execute`. It will also do its best to detect problems early and error out if things seem wrong. This absolutely rules! 
+cargo-release defaults to dry-run semantics, only doing side-effectful operations if you pass it `--execute`. It will also do its best to detect problems early and error out if things seem wrong. This absolutely rules!
 
-There are two things to keep in mind: 
+There are two things to keep in mind:
 
 * cargo-release's dry-run is imperfect and has some differences from the real run
 * cargo-release isn't aware of cargo-dist, so it can't check if what it's about to do will blow up in CI or not

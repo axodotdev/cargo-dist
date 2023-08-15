@@ -41,7 +41,7 @@ If you specify a path to a README file, cargo-dist will use that for all the pac
 
 cargo-dist defaults to trying to include certain "important" static files in your executable-zips. A LICENSE is one of them.
 
-If you specify a path to a license file, cargo-dist will use that for all packages it affects. Otherwise, cargo-dist will search for LICENSE* or UNLICENSE* files in the package's root directory and the workspace's root directory (preferring the package). If multiple are defined in the same directory, we will grab them all (this is necessary for the extremely common dual MIT/Apache license, which often results in two LICENSE-* files). 
+If you specify a path to a license file, cargo-dist will use that for all packages it affects. Otherwise, cargo-dist will search for LICENSE* or UNLICENSE* files in the package's root directory and the workspace's root directory (preferring the package). If multiple are defined in the same directory, we will grab them all (this is necessary for the extremely common dual MIT/Apache license, which often results in two LICENSE-* files).
 
 Note that the Cargo license-file flag only accepts one path, so it can't handle the dual-license-file case. This cargo feature largely exists as an escape hatch for weird licenses which can't be described by the SPDX format of the "license" field.
 
@@ -55,7 +55,7 @@ Cargo allows other tools to include their own project-wide settings in [metadata
 
 > since 0.0.3
 
-Example: `cargo-dist-version = "0.0.3"` 
+Example: `cargo-dist-version = "0.0.3"`
 
 **This can only be set globally**
 
@@ -69,7 +69,7 @@ If you delete the key, generate-ci will just use the version of cargo-dist that'
 
 > since 0.0.3 (deprecated in 0.1.0)
 
-Example: `rust-toolchain-version = "1.67.1"` 
+Example: `rust-toolchain-version = "1.67.1"`
 
 > Deprecation reason: [rust-toolchain.toml](https://rust-lang.github.io/rustup/overrides.html#the-toolchain-file) is a more standard/universal mechanism for pinning toolchain versions for reproducibility. Teams without dedicated release engineers will likely benefit from unpinning their toolchain and letting the underlying CI vendor silently update them to "some recent stable toolchain", as they will get updates/improvements and are unlikely to have regressions.
 
@@ -284,7 +284,7 @@ The strategy that script installers ([shell][shell-installer], [powershell][powe
 
 > NOTE: `$HOME/some/subdir` is technically valid syntax but it won't behave the way you want on Windows, because `$HOME` isn't a proper environment variable. Let us handle those details for you and just use `~/subdir/`.
 
-All of these error out if none of the required env-vars are set to a non-empty value. 
+All of these error out if none of the required env-vars are set to a non-empty value.
 
 We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. `~/My cargo-dist Documents/bin/` works), but we won't be surprised if things misbehave on Interesting Inputs.
 

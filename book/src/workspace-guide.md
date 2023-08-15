@@ -4,9 +4,9 @@
 
 Now that we've [looked at a simple example][simple-guide] with `cargo new`, let's start looking at ways to make a [Cargo Workspace][workspace] more complicated, and how cargo-dist will deal with them.
 
-But first, let's define some precise terminology: 
+But first, let's define some precise terminology:
 
-Rust projects typically exist as a single *[Workspace][workspace]*, which is a collection of one or more *[Packages][package]* that are all developed in the same repository ([crates.io][crates-io] dependencies are not considered part of the workspace). A workspace always has a root Cargo.toml where certain workspace-global settings are defined. 
+Rust projects typically exist as a single *[Workspace][workspace]*, which is a collection of one or more *[Packages][package]* that are all developed in the same repository ([crates.io][crates-io] dependencies are not considered part of the workspace). A workspace always has a root Cargo.toml where certain workspace-global settings are defined.
 
 If the root Cargo.toml *doesn't* define a Package then we say it's a *[Virtual Workspace][virtual-workspace]*. A Virtual Workspace puts all the packages on the same level, treating them as equals. If you don't use a Virtual Workspace you are essentially saying the entire project exists to produce that one root Package. Both approaches make sense in different contexts. I personally prefer virtual workspaces because it makes cargo (and other tools) default to operating on all packages at once, which is usually what I want (e.g. I want `cargo test` to test the entire workspace, I want `cargo fmt` to format the whole workspace, and so on).
 
