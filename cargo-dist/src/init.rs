@@ -381,6 +381,7 @@ fn get_new_dist_metadata(
             InstallerStyle::Shell,
             InstallerStyle::Powershell,
             InstallerStyle::Npm,
+            InstallerStyle::Homebrew,
         ];
         let mut defaults = vec![];
         let mut keys = vec![];
@@ -403,6 +404,7 @@ fn get_new_dist_metadata(
                 InstallerStyle::Shell => "shell",
                 InstallerStyle::Powershell => "powershell",
                 InstallerStyle::Npm => "npm",
+                InstallerStyle::Homebrew => "homebrew",
             });
         }
 

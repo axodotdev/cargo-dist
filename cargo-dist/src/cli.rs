@@ -129,7 +129,7 @@ pub enum Commands {
     /// that may not exist (since the build wasn't run).
     ///
     /// 'cargo dist plan' is an alias for this command that picks nicer defaults
-    /// by forcing a couple flags to have specific values. You probably want that.  
+    /// by forcing a couple flags to have specific values. You probably want that.
     #[clap(disable_version_flag = true)]
     Manifest(ManifestArgs),
     /// Print --help as markdown (for generating docs)
@@ -168,7 +168,7 @@ pub struct BuildArgs {
     ///
     /// Having this distinction lets us run cargo-dist independently on
     /// multiple machines without collisions between the outputs.
-    ///   
+    ///
     /// If let unspecified, we will pick a fuzzier "host" mode that builds "as much as possible"
     /// for the local system. This mode is appropriate for local testing/debugging/demoing.
     /// If no --target flags are passed on the CLI then "host" mode will try to intelligently
@@ -261,6 +261,8 @@ pub enum InstallerStyle {
     Powershell,
     /// Generates an npm project that fetches the right build to your node_modules
     Npm,
+    /// Generates a Homebrew formula
+    Homebrew,
 }
 
 impl InstallerStyle {
@@ -270,6 +272,7 @@ impl InstallerStyle {
             InstallerStyle::Shell => cargo_dist::config::InstallerStyle::Shell,
             InstallerStyle::Powershell => cargo_dist::config::InstallerStyle::Powershell,
             InstallerStyle::Npm => cargo_dist::config::InstallerStyle::Npm,
+            InstallerStyle::Homebrew => cargo_dist::config::InstallerStyle::Homebrew,
         }
     }
 }

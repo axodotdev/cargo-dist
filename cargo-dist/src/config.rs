@@ -381,6 +381,9 @@ pub enum InstallerStyle {
     /// Generate an npm project that fetches from [`crate::tasks::DistGraph::artifact_download_url`][]
     #[serde(rename = "npm")]
     Npm,
+    /// Generate a Homebrew formula that fetches from [`crate::tasks::DistGraph::artifact_download_url`][]
+    #[serde(rename = "homebrew")]
+    Homebrew,
 }
 
 impl std::fmt::Display for InstallerStyle {
@@ -389,6 +392,7 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Shell => "shell",
             InstallerStyle::Powershell => "powershell",
             InstallerStyle::Npm => "npm",
+            InstallerStyle::Homebrew => "homebrew",
         };
         string.fmt(f)
     }

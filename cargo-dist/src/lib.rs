@@ -17,7 +17,7 @@ use std::{
 
 use axoasset::LocalAsset;
 use backend::{
-    installer::{self, npm::NpmInstallerInfo, InstallerImpl},
+    installer::{self, homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, InstallerImpl},
     templates::{TemplateEntry, TEMPLATE_INSTALLER_NPM},
 };
 use camino::{Utf8Path, Utf8PathBuf};
@@ -228,6 +228,7 @@ fn manifest_artifact(
         ArtifactKind::Installer(
             InstallerImpl::Powershell(info)
             | InstallerImpl::Shell(info)
+            | InstallerImpl::Homebrew(HomebrewInstallerInfo { inner: info, .. })
             | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. }),
         ) => {
             install_hint = Some(info.hint.clone());
@@ -283,16 +284,22 @@ fn run_build_step(dist_graph: &DistGraph, target: &BuildStep) -> Result<()> {
             checksum,
             src_path,
             dest_path,
-        }) => Ok(generate_checksum(checksum, src_path, dest_path)?),
+        }) => Ok(generate_and_write_checksum(checksum, src_path, dest_path)?),
     }
 }
 
 /// Generate a checksum for the src_path to dest_path
-fn generate_checksum(
+fn generate_and_write_checksum(
     checksum: &ChecksumStyle,
     src_path: &Utf8Path,
     dest_path: &Utf8Path,
 ) -> DistResult<()> {
+    let output = generate_checksum(checksum, src_path)?;
+    write_checksum(&output, dest_path)
+}
+
+/// Generate a checksum for the src_path and return it as a string
+fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResult<String> {
     use sha2::Digest;
     use std::fmt::Write;
 
@@ -317,7 +324,12 @@ fn generate_checksum(
     for byte in hash {
         write!(&mut output, "{:02x}", byte).unwrap();
     }
-    axoasset::LocalAsset::write_new(&output, dest_path)?;
+    Ok(output)
+}
+
+/// Write the checksum to dest_path
+fn write_checksum(checksum: &str, dest_path: &Utf8Path) -> DistResult<()> {
+    axoasset::LocalAsset::write_new(checksum, dest_path)?;
     Ok(())
 }
 
@@ -579,6 +591,9 @@ fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
             installer::powershell::write_install_ps_script(&dist.templates, info)?
         }
         InstallerImpl::Npm(info) => installer::npm::write_npm_project(&dist.templates, info)?,
+        InstallerImpl::Homebrew(info) => {
+            installer::homebrew::write_homebrew_formula(&dist.templates, dist, info)?
+        }
     }
     Ok(())
 }

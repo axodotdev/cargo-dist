@@ -312,6 +312,7 @@ dependencies = [
  "clap",
  "clap-cargo",
  "console",
+ "cruet",
  "dialoguer",
  "flate2",
  "guppy",
@@ -552,6 +553,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a22b2d63d4d1dc0b7f1b6b2747dd0088008a9be28b6ddf0b1e7d335e3037294"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "cruet"
+version = "0.13.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "113a9e83d8f614be76de8df1f25bf9d0ea6e85ea573710a3d3f3abe1438ae49c"
+dependencies = [
+ "once_cell",
+ "regex",
 ]
 
 [[package]]
