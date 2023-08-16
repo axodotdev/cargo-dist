@@ -217,7 +217,7 @@ Build only the required packages, and individually.
 
 [See "inferring precise-builds" for the default behaviour.](#inferring-precise-builds)
 
-By default when we need to build anything in your workspace, we try to build your entire workspace with --workspace. This setting tells cargo-dist to instead build each app individually.
+By default when we need to build anything in your workspace, we try to build your entire workspace with `--workspace`. This setting tells cargo-dist to instead build each app individually.
 
 On balance, the Rust experts we've consulted with find building with --workspace to be a safer/better default, as it provides some of the benefits of a more manual [workspace-hack][], without the user needing to be aware that this is a thing.
 
@@ -234,7 +234,7 @@ If that downside is big enough for you, this setting is a good idea.
 
 Although cargo-dist prefers `--workspace` builds ([precise-builds](#precise-builds) = `false`) for the reasons stated above, it *will* attempt to check if that's possible, and use `--package` builds if necessary (`precise-builds = true`).
 
-If you explicitly set `precise-builds = false` and we determine --package builds are required, cargo-dist will produce an error. `precise-builds = true` will never produce an error.
+If you explicitly set `precise-builds = false` and we determine `--package` builds are required, cargo-dist will produce an error. `precise-builds = true` will never produce an error.
 
 Precise-builds are considered required when you use any of [features](#features), [all-features](#all-features), or [default-features](#default-features) *and* not all of the packages in your workspace have the same values set.
 
@@ -330,7 +330,7 @@ Future Improvements:
 
 Example: `features = ["serde-support", "fancy-output"]`
 
-Specifies feature-flags that should be passed to a package when building it. This lets you enable features that should on be on "in production" but for whatever reason shouldn't be on by default.
+Specifies feature-flags that should be passed to a package when building it. This lets you enable features that should be on "in production" but for whatever reason shouldn't be on by default.
 
 For instance for packages that are a library and a CLI binary, some developers prefer to make the library the default and the CLI opt-in. In such a case you would want to add `features = ["cli"]` to your `[package.metadata.dist]`.
 
@@ -357,7 +357,7 @@ If you use this you *probably* want to set it on `[package.metadata.dist]` and n
 
 Example: `all-features = true`
 
-Specifies that all features for a package should be enabled when building it (when set to true this tells us to pass --all-features to Cargo).
+Specifies that all features for a package should be enabled when building it (when set to true this tells us to pass `--all-features` to Cargo).
 
 Defaults false.
 
