@@ -8,7 +8,7 @@ resolver = "2"
 [workspace.metadata.release]
 shared-version = true
 tag-name = "v{{version}}"
-pre-release-commit-message = "chore: Release version {{version}}"
+pre-release-commit-message = "release: {{version}}"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
