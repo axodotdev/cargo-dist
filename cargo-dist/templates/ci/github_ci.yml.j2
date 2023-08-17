@@ -58,7 +58,7 @@ jobs:
           submodules: recursive
       {{%- if rust_version %}}
       - name: Install Rust
-        run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}"#
+        run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - name: Install cargo-dist
         run: {{{ install_dist_sh }}}
@@ -184,4 +184,3 @@ jobs:
       - name: mark release as non-draft
         run: |
           gh release edit ${{ github.ref_name }} --draft=false
-
