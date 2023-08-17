@@ -23,7 +23,8 @@ pub mod rust;
 #[cfg(test)]
 mod tests;
 
-use crate::repo::{GithubRepo, GithubRepoInput};
+pub use crate::repo::GithubRepo;
+use crate::repo::GithubRepoInput;
 
 /// Information about various kinds of workspaces
 pub struct Workspaces {
