@@ -1,11 +1,8 @@
 # Unreleased
 
-Nothing Yet!
-
-# Version 0.2.0-prerelease.1 (2023-08-17)
-
 This release includes preliminary support for creating Homebrew packages on
-macOS.
+macOS. It also allows you to specify `--features` your application should be
+built with for production releases.
 
 ## Features
 
@@ -16,11 +13,42 @@ of installers in `Cargo.toml`. In this release, the formula file won't be
 pushed to a tap automatically, but it will be uploaded to the releases alongside
 the tarballs.
 
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/318)
+* docs: TODO
+
+### Feature Flags
+
+You can now change which Cargo features cargo-dist builds your project with, by setting `features`, `all-features`, and `default-features` on `[package.metadata.dist]` (and `[workspace.metadata.dist]` but this is less likely to be what you want for non-trivial workspaces).
+
+This is useful for projects which choose to have the default features for their project set to something other than the "proper" shipping configuration. For instance if your main package is both a library and an application, and you prefer to keep the library as the default for people depending on it. If all the "app" functionality is hidden behind a feature called "cli", then `features = ["cli"]` in `[package.metadata.dist]` will do what you want.
+
+If you enable any of these features, we may automatically turn on `precise-builds` to satisfy the requirements.
+
+See the docs for all the details.
+
+* @gankra + @Yatekiii [impl](https://github.com/axodotdev/cargo-dist/pull/321)
+* docs
+    * [features](https://opensource.axo.dev/cargo-dist/book/config.html#features)
+    * [all-features](https://opensource.axo.dev/cargo-dist/book/config.html#all-features)
+    * [default-features](https://opensource.axo.dev/cargo-dist/book/config.html#default-features)
+    * [precise-builds](https://opensource.axo.dev/cargo-dist/book/config.html#precise-builds)
+
+
 ## Fixes
 
 ### Installation instructions
 
 * [Updated and corrected Arch Linux installation instructions](https://github.com/axodotdev/cargo-dist/pull/326).
+
+
+## Maintenance
+
+Thanks to everyone who contributed docs, the real MVPs!!!
+
+* @orhun [update instructions for Arch Linux](https://github.com/axodotdev/cargo-dist/pull/326)
+* @tshepang [various fixes](https://github.com/axodotdev/cargo-dist/pull/328) [throughout](https://github.com/axodotdev/cargo-dist/pull/330) [the docs](https://github.com/axodotdev/cargo-dist/pull/331)
+
+
 
 # Version 0.1.0 (2023-08-11)
 
@@ -134,7 +162,7 @@ The `include` config will now work properly if you provide it a path to a direct
 
 ### release.yml license
 
-At the request of end users, we've added a small legal notice at the top of the generated github release.yml file to indicate that the contents of the file are permissibly licensed. This hopefully makes it easier for package distributors and employees at large companies w/legal review to confidentally use cargo-dist!
+At the request of end users, we've added a small legal notice at the top of the generated github release.yml file to indicate that the contents of the file are permissibly licensed. This hopefully makes it easier for package distributors and employees at large companies w/legal review to confidently use cargo-dist!
 
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/310)
 
