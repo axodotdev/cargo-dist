@@ -26,6 +26,8 @@ pub struct HomebrewInstallerInfo {
     pub homepage: Option<String>,
     /// A brief description of the application
     pub desc: Option<String>,
+    /// A GitHub repository to write the formula to, in owner/name format
+    pub tap: Option<String>,
     /// AMD64 artifact
     pub x86_64: Option<ExecutableZipFragment>,
     /// sha256 of AMD64 artifact

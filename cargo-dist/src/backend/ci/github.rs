@@ -20,6 +20,7 @@ struct CiInfo {
     fail_fast: bool,
     local_tasks: Vec<CiTask>,
     global_task: Option<CiTask>,
+    tap: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -92,6 +93,7 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
     } else {
         None
     };
+    let tap = dist.tap.clone();
 
     // Figure out what Local Artifact tasks we need
     let local_runs = if dist.merge_tasks {
@@ -121,6 +123,7 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
         fail_fast,
         local_tasks,
         global_task,
+        tap,
     }
 }
 

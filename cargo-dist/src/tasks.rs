@@ -180,6 +180,8 @@ pub struct DistGraph {
     pub variants: Vec<ReleaseVariant>,
     /// Logical releases that artifacts are grouped under
     pub releases: Vec<Release>,
+    /// A GitHub repo to publish the Homebrew formula to
+    pub tap: Option<String>,
 }
 
 /// Various tools we have found installed on the system
@@ -481,6 +483,8 @@ pub struct Release {
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
     /// Strategy for selecting paths to install to
     pub install_path: InstallPathStrategy,
+    /// GitHub repository to push the Homebrew formula to, if built
+    pub tap: Option<String>,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -604,6 +608,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Only the final value merged into a package_config matters
             installers: _,
             // Only the final value merged into a package_config matters
+            tap: _,
+            // Only the final value merged into a package_config matters
             windows_archive: _,
             // Only the final value merged into a package_config matters
             unix_archive: _,
@@ -689,6 +695,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 binaries: vec![],
                 variants: vec![],
                 releases: vec![],
+                tap: workspace_metadata.tap.clone(),
             },
             package_metadata,
             workspace_metadata,
@@ -723,6 +730,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .install_path
             .clone()
             .unwrap_or(InstallPathStrategy::CargoHome);
+        let tap = package_config.tap.clone();
 
         let windows_archive = package_config.windows_archive.unwrap_or(ZipStyle::Zip);
         let unix_archive = package_config
@@ -775,6 +783,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             checksum,
             npm_scope,
             install_path,
+            tap,
         });
         idx
     }
@@ -1171,7 +1180,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // TODO ensure this is Homebrew-legal
         let artifact_name = format!("{release_id}.rb");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
-        let hint = format!("brew install {artifact_name}");
+
+        // If tap is specified, include that in the `brew install` message
+        let mut install_target = release.app_name.clone();
+        if let Some(tap) = &self.inner.tap {
+            install_target = format!("{tap}/{install_target}").to_owned();
+        }
+
+        let hint = format!("brew install {}", install_target);
         let desc = "Install prebuilt binaries via Homebrew".to_owned();
 
         // If they have an x64 macos build but not an arm64 one, add a fallback entry
@@ -1250,6 +1266,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_desc = release.app_desc.clone();
         let app_license = release.app_license.clone();
         let app_homepage_url = release.app_homepage_url.clone();
+        let tap = release.tap.clone();
 
         let formula_name = to_class_case(&app_name);
 
@@ -1270,6 +1287,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desc: app_desc,
                 license: app_license,
                 homepage: app_homepage_url,
+                tap,
                 inner: InstallerInfo {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),

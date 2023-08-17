@@ -184,6 +184,7 @@ fn get_new_dist_metadata(
             rust_toolchain_version: None,
             ci: None,
             installers: None,
+            tap: None,
             targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),
             dist: None,
             include: None,
@@ -554,6 +555,7 @@ fn update_toml_metadata(
         dist,
         ci,
         installers,
+        tap,
         targets,
         include,
         auto_includes,
@@ -596,6 +598,13 @@ fn update_toml_metadata(
         "installers",
         "# The installers to generate for each app\n",
         installers.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "tap",
+        "# A GitHub repo to push Homebrew formulas to\n",
+        tap.clone(),
     );
 
     apply_string_list(
