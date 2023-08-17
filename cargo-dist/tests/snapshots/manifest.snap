@@ -20,6 +20,7 @@ stdout:
       "artifacts": [
         "cargo-dist-installer.sh",
         "cargo-dist-installer.ps1",
+        "cargo-dist.rb",
         "cargo-dist-aarch64-apple-darwin.tar.xz",
         "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
         "cargo-dist-x86_64-apple-darwin.tar.xz",
@@ -219,6 +220,16 @@ stdout:
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ]
+    },
+    "cargo-dist.rb": {
+      "name": "cargo-dist.rb",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin"
+      ],
+      "install_hint": "brew install cargo-dist.rb",
+      "description": "Install prebuilt binaries via Homebrew"
     }
   }
 }
