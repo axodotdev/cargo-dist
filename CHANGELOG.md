@@ -1,6 +1,53 @@
 # Unreleased
 
-Nothing Yet!
+This release includes preliminary support for creating Homebrew packages on
+macOS. It also allows you to specify `--features` your application should be
+built with for production releases.
+
+## Features
+
+### Homebrew formula support
+
+Generating a Homebrew formula can be enabled by adding `"homebrew"` to the list
+of installers in `Cargo.toml`. In this release, the formula file won't be
+pushed to a tap automatically, but it will be uploaded to the releases alongside
+the tarballs.
+
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/318)
+* docs: TODO
+
+### Feature Flags
+
+You can now change which Cargo features cargo-dist builds your project with, by setting `features`, `all-features`, and `default-features` on `[package.metadata.dist]` (and `[workspace.metadata.dist]` but this is less likely to be what you want for non-trivial workspaces).
+
+This is useful for projects which choose to have the default features for their project set to something other than the "proper" shipping configuration. For instance if your main package is both a library and an application, and you prefer to keep the library as the default for people depending on it. If all the "app" functionality is hidden behind a feature called "cli", then `features = ["cli"]` in `[package.metadata.dist]` will do what you want.
+
+If you enable any of these features, we may automatically turn on `precise-builds` to satisfy the requirements.
+
+See the docs for all the details.
+
+* @gankra + @Yatekiii [impl](https://github.com/axodotdev/cargo-dist/pull/321)
+* docs
+    * [features](https://opensource.axo.dev/cargo-dist/book/config.html#features)
+    * [all-features](https://opensource.axo.dev/cargo-dist/book/config.html#all-features)
+    * [default-features](https://opensource.axo.dev/cargo-dist/book/config.html#default-features)
+    * [precise-builds](https://opensource.axo.dev/cargo-dist/book/config.html#precise-builds)
+
+
+## Fixes
+
+### Installation instructions
+
+* [Updated and corrected Arch Linux installation instructions](https://github.com/axodotdev/cargo-dist/pull/326).
+
+
+## Maintenance
+
+Thanks to everyone who contributed docs, the real MVPs!!!
+
+* @orhun [update instructions for Arch Linux](https://github.com/axodotdev/cargo-dist/pull/326)
+* @tshepang [various fixes](https://github.com/axodotdev/cargo-dist/pull/328) [throughout](https://github.com/axodotdev/cargo-dist/pull/330) [the docs](https://github.com/axodotdev/cargo-dist/pull/331)
+
 
 
 # Version 0.1.0 (2023-08-11)
@@ -36,10 +83,10 @@ See the docs for finer details, caveats, and future plans.
 * docs
     * [install-path](https://opensource.axo.dev/cargo-dist/book/config.html#install-path)
     * [shell installer](https://opensource.axo.dev/cargo-dist/book/installers.html#shell)
-    * [powershell installer](https://opensource.axo.dev/cargo-dist/book/installers.html#powershell) 
+    * [powershell installer](https://opensource.axo.dev/cargo-dist/book/installers.html#powershell)
 * impl
     * @gankra [add install-path](https://github.com/axodotdev/cargo-dist/pull/284)
-    * @gankra [teach scripts to edit PATH](https://github.com/axodotdev/cargo-dist/pull/293) 
+    * @gankra [teach scripts to edit PATH](https://github.com/axodotdev/cargo-dist/pull/293)
 
 
 ### archive checksums
@@ -115,7 +162,7 @@ The `include` config will now work properly if you provide it a path to a direct
 
 ### release.yml license
 
-At the request of end users, we've added a small legal notice at the top of the generated github release.yml file to indicate that the contents of the file are permissibly licensed. This hopefully makes it easier for package distributors and employees at large companies w/legal review to confidentally use cargo-dist!
+At the request of end users, we've added a small legal notice at the top of the generated github release.yml file to indicate that the contents of the file are permissibly licensed. This hopefully makes it easier for package distributors and employees at large companies w/legal review to confidently use cargo-dist!
 
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/310)
 
@@ -205,7 +252,7 @@ This release is a pretty big improvement to cargo-dist's UX!
 # Version 0.0.5 (2023-03-15)
 
 This is a bug-fix release for an issue with cross-platform line endings that affected
-users who installed cargo-dist with `cargo install`. Prebuilt binaries were unaffected. 
+users who installed cargo-dist with `cargo install`. Prebuilt binaries were unaffected.
 Specifically folks reported in [#181] that they were seeing the Shell installer (for Mac and Linux)
 be generated with mixed CRLF and LF line endings, which was causing both functionality
 and development issues (git churn).
@@ -269,7 +316,7 @@ Step 3 will completely blow away your release.yml CI with the new design. The ov
 The new design is described in detail in [the new cargo-dist book](https://axodotdev.github.io/cargo-dist/book/)!
 
 
-## Configuration 
+## Configuration
 
 You can now include persistent configuration for cargo-dist in `[workspace.metadata.dist]` and `[package.metadata.dist]`. [See the book for details](https://axodotdev.github.io/cargo-dist/book/config.html#metadatadist).
 
@@ -279,7 +326,7 @@ Previously cargo-dist had some vague notions of what it was supposed to do when 
 
 Now cargo-dist can produce well-defined subsets of all tne possible artifacts with the `--artifacts` flag:
 
-> --artifacts = "local" | "global" | "all" | "host" 
+> --artifacts = "local" | "global" | "all" | "host"
 >
 > Artifacts can be broken up into two major classes:
 >
@@ -287,7 +334,7 @@ Now cargo-dist can produce well-defined subsets of all tne possible artifacts wi
 > * global: made once (curl-sh installers, npm package, metadata...)
 >
 > ("all" selects both of these at once)
-> 
+>
 > Having this distinction lets us run cargo-dist independently on multiple machines without collisions between the outputs by spinning up machines that run something like:
 >
 > * linux-runner1 (get full manifest): cargo-dist manifest --artifacts=all --output-format=json
@@ -392,7 +439,7 @@ cargo-dist-schema:
     * Currently just used to describe some installers
 * Made Artifact::name Optional to futureproof
     * If None this indicates the artifact is purely informative and no file exists (i.e. "you can install with cargo-binstall")
-    
+
 # Version 0.0.1 (2023-01-23)
 
 This is the first alpha release of cargo-dist with some minimal functionality!
