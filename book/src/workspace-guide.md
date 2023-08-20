@@ -51,7 +51,7 @@ When you push a Git Tag to your repository, cargo-dist's CI will try to create a
 cargo-dist supports two forms of Announcement which you can select with the format of your Git Tag:
 
 * Unified Announcement: `v{VERSION}` selects all packages with the given version (v1.0.0, v0.1.0-prerelease, ...)
-* Singular Announcement: `{PACKAGE-NAME}-v{VERSION}` selects only the given package (my-app-v1.0.0, my-app-v1.0.0-prerelease, ...)
+* Singular Announcement: `{PACKAGE-NAME}-v{VERSION}` or `{PACKAGE-NAME}/v{VERSION}` selects only the given package (my-app-v1.0.0, my-app/v1.0.0, my-app-v1.0.0-prerelease, my-app/v1.0.0-prerelease, ...)
 
 These two modes support the following workflows:
 

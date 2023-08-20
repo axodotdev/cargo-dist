@@ -2,7 +2,7 @@
 
 <!-- toc -->
 
-> NOTE: It will be helpful to read [the section on cargo-dist Announcement Tags][announcements], because that is the interface boundary between cargo-release and cargo-dist. TL;DR: cargo-dist interprets a git tag of "v1.0.0" as "Announce/Release the whole workspace" (Unified Announcement) and "my-app-v1.0.0" as "Announce/Release that one package" (Singular Announcement).
+> NOTE: It will be helpful to read [the section on cargo-dist Announcement Tags][announcements], because that is the interface boundary between cargo-release and cargo-dist. TL;DR: cargo-dist interprets a git tag of "v1.0.0" as "Announce/Release the whole workspace" (Unified Announcement) and "my-app-v1.0.0" or "my-app/v1.0.0" as "Announce/Release that one package" (Singular Announcement).
 
 > NOTE: this guide assumes you're running [cargo-release v0.22.0][release-22] or greater, as that version made several significant changes to default behaviours (for the better!).
 
@@ -75,6 +75,7 @@ As we'll see below, these combined behaviours have the following interactions wi
 
 * ✅ one package workspace: tags it like "v1.0.0"
 * ✅ virtual workspace, independent versions: tags each package like "my-app-v1.0.0"
+* ✅ virtual workspace, independent versions: tags each package like "my-app/v1.0.0" (needs additional configuration in cargo-release, see below)
 * ❌ virtual workspace, unified versions: we want a single tag like "v1.0.0"
 * ❌ non-virtual workspace: it will mix the tag formats, which *might* be ok in one situation
 
@@ -125,6 +126,18 @@ If the package is a library the Github Release won't have any builds/artifacts u
 
 Note that we currently don't support finding/emitting Release Notes for Singular Releases (simply haven't had time to design and implement it yet).
 
+### Using slash in tag prefix with cargo-release
+
+For cargo-release to work with tag prefixes that use a slash, you must configure it to use a different prefix for tags in `Cargo.toml`.
+
+For a virtual workspace, put the following in your root Cargo.toml:
+
+```toml
+[workspace.metadata.release]
+tag-prefix = "{{crate_name}}/"
+```
+
+Please refer to [the cargo-release reference][cargo-release-ref-config] for further information on how you can configure cargo-release.
 
 
 
@@ -345,6 +358,7 @@ cargo release
 [cargo-release]: https://github.com/crate-ci/cargo-release
 [simple-guide]: ./simple-guide.md
 [cargo-release-ref]: https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md
+[cargo-release-ref-config]: https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md#configuration
 [workspace-guide]: ./workspace-guide.md
 [default-members]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-default-members-field
 [virtual workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html#virtual-workspace
