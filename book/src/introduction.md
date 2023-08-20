@@ -23,7 +23,7 @@ Being able to build a zip on your own machine is nice and all, but in practice y
 
 Just run `cargo dist init` and it will **generate its own CI scripts** which:
 
-* Waits for you to push a git tag for a new version (v1.0.0, my-app-v1.0.0, ...)
+* Waits for you to push a git tag for a new version (v1.0.0, my-app-v1.0.0, my-app/v1.0.0, ...)
 * Selects what apps in your workspace to announce new releases for based on that tag
 * Creates a draft Github Release to announce the apps in and host the downloads
 * Adds the relevant release notes from your RELEASES or CHANGELOG file

@@ -8,7 +8,7 @@ An invocation of cargo-dist has 4 major inputs:
 
 * The structure of your project's [Cargo Workspace][workspace] (via [cargo-metadata][])
 * The config in your Cargo.toml `[workspace.metadata.dist]` (and `[package.metadata.dist]`)
-* The "announcement tag" (e.g. `--tag=v1.0.0`) 
+* The "announcement tag" (e.g. `--tag=v1.0.0`)
 * The "artifact mode" (e.g. `--artifacts=all`)
 
 The first two define the full "Universe" of your project -- the platforms/binaries/[installers][] that cargo-dist wants to build. The second two tell cargo-dist what subset of the Universe to actually bother with.
@@ -66,7 +66,7 @@ The parts we're really interested in here are "installers", "targets", and `[pro
 
 First the easy part: `profile.dist` is the profile cargo-dist will build everything with. We define a separate profile from `release` so that it can be tuned more aggressively for builds that are longer or more resource-intensive without making it tedious to develop locally.
 
-The other 3 fields are defining the various Artifacts that should be produced for each App in the workspace (because this is `[workspace.metadata]` and not `[package.metadata]`). 
+The other 3 fields are defining the various Artifacts that should be produced for each App in the workspace (because this is `[workspace.metadata]` and not `[package.metadata]`).
 
 For each entry in `targets` you will get a build of your App for [that platform][rust-platform] in the form of an [executable-zip][].
 
@@ -79,7 +79,7 @@ For each entry in `installers` you get that kind of [installer][installers] for 
 
 # Announcements (Selecting Apps)
 
-cargo-dist's self-generated CI is triggered by pushing git tags with specific formats like "v1.0.0" or "my-app-v1.0.0". Each tag will trigger its own independent run of that CI workflow. That tag defines the subset of the workspace (what packages) we want to produce a single unified Announcement for (i.e. a single Github Release). Every invocation of cargo-dist in that CI run will be passed that git tag with the `--tag` flag to ensure consensus on what to Announce (and therefore build and upload).
+cargo-dist's self-generated CI is triggered by pushing git tags with specific formats like "v1.0.0", "my-app-v1.0.0" or "my-app/v1.0.0". Each tag will trigger its own independent run of that CI workflow. That tag defines the subset of the workspace (what packages) we want to produce a single unified Announcement for (i.e. a single Github Release). Every invocation of cargo-dist in that CI run will be passed that git tag with the `--tag` flag to ensure consensus on what to Announce (and therefore build and upload).
 
 1 Git Tag = 1 cargo-dist Announcement = 1 Github Release
 
@@ -98,7 +98,7 @@ Here we have the same workspace we saw in the ["defining your apps" section][def
 The error goes on to recommend the two formats for the Announcement Tag:
 
 * Unified Announcement: `v{VERSION}` selects all packages with the given version (v1.0.0, v0.1.0-prerelease, etc.)
-* Singular Announcement: `{PACKAGE-NAME}-v{VERSION}` selects only the given package (error if the version doesn't match the Cargo.toml)
+* Singular Announcement: `{PACKAGE-NAME}-v{VERSION}` or `{PACKAGE-NAME}/v{VERSION}` selects only the given package (error if the version doesn't match the Cargo.toml)
 
 These two modes support the following workflows:
 
@@ -218,7 +218,7 @@ Ok so here's what goes through cargo-dist's brains when you run it:
 1. Read in the workspace/config/cli-flags
 2. Determine the Announcement Tag (select the Apps) ("v1.0.0")
 3. Determine what Targets we're building for
-3. Call the specific Version of each App a "Release" ("my-app-v1.0.0")
+3. Call the specific Version of each App a "Release" ("my-app-v1.0.0" or "my-app/v1.0.0")
 4. For each Release-Target pair, create a "ReleaseVariant" ("my-app-v1.0.0-x86_64-apple-darwin")
 5. Add executable-zip Artifacts to each Release (broadcasted to each Variant, filtered by Artifact Mode)
 6. Add all the enabled Installers to each Release (local ones broadcasted to each Variant, filtered by Artifact Mode)

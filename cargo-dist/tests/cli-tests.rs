@@ -123,6 +123,30 @@ fn test_lib_manifest() {
 }
 
 #[test]
+fn test_lib_manifest_slash() {
+    let version = std::env!("CARGO_PKG_VERSION");
+    let output = Command::new(BIN)
+        .arg("dist")
+        .arg("manifest")
+        .arg("--artifacts=all")
+        .arg("--no-local-paths")
+        .arg("--output-format=json")
+        .arg("--tag")
+        .arg(&format!("cargo-dist-schema/v{}", version))
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .unwrap();
+
+    // We don't want this to churn every time we do a version bump
+    snapshot_settings_with_dist_manifest_filter().bind(|| {
+        insta::assert_snapshot!(format_outputs(&output));
+    });
+
+    assert!(output.status.success(), "{}", output.status);
+}
+
+#[test]
 fn test_error_manifest() {
     let output = Command::new(BIN)
         .arg("dist")

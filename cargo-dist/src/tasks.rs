@@ -1928,14 +1928,15 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         for (pkg_id, package) in workspace.packages() {
             let package_version = package.version.as_ref().unwrap().cargo();
             let package_tag = format!("{}-v{}", package.name, package_version);
-            if &package_tag == tag {
+            let package_tag_slash = format!("{}/v{}", package.name, package_version);
+            if &package_tag == tag || &package_tag_slash == tag {
                 info!(
                     "announcement tag matched {}@{}",
                     package.name, package_version
                 );
                 assert!(
                     announcing_package.is_none(),
-                    "how on earth do you have two packages that match {package_tag}!?"
+                    "how on earth do you have two packages that match {package_tag} or {package_tag_slash}!?"
                 );
                 announcing_prerelease = !package_version.pre.is_empty();
                 announcing_package = Some(pkg_id);

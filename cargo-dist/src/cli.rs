@@ -81,8 +81,9 @@ pub struct Cli {
     /// certain URLs. For instance the git tag associated with a Github Release is part of the
     /// URL to fetch artifacts from that release, which needs to be known by some installers!
     ///
-    /// The currently accepted formats are "v{VERSION}" and "{PACKAGE_NAME}-v{VERSION}"
-    /// ("v1.0.0", "v0.1.0-prerelease1", "my-app-v1.0.0", etc).
+    /// The currently accepted formats are "v{VERSION}", "{PACKAGE_NAME}-v{VERSION}",
+    /// and "{PACKAGE_NAME}/v{VERSION}" ("v1.0.0", "v0.1.0-prerelease1", "my-app-v1.0.0",
+    /// "my-app/v1.0.0, etc).
     ///
     /// If you use the prefixed version then we will only Announce/Release that package's apps
     /// (and return an error if that is not in fact the package's current version). This is

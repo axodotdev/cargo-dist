@@ -1,0 +1,24 @@
+---
+source: cargo-dist/tests/cli-tests.rs
+expression: format_outputs(&output)
+---
+stdout:
+{
+  "dist_version": "1.0.0-FAKEVERSION",
+  "announcement_tag": "CENSORED",
+  "announcement_is_prerelease": "CENSORED"
+  "announcement_title": "CENSORED"
+  "announcement_github_body": "CENSORED"
+  "system_info": {
+    "cargo_version_line": "CENSORED"
+  }
+}
+
+stderr:
+analyzing workspace:
+  cargo-dist (didn't match tag cargo-dist-schema/v1.0.0-FAKEVERSION)
+    [bin] cargo-dist
+  cargo-dist-schema (no binaries)
+
+ WARN You're trying to explicitly Release a library, only minimal functionality will work
+
