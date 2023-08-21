@@ -90,7 +90,6 @@ download_binary_and_run_installer() {
                 OPTIND=1
                 if [ "${arg%%--*}" = "" ]; then
                     err "unknown option $arg"
-                    continue
                 fi
                 while getopts :hvq sub_arg "$arg"; do
                     case "$sub_arg" in
@@ -162,7 +161,7 @@ download_binary_and_run_installer() {
     say_verbose "  to $_file" 1>&2
 
     ensure mkdir -p "$_dir"
-    
+
     if ! downloader "$_url" "$_file"; then
       say "failed to download $_url"
       say "this may be a standard network error, but it may also indicate"
@@ -312,7 +311,7 @@ add_install_dir_to_path() {
         local _pretty_line="source \"$_env_script_path_expr\""
 
         # Add the env script if it doesn't already exist
-        if [ ! -f "$_env_script_path" ]; then 
+        if [ ! -f "$_env_script_path" ]; then
             say_verbose "creating $_env_script_path"
             write_env_script "$_install_dir_expr" "$_env_script_path"
         else
@@ -329,10 +328,10 @@ add_install_dir_to_path() {
         # We search for both kinds of line here just to do the right thing in more cases.
         if ! grep -F "$_robust_line" "$_rcfile" > /dev/null 2>/dev/null && \
            ! grep -F "$_pretty_line" "$_rcfile" > /dev/null 2>/dev/null
-        then 
+        then
             # If the script now exists, add the line to source it to the rcfile
             # (This will also create the rcfile if it doesn't exist)
-            if [ -f "$_env_script_path" ]; then 
+            if [ -f "$_env_script_path" ]; then
                 say_verbose "adding $_robust_line to $_rcfile"
                 ensure echo "$_robust_line" >> "$_rcfile"
                 say ""
