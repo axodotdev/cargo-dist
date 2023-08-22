@@ -228,7 +228,7 @@ stdout:
         "aarch64-apple-darwin",
         "x86_64-apple-darwin"
       ],
-      "install_hint": "brew install cargo-dist",
+      "install_hint": "brew install axodotdev/homebrew-tap/cargo-dist",
       "description": "Install prebuilt binaries via Homebrew"
     }
   }
