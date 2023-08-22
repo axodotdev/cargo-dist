@@ -1,3 +1,8 @@
+# Version 0.4.4 (2023-08-22)
+
+* WorkspaceInfo now supports the new features PackageInfo received in 0.4.3.
+* GithubRepo is now correctly exposed as public.
+
 # Version 0.4.3 (2023-08-09)
 
 * Updated dependencies.
