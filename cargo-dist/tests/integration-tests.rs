@@ -35,6 +35,7 @@ fn axolotlsay_basic() -> Result<(), miette::Report> {
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew", "npm"]
+tap = "axodotdev/homebrew-packages"
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 unix-archive = ".tar.gz"
@@ -68,6 +69,7 @@ cargo-dist-version = "{dist_version}"
 rust-toolchain-version = "1.67.1"
 ci = ["github"]
 installers = ["shell", "powershell", "homebrew"]
+tap = "mistydemeo/homebrew-formulae"
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 
 "#

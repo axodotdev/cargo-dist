@@ -2274,6 +2274,36 @@ jobs:
           cat uploads.txt
           gh release upload ${{ github.ref_name }} $(cat uploads.txt)
           echo "uploaded!"
+  upload-homebrew-formula:
+    needs: [create-release, upload-global-artifacts]
+    runs-on: "ubuntu-20.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASES: ${{ needs.create-release.outputs.releases }}
+      GITHUB_USER: "axo bot"
+      GITHUB_EMAIL: "admin+bot@axo.dev"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: "axodotdev/homebrew-packages"
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      # So we have access to the formula
+      - name: Fetch local artifacts
+        run: |
+          gh release download ${{ github.ref_name }} --dir Formula --repo ${GITHUB_REPOSITORY} --clobber
+      - name: Commit formula files
+        run: |
+          git config --global user.name "${GITHUB_USER}"
+          git config --global user.email "${GITHUB_EMAIL}"
+
+          for release in $(echo "$RELEASES" | jq --compact-output '.[]'); do
+            name=$(echo "$release" | jq .app_name --raw-output)
+            version=$(echo "$release" | jq .app_version --raw-output)
+
+            git add Formula/${name}.rb
+            git commit -m "${name} ${version}"
+          done
+          git push
 
   # Mark the Github Release™ as a non-draft now that everything has succeeded!
   publish-release:
