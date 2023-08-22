@@ -682,7 +682,7 @@ pub(crate) fn parse_metadata_table(
 pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
-    match axoproject::rust::get_workspace(None, &start_dir) {
+    match axoproject::rust::get_workspace(&start_dir, None) {
         WorkspaceSearch::Found(mut workspace) => {
             // This is a goofy as heck workaround for two facts:
             //   * the convenient Report approach requires us to provide an Error by-val
@@ -700,9 +700,10 @@ pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
             Ok(workspace)
         }
         WorkspaceSearch::Missing(e) => Err(Report::new(e).wrap_err("no cargo workspace found")),
-        WorkspaceSearch::Broken(e) => {
-            Err(Report::new(e).wrap_err("your cargo workspace has an issue"))
-        }
+        WorkspaceSearch::Broken {
+            manifest_path: _,
+            cause,
+        } => Err(Report::new(cause).wrap_err("your cargo workspace has an issue")),
     }
 }
 
