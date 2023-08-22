@@ -707,6 +707,7 @@ class AkaikatanaRepack < Formula
   else
     url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz"
   end
+  version "0.2.0"
   license "GPL-2.0-or-later"
 
   def install

@@ -24,6 +24,7 @@ class {{ formula_class }} < Formula
     sha256 "{{ x86_64_sha256 }}"
     {%- endif %}
   end
+  version "{{ inner.app_version }}"
   {%- endif %}
   {#- #}
   {%- if license %}
