@@ -228,7 +228,7 @@ stdout:
         "aarch64-apple-darwin",
         "x86_64-apple-darwin"
       ],
-      "install_hint": "brew install cargo-dist.rb",
+      "install_hint": "brew install cargo-dist",
       "description": "Install prebuilt binaries via Homebrew"
     }
   }

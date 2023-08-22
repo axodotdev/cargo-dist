@@ -72,6 +72,9 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<InstallerStyle>>,
 
+    /// A Homebrew tap to push the Homebrew formula to, if built
+    pub tap: Option<String>,
+
     /// The full set of target triples to build for.
     ///
     /// When generating full task graphs (such as CI scripts) we will to try to generate these.
@@ -230,6 +233,7 @@ impl DistMetadata {
             dist: _,
             ci: _,
             installers: _,
+            tap: _,
             targets: _,
             include,
             auto_includes: _,
@@ -265,6 +269,7 @@ impl DistMetadata {
             dist,
             ci,
             installers,
+            tap,
             targets,
             include,
             auto_includes,
@@ -337,6 +342,9 @@ impl DistMetadata {
         }
         if all_features.is_none() {
             *all_features = workspace_config.all_features;
+        }
+        if tap.is_none() {
+            *tap = workspace_config.tap.clone();
         }
 
         // This was historically implemented as extend, but I'm not convinced the

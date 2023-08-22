@@ -184,6 +184,7 @@ fn get_new_dist_metadata(
             rust_toolchain_version: None,
             ci: None,
             installers: None,
+            tap: None,
             targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),
             dist: None,
             include: None,
@@ -439,6 +440,53 @@ fn get_new_dist_metadata(
         eprintln!();
     }
 
+    // Special handling of the Homebrew installer
+    if meta
+        .installers
+        .as_deref()
+        .unwrap_or_default()
+        .contains(&InstallerStyle::Homebrew)
+    {
+        let homebrew_is_new = !orig_meta
+            .installers
+            .as_deref()
+            .unwrap_or_default()
+            .contains(&InstallerStyle::Homebrew);
+
+        if homebrew_is_new {
+            let prompt = r#"you've enabled Homebrew support; if you want cargo-dist
+    to automatically push package updates to a tap (repository) for you,
+    please enter the tap name (in GitHub owner/name format)"#;
+            let default = "".to_string();
+
+            let tap: String = if args.yes {
+                default
+            } else {
+                let res = Input::with_theme(&theme)
+                    .with_prompt(prompt)
+                    .allow_empty(true)
+                    .interact_text()?;
+                eprintln!();
+                res
+            };
+            let tap = tap.trim();
+            if tap.is_empty() {
+                eprintln!("{check} Homebrew package will be published to {tap}");
+                meta.tap = None;
+            } else {
+                meta.tap = Some(tap.to_owned());
+                eprintln!("{check} homebrew packages will not be automatically published");
+
+                eprintln!(
+                    r#"{check} You must provision a GitHub token and expose it as a secret named
+    HOMEBREW_TAP_TOKEN in GitHub Actions. For more information,
+    see the documentation:
+    https://opensource.axo.dev/cargo-dist/book/installers.html#homebrew"#
+                );
+            }
+        }
+    }
+
     // Special handling of the npm installer
     if meta
         .installers
@@ -554,6 +602,7 @@ fn update_toml_metadata(
         dist,
         ci,
         installers,
+        tap,
         targets,
         include,
         auto_includes,
@@ -596,6 +645,13 @@ fn update_toml_metadata(
         "installers",
         "# The installers to generate for each app\n",
         installers.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "tap",
+        "# A GitHub repo to push Homebrew formulas to\n",
+        tap.clone(),
     );
 
     apply_string_list(
