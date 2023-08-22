@@ -9,12 +9,14 @@ built with for production releases.
 ### Homebrew formula support
 
 Generating a Homebrew formula can be enabled by adding `"homebrew"` to the list
-of installers in `Cargo.toml`. In this release, the formula file won't be
-pushed to a tap automatically, but it will be uploaded to the releases alongside
-the tarballs.
+of installers in `Cargo.toml`. The formula file can be automatically uploaded
+to a tap to simplify `brew install`.
 
-* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/318)
-* docs: TODO
+* impl
+    * @mistydemeo [Homebrew formula file](https://github.com/axodotdev/cargo-dist/pull/318)
+    * @mistydemeo [Pushing to Homebrew tap](https://github.com/axodotdev/cargo-dist/pull/340)
+* docs
+    * [homebrew](https://opensource.axo.dev/cargo-dist/book/installers.html#homebrew)
 
 ### Feature Flags
 
