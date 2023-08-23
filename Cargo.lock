@@ -140,16 +140,16 @@ dependencies = [
 
 [[package]]
 name = "axoproject"
-version = "0.4.4"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad981761504d1d8516420ba773304602b0b7afe75034d583a03e2950ba55967e"
+checksum = "2a27738e3ae3be5c7f5dd49ac14e686a79d7b9bceac1d774dd666b527ec884aa"
 dependencies = [
  "axoasset",
  "camino",
  "clap",
  "console",
  "guppy",
- "itertools",
+ "itertools 0.10.5",
  "miette",
  "parse-changelog 0.6.2",
  "pathdiff",
@@ -298,6 +298,7 @@ dependencies = [
  "guppy",
  "include_dir",
  "insta",
+ "itertools 0.11.0",
  "miette",
  "minijinja",
  "newline-converter",
@@ -852,7 +853,7 @@ dependencies = [
  "fixedbitset",
  "guppy-workspace-hack",
  "indexmap 1.9.3",
- "itertools",
+ "itertools 0.10.5",
  "nested",
  "once_cell",
  "pathdiff",
@@ -1124,6 +1125,15 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
 dependencies = [
  "either",
 ]

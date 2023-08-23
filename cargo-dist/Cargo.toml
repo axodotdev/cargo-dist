@@ -43,12 +43,13 @@ semver = "1.0.14"
 toml_edit = "0.19.0"
 parse-changelog = { version = "0.5.3", default-features = false }
 newline-converter = "0.2.2"
-axoproject = { version = "0.4.4", default-features = false, features = ["cargo-projects"] }
+axoproject = { version = "0.4.6", default-features = false, features = ["cargo-projects"] }
 dialoguer = "0.10.4"
 axoasset = { version = "0.5.0", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
 sha2 = "0.10.6"
 minijinja = { version = "1.0.5", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.3"
+itertools = "0.11.0"
 
 [dev-dependencies]
 insta = { version = "1.26.0", features = ["filters"] }

@@ -416,7 +416,7 @@ impl DistResult {
             let prefix_output =
                 homebrew.output_checked(|cmd| cmd.arg("--prefix").arg(&relative_formula_path))?;
             let prefix_raw = String::from_utf8(prefix_output.stdout).unwrap();
-            let prefix = prefix_raw.strip_suffix("\n").unwrap();
+            let prefix = prefix_raw.strip_suffix('\n').unwrap();
             let bin = Utf8PathBuf::from(&prefix).join("bin");
 
             for bin_name in ctx.repo.bins {
