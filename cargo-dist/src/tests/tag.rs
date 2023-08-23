@@ -10,7 +10,6 @@ use semver::Version;
 use crate::{config::ArtifactMode, parse_tag, DistGraphBuilder};
 
 #[test]
-#[should_panic = "NoTagMatch"]
 fn parse_one() {
     // "1.0.0" in a one package workspace
     let workspace = workspace_just_axo();
@@ -21,7 +20,7 @@ fn parse_one() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
@@ -38,7 +37,7 @@ fn parse_one_v() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
@@ -55,14 +54,13 @@ fn parse_one_package_v() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
 }
 
 #[test]
-#[should_panic = "NoTagMatch"]
 fn parse_one_package() {
     // "axolotlsay-1.0.0" in a one package workspace
     let workspace = workspace_just_axo();
@@ -73,7 +71,7 @@ fn parse_one_package() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
@@ -90,7 +88,7 @@ fn parse_one_v_alpha() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, true);
+    assert!(announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
@@ -107,14 +105,13 @@ fn parse_one_package_v_alpha() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, true);
+    assert!(announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
 }
 
 #[test]
-#[should_panic = "NoTagMatch"]
 fn parse_one_prefix_slashv() {
     // "release/v1.0.0" in a one package workspace
     let workspace = workspace_just_axo();
@@ -125,14 +122,13 @@ fn parse_one_prefix_slashv() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
 }
 
 #[test]
-#[should_panic = "NoTagMatch"]
 fn parse_one_prefix_slash() {
     // "release/1.0.0" in a one package workspace
     let workspace = workspace_just_axo();
@@ -143,14 +139,13 @@ fn parse_one_prefix_slash() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
 }
 
 #[test]
-#[should_panic = "NoTagMatch"]
 fn parse_one_prefix_slash_package_v() {
     // "release/axolotlsay-v1.0.0" in a one package workspace
     let workspace = workspace_just_axo();
@@ -161,14 +156,13 @@ fn parse_one_prefix_slash_package_v() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
-    assert_eq!(announcing.version, Some(version));
+    assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
 }
 
 #[test]
-#[should_panic = "NoTagMatch"]
 fn parse_one_prefix_slash_package_slashv() {
     // "releases/axolotlsay/v1.0.0" in a one package workspace
     let workspace = workspace_just_axo();
@@ -179,7 +173,7 @@ fn parse_one_prefix_slash_package_slashv() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
@@ -196,14 +190,13 @@ fn parse_one_package_slashv() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
 }
 
 #[test]
-#[should_panic = "NoTagMatch"]
 fn parse_one_prefix_slash_package_slash() {
     // "releases/axolotlsay/v1.0.0" in a one package workspace
     let workspace = workspace_just_axo();
@@ -214,14 +207,30 @@ fn parse_one_prefix_slash_package_slash() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
 }
 
 #[test]
-#[should_panic = "NoTagMatch"]
+fn parse_one_prefix_many_slash_package_slash() {
+    // "releases/axolotlsay/v1.0.0" in a one package workspace
+    let workspace = workspace_just_axo();
+    let version: Version = BIN_AXO_VER.parse().unwrap();
+    let tag = format!("blah/blah/releases/{BIN_AXO_NAME}/{version}");
+
+    let tools = mock_tools();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
+    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+
+    assert!(!announcing.prerelease);
+    assert_eq!(announcing.tag, tag);
+    assert_eq!(announcing.version, None);
+    assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
+}
+
+#[test]
 fn parse_one_package_slash() {
     // "releases/axolotlsay/v1.0.0" in a one package workspace
     let workspace = workspace_just_axo();
@@ -232,7 +241,7 @@ fn parse_one_package_slash() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
@@ -249,7 +258,7 @@ fn parse_one_infer() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, None, true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(announcing.rust_releases, vec![entry_axo_bin()]);
@@ -266,7 +275,7 @@ fn parse_unified_v() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(
@@ -286,7 +295,7 @@ fn parse_unified_infer() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, None, true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(
@@ -306,7 +315,7 @@ fn parse_unified_lib() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![]);
@@ -323,7 +332,7 @@ fn parse_disjoint_v() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(
@@ -344,7 +353,7 @@ fn parse_disjoint_infer() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, None, true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(
@@ -364,7 +373,7 @@ fn parse_disjoint_v_oddball() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, Some(version));
     assert_eq!(announcing.rust_releases, vec![entry_oddball_bin()]);
@@ -381,7 +390,7 @@ fn parse_disjoint_lib() {
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All).unwrap();
     let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
 
-    assert_eq!(announcing.prerelease, false);
+    assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
     assert_eq!(announcing.rust_releases, vec![]);

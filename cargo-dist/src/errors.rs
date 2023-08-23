@@ -138,6 +138,27 @@ pub enum DistError {
         #[help]
         help: String,
     },
+    /// parse_tag concluded that versions didn't line up
+    #[error("The provided announcement tag ({tag}) claims we're releasing {package_name} {tag_version}, but that package is version {real_version}")]
+    ContradictoryTagVersion {
+        /// The full tag
+        tag: String,
+        /// The package name
+        package_name: String,
+        /// The version the tag claimed
+        tag_version: semver::Version,
+        /// The version the package actually has
+        real_version: axoproject::Version,
+    },
+    /// parse_tag couldn't parse the version component at all
+    #[error("Couldn't parse the version from the provided announcement tag ({tag})")]
+    TagVersionParse {
+        /// the full tag
+        tag: String,
+        /// parse error
+        #[source]
+        details: semver::Error,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

@@ -1,5 +1,5 @@
 #![deny(missing_docs)]
-#![allow(clippy::single_match)]
+#![allow(clippy::single_match, clippy::result_large_err)]
 
 //! # cargo-dist
 //!
