@@ -8,7 +8,7 @@ An invocation of cargo-dist has 4 major inputs:
 
 * The structure of your project's [Cargo Workspace][workspace] (via [cargo-metadata][])
 * The config in your Cargo.toml `[workspace.metadata.dist]` (and `[package.metadata.dist]`)
-* The "announcement tag" (e.g. `--tag=v1.0.0`) 
+* The "announcement tag" (e.g. `--tag=v1.0.0`)
 * The "artifact mode" (e.g. `--artifacts=all`)
 
 The first two define the full "Universe" of your project -- the platforms/binaries/[installers][] that cargo-dist wants to build. The second two tell cargo-dist what subset of the Universe to actually bother with.
@@ -47,8 +47,6 @@ Ok so you've defined your App, but what should we actually build for it? Let's l
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.3"
-# The preferred Rust toolchain to use in CI (rustup toolchain syntax)
-rust-toolchain-version = "1.67.1"
 # CI backends to support (see 'cargo dist generate-ci')
 ci = ["github"]
 # The installers to generate for each app
@@ -66,7 +64,7 @@ The parts we're really interested in here are "installers", "targets", and `[pro
 
 First the easy part: `profile.dist` is the profile cargo-dist will build everything with. We define a separate profile from `release` so that it can be tuned more aggressively for builds that are longer or more resource-intensive without making it tedious to develop locally.
 
-The other 3 fields are defining the various Artifacts that should be produced for each App in the workspace (because this is `[workspace.metadata]` and not `[package.metadata]`). 
+The other 3 fields are defining the various Artifacts that should be produced for each App in the workspace (because this is `[workspace.metadata]` and not `[package.metadata]`).
 
 For each entry in `targets` you will get a build of your App for [that platform][rust-platform] in the form of an [executable-zip][].
 
