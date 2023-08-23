@@ -195,7 +195,11 @@ impl Templates {
         val: &impl Serialize,
     ) -> DistResult<String> {
         let template = self.envs[file.env].get_template(file.path.as_str())?;
-        let rendered = template.render(val)?;
+        let mut rendered = template.render(val)?;
+        // minijinja strips trailing newlines from templates
+        if !rendered.ends_with('\n') {
+            rendered.push('\n');
+        }
         let cleaned = dos2unix(&rendered).into_owned();
         Ok(cleaned)
     }

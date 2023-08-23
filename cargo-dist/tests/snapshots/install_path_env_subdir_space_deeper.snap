@@ -706,6 +706,7 @@ class Axolotlsay < Formula
     pkgshare.install *leftover_contents unless leftover_contents.empty?
   end
 end
+
 ================ installer.ps1 ================
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
