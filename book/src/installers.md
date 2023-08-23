@@ -16,6 +16,7 @@ Currently supported installers include:
 * "shell": a shell script that fetches and installs executables
 * "powershell": a powershell script that fetches and installs executables
 * "npm": an npm project that fetches and runs executables (e.g. via npx)
+* "homebrew": a Homebrew formula that fetches and installs executables
 
 These keys can be specified via [`installer` in your cargo-dist config][installer-config]. The [`cargo dist init` command][init] provides an interactive UI for enabling/disabling them.
 
@@ -40,7 +41,7 @@ Limitations/Caveats:
 
 * Requires a well-defined [artifact download URL][artifact-download-url]
 * Currently only really designed for "linux" and "macOS", and won't detect other platforms properly (and certainly won't play nice with things like nixOS).
-* [Cannot detect situations where musl-based builds are appropriate][musl] (static or dynamic) 
+* [Cannot detect situations where musl-based builds are appropriate][musl] (static or dynamic)
 * [Relies on the user's installation of `tar` and `unzip` to unpack the files][unpacking]
 * Relies on the the user's installation of `curl` or `wget` to fetch the files
 * [Will throw out all files except for the binary, so the binary can't rely on assets included in the archive][issue-unpack-all]
@@ -91,7 +92,7 @@ Limitations/Caveats:
 
 * Requires a well-defined [artifact download URL][artifact-download-url]
 * Currently only really designed for "native windows", and won't detect other platforms properly
-* [Cannot detect situations where musl-based builds are appropriate][musl] (static or dynamic) 
+* [Cannot detect situations where musl-based builds are appropriate][musl] (static or dynamic)
 * [Relies on the user's installation of `tar` and `Expand-Archive` to unpack the files][unpacking]
 * Relies on the the user's installation of `Net.Webclient` to fetch the files
 * [Won't work if run in cmd instead of powershell][issue-irm-iex]
@@ -169,12 +170,33 @@ The package will also include an npm-shrinkwrap.json file for the npm packages t
 Limitations/Caveats:
 
 * Requires a well-defined [artifact download URL][artifact-download-url]
-* [Cannot detect situations where musl-based builds are appropriate][musl] (static or dynamic) 
+* [Cannot detect situations where musl-based builds are appropriate][musl] (static or dynamic)
 * [Relies on nodejs's builtin gzip support to unpack the files, which only works with .tar.gz][unpacking]
 * Cannot run any kind of custom install logic
 
 As a result of the `.tar.gz` limitation, `cargo dist init` will prompt you to change [windows-archive][] and [unix-archive][] to ".tar.gz" if you enable the npm installer, erroring if you decline.
 
+
+
+### Homebrew
+
+> since 0.2.0
+
+This provides a [Homebrew](https://brew.sh) formula which allows users to `brew install` your package. Since it installs to a location on the user's `PATH`, it provides a simple and convenient installation method for users who already have Homebrew available. When published to a [tap](https://docs.brew.sh/Taps) (package repository), this gives your users an easy way to both install your package and to keep it up to date using `brew update` and `brew upgrade`. It fetches the same prebuilt macOS binaries as the shell installer.
+
+cargo-dist can, optionally, publish your formula to a tap repository for you on every release. To enable this, add a `tap` field to your `Cargo.toml` pointing to a GitHub repository that you control. The repository name must start with `homebrew-`. For example:
+
+```toml
+tap = "axodotdev/homebrew-formulae"
+```
+
+In order to write to a tap GitHub repository, cargo-dist needs a [personal access token](https://github.com/settings/tokens/new?scopes=repo) with the `repo` scope exposed as `HOMEBREW_TAP_TOKEN`. For more information on GitHub Actions secrets, [consult this documentation](https://docs.github.com/en/actions/security-guides/encrypted-secrets).
+
+Limitations/Caveats:
+
+* Does not support creating a formula which builds from source
+* Does not support Linuxbrew (Homebrew on Linux)
+* Does not support [Cask][cask-issue] for more convenient GUI app installation
 
 
 
@@ -285,3 +307,4 @@ Although that's still missing things like [Windows crt-static workarounds][crt-s
 [cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
 [install-locked]: https://doc.rust-lang.org/cargo/commands/cargo-install.html#dealing-with-the-lockfile
 [crt-static]: https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md
+[cask-issue]: https://github.com/axodotdev/cargo-dist/issues/309

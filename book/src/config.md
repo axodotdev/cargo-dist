@@ -125,6 +125,16 @@ This is a list of installers you want to be made for your application(s). In pri
 See "repository" for some discussion on the "Artifact Download URL".
 
 
+### tap
+
+> since 0.2.0
+
+Example: `tap = "axodotdev/homebrew-formulae"`
+
+This is the name of a GitHub repository which cargo-dist should publish the Homebrew installer to. It must already exist, and the token which creates releases must have write access.
+
+See the [installers documentation][homebrew-installer] for more information on Homebrew support.
+
 ### include
 
 > since 0.0.3
@@ -241,14 +251,14 @@ Precise-builds are considered required when you use any of [features](#features)
 So for instance if you have several packages in your workspace and only one sets:
 
 ```toml
-[package.metadata.dist] 
+[package.metadata.dist]
 all-features = true
 ```
 
 Then we will require precise-builds, and will pass `--all-features` to only the `cargo build` for that package. This setting, on the other hand:
 
 ```toml
-[workspace.metadata.dist] 
+[workspace.metadata.dist]
 all-features = true
 ```
 
@@ -394,6 +404,7 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [installers]: ./installers.md
 [shell-installer]: ./installers.md#shell
 [powershell-installer]: ./installers.md#powershell
+[homebrew-installer]: ./installers.md#homebrew
 [artifact-url]: ./installers.md#artifact-download-url
 [scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
 [npm installers]: ./installers.md#npm
