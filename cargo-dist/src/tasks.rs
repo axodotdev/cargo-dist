@@ -2209,34 +2209,73 @@ pub(crate) fn parse_tag(
     let mut announcing_prerelease = false;
     let mut announcement_tag = tag.map(|t| t.to_owned());
     if let Some(tag) = &announcement_tag {
-        // TODO: make this logic be a proper "parser" for tag formats so it's easier to improve
-        // First check if it matches any package
-        for (pkg_id, package) in graph.workspace().packages() {
-            let package_version = package.version.as_ref().unwrap().cargo();
-            let package_tag = format!("{}-v{}", package.name, package_version);
-            let package_tag_slash = format!("{}/v{}", package.name, package_version);
-            if &package_tag == tag || &package_tag_slash == tag {
-                info!(
-                    "announcement tag matched {}@{}",
-                    package.name, package_version
-                );
-                assert!(
-                    announcing_package.is_none(),
-                    "how on earth do you have two packages that match {package_tag} or {package_tag_slash}!?"
-                );
-                announcing_prerelease = !package_version.pre.is_empty();
-                announcing_package = Some(pkg_id);
+        let mut tag_suffix;
+        // Check if we're using `/`'s to delimit things
+        if let Some((prefix, suffix)) = tag.rsplit_once('/') {
+            // We're at least in "blah/v1.0.0" format
+            let maybe_package = if let Some((_prefix, package)) = prefix.rsplit_once('/') {
+                package
+            } else {
+                // There's only one `/`, assume the whole prefix could be a package name
+                prefix
+            };
+            // Check if this is "blah/blah/some-package/v1.0.0" format by checking if the last slash-delimited
+            // component is exactly a package name (strip_prefix produces empty string)
+            if let Some((package, "")) = strip_prefix_package(maybe_package, graph) {
+                announcing_package = Some(package);
+            }
+            tag_suffix = suffix;
+        } else {
+            tag_suffix = tag;
+        };
+
+        // If we don't have an announcing_package yet, check if this is "some-package-v1.0.0" format
+        if announcing_package.is_none() {
+            if let Some((package, suffix)) = strip_prefix_package(tag_suffix, graph) {
+                // Must be followed by a dash to be accepted
+                if let Some(suffix) = suffix.strip_prefix('-') {
+                    tag_suffix = suffix;
+                    announcing_package = Some(package);
+                }
             }
         }
 
-        // If it doesn't match any package then try to parse it as v{VERSION}
-        if announcing_package.is_none() {
-            if let Some(version) = tag
-                .strip_prefix('v')
-                .and_then(|v| v.parse::<Version>().ok())
-            {
+        // At this point, assuming the input is valid, tag_suffix should just be the version
+        // component with an optional "v" prefix, so strip that "v"
+        if let Some(suffix) = tag_suffix.strip_prefix('v') {
+            tag_suffix = suffix;
+        }
+
+        // Now parse the version out
+        match tag_suffix.parse::<Version>() {
+            Ok(version) => {
+                // Register whether we're announcing a prerelease
                 announcing_prerelease = !version.pre.is_empty();
-                announcing_version = Some(version);
+
+                // If there's an announcing package, validate that the version matches
+                if let Some(pkg_idx) = announcing_package {
+                    let package = graph.workspace().package(pkg_idx);
+                    if let Some(real_version) = &package.version {
+                        if real_version.cargo() != &version {
+                            return Err(DistError::ContradictoryTagVersion {
+                                tag: tag.clone(),
+                                package_name: package.name.clone(),
+                                tag_version: version,
+                                real_version: real_version.clone(),
+                            });
+                        }
+                    }
+                } else {
+                    // We had no announcing_package, so looks like we're doing a unified release.
+                    // Set this value to indicate that.
+                    announcing_version = Some(version);
+                }
+            }
+            Err(e) => {
+                return Err(DistError::TagVersionParse {
+                    tag: tag.clone(),
+                    details: e,
+                })
             }
         }
 
@@ -2361,4 +2400,28 @@ pub(crate) fn parse_tag(
         version: announcing_version,
         rust_releases,
     })
+}
+
+/// Try to strip-prefix a package name from the given input, preferring whichever one is longest
+/// (to disambiguate situations where you have `my-app` and `my-app-helper`).
+///
+/// If a match is found, then the return value is:
+/// * the idx of the package
+/// * the rest of the input
+fn strip_prefix_package<'a>(
+    input: &'a str,
+    graph: &DistGraphBuilder,
+) -> Option<(PackageIdx, &'a str)> {
+    let mut result: Option<(PackageIdx, &'a str)> = None;
+    for (pkg_id, package) in graph.workspace().packages() {
+        if let Some(rest) = input.strip_prefix(&package.name) {
+            if let Some((_, best)) = result {
+                if best.len() <= rest.len() {
+                    continue;
+                }
+            }
+            result = Some((pkg_id, rest))
+        }
+    }
+    result
 }
