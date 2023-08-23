@@ -2276,6 +2276,7 @@ jobs:
           cat uploads.txt
           gh release upload ${{ github.ref_name }} $(cat uploads.txt)
           echo "uploaded!"
+
   upload-homebrew-formula:
     needs: [create-release, upload-global-artifacts]
     runs-on: "ubuntu-20.04"
