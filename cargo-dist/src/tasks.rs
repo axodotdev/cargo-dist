@@ -565,7 +565,7 @@ pub(crate) struct DistGraphBuilder<'pkg_graph> {
 }
 
 impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
-    fn new(
+    pub(crate) fn new(
         tools: Tools,
         workspace: &'pkg_graph WorkspaceInfo,
         artifact_mode: ArtifactMode,
@@ -1918,50 +1918,6 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     let workspace = crate::config::get_project()?;
     let mut graph = DistGraphBuilder::new(tools, &workspace, cfg.artifact_mode)?;
 
-    // First thing's first: if they gave us an announcement tag then we should try to parse it
-    let mut announcing_package = None;
-    let mut announcing_version = None;
-    let mut announcing_prerelease = false;
-    let mut announcement_tag = cfg.announcement_tag.clone();
-    if let Some(tag) = &announcement_tag {
-        // First check if it matches any package
-        for (pkg_id, package) in workspace.packages() {
-            let package_version = package.version.as_ref().unwrap().cargo();
-            let package_tag = format!("{}-v{}", package.name, package_version);
-            let package_tag_slash = format!("{}/v{}", package.name, package_version);
-            if &package_tag == tag || &package_tag_slash == tag {
-                info!(
-                    "announcement tag matched {}@{}",
-                    package.name, package_version
-                );
-                assert!(
-                    announcing_package.is_none(),
-                    "how on earth do you have two packages that match {package_tag} or {package_tag_slash}!?"
-                );
-                announcing_prerelease = !package_version.pre.is_empty();
-                announcing_package = Some(pkg_id);
-            }
-        }
-
-        // If it doesn't match any package then try to parse it as v{VERSION}
-        if announcing_package.is_none() {
-            if let Some(version) = tag
-                .strip_prefix('v')
-                .and_then(|v| v.parse::<Version>().ok())
-            {
-                announcing_prerelease = !version.pre.is_empty();
-                announcing_version = Some(version);
-            }
-        }
-
-        // If none of the approaches work, refuse to proceed
-        if announcing_package.is_none() && announcing_version.is_none() {
-            return Err(miette!(
-                "The provided announcement tag ({tag}) didn't match any Package or Version"
-            ));
-        }
-    }
-
     // Prefer the CLI (cfg) if it's non-empty, but only select a subset
     // of what the workspace supports if it's non-empty
     let workspace_ci = graph.workspace_metadata.ci.clone().unwrap_or_default();
@@ -2013,131 +1969,21 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     };
     info!("selected triples: {:?}", triples);
 
-    // Choose which binaries we want to release
-    let disabled_sty = console::Style::new().dim();
-    let enabled_sty = console::Style::new();
-    let mut rust_releases = vec![];
-    for (pkg_id, pkg) in workspace.packages() {
-        let pkg_name = &pkg.name;
+    let announcing = parse_tag(
+        &graph,
+        cfg.announcement_tag.as_deref(),
+        cfg.needs_coherent_announcement_tag,
+    )?;
 
-        // Determine if this package's binaries should be Released
-        let disabled_reason = check_dist_package(
-            &graph,
-            pkg_id,
-            pkg,
-            announcement_tag.as_deref(),
-            announcing_package,
-            announcing_version.as_ref(),
-        );
-
-        // Report our conclusion/discoveries
-        let sty;
-        if let Some(reason) = &disabled_reason {
-            sty = &disabled_sty;
-            eprintln!("  {}", sty.apply_to(format!("{pkg_name} ({reason})")));
-        } else {
-            sty = &enabled_sty;
-            eprintln!("  {}", sty.apply_to(pkg_name));
-        }
-
-        // Report each binary and potentially add it to the Release for this package
-        let mut rust_binaries = vec![];
-        for binary in &pkg.binaries {
-            eprintln!("    {}", sty.apply_to(format!("[bin] {}", binary)));
-            // In the future might want to allow this to be granular for each binary
-            if disabled_reason.is_none() {
-                rust_binaries.push(binary);
-            }
-        }
-
-        // If any binaries were accepted for this package, it's a Release!
-        if !rust_binaries.is_empty() {
-            rust_releases.push((pkg_id, rust_binaries));
-        }
-    }
-    eprintln!();
-
-    // Don't proceed if this doesn't make sense
-    if rust_releases.is_empty() {
-        if announcing_package.is_some() {
-            warn!("You're trying to explicitly Release a library, only minimal functionality will work");
-        } else {
-            return Err(miette!(
-                "This workspace doesn't have anything for cargo-dist to Release!"
-            ));
-        }
-    }
-    // If we don't have a tag yet we MUST successfully select one here or fail
-    if announcement_tag.is_none() {
-        let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
-        for (pkg_idx, _) in &rust_releases {
-            let info = graph.workspace().package(*pkg_idx);
-            let version = info.version.as_ref().unwrap().cargo();
-            versions.entry(version).or_default().push(*pkg_idx);
-        }
-        if versions.len() == 1 {
-            let version = *versions.first_key_value().unwrap().0;
-            let tag = format!("v{version}");
-            info!("inferred Announcement tag: {}", tag);
-            announcement_tag = Some(tag);
-            announcing_prerelease = !version.pre.is_empty();
-            announcing_version = Some(version.clone());
-        } else if cfg.needs_coherent_announcement_tag {
-            use std::fmt::Write;
-            let mut msg = String::new();
-            msg.push_str(
-                "There are too many unrelated apps in your workspace to coherently Announce!\n\n",
-            );
-            msg.push_str("Please either specify --tag, or give them all the same version\n\n");
-            msg.push_str("Here are some options:\n\n");
-            for (version, packages) in &versions {
-                write!(msg, "--tag=v{version} will Announce: ").unwrap();
-                let mut multi_package = false;
-                for &pkg_id in packages {
-                    let info = &graph.workspace().package(pkg_id);
-                    if multi_package {
-                        write!(msg, ", ").unwrap();
-                    } else {
-                        multi_package = true;
-                    }
-                    write!(msg, "{}", info.name).unwrap();
-                }
-                writeln!(msg).unwrap();
-            }
-            msg.push('\n');
-            let some_pkg = *versions.first_key_value().unwrap().1.first().unwrap();
-            let info = &graph.workspace().package(some_pkg);
-            let some_tag = format!(
-                "--tag={}-v{}",
-                info.name,
-                info.version.as_ref().unwrap().cargo()
-            );
-            writeln!(
-                msg,
-                "you can also request any single package with {some_tag}"
-            )
-            .unwrap();
-            return Err(miette!("{}", msg));
-        } else {
-            // We don't need a coherent announcement tag so use a fake one to continue on
-            announcement_tag = Some("v1.0.0-FAKEVER".to_owned());
-            announcing_prerelease = true;
-            announcing_version = Some("1.0.0-FAKEVER".parse().unwrap());
-        }
-    }
-    assert!(
-        announcement_tag.is_some(),
-        "integrity error: failed to select announcement tag"
-    );
-    graph.inner.announcement_tag = announcement_tag;
-    graph.inner.announcement_is_prerelease = announcing_prerelease;
+    graph.inner.announcement_tag = Some(announcing.tag.clone());
+    graph.inner.announcement_is_prerelease = announcing.prerelease;
     if let Some(repo_url) = workspace.web_url()?.as_ref() {
         let tag = graph.inner.announcement_tag.as_ref().unwrap();
         graph.inner.artifact_download_url = Some(format!("{repo_url}/releases/download/{tag}"));
     }
 
     // Create a Release for each package
-    for (pkg_idx, binaries) in &rust_releases {
+    for (pkg_idx, binaries) in &announcing.rust_releases {
         // FIXME: this clone is hacky but I'm in the middle of a nasty refactor
         let package_config = graph.package_metadata(*pkg_idx).clone();
 
@@ -2197,7 +2043,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
 
     // Prep the announcement's release notes and whatnot
-    graph.compute_announcement_info(announcing_version.as_ref());
+    graph.compute_announcement_info(announcing.version.as_ref());
 
     // Finally compute all the build steps!
     graph.compute_build_steps();
@@ -2336,5 +2182,183 @@ fn find_tool(name: &str) -> Option<Tool> {
     Some(Tool {
         cmd: name.to_owned(),
         version: version.to_owned(),
+    })
+}
+
+/// details on what we're announcing
+pub(crate) struct AnnouncementTag {
+    /// The full tag
+    pub tag: String,
+    /// The version we're announcing
+    pub version: Option<Version>,
+    /// whether we're prereleasing
+    pub prerelease: bool,
+    /// Which packages+bins we're announcing
+    pub rust_releases: Vec<(PackageIdx, Vec<String>)>,
+}
+
+/// Parse the announcement tag and determine what we're announcing
+pub(crate) fn parse_tag(
+    graph: &DistGraphBuilder,
+    tag: Option<&str>,
+    needs_coherent_announcement_tag: bool,
+) -> DistResult<AnnouncementTag> {
+    // First thing's first: if they gave us an announcement tag then we should try to parse it
+    let mut announcing_package = None;
+    let mut announcing_version = None;
+    let mut announcing_prerelease = false;
+    let mut announcement_tag = tag.map(|t| t.to_owned());
+    if let Some(tag) = &announcement_tag {
+        // TODO: make this logic be a proper "parser" for tag formats so it's easier to improve
+        // First check if it matches any package
+        for (pkg_id, package) in graph.workspace().packages() {
+            let package_version = package.version.as_ref().unwrap().cargo();
+            let package_tag = format!("{}-v{}", package.name, package_version);
+            let package_tag_slash = format!("{}/v{}", package.name, package_version);
+            if &package_tag == tag || &package_tag_slash == tag {
+                info!(
+                    "announcement tag matched {}@{}",
+                    package.name, package_version
+                );
+                assert!(
+                    announcing_package.is_none(),
+                    "how on earth do you have two packages that match {package_tag} or {package_tag_slash}!?"
+                );
+                announcing_prerelease = !package_version.pre.is_empty();
+                announcing_package = Some(pkg_id);
+            }
+        }
+
+        // If it doesn't match any package then try to parse it as v{VERSION}
+        if announcing_package.is_none() {
+            if let Some(version) = tag
+                .strip_prefix('v')
+                .and_then(|v| v.parse::<Version>().ok())
+            {
+                announcing_prerelease = !version.pre.is_empty();
+                announcing_version = Some(version);
+            }
+        }
+
+        // If none of the approaches work, refuse to proceed
+        if announcing_package.is_none() && announcing_version.is_none() {
+            return Err(DistError::NoTagMatch { tag: tag.clone() });
+        }
+    }
+
+    // Choose which binaries we want to release
+    let disabled_sty = console::Style::new().dim();
+    let enabled_sty = console::Style::new();
+    let mut rust_releases = vec![];
+    for (pkg_id, pkg) in graph.workspace().packages() {
+        let pkg_name = &pkg.name;
+
+        // Determine if this package's binaries should be Released
+        let disabled_reason = check_dist_package(
+            graph,
+            pkg_id,
+            pkg,
+            announcement_tag.as_deref(),
+            announcing_package,
+            announcing_version.as_ref(),
+        );
+
+        // Report our conclusion/discoveries
+        let sty;
+        if let Some(reason) = &disabled_reason {
+            sty = &disabled_sty;
+            eprintln!("  {}", sty.apply_to(format!("{pkg_name} ({reason})")));
+        } else {
+            sty = &enabled_sty;
+            eprintln!("  {}", sty.apply_to(pkg_name));
+        }
+
+        // Report each binary and potentially add it to the Release for this package
+        let mut rust_binaries = vec![];
+        for binary in &pkg.binaries {
+            eprintln!("    {}", sty.apply_to(format!("[bin] {}", binary)));
+            // In the future might want to allow this to be granular for each binary
+            if disabled_reason.is_none() {
+                rust_binaries.push(binary.to_owned());
+            }
+        }
+
+        // If any binaries were accepted for this package, it's a Release!
+        if !rust_binaries.is_empty() {
+            rust_releases.push((pkg_id, rust_binaries));
+        }
+    }
+    eprintln!();
+
+    // Don't proceed if this doesn't make sense
+    if rust_releases.is_empty() {
+        if announcing_package.is_some() {
+            warn!("You're trying to explicitly Release a library, only minimal functionality will work");
+        } else {
+            return Err(DistError::NothingToRelease);
+        }
+    }
+
+    // If we don't have a tag yet we MUST successfully select one here or fail
+    if announcement_tag.is_none() {
+        let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
+        for (pkg_idx, _) in &rust_releases {
+            let info = graph.workspace().package(*pkg_idx);
+            let version = info.version.as_ref().unwrap().cargo();
+            versions.entry(version).or_default().push(*pkg_idx);
+        }
+        if versions.len() == 1 {
+            let version = *versions.first_key_value().unwrap().0;
+            let tag = format!("v{version}");
+            info!("inferred Announcement tag: {}", tag);
+            announcement_tag = Some(tag);
+            announcing_prerelease = !version.pre.is_empty();
+            announcing_version = Some(version.clone());
+        } else if needs_coherent_announcement_tag {
+            use std::fmt::Write;
+            let mut help = String::new();
+            help.push_str("Please either specify --tag, or give them all the same version\n\n");
+            help.push_str("Here are some options:\n\n");
+            for (version, packages) in &versions {
+                write!(help, "--tag=v{version} will Announce: ").unwrap();
+                let mut multi_package = false;
+                for &pkg_id in packages {
+                    let info = &graph.workspace().package(pkg_id);
+                    if multi_package {
+                        write!(help, ", ").unwrap();
+                    } else {
+                        multi_package = true;
+                    }
+                    write!(help, "{}", info.name).unwrap();
+                }
+                writeln!(help).unwrap();
+            }
+            help.push('\n');
+            let some_pkg = *versions.first_key_value().unwrap().1.first().unwrap();
+            let info = &graph.workspace().package(some_pkg);
+            let some_tag = format!(
+                "--tag={}-v{}",
+                info.name,
+                info.version.as_ref().unwrap().cargo()
+            );
+
+            writeln!(
+                help,
+                "you can also request any single package with {some_tag}"
+            )
+            .unwrap();
+            return Err(DistError::TooManyUnrelatedApps { help });
+        } else {
+            // We don't need a coherent announcement tag so use a fake one to continue on
+            announcement_tag = Some("v1.0.0-FAKEVER".to_owned());
+            announcing_prerelease = true;
+            announcing_version = Some("1.0.0-FAKEVER".parse().unwrap());
+        }
+    }
+    Ok(AnnouncementTag {
+        tag: announcement_tag.expect("integrity error: failed to select announcement tag"),
+        prerelease: announcing_prerelease,
+        version: announcing_version,
+        rust_releases,
     })
 }
