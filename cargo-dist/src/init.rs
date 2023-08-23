@@ -471,11 +471,11 @@ fn get_new_dist_metadata(
             };
             let tap = tap.trim();
             if tap.is_empty() {
-                eprintln!("{check} Homebrew package will be published to {tap}");
+                eprintln!("Homebrew packages will not be automatically published");
                 meta.tap = None;
             } else {
                 meta.tap = Some(tap.to_owned());
-                eprintln!("{check} homebrew packages will not be automatically published");
+                eprintln!("{check} Homebrew package will be published to {tap}");
 
                 eprintln!(
                     r#"{check} You must provision a GitHub token and expose it as a secret named
