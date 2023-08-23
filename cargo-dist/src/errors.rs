@@ -119,6 +119,25 @@ pub enum DistError {
         /// names of problem packages
         packages: Vec<String>,
     },
+
+    /// parse_tag couldn't make sense of the --tag provided
+    #[error("The provided announcement tag ({tag}) didn't match any Package or Version")]
+    NoTagMatch {
+        /// The --tag
+        tag: String,
+    },
+
+    /// parse_tag concluded there was nothing to release
+    #[error("This workspace doesn't have anything for cargo-dist to Release!")]
+    NothingToRelease,
+
+    /// parse_tag concluded there are too many unrelated things for a single tag
+    #[error("There are too many unrelated apps in your workspace to coherently Announce!")]
+    TooManyUnrelatedApps {
+        /// full help printout (very dynamic)
+        #[help]
+        help: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {
