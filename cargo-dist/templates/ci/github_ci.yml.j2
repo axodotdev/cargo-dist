@@ -171,6 +171,7 @@ jobs:
           echo "uploaded!"
 
 {{%- if tap %}}
+
   upload-homebrew-formula:
     needs: [create-release, upload-global-artifacts]
     runs-on: {{{ global_task.runner }}}
