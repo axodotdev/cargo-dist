@@ -1781,6 +1781,7 @@ install(false);
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "repository": "https://github.com/axodotdev/axolotlsay",
   "license": "MIT OR Apache-2.0",
+  "author": "axo.dev",
   "bin": {
     "axolotlsay": "run.js"
   },

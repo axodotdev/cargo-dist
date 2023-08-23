@@ -491,6 +491,9 @@ pub enum InstallerStyle {
     /// Generate a Homebrew formula that fetches from [`crate::tasks::DistGraph::artifact_download_url`][]
     #[serde(rename = "homebrew")]
     Homebrew,
+    /// Generate an MSI installer that embeds the binary
+    #[serde(rename = "msi")]
+    Msi,
 }
 
 impl std::fmt::Display for InstallerStyle {
@@ -500,6 +503,7 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Powershell => "powershell",
             InstallerStyle::Npm => "npm",
             InstallerStyle::Homebrew => "homebrew",
+            InstallerStyle::Msi => "msi",
         };
         string.fmt(f)
     }
@@ -529,6 +533,8 @@ pub enum ZipStyle {
     Zip,
     /// `.tar.<compression>`
     Tar(CompressionImpl),
+    /// Don't bundle/compress this, it's just a temp dir
+    TempDir,
 }
 
 /// Compression impls (used by [`ZipStyle::Tar`][])
@@ -545,6 +551,7 @@ impl ZipStyle {
     /// Get the extension used for this kind of zip
     pub fn ext(&self) -> &'static str {
         match self {
+            ZipStyle::TempDir => "",
             ZipStyle::Zip => ".zip",
             ZipStyle::Tar(compression) => match compression {
                 CompressionImpl::Gzip => ".tar.gz",
@@ -752,12 +759,16 @@ pub enum GenerateMode {
     /// Generate CI scripts for orchestrating cargo-dist
     #[serde(rename = "ci")]
     Ci,
+    /// Generate wsx (WiX) templates for msi installers
+    #[serde(rename = "msi")]
+    Msi,
 }
 
 impl std::fmt::Display for GenerateMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             GenerateMode::Ci => "ci".fmt(f),
+            GenerateMode::Msi => "msi".fmt(f),
         }
     }
 }
@@ -826,15 +837,34 @@ pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
 }
 
 /// Load a Cargo.toml into toml-edit form
-pub fn load_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
+pub fn load_cargo_toml(manifest_path: &Utf8Path) -> DistResult<toml_edit::Document> {
     let src = axoasset::SourceFile::load_local(manifest_path)?;
     let toml = src.deserialize_toml_edit()?;
     Ok(toml)
 }
 
 /// Save a Cargo.toml from toml-edit form
-pub fn save_cargo_toml(manifest_path: &Utf8Path, toml: toml_edit::Document) -> Result<()> {
+pub fn save_cargo_toml(manifest_path: &Utf8Path, toml: toml_edit::Document) -> DistResult<()> {
     let toml_text = toml.to_string();
     axoasset::LocalAsset::write_new(&toml_text, manifest_path)?;
     Ok(())
+}
+
+/// Get the `[workspace.metadata]` or `[package.metadata]` (based on `is_workspace`)
+pub fn get_toml_metadata(
+    toml: &mut toml_edit::Document,
+    is_workspace: bool,
+) -> &mut toml_edit::Item {
+    // Walk down/prepare the components...
+    let root_key = if is_workspace { "workspace" } else { "package" };
+    let workspace = toml[root_key].or_insert(toml_edit::table());
+    if let Some(t) = workspace.as_table_mut() {
+        t.set_implicit(true)
+    }
+    let metadata = workspace["metadata"].or_insert(toml_edit::table());
+    if let Some(t) = metadata.as_table_mut() {
+        t.set_implicit(true)
+    }
+
+    metadata
 }

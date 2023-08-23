@@ -305,6 +305,8 @@ pub enum InstallerStyle {
     Npm,
     /// Generates a Homebrew formula
     Homebrew,
+    /// Generates an MSI for each windows platform
+    Msi,
 }
 
 impl InstallerStyle {
@@ -315,6 +317,7 @@ impl InstallerStyle {
             InstallerStyle::Powershell => cargo_dist::config::InstallerStyle::Powershell,
             InstallerStyle::Npm => cargo_dist::config::InstallerStyle::Npm,
             InstallerStyle::Homebrew => cargo_dist::config::InstallerStyle::Homebrew,
+            InstallerStyle::Msi => cargo_dist::config::InstallerStyle::Msi,
         }
     }
 }

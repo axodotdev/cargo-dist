@@ -34,7 +34,7 @@ fn axolotlsay_basic() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -42,6 +42,10 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 scope = "@axodotdev"
+
+[package.metadata.wix]
+upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
+path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
 "#
         ))?;

@@ -43,6 +43,26 @@ pub enum DistError {
         details: minijinja::Error,
     },
 
+    /// Error from (cargo-)wix
+    #[error("WiX returned an error while building {msi}")]
+    Wix {
+        /// The MSI we were trying to build
+        msi: String,
+        /// The underyling wix error
+        #[source]
+        details: wix::Error,
+    },
+
+    /// Error from (cargo-)wix init
+    #[error("Couldn't generate main.wxs for {package}'s msi installer")]
+    WixInit {
+        /// The package
+        package: String,
+        /// The underlying wix error
+        #[source]
+        details: wix::Error,
+    },
+
     /// Error parsing metadata in Cargo.toml (json because it's from cargo-metadata)
     #[error("Malformed metadata.dist in {manifest_path}")]
     CargoTomlParse {
@@ -114,7 +134,7 @@ pub enum DistError {
 
     /// Use explicitly requested workspace builds, but had packages with custom feature settings
     #[error("precise-builds = false was set, but some packages have custom build features, making it impossible")]
-    #[help("these packages customized either features, no-default-features, or all-features: {packages:?}")]
+    #[diagnostic(help("these packages customized either features, no-default-features, or all-features: {packages:?}"))]
     PreciseImpossible {
         /// names of problem packages
         packages: Vec<String>,
@@ -159,7 +179,6 @@ pub enum DistError {
         #[source]
         details: semver::Error,
     },
-
     /// Not an error; indicates that a file's contents differ via --check
     #[error("{}:{line_number} has out of date contents and needs to be regenerated:\n-{existing_line}\n+{new_line}", file.origin_path())]
     #[diagnostic(help("run 'cargo dist init' to update the file or set 'allow-dirty' in Cargo.toml to ignore out of date contents"))]
@@ -182,6 +201,33 @@ pub enum DistError {
     ContradictoryGenerateModes {
         /// The problematic mode
         generate_mode: crate::config::GenerateMode,
+    },
+    /// MSI with too many packages
+    #[error("{artifact_name} depends on multiple packages, which isn't yet supported")]
+    #[diagnostic(help("depends on {spec1} and {spec2}"))]
+    MultiPackageMSI {
+        /// Name of the MSI
+        artifact_name: String,
+        /// One of the pacakges
+        spec1: String,
+        /// A different package
+        spec2: String,
+    },
+    /// MSI with too few packages
+    #[error("{artifact_name} has no binaries")]
+    #[diagnostic(help("This should be impossible, you did nothing wrong, please file an issue!"))]
+    NoPackageMSI {
+        /// Name of the MSI
+        artifact_name: String,
+    },
+    /// These GUIDs for msi's are required and enforced by `cargo dist generate --check`
+    #[error("missing WiX GUIDs in {manifest_path}: {keys:?}")]
+    #[diagnostic(help("run 'cargo dist init' to generate them"))]
+    MissingWixGuids {
+        /// The Cargo.toml missing them
+        manifest_path: Utf8PathBuf,
+        /// The missing keys
+        keys: &'static [&'static str],
     },
 }
 
