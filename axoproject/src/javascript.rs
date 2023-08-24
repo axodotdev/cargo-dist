@@ -46,7 +46,9 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
 
     // Not having a name is common for virtual manifests, but we don't handle those!
     let Some(package_name) = manifest.name else {
-        return Err(crate::errors::AxoprojectError::NamelessNpmPackage { manifest: manifest_path.to_owned() });
+        return Err(crate::errors::AxoprojectError::NamelessNpmPackage {
+            manifest: manifest_path.to_owned(),
+        });
     };
     let version = manifest.version.map(Version::Npm);
     let authors = manifest

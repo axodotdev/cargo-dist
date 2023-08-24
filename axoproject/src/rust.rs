@@ -299,7 +299,7 @@ fn get_profiles(manifest_path: &Utf8Path) -> Result<BTreeMap<String, CargoProfil
     let workspace_toml = load_root_cargo_toml(manifest_path)?;
     let Some(profiles_table) = &workspace_toml.get("profile").and_then(|t| t.as_table()) else {
         // No table, empty return
-        return Ok(profiles)
+        return Ok(profiles);
     };
 
     for (profile_name, profile) in profiles_table.iter() {
