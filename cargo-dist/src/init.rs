@@ -7,7 +7,10 @@ use semver::Version;
 use serde::Deserialize;
 
 use crate::{
-    config::{self, CiStyle, CompressionImpl, Config, DistMetadata, InstallerStyle, ZipStyle},
+    config::{
+        self, CiStyle, CompressionImpl, Config, DistMetadata, InstallerStyle, PublishStyle,
+        ZipStyle,
+    },
     do_generate_ci,
     errors::{DistError, DistResult, Result},
     GenerateCiArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
@@ -200,6 +203,7 @@ fn get_new_dist_metadata(
             features: None,
             default_features: None,
             all_features: None,
+            publish_jobs: None,
         }
     };
 
@@ -440,6 +444,8 @@ fn get_new_dist_metadata(
         eprintln!();
     }
 
+    let mut publish_jobs = orig_meta.publish_jobs.clone().unwrap_or(vec![]);
+
     // Special handling of the Homebrew installer
     if meta
         .installers
@@ -475,6 +481,8 @@ fn get_new_dist_metadata(
                 meta.tap = None;
             } else {
                 meta.tap = Some(tap.to_owned());
+                publish_jobs.push(PublishStyle::Homebrew);
+
                 eprintln!("{check} Homebrew package will be published to {tap}");
 
                 eprintln!(
@@ -486,6 +494,12 @@ fn get_new_dist_metadata(
             }
         }
     }
+
+    meta.publish_jobs = if publish_jobs.is_empty() {
+        None
+    } else {
+        Some(publish_jobs)
+    };
 
     // Special handling of the npm installer
     if meta
@@ -617,6 +631,7 @@ fn update_toml_metadata(
         features,
         all_features,
         default_features,
+        publish_jobs,
     } = &meta;
 
     apply_optional_value(
@@ -757,6 +772,13 @@ fn update_toml_metadata(
         "all-features",
         "# Whether to pass --all-features to cargo build\n",
         *all_features,
+    );
+
+    apply_string_list(
+        table,
+        "publish-jobs",
+        "# Publish jobs to run in CI\n",
+        publish_jobs.as_ref(),
     );
 
     // Finalize the table

@@ -68,7 +68,7 @@ use crate::{
     },
     config::{
         self, ArtifactMode, ChecksumStyle, CiStyle, CompressionImpl, Config, DistMetadata,
-        InstallPathStrategy, InstallerStyle, ZipStyle,
+        InstallPathStrategy, InstallerStyle, PublishStyle, ZipStyle,
     },
     errors::{DistError, DistResult, Result},
 };
@@ -180,6 +180,8 @@ pub struct DistGraph {
     pub variants: Vec<ReleaseVariant>,
     /// Logical releases that artifacts are grouped under
     pub releases: Vec<Release>,
+    /// List of publish jobs to run
+    pub publish_jobs: Vec<PublishStyle>,
     /// A GitHub repo to publish the Homebrew formula to
     pub tap: Option<String>,
 }
@@ -621,6 +623,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             checksum: _,
             // Only the final value merged into a package_config matters
             install_path: _,
+            // Only the final value merged into a package_config matters
+            publish_jobs: _,
             features,
             default_features: no_default_features,
             all_features,
@@ -669,6 +673,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         let templates = Templates::new()?;
+        let publish_jobs = workspace_metadata.publish_jobs.clone().unwrap_or(vec![]);
 
         Ok(Self {
             inner: DistGraph {
@@ -696,6 +701,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 variants: vec![],
                 releases: vec![],
                 tap: workspace_metadata.tap.clone(),
+                publish_jobs,
             },
             package_metadata,
             workspace_metadata,
@@ -1177,7 +1183,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping Homebrew formula: couldn't compute a URL to download artifacts from");
             return;
         };
-        // TODO ensure this is Homebrew-legal
+
         let artifact_name = format!("{release_id}.rb");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
 
@@ -1267,6 +1273,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_license = release.app_license.clone();
         let app_homepage_url = release.app_homepage_url.clone();
         let tap = release.tap.clone();
+
+        if tap.is_some() && !self.inner.publish_jobs.contains(&PublishStyle::Homebrew) {
+            warn!("A Homebrew tap was specified but the Homebrew publish job is disabled\n  consider adding \"homebrew\" to publish-jobs in Cargo.toml");
+        }
+        if self.inner.publish_jobs.contains(&PublishStyle::Homebrew) && tap.is_none() {
+            warn!("The Homebrew publish job is enabled but no tap was specified\n  consider setting the tap field in Cargo.toml");
+        }
 
         let formula_name = to_class_case(&app_name);
 

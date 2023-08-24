@@ -221,6 +221,13 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "all-features")]
     pub all_features: Option<bool>,
+
+    /// Publish jobs to run in CI
+    ///
+    /// (defaults to none)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "publish-jobs")]
+    pub publish_jobs: Option<Vec<PublishStyle>>,
 }
 
 impl DistMetadata {
@@ -248,6 +255,7 @@ impl DistMetadata {
             features: _,
             default_features: _,
             all_features: _,
+            publish_jobs: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -284,6 +292,7 @@ impl DistMetadata {
             features,
             default_features,
             all_features,
+            publish_jobs,
         } = self;
 
         // Check for global settings on local packages
@@ -345,6 +354,9 @@ impl DistMetadata {
         }
         if tap.is_none() {
             *tap = workspace_config.tap.clone();
+        }
+        if publish_jobs.is_none() {
+            *publish_jobs = workspace_config.publish_jobs.clone();
         }
 
         // This was historically implemented as extend, but I'm not convinced the
@@ -434,6 +446,23 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Powershell => "powershell",
             InstallerStyle::Npm => "npm",
             InstallerStyle::Homebrew => "homebrew",
+        };
+        string.fmt(f)
+    }
+}
+
+/// The publish jobs we should run
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum PublishStyle {
+    /// Publish a Homebrew formula to a tap repository
+    #[serde(rename = "homebrew")]
+    Homebrew,
+}
+
+impl std::fmt::Display for PublishStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            PublishStyle::Homebrew => "homebrew",
         };
         string.fmt(f)
     }
