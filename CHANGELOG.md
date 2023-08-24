@@ -42,6 +42,10 @@ See the docs for all the details.
 
 * [Updated and corrected Arch Linux installation instructions](https://github.com/axodotdev/cargo-dist/pull/326).
 
+### Manifest
+
+* [Fixes handling repository URLs that end in .git](https://github.com/axodotdev/cargo-dist/pull/298).
+
 
 ## Maintenance
 
