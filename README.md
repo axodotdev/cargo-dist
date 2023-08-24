@@ -19,9 +19,7 @@ for a rust project. This includes:
 4. Generating a machine-readable manifest so other tools can understand the results
 5. Uploading all the resulting artifacts to a Github Release™️
 
-Even though cargo-dist is primarily a tool for building and packaging applications (steps 2-4), we put a fair amount of effort into Generating Your CI Scripts For You because we want to be able to run things locally and know what the CI *should* do without actually running it. It also helps avoid needless vendor lock-in -- in an ideal world, migrating from Github to Gitlab or your own personal infra would be just one invocation of cargo-dist away!
-
-That said, the current version is Experimental and the extra conveniences currently only work with Github CI and Github Releases™️!
+Even though cargo-dist is primarily a tool for building and packaging applications (steps 2-4), we put a fair amount of effort into Generating Your CI Scripts For You because we want to be able to run things locally and know what the CI *should* do without actually running it. It also helps avoid needless vendor lock-in -- while the extra conveniences currently only support GitHub Actions, in the future migrating from Github to Gitlab or your own personal infra will be just one invocation of cargo-dist away!
 
 # Read The Book!
 
