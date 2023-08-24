@@ -58,7 +58,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.4/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.5/cargo-dist-installer.sh | sh"
       - id: create-release
         run: |
           cargo dist plan --tag=${{ github.ref_name }} --output-format=json > dist-manifest.json
@@ -93,16 +93,16 @@ jobs:
         include:
         - os: "macos-11"
           dist-args: "--artifacts=local --target=aarch64-apple-darwin"
-          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.4/cargo-dist-installer.sh | sh"
+          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.5/cargo-dist-installer.sh | sh"
         - os: "macos-11"
           dist-args: "--artifacts=local --target=x86_64-apple-darwin"
-          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.4/cargo-dist-installer.sh | sh"
+          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.5/cargo-dist-installer.sh | sh"
         - os: "windows-2019"
           dist-args: "--artifacts=local --target=x86_64-pc-windows-msvc"
-          install-dist: "irm  https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.4/cargo-dist-installer.ps1 | iex"
+          install-dist: "irm  https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.5/cargo-dist-installer.ps1 | iex"
         - os: "ubuntu-20.04"
           dist-args: "--artifacts=local --target=x86_64-unknown-linux-gnu"
-          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.4/cargo-dist-installer.sh | sh"
+          install-dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.5/cargo-dist-installer.sh | sh"
     runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -141,7 +141,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.4/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.2.0-prerelease.5/cargo-dist-installer.sh | sh"
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         run: |
