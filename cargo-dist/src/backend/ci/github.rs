@@ -21,6 +21,7 @@ struct CiInfo {
     local_tasks: Vec<CiTask>,
     global_task: Option<CiTask>,
     tap: Option<String>,
+    publish_jobs: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -94,6 +95,7 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
         None
     };
     let tap = dist.tap.clone();
+    let publish_jobs = dist.publish_jobs.iter().map(|j| j.to_string()).collect();
 
     // Figure out what Local Artifact tasks we need
     let local_runs = if dist.merge_tasks {
@@ -124,6 +126,7 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
         local_tasks,
         global_task,
         tap,
+        publish_jobs,
     }
 }
 
