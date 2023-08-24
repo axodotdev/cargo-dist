@@ -17,6 +17,7 @@ pub mod changelog;
 pub mod errors;
 #[cfg(feature = "npm-projects")]
 pub mod javascript;
+pub mod platforms;
 mod repo;
 #[cfg(feature = "cargo-projects")]
 pub mod rust;
