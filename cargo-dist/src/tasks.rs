@@ -1184,7 +1184,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
-        // TODO ensure this is Homebrew-legal
         let artifact_name = format!("{release_id}.rb");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
 
