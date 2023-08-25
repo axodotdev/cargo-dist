@@ -204,6 +204,7 @@ fn get_new_dist_metadata(
             default_features: None,
             all_features: None,
             publish_jobs: None,
+            create_release: None,
         }
     };
 
@@ -632,6 +633,7 @@ fn update_toml_metadata(
         all_features,
         default_features,
         publish_jobs,
+        create_release,
     } = &meta;
 
     apply_optional_value(
@@ -744,6 +746,13 @@ fn update_toml_metadata(
         "fail-fast",
         "# Whether failing tasks should make us give up on all other tasks\n",
         *fail_fast,
+    );
+
+    apply_optional_value(
+        table,
+        "create-release",
+        "# Whether cargo-dist should create a Github Release or use an existing draft\n",
+        *create_release,
     );
 
     apply_optional_value(

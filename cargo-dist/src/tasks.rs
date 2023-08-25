@@ -149,6 +149,8 @@ pub struct DistGraph {
     pub merge_tasks: bool,
     /// Whether failing tasks should make us give up on all other tasks
     pub fail_fast: bool,
+    /// Whether to creat a github release or edit an existing draft
+    pub create_release: bool,
     /// The desired cargo-dist version for handling this project
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
@@ -628,6 +630,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             features,
             default_features: no_default_features,
             all_features,
+            create_release,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -637,6 +640,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let merge_tasks = merge_tasks.unwrap_or(false);
         let fail_fast = fail_fast.unwrap_or(false);
+        let create_release = create_release.unwrap_or(true);
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
         let mut package_metadata = vec![];
@@ -684,6 +688,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 precise_builds,
                 fail_fast,
                 merge_tasks,
+                create_release,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
                 tools,

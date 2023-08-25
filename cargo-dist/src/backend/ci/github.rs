@@ -18,6 +18,7 @@ struct CiInfo {
     install_dist_sh: String,
     install_dist_ps1: String,
     fail_fast: bool,
+    create_release: bool,
     local_tasks: Vec<CiTask>,
     global_task: Option<CiTask>,
     tap: Option<String>,
@@ -64,6 +65,7 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
         .as_ref()
         .unwrap_or(&self_dist_version);
     let fail_fast = dist.fail_fast;
+    let create_release = dist.create_release;
 
     // Figure out what builds we need to do
     let mut needs_global_build = false;
@@ -123,6 +125,7 @@ fn compute_ci_info(dist: &DistGraph) -> CiInfo {
         install_dist_sh,
         install_dist_ps1,
         fail_fast,
+        create_release,
         local_tasks,
         global_task,
         tap,
