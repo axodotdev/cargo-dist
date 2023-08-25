@@ -305,6 +305,24 @@ Prior to 0.1.0 we didn't set the correct flags in our CI scripts to do this, but
 This flag was introduced to allow you to restore the old behaviour if you prefer.
 
 
+### create-release
+
+> since 0.2.0
+
+Example: `create-release = false`
+
+**This can only be set globally**
+
+Whether we should create the Github Release for you in your Release CI.
+
+If true (default), cargo-dist will create a new Github Release and generate
+a title/body for it based on your changelog.
+
+If false, cargo-dist will assume a draft Github Release for the current git tag
+already exists with the title/body you want, and just upload artifacts to it.
+At the end of a successful publish it will undraft the Github Release.
+
+
 ### install-path
 
 > since 0.1.0

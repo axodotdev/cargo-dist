@@ -228,6 +228,18 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "publish-jobs")]
     pub publish_jobs: Option<Vec<PublishStyle>>,
+
+    /// Whether we should create the Github Release for you when you push a tag.
+    ///
+    /// If true (default), cargo-dist will create a new Github Release and generate
+    /// a title/body for it based on your changelog.
+    ///
+    /// If false, cargo-dist will assume a draft Github Release already exists
+    /// with the title/body you want. At the end of a successful publish it will
+    /// undraft the Github Release.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "create-release")]
+    pub create_release: Option<bool>,
 }
 
 impl DistMetadata {
@@ -256,6 +268,7 @@ impl DistMetadata {
             default_features: _,
             all_features: _,
             publish_jobs: _,
+            create_release: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -293,6 +306,7 @@ impl DistMetadata {
             default_features,
             all_features,
             publish_jobs,
+            create_release,
         } = self;
 
         // Check for global settings on local packages
@@ -313,6 +327,9 @@ impl DistMetadata {
         }
         if fail_fast.is_some() {
             warn!("package.metadata.dist.fail-fast is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if create_release.is_some() {
+            warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
