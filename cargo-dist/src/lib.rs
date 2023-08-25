@@ -345,7 +345,7 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         .arg("build")
         .arg("--profile")
         .arg(&target.profile)
-        .arg("--message-format=json")
+        .arg("--message-format=json-render-diagnostics")
         .arg("--target")
         .arg(&target.target_triple)
         .env("RUSTFLAGS", &target.rustflags)
