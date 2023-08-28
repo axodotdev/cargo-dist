@@ -10,8 +10,14 @@ use serde::Serialize;
 use tracing::warn;
 
 use crate::{
-    backend::templates::TEMPLATE_CI_GITHUB, DistGraph, SortedMap, SortedSet, TargetTriple,
+    backend::templates::TEMPLATE_CI_GITHUB,
+    config::CiStyle,
+    errors::{DistError, DistResult},
+    DistGraph, SortedMap, SortedSet, TargetTriple,
 };
+
+const GITHUB_CI_DIR: &str = ".github/workflows/";
+const GITHUB_CI_FILE: &str = "release.yml";
 
 /// Info about running cargo-dist in Github CI
 #[derive(Debug, Serialize)]
@@ -36,6 +42,8 @@ pub struct GithubCiInfo {
     pub publish_jobs: Vec<String>,
     /// whether to create the release or assume an existing one
     pub create_release: bool,
+    /// whether to ignore on-disk changes to the configuration
+    pub allow_dirty: bool,
 }
 
 impl GithubCiInfo {
@@ -84,6 +92,7 @@ impl GithubCiInfo {
         };
 
         let pr_run_mode = dist.pr_run_mode.clone();
+        let allow_dirty = dist.allow_dirty.contains(&CiStyle::Github);
 
         let tap = dist.tap.clone();
         let publish_jobs = dist.publish_jobs.iter().map(|j| j.to_string()).collect();
@@ -120,25 +129,50 @@ impl GithubCiInfo {
             pr_run_mode,
             global_task,
             create_release,
+            allow_dirty,
         }
+    }
+
+    fn github_ci_path(&self, dist: &DistGraph) -> camino::Utf8PathBuf {
+        let ci_dir = dist.workspace_dir.join(GITHUB_CI_DIR);
+        ci_dir.join(GITHUB_CI_FILE)
+    }
+
+    /// Generate the requested configuration and returns it as a string.
+    pub fn generate_github_ci(&self, dist: &DistGraph) -> DistResult<String> {
+        let rendered = dist
+            .templates
+            .render_file_to_clean_string(TEMPLATE_CI_GITHUB, self)?;
+
+        Ok(rendered)
     }
 
     /// Write release.yml to disk
     pub fn write_to_disk(&self, dist: &DistGraph) -> Result<(), miette::Report> {
-        const GITHUB_CI_DIR: &str = ".github/workflows/";
-        const GITHUB_CI_FILE: &str = "release.yml";
+        let ci_file = self.github_ci_path(dist);
+        let rendered = self.generate_github_ci(dist)?;
 
-        // FIXME: should we try to avoid clobbering old files..?
-        let ci_dir = dist.workspace_dir.join(GITHUB_CI_DIR);
-        let ci_file = ci_dir.join(GITHUB_CI_FILE);
-
-        let rendered = dist
-            .templates
-            .render_file_to_clean_string(TEMPLATE_CI_GITHUB, self)?;
         LocalAsset::write_new_all(&rendered, &ci_file)?;
         eprintln!("generated Github CI to {}", ci_file);
 
         Ok(())
+    }
+
+    /// Check whether the new configuration differs from the config on disk
+    /// writhout actually writing the result.
+    pub fn check_github_ci(&self, dist: &DistGraph) -> DistResult<()> {
+        let ci_file = self.github_ci_path(dist);
+
+        let rendered = self.generate_github_ci(dist)?;
+        // FIXME: should we catch all errors, or only LocalAssetNotFound?
+        let existing = LocalAsset::load_string(&ci_file).unwrap_or("".to_owned());
+        if rendered != existing && !self.allow_dirty {
+            Err(DistError::CheckFileMismatch {
+                file: ci_file.to_string(),
+            })
+        } else {
+            Ok(())
+        }
     }
 }
 

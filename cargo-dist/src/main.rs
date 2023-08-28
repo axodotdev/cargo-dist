@@ -9,11 +9,13 @@ use camino::Utf8PathBuf;
 use cargo_dist::*;
 use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
-use cli::{Cli, Commands, FakeCli, HelpMarkdownArgs, ManifestArgs, OutputFormat, PlanArgs};
+use cli::{
+    Cli, Commands, FakeCli, GenerateMode, HelpMarkdownArgs, ManifestArgs, OutputFormat, PlanArgs,
+};
 use console::Term;
 use miette::IntoDiagnostic;
 
-use crate::cli::{BuildArgs, GenerateCiArgs, InitArgs};
+use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs};
 
 mod cli;
 
@@ -29,6 +31,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
     let config = &cli.config;
     match &config.command {
         Commands::Init(args) => cmd_init(config, args),
+        Commands::Generate(args) => cmd_generate(config, args),
         Commands::GenerateCi(args) => cmd_generate_ci(config, args),
         Commands::Manifest(args) => cmd_manifest(config, args),
         Commands::Plan(args) => cmd_plan(config, args),
@@ -220,7 +223,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     do_init(&config, &args)
 }
 
-fn cmd_generate_ci(cli: &Cli, _args: &GenerateCiArgs) -> Result<(), miette::Report> {
+fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
@@ -230,8 +233,21 @@ fn cmd_generate_ci(cli: &Cli, _args: &GenerateCiArgs) -> Result<(), miette::Repo
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
     };
-    let args = cargo_dist::GenerateCiArgs {};
-    do_generate_ci(&config, &args)
+    let args = cargo_dist::GenerateArgs {
+        check: args.check,
+        modes: args.mode.iter().map(|m| m.to_lib()).collect(),
+    };
+    do_generate(&config, &args)
+}
+
+fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Report> {
+    cmd_generate(
+        cli,
+        &GenerateArgs {
+            check: args.check,
+            mode: vec![GenerateMode::Ci],
+        },
+    )
 }
 
 fn default_desktop_targets() -> Vec<String> {

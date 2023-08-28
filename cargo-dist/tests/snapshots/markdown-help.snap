@@ -21,7 +21,8 @@ cargo dist <COMMAND>
 ### Commands
 * [build](#cargo-dist-build): Build artifacts
 * [init](#cargo-dist-init): Setup or update cargo-dist
-* [generate-ci](#cargo-dist-generate-ci): Generate CI scripts for orchestrating cargo-dist
+* [generate](#cargo-dist-generate): Generate one or more pieces of configuration
+* [generate-ci](#cargo-dist-generate-ci): Generate CI scripts for orchestrating cargo-dist (deprecated in favour of generate)
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
@@ -157,8 +158,35 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
+## cargo dist generate
+Generate one or more pieces of configuration
+
+### Usage
+
+```text
+cargo dist generate [OPTIONS] [MODE]...
+```
+
+### Arguments
+\[MODE]...  
+Which type of configuration to generate
+
+Possible values:
+- ci: Generate CI scripts for orchestrating cargo-dist
+
+### Options
+#### `--check`
+Check if the generated output differs from on-disk config without writing it
+
+#### `-h, --help`
+Print help (see a summary with '-h')
+
+### GLOBAL OPTIONS
+This subcommand accepts all the [global options](#global-options)
+
+<br><br><br>
 ## cargo dist generate-ci
-Generate CI scripts for orchestrating cargo-dist
+Generate CI scripts for orchestrating cargo-dist (deprecated in favour of generate)
 
 ### Usage
 
@@ -167,6 +195,9 @@ cargo dist generate-ci [OPTIONS]
 ```
 
 ### Options
+#### `--check`
+Check if the generated output differs from on-disk config without writing it
+
 #### `-h, --help`
 Print help (see a summary with '-h')
 
@@ -251,7 +282,8 @@ cargo dist help [COMMAND]
 ### Commands
 * [build](#cargo-dist-build): Build artifacts
 * [init](#cargo-dist-init): Setup or update cargo-dist
-* [generate-ci](#cargo-dist-generate-ci): Generate CI scripts for orchestrating cargo-dist
+* [generate](#cargo-dist-generate): Generate one or more pieces of configuration
+* [generate-ci](#cargo-dist-generate-ci): Generate CI scripts for orchestrating cargo-dist (deprecated in favour of generate)
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
