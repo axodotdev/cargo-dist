@@ -1278,7 +1278,7 @@ permissions:
 # If you push multiple tags at once, separate instances of this workflow will
 # spin up, creating an independent Github Release™ for each one.
 #
-# If there's a prerelease-style suffix to the version then the Github Release™
+# If there's a prerelease-style suffix to the version, then the Github Release™
 # will be marked as a prerelease.
 on:
   push:
@@ -1375,7 +1375,7 @@ jobs:
           gh release upload ${{ github.ref_name }} $(cat uploads.txt)
           echo "uploaded!"
 
-  # Build and packages all the platform-agnostic(ish) things
+  # Build and package all the platform-agnostic(ish) things
   upload-global-artifacts:
     needs: upload-local-artifacts
     runs-on: "ubuntu-20.04"
