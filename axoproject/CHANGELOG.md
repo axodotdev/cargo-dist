@@ -1,3 +1,11 @@
+# Version 0.4.6 (2023-08-28)
+
+* Upgrades cargo-dist config and rustc for release build.
+
+# Version 0.4.5 (2023-08-28)
+
+* The new "platforms" module contains target triple constants and a function to map triples to human-readable display strings.
+
 # Version 0.4.4 (2023-08-22)
 
 * WorkspaceInfo now supports the new features PackageInfo received in 0.4.3.
