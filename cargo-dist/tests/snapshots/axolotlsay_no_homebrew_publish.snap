@@ -2144,7 +2144,7 @@ permissions:
 # package (erroring out if it doesn't have the given version or isn't cargo-dist-able).
 #
 # If PACKAGE_NAME isn't specified, then we will create a Github Release™ for all
-# (cargo-dist-able) packages in the workspace with that version (this is mode is
+# (cargo-dist-able) packages in the workspace with that version (this mode is
 # intended for workspaces with only one dist-able package, or with all dist-able
 # packages versioned/released in lockstep).
 #
