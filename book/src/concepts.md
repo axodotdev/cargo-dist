@@ -97,8 +97,8 @@ Here we have the same workspace we saw in the ["defining your apps" section][def
 
 The error goes on to recommend the two formats for the Announcement Tag:
 
-* Unified Announcement: `v{VERSION}` selects all packages with the given version (v1.0.0, v0.1.0-prerelease, etc.)
-* Singular Announcement: `{PACKAGE-NAME}-v{VERSION}` or `{PACKAGE-NAME}/v{VERSION}` selects only the given package (error if the version doesn't match the Cargo.toml)
+* Unified Announcement: VERSION selects all packages with the given version (v1.0.0, 0.1.0-prerelease.1, releases/1.2.3, ...)
+* Singular Announcement: PACKAGE-VERSION or PACKAGE/VERSION selects only the given package (my-app-v1.0.0, my-app/1.0.0, release/my-app/v1.2.3-alpha, ...)
 
 These two modes support the following workflows:
 
@@ -218,7 +218,7 @@ Ok so here's what goes through cargo-dist's brains when you run it:
 1. Read in the workspace/config/cli-flags
 2. Determine the Announcement Tag (select the Apps) ("v1.0.0")
 3. Determine what Targets we're building for
-3. Call the specific Version of each App a "Release" ("my-app-v1.0.0" or "my-app/v1.0.0")
+3. Call the specific Version of each App a "Release" ("my-app-v1.0.0")
 4. For each Release-Target pair, create a "ReleaseVariant" ("my-app-v1.0.0-x86_64-apple-darwin")
 5. Add executable-zip Artifacts to each Release (broadcasted to each Variant, filtered by Artifact Mode)
 6. Add all the enabled Installers to each Release (local ones broadcasted to each Variant, filtered by Artifact Mode)
