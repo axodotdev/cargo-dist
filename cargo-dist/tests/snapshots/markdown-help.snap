@@ -76,11 +76,13 @@ The (git) tag to use for the Announcement that each invocation of cargo-dist is 
 
 This tag serves two purposes: defining which apps we are Announcing new Releases for (and therefore building binaries and installers for); and picking an id to use for certain URLs. For instance the git tag associated with a Github Release is part of the URL to fetch artifacts from that release, which needs to be known by some installers!
 
-The currently accepted formats are "v{VERSION}", "{PACKAGE_NAME}-v{VERSION}", and "{PACKAGE_NAME}/v{VERSION}" ("v1.0.0", "v0.1.0-prerelease1", "my-app-v1.0.0", "my-app/v1.0.0, etc).
+Unified Announcement: VERSION selects all packages with the given version (v1.0.0, 0.1.0-prerelease.1, releases/1.2.3, ...)
 
-If you use the prefixed version then we will only Announce/Release that package's apps (and return an error if that is not in fact the package's current version). This is appropriate for workspaces that have more than one app.
+Singular Announcement: PACKAGE-VERSION or PACKAGE/VERSION selects only the given package (my-app-v1.0.0, my-app/1.0.0, release/my-app/v1.2.3-alpha, ...)
 
-If you use the unprefixed version then we will assume you're Announcing/Releasing all packages in the workspace that have that version. This is appropriate for workspaces that only have one app, or for monorepos that version all their apps in lockstep.
+If you use the singular version then we will only Announce/Release that package's apps (and return an error if that is not in fact the package's current version). This is appropriate for workspaces that have more than one app.
+
+If you use the unified version then we will assume you're Announcing/Releasing all packages in the workspace that have that version. This is appropriate for workspaces that only have one app, or for monorepos that version all their apps in lockstep.
 
 If you do not specify this tag we will attempt to infer it by trying to Announce/Release every app in the workspace, succeeding only if they all have the same version. The tag selected will be "v{VERSION}".
 

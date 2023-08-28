@@ -50,8 +50,14 @@ When you push a Git Tag to your repository, cargo-dist's CI will try to create a
 
 cargo-dist supports two forms of Announcement which you can select with the format of your Git Tag:
 
-* Unified Announcement: `v{VERSION}` selects all packages with the given version (v1.0.0, v0.1.0-prerelease, ...)
-* Singular Announcement: `{PACKAGE-NAME}-v{VERSION}` or `{PACKAGE-NAME}/v{VERSION}` selects only the given package (my-app-v1.0.0, my-app/v1.0.0, my-app-v1.0.0-prerelease, my-app/v1.0.0-prerelease, ...)
+* Unified Announcement: VERSION selects all packages with the given version (v1.0.0, 0.1.0-prerelease.1, releases/1.2.3, ...)
+* Singular Announcement: PACKAGE-VERSION or PACKAGE/VERSION selects only the given package (my-app-v1.0.0, my-app/1.0.0, release/my-app/v1.2.3-alpha, ...)
+
+> People love their different tag formats, so we do our best to parse lots
+> of different kinds! Prefixing the version with `v` is optional. Anything
+> that comes before a `/` is ignored unless it's exactly a package name
+> (so `really/cool/5.0.0/releases/v1.0.0` is just read as "1.0.0"). Note
+> that something like "1.0" is not a valid [Cargo SemVer Version][cargo semver].
 
 These two modes support the following workflows:
 
@@ -91,3 +97,4 @@ See [the dedicated guide to using cargo-release with cargo-dist][cargo-release-g
 [dist-config]: ./config.md#dist
 [cargo-release-guide]: ./cargo-release-guide.md
 [installers]: ./installers.md
+[cargo semver]: https://docs.rs/semver/latest/semver/struct.Version.html#errors

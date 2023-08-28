@@ -85,7 +85,7 @@ git tag v0.1.0
 git push --tags
 ```
 
-The important parts are that you update the crates you want to release/announce to the desired version and push a git tag with that version. (prefixed with `v`!)
+The important parts are that you update the crates you want to release/announce to the desired version and push a git tag with that version.
 
 At this point you're done! The generated CI script should pick up the ball and create a Github Release with all your builds over the next few minutes!
 
