@@ -86,7 +86,7 @@ pub struct Cli {
     ///
     /// If you use the prefixed version then we will only Announce/Release that package's apps
     /// (and return an error if that is not in fact the package's current version). This is
-    /// approp
+    /// appropriate for workspaces that have more than one app.
     ///
     /// If you use the unprefixed version then we will assume you're Announcing/Releasing all
     /// packages in the workspace that have that version. This is appropriate for workspaces
