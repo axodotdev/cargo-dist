@@ -1,22 +1,36 @@
 # Unreleased
 
-This release includes preliminary support for creating Homebrew packages on
-macOS. It also allows you to specify `--features` your application should be
-built with for production releases.
+This release includes a bunch of features that resolve several of our user's needs.
+
+* Support for creating Homebrew packages on macOS and automatically uploading them to a private tap
+* Ability to specify `--features` your application should be built with for production releases
+* Ability to use more tag formats like `0.1.0`, `releases/v0.1.0`, `my-app/1.0.0`, etc.
+* Ability to Bring Your Own Github Release (BYOGR) that cargo-dist uploads to
+
+In the background of these changes we've also been working on improving some of the architecture
+of cargo-dist to make it easier to add new installers and publishing steps.
 
 ## Features
 
-### Homebrew formula support
+### Homebrew Formula Support
 
 Generating a Homebrew formula can be enabled by adding `"homebrew"` to the list
 of installers in `Cargo.toml`. The formula file can be automatically uploaded
 to a tap to simplify `brew install`.
 
+This also introduces the first hint of the publish-jobs config, which will quickly
+grow support for automatically publishing to crates.io, npm, and more!
+
 * impl
+    * @gankra [split out global task and have it fetch local results](https://github.com/axodotdev/cargo-dist/pull/333)
+    * @gankra [properly pass --dir to gh release download](https://github.com/axodotdev/cargo-dist/pull/336)
     * @mistydemeo [Homebrew formula file](https://github.com/axodotdev/cargo-dist/pull/318)
     * @mistydemeo [Pushing to Homebrew tap](https://github.com/axodotdev/cargo-dist/pull/340)
-* docs
-    * [homebrew](https://opensource.axo.dev/cargo-dist/book/installers.html#homebrew)
+    * @mistydemeo [Add publish-jobs config](https://github.com/axodotdev/cargo-dist/pull/359)
+    * @mistydemeo [Add explicit version tag](https://github.com/axodotdev/cargo-dist/pull/348)
+    * @mistydemeo [Fix Homebrew messages in init](https://github.com/axodotdev/cargo-dist/pull/353)
+    * @mistydemeo [Add Homebrew docs](https://github.com/axodotdev/cargo-dist/pull/341)
+* [docs](https://opensource.axo.dev/cargo-dist/book/installers.html#homebrew)
 
 ### Feature Flags
 
@@ -35,24 +49,65 @@ See the docs for all the details.
     * [default-features](https://opensource.axo.dev/cargo-dist/book/config.html#default-features)
     * [precise-builds](https://opensource.axo.dev/cargo-dist/book/config.html#precise-builds)
 
+### Tag Formats
+
+cargo-dist's git tag parser has been made much more robust and permissive:
+
+* You can now prefix release tags with anything preceding a '/'
+* The 'v' prefix on a version is now optional
+* You can now use package-name/v1.0.0 instead of package-name-v1.0.0
+
+Putting this all together, all of these formats are now allowed:
+
+* unified (release everything with the given version)
+  * v1.0.0
+  * 1.0.0
+  * blah/blah/v1.0.0
+  * whatever/1.0.0
+* precise (release only this one package)
+  * package-name-v1.0.0
+  * package-name-1.0.0
+  * package-name/v1.0.0
+  * package-name/1.0.0
+  * blah/blah/package-name/v1.0.0
+  * blah/blah/package-name/1.0.0
+  * blah/blah/package-name-v1.0.0
+  * blah/blah/package-name-1.0.0
+
+And of course `-prerelease.1`-style suffixes can be added to any of those.
+
+Thanks to @Sharparam for all the great work on the implementation and docs for this!
+
+* @Sharparam + @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/346)
+* [docs](https://opensource.axo.dev/cargo-dist/book/workspace-guide.html#announcement-tags)
+
+### Bring Your Own Github Release
+
+A new `create-release` config has been added, which makes cargo-dist interoperate with things like
+[release drafter](https://github.com/release-drafter/release-drafter/) which create a draft body/title
+for your Github Release.
+
+When you set `create-release = false` cargo-dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the Github Release.
+
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/367)
+* [docs](https://opensource.axo.dev/cargo-dist/book/config.html#create-release)
+
+
 
 ## Fixes
 
-### Installation instructions
-
-* [Updated and corrected Arch Linux installation instructions](https://github.com/axodotdev/cargo-dist/pull/326).
-
-### Manifest
-
-* [Fixes handling repository URLs that end in .git](https://github.com/axodotdev/cargo-dist/pull/298).
-
+* @mistydemeo [Fix a typo in deprecated rustup update lines](https://github.com/axodotdev/cargo-dist/pull/342)
+* @mistydemeo [Restore table headings in generated github release](https://github.com/axodotdev/cargo-dist/pull/357)
+* @gankra [Fixes handling of cargo --message-format](https://github.com/axodotdev/cargo-dist/pull/363)
+* @mistydemeo [Fixes handling repository URLs that end in .git](https://github.com/axodotdev/cargo-dist/pull/298).
 
 ## Maintenance
 
-Thanks to everyone who contributed docs, the real MVPs!!!
+Thanks to everyone who contributed docs and cleanups, the real MVPs!!!
 
+* @Sharparam [remove unreachable code in installer.sh](https://github.com/axodotdev/cargo-dist/pull/345)
 * @orhun [update instructions for Arch Linux](https://github.com/axodotdev/cargo-dist/pull/326)
-* @tshepang [various fixes](https://github.com/axodotdev/cargo-dist/pull/328) [throughout](https://github.com/axodotdev/cargo-dist/pull/330) [the docs](https://github.com/axodotdev/cargo-dist/pull/331)
+* @tshepang [various](https://github.com/axodotdev/cargo-dist/pull/375) [fixes](https://github.com/axodotdev/cargo-dist/pull/328) [throughout](https://github.com/axodotdev/cargo-dist/pull/330) [the docs](https://github.com/axodotdev/cargo-dist/pull/331)
 
 
 
