@@ -55,6 +55,11 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<Vec<CiStyle>>,
 
+    /// TODO
+    #[serde(rename = "pr-run-mode")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
+
     /// The full set of installers you would like to produce
     ///
     /// When generating full task graphs (such as CI scripts) we will try to generate these.
@@ -269,6 +274,7 @@ impl DistMetadata {
             all_features: _,
             publish_jobs: _,
             create_release: _,
+            pr_run_mode: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -307,6 +313,7 @@ impl DistMetadata {
             all_features,
             publish_jobs,
             create_release,
+            pr_run_mode: _,
         } = self;
 
         // Check for global settings on local packages

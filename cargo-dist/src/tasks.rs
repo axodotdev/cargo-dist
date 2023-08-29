@@ -14,7 +14,7 @@
 //!   2. add installers, each one decides if it's global or local
 //! 7. compute actual BuildSteps from the current graph (a Binary will only induce an actual `cargo build`
 //!    here if one of the Artifacts that was added requires outputs from it!)
-//! 8. (NOT YET IMPLEMENTED) generate release/announcement notes
+//! 8. generate release/announcement notes
 //!
 //! During step 6 a lot of extra magic happens:
 //!
@@ -60,6 +60,8 @@ use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use tracing::{info, warn};
 
+use crate::backend::ci::github::GithubCiInfo;
+use crate::backend::ci::CiInfo;
 use crate::{
     backend::{
         installer::{
@@ -159,6 +161,8 @@ pub struct DistGraph {
     pub desired_rust_toolchain: Option<String>,
     /// Styles of CI we want to support
     pub ci_style: Vec<CiStyle>,
+    /// TODO
+    pub pr_run_mode: cargo_dist_schema::PrRunMode,
     /// The git tag used for the announcement (e.g. v1.0.0)
     ///
     /// This is important for certain URLs like Github Releases
@@ -184,6 +188,8 @@ pub struct DistGraph {
     pub variants: Vec<ReleaseVariant>,
     /// Logical releases that artifacts are grouped under
     pub releases: Vec<Release>,
+    /// Info about CI backends
+    pub ci: CiInfo,
     /// List of publish jobs to run
     pub publish_jobs: Vec<PublishStyle>,
     /// A GitHub repo to publish the Homebrew formula to
@@ -633,6 +639,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             default_features: no_default_features,
             all_features,
             create_release,
+            pr_run_mode: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -707,6 +714,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 binaries: vec![],
                 variants: vec![],
                 releases: vec![],
+                ci: CiInfo::default(),
+                pr_run_mode: workspace_metadata.pr_run_mode.clone().unwrap_or_default(),
                 tap: workspace_metadata.tap.clone(),
                 publish_jobs,
             },
@@ -1857,6 +1866,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.inner.announcement_github_body = Some(gh_body);
     }
 
+    fn compute_ci(&mut self) {
+        for ci in &self.inner.ci_style {
+            match ci {
+                CiStyle::Github => {
+                    self.inner.ci.github = Some(GithubCiInfo::new(&self.inner));
+                }
+            }
+        }
+    }
+
     fn workspace(&self) -> &'pkg_graph WorkspaceInfo {
         self.workspace
     }
@@ -2057,6 +2076,8 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
 
     // Finally compute all the build steps!
     graph.compute_build_steps();
+
+    graph.compute_ci();
 
     Ok(graph.inner)
 }

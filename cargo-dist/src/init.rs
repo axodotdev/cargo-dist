@@ -3,6 +3,7 @@ use std::ops::Not;
 use axoproject::errors::AxoprojectError;
 use axoproject::WorkspaceInfo;
 use camino::Utf8PathBuf;
+use cargo_dist_schema::PrRunMode;
 use semver::Version;
 use serde::Deserialize;
 
@@ -166,7 +167,7 @@ fn get_new_dist_metadata(
     args: &InitArgs,
     workspace_info: &WorkspaceInfo,
 ) -> DistResult<DistMetadata> {
-    use dialoguer::{Confirm, Input, MultiSelect};
+    use dialoguer::{Confirm, Input, MultiSelect, Select};
     // Setup [workspace.metadata.dist]
     let has_config = workspace_info
         .cargo_metadata_table
@@ -205,6 +206,7 @@ fn get_new_dist_metadata(
             all_features: None,
             publish_jobs: None,
             create_release: None,
+            pr_run_mode: None,
         }
     };
 
@@ -380,6 +382,30 @@ fn get_new_dist_metadata(
             // Otherwise assume no URL
             return Err(DistError::CantEnableGithubNoUrl)?;
         }
+    }
+
+    if has_github_ci {
+        let prompt = r#"enable Github CI checks on pull requests?
+    This will run most of your release process in order to allow you to
+    test it regularly. "Upload" will build and upload the release artifacts,
+    while "plan" will only plan out the release without actually
+    performing it."#;
+        let items = vec!["upload", "plan", "skip"];
+        let selection = Select::with_theme(&theme)
+            .with_prompt(prompt)
+            .items(&items)
+            .default(0)
+            .interact()?;
+        eprintln!();
+
+        let result = match items[selection] {
+            "upload" => PrRunMode::Upload,
+            "plan" => PrRunMode::Plan,
+            "skip" => PrRunMode::Skip,
+            _ => PrRunMode::default(),
+        };
+
+        meta.pr_run_mode = Some(result);
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
@@ -634,6 +660,7 @@ fn update_toml_metadata(
         default_features,
         publish_jobs,
         create_release,
+        pr_run_mode,
     } = &meta;
 
     apply_optional_value(
@@ -788,6 +815,13 @@ fn update_toml_metadata(
         "publish-jobs",
         "# Publish jobs to run in CI\n",
         publish_jobs.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "pr-run-mode",
+        "# Publish jobs to run in CI\n",
+        pr_run_mode.as_ref().map(|m| m.to_string()),
     );
 
     // Finalize the table
