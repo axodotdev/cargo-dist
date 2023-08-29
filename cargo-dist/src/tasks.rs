@@ -48,8 +48,10 @@
 //! Also note that the BuildSteps for installers are basically monolithic "build that installer"
 //! steps to give them the freedom to do whatever they need to do.
 
+use itertools::Itertools;
 use std::process::Command;
 
+use axoproject::platforms::triple_to_display_name;
 use axoproject::{PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
 use cruet::to_class_case;
@@ -1813,8 +1815,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if !other_artifacts.is_empty() && download_url.is_some() {
                 let download_url = download_url.as_ref().unwrap();
                 writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();
-                gh_body.push_str("|        |        |\n");
-                gh_body.push_str("|--------|--------|\n");
+                gh_body.push_str("|  File  | Platform | Checksum |\n");
+                gh_body.push_str("|--------|----------|----------|\n");
 
                 for artifact in other_artifacts {
                     let mut targets = String::new();
@@ -1836,7 +1838,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     } else {
                         String::new()
                     };
-                    writeln!(&mut gh_body, "| {download} | {checksum} |").unwrap();
+                    let mut triple = artifact
+                        .target_triples
+                        .iter()
+                        .filter_map(|t| triple_to_display_name(t))
+                        .join(", ");
+                    if triple.is_empty() {
+                        triple = "Unknown".to_string();
+                    }
+                    writeln!(&mut gh_body, "| {download} | {triple} | {checksum} |").unwrap();
                 }
                 writeln!(&mut gh_body).unwrap();
             }
