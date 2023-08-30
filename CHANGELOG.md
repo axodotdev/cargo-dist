@@ -1,5 +1,7 @@
 # Unreleased
 
+# Version 0.2.0 (2023-08-30)
+
 This release includes a bunch of features that resolve several of our user's needs.
 
 * Support for creating Homebrew packages on macOS and automatically uploading them to a private tap
