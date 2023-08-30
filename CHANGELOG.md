@@ -93,11 +93,16 @@ When you set `create-release = false` cargo-dist will assume a draft Github Rele
 * [docs](https://opensource.axo.dev/cargo-dist/book/config.html#create-release)
 
 
+### Enhanced Release Description
+
+The table of release artifacts has been improved and now resembles the version
+in oranda.
+
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/357)
 
 ## Fixes
 
 * @mistydemeo [Fix a typo in deprecated rustup update lines](https://github.com/axodotdev/cargo-dist/pull/342)
-* @mistydemeo [Restore table headings in generated github release](https://github.com/axodotdev/cargo-dist/pull/357)
 * @gankra [Fixes handling of cargo --message-format](https://github.com/axodotdev/cargo-dist/pull/363)
 * @mistydemeo [Fixes handling repository URLs that end in .git](https://github.com/axodotdev/cargo-dist/pull/298).
 
