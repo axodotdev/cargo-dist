@@ -2,11 +2,20 @@
 
 use semver::Version;
 
+use self::github::GithubCiInfo;
+
 pub mod github;
 
 /// The current version of cargo-dist
 const SELF_DIST_VERSION: &str = env!("CARGO_PKG_VERSION");
 const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/releases/download";
+
+/// Info about all the enabled CI backends
+#[derive(Debug, Default)]
+pub struct CiInfo {
+    /// Github CI
+    pub github: Option<GithubCiInfo>,
+}
 
 /// Get the command to invoke to install cargo-dist via sh script
 fn install_dist_sh_for_version(version: &Version) -> String {

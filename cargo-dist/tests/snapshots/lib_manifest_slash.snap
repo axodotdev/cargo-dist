@@ -11,6 +11,12 @@ stdout:
   "announcement_github_body": "CENSORED"
   "system_info": {
     "cargo_version_line": "CENSORED"
+  },
+  "ci": {
+    "github": {
+      "artifacts_matrix": {},
+      "pr_run_mode": "upload"
+    }
   }
 }
 

@@ -17,12 +17,13 @@ use std::{
 
 use axoasset::LocalAsset;
 use backend::{
+    ci::CiInfo,
     installer::{self, homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, InstallerImpl},
     templates::{TemplateEntry, TEMPLATE_INSTALLER_NPM},
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
-use config::{ChecksumStyle, CiStyle, CompressionImpl, Config, ZipStyle};
+use config::{ChecksumStyle, CompressionImpl, Config, ZipStyle};
 use semver::Version;
 use tracing::{info, warn};
 
@@ -119,7 +120,14 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
     }
 
     let mut manifest = DistManifest::new(releases, all_artifacts);
+
+    // build metadata
     manifest.dist_version = Some(env!("CARGO_PKG_VERSION").to_owned());
+    manifest.system_info = Some(cargo_dist_schema::SystemInfo {
+        cargo_version_line: dist.tools.cargo.version_line.clone(),
+    });
+
+    // announcement metadata
     manifest.announcement_tag = dist.announcement_tag.clone();
     manifest.announcement_is_prerelease = dist.announcement_is_prerelease;
     manifest.announcement_title = dist.announcement_title.clone();
@@ -128,6 +136,18 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
     manifest.system_info = Some(cargo_dist_schema::SystemInfo {
         cargo_version_line: dist.tools.cargo.version_line.clone(),
     });
+
+    // ci metadata
+    if !dist.ci_style.is_empty() {
+        let CiInfo { github } = &dist.ci;
+        let github = github.as_ref().map(|info| cargo_dist_schema::GithubCiInfo {
+            artifacts_matrix: Some(info.artifacts_matrix.clone()),
+            pr_run_mode: Some(info.pr_run_mode.clone()),
+        });
+
+        manifest.ci = Some(cargo_dist_schema::CiInfo { github });
+    }
+
     manifest
 }
 
@@ -573,10 +593,10 @@ pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
         ));
     }
 
-    for style in &dist.ci_style {
-        match style {
-            CiStyle::Github => backend::ci::github::generate_github_ci(&dist)?,
-        }
+    // If you add a CI backend, call its write_to_disk here
+    let CiInfo { github } = &dist.ci;
+    if let Some(github) = github {
+        github.write_to_disk(&dist)?;
     }
     Ok(())
 }

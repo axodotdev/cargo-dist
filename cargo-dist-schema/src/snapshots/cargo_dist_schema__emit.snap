@@ -48,6 +48,17 @@ expression: json_schema
         "$ref": "#/definitions/Artifact"
       }
     },
+    "ci": {
+      "description": "ci backend info",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CiInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "dist_version": {
       "description": "The version of cargo-dist that generated this",
       "type": [
@@ -310,6 +321,117 @@ expression: json_schema
           ]
         }
       }
+    },
+    "CiInfo": {
+      "description": "CI backend info",
+      "type": "object",
+      "properties": {
+        "github": {
+          "description": "GitHub CI backend",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GithubCiInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GithubCiInfo": {
+      "description": "Github CI backend",
+      "type": "object",
+      "properties": {
+        "artifacts_matrix": {
+          "description": "Github CI Matrix for upload-artifacts",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GithubMatrix"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pr_run_mode": {
+          "description": "What kind of job to run on pull request",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PrRunMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GithubMatrix": {
+      "description": "Github CI Matrix",
+      "type": "object",
+      "properties": {
+        "include": {
+          "description": "define each task manually rather than doing cross-product stuff",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GithubMatrixEntry"
+          }
+        }
+      }
+    },
+    "GithubMatrixEntry": {
+      "description": "Entry for a github matrix",
+      "type": "object",
+      "properties": {
+        "dist_args": {
+          "description": "Arguments to pass to cargo-dist",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "install_dist": {
+          "description": "Expression to execute to install cargo-dist",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runner": {
+          "description": "Github Runner to user",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "PrRunMode": {
+      "description": "Type of job to run on pull request",
+      "oneOf": [
+        {
+          "description": "Do not run on pull requests at all",
+          "type": "string",
+          "enum": [
+            "skip"
+          ]
+        },
+        {
+          "description": "Only run the plan step",
+          "type": "string",
+          "enum": [
+            "plan"
+          ]
+        },
+        {
+          "description": "Build and upload artifacts",
+          "type": "string",
+          "enum": [
+            "upload"
+          ]
+        }
+      ]
     },
     "Release": {
       "description": "A Release of an Application",
