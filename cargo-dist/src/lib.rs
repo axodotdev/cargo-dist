@@ -587,22 +587,57 @@ pub struct GenerateArgs {
     pub modes: Vec<GenerateMode>,
 }
 
+fn do_generate_preflight_checks(dist: &DistGraph) -> Result<()> {
+    // Enforce cargo-dist-version, unless it's a magic vX.Y.Z-github-BRANCHNAME version,
+    // which we use for testing against a PR branch. In that case the current_version
+    // should be irrelevant (so sayeth the person who made and uses this feature).
+    if let Some(desired_version) = &dist.desired_cargo_dist_version {
+        let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
+        if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
+            return Err(miette!("you're running cargo-dist {}, but 'cargo-dist-version = {}' is set in your Cargo.toml\n\nYou should update cargo-dist-version if you want to update to this version", current_version, desired_version));
+        }
+    }
+    if !dist.is_init {
+        return Err(miette!(
+            "please run 'cargo dist init' before running any other commands!"
+        ));
+    }
+
+    Ok(())
+}
+
 /// Generate any scripts which are relevant (impl of `cargo dist generate`)
 pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> Result<()> {
     let dist = gather_work(cfg)?;
+    do_generate_preflight_checks(&dist)?;
 
     // If specific modes are specified, operate *only* on those modes
-    if !args.modes.is_empty() {
-        for mode in &args.modes {
-            match mode {
-                GenerateMode::Ci => do_generate_ci(cfg, &GenerateCiArgs { check: args.check })?,
-            }
-        }
     // Otherwise, choose any modes that are appropriate
+    let inferred = args.modes.is_empty();
+    let modes = if inferred {
+        let mut m = vec![];
+        // CI is the only thing to infer at the moment
+        if !&dist.ci_style.is_empty() {
+            m.push(GenerateMode::Ci)
+        }
+        m
     } else {
-        // CI is currently the only mode to infer
-        if !dist.ci_style.is_empty() {
-            do_generate_ci_dist(dist, &GenerateCiArgs { check: args.check })?
+        args.modes.clone()
+    };
+
+    for mode in modes {
+        match mode {
+            GenerateMode::Ci => {
+                // If you add a CI backend, call it here
+                let CiInfo { github } = &dist.ci;
+                if let Some(github) = github {
+                    // Always write if not inferred, otherwise only write
+                    // if allow_dirty is off.
+                    if !inferred || !github.allow_dirty {
+                        github.write_to_disk(&dist)?;
+                    }
+                }
+            }
         }
     }
 
@@ -619,24 +654,7 @@ pub struct GenerateCiArgs {
 /// Generate CI scripts (impl of `cargo dist generate-ci`)
 pub fn do_generate_ci(cfg: &Config, args: &GenerateCiArgs) -> Result<()> {
     let dist = gather_work(cfg)?;
-    do_generate_ci_dist(dist, args)
-}
-
-fn do_generate_ci_dist(dist: DistGraph, args: &GenerateCiArgs) -> Result<()> {
-    // Enforce cargo-dist-version, unless it's a magic vX.Y.Z-github-BRANCHNAME version,
-    // which we use for testing against a PR branch. In that case the current_version
-    // should be irrelevant (so sayeth the person who made and uses this feature).
-    if let Some(desired_version) = &dist.desired_cargo_dist_version {
-        let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
-        if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
-            return Err(miette!("you're running cargo-dist {}, but 'cargo-dist-version = {}' is set in your Cargo.toml\n\nYou should update cargo-dist-version if you want to update to this version", current_version, desired_version));
-        }
-    }
-    if !dist.is_init {
-        return Err(miette!(
-            "please run 'cargo dist init' before running any other commands!"
-        ));
-    }
+    do_generate_preflight_checks(&dist)?;
 
     // If you add a CI backend, call its write_to_disk here
     let CiInfo { github } = &dist.ci;
