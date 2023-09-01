@@ -62,6 +62,7 @@ use tracing::{info, warn};
 
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
+use crate::config::DirtyMode;
 use crate::{
     backend::{
         installer::{
@@ -163,8 +164,8 @@ pub struct DistGraph {
     pub ci_style: Vec<CiStyle>,
     /// TODO
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
-    /// Styles of CI to skip configuration up to date checks for
-    pub allow_dirty: Vec<CiStyle>,
+    /// Generate targets to skip configuration up to date checks for
+    pub allow_dirty: DirtyMode,
     /// The git tag used for the announcement (e.g. v1.0.0)
     ///
     /// This is important for certain URLs like Github Releases
@@ -579,6 +580,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         tools: Tools,
         workspace: &'pkg_graph WorkspaceInfo,
         artifact_mode: ArtifactMode,
+        allow_all_dirty: bool,
     ) -> DistResult<Self> {
         let target_dir = workspace.target_dir.clone();
         let workspace_dir = workspace.workspace_dir.clone();
@@ -691,7 +693,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let templates = Templates::new()?;
         let publish_jobs = workspace_metadata.publish_jobs.clone().unwrap_or(vec![]);
 
-        let allow_dirty = allow_dirty.clone().unwrap_or(vec![]);
+        let allow_dirty = if allow_all_dirty {
+            DirtyMode::AllowAll
+        } else {
+            DirtyMode::AllowList(allow_dirty.clone().unwrap_or(vec![]))
+        };
 
         Ok(Self {
             inner: DistGraph {
@@ -1951,7 +1957,8 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     eprintln!("analyzing workspace:");
     let tools = tool_info()?;
     let workspace = crate::config::get_project()?;
-    let mut graph = DistGraphBuilder::new(tools, &workspace, cfg.artifact_mode)?;
+    let mut graph =
+        DistGraphBuilder::new(tools, &workspace, cfg.artifact_mode, cfg.allow_all_dirty)?;
 
     // Prefer the CLI (cfg) if it's non-empty, but only select a subset
     // of what the workspace supports if it's non-empty

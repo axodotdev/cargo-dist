@@ -89,10 +89,6 @@ pub struct GithubCiInfo {
     /// What kind of job to run on pull request
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pr_run_mode: Option<PrRunMode>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    /// Whether to skip the check for outdated configuration
-    pub allow_dirty: Option<bool>,
 }
 
 /// Github CI Matrix

@@ -343,13 +343,6 @@ expression: json_schema
       "description": "Github CI backend",
       "type": "object",
       "properties": {
-        "allow_dirty": {
-          "description": "Whether to skip the check for outdated configuration",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
         "artifacts_matrix": {
           "description": "Github CI Matrix for upload-artifacts",
           "anyOf": [

@@ -39,7 +39,6 @@ tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 scope = "@axodotdev"
@@ -47,12 +46,12 @@ scope = "@axodotdev"
 "#
         ))?;
 
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
-        // Check generate-ci
-        let ci_result = ctx.cargo_dist_generate_ci(test_name)?;
-        let ci_snap = ci_result.check_all()?;
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())
@@ -71,7 +70,6 @@ installers = ["shell", "powershell", "homebrew", "npm"]
 tap = "axodotdev/homebrew-packages"
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 scope = "@axodotdev"
@@ -79,12 +77,12 @@ scope = "@axodotdev"
 "#
         ))?;
 
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
-        // Check generate-ci
-        let ci_result = ctx.cargo_dist_generate_ci(test_name)?;
-        let ci_snap = ci_result.check_all()?;
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())
@@ -104,7 +102,6 @@ tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 scope = "@axodotdev"
@@ -113,12 +110,12 @@ create-release = false
 "#
         ))?;
 
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
-        // Check generate-ci
-        let ci_result = ctx.cargo_dist_generate_ci(test_name)?;
-        let ci_snap = ci_result.check_all()?;
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())
@@ -136,7 +133,6 @@ fn akaikatana_basic() -> Result<(), miette::Report> {
 cargo-dist-version = "{dist_version}"
 rust-toolchain-version = "1.67.1"
 ci = ["github"]
-allow-dirty = ["github"]
 installers = ["shell", "powershell", "homebrew"]
 tap = "mistydemeo/homebrew-formulae"
 publish-jobs = ["homebrew"]
@@ -145,12 +141,12 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 "#
         ))?;
 
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
-        // Check generate-ci
-        let ci_result = ctx.cargo_dist_generate_ci(test_name)?;
-        let ci_snap = ci_result.check_all()?;
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())
@@ -173,7 +169,6 @@ repository = "https://github.com/mistydemeo/akaikatana-repack.git"
 cargo-dist-version = "{dist_version}"
 rust-toolchain-version = "1.67.1"
 ci = ["github"]
-allow-dirty = ["github"]
 installers = ["shell", "powershell", "homebrew"]
 tap = "mistydemeo/homebrew-formulae"
 publish-jobs = ["homebrew"]
@@ -182,12 +177,12 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 "#
         ))?;
 
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
-        // Check generate-ci
-        let ci_result = ctx.cargo_dist_generate_ci(test_name)?;
-        let ci_snap = ci_result.check_all()?;
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())
@@ -206,7 +201,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "CARGO_HOME"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -233,7 +228,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "~/.axolotlsay/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -260,7 +255,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "~/.axolotlsay/bins"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -287,7 +282,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "~/My Axolotlsay Documents"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -313,7 +308,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "~/My Axolotlsay Documents/bin/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -340,7 +335,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "$MY_ENV_VAR/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -367,7 +362,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "$MY_ENV_VAR/bin/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -394,7 +389,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "$MY_ENV_VAR/My Axolotlsay Documents"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -421,7 +416,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "$MY_ENV_VAR/My Axolotlsay Documents/bin"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -449,7 +444,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "~/"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
@@ -475,7 +470,7 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-allow-dirty = ["github"]
+allow-dirty = ["ci"]
 install-path = "$MY_ENV"
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"

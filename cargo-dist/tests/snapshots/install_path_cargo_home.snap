@@ -1264,8 +1264,7 @@ Install-Binary "$Args"
           }
         ]
       },
-      "pr_run_mode": "plan",
-      "allow_dirty": true
+      "pr_run_mode": "plan"
     }
   }
 }

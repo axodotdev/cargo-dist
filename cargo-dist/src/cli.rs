@@ -103,6 +103,10 @@ pub struct Cli {
     #[clap(long)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub tag: Option<String>,
+    /// Allow generated files like CI scripts to be out of date
+    #[clap(long)]
+    #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
+    pub allow_dirty: bool,
 }
 
 #[derive(Subcommand, Clone, Debug)]

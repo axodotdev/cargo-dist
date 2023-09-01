@@ -144,12 +144,13 @@ fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         needs_coherent_announcement_tag: true,
         artifact_mode: args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
+        allow_all_dirty: cli.allow_dirty,
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
     };
-    let report = do_dist(&config)?;
+    let report = do_build(&config)?;
     let mut out = Term::stdout();
     match cli.output_format {
         OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
@@ -163,6 +164,7 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
         needs_coherent_announcement_tag: true,
         artifact_mode: args.build_args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
+        allow_all_dirty: cli.allow_dirty,
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
@@ -210,6 +212,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         needs_coherent_announcement_tag: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
+        allow_all_dirty: cli.allow_dirty,
         targets,
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
@@ -228,6 +231,7 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
         needs_coherent_announcement_tag: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
+        allow_all_dirty: cli.allow_dirty,
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
