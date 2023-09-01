@@ -111,7 +111,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
             eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
             eprintln!();
 
-            let ci_args = GenerateCiArgs {};
+            let ci_args = GenerateCiArgs { check: false };
             do_generate_ci(cfg, &ci_args)?;
         }
     }
@@ -207,6 +207,7 @@ fn get_new_dist_metadata(
             publish_jobs: None,
             create_release: None,
             pr_run_mode: None,
+            allow_dirty: None,
         }
     };
 
@@ -661,6 +662,7 @@ fn update_toml_metadata(
         publish_jobs,
         create_release,
         pr_run_mode,
+        allow_dirty,
     } = &meta;
 
     apply_optional_value(
@@ -822,6 +824,13 @@ fn update_toml_metadata(
         "pr-run-mode",
         "# Publish jobs to run in CI\n",
         pr_run_mode.as_ref().map(|m| m.to_string()),
+    );
+
+    apply_string_list(
+        table,
+        "allow-dirty",
+        "# Skip checking whether the specified configuration files are up to date\n",
+        allow_dirty.as_ref(),
     );
 
     // Finalize the table

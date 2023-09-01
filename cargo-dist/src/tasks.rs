@@ -163,6 +163,8 @@ pub struct DistGraph {
     pub ci_style: Vec<CiStyle>,
     /// TODO
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
+    /// Styles of CI to skip configuration up to date checks for
+    pub allow_dirty: Vec<CiStyle>,
     /// The git tag used for the announcement (e.g. v1.0.0)
     ///
     /// This is important for certain URLs like Github Releases
@@ -640,6 +642,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             all_features,
             create_release,
             pr_run_mode: _,
+            allow_dirty,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -688,6 +691,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let templates = Templates::new()?;
         let publish_jobs = workspace_metadata.publish_jobs.clone().unwrap_or(vec![]);
 
+        let allow_dirty = allow_dirty.clone().unwrap_or(vec![]);
+
         Ok(Self {
             inner: DistGraph {
                 is_init: dist_profile.is_some(),
@@ -718,6 +723,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 pr_run_mode: workspace_metadata.pr_run_mode.clone().unwrap_or_default(),
                 tap: workspace_metadata.tap.clone(),
                 publish_jobs,
+                allow_dirty,
             },
             package_metadata,
             workspace_metadata,

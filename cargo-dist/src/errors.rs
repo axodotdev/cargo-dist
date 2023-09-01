@@ -159,6 +159,13 @@ pub enum DistError {
         #[source]
         details: semver::Error,
     },
+
+    /// Not an error; indicates that a file's contents differ via --check
+    #[error(r#"generated contents for file {file} differ"#)]
+    CheckFileMismatch {
+        /// The file whose contents differ
+        file: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

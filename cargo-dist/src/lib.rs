@@ -23,7 +23,7 @@ use backend::{
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
-use config::{ChecksumStyle, CompressionImpl, Config, ZipStyle};
+use config::{ChecksumStyle, CompressionImpl, Config, GenerateMode, ZipStyle};
 use semver::Version;
 use tracing::{info, warn};
 
@@ -48,6 +48,12 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
         return Err(miette!(
             "please run 'cargo dist init' before running any other commands!"
         ));
+    }
+
+    // If you add a CI backend, call its check here
+    let CiInfo { github } = &dist.ci;
+    if let Some(github) = github {
+        github.check_github_ci(&dist)?;
     }
 
     // FIXME: parallelize this by working this like a dependency graph, so we can start
@@ -143,6 +149,7 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
         let github = github.as_ref().map(|info| cargo_dist_schema::GithubCiInfo {
             artifacts_matrix: Some(info.artifacts_matrix.clone()),
             pr_run_mode: Some(info.pr_run_mode.clone()),
+            allow_dirty: Some(info.allow_dirty),
         });
 
         manifest.ci = Some(cargo_dist_schema::CiInfo { github });
@@ -571,13 +578,16 @@ fn zip_dir(
     Ok(())
 }
 
-/// Arguments for `cargo dist generate-ci` ([`do_generate_ci][])
+/// Arguments for `cargo dist generate` ([`do_generate][])
 #[derive(Debug)]
-pub struct GenerateCiArgs {}
+pub struct GenerateArgs {
+    /// Check whether the output differs without writing to disk
+    pub check: bool,
+    /// Which type(s) of config to generate
+    pub modes: Vec<GenerateMode>,
+}
 
-/// Generate CI scripts (impl of `cargo dist generate-ci`)
-pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
-    let dist = gather_work(cfg)?;
+fn do_generate_preflight_checks(dist: &DistGraph) -> Result<()> {
     // Enforce cargo-dist-version, unless it's a magic vX.Y.Z-github-BRANCHNAME version,
     // which we use for testing against a PR branch. In that case the current_version
     // should be irrelevant (so sayeth the person who made and uses this feature).
@@ -593,10 +603,67 @@ pub fn do_generate_ci(cfg: &Config, _args: &GenerateCiArgs) -> Result<()> {
         ));
     }
 
+    Ok(())
+}
+
+/// Generate any scripts which are relevant (impl of `cargo dist generate`)
+pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> Result<()> {
+    let dist = gather_work(cfg)?;
+    do_generate_preflight_checks(&dist)?;
+
+    // If specific modes are specified, operate *only* on those modes
+    // Otherwise, choose any modes that are appropriate
+    let inferred = args.modes.is_empty();
+    let modes = if inferred {
+        let mut m = vec![];
+        // CI is the only thing to infer at the moment
+        if !&dist.ci_style.is_empty() {
+            m.push(GenerateMode::Ci)
+        }
+        m
+    } else {
+        args.modes.clone()
+    };
+
+    for mode in modes {
+        match mode {
+            GenerateMode::Ci => {
+                // If you add a CI backend, call it here
+                let CiInfo { github } = &dist.ci;
+                if let Some(github) = github {
+                    // Always write if not inferred, otherwise only write
+                    // if allow_dirty is off.
+                    if !inferred || !github.allow_dirty {
+                        github.write_to_disk(&dist)?;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Arguments for `cargo dist generate-ci` ([`do_generate_ci][])
+#[derive(Debug)]
+pub struct GenerateCiArgs {
+    /// Check whether the output differs without writing to disk
+    pub check: bool,
+}
+
+/// Generate CI scripts (impl of `cargo dist generate-ci`)
+pub fn do_generate_ci(cfg: &Config, args: &GenerateCiArgs) -> Result<()> {
+    let dist = gather_work(cfg)?;
+    do_generate_preflight_checks(&dist)?;
+
     // If you add a CI backend, call its write_to_disk here
     let CiInfo { github } = &dist.ci;
     if let Some(github) = github {
-        github.write_to_disk(&dist)?;
+        if args.check {
+            github.check_github_ci(&dist)?;
+        } else {
+            github.write_to_disk(&dist)?;
+        }
     }
     Ok(())
 }

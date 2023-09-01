@@ -60,6 +60,12 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
 
+    /// CI environments whose configuration cargo-dist should avoid checking
+    /// for up-to-dateness.
+    #[serde(rename = "allow-dirty")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_dirty: Option<Vec<CiStyle>>,
+
     /// The full set of installers you would like to produce
     ///
     /// When generating full task graphs (such as CI scripts) we will try to generate these.
@@ -275,6 +281,7 @@ impl DistMetadata {
             publish_jobs: _,
             create_release: _,
             pr_run_mode: _,
+            allow_dirty: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -314,6 +321,7 @@ impl DistMetadata {
             publish_jobs,
             create_release,
             pr_run_mode: _,
+            allow_dirty,
         } = self;
 
         // Check for global settings on local packages
@@ -381,6 +389,9 @@ impl DistMetadata {
         }
         if publish_jobs.is_none() {
             *publish_jobs = workspace_config.publish_jobs.clone();
+        }
+        if allow_dirty.is_none() {
+            *allow_dirty = workspace_config.allow_dirty.clone();
         }
 
         // This was historically implemented as extend, but I'm not convinced the
@@ -714,6 +725,13 @@ impl ChecksumStyle {
             ChecksumStyle::False => "false",
         }
     }
+}
+
+/// Which style(s) of configuration to generate
+#[derive(Copy, Clone, Debug)]
+pub enum GenerateMode {
+    /// Generate CI scripts for orchestrating cargo-dist
+    Ci,
 }
 
 pub(crate) fn parse_metadata_table(

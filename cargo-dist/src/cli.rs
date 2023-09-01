@@ -117,7 +117,10 @@ pub enum Commands {
     /// also handle updating your project to a new version of cargo-dist if you're running one.
     #[clap(disable_version_flag = true)]
     Init(InitArgs),
-    /// Generate CI scripts for orchestrating cargo-dist
+    /// Generate one or more pieces of configuration
+    #[clap(disable_version_flag = true)]
+    Generate(GenerateArgs),
+    /// Generate CI scripts for orchestrating cargo-dist (deprecated in favour of generate)
     #[clap(disable_version_flag = true)]
     GenerateCi(GenerateCiArgs),
     /// Generate the final build manifest without running any builds.
@@ -233,8 +236,40 @@ pub struct InitArgs {
     pub with_json_config: Option<Utf8PathBuf>,
 }
 
+/// Which style(s) of configuration to generate
+#[derive(ValueEnum, Copy, Clone, Debug)]
+pub enum GenerateMode {
+    /// Generate CI scripts for orchestrating cargo-dist
+    Ci,
+}
+
+impl GenerateMode {
+    /// Convert the application version of this enum to the library version
+    pub fn to_lib(self) -> cargo_dist::config::GenerateMode {
+        match self {
+            GenerateMode::Ci => cargo_dist::config::GenerateMode::Ci,
+        }
+    }
+}
+
 #[derive(Args, Clone, Debug)]
-pub struct GenerateCiArgs {}
+pub struct GenerateArgs {
+    /// Which type of configuration to generate
+    pub mode: Vec<GenerateMode>,
+
+    /// Check if the generated output differs from on-disk config without writing it
+    #[clap(long)]
+    #[clap(default_value_t = false)]
+    pub check: bool,
+}
+
+#[derive(Args, Clone, Debug)]
+pub struct GenerateCiArgs {
+    /// Check if the generated output differs from on-disk config without writing it
+    #[clap(long)]
+    #[clap(default_value_t = false)]
+    pub check: bool,
+}
 
 #[derive(Args, Clone, Debug)]
 pub struct HelpMarkdownArgs {}
