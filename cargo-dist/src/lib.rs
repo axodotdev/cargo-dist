@@ -1,4 +1,3 @@
-
 #![deny(missing_docs)]
 #![allow(clippy::single_match, clippy::result_large_err)]
 

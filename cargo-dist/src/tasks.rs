@@ -162,7 +162,11 @@ pub struct DistGraph {
     pub desired_rust_toolchain: Option<String>,
     /// Styles of CI we want to support
     pub ci_style: Vec<CiStyle>,
-    /// TODO
+    /// Which actions to run on pull requests.
+    ///
+    /// "upload" will build and upload release artifacts, while "plan" will
+    /// only plan out the release without running builds and "skip" will disable
+    /// pull request runs entirely.
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
     /// Generate targets to skip configuration up to date checks for
     pub allow_dirty: DirtyMode,
