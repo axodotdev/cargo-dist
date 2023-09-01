@@ -55,7 +55,11 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<Vec<CiStyle>>,
 
-    /// TODO
+    /// Which actions to run on pull requests.
+    ///
+    /// "upload" will build and upload release artifacts, while "plan" will
+    /// only plan out the release without running builds and "skip" will disable
+    /// pull request runs entirely.
     #[serde(rename = "pr-run-mode")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
