@@ -386,27 +386,41 @@ fn get_new_dist_metadata(
     }
 
     if has_github_ci {
-        let prompt = r#"enable Github CI checks on pull requests?
-    This will run most of your release process in order to allow you to
-    test it regularly. "Upload" will build and upload the release artifacts,
-    while "plan" will only plan out the release without actually
-    performing it."#;
-        let items = vec!["upload", "plan", "skip"];
+        let default_val = PrRunMode::default();
+        let cur_val = meta.pr_run_mode.unwrap_or(default_val);
+
+        // This is intentionally written awkwardly to make you update this!
+        //
+        // don't forget to add it to 'items' below!
+        let desc = |val| match val {
+            PrRunMode::Skip => "skip - don't check the release process in PRs",
+            PrRunMode::Plan => "plan - run 'cargo dist plan' on PRs (recommended)",
+            PrRunMode::Upload => "upload - build and upload an artifacts.zip to the PR (expensive)",
+        };
+        let items = [PrRunMode::Skip, PrRunMode::Plan, PrRunMode::Upload];
+
+        // Get the index of the current value
+        let default = items
+            .iter()
+            .position(|val| val == &cur_val)
+            .expect("someone added a pr_run_mode but forgot to add it to 'init'");
+
+        let prompt = r#"check your release process in pull requests?"#;
         let selection = Select::with_theme(&theme)
             .with_prompt(prompt)
-            .items(&items)
-            .default(0)
+            .items(&items.iter().map(|mode| desc(*mode)).collect::<Vec<_>>())
+            .default(default)
             .interact()?;
         eprintln!();
 
-        let result = match items[selection] {
-            "upload" => PrRunMode::Upload,
-            "plan" => PrRunMode::Plan,
-            "skip" => PrRunMode::Skip,
-            _ => PrRunMode::default(),
-        };
+        let result = items[selection];
 
-        meta.pr_run_mode = Some(result);
+        // Don't add needlessly noisy config if it's just the default
+        meta.pr_run_mode = if result == default_val {
+            None
+        } else {
+            Some(result)
+        };
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)

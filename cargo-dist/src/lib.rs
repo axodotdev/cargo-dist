@@ -148,7 +148,7 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
         let CiInfo { github } = &dist.ci;
         let github = github.as_ref().map(|info| cargo_dist_schema::GithubCiInfo {
             artifacts_matrix: Some(info.artifacts_matrix.clone()),
-            pr_run_mode: Some(info.pr_run_mode.clone()),
+            pr_run_mode: Some(info.pr_run_mode),
             allow_dirty: Some(info.allow_dirty),
         });
 

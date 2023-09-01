@@ -119,17 +119,18 @@ pub struct GithubMatrixEntry {
 }
 
 /// Type of job to run on pull request
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
-#[non_exhaustive]
+#[derive(
+    Debug, Copy, Clone, Serialize, Deserialize, JsonSchema, Default, PartialEq, Eq, PartialOrd, Ord,
+)]
 pub enum PrRunMode {
     /// Do not run on pull requests at all
     #[serde(rename = "skip")]
     Skip,
     /// Only run the plan step
+    #[default]
     #[serde(rename = "plan")]
     Plan,
     /// Build and upload artifacts
-    #[default]
     #[serde(rename = "upload")]
     Upload,
 }

@@ -258,7 +258,7 @@ stdout:
           }
         ]
       },
-      "pr_run_mode": "upload",
+      "pr_run_mode": "plan",
       "allow_dirty": false
     }
   }
