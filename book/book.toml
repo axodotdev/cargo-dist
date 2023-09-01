@@ -8,6 +8,7 @@ title = "cargo-dist"
 [output.html]
 git-repository-url = "https://github.com/axodotdev/cargo-dist"
 edit-url-template = "https://github.com/axodotdev/cargo-dist/edit/main/book/{path}"
+search.use-boolean-and = true
 
 # disabled due to bugginess (#337)
 # [output.linkcheck]
