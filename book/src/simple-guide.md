@@ -118,7 +118,7 @@ This output has two parts: "analyzing workspace" and "announcing"
 
 It also helpfully lists the contents of each zip. In this case I didn't properly setup my project at all, so it only contains a prebuilt binary. If I actually add files like README.md, LICENSE, and RELEASES.md, cargo-dist will helpfully pick those up and include them (disable this with the `auto-includes=false` [config][]):
 
-![The same as the last screenshot, but now the files mentioned above are included in each zip/tarball][simple-app-manifest-with-files].
+![The same as the last screenshot, but now the files mentioned above are included in each zip/tarball][simple-app-manifest-with-files]
 
 If you add `--output-format=json` you'll get a full machine-readable output instead, and have locally recreated the first step of the generate CI!
 
