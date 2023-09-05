@@ -2286,6 +2286,8 @@ pub(crate) fn parse_tag(
         // Now parse the version out
         match tag_suffix.parse::<Version>() {
             Ok(version) => {
+                announcing_version = Some(version.clone());
+
                 // Register whether we're announcing a prerelease
                 announcing_prerelease = !version.pre.is_empty();
 
@@ -2302,10 +2304,6 @@ pub(crate) fn parse_tag(
                             });
                         }
                     }
-                } else {
-                    // We had no announcing_package, so looks like we're doing a unified release.
-                    // Set this value to indicate that.
-                    announcing_version = Some(version);
                 }
             }
             Err(e) => {
