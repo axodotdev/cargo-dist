@@ -66,6 +66,11 @@ expression: json_schema
         "null"
       ]
     },
+    "publish_prereleases": {
+      "description": "Whether to publish prereleases to package managers",
+      "default": false,
+      "type": "boolean"
+    },
     "releases": {
       "description": "App releases we're distributing",
       "type": "array",

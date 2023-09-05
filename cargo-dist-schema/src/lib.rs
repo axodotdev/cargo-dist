@@ -65,6 +65,9 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub artifacts: BTreeMap<ArtifactId, Artifact>,
+    /// Whether to publish prereleases to package managers
+    #[serde(default)]
+    pub publish_prereleases: bool,
     /// ci backend info
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -348,6 +351,7 @@ impl DistManifest {
             system_info: None,
             releases,
             artifacts,
+            publish_prereleases: false,
             ci: None,
         }
     }

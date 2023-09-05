@@ -13,6 +13,7 @@ stdout:
   "system_info": {
     "cargo_version_line": "CENSORED"
   },
+  "publish_prereleases": false,
   "ci": {
     "github": {
       "artifacts_matrix": {},

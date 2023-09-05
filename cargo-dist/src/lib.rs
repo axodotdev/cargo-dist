@@ -139,6 +139,8 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
         manifest.ci = Some(cargo_dist_schema::CiInfo { github });
     }
 
+    manifest.publish_prereleases = dist.publish_prereleases;
+
     manifest
 }
 

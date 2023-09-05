@@ -199,6 +199,8 @@ pub struct DistGraph {
     pub ci: CiInfo,
     /// List of publish jobs to run
     pub publish_jobs: Vec<PublishStyle>,
+    /// Whether to publish prerelease builds to package managers
+    pub publish_prereleases: bool,
     /// A GitHub repo to publish the Homebrew formula to
     pub tap: Option<String>,
 }
@@ -643,6 +645,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             install_path: _,
             // Only the final value merged into a package_config matters
             publish_jobs: _,
+            publish_prereleases,
             features,
             default_features: no_default_features,
             all_features,
@@ -696,6 +699,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let templates = Templates::new()?;
         let publish_jobs = workspace_metadata.publish_jobs.clone().unwrap_or(vec![]);
+        let publish_prereleases = publish_prereleases.unwrap_or(false);
 
         let allow_dirty = if allow_all_dirty {
             DirtyMode::AllowAll
@@ -733,6 +737,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 pr_run_mode: workspace_metadata.pr_run_mode.unwrap_or_default(),
                 tap: workspace_metadata.tap.clone(),
                 publish_jobs,
+                publish_prereleases,
                 allow_dirty,
             },
             package_metadata,

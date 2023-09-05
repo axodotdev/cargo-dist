@@ -232,6 +232,7 @@ stdout:
       "description": "Install prebuilt binaries via Homebrew"
     }
   },
+  "publish_prereleases": false,
   "ci": {
     "github": {
       "artifacts_matrix": {
