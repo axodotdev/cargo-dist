@@ -23,7 +23,7 @@ use backend::{
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
-use config::{ChecksumStyle, CompressionImpl, Config, GenerateMode, ZipStyle};
+use config::{ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle};
 use semver::Version;
 use tracing::{info, warn};
 
@@ -595,18 +595,18 @@ fn do_generate_preflight_checks(dist: &DistGraph) -> Result<()> {
 pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> Result<()> {
     let dist = gather_work(cfg)?;
 
-    run_generate(&dist, &args.modes, args.check)?;
+    run_generate(&dist, args)?;
 
     Ok(())
 }
 
 /// The inner impl of do_generate
-pub fn run_generate(dist: &DistGraph, modes: &[GenerateMode], check: bool) -> Result<()> {
+pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
     do_generate_preflight_checks(dist)?;
 
     // If specific modes are specified, operate *only* on those modes
     // Otherwise, choose any modes that are appropriate
-    let inferred = modes.is_empty();
+    let inferred = args.modes.is_empty();
     let modes = if inferred {
         let mut m = vec![];
         // CI is the only thing to infer at the moment
@@ -615,7 +615,17 @@ pub fn run_generate(dist: &DistGraph, modes: &[GenerateMode], check: bool) -> Re
         }
         m
     } else {
-        modes.to_owned()
+        // Check that we're not being told to do a contradiction
+        for &mode in &args.modes {
+            if !dist.allow_dirty.should_run(mode)
+                && matches!(dist.allow_dirty, DirtyMode::AllowList(..))
+            {
+                return Err(DistError::ContradictoryGenerateModes {
+                    generate_mode: mode,
+                })?;
+            }
+        }
+        args.modes.to_owned()
     };
 
     // generate everything we need to
@@ -626,7 +636,7 @@ pub fn run_generate(dist: &DistGraph, modes: &[GenerateMode], check: bool) -> Re
                     // If you add a CI backend, call it here
                     let CiInfo { github } = &dist.ci;
                     if let Some(github) = github {
-                        if check {
+                        if args.check {
                             github.check(dist)?;
                         } else {
                             github.write_to_disk(dist)?;
@@ -644,7 +654,13 @@ pub fn run_generate(dist: &DistGraph, modes: &[GenerateMode], check: bool) -> Re
 ///
 /// (This is currently equivalent to `cargo dist generate --check`)
 pub fn check_integrity(dist: &DistGraph) -> Result<()> {
-    run_generate(dist, &[], true)
+    run_generate(
+        dist,
+        &GenerateArgs {
+            modes: vec![],
+            check: true,
+        },
+    )
 }
 
 /// Build a cargo target

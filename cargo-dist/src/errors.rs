@@ -173,6 +173,16 @@ pub enum DistError {
         /// The line number
         line_number: usize,
     },
+
+    /// `cargo dist generate` was passed an explicit GenerateMode but the config in their Cargo.toml
+    /// has that mode set to allow-dirty, a contradiction!
+    #[error(
+        "'{generate_mode}' is marked as allow-dirty in your cargo-dist config, refusing to run"
+    )]
+    ContradictoryGenerateModes {
+        /// The problematic mode
+        generate_mode: crate::config::GenerateMode,
+    },
 }
 
 impl From<minijinja::Error> for DistError {
