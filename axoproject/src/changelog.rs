@@ -87,7 +87,7 @@ fn try_extract_changelog_exact(
     changelogs
         .get(&*version_string)
         .map(|release_notes| ChangelogInfo {
-            title: release_notes.title.to_string(),
+            title: release_notes.title_no_link().to_string(),
             body: release_notes.notes.to_string(),
         })
 }
@@ -112,7 +112,8 @@ fn try_extract_changelog_normalized(
 
     // title looks something like '<prefix><version><freeform>'
     // `prefix` could be 'v' or 'Version ' for example
-    let Some((prefix, freeform)) = release_notes.title.split_once(&stable_version_string) else {
+    let raw_title = release_notes.title_no_link();
+    let Some((prefix, freeform)) = raw_title.split_once(&stable_version_string) else {
         return None;
     };
 

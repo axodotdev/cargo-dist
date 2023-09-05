@@ -262,6 +262,14 @@ fn kitchen_sink_changelog() -> &'static str {
 Coming soon..!
 
 
+## v3.2.5 - [CHANGEGER](https://github.com/axodotdev/fakesite)
+
+Hope the title link also got stripped....!!!
+
+## [3.2.3 - NEXT CHANGERATIONS](https://github.com/axodotdev/fakesite)
+
+Hope the title link got stripped..!
+
 ## 3.2.1 - THE FINAL CHANGETIER
 
 WOW!
@@ -392,6 +400,49 @@ fn test_changelog_basic() {
         ChangelogInfo {
             title: "3.2.1 - THE FINAL CHANGETIER".to_owned(),
             body: "WOW!".to_owned()
+        }
+    );
+}
+
+#[test]
+fn test_changelog_link_strip() {
+    use crate::changelog::changelog_for_version_inner as test;
+    let text = kitchen_sink_changelog();
+    let path = Utf8PathBuf::from("CHANGELOG.md");
+
+    assert_eq!(
+        test(&path, text, &ver("3.2.3")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "3.2.3 - NEXT CHANGERATIONS".to_owned(),
+            body: "Hope the title link got stripped..!".to_owned()
+        }
+    );
+
+    assert_eq!(
+        test(&path, text, &ver("3.2.3-prerelease.1"))
+            .unwrap()
+            .unwrap(),
+        ChangelogInfo {
+            title: "3.2.3-prerelease.1 - NEXT CHANGERATIONS".to_owned(),
+            body: "Hope the title link got stripped..!".to_owned()
+        }
+    );
+
+    assert_eq!(
+        test(&path, text, &ver("3.2.5")).unwrap().unwrap(),
+        ChangelogInfo {
+            title: "v3.2.5 - CHANGEGER".to_owned(),
+            body: "Hope the title link also got stripped....!!!".to_owned()
+        }
+    );
+
+    assert_eq!(
+        test(&path, text, &ver("3.2.5-prerelease.3"))
+            .unwrap()
+            .unwrap(),
+        ChangelogInfo {
+            title: "v3.2.5-prerelease.3 - CHANGEGER".to_owned(),
+            body: "Hope the title link also got stripped....!!!".to_owned()
         }
     );
 }
