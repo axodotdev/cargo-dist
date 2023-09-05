@@ -31,6 +31,10 @@ axocli = { version = "0.1.0", optional = true }
 
 # Features used by the cli and library
 cargo-dist-schema = { version = "=0.2.0", path = "../cargo-dist-schema" }
+
+axoasset = { version = "0.5.0", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
+axoproject = { version = "0.4.7", default-features = false, features = ["cargo-projects"] }
+
 miette = { version = "5.6.0" }
 thiserror = "1.0.35"
 tracing = { version = "0.1.36", features = ["log"] }
@@ -41,11 +45,8 @@ guppy = "0.15.0"
 camino = "1.1.1"
 semver = "1.0.14"
 toml_edit = "0.19.0"
-parse-changelog = { version = "0.5.3", default-features = false }
 newline-converter = "0.2.2"
-axoproject = { version = "0.4.6", default-features = false, features = ["cargo-projects"] }
 dialoguer = "0.10.4"
-axoasset = { version = "0.5.0", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
 sha2 = "0.10.6"
 minijinja = { version = "1.0.5", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.3"
