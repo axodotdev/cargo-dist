@@ -1757,6 +1757,34 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.compute_announcement_github();
     }
 
+    /// Try to compute changelogs for the announcement
+    pub fn compute_announcement_changelog(&mut self, announcing_version: Option<&Version>) {
+        // FIXME: currently this only supports a top-level changelog, it would be nice
+        // to allow individual apps to have individual streams
+
+        // Try to find the version we're announcing in the top level CHANGELOG/RELEASES
+        let Some(announcing_version) = announcing_version else {
+            info!("not announcing a consistent version, skipping changelog generation");
+            return;
+        };
+
+        // Try to extract the changelog entry for the announcing version.
+        // Logic for this lives in axoproject.
+        let query = axoproject::Version::Cargo(announcing_version.clone());
+        let Ok(Some(info)) = self.workspace.changelog_for_version(&query) else {
+            info!(
+                "failed to find {announcing_version} in changelogs, skipping changelog generation"
+            );
+            return;
+        };
+
+        info!("successfully parsed changelog!");
+        self.inner.announcement_title = Some(info.title);
+        // Those windows newlines get everywhere...
+        let clean_notes = newline_converter::dos2unix(&info.body);
+        self.inner.announcement_changelog = Some(clean_notes.into_owned());
+    }
+
     /// If we're publishing to Github, generate some Github notes
     fn compute_announcement_github(&mut self) {
         use std::fmt::Write;

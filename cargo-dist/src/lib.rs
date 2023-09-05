@@ -33,7 +33,6 @@ use miette::{miette, Context, IntoDiagnostic};
 pub use tasks::*;
 
 pub mod backend;
-pub mod changelog;
 pub mod config;
 pub mod errors;
 mod init;

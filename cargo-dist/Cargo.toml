@@ -43,7 +43,7 @@ semver = "1.0.14"
 toml_edit = "0.19.0"
 parse-changelog = { version = "0.5.3", default-features = false }
 newline-converter = "0.2.2"
-axoproject = { version = "0.4.6", default-features = false, features = ["cargo-projects"] }
+axoproject = { version = "0.4.7", default-features = false, features = ["cargo-projects"] }
 dialoguer = "0.10.4"
 axoasset = { version = "0.5.0", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
 sha2 = "0.10.6"
