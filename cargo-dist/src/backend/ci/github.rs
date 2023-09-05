@@ -91,7 +91,7 @@ impl GithubCiInfo {
             None
         };
 
-        let pr_run_mode = dist.pr_run_mode.clone();
+        let pr_run_mode = dist.pr_run_mode;
         let allow_dirty = dist.allow_dirty.contains(&CiStyle::Github);
 
         let tap = dist.tap.clone();

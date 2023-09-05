@@ -720,7 +720,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 variants: vec![],
                 releases: vec![],
                 ci: CiInfo::default(),
-                pr_run_mode: workspace_metadata.pr_run_mode.clone().unwrap_or_default(),
+                pr_run_mode: workspace_metadata.pr_run_mode.unwrap_or_default(),
                 tap: workspace_metadata.tap.clone(),
                 publish_jobs,
                 allow_dirty,
