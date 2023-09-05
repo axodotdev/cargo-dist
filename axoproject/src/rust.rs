@@ -259,12 +259,11 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
     };
 
     // Find files we might want to auto-include
-    //
-    // This is kinda expensive so only bother doing it for things we MIGHT care about
-    if !info.binaries.is_empty() {
-        let auto_includes = crate::find_auto_includes(&package_root)?;
-        crate::merge_auto_includes(&mut info, &auto_includes);
-    }
+    // It's kind of unfortunate that we do this unconditionally for every
+    // package, even if we'll never care about the result, but that's how
+    // separation of concerns gets ya.
+    let auto_includes = crate::find_auto_includes(&package_root)?;
+    crate::merge_auto_includes(&mut info, &auto_includes);
 
     // If there's no documentation URL provided, default assume it's docs.rs like crates.io does
     if info.documentation_url.is_none() {
