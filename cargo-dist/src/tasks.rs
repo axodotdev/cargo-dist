@@ -1749,33 +1749,51 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         builds
     }
 
-    fn compute_announcement_info(&mut self, announcing_version: Option<&Version>) {
+    fn compute_announcement_info(&mut self, announcing: &AnnouncementTag) {
         // Default to using the tag as a title
-        self.inner.announcement_title = self.inner.announcement_tag.clone();
+        self.inner.announcement_title = Some(announcing.tag.clone());
+        self.inner.announcement_tag = Some(announcing.tag.clone());
+        self.inner.announcement_is_prerelease = announcing.prerelease;
 
-        self.compute_announcement_changelog(announcing_version);
+        self.compute_announcement_changelog(announcing);
         self.compute_announcement_github();
     }
 
     /// Try to compute changelogs for the announcement
-    pub fn compute_announcement_changelog(&mut self, announcing_version: Option<&Version>) {
-        // FIXME: currently this only supports a top-level changelog, it would be nice
-        // to allow individual apps to have individual streams
+    pub fn compute_announcement_changelog(&mut self, announcing: &AnnouncementTag) {
+        let info = if let Some(announcing_version) = &announcing.version {
+            // Try to find the version we're announcing in the top level CHANGELOG/RELEASES
+            let version = axoproject::Version::Cargo(announcing_version.clone());
+            let Ok(Some(info)) = self.workspace.changelog_for_version(&version) else {
+                info!(
+                    "failed to find {version} in workspace changelogs, skipping changelog generation"
+                );
+                return;
+            };
 
-        // Try to find the version we're announcing in the top level CHANGELOG/RELEASES
-        let Some(announcing_version) = announcing_version else {
-            info!("not announcing a consistent version, skipping changelog generation");
-            return;
-        };
+            info
+        } else if let Some(announcing_package) = announcing.package {
+            // Try to find the package's specific CHANGELOG/RELEASES
+            let package = self.workspace.package(announcing_package);
+            let package_name = &package.name;
+            let version = package
+                .version
+                .as_ref()
+                .expect("cargo package without a version!?");
+            let Ok(Some(info)) = self
+                .workspace
+                .package(announcing_package)
+                .changelog_for_version(version)
+            else {
+                info!(
+                    "failed to find {version} in {package_name} changelogs, skipping changelog generation"
+                );
+                return;
+            };
 
-        // Try to extract the changelog entry for the announcing version.
-        // Logic for this lives in axoproject.
-        let query = axoproject::Version::Cargo(announcing_version.clone());
-        let Ok(Some(info)) = self.workspace.changelog_for_version(&query) else {
-            info!(
-                "failed to find {announcing_version} in changelogs, skipping changelog generation"
-            );
-            return;
+            info
+        } else {
+            unreachable!("you're neither announcing a version or a package!?");
         };
 
         info!("successfully parsed changelog!");
@@ -2049,10 +2067,8 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
         cfg.needs_coherent_announcement_tag,
     )?;
 
-    graph.inner.announcement_tag = Some(announcing.tag.clone());
-    graph.inner.announcement_is_prerelease = announcing.prerelease;
     if let Some(repo_url) = workspace.web_url()?.as_ref() {
-        let tag = graph.inner.announcement_tag.as_ref().unwrap();
+        let tag = &announcing.tag;
         graph.inner.artifact_download_url = Some(format!("{repo_url}/releases/download/{tag}"));
     }
 
@@ -2117,7 +2133,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     }
 
     // Prep the announcement's release notes and whatnot
-    graph.compute_announcement_info(announcing.version.as_ref());
+    graph.compute_announcement_info(&announcing);
 
     // Finally compute all the build steps!
     graph.compute_build_steps();
@@ -2265,8 +2281,10 @@ fn find_tool(name: &str) -> Option<Tool> {
 pub(crate) struct AnnouncementTag {
     /// The full tag
     pub tag: String,
-    /// The version we're announcing
+    /// The version we're announcing (if doing a unified version announcement)
     pub version: Option<Version>,
+    /// The package we're announcing (if doing a single-package announcement)
+    pub package: Option<PackageIdx>,
     /// whether we're prereleasing
     pub prerelease: bool,
     /// Which packages+bins we're announcing
@@ -2474,6 +2492,7 @@ pub(crate) fn parse_tag(
         tag: announcement_tag.expect("integrity error: failed to select announcement tag"),
         prerelease: announcing_prerelease,
         version: announcing_version,
+        package: announcing_package,
         rust_releases,
     })
 }

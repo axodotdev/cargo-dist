@@ -8,6 +8,7 @@ stdout:
   "announcement_tag": "CENSORED",
   "announcement_is_prerelease": "CENSORED"
   "announcement_title": "CENSORED"
+  "announcement_changelog": "CENSORED"
   "announcement_github_body": "CENSORED"
   "system_info": {
     "cargo_version_line": "CENSORED"
