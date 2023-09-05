@@ -87,5 +87,8 @@ GLOBAL OPTIONS:
           
           In the future we may try to make this look at the current git tags or something?
 
+      --allow-dirty
+          Allow generated files like CI scripts to be out of date
+
 stderr:
 

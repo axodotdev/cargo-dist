@@ -258,8 +258,7 @@ stdout:
           }
         ]
       },
-      "pr_run_mode": "plan",
-      "allow_dirty": false
+      "pr_run_mode": "plan"
     }
   }
 }

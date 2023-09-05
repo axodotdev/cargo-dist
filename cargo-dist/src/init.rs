@@ -12,9 +12,9 @@ use crate::{
         self, CiStyle, CompressionImpl, Config, DistMetadata, InstallerStyle, PublishStyle,
         ZipStyle,
     },
-    do_generate_ci,
+    do_generate,
     errors::{DistError, DistResult, Result},
-    GenerateCiArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
+    GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
 /// Arguments for `cargo dist init` ([`do_init`][])
@@ -111,8 +111,11 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
             eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
             eprintln!();
 
-            let ci_args = GenerateCiArgs { check: false };
-            do_generate_ci(cfg, &ci_args)?;
+            let ci_args = GenerateArgs {
+                check: false,
+                modes: vec![],
+            };
+            do_generate(cfg, &ci_args)?;
         }
     }
     Ok(())

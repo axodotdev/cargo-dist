@@ -23,7 +23,7 @@ use backend::{
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
-use config::{ChecksumStyle, CompressionImpl, Config, GenerateMode, ZipStyle};
+use config::{ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle};
 use semver::Version;
 use tracing::{info, warn};
 
@@ -41,20 +41,10 @@ pub mod tasks;
 #[cfg(test)]
 mod tests;
 
-/// Top level command of cargo_dist -- do everything!
-pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
+/// cargo dist build -- actually build binaries and installers!
+pub fn do_build(cfg: &Config) -> Result<DistManifest> {
     let dist = tasks::gather_work(cfg)?;
-    if !dist.is_init {
-        return Err(miette!(
-            "please run 'cargo dist init' before running any other commands!"
-        ));
-    }
-
-    // If you add a CI backend, call its check here
-    let CiInfo { github } = &dist.ci;
-    if let Some(github) = github {
-        github.check_github_ci(&dist)?;
-    }
+    check_integrity(&dist)?;
 
     // FIXME: parallelize this by working this like a dependency graph, so we can start
     // bundling up an executable the moment it's built! Note however that you shouldn't
@@ -87,11 +77,7 @@ pub fn do_dist(cfg: &Config) -> Result<DistManifest> {
 /// Just generate the manifest produced by `cargo dist build` without building
 pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
     let dist = gather_work(cfg)?;
-    if !dist.is_init {
-        return Err(miette!(
-            "please run 'cargo dist init' before running any other commands!"
-        ));
-    }
+    check_integrity(&dist)?;
 
     Ok(build_manifest(cfg, &dist))
 }
@@ -149,7 +135,6 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
         let github = github.as_ref().map(|info| cargo_dist_schema::GithubCiInfo {
             artifacts_matrix: Some(info.artifacts_matrix.clone()),
             pr_run_mode: Some(info.pr_run_mode),
-            allow_dirty: Some(info.allow_dirty),
         });
 
         manifest.ci = Some(cargo_dist_schema::CiInfo { github });
@@ -609,7 +594,15 @@ fn do_generate_preflight_checks(dist: &DistGraph) -> Result<()> {
 /// Generate any scripts which are relevant (impl of `cargo dist generate`)
 pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> Result<()> {
     let dist = gather_work(cfg)?;
-    do_generate_preflight_checks(&dist)?;
+
+    run_generate(&dist, args)?;
+
+    Ok(())
+}
+
+/// The inner impl of do_generate
+pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
+    do_generate_preflight_checks(dist)?;
 
     // If specific modes are specified, operate *only* on those modes
     // Otherwise, choose any modes that are appropriate
@@ -622,19 +615,32 @@ pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> Result<()> {
         }
         m
     } else {
-        args.modes.clone()
+        // Check that we're not being told to do a contradiction
+        for &mode in &args.modes {
+            if !dist.allow_dirty.should_run(mode)
+                && matches!(dist.allow_dirty, DirtyMode::AllowList(..))
+            {
+                return Err(DistError::ContradictoryGenerateModes {
+                    generate_mode: mode,
+                })?;
+            }
+        }
+        args.modes.to_owned()
     };
 
+    // generate everything we need to
     for mode in modes {
         match mode {
             GenerateMode::Ci => {
-                // If you add a CI backend, call it here
-                let CiInfo { github } = &dist.ci;
-                if let Some(github) = github {
-                    // Always write if not inferred, otherwise only write
-                    // if allow_dirty is off.
-                    if !inferred || !github.allow_dirty {
-                        github.write_to_disk(&dist)?;
+                if dist.allow_dirty.should_run(mode) {
+                    // If you add a CI backend, call it here
+                    let CiInfo { github } = &dist.ci;
+                    if let Some(github) = github {
+                        if args.check {
+                            github.check(dist)?;
+                        } else {
+                            github.write_to_disk(dist)?;
+                        }
                     }
                 }
             }
@@ -644,28 +650,17 @@ pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> Result<()> {
     Ok(())
 }
 
-/// Arguments for `cargo dist generate-ci` ([`do_generate_ci][])
-#[derive(Debug)]
-pub struct GenerateCiArgs {
-    /// Check whether the output differs without writing to disk
-    pub check: bool,
-}
-
-/// Generate CI scripts (impl of `cargo dist generate-ci`)
-pub fn do_generate_ci(cfg: &Config, args: &GenerateCiArgs) -> Result<()> {
-    let dist = gather_work(cfg)?;
-    do_generate_preflight_checks(&dist)?;
-
-    // If you add a CI backend, call its write_to_disk here
-    let CiInfo { github } = &dist.ci;
-    if let Some(github) = github {
-        if args.check {
-            github.check_github_ci(&dist)?;
-        } else {
-            github.write_to_disk(&dist)?;
-        }
-    }
-    Ok(())
+/// Run any necessary integrity checks for "primary" commands like build/plan
+///
+/// (This is currently equivalent to `cargo dist generate --check`)
+pub fn check_integrity(dist: &DistGraph) -> Result<()> {
+    run_generate(
+        dist,
+        &GenerateArgs {
+            modes: vec![],
+            check: true,
+        },
+    )
 }
 
 /// Build a cargo target

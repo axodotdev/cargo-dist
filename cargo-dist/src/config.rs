@@ -64,11 +64,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
 
-    /// CI environments whose configuration cargo-dist should avoid checking
-    /// for up-to-dateness.
+    /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
     #[serde(rename = "allow-dirty")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub allow_dirty: Option<Vec<CiStyle>>,
+    pub allow_dirty: Option<Vec<GenerateMode>>,
 
     /// The full set of installers you would like to produce
     ///
@@ -350,6 +349,11 @@ impl DistMetadata {
         if create_release.is_some() {
             warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
+        // Arguably should be package-local for things like MSIs, but doesn't make sense for CI,
+        // so let's not support that yet for its complexity!
+        if allow_dirty.is_some() {
+            warn!("package.metadata.dist.allow-dirty is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
 
         // Merge non-global settings
         if installers.is_none() {
@@ -394,9 +398,6 @@ impl DistMetadata {
         if publish_jobs.is_none() {
             *publish_jobs = workspace_config.publish_jobs.clone();
         }
-        if allow_dirty.is_none() {
-            *allow_dirty = workspace_config.allow_dirty.clone();
-        }
 
         // This was historically implemented as extend, but I'm not convinced the
         // inconsistency is worth the inconvenience...
@@ -421,6 +422,8 @@ pub struct Config {
     pub artifact_mode: ArtifactMode,
     /// Whether local paths to files should be in the final dist json output
     pub no_local_paths: bool,
+    /// If true, override allow-dirty in the config and ignore all dirtyness
+    pub allow_all_dirty: bool,
     /// Target triples we want to build for
     pub targets: Vec<TargetTriple>,
     /// CI kinds we want to support
@@ -732,10 +735,38 @@ impl ChecksumStyle {
 }
 
 /// Which style(s) of configuration to generate
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum GenerateMode {
     /// Generate CI scripts for orchestrating cargo-dist
+    #[serde(rename = "ci")]
     Ci,
+}
+
+impl std::fmt::Display for GenerateMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GenerateMode::Ci => "ci".fmt(f),
+        }
+    }
+}
+
+/// Settings for which Generate targets can be dirty
+#[derive(Debug, Clone)]
+pub enum DirtyMode {
+    /// Allow only these targets
+    AllowList(Vec<GenerateMode>),
+    /// Allow all targets
+    AllowAll,
+}
+
+impl DirtyMode {
+    /// Do we need to run this Generate Mode
+    pub fn should_run(&self, mode: GenerateMode) -> bool {
+        match self {
+            DirtyMode::AllowAll => false,
+            DirtyMode::AllowList(list) => !list.contains(&mode),
+        }
+    }
 }
 
 pub(crate) fn parse_metadata_table(

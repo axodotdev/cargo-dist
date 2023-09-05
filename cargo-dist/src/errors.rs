@@ -161,10 +161,27 @@ pub enum DistError {
     },
 
     /// Not an error; indicates that a file's contents differ via --check
-    #[error(r#"generated contents for file {file} differ"#)]
+    #[error("{}:{line_number} has out of date contents and needs to be regenerated:\n-{existing_line}\n+{new_line}", file.origin_path())]
+    #[diagnostic(help("run 'cargo dist init' or 'cargo dist generate' to update the file"))]
     CheckFileMismatch {
         /// The file whose contents differ
-        file: String,
+        file: axoasset::SourceFile,
+        /// The line in the existing file
+        existing_line: String,
+        /// The line in the new version
+        new_line: String,
+        /// The line number
+        line_number: usize,
+    },
+
+    /// `cargo dist generate` was passed an explicit GenerateMode but the config in their Cargo.toml
+    /// has that mode set to allow-dirty, a contradiction!
+    #[error(
+        "'{generate_mode}' is marked as allow-dirty in your cargo-dist config, refusing to run"
+    )]
+    ContradictoryGenerateModes {
+        /// The problematic mode
+        generate_mode: crate::config::GenerateMode,
     },
 }
 

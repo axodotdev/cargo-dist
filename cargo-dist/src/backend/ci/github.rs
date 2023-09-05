@@ -10,9 +10,8 @@ use serde::Serialize;
 use tracing::warn;
 
 use crate::{
-    backend::templates::TEMPLATE_CI_GITHUB,
-    config::CiStyle,
-    errors::{DistError, DistResult},
+    backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
+    errors::DistResult,
     DistGraph, SortedMap, SortedSet, TargetTriple,
 };
 
@@ -42,8 +41,6 @@ pub struct GithubCiInfo {
     pub publish_jobs: Vec<String>,
     /// whether to create the release or assume an existing one
     pub create_release: bool,
-    /// whether to ignore on-disk changes to the configuration
-    pub allow_dirty: bool,
 }
 
 impl GithubCiInfo {
@@ -92,7 +89,6 @@ impl GithubCiInfo {
         };
 
         let pr_run_mode = dist.pr_run_mode;
-        let allow_dirty = dist.allow_dirty.contains(&CiStyle::Github);
 
         let tap = dist.tap.clone();
         let publish_jobs = dist.publish_jobs.iter().map(|j| j.to_string()).collect();
@@ -129,7 +125,6 @@ impl GithubCiInfo {
             pr_run_mode,
             global_task,
             create_release,
-            allow_dirty,
         }
     }
 
@@ -160,19 +155,11 @@ impl GithubCiInfo {
 
     /// Check whether the new configuration differs from the config on disk
     /// writhout actually writing the result.
-    pub fn check_github_ci(&self, dist: &DistGraph) -> DistResult<()> {
+    pub fn check(&self, dist: &DistGraph) -> DistResult<()> {
         let ci_file = self.github_ci_path(dist);
 
         let rendered = self.generate_github_ci(dist)?;
-        // FIXME: should we catch all errors, or only LocalAssetNotFound?
-        let existing = LocalAsset::load_string(&ci_file).unwrap_or("".to_owned());
-        if rendered != existing && !self.allow_dirty {
-            Err(DistError::CheckFileMismatch {
-                file: ci_file.to_string(),
-            })
-        } else {
-            Ok(())
-        }
+        diff_files(&ci_file, &rendered)
     }
 }
 

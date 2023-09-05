@@ -159,7 +159,7 @@ impl<'a> TestContext<'a, Tools> {
         self.load_dist_results(test_name)
     }
     /// Run 'cargo dist generate-ci' and return paths to various files that were generated
-    pub fn cargo_dist_generate_ci(&self, test_name: &str) -> Result<GenerateCiResult> {
+    pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateCiResult> {
         let github_ci_path = Utf8Path::new(".github/workflows/release.yml").to_owned();
         // Delete ci.yml if it already exists
         if github_ci_path.exists() {
@@ -167,10 +167,10 @@ impl<'a> TestContext<'a, Tools> {
         }
 
         // run generate-ci
-        eprintln!("running cargo dist build -aglobal...");
+        eprintln!("running cargo dist generate...");
         self.tools
             .cargo_dist
-            .output_checked(|cmd| cmd.arg("dist").arg("generate-ci"))?;
+            .output_checked(|cmd| cmd.arg("dist").arg("generate"))?;
 
         Ok(GenerateCiResult {
             test_name: test_name.to_owned(),
