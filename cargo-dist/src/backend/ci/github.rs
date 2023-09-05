@@ -2,8 +2,6 @@
 //!
 //! In the future this may get split up into submodules.
 
-// FIXME(#283): migrate this to minijinja (steal logic from oranda to load a whole dir)
-
 use axoasset::LocalAsset;
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
 use serde::Serialize;

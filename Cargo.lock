@@ -140,9 +140,9 @@ dependencies = [
 
 [[package]]
 name = "axoproject"
-version = "0.4.6"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a27738e3ae3be5c7f5dd49ac14e686a79d7b9bceac1d774dd666b527ec884aa"
+checksum = "6fff7bed7640f7b5ca3cbe96c49887f18f731ac2b8de26b7ce433ce21c78888c"
 dependencies = [
  "axoasset",
  "camino",
@@ -151,7 +151,7 @@ dependencies = [
  "guppy",
  "itertools 0.10.5",
  "miette",
- "parse-changelog 0.6.2",
+ "parse-changelog",
  "pathdiff",
  "semver",
  "serde",
@@ -302,7 +302,6 @@ dependencies = [
  "miette",
  "minijinja",
  "newline-converter",
- "parse-changelog 0.5.4",
  "semver",
  "serde",
  "serde_json",
@@ -1427,18 +1426,6 @@ name = "owo-colors"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1b04fb49957986fdce4d6ee7a65027d55d4b6d2265e5848bbb507b58ccfdb6f"
-
-[[package]]
-name = "parse-changelog"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6eab4bdddacb3dd2b7d704d58c2d4755ed63b74563d3d755691741e3b764ad9b"
-dependencies = [
- "indexmap 1.9.3",
- "memchr",
- "once_cell",
- "regex",
-]
 
 [[package]]
 name = "parse-changelog"
