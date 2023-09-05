@@ -1,3 +1,8 @@
+# Version 0.4.7 (2023-09-05)
+
+* Now uses parse_changelog::title_no_link to strip links on titles
+* autoincludes are now found for all packages, including libraries
+
 # Version 0.4.6 (2023-08-28)
 
 * Upgrades cargo-dist config and rustc for release build.
