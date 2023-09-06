@@ -162,7 +162,7 @@ pub enum DistError {
 
     /// Not an error; indicates that a file's contents differ via --check
     #[error("{}:{line_number} has out of date contents and needs to be regenerated:\n-{existing_line}\n+{new_line}", file.origin_path())]
-    #[diagnostic(help("run 'cargo dist init' or 'cargo dist generate' to update the file"))]
+    #[diagnostic(help("run 'cargo dist init' to update the file or set 'allow-dirty' in Cargo.toml to ignore out of date contents"))]
     CheckFileMismatch {
         /// The file whose contents differ
         file: axoasset::SourceFile,

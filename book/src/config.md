@@ -95,6 +95,14 @@ This is a list of CI backends you want to support, allowing subsequent runs of [
 
 `cargo dist init` can set this if you pass `--ci=...`
 
+### allow-dirty
+
+> since 0.3.0
+
+Example: `allow-dirty = ["ci"]`
+
+This is a list of generate tasks for cargo-dist to ignore when checking if generated configuration is up to date. It's useful for users who customize their own configuration beyond cargo-dist's generated defaults and want to avoid cargo-dist overwriting it.
+
 ### targets
 
 > since 0.0.3
