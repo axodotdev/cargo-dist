@@ -243,6 +243,13 @@ pub struct DistMetadata {
     #[serde(rename = "publish-jobs")]
     pub publish_jobs: Option<Vec<PublishStyle>>,
 
+    /// Whether to publish prereleases to package managers
+    ///
+    /// (defaults to false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "publish-prereleases")]
+    pub publish_prereleases: Option<bool>,
+
     /// Whether we should create the Github Release for you when you push a tag.
     ///
     /// If true (default), cargo-dist will create a new Github Release and generate
@@ -282,6 +289,7 @@ impl DistMetadata {
             default_features: _,
             all_features: _,
             publish_jobs: _,
+            publish_prereleases: _,
             create_release: _,
             pr_run_mode: _,
             allow_dirty: _,
@@ -322,6 +330,7 @@ impl DistMetadata {
             default_features,
             all_features,
             publish_jobs,
+            publish_prereleases,
             create_release,
             pr_run_mode: _,
             allow_dirty,
@@ -353,6 +362,9 @@ impl DistMetadata {
         // so let's not support that yet for its complexity!
         if allow_dirty.is_some() {
             warn!("package.metadata.dist.allow-dirty is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if publish_prereleases.is_some() {
+            warn!("package.metadata.dist.publish-prereleases is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings

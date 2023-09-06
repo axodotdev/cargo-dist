@@ -27,6 +27,10 @@ The version of your package is used pervasively, and cargo-dist will generally e
 
 If you set `publish = false` in your Cargo.toml we will treat this as a hint that cargo-dist should ignore all the affected packages completely. You can override this with dist's own `dist = true` config.
 
+### publish-prereleases
+
+If you set `publish-prereleases = true`, cargo-dist will publish prerelease versions to package managers such as Homebrew. By default, cargo-dist will only publish stable versions.
+
 ### repository
 
 cargo-dist has an internal notion of an "artifact download URL" that is required for things like [installers][] that detect the current platform and fetch binaries. If your CI backend is "github" then we will base the "[artifact download URL][artifact-url]" on the "repository" key. To be safe, we will only do this if your workspace agrees on this value. It's fine if only some packages bother setting "repository", as long as the ones that do use the exact same string. If they don't we will fail to compute an "artifact download URL", emit a warning, and ignore your request for installers that require it. (This might want to be a hard error in the future.)

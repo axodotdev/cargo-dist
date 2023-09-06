@@ -208,6 +208,7 @@ fn get_new_dist_metadata(
             default_features: None,
             all_features: None,
             publish_jobs: None,
+            publish_prereleases: None,
             create_release: None,
             pr_run_mode: None,
             allow_dirty: None,
@@ -677,6 +678,7 @@ fn update_toml_metadata(
         all_features,
         default_features,
         publish_jobs,
+        publish_prereleases,
         create_release,
         pr_run_mode,
         allow_dirty,
@@ -834,6 +836,13 @@ fn update_toml_metadata(
         "publish-jobs",
         "# Publish jobs to run in CI\n",
         publish_jobs.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "publish-prereleases",
+        "# Whether to publish prereleases to package managers\n",
+        *publish_prereleases,
     );
 
     apply_optional_value(

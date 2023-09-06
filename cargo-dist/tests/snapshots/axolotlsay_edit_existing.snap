@@ -2109,6 +2109,7 @@ maybeInstall(true).then(run);
       "description": "Install prebuilt binaries via Homebrew"
     }
   },
+  "publish_prereleases": false,
   "ci": {
     "github": {
       "artifacts_matrix": {
@@ -2316,6 +2317,7 @@ jobs:
       PLAN: ${{ needs.plan.outputs.val }}
       GITHUB_USER: "axo bot"
       GITHUB_EMAIL: "admin+bot@axo.dev"
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
     steps:
       - uses: actions/checkout@v3
         with:
