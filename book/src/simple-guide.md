@@ -6,7 +6,7 @@ Let's start with the kind of simple [Cargo Workspace][workspace] you would get f
 
 Our goal will be to setup a Github CI workflow that announces a new release of our application with a Github Release. The workflow will also build our application for the 3 major desktop platforms, wrap the binaries in zips/tarballs, and upload them to the Github Release. The Github Release's text will also include the relevant release notes from our RELEASES.md file.
 
-The workflow will be triggered whenever you push a [Git Tag][git-tag] specifying the application's new version, like "v1.0.0". Don't worry, you won't need to write those workflows yourself, cargo-dist will generate them for you! 
+The workflow will be triggered whenever you push a [Git Tag][git-tag] specifying the application's new version, like "v1.0.0". Don't worry, you won't need to write those workflows yourself, cargo-dist will generate them for you!
 
 > TO BE EXTREMELY PEDANTIC: The workflow will trigger whenever Github sees that the git tag *and* the commit it refers to are part of the repo *and* the timestamp(?) of both(?) is *after* the commit that introduced the workflow's yml file. That last part is an absolute headache, and may require you to delete the tag *both locally and on github* if you created it before the workflow. Basically, setup cargo-dist *before* you start cutting releases!
 
@@ -34,8 +34,6 @@ lto = "thin"
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.6"
-# The preferred Rust toolchain to use in CI (rustup toolchain syntax)
-rust-toolchain-version = "1.67.1"
 # CI backends to support (see 'cargo dist generate-ci')
 ci = ["github"]
 # The installers to generate for each app
@@ -64,7 +62,7 @@ Next let's talk about `[workspace.metadata.dist]`. Cargo allows other tools to i
 
 `rust-toolchain-version = "1.67.1"` is the Rust toolchain that is considered "ideal" for building your application, recorded for the sake of reproducibility and documentation. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate-ci][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
 
-`ci = ["github"]` lets subsequent runs of [generate-ci][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. It will be enabled by default if you have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). ("github" is currently the only supported CI backend.) 
+`ci = ["github"]` lets subsequent runs of [generate-ci][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. It will be enabled by default if you have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). ("github" is currently the only supported CI backend.)
 
 `installer = []` is just saying that we haven't enabled any [installers][]. Installers are intentionally excluded here to keep this example focused.
 
@@ -168,7 +166,7 @@ Oops! There's some extra features in that screenshot that I haven't explained ye
 
 If your project has a top-level RELEASES/CHANGELOG file like "RELEASES.md", then cargo-dist will automatically try to use it as part of your Announcement (Github Release). We use the [parse-changelog][] library to try to find a heading for the version you're releasing, and if we do, we add it to the Github Release's text. We also use the heading as the title for the Github Release (rather than just the git tag).
 
-Roughly speaking, the library is looking for something like: 
+Roughly speaking, the library is looking for something like:
 
 ```text
 # <ignorable prefix> <version> <ignorable suffix>

@@ -47,8 +47,6 @@ Ok so you've defined your App, but what should we actually build for it? Let's l
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.3"
-# The preferred Rust toolchain to use in CI (rustup toolchain syntax)
-rust-toolchain-version = "1.67.1"
 # CI backends to support (see 'cargo dist generate-ci')
 ci = ["github"]
 # The installers to generate for each app
