@@ -23,7 +23,9 @@ use backend::{
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
-use config::{ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle};
+use config::{
+    ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
+};
 use semver::Version;
 use tracing::{info, warn};
 
@@ -42,8 +44,9 @@ mod tests;
 
 /// cargo dist build -- actually build binaries and installers!
 pub fn do_build(cfg: &Config) -> Result<DistManifest> {
+    check_integrity(cfg)?;
+
     let dist = tasks::gather_work(cfg)?;
-    check_integrity(&dist)?;
 
     // FIXME: parallelize this by working this like a dependency graph, so we can start
     // bundling up an executable the moment it's built! Note however that you shouldn't
@@ -75,8 +78,8 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
 
 /// Just generate the manifest produced by `cargo dist build` without building
 pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
+    check_integrity(cfg)?;
     let dist = gather_work(cfg)?;
-    check_integrity(&dist)?;
 
     Ok(build_manifest(cfg, &dist))
 }
@@ -661,9 +664,23 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
 /// Run any necessary integrity checks for "primary" commands like build/plan
 ///
 /// (This is currently equivalent to `cargo dist generate --check`)
-pub fn check_integrity(dist: &DistGraph) -> Result<()> {
+pub fn check_integrity(cfg: &Config) -> Result<()> {
+    // We need to avoid overwriting any parts of configuration from CLI here,
+    // so construct a clean copy of config to run the check generate
+    let check_config = Config {
+        needs_coherent_announcement_tag: false,
+        artifact_mode: ArtifactMode::All,
+        no_local_paths: false,
+        allow_all_dirty: cfg.allow_all_dirty,
+        targets: vec![],
+        ci: vec![],
+        installers: vec![],
+        announcement_tag: None,
+    };
+    let dist = tasks::gather_work(&check_config)?;
+
     run_generate(
-        dist,
+        &dist,
         &GenerateArgs {
             modes: vec![],
             check: true,

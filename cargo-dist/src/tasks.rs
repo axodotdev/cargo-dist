@@ -2009,7 +2009,7 @@ impl DistGraph {
 
 /// Precompute all the work this invocation will need to do
 pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
-    eprintln!("analyzing workspace:");
+    info!("analyzing workspace:");
     let tools = tool_info()?;
     let workspace = crate::config::get_project()?;
     let mut graph =
@@ -2405,16 +2405,16 @@ pub(crate) fn parse_tag(
         let sty;
         if let Some(reason) = &disabled_reason {
             sty = &disabled_sty;
-            eprintln!("  {}", sty.apply_to(format!("{pkg_name} ({reason})")));
+            info!("  {}", sty.apply_to(format!("{pkg_name} ({reason})")));
         } else {
             sty = &enabled_sty;
-            eprintln!("  {}", sty.apply_to(pkg_name));
+            info!("  {}", sty.apply_to(pkg_name));
         }
 
         // Report each binary and potentially add it to the Release for this package
         let mut rust_binaries = vec![];
         for binary in &pkg.binaries {
-            eprintln!("    {}", sty.apply_to(format!("[bin] {}", binary)));
+            info!("    {}", sty.apply_to(format!("[bin] {}", binary)));
             // In the future might want to allow this to be granular for each binary
             if disabled_reason.is_none() {
                 rust_binaries.push(binary.to_owned());
@@ -2426,7 +2426,6 @@ pub(crate) fn parse_tag(
             rust_releases.push((pkg_id, rust_binaries));
         }
     }
-    eprintln!();
 
     // Don't proceed if this doesn't make sense
     if rust_releases.is_empty() {

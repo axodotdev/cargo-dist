@@ -265,9 +265,4 @@ stdout:
 }
 
 stderr:
-analyzing workspace:
-  cargo-dist
-    [bin] cargo-dist
-  cargo-dist-schema (no binaries)
-
 
