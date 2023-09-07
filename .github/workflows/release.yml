@@ -10,7 +10,7 @@
 #
 # Note that the Github Release™ will be created with a generated
 # title/body based on your changelogs.
-name: Release
+name: ${{ !github.event.pull_request && "Release" || "Check Release" }}
 
 permissions:
   contents: write
