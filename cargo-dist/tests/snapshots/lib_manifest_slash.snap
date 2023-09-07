@@ -23,10 +23,5 @@ stdout:
 }
 
 stderr:
-analyzing workspace:
-  cargo-dist (didn't match tag cargo-dist-schema/v1.0.0-FAKEVERSION)
-    [bin] cargo-dist
-  cargo-dist-schema (no binaries)
-
  WARN You're trying to explicitly Release a library, only minimal functionality will work
 
