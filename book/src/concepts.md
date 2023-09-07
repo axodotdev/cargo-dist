@@ -124,7 +124,7 @@ Normally cargo-dist will error out if the Announcement Tag selects no Apps, beca
 
 Now that we have a coherent Announcement and therefore have selected what apps we want to Release, we need to select what artifacts we want to build (or get a manifest for). Enumerating the exact artifacts for each invocation of cargo-dist would be tedious and error-prone, so we provide the `--artifacts=...` flag to specify the *Artifact Mode*, which is a certain subset of the Universe of all Artifacts:
 
-* "local": artifacts that are per-target platform ([executable-zips][executable-zip], symbols, MSIs...)
+* "local": artifacts that are per-target platform ([executable-zips][executable-zip], symbols, msi installers...)
 * "global": artifacts that are one-per-app (shell installer, npm package...)
 * "all": both global and local (so the whole Universe)
 * "host": the default mode that kind of breaks the rules to let you test things out locally

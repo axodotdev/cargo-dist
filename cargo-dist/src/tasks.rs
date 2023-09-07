@@ -1583,7 +1583,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let variants = release.variants.clone();
         let checksum = release.checksum;
 
-        // Make an MSI for every windows platform
+        // Make an msi for every windows platform
         for variant_idx in variants {
             let variant = self.variant(variant_idx);
             let binaries = variant.binaries.clone();
@@ -1605,7 +1605,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 if let Some((existing_spec, _)) = &package_info {
                     // cargo-wix doesn't clearly support multi-package, so bail
                     if existing_spec != &binary.pkg_spec {
-                        return Err(DistError::MultiPackageMSI {
+                        return Err(DistError::MultiPackageMsi {
                             artifact_name,
                             spec1: existing_spec.clone(),
                             spec2: binary.pkg_spec.clone(),
@@ -1616,7 +1616,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
             }
             let Some((pkg_spec, pkg_idx)) = package_info else {
-                return Err(DistError::NoPackageMSI { artifact_name })?;
+                return Err(DistError::NoPackageMsi { artifact_name })?;
             };
             let manifest_path = self.workspace.package(pkg_idx).manifest_path.clone();
             let wxs_path = manifest_path

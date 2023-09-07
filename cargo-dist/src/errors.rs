@@ -46,7 +46,7 @@ pub enum DistError {
     /// Error from (cargo-)wix
     #[error("WiX returned an error while building {msi}")]
     Wix {
-        /// The MSI we were trying to build
+        /// The msi we were trying to build
         msi: String,
         /// The underyling wix error
         #[source]
@@ -202,22 +202,22 @@ pub enum DistError {
         /// The problematic mode
         generate_mode: crate::config::GenerateMode,
     },
-    /// MSI with too many packages
+    /// msi with too many packages
     #[error("{artifact_name} depends on multiple packages, which isn't yet supported")]
     #[diagnostic(help("depends on {spec1} and {spec2}"))]
-    MultiPackageMSI {
-        /// Name of the MSI
+    MultiPackageMsi {
+        /// Name of the msi
         artifact_name: String,
         /// One of the pacakges
         spec1: String,
         /// A different package
         spec2: String,
     },
-    /// MSI with too few packages
+    /// msi with too few packages
     #[error("{artifact_name} has no binaries")]
     #[diagnostic(help("This should be impossible, you did nothing wrong, please file an issue!"))]
-    NoPackageMSI {
-        /// Name of the MSI
+    NoPackageMsi {
+        /// Name of the msi
         artifact_name: String,
     },
     /// These GUIDs for msi's are required and enforced by `cargo dist generate --check`

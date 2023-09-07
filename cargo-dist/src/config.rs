@@ -358,7 +358,7 @@ impl DistMetadata {
         if create_release.is_some() {
             warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        // Arguably should be package-local for things like MSIs, but doesn't make sense for CI,
+        // Arguably should be package-local for things like msi installers, but doesn't make sense for CI,
         // so let's not support that yet for its complexity!
         if allow_dirty.is_some() {
             warn!("package.metadata.dist.allow-dirty is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
@@ -449,7 +449,7 @@ pub struct Config {
 /// How we should select the artifacts to build
 #[derive(Clone, Copy, Debug)]
 pub enum ArtifactMode {
-    /// Build target-specific artifacts like executable-zips, symbols, MSIs...
+    /// Build target-specific artifacts like executable-zips, symbols, msi installers
     Local,
     /// Build globally unique artifacts like curl-sh installers, npm packages, metadata...
     Global,
@@ -491,7 +491,7 @@ pub enum InstallerStyle {
     /// Generate a Homebrew formula that fetches from [`crate::tasks::DistGraph::artifact_download_url`][]
     #[serde(rename = "homebrew")]
     Homebrew,
-    /// Generate an MSI installer that embeds the binary
+    /// Generate an msi installer that embeds the binary
     #[serde(rename = "msi")]
     Msi,
 }

@@ -1,4 +1,4 @@
-//! MSI installer
+//! msi installer
 
 use axoasset::LocalAsset;
 use camino::Utf8PathBuf;
@@ -9,20 +9,20 @@ use crate::{backend::diff_files, config, errors::*};
 const METADATA_WIX: &str = "wix";
 const WIX_GUID_KEYS: &[&str] = &["upgrade-guid", "path-guid"];
 
-/// Info needed to build an MSI
+/// Info needed to build an msi
 #[derive(Debug, Clone)]
 pub struct MsiInstallerInfo {
     /// An ideally unambiguous way to refer to a package for the purpose of cargo -p flags.
     pub pkg_spec: String,
-    /// Binaries we'll be baking into the MSI
+    /// Binaries we'll be baking into the msi
     pub target: String,
-    /// Final file path of the MSI
+    /// Final file path of the msi
     pub file_path: Utf8PathBuf,
     /// Dir stuff goes to
     pub package_dir: Utf8PathBuf,
     /// Path to the wxs file this installer uses
     pub wxs_path: Utf8PathBuf,
-    /// Path to the package Cargo.toml associated with this MSI
+    /// Path to the package Cargo.toml associated with this msi
     pub manifest_path: Utf8PathBuf,
 }
 

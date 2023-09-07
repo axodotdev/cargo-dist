@@ -441,7 +441,7 @@ fn get_new_dist_metadata(
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
-    // In the future, "vendored" installers like MSIs could be enabled in this situation!
+    // FIXME: "vendored" installers like msi could be enabled without any CI...
     let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
     if has_ci {
         let known = &[

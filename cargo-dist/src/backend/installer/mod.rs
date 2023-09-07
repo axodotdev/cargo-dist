@@ -32,7 +32,7 @@ pub enum InstallerImpl {
     Npm(NpmInstallerInfo),
     /// Homebrew formula
     Homebrew(HomebrewInstallerInfo),
-    /// Windows MSI installer
+    /// Windows msi installer
     Msi(MsiInstallerInfo),
 }
 

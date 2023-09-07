@@ -2030,7 +2030,7 @@ maybeInstall(true).then(run);
           "kind": "executable"
         }
       ],
-      "description": "install via MSI",
+      "description": "install via msi",
       "checksum": "axolotlsay-x86_64-pc-windows-msvc.msi.sha256"
     },
     "axolotlsay-x86_64-pc-windows-msvc.msi.sha256": {
