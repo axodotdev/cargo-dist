@@ -1994,12 +1994,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if !global_installers.is_empty() {
                 writeln!(gh_body, "## Install {heading_suffix}\n").unwrap();
                 for (_installer, details) in global_installers {
-                    let (InstallerImpl::Shell(info)
-                    | InstallerImpl::Homebrew(HomebrewInstallerInfo { inner: info, .. })
-                    | InstallerImpl::Powershell(info)
-                    | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. })) = details
-                    else {
-                        unreachable!("TODO: untangle this code for local installers");
+                    let info = match details {
+                        InstallerImpl::Shell(info)
+                        | InstallerImpl::Homebrew(HomebrewInstallerInfo { inner: info, .. })
+                        | InstallerImpl::Powershell(info)
+                        | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. }) => info,
+                        InstallerImpl::Msi(_) => {
+                            // Should be unreachable, but let's not crash over it
+                            continue;
+                        }
                     };
                     writeln!(&mut gh_body, "### {}\n", info.desc).unwrap();
                     writeln!(&mut gh_body, "```sh\n{}\n```\n", info.hint).unwrap();

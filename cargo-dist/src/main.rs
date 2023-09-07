@@ -292,10 +292,10 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
     let mut fake_cli = FakeCli::command().term_width(0);
     let full_command = fake_cli.get_subcommands_mut().next().unwrap();
     full_command.build();
-    let mut todo = vec![full_command];
+    let mut work_stack = vec![full_command];
     let mut is_full_command = true;
 
-    while let Some(command) = todo.pop() {
+    while let Some(command) = work_stack.pop() {
         let mut help_buf = Vec::new();
         command.write_long_help(&mut help_buf)?;
         let help = String::from_utf8(help_buf).unwrap();
@@ -406,11 +406,11 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
         }
         writeln!(out)?;
 
-        // The todo list is a stack, and processed in reverse-order, append
+        // The work_stack is necessarily processed in reverse-order, so append
         // these commands to the end in reverse-order so the first command is
         // processed first (i.e. at the end of the list).
         if subcommand_name != "help" {
-            todo.extend(
+            work_stack.extend(
                 command
                     .get_subcommands_mut()
                     .filter(|cmd| !cmd.is_hide_set())
