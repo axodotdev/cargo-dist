@@ -59,18 +59,16 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
         LocalAsset::create_dir_all(&dist.dist_dir)?;
     }
 
+    eprintln!("building artifacts:");
     for artifact in &dist.artifacts {
-        eprintln!("bundling {}", artifact.id);
+        eprintln!("  {}", artifact.id);
         init_artifact_dir(&dist, artifact)?;
     }
+    eprintln!();
 
     // Run all the build steps
     for step in &dist.build_steps {
         run_build_step(&dist, step)?;
-    }
-
-    for artifact in &dist.artifacts {
-        eprintln!("bundled: {}", artifact.file_path);
     }
 
     Ok(build_manifest(cfg, &dist))
