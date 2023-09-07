@@ -630,12 +630,16 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
     } else {
         // Check that we're not being told to do a contradiction
         for &mode in &args.modes {
-            if !dist.allow_dirty.should_run(mode)
-                && matches!(dist.allow_dirty, DirtyMode::AllowList(..))
-            {
-                return Err(DistError::ContradictoryGenerateModes {
-                    generate_mode: mode,
-                })?;
+            if !dist.allow_dirty.should_run(mode) {
+                if !matches!(dist.allow_dirty, DirtyMode::AllowList(..)) {
+                    return Err(DistError::ContradictoryGenerateModes {
+                        generate_mode: mode,
+                    })?;
+                } else {
+                    eprintln!(
+                        "'{mode}' is marked as allow-dirty in your cargo-dist config, skipping"
+                    )
+                }
             }
         }
         &args.modes[..]
