@@ -63,6 +63,7 @@ Possible values:
 - powershell: Generates a powershell script that fetches/installs the right build
 - npm:        Generates an npm project that fetches the right build to your node_modules
 - homebrew:   Generates a Homebrew formula
+- msi:        Generates an msi for each windows platform
 
 #### `-c, --ci <CI>`
 CI we want to support
@@ -106,7 +107,7 @@ cargo dist build [OPTIONS]
 #### `-a, --artifacts <ARTIFACTS>`
 Which subset of the Artifacts to build
 
-Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, MSIs...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
+Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, msi installers...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
 
 Having this distinction lets us run cargo-dist independently on multiple machines without collisions between the outputs.
 
@@ -117,7 +118,7 @@ The specifics of "host" mode are intentionally unspecified to enable us to provi
 \[default: host]  
 
 Possible values:
-- local:  Build target-specific artifacts like executable-zips and MSIs
+- local:  Build target-specific artifacts like executable-zips and msi installers
 - global: Build unique artifacts like curl-sh installers and npm packages
 - host:   Fuzzily build "as much as possible" for the host system
 - all:    Build all the artifacts; useful for `cargo dist manifest`
@@ -175,7 +176,8 @@ cargo dist generate [OPTIONS] [MODE]...
 Which type of configuration to generate
 
 Possible values:
-- ci: Generate CI scripts for orchestrating cargo-dist
+- ci:  Generate CI scripts for orchestrating cargo-dist
+- msi: Generate .wxs tempaltes for msi installers
 
 ### Options
 #### `--check`
@@ -227,7 +229,7 @@ cargo dist manifest [OPTIONS]
 #### `-a, --artifacts <ARTIFACTS>`
 Which subset of the Artifacts to build
 
-Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, MSIs...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
+Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, msi installers...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
 
 Having this distinction lets us run cargo-dist independently on multiple machines without collisions between the outputs.
 
@@ -238,7 +240,7 @@ The specifics of "host" mode are intentionally unspecified to enable us to provi
 \[default: host]  
 
 Possible values:
-- local:  Build target-specific artifacts like executable-zips and MSIs
+- local:  Build target-specific artifacts like executable-zips and msi installers
 - global: Build unique artifacts like curl-sh installers and npm packages
 - host:   Fuzzily build "as much as possible" for the host system
 - all:    Build all the artifacts; useful for `cargo dist manifest`

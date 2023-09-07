@@ -44,7 +44,7 @@ If you enable any of these features, we may automatically turn on `precise-build
 
 See the docs for all the details.
 
-* @gankra + @Yatekiii [impl](https://github.com/axodotdev/cargo-dist/pull/321)
+* @gankra + @Yatekii [impl](https://github.com/axodotdev/cargo-dist/pull/321)
 * docs
     * [features](https://opensource.axo.dev/cargo-dist/book/config.html#features)
     * [all-features](https://opensource.axo.dev/cargo-dist/book/config.html#all-features)

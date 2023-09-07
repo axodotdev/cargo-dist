@@ -27,7 +27,7 @@ pub static AXOLOTLSAY: TestContextLock<Tools> = TestContextLock::new(
     &Repo {
         repo_owner: "axodotdev",
         repo_name: "axolotlsay",
-        commit_sha: "6b8337fb742908e506296eab3371bb71b76283d7",
+        commit_sha: "b9e3554cd0db987494ab844d676a6fd30f861741",
         app_name: "axolotlsay",
         bins: &["axolotlsay"],
     },
@@ -104,9 +104,10 @@ pub struct PlanResult {
     raw_json: String,
 }
 
-pub struct GenerateCiResult {
+pub struct GenerateResult {
     test_name: String,
     github_ci_path: Option<Utf8PathBuf>,
+    wxs_path: Option<Utf8PathBuf>,
 }
 
 pub struct BuildAndPlanResult {
@@ -159,11 +160,15 @@ impl<'a> TestContext<'a, Tools> {
         self.load_dist_results(test_name)
     }
     /// Run 'cargo dist generate-ci' and return paths to various files that were generated
-    pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateCiResult> {
+    pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateResult> {
         let github_ci_path = Utf8Path::new(".github/workflows/release.yml").to_owned();
-        // Delete ci.yml if it already exists
+        let wxs_path = Utf8Path::new("wix/main.wxs").to_owned();
+        // Delete files if they already exist
         if github_ci_path.exists() {
             LocalAsset::remove_file(&github_ci_path)?;
+        }
+        if wxs_path.exists() {
+            LocalAsset::remove_file(&wxs_path)?;
         }
 
         // run generate-ci
@@ -172,9 +177,10 @@ impl<'a> TestContext<'a, Tools> {
             .cargo_dist
             .output_checked(|cmd| cmd.arg("dist").arg("generate"))?;
 
-        Ok(GenerateCiResult {
+        Ok(GenerateResult {
             test_name: test_name.to_owned(),
             github_ci_path: github_ci_path.exists().then_some(github_ci_path),
+            wxs_path: wxs_path.exists().then_some(wxs_path),
         })
     }
 
@@ -206,10 +212,20 @@ impl<'a> TestContext<'a, Tools> {
         let new_table = new_table_src.deserialize_toml_edit()?;
 
         // Written slightly verbosely to make it easier to isolate which failed
-        eprintln!("{new_table}");
-        let old = &mut toml["workspace"]["metadata"]["dist"];
-        let new = &new_table["workspace"]["metadata"]["dist"];
-        *old = new.clone();
+        let namespaces = ["workspace", "package"];
+        for namespace in namespaces {
+            let Some(new_meta) = new_table.get(namespace).and_then(|t| t.get("metadata")) else {
+                continue;
+            };
+            let old_namespace = toml[namespace].or_insert(toml_edit::table());
+            let old_meta = old_namespace["metadata"].or_insert(toml_edit::table());
+            eprintln!("{new_table}");
+            for (key, new) in new_meta.as_table().unwrap() {
+                let old = &mut old_meta[key];
+                *old = new.clone();
+            }
+        }
+
         let toml_out = toml.to_string();
         eprintln!("writing Cargo.toml...");
         axoasset::LocalAsset::write_new(&toml_out, "Cargo.toml")?;
@@ -503,7 +519,7 @@ impl BuildAndPlanResult {
     }
 }
 
-impl GenerateCiResult {
+impl GenerateResult {
     pub fn check_all(&self) -> Result<Snapshots> {
         self.snapshot()
     }
@@ -519,6 +535,8 @@ impl GenerateCiResult {
             "github-ci.yml",
             self.github_ci_path.as_deref(),
         )?;
+
+        append_snapshot_file(&mut snapshots, "main.wxs", self.wxs_path.as_deref())?;
 
         Ok(Snapshots {
             settings: snapshot_settings_with_gallery_filter(),

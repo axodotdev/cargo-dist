@@ -66,8 +66,8 @@ use crate::config::DirtyMode;
 use crate::{
     backend::{
         installer::{
-            homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, ExecutableZipFragment,
-            InstallerImpl, InstallerInfo,
+            homebrew::HomebrewInstallerInfo, msi::MsiInstallerInfo, npm::NpmInstallerInfo,
+            ExecutableZipFragment, InstallerImpl, InstallerInfo,
         },
         templates::Templates,
     },
@@ -250,6 +250,8 @@ pub struct Binary {
     pub pkg_spec: String,
     /// The name of the binary (as defined by the Cargo.toml)
     pub name: String,
+    /// The filename the binary will have
+    pub file_name: String,
     /// The target triple to build it for
     pub target: TargetTriple,
     /// The artifact for this Binary's symbols
@@ -263,6 +265,7 @@ pub struct Binary {
     pub copy_symbols_to: Vec<Utf8PathBuf>,
     /// feature flags!
     pub features: CargoTargetFeatures,
+    pkg_idx: PackageIdx,
 }
 
 /// A build step we would like to perform
@@ -862,28 +865,36 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let pkg_spec = package.name.clone();
             let id = format!("{binary_name}-v{version}-{target}");
 
-            let features = CargoTargetFeatures {
-                default_features: package_metadata.default_features.unwrap_or(true),
-                features: if let Some(true) = package_metadata.all_features {
-                    CargoTargetFeatureList::All
-                } else {
-                    CargoTargetFeatureList::List(
-                        package_metadata.features.clone().unwrap_or_default(),
-                    )
-                },
-            };
-
-            // If we already are building this binary we don't need to do it again!
             let idx = if let Some(&idx) = self.binaries_by_id.get(&id) {
+                // If we already are building this binary we don't need to do it again!
                 idx
             } else {
+                // Compute the rest of the details and add the binary
+                let features = CargoTargetFeatures {
+                    default_features: package_metadata.default_features.unwrap_or(true),
+                    features: if let Some(true) = package_metadata.all_features {
+                        CargoTargetFeatureList::All
+                    } else {
+                        CargoTargetFeatureList::List(
+                            package_metadata.features.clone().unwrap_or_default(),
+                        )
+                    },
+                };
+
+                let target_is_windows = target.contains("windows");
+                let platform_exe_ext = if target_is_windows { ".exe" } else { "" };
+
+                let file_name = format!("{binary_name}{platform_exe_ext}");
+
                 info!("added binary {id}");
                 let idx = BinaryIdx(self.inner.binaries.len());
                 let binary = Binary {
                     id,
                     pkg_id,
                     pkg_spec,
+                    pkg_idx,
                     name: binary_name,
+                    file_name,
                     target: target.clone(),
                     copy_exe_to: vec![],
                     copy_symbols_to: vec![],
@@ -992,7 +1003,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             release.unix_archive
         };
-        let platform_exe_ext = if target_is_windows { ".exe" } else { "" };
 
         let artifact_dir_name = variant.id.clone();
         let artifact_dir_path = dist_dir.join(&artifact_dir_name);
@@ -1004,9 +1014,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut built_assets = Vec::new();
         for &binary_idx in &variant.binaries {
             let binary = self.binary(binary_idx);
-            let exe_name = &binary.name;
-            let exe_filename = format!("{exe_name}{platform_exe_ext}");
-            built_assets.push((binary_idx, artifact_dir_path.join(exe_filename)));
+            built_assets.push((binary_idx, artifact_dir_path.join(&binary.file_name)));
         }
 
         // When unpacking we currently rely on zips being flat, but --strip-prefix=1 tarballs.
@@ -1039,6 +1047,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         )
     }
 
+    /// Register that `for_artifact` requires `binary_idx` to actually be built for
+    /// `for_variant`.
+    ///
+    /// `dest_path` is the file path to copy the binary to (used for Archives)
+    /// as soon as they're built.
+    ///
+    /// Note that it's important to use `dest_path`, as cargo does not guarantee that
+    /// multiple invocations will not overwrite each other's outputs. Since we always
+    /// explicitly pass --target and --profile, this is unlikely to be an issue. But if
+    /// we ever introduce the notion of "feature variants" (ReleaseVariants that differ
+    /// only in the feature flags they take), this will become a problem.
     fn require_binary(
         &mut self,
         for_artifact: ArtifactIdx,
@@ -1103,13 +1122,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .insert(binary_idx, dest_path);
     }
 
-    fn add_installer(&mut self, to_release: ReleaseIdx, installer: &InstallerStyle) {
+    fn add_installer(
+        &mut self,
+        to_release: ReleaseIdx,
+        installer: &InstallerStyle,
+    ) -> DistResult<()> {
         match installer {
             InstallerStyle::Shell => self.add_shell_installer(to_release),
             InstallerStyle::Powershell => self.add_powershell_installer(to_release),
             InstallerStyle::Npm => self.add_npm_installer(to_release),
             InstallerStyle::Homebrew => self.add_homebrew_installer(to_release),
+            InstallerStyle::Msi => self.add_msi_installer(to_release)?,
         }
+        Ok(())
     }
 
     fn add_shell_installer(&mut self, to_release: ReleaseIdx) {
@@ -1548,12 +1573,108 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.add_global_artifact(to_release, installer_artifact);
     }
 
+    fn add_msi_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
+        if !self.local_artifacts_enabled() {
+            return Ok(());
+        }
+
+        // Clone info we need from the release to avoid borrowing across the loop
+        let release = self.release(to_release);
+        let variants = release.variants.clone();
+        let checksum = release.checksum;
+
+        // Make an msi for every windows platform
+        for variant_idx in variants {
+            let variant = self.variant(variant_idx);
+            let binaries = variant.binaries.clone();
+            let target = &variant.target;
+            if !target.contains("windows") {
+                continue;
+            }
+
+            let variant_id = &variant.id;
+            let artifact_name = format!("{variant_id}.msi");
+            let artifact_path = self.inner.dist_dir.join(&artifact_name);
+            let dir_name = format!("{variant_id}_msi");
+            let dir_path = self.inner.dist_dir.join(&dir_name);
+
+            // Compute which package we're actually building, based on the binaries
+            let mut package_info: Option<(String, PackageIdx)> = None;
+            for &binary_idx in &binaries {
+                let binary = self.binary(binary_idx);
+                if let Some((existing_spec, _)) = &package_info {
+                    // cargo-wix doesn't clearly support multi-package, so bail
+                    if existing_spec != &binary.pkg_spec {
+                        return Err(DistError::MultiPackageMsi {
+                            artifact_name,
+                            spec1: existing_spec.clone(),
+                            spec2: binary.pkg_spec.clone(),
+                        })?;
+                    }
+                } else {
+                    package_info = Some((binary.pkg_spec.clone(), binary.pkg_idx));
+                }
+            }
+            let Some((pkg_spec, pkg_idx)) = package_info else {
+                return Err(DistError::NoPackageMsi { artifact_name })?;
+            };
+            let manifest_path = self.workspace.package(pkg_idx).manifest_path.clone();
+            let wxs_path = manifest_path
+                .parent()
+                .expect("Cargo.toml had no parent dir!?")
+                .join("wix")
+                .join("main.wxs");
+
+            // Gather up the bundles the installer supports
+            let installer_artifact = Artifact {
+                id: artifact_name,
+                target_triples: vec![target.clone()],
+                file_path: artifact_path.clone(),
+                required_binaries: FastMap::new(),
+                archive: Some(Archive {
+                    with_root: None,
+                    dir_path: dir_path.clone(),
+                    zip_style: ZipStyle::TempDir,
+                    static_assets: vec![],
+                }),
+                checksum: None,
+                kind: ArtifactKind::Installer(InstallerImpl::Msi(MsiInstallerInfo {
+                    package_dir: dir_path.clone(),
+                    pkg_spec,
+                    target: target.clone(),
+                    file_path: artifact_path.clone(),
+                    wxs_path,
+                    manifest_path,
+                })),
+                is_global: false,
+            };
+
+            // Register the artifact to various things
+            let installer_idx = self.add_local_artifact(variant_idx, installer_artifact);
+            for binary_idx in binaries {
+                let binary = self.binary(binary_idx);
+                self.require_binary(
+                    installer_idx,
+                    variant_idx,
+                    binary_idx,
+                    dir_path.join(&binary.file_name),
+                );
+            }
+            if checksum != ChecksumStyle::False {
+                self.add_artifact_checksum(variant_idx, installer_idx, checksum);
+            }
+        }
+
+        Ok(())
+    }
+
     fn add_local_artifact(
         &mut self,
         to_variant: ReleaseVariantIdx,
         artifact: Artifact,
     ) -> ArtifactIdx {
         assert!(self.local_artifacts_enabled());
+        assert!(!artifact.is_global);
 
         let idx = ArtifactIdx(self.inner.artifacts.len());
         let ReleaseVariant {
@@ -1567,6 +1688,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
     fn add_global_artifact(&mut self, to_release: ReleaseIdx, artifact: Artifact) -> ArtifactIdx {
         assert!(self.global_artifacts_enabled());
+        assert!(artifact.is_global);
 
         let idx = ArtifactIdx(self.inner.artifacts.len());
         let Release {
@@ -1872,11 +1994,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if !global_installers.is_empty() {
                 writeln!(gh_body, "## Install {heading_suffix}\n").unwrap();
                 for (_installer, details) in global_installers {
-                    let (InstallerImpl::Shell(info)
-                    | InstallerImpl::Homebrew(HomebrewInstallerInfo { inner: info, .. })
-                    | InstallerImpl::Powershell(info)
-                    | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. })) = details;
-
+                    let info = match details {
+                        InstallerImpl::Shell(info)
+                        | InstallerImpl::Homebrew(HomebrewInstallerInfo { inner: info, .. })
+                        | InstallerImpl::Powershell(info)
+                        | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. }) => info,
+                        InstallerImpl::Msi(_) => {
+                            // Should be unreachable, but let's not crash over it
+                            continue;
+                        }
+                    };
                     writeln!(&mut gh_body, "### {}\n", info.desc).unwrap();
                     writeln!(&mut gh_body, "```sh\n{}\n```\n", info.hint).unwrap();
                 }
@@ -2133,7 +2260,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
             }
 
             // Create the variant
-            graph.add_installer(release, installer);
+            graph.add_installer(release, installer)?;
         }
     }
 

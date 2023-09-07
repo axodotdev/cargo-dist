@@ -249,6 +249,11 @@ fn manifest_artifact(
             description = Some(info.desc.clone());
             kind = cargo_dist_schema::ArtifactKind::Installer;
         }
+        ArtifactKind::Installer(InstallerImpl::Msi(..)) => {
+            install_hint = None;
+            description = Some("install via msi".to_owned());
+            kind = cargo_dist_schema::ArtifactKind::Installer;
+        }
         ArtifactKind::Checksum(_) => {
             install_hint = None;
             description = None;
@@ -314,6 +319,7 @@ fn generate_and_write_checksum(
 
 /// Generate a checksum for the src_path and return it as a string
 fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResult<String> {
+    info!("generating {checksum:?} for {src_path}");
     use sha2::Digest;
     use std::fmt::Write;
 
@@ -561,6 +567,9 @@ fn zip_dir(
         ZipStyle::Tar(CompressionImpl::Zstd) => {
             LocalAsset::tar_zstd_dir(src_path, dest_path, with_root)?
         }
+        ZipStyle::TempDir => {
+            // no-op
+        }
     }
     Ok(())
 }
@@ -617,12 +626,7 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
     // Otherwise, choose any modes that are appropriate
     let inferred = args.modes.is_empty();
     let modes = if inferred {
-        let mut m = vec![];
-        // CI is the only thing to infer at the moment
-        if !&dist.ci_style.is_empty() {
-            m.push(GenerateMode::Ci)
-        }
-        m
+        &[GenerateMode::Ci, GenerateMode::Msi]
     } else {
         // Check that we're not being told to do a contradiction
         for &mode in &args.modes {
@@ -634,14 +638,15 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
                 })?;
             }
         }
-        args.modes.to_owned()
+        &args.modes[..]
     };
 
     // generate everything we need to
-    for mode in modes {
-        match mode {
-            GenerateMode::Ci => {
-                if dist.allow_dirty.should_run(mode) {
+    // HEY! if you're adding a case to this, add it to the inferred list above!
+    for &mode in modes {
+        if dist.allow_dirty.should_run(mode) {
+            match mode {
+                GenerateMode::Ci => {
                     // If you add a CI backend, call it here
                     let CiInfo { github } = &dist.ci;
                     if let Some(github) = github {
@@ -649,6 +654,17 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
                             github.check(dist)?;
                         } else {
                             github.write_to_disk(dist)?;
+                        }
+                    }
+                }
+                GenerateMode::Msi => {
+                    for artifact in &dist.artifacts {
+                        if let ArtifactKind::Installer(InstallerImpl::Msi(msi)) = &artifact.kind {
+                            if args.check {
+                                msi.check_config()?;
+                            } else {
+                                msi.write_config_to_disk()?;
+                            }
                         }
                     }
                 }
@@ -699,6 +715,7 @@ fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
         InstallerImpl::Homebrew(info) => {
             installer::homebrew::write_homebrew_formula(&dist.templates, dist, info)?
         }
+        InstallerImpl::Msi(info) => info.build()?,
     }
     Ok(())
 }

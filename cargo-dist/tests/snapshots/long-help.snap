@@ -61,6 +61,7 @@ GLOBAL OPTIONS:
           - powershell: Generates a powershell script that fetches/installs the right build
           - npm:        Generates an npm project that fetches the right build to your node_modules
           - homebrew:   Generates a Homebrew formula
+          - msi:        Generates an msi for each windows platform
 
   -c, --ci <CI>
           CI we want to support

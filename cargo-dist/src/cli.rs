@@ -173,7 +173,7 @@ pub struct BuildArgs {
     /// Which subset of the Artifacts to build
     ///
     /// Artifacts can be broken up into two major classes: "local" ones, which are
-    /// made for each target system (executable-zips, symbols, MSIs...); and "global" ones,
+    /// made for each target system (executable-zips, symbols, msi installers...); and "global" ones,
     /// which are made once per app (curl-sh installers, npm package, metadata...).
     ///
     /// Having this distinction lets us run cargo-dist independently on
@@ -196,7 +196,7 @@ pub struct BuildArgs {
 /// How we should select the artifacts to build
 #[derive(ValueEnum, Copy, Clone, Debug)]
 pub enum ArtifactMode {
-    /// Build target-specific artifacts like executable-zips and MSIs
+    /// Build target-specific artifacts like executable-zips and msi installers
     Local,
     /// Build unique artifacts like curl-sh installers and npm packages
     Global,
@@ -245,6 +245,8 @@ pub struct InitArgs {
 pub enum GenerateMode {
     /// Generate CI scripts for orchestrating cargo-dist
     Ci,
+    /// Generate .wxs tempaltes for msi installers
+    Msi,
 }
 
 impl GenerateMode {
@@ -252,6 +254,7 @@ impl GenerateMode {
     pub fn to_lib(self) -> cargo_dist::config::GenerateMode {
         match self {
             GenerateMode::Ci => cargo_dist::config::GenerateMode::Ci,
+            GenerateMode::Msi => cargo_dist::config::GenerateMode::Msi,
         }
     }
 }
@@ -305,6 +308,8 @@ pub enum InstallerStyle {
     Npm,
     /// Generates a Homebrew formula
     Homebrew,
+    /// Generates an msi for each windows platform
+    Msi,
 }
 
 impl InstallerStyle {
@@ -315,6 +320,7 @@ impl InstallerStyle {
             InstallerStyle::Powershell => cargo_dist::config::InstallerStyle::Powershell,
             InstallerStyle::Npm => cargo_dist::config::InstallerStyle::Npm,
             InstallerStyle::Homebrew => cargo_dist::config::InstallerStyle::Homebrew,
+            InstallerStyle::Msi => cargo_dist::config::InstallerStyle::Msi,
         }
     }
 }

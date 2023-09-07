@@ -79,26 +79,39 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     };
 
     if let Some(meta) = &multi_meta.workspace {
-        update_toml_metadata(&mut workspace_toml, meta, true);
+        let metadata = config::get_toml_metadata(&mut workspace_toml, true);
+        apply_dist_to_metadata(metadata, meta);
     }
 
     // Save the workspace toml (potentially an effective no-op if we made no edits)
+    config::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
     eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
     eprintln!();
-    config::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
 
     // Now that we've done the stuff that's definitely part of the root Cargo.toml,
-    // Optionally apply updates to packages (currently only applies with --with-json-config)
-    for (package_name, meta) in &multi_meta.packages {
-        for (_idx, package) in workspace.packages() {
-            if &package.name == package_name {
-                let mut package_toml = config::load_cargo_toml(&package.manifest_path)?;
-                update_toml_metadata(&mut package_toml, meta, false);
-                eprintln!("{check} added [package.metadata.dist] to {package_name}'s Cargo.toml");
-                eprintln!();
-                config::save_cargo_toml(&package.manifest_path, package_toml)?;
-                break;
+    // Optionally apply updates to packages
+    for (_idx, package) in workspace.packages() {
+        // Gather up all the things we'd like to be written to this file
+        let meta = multi_meta.packages.get(&package.name);
+        let needs_edit = meta.is_some();
+
+        if needs_edit {
+            // Ok we have changes to make, let's load the toml
+            let mut package_toml = config::load_cargo_toml(&package.manifest_path)?;
+            let metadata = config::get_toml_metadata(&mut package_toml, false);
+
+            // Apply [package.metadata.dist]
+            if let Some(meta) = meta {
+                apply_dist_to_metadata(metadata, meta);
+                eprintln!(
+                    "{check} added [package.metadata.dist] to {}'s Cargo.toml",
+                    package.name
+                );
             }
+
+            // Save the result
+            eprintln!();
+            config::save_cargo_toml(&package.manifest_path, package_toml)?;
         }
     }
 
@@ -428,7 +441,7 @@ fn get_new_dist_metadata(
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
-    // In the future, "vendored" installers like MSIs could be enabled in this situation!
+    // FIXME: "vendored" installers like msi could be enabled without any CI...
     let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
     if has_ci {
         let known = &[
@@ -436,6 +449,7 @@ fn get_new_dist_metadata(
             InstallerStyle::Powershell,
             InstallerStyle::Npm,
             InstallerStyle::Homebrew,
+            InstallerStyle::Msi,
         ];
         let mut defaults = vec![];
         let mut keys = vec![];
@@ -459,6 +473,7 @@ fn get_new_dist_metadata(
                 InstallerStyle::Powershell => "powershell",
                 InstallerStyle::Npm => "npm",
                 InstallerStyle::Homebrew => "homebrew",
+                InstallerStyle::Msi => "msi",
             });
         }
 
@@ -630,21 +645,8 @@ fn get_new_dist_metadata(
     Ok(meta)
 }
 
-fn update_toml_metadata(
-    workspace_toml: &mut toml_edit::Document,
-    meta: &DistMetadata,
-    is_workspace: bool,
-) {
-    // Walk down/prepare the components...
-    let root_key = if is_workspace { "workspace" } else { "package" };
-    let workspace = workspace_toml[root_key].or_insert(toml_edit::table());
-    if let Some(t) = workspace.as_table_mut() {
-        t.set_implicit(true)
-    }
-    let metadata = workspace["metadata"].or_insert(toml_edit::table());
-    if let Some(t) = metadata.as_table_mut() {
-        t.set_implicit(true)
-    }
+/// Ensure [*.metadata.dist] has the given values
+fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     let dist_metadata = &mut metadata[METADATA_DIST];
 
     // If there's no table, make one

@@ -11,9 +11,11 @@ use crate::{
 };
 
 use self::homebrew::HomebrewInstallerInfo;
+use self::msi::MsiInstallerInfo;
 use self::npm::NpmInstallerInfo;
 
 pub mod homebrew;
+pub mod msi;
 pub mod npm;
 pub mod powershell;
 pub mod shell;
@@ -30,6 +32,8 @@ pub enum InstallerImpl {
     Npm(NpmInstallerInfo),
     /// Homebrew formula
     Homebrew(HomebrewInstallerInfo),
+    /// Windows msi installer
+    Msi(MsiInstallerInfo),
 }
 
 /// Generic info about an installer
