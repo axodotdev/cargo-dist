@@ -229,6 +229,13 @@ pub enum DistError {
         /// The missing keys
         keys: &'static [&'static str],
     },
+    /// unrecognized style
+    #[error("{style} is not a recognized value")]
+    #[diagnostic(help("Jobs that do not come with cargo-dist should be prefixed with ./"))]
+    UnrecognizedStyle {
+        /// Name of the msi
+        style: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

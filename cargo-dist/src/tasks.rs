@@ -201,6 +201,8 @@ pub struct DistGraph {
     pub ci: CiInfo,
     /// List of publish jobs to run
     pub publish_jobs: Vec<PublishStyle>,
+    /// Extra user-specified publish jobs to run
+    pub user_publish_jobs: Vec<String>,
     /// Whether to publish prerelease builds to package managers
     pub publish_prereleases: bool,
     /// A GitHub repo to publish the Homebrew formula to
@@ -705,7 +707,27 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         let templates = Templates::new()?;
-        let publish_jobs = workspace_metadata.publish_jobs.clone().unwrap_or(vec![]);
+        let publish_jobs: Vec<PublishStyle>;
+        let user_publish_jobs: Vec<PublishStyle>;
+        (publish_jobs, user_publish_jobs) = workspace_metadata
+            .publish_jobs
+            .clone()
+            .unwrap_or(vec![])
+            .into_iter()
+            .partition(|s| !matches!(s, PublishStyle::User(_)));
+        let user_publish_jobs = user_publish_jobs
+            .into_iter()
+            // Remove the ./ suffix for later; we only have user jobs at this
+            // point so we no longer need to distinguish
+            .map(|s| {
+                let string = s.to_string();
+                if let Some(stripped) = string.strip_prefix("./") {
+                    stripped.to_owned()
+                } else {
+                    string
+                }
+            })
+            .collect();
         let publish_prereleases = publish_prereleases.unwrap_or(false);
 
         let allow_dirty = if allow_all_dirty {
@@ -745,6 +767,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 pr_run_mode: workspace_metadata.pr_run_mode.unwrap_or_default(),
                 tap: workspace_metadata.tap.clone(),
                 publish_jobs,
+                user_publish_jobs,
                 publish_prereleases,
                 allow_dirty,
             },

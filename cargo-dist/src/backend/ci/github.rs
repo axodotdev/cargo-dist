@@ -38,6 +38,8 @@ pub struct GithubCiInfo {
     pub tap: Option<String>,
     /// publish jobs
     pub publish_jobs: Vec<String>,
+    /// user-specified publish jobs
+    pub user_publish_jobs: Vec<String>,
     /// whether to create the release or assume an existing one
     pub create_release: bool,
     /// \[unstable\] whether to add ssl.com windows binary signing
@@ -94,6 +96,7 @@ impl GithubCiInfo {
 
         let tap = dist.tap.clone();
         let publish_jobs = dist.publish_jobs.iter().map(|j| j.to_string()).collect();
+        let user_publish_jobs = dist.user_publish_jobs.clone();
 
         // Figure out what Local Artifact tasks we need
         let local_runs = if dist.merge_tasks {
@@ -123,6 +126,7 @@ impl GithubCiInfo {
             fail_fast,
             tap,
             publish_jobs,
+            user_publish_jobs,
             artifacts_matrix: GithubMatrix { include: tasks },
             pr_run_mode,
             global_task,

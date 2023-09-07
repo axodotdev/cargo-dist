@@ -523,19 +523,48 @@ impl std::fmt::Display for InstallerStyle {
 }
 
 /// The publish jobs we should run
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub enum PublishStyle {
     /// Publish a Homebrew formula to a tap repository
     #[serde(rename = "homebrew")]
     Homebrew,
+    /// User-supplied value
+    User(String),
+}
+
+impl std::str::FromStr for PublishStyle {
+    type Err = DistError;
+    fn from_str(s: &str) -> DistResult<Self> {
+        if let Some(slug) = s.strip_prefix("./") {
+            Ok(Self::User(slug.to_owned()))
+        } else if s == "homebrew" {
+            Ok(Self::Homebrew)
+        } else {
+            Err(DistError::UnrecognizedStyle {
+                style: s.to_owned(),
+            })
+        }
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for PublishStyle {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let path = String::deserialize(deserializer)?;
+        path.parse().map_err(|e| D::Error::custom(format!("{e}")))
+    }
 }
 
 impl std::fmt::Display for PublishStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let string = match self {
-            PublishStyle::Homebrew => "homebrew",
-        };
-        string.fmt(f)
+        match self {
+            PublishStyle::Homebrew => write!(f, "homebrew"),
+            PublishStyle::User(s) => write!(f, "./{s}"),
+        }
     }
 }
 
