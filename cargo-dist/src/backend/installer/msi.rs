@@ -47,8 +47,9 @@ impl MsiInstallerInfo {
         b.output(Some(self.file_path.as_str()));
         // Binaries are over here
         b.target_bin_dir(Some(self.package_dir.as_str()));
-        // Give users better feedback from WiX
-        b.capture_output(false);
+        // FIXME: Would love to give users better output from WiX but it prints to stdout,
+        // which messes up `--output-format=json`
+        b.capture_output(true);
 
         let exec = b.build();
         exec.run().map_err(|e| DistError::Wix {
