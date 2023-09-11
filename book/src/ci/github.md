@@ -117,6 +117,19 @@ Running `cargo-dist init` for your tool will update your GitHub Actions configur
 
 
 
+### Install extra packages
+
+> since 0.4.0
+
+Sometimes, you may need extra packages from the system package manager to be installed before in the builder before cargo-dist begins building your software. Cargo-dist can do this for you by adding the `dependencies` setting to your `Cargo.toml`. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them. For more information, see the [configuration syntax][config-dependencies].
+
+#### Limitations
+
+* Currently, the only supported package managers are Apt (Linux), Chocolatey (Windows) and Homebrew (macOS).
+* On macOS, system dependencies can only be enabled for x86_64 builds because GitHub does not provide Apple Silicon runners and Apple Silicon Homebrew can't be installed on x86_64 macOS.
+
+
+
 ### Hand-editing release.yml
 
 > since 0.3.0
@@ -148,6 +161,7 @@ By default cargo-dist breaks build tasks onto more machines than strictly necess
 [config-merge-tasks]: ../reference/config.md#merge-tasks
 [config-allow-dirty]: ../reference/config.md#allow-dirty
 [config-pr-run-mode]: ../reference/config.md#pr-run-mode
+[config-dependencies]: ../reference/config.md#dependencies
 
 [artifact-url]: ../reference/artifact-url.md#github
 [quickstart]: ../way-too-quickstart.md

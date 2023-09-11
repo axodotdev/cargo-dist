@@ -62,7 +62,7 @@ use tracing::{info, warn};
 
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::config::{DirtyMode, ProductionMode};
+use crate::config::{DependencyKind, DirtyMode, ProductionMode, SystemDependencies};
 use crate::{
     backend::{
         installer::{
@@ -513,6 +513,8 @@ pub struct Release {
     pub install_path: InstallPathStrategy,
     /// GitHub repository to push the Homebrew formula to, if built
     pub tap: Option<String>,
+    /// Packages to install from a system package manager
+    pub system_dependencies: SystemDependencies,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -639,6 +641,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             installers: _,
             // Only the final value merged into a package_config matters
             tap: _,
+            // Only the final value merged into a package_config matters
+            system_dependencies: _,
             // Only the final value merged into a package_config matters
             windows_archive: _,
             // Only the final value merged into a package_config matters
@@ -832,6 +836,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
         }
 
+        let system_dependencies = package_config
+            .system_dependencies
+            .clone()
+            .unwrap_or_default();
+
         let idx = ReleaseIdx(self.inner.releases.len());
         let id = app_name.clone();
         info!("added release {id}");
@@ -858,6 +867,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             npm_scope,
             install_path,
             tap,
+            system_dependencies,
         });
         idx
     }
@@ -1373,6 +1383,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let formula_name = to_class_case(&app_name);
 
+        let dependencies: Vec<String> = release
+            .system_dependencies
+            .homebrew
+            .clone()
+            .into_iter()
+            .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Run))
+            .map(|(name, _)| name)
+            .collect();
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
@@ -1391,6 +1410,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 license: app_license,
                 homepage: app_homepage_url,
                 tap,
+                dependencies,
                 inner: InstallerInfo {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),

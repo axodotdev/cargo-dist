@@ -30,6 +30,11 @@ class {{ formula_class }} < Formula
   {%- if license %}
   license "{{ license }}"
   {%- endif %}
+  {%- if dependencies|length > 0 %}
+  {% for dep in dependencies %}
+  depends_on "{{ dep }}"
+  {%- endfor %}
+  {%- endif %}
 
   def install
     {#- Like the URL case above, write out a single install line in the case that the binary artifacts are the same across architectures #}

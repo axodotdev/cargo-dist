@@ -115,6 +115,9 @@ pub struct GithubMatrixEntry {
     /// Arguments to pass to cargo-dist
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_args: Option<String>,
+    /// Command to run to install dependencies
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub packages_install: Option<String>,
 }
 
 /// Type of job to run on pull request

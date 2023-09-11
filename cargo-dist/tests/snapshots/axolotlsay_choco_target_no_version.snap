@@ -778,6 +778,11 @@ function Install-Binary($install_args) {
 
   # Platform info injected by cargo-dist
   $platforms = @{
+    "aarch64-pc-windows-msvc" = @{
+      "artifact_name" = "axolotlsay-aarch64-pc-windows-msvc.tar.gz"
+      "bins" = "axolotlsay.exe"
+      "zip_ext" = ".tar.gz"
+    }
     "x86_64-pc-windows-msvc" = @{
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = "axolotlsay.exe"
@@ -1297,6 +1302,11 @@ const supportedPlatforms = {
   "aarch64-apple-darwin": {
     "artifact_name": "axolotlsay-aarch64-apple-darwin.tar.gz",
     "bins": ["axolotlsay"],
+    "zip_ext": ".tar.gz"
+  },
+  "aarch64-pc-windows-msvc": {
+    "artifact_name": "axolotlsay-aarch64-pc-windows-msvc.tar.gz",
+    "bins": ["axolotlsay.exe"],
     "zip_ext": ".tar.gz"
   },
   "x86_64-apple-darwin": {
@@ -1822,7 +1832,7 @@ maybeInstall(true).then(run);
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.1.0",
   "announcement_changelog": "```text\n         +------------------------+\n         | the initial release!!! |\n         +------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +------------------------+\n         | the initial release!!! |\n         +------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.1.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.ps1 | iex\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/homebrew-packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install axolotlsay@0.1.0\n```\n\n## Download axolotlsay 0.1.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz) | macOS Apple Silicon | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz) | macOS Intel | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | Linux x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +------------------------+\n         | the initial release!!! |\n         +------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.1.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.ps1 | iex\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/homebrew-packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install axolotlsay@0.1.0\n```\n\n## Download axolotlsay 0.1.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz) | macOS Apple Silicon | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-aarch64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-pc-windows-msvc.tar.gz) | Windows arm64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz) | macOS Intel | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | Linux x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
   "system_info": {
     "cargo_version_line": "CENSORED"
   },
@@ -1837,6 +1847,8 @@ maybeInstall(true).then(run);
         "axolotlsay-npm-package.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-aarch64-pc-windows-msvc.tar.gz",
+        "axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
@@ -1889,10 +1901,53 @@ maybeInstall(true).then(run);
         "aarch64-apple-darwin"
       ]
     },
+    "axolotlsay-aarch64-pc-windows-msvc.tar.gz": {
+      "name": "axolotlsay-aarch64-pc-windows-msvc.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-pc-windows-msvc"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256"
+    },
+    "axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256": {
+      "name": "axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-pc-windows-msvc"
+      ]
+    },
     "axolotlsay-installer.ps1": {
       "name": "axolotlsay-installer.ps1",
       "kind": "installer",
       "target_triples": [
+        "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-msvc"
       ],
       "install_hint": "irm https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.ps1 | iex",
@@ -1914,6 +1969,7 @@ maybeInstall(true).then(run);
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-msvc",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-msvc",
         "x86_64-unknown-linux-gnu"
@@ -2121,6 +2177,12 @@ maybeInstall(true).then(run);
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
           },
           {
+            "runner": "windows-2019",
+            "install_dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex",
+            "dist_args": "--artifacts=local --target=aarch64-pc-windows-msvc",
+            "packages_install": "choco install lftp"
+          },
+          {
             "runner": "macos-11",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
@@ -2128,7 +2190,8 @@ maybeInstall(true).then(run);
           {
             "runner": "windows-2019",
             "install_dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex",
-            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
+            "packages_install": "choco install cmake\nchoco install lftp"
           },
           {
             "runner": "ubuntu-20.04",
@@ -2247,25 +2310,23 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
-      - name: Build artifacts
-        if: ${{ hashFiles('Brewfile') == '' }}
-        run: |
-          # Actually do builds and make zips and whatnot
-          cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-          echo "cargo dist ran successfully"
-      - name: Build artifacts (using Brewfile)
-        if: ${{ hashFiles('Brewfile') != '' }}
-        run: |
-          # Actually do builds and make zips and whatnot
-          brew bundle exec -- cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-          echo "cargo dist ran successfully"
       - id: cargo-dist
-        name: Post-build
+        name: Build
         # We force bash here just because github makes it really hard to get values up
         # to "real" actions without writing to env-vars, and writing to env-vars has
-        # inconsistent syntax between shell and powershell.
+        # inconsistent syntax between shell and powershell. cargo-dist and jq work fine
+        # in powershell.
         shell: bash
         run: |
+          CARGO="cargo"
+          if [[ -f "Brewfile" ]]; then
+            CARGO="brew bundle exec -- cargo"
+          fi
+
+          # Actually do builds and make zips and whatnot
+          $CARGO dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          echo "cargo dist ran successfully"
+
           # Parse out what we just built and upload it to the Github Release™
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
@@ -2354,22 +2415,6 @@ jobs:
             git commit -m "${name} ${version}"
           done
           git push
-
-  custom-custom-task-1:
-    needs: [plan, should-publish]
-    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    uses: ./.github/workflows/custom-task-1.yml
-    with:
-      plan: ${{ needs.plan.outputs.val }}
-    secrets: inherit
-
-  custom-custom-task-2:
-    needs: [plan, should-publish]
-    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    uses: ./.github/workflows/custom-task-2.yml
-    with:
-      plan: ${{ needs.plan.outputs.val }}
-    secrets: inherit
 
   # Create a Github Release with all the results once everything is done,
   publish-release:
