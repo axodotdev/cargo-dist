@@ -314,7 +314,7 @@ fn generate_and_write_checksum(
     dest_path: &Utf8Path,
 ) -> DistResult<()> {
     let output = generate_checksum(checksum, src_path)?;
-    write_checksum(&output, dest_path)
+    write_checksum(&output, src_path, dest_path)
 }
 
 /// Generate a checksum for the src_path and return it as a string
@@ -348,8 +348,20 @@ fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResul
 }
 
 /// Write the checksum to dest_path
-fn write_checksum(checksum: &str, dest_path: &Utf8Path) -> DistResult<()> {
-    axoasset::LocalAsset::write_new(checksum, dest_path)?;
+fn write_checksum(checksum: &str, src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
+    // Tools like sha256sum expect a new-line-delimited format of
+    // <checksum> <mode><path>
+    //
+    // * checksum is the checksum in hex
+    // * mode is ` ` for "text" and `*` for "binary" (we mostly have binaries)
+    // * path is a relative path to the thing being checksumed (usually just a filename)
+    //
+    // We also make sure there's a trailing newline as is traditional.
+    //
+    // By following this format we support commands like `sha256sum --check my-app.tar.gz.sha256`
+    let file_path = src_path.file_name().expect("hashing file with no name!?");
+    let line = format!("{checksum} *{file_path}\n");
+    axoasset::LocalAsset::write_new(&line, dest_path)?;
     Ok(())
 }
 
