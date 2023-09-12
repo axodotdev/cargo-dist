@@ -402,11 +402,20 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         .into_diagnostic()
         .wrap_err_with(|| format!("failed to exec cargo build: {command:?}"))?;
 
-    // Create entries for all the binaries we expect to find with empty paths
-    // we'll fail if any are still empty at the end!
-    let mut expected_exes = HashMap::<String, HashMap<String, (Utf8PathBuf, Utf8PathBuf)>>::new();
+    // Create entries for all the binaries we expect to find, and the paths they should
+    // be copied to (according to the copy_exe_to subscribers list).
+    //
+    // Structure is:
+    //
+    // package-id (key)
+    //    binary-name (key)
+    //       subscribers (list)
+    //          src-path (initially blank, must be filled in by rustc)
+    //          dest-path (where to copy the file to)
+    let mut expected_exes =
+        HashMap::<String, HashMap<String, Vec<(Utf8PathBuf, Utf8PathBuf)>>>::new();
     let mut expected_symbols =
-        HashMap::<String, HashMap<String, (Utf8PathBuf, Utf8PathBuf)>>::new();
+        HashMap::<String, HashMap<String, Vec<(Utf8PathBuf, Utf8PathBuf)>>>::new();
     for &binary_idx in &target.expected_binaries {
         let binary = &dist_graph.binary(binary_idx);
         let package_id = binary.pkg_id.to_string();
@@ -415,13 +424,17 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
             expected_exes
                 .entry(package_id.clone())
                 .or_default()
-                .insert(exe_name.clone(), (Utf8PathBuf::new(), exe_dest.clone()));
+                .entry(exe_name.clone())
+                .or_default()
+                .push((Utf8PathBuf::new(), exe_dest.clone()));
         }
         for sym_dest in &binary.copy_symbols_to {
             expected_symbols
                 .entry(package_id.clone())
                 .or_default()
-                .insert(exe_name.clone(), (Utf8PathBuf::new(), sym_dest.clone()));
+                .entry(exe_name.clone())
+                .or_default()
+                .push((Utf8PathBuf::new(), sym_dest.clone()));
         }
     }
 
@@ -449,13 +462,16 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
                     let expected_sym = expected_symbols
                         .get_mut(&package_id)
                         .and_then(|m| m.get_mut(exe_name));
-                    if let Some((src_sym_path, _)) = expected_sym {
-                        for path in artifact.filenames {
-                            // FIXME: unhardcode this when we add support for other symbol kinds!
-                            let is_symbols = path.extension().map(|e| e == "pdb").unwrap_or(false);
-                            if is_symbols {
-                                // These are symbols we expected! Save the path.
-                                *src_sym_path = path;
+                    if let Some(expected) = expected_sym {
+                        for (src_sym_path, _) in expected {
+                            for path in &artifact.filenames {
+                                // FIXME: unhardcode this when we add support for other symbol kinds!
+                                let is_symbols =
+                                    path.extension().map(|e| e == "pdb").unwrap_or(false);
+                                if is_symbols {
+                                    // These are symbols we expected! Save the path.
+                                    *src_sym_path = path.to_owned();
+                                }
                             }
                         }
                     }
@@ -465,8 +481,10 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
                         .get_mut(&package_id)
                         .and_then(|m| m.get_mut(exe_name));
                     if let Some(expected) = expected_exe {
-                        // This is an exe we expected! Save the path.
-                        expected.0 = new_exe;
+                        for (src_bin_path, _) in expected {
+                            // This is an exe we expected! Save the path.
+                            *src_bin_path = new_exe.clone();
+                        }
                     }
                 }
             }
@@ -478,23 +496,27 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
 
     // Check that we got everything we expected, and normalize to ArtifactIdx => Artifact Path
     for (package_id, exes) in expected_exes {
-        for (exe_name, (src_path, dest_path)) in &exes {
-            if src_path.as_str().is_empty() {
-                return Err(miette!("failed to find bin {} ({})", exe_name, package_id));
+        for (exe_name, to_copy) in &exes {
+            for (src_path, dest_path) in to_copy {
+                if src_path.as_str().is_empty() {
+                    return Err(miette!("failed to find bin {} ({})", exe_name, package_id));
+                }
+                copy_file(src_path, dest_path)?;
             }
-            copy_file(src_path, dest_path)?;
         }
     }
     for (package_id, symbols) in expected_symbols {
-        for (exe, (src_path, dest_path)) in &symbols {
-            if src_path.as_str().is_empty() {
-                return Err(miette!(
-                    "failed to find symbols for bin {} ({})",
-                    exe,
-                    package_id
-                ));
+        for (exe, to_copy) in &symbols {
+            for (src_path, dest_path) in to_copy {
+                if src_path.as_str().is_empty() {
+                    return Err(miette!(
+                        "failed to find symbols for bin {} ({})",
+                        exe,
+                        package_id
+                    ));
+                }
+                copy_file(src_path, dest_path)?;
             }
-            copy_file(src_path, dest_path)?;
         }
     }
 
