@@ -225,6 +225,7 @@ fn get_new_dist_metadata(
             create_release: None,
             pr_run_mode: None,
             allow_dirty: None,
+            ssldotcom_windows_sign: None,
         }
     };
 
@@ -684,6 +685,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         create_release,
         pr_run_mode,
         allow_dirty,
+        ssldotcom_windows_sign,
     } = &meta;
 
     apply_optional_value(
@@ -859,6 +861,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "allow-dirty",
         "# Skip checking whether the specified configuration files are up to date\n",
         allow_dirty.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "ssldotcom-windows-sign",
+        "",
+        ssldotcom_windows_sign.as_ref().map(|p| p.to_string()),
     );
 
     // Finalize the table

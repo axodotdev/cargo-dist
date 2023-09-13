@@ -261,6 +261,11 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "create-release")]
     pub create_release: Option<bool>,
+
+    /// \[unstable\] Whether we should sign windows binaries with ssl.com
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ssldotcom-windows-sign")]
+    pub ssldotcom_windows_sign: Option<ProductionMode>,
 }
 
 impl DistMetadata {
@@ -293,6 +298,7 @@ impl DistMetadata {
             create_release: _,
             pr_run_mode: _,
             allow_dirty: _,
+            ssldotcom_windows_sign: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -332,8 +338,9 @@ impl DistMetadata {
             publish_jobs,
             publish_prereleases,
             create_release,
-            pr_run_mode: _,
+            pr_run_mode,
             allow_dirty,
+            ssldotcom_windows_sign,
         } = self;
 
         // Check for global settings on local packages
@@ -365,6 +372,12 @@ impl DistMetadata {
         }
         if publish_prereleases.is_some() {
             warn!("package.metadata.dist.publish-prereleases is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if pr_run_mode.is_some() {
+            warn!("package.metadata.dist.pr-run-mode is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if ssldotcom_windows_sign.is_some() {
+            warn!("package.metadata.dist.ssldotcom-windows-sign is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
@@ -788,6 +801,26 @@ impl DirtyMode {
         match self {
             DirtyMode::AllowAll => false,
             DirtyMode::AllowList(list) => !list.contains(&mode),
+        }
+    }
+}
+
+/// For features that can be generated in "test" or "production" mode
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum ProductionMode {
+    /// test mode
+    #[serde(rename = "test")]
+    Test,
+    /// production mode
+    #[serde(rename = "prod")]
+    Prod,
+}
+
+impl std::fmt::Display for ProductionMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProductionMode::Test => "test".fmt(f),
+            ProductionMode::Prod => "prod".fmt(f),
         }
     }
 }
