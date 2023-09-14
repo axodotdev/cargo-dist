@@ -128,6 +128,9 @@ pub enum Commands {
     #[clap(disable_version_flag = true)]
     #[clap(hide = true)]
     GenerateCi(GenerateCiArgs),
+    /// Report on the dynamic libraries used by the built artifacts.
+    #[clap(disable_version_flag = true)]
+    Linkage(LinkageArgs),
     /// Generate the final build manifest without running any builds.
     ///
     /// This command is designed to match the exact behaviour of
@@ -277,6 +280,21 @@ pub struct GenerateCiArgs {
     #[clap(long)]
     #[clap(default_value_t = false)]
     pub check: bool,
+}
+#[derive(Args, Clone, Debug)]
+pub struct LinkageArgs {
+    /// Print human-readable output
+    #[clap(long)]
+    #[clap(default_value_t = false)]
+    pub print_output: bool,
+    /// Print output as JSON
+    #[clap(long)]
+    #[clap(default_value_t = false)]
+    pub print_json: bool,
+    #[clap(long)]
+    #[clap(hide = true)]
+    #[clap(default_value = "")]
+    pub artifacts: String,
 }
 
 #[derive(Args, Clone, Debug)]

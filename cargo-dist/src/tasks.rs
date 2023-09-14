@@ -385,7 +385,7 @@ impl SymbolKind {
 }
 
 /// A distributable artifact we want to build
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Artifact {
     /// Unique id for the Artifact (its file name)
     ///
@@ -417,7 +417,7 @@ pub struct Artifact {
 
 /// Info about an archive (zip/tarball) that should be made. Currently this is always part
 /// of an Artifact, and the final output will be [`Artifact::file_path`][].
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Archive {
     /// An optional prefix path to nest all the archive contents under
     /// If None then all the archive's contents will be placed in the root
@@ -435,7 +435,7 @@ pub struct Archive {
 }
 
 /// A kind of artifact (more specific fields)
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum ArtifactKind {
     /// An Archive containing binaries (aka ExecutableZip)
@@ -449,20 +449,20 @@ pub enum ArtifactKind {
 }
 
 /// An Archive containing binaries (aka ExecutableZip)
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ExecutableZip {
     // everything important is already part of Artifact
 }
 
 /// A Symbols/Debuginfo Artifact
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Symbols {
     /// The kind of symbols this is
     kind: SymbolKind,
 }
 
 /// A logical release of an application that artifacts are grouped under
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Release {
     /// The name of the app
     pub app_name: String,

@@ -1388,6 +1388,11 @@ jobs:
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+      - name: "Linkage report"
+        run: |
+          cargo dist linkage ${{ matrix.dist_args }} --print-output --print-json > linkage.json
+
+          echo "linkage=$(cat linkage.json)" >> "${GITHUB_OUTPUT}"
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v3
         with:

@@ -22,6 +22,7 @@ cargo dist <COMMAND>
 * [build](#cargo-dist-build): Build artifacts
 * [init](#cargo-dist-init): Setup or update cargo-dist
 * [generate](#cargo-dist-generate): Generate one or more pieces of configuration
+* [linkage](#cargo-dist-linkage): Report on the dynamic libraries used by the built artifacts
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
@@ -189,6 +190,29 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
+## cargo dist linkage
+Report on the dynamic libraries used by the built artifacts
+
+### Usage
+
+```text
+cargo dist linkage [OPTIONS]
+```
+
+### Options
+#### `--print-output`
+Print human-readable output
+
+#### `--print-json`
+Print output as JSON
+
+#### `-h, --help`
+Print help (see a summary with '-h')
+
+### GLOBAL OPTIONS
+This subcommand accepts all the [global options](#global-options)
+
+<br><br><br>
 ## cargo dist manifest
 Generate the final build manifest without running any builds.
 
@@ -267,6 +291,7 @@ cargo dist help [COMMAND]
 * [build](#cargo-dist-build): Build artifacts
 * [init](#cargo-dist-init): Setup or update cargo-dist
 * [generate](#cargo-dist-generate): Generate one or more pieces of configuration
+* [linkage](#cargo-dist-linkage): Report on the dynamic libraries used by the built artifacts
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
