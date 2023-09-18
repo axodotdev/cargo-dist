@@ -202,18 +202,12 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
-    // This command is more automagic, so provide default targets if none are chosen
-    let targets = if cli.target.is_empty() {
-        default_desktop_targets()
-    } else {
-        cli.target.clone()
-    };
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,
-        targets,
+        targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
@@ -252,20 +246,6 @@ fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Repor
             mode: vec![GenerateMode::Ci],
         },
     )
-}
-
-fn default_desktop_targets() -> Vec<String> {
-    vec![
-        // Everyone can build x64!
-        "x86_64-unknown-linux-gnu".to_owned(),
-        "x86_64-apple-darwin".to_owned(),
-        "x86_64-pc-windows-msvc".to_owned(),
-        // Apple is really easy to cross from Apple
-        "aarch64-apple-darwin".to_owned(),
-        // other cross-compiles not yet supported
-        // "aarch64-gnu-unknown-linux".to_owned(),
-        // "aarch64-pc-windows-msvc".to_owned(),
-    ]
 }
 
 fn cmd_help_md(_args: &Cli, _sub_args: &HelpMarkdownArgs) -> Result<(), miette::Report> {

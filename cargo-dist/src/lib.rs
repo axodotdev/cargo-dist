@@ -753,3 +753,20 @@ fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
     }
     Ok(())
 }
+
+/// Get the default list of targets
+pub fn default_desktop_targets() -> Vec<String> {
+    vec![
+        // Everyone can build x64!
+        axoproject::platforms::TARGET_X64_LINUX_GNU.to_owned(),
+        axoproject::platforms::TARGET_ARM64_LINUX_GNU.to_owned(),
+        axoproject::platforms::TARGET_X64_MAC.to_owned(),
+        // Apple is really easy to cross from Apple
+        axoproject::platforms::TARGET_ARM64_MAC
+            .to_owned()
+            .to_owned(),
+        // other cross-compiles not yet supported
+        // axoproject::platforms::TARGET_X64_WINDOWS.to_owned(),
+        // axoproject::platforms::TARGET_ARM64_WINDOWS.to_owned(),
+    ]
+}
