@@ -1,4 +1,4 @@
-# After a release is successfully created, upload extra assets to it
+# After a release is successfully published, upload extra assets to it
 name: AppendRelease
 
 # We're going to edit a gh release, so we need that permission
@@ -12,15 +12,41 @@ on:
     types:
         - completed
 
-# Alright, let's do it!
 jobs:
+  # Check if we should actually run by looking for the should-publish job
+  should-run:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      val: ${{ steps.check.outputs.result }}
+    steps:
+      - id: check
+        uses: actions/github-script@v6
+        with:
+          result-encoding: string
+          script: |
+            let allRuns = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            for (const job of allRuns.data.jobs) {
+              if (job.name == "should-publish") {
+                if (job.status == "completed" && job.conclusion == "success") {
+                  return "run"
+                }
+              }
+            }
+            return "skip"
+
   # Generate dist-manifest-schema.json and upload it to the release
   schema:
     name: Add schema to release
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.ref, 'refs/tags/') }}
+    needs: ["should-run"]
+    if: ${{ needs.should-run.outputs.val == 'run' }}
     steps:
       # Setup
       - uses: actions/checkout@v3
