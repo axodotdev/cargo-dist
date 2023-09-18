@@ -62,7 +62,7 @@ use tracing::{info, warn};
 
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::config::DirtyMode;
+use crate::config::{DirtyMode, ProductionMode};
 use crate::{
     backend::{
         installer::{
@@ -154,8 +154,10 @@ pub struct DistGraph {
     pub merge_tasks: bool,
     /// Whether failing tasks should make us give up on all other tasks
     pub fail_fast: bool,
-    /// Whether to creat a github release or edit an existing draft
+    /// Whether to create a github release or edit an existing draft
     pub create_release: bool,
+    /// \[unstable\] if Some, sign binaries with ssl.com
+    pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// The desired cargo-dist version for handling this project
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
@@ -614,6 +616,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             precise_builds,
             merge_tasks,
             fail_fast,
+            ssldotcom_windows_sign,
             // Processed elsewhere
             //
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
@@ -665,6 +668,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let merge_tasks = merge_tasks.unwrap_or(false);
         let fail_fast = fail_fast.unwrap_or(false);
         let create_release = create_release.unwrap_or(true);
+        let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
         let mut package_metadata = vec![];
@@ -720,6 +724,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 fail_fast,
                 merge_tasks,
                 create_release,
+                ssldotcom_windows_sign,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
                 tools,

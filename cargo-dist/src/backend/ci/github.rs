@@ -9,6 +9,7 @@ use tracing::warn;
 
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
+    config::ProductionMode,
     errors::DistResult,
     DistGraph, SortedMap, SortedSet, TargetTriple,
 };
@@ -39,6 +40,8 @@ pub struct GithubCiInfo {
     pub publish_jobs: Vec<String>,
     /// whether to create the release or assume an existing one
     pub create_release: bool,
+    /// \[unstable\] whether to add ssl.com windows binary signing
+    pub ssldotcom_windows_sign: Option<ProductionMode>,
 }
 
 impl GithubCiInfo {
@@ -55,6 +58,7 @@ impl GithubCiInfo {
             .unwrap_or(&self_dist_version);
         let fail_fast = dist.fail_fast;
         let create_release = dist.create_release;
+        let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
 
         // Figure out what builds we need to do
         let mut needs_global_build = false;
@@ -123,6 +127,7 @@ impl GithubCiInfo {
             pr_run_mode,
             global_task,
             create_release,
+            ssldotcom_windows_sign,
         }
     }
 
