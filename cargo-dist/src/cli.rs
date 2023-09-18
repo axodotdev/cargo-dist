@@ -126,6 +126,7 @@ pub enum Commands {
     Generate(GenerateArgs),
     /// Generate CI scripts for orchestrating cargo-dist (deprecated in favour of generate)
     #[clap(disable_version_flag = true)]
+    #[clap(hide = true)]
     GenerateCi(GenerateCiArgs),
     /// Generate the final build manifest without running any builds.
     ///

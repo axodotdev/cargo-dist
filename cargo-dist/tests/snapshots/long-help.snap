@@ -11,13 +11,12 @@ Usage: cargo dist [OPTIONS]
        cargo dist <COMMAND>
 
 Commands:
-  build        Build artifacts
-  init         Setup or update cargo-dist
-  generate     Generate one or more pieces of configuration
-  generate-ci  Generate CI scripts for orchestrating cargo-dist (deprecated in favour of generate)
-  manifest     Generate the final build manifest without running any builds
-  plan         Get a plan of what to build (and check project status)
-  help         Print this message or the help of the given subcommand(s)
+  build     Build artifacts
+  init      Setup or update cargo-dist
+  generate  Generate one or more pieces of configuration
+  manifest  Generate the final build manifest without running any builds
+  plan      Get a plan of what to build (and check project status)
+  help      Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help
