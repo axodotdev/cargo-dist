@@ -209,7 +209,7 @@ jobs:
           done
       # Sign the files
       - name: Sign Artifacts with CodeSignTool
-        uses: ssldotcom/esigner-codesign@develop
+        uses: sslcom/esigner-codesign@develop
         with:
           command: batch_sign
           username: ${{ secrets.SSLDOTCOM_USERNAME }}
@@ -218,7 +218,6 @@ jobs:
           totp_secret: ${{ secrets.SSLDOTCOM_TOTP_SECRET }}
           dir_path: ${{ env.SIGN_DIR_IN }}
           output_path: ${{ env.SIGN_DIR_OUT }}
-          # Set this to TEST for testing (sandbox) and PROD for production
           environment_name: {{%- if ssldotcom_windows_sign == "test" %}} TEST {{%- else %}} PROD {{%- endif %}}
       # Regenerate checksum files for things that have been signed
       - name: Regenerate Checksums
