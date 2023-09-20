@@ -7,6 +7,7 @@
   - [A Simple Application](./simple-guide.md)
   - [More Complex Workspaces](./workspace-guide.md)
   - [Using cargo-release](./cargo-release-guide.md)
+- [Customizing CI](./customizing-ci.md)
 - [Reference](./reference.md)
   - [Concepts](./concepts.md)
   - [Config](./config.md)
