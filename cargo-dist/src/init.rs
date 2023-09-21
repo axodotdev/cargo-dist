@@ -21,7 +21,7 @@ pub struct InitArgs {
     /// Whether to auto-accept the default values for interactive prompts
     pub yes: bool,
     /// Don't automatically generate ci
-    pub no_generate_ci: bool,
+    pub no_generate: bool,
     /// A path to a json file containing values to set in workspace.metadata.dist
     pub with_json_config: Option<Utf8PathBuf>,
 }
@@ -117,7 +117,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     eprintln!();
 
     // regenerate anything that needs to be
-    if !args.no_generate_ci {
+    if !args.no_generate {
         eprintln!("running 'cargo dist generate' to apply any changes");
         eprintln!();
 
@@ -754,12 +754,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         rust_toolchain_version.as_deref(),
     );
 
-    apply_string_list(
-        table,
-        "ci",
-        "# CI backends to support (see 'cargo dist generate-ci')\n",
-        ci.as_ref(),
-    );
+    apply_string_list(table, "ci", "# CI backends to support\n", ci.as_ref());
 
     apply_string_list(
         table,

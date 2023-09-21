@@ -214,7 +214,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     };
     let args = cargo_dist::InitArgs {
         yes: args.yes,
-        no_generate_ci: args.no_generate_ci,
+        no_generate: args.no_generate,
         with_json_config: args.with_json_config.clone(),
     };
     do_init(&config, &args)

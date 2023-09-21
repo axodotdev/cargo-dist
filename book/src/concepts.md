@@ -47,7 +47,7 @@ Ok so you've defined your App, but what should we actually build for it? Let's l
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.3"
-# CI backends to support (see 'cargo dist generate-ci')
+# CI backends to support
 ci = ["github"]
 # The installers to generate for each app
 installers = ["shell", "powershell"]

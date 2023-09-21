@@ -20,7 +20,7 @@ You can rerun `init` as many times as you want, as it also functions as an "upda
 cargo dist init
 ```
 
-[`init`][init] on its own just edits your Cargo.toml to include the recommended defaults. If you have enabled CI support, it will also run `cargo dist generate-ci` after setting things up. This ensures your config and your CI scripts are in sync, but will unfortunately clobber any hand-edits you made to the scripts.
+[`init`][init] on its own just edits your Cargo.toml to include the recommended defaults. If you have enabled CI support, it will also run `cargo dist generate` after setting things up. This ensures your config and your CI scripts are in sync, but will unfortunately clobber any hand-edits you made to the scripts.
 
 Let's look at those defaults that were added (yes those comments are generated too, you will never stop me from adding more docs!!!):
 
@@ -34,7 +34,7 @@ lto = "thin"
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.6"
-# CI backends to support (see 'cargo dist generate-ci')
+# CI backends to support
 ci = ["github"]
 # The installers to generate for each app
 installers = []
@@ -58,11 +58,11 @@ cargo-dist uses the existence of `[profile.dist]` in your Cargo.toml to detect i
 
 Next let's talk about `[workspace.metadata.dist]`. Cargo allows other tools to include their own project-wide settings in this kind of [metadata table][workspace-metadata]. See [config][] for the full set of options, but here we'll look at the defaults.
 
-`cargo-dist-version = "0.0.6"` is cargo-dist recording its own version in your config for the sake of reproducibility and documentation. When you run [generate-ci][] the resulting CI scripts will use that version of cargo-dist.
+`cargo-dist-version = "0.0.6"` is cargo-dist recording its own version in your config for the sake of reproducibility and documentation. When you run [generate][] the resulting CI scripts will use that version of cargo-dist.
 
-`rust-toolchain-version = "1.67.1"` is the Rust toolchain that is considered "ideal" for building your application, recorded for the sake of reproducibility and documentation. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate-ci][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
+`rust-toolchain-version = "1.67.1"` is the Rust toolchain that is considered "ideal" for building your application, recorded for the sake of reproducibility and documentation. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
 
-`ci = ["github"]` lets subsequent runs of [generate-ci][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. It will be enabled by default if you have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). ("github" is currently the only supported CI backend.)
+`ci = ["github"]` lets subsequent runs of [generate][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. It will be enabled by default if you have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). ("github" is currently the only supported CI backend.)
 
 `installer = []` is just saying that we haven't enabled any [installers][]. Installers are intentionally excluded here to keep this example focused.
 
@@ -72,7 +72,7 @@ Next let's talk about `[workspace.metadata.dist]`. Cargo allows other tools to i
 
 ### The CI Script
 
-Because we set `ci = ["github"]`, [init][] invoked [generate-ci][] for us. Creating the Github CI workflow we wanted at `.github/workflows/release.yml`. Rather than including the full text here, I'll just link [cargo-dist's own release.yml][release-yml], because cargo-dist is self-hosting and has an extremely boring build/config that is basically equivalent to the one we're looking at in this example.
+Because we set `ci = ["github"]`, [init][] invoked [generate][] for us. Creating the Github CI workflow we wanted at `.github/workflows/release.yml`. Rather than including the full text here, I'll just link [cargo-dist's own release.yml][release-yml], because cargo-dist is self-hosting and has an extremely boring build/config that is basically equivalent to the one we're looking at in this example.
 
 The first thing you might notice is that there's a *lot* of comments describing the script. As always: you will never stop me from writing more docs and shoving them in your face. Actually ok you *can* stop me because I need to write a lot of docs here and those comments are already decent docs. Feel free to peruse them to get a feel for it.
 
@@ -195,7 +195,7 @@ If none of the previous rules apply, "1.0.0-prerelease.1" will also match a spec
 [cargo-release]: https://github.com/crate-ci/cargo-release
 [git-tag]: https://git-scm.com/book/en/v2/Git-Basics-Tagging
 [init]:  ./cli.md#cargo-dist-init
-[generate-ci]:  ./cli.md#cargo-dist-generate-ci
+[generate]:  ./cli.md#cargo-dist-generate
 [cargo-profile]: https://doc.rust-lang.org/cargo/reference/profiles.html
 [thin-lto]: https://doc.rust-lang.org/cargo/reference/profiles.html#lto
 [workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table
