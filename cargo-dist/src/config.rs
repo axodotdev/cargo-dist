@@ -22,7 +22,7 @@ pub struct DistMetadata {
     ///
     /// FIXME: Should we produce a warning if running locally with a different version? In theory
     /// it shouldn't be a problem and newer versions should just be Better... probably you
-    /// Really want to have the exact version when running generate-ci to avoid generating
+    /// Really want to have the exact version when running generate to avoid generating
     /// things other cargo-dist versions can't handle!
     #[serde(rename = "cargo-dist-version")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -49,9 +49,8 @@ pub struct DistMetadata {
     ///
     /// Currently only accepts "github".
     ///
-    /// When running `generate-ci` with no arguments this list will be used.
-    ///
-    /// This value isn't Optional because it's global, and therefore can't be overriden by packages.
+    /// When running `generate` this list will be used if it's Some, otherwise all known
+    /// CI backends will be used.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<Vec<CiStyle>>,
 
@@ -441,7 +440,7 @@ impl DistMetadata {
 pub struct Config {
     /// Whether we need to compute an announcement tag or if we can fudge it
     ///
-    /// Commands like generate-ci and init don't need announcements, but want to run gather_work
+    /// Commands like generate and init don't need announcements, but want to run gather_work
     pub needs_coherent_announcement_tag: bool,
     /// The subset of artifacts we want to build
     pub artifact_mode: ArtifactMode,

@@ -63,11 +63,11 @@ Example: `cargo-dist-version = "0.0.3"`
 
 **This can only be set globally**
 
-This is added automatically by `cargo dist init`, and is a recording of its own version for the sake of reproducibility and documentation. When you run [generate-ci][] the resulting CI scripts will use that version of cargo-dist to build your applications.
+This is added automatically by `cargo dist init`, and is a recording of its own version for the sake of reproducibility and documentation. When you run [generate][] the resulting CI scripts will use that version of cargo-dist to build your applications.
 
 The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a VersionReq!).
 
-If you delete the key, generate-ci will just use the version of cargo-dist that's currently running.
+If you delete the key, generate will just use the version of cargo-dist that's currently running.
 
 ### rust-toolchain-version
 
@@ -79,11 +79,11 @@ Example: `rust-toolchain-version = "1.67.1"`
 
 **This can only be set globally**
 
-This is added automatically by `cargo dist init`, recorded for the sake of reproducibility and documentation. It represents the "ideal" Rust toolchain to build your project with. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate-ci][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
+This is added automatically by `cargo dist init`, recorded for the sake of reproducibility and documentation. It represents the "ideal" Rust toolchain to build your project with. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
 
 The syntax must be a valid rustup toolchain like "1.60.0" or "stable" (should not specify the platform, we want to install this toolchain on all platforms).
 
-If you delete the key, generate-ci won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal). Before being deprecated the default was to `rustup update stable`, but this is no longer the case.
+If you delete the key, generate won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal). Before being deprecated the default was to `rustup update stable`, but this is no longer the case.
 
 ### ci
 
@@ -93,7 +93,7 @@ Example: `ci = ["github"]`
 
 **This can only be set globally**
 
-This is a list of CI backends you want to support, allowing subsequent runs of [generate-ci][] to know what CI scripts to generate. Its presence also enables certain CI-specific features. For instance if "github" is included we'll try to generate the body for a Github Release and tell [installers][] to fetch binaries from a Github Release.  Once we introduce more CI backends we'll need to more completely rationalize what that means. In all likelihood each set of CI scripts will need to explicitly select just its own CI by passing `--ci=...` for every invocation.
+This is a list of CI backends you want to support, allowing subsequent runs of [generate][] to know what CI scripts to generate. Its presence also enables certain CI-specific features. For instance if "github" is included we'll try to generate the body for a Github Release and tell [installers][] to fetch binaries from a Github Release.  Once we introduce more CI backends we'll need to more completely rationalize what that means. In all likelihood each set of CI scripts will need to explicitly select just its own CI by passing `--ci=...` for every invocation.
 
 "github" is currently the only supported CI backend.
 
@@ -424,7 +424,7 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
 [concepts]: ./concepts.md
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[generate-ci]: ./cli.md#cargo-dist-generate-ci
+[generate]: ./cli.md#cargo-dist-generate
 [semver-version]: https://docs.rs/semver/latest/semver/struct.Version.html
 [rust-version]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field
 [rustup]: https://rust-lang.github.io/rustup/

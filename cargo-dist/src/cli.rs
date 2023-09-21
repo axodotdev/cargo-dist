@@ -117,7 +117,7 @@ pub enum Commands {
     /// Setup or update cargo-dist
     ///
     /// This will interactively guide you through the process of selecting configuration options
-    /// and will also automatically run 'cargo dist generate-ci' afterwards as necessary. It will
+    /// and will also automatically run 'cargo dist generate' afterwards as necessary. It will
     /// also handle updating your project to a new version of cargo-dist if you're running one.
     #[clap(disable_version_flag = true)]
     Init(InitArgs),
@@ -227,9 +227,9 @@ pub struct InitArgs {
     /// during the interactive prompts.
     #[clap(long, short)]
     pub yes: bool,
-    /// Don't automatically invoke 'cargo dist generate-ci' at the end
-    #[clap(long)]
-    pub no_generate_ci: bool,
+    /// Don't automatically invoke 'cargo dist generate' at the end
+    #[clap(long, alias = "no-generate-ci")]
+    pub no_generate: bool,
     /// A path to a json file containing values to set in workspace.metadata.dist
     /// and package.metadata.dist, for building tools that edit these configs.
     ///

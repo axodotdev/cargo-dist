@@ -159,7 +159,7 @@ impl<'a> TestContext<'a, Tools> {
 
         self.load_dist_results(test_name)
     }
-    /// Run 'cargo dist generate-ci' and return paths to various files that were generated
+    /// Run 'cargo dist generate' and return paths to various files that were generated
     pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateResult> {
         let github_ci_path = Utf8Path::new(".github/workflows/release.yml").to_owned();
         let wxs_path = Utf8Path::new("wix/main.wxs").to_owned();
@@ -171,7 +171,7 @@ impl<'a> TestContext<'a, Tools> {
             LocalAsset::remove_file(&wxs_path)?;
         }
 
-        // run generate-ci
+        // run generate
         eprintln!("running cargo dist generate...");
         self.tools
             .cargo_dist

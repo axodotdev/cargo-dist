@@ -132,7 +132,7 @@ This subcommand accepts all the [global options](#global-options)
 ## cargo dist init
 Setup or update cargo-dist
 
-This will interactively guide you through the process of selecting configuration options and will also automatically run 'cargo dist generate-ci' afterwards as necessary. It will also handle updating your project to a new version of cargo-dist if you're running one.
+This will interactively guide you through the process of selecting configuration options and will also automatically run 'cargo dist generate' afterwards as necessary. It will also handle updating your project to a new version of cargo-dist if you're running one.
 
 ### Usage
 
@@ -146,8 +146,8 @@ Automatically accept all recommended/default values
 
 This is equivalent to just mashing ENTER over and over during the interactive prompts.
 
-#### `--no-generate-ci`
-Don't automatically invoke 'cargo dist generate-ci' at the end
+#### `--no-generate`
+Don't automatically invoke 'cargo dist generate' at the end
 
 #### `--with-json-config <WITH_JSON_CONFIG>`
 A path to a json file containing values to set in workspace.metadata.dist and package.metadata.dist, for building tools that edit these configs.
