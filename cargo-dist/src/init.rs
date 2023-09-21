@@ -314,7 +314,7 @@ fn get_new_dist_metadata(
         // Prettify/sort things
         let desc = move |triple: &str| -> String {
             let pretty = triple_to_display_name(triple).unwrap_or("[unknown]");
-            format!("{pretty} - {triple}")
+            format!("{pretty} ({triple})")
         };
         known.sort_by_cached_key(|k| desc(k).to_uppercase());
 
