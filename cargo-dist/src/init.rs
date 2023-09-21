@@ -50,16 +50,9 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     let check = console::style("✔".to_string()).for_stderr().green();
 
     // Init things
-    eprintln!("first let's setup your cargo build profile...");
-    eprintln!();
-    if init_dist_profile(cfg, &mut workspace_toml)? {
-        eprintln!("{check} added [profile.dist] to your root Cargo.toml");
-    } else {
-        eprintln!("{check} [profile.dist] already exists");
-    }
-    eprintln!();
+    let did_add_profile = init_dist_profile(cfg, &mut workspace_toml)?;
 
-    eprintln!("next let's setup your cargo-dist config...");
+    eprintln!("let's setup your cargo-dist config...");
     eprintln!();
 
     let multi_meta = if let Some(json_path) = &args.with_json_config {
@@ -81,10 +74,14 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
         apply_dist_to_metadata(metadata, meta);
     }
 
+    eprintln!();
+
     // Save the workspace toml (potentially an effective no-op if we made no edits)
     config::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
+    if did_add_profile {
+        eprintln!("{check} added [profile.dist] to your root Cargo.toml");
+    }
     eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
-    eprintln!();
 
     // Now that we've done the stuff that's definitely part of the root Cargo.toml,
     // Optionally apply updates to packages
@@ -99,17 +96,20 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
             let metadata = config::get_toml_metadata(&mut package_toml, false);
 
             // Apply [package.metadata.dist]
+            let mut writing_metadata = false;
             if let Some(meta) = meta {
                 apply_dist_to_metadata(metadata, meta);
+                writing_metadata = true;
+            }
+
+            // Save the result
+            config::save_cargo_toml(&package.manifest_path, package_toml)?;
+            if writing_metadata {
                 eprintln!(
                     "{check} added [package.metadata.dist] to {}'s Cargo.toml",
                     package.name
                 );
             }
-
-            // Save the result
-            eprintln!();
-            config::save_cargo_toml(&package.manifest_path, package_toml)?;
         }
     }
 
