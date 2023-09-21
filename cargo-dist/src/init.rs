@@ -116,18 +116,16 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     eprintln!("{check} cargo-dist is setup!");
     eprintln!();
 
-    // If there's CI stuff, regenerate it
-    if let Some(ci) = multi_meta.workspace.as_ref().and_then(|w| w.ci.as_ref()) {
-        if !ci.is_empty() && !args.no_generate_ci {
-            eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
-            eprintln!();
+    // regenerate anything that needs to be
+    if !args.no_generate_ci {
+        eprintln!("running 'cargo dist generate' to apply any changes");
+        eprintln!();
 
-            let ci_args = GenerateArgs {
-                check: false,
-                modes: vec![],
-            };
-            do_generate(cfg, &ci_args)?;
-        }
+        let ci_args = GenerateArgs {
+            check: false,
+            modes: vec![],
+        };
+        do_generate(cfg, &ci_args)?;
     }
     Ok(())
 }
@@ -335,7 +333,8 @@ fn get_new_dist_metadata(
         }
 
         // Prompt the user
-        let prompt = r#"what platforms do you want to build for?"#;
+        let prompt = r#"what platforms do you want to build for?
+    (select with arrow keys and space, submit with enter)"#;
         let selected = if args.yes {
             defaults
                 .iter()
@@ -357,7 +356,10 @@ fn get_new_dist_metadata(
     }
 
     // Enable CI backends
-    {
+    // FIXME: when there is more than one option we maybe shouldn't hide this
+    // once the user has any one enabled, right now it's just annoying to always
+    // prompt for Github CI support.
+    if meta.ci.as_deref().unwrap_or_default().is_empty() {
         // FIXME: when there is more than one option this should be a proper
         // multiselect like the installer selector is! For now we do
         // most of the multi-select logic and then just give a prompt.
@@ -455,7 +457,7 @@ fn get_new_dist_metadata(
         }
     }
 
-    if has_github_ci {
+    if has_github_ci && meta.pr_run_mode.is_none() {
         let default_val = PrRunMode::default();
         let cur_val = meta.pr_run_mode.unwrap_or(default_val);
 
@@ -485,25 +487,28 @@ fn get_new_dist_metadata(
 
         let result = items[selection];
 
-        // Don't add needlessly noisy config if it's just the default
-        meta.pr_run_mode = if result == default_val {
-            None
-        } else {
-            Some(result)
-        };
+        // Record that the user made a concrete decision so we don't prompt over and over
+        meta.pr_run_mode = Some(result);
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // FIXME: "vendored" installers like msi could be enabled without any CI...
     let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
-    if has_ci {
-        let known = &[
-            InstallerStyle::Shell,
-            InstallerStyle::Powershell,
-            InstallerStyle::Npm,
-            InstallerStyle::Homebrew,
-            InstallerStyle::Msi,
-        ];
+    {
+        // If they have CI, then they can use fetching installers,
+        // otherwise they can only do vendored installers.
+        let known: &[InstallerStyle] = if has_ci {
+            &[
+                InstallerStyle::Shell,
+                InstallerStyle::Powershell,
+                InstallerStyle::Npm,
+                InstallerStyle::Homebrew,
+                InstallerStyle::Msi,
+            ]
+        } else {
+            eprintln!("{notice} no CI backends enabled, most installers have been hidden");
+            &[InstallerStyle::Msi]
+        };
         let mut defaults = vec![];
         let mut keys = vec![];
         for item in known {
@@ -531,9 +536,7 @@ fn get_new_dist_metadata(
         }
 
         // Prompt the user
-        let prompt = r#"enable generating installers?
-    installers streamline fetching your app's prebuilt artifacts
-    see the docs for details on each one
+        let prompt = r#"what installers do you want to build?
     (select with arrow keys and space, submit with enter)"#;
         let selected = if args.yes {
             defaults
@@ -553,9 +556,6 @@ fn get_new_dist_metadata(
 
         // Apply the results
         meta.installers = Some(selected.into_iter().map(|i| known[i]).collect());
-    } else {
-        eprintln!("{notice} no CI backends enabled, skipping installers");
-        eprintln!();
     }
 
     let mut publish_jobs = orig_meta.publish_jobs.clone().unwrap_or(vec![]);
