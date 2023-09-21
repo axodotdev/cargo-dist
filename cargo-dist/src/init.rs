@@ -1,7 +1,5 @@
-use std::ops::Not;
-
-use axoproject::errors::AxoprojectError;
 use axoproject::WorkspaceInfo;
+use axoproject::{errors::AxoprojectError, platforms::triple_to_display_name};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::PrRunMode;
 use semver::Version;
@@ -52,16 +50,9 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     let check = console::style("✔".to_string()).for_stderr().green();
 
     // Init things
-    eprintln!("first let's setup your cargo build profile...");
-    eprintln!();
-    if init_dist_profile(cfg, &mut workspace_toml)? {
-        eprintln!("{check} added [profile.dist] to your root Cargo.toml");
-    } else {
-        eprintln!("{check} [profile.dist] already exists");
-    }
-    eprintln!();
+    let did_add_profile = init_dist_profile(cfg, &mut workspace_toml)?;
 
-    eprintln!("next let's setup your cargo-dist config...");
+    eprintln!("let's setup your cargo-dist config...");
     eprintln!();
 
     let multi_meta = if let Some(json_path) = &args.with_json_config {
@@ -83,10 +74,14 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
         apply_dist_to_metadata(metadata, meta);
     }
 
+    eprintln!();
+
     // Save the workspace toml (potentially an effective no-op if we made no edits)
     config::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
+    if did_add_profile {
+        eprintln!("{check} added [profile.dist] to your root Cargo.toml");
+    }
     eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
-    eprintln!();
 
     // Now that we've done the stuff that's definitely part of the root Cargo.toml,
     // Optionally apply updates to packages
@@ -101,35 +96,36 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
             let metadata = config::get_toml_metadata(&mut package_toml, false);
 
             // Apply [package.metadata.dist]
+            let mut writing_metadata = false;
             if let Some(meta) = meta {
                 apply_dist_to_metadata(metadata, meta);
+                writing_metadata = true;
+            }
+
+            // Save the result
+            config::save_cargo_toml(&package.manifest_path, package_toml)?;
+            if writing_metadata {
                 eprintln!(
                     "{check} added [package.metadata.dist] to {}'s Cargo.toml",
                     package.name
                 );
             }
-
-            // Save the result
-            eprintln!();
-            config::save_cargo_toml(&package.manifest_path, package_toml)?;
         }
     }
 
     eprintln!("{check} cargo-dist is setup!");
     eprintln!();
 
-    // If there's CI stuff, regenerate it
-    if let Some(ci) = multi_meta.workspace.as_ref().and_then(|w| w.ci.as_ref()) {
-        if !ci.is_empty() && !args.no_generate_ci {
-            eprintln!("running 'cargo dist generate-ci' to apply any changes to your CI scripts");
-            eprintln!();
+    // regenerate anything that needs to be
+    if !args.no_generate_ci {
+        eprintln!("running 'cargo dist generate' to apply any changes");
+        eprintln!();
 
-            let ci_args = GenerateArgs {
-                check: false,
-                modes: vec![],
-            };
-            do_generate(cfg, &ci_args)?;
-        }
+        let ci_args = GenerateArgs {
+            check: false,
+            modes: vec![],
+        };
+        do_generate(cfg, &ci_args)?;
     }
     Ok(())
 }
@@ -205,7 +201,7 @@ fn get_new_dist_metadata(
             ci: None,
             installers: None,
             tap: None,
-            targets: cfg.targets.is_empty().not().then(|| cfg.targets.clone()),
+            targets: None,
             dist: None,
             include: None,
             auto_includes: None,
@@ -301,8 +297,69 @@ fn get_new_dist_metadata(
         }
     }
 
-    // Enable CI backends
     {
+        // Start with builtin targets
+        let default_platforms = crate::default_desktop_targets();
+        let mut known = default_platforms.clone();
+        // If the config doesn't have targets at all, generate them
+        let config_vals = meta.targets.as_deref().unwrap_or(&default_platforms);
+        let cli_vals = cfg.targets.as_slice();
+        // Add anything custom they did to the list (this will do some reordering if they hand-edited)
+        for val in config_vals.iter().chain(cli_vals) {
+            if !known.contains(val) {
+                known.push(val.clone());
+            }
+        }
+
+        // Prettify/sort things
+        let desc = move |triple: &str| -> String {
+            let pretty = triple_to_display_name(triple).unwrap_or("[unknown]");
+            format!("{pretty} ({triple})")
+        };
+        known.sort_by_cached_key(|k| desc(k).to_uppercase());
+
+        let mut defaults = vec![];
+        let mut keys = vec![];
+        for item in &known {
+            // If this target is in their config, keep it
+            // If they passed it on the CLI, flip it on
+            let config_had_it = config_vals.contains(item);
+            let cli_had_it = cli_vals.contains(item);
+
+            let default = config_had_it || cli_had_it;
+            defaults.push(default);
+
+            keys.push(desc(item));
+        }
+
+        // Prompt the user
+        let prompt = r#"what platforms do you want to build for?
+    (select with arrow keys and space, submit with enter)"#;
+        let selected = if args.yes {
+            defaults
+                .iter()
+                .enumerate()
+                .filter_map(|(idx, enabled)| enabled.then_some(idx))
+                .collect()
+        } else {
+            let res = MultiSelect::with_theme(&theme)
+                .items(&keys)
+                .defaults(&defaults)
+                .with_prompt(prompt)
+                .interact()?;
+            eprintln!();
+            res
+        };
+
+        // Apply the results
+        meta.targets = Some(selected.into_iter().map(|i| known[i].clone()).collect());
+    }
+
+    // Enable CI backends
+    // FIXME: when there is more than one option we maybe shouldn't hide this
+    // once the user has any one enabled, right now it's just annoying to always
+    // prompt for Github CI support.
+    if meta.ci.as_deref().unwrap_or_default().is_empty() {
         // FIXME: when there is more than one option this should be a proper
         // multiselect like the installer selector is! For now we do
         // most of the multi-select logic and then just give a prompt.
@@ -339,10 +396,7 @@ fn get_new_dist_metadata(
         }
 
         // Prompt the user
-        let prompt = r#"enable Github CI integration?
-    this creates a CI action which automates creating a Github Release,
-    builds all your binaries/archives, and then uploads them to the Release
-    it also unlocks the ability to generate installers which fetch those artifacts"#;
+        let prompt = r#"enable Github CI and Releases?"#;
         let default = defaults[github_key];
 
         let github_selected = if args.yes {
@@ -403,7 +457,7 @@ fn get_new_dist_metadata(
         }
     }
 
-    if has_github_ci {
+    if has_github_ci && meta.pr_run_mode.is_none() {
         let default_val = PrRunMode::default();
         let cur_val = meta.pr_run_mode.unwrap_or(default_val);
 
@@ -433,25 +487,28 @@ fn get_new_dist_metadata(
 
         let result = items[selection];
 
-        // Don't add needlessly noisy config if it's just the default
-        meta.pr_run_mode = if result == default_val {
-            None
-        } else {
-            Some(result)
-        };
+        // Record that the user made a concrete decision so we don't prompt over and over
+        meta.pr_run_mode = Some(result);
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // FIXME: "vendored" installers like msi could be enabled without any CI...
     let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
-    if has_ci {
-        let known = &[
-            InstallerStyle::Shell,
-            InstallerStyle::Powershell,
-            InstallerStyle::Npm,
-            InstallerStyle::Homebrew,
-            InstallerStyle::Msi,
-        ];
+    {
+        // If they have CI, then they can use fetching installers,
+        // otherwise they can only do vendored installers.
+        let known: &[InstallerStyle] = if has_ci {
+            &[
+                InstallerStyle::Shell,
+                InstallerStyle::Powershell,
+                InstallerStyle::Npm,
+                InstallerStyle::Homebrew,
+                InstallerStyle::Msi,
+            ]
+        } else {
+            eprintln!("{notice} no CI backends enabled, most installers have been hidden");
+            &[InstallerStyle::Msi]
+        };
         let mut defaults = vec![];
         let mut keys = vec![];
         for item in known {
@@ -479,9 +536,7 @@ fn get_new_dist_metadata(
         }
 
         // Prompt the user
-        let prompt = r#"enable generating installers?
-    installers streamline fetching your app's prebuilt artifacts
-    see the docs for details on each one
+        let prompt = r#"what installers do you want to build?
     (select with arrow keys and space, submit with enter)"#;
         let selected = if args.yes {
             defaults
@@ -501,9 +556,6 @@ fn get_new_dist_metadata(
 
         // Apply the results
         meta.installers = Some(selected.into_iter().map(|i| known[i]).collect());
-    } else {
-        eprintln!("{notice} no CI backends enabled, skipping installers");
-        eprintln!();
     }
 
     let mut publish_jobs = orig_meta.publish_jobs.clone().unwrap_or(vec![]);
