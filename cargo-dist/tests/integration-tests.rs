@@ -556,9 +556,7 @@ windows-archive = ".tar.gz"
 }
 
 #[test]
-#[should_panic(
-    expected = r#"It appears that you have no packages in your workspace with distable"#
-)]
+#[should_panic(expected = r#"you have no packages in your workspace with"#)]
 fn axoasset_basic() {
     // This is just a library so we should error with a helpful message
     let test_name = _function_name!();

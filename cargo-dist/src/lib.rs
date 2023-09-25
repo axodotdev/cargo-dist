@@ -511,7 +511,11 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         for (exe_name, to_copy) in &exes {
             for (src_path, dest_path) in to_copy {
                 if src_path.as_str().is_empty() {
-                    return Err(miette!("failed to find bin {} ({})", exe_name, package_id));
+                    return Err(miette!(
+                        "failed to find bin {} ({}) -- did the cargo build above have errors?",
+                        exe_name,
+                        package_id
+                    ));
                 }
                 copy_file(src_path, dest_path)?;
             }
@@ -522,7 +526,7 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
             for (src_path, dest_path) in to_copy {
                 if src_path.as_str().is_empty() {
                     return Err(miette!(
-                        "failed to find symbols for bin {} ({})",
+                        "failed to find symbols for bin {} ({}) -- did the cargo build above have errors?",
                         exe,
                         package_id
                     ));
