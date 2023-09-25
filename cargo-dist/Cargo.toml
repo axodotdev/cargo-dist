@@ -51,7 +51,7 @@ sha2 = "0.10.6"
 minijinja = { version = "1.0.5", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.3"
 itertools = "0.11.0"
-cargo-wix = "0.3.6"
+cargo-wix = { version = "0.3.6", git = "https://github.com/Gankra/cargo-wix", branch = "sort-metadata" }
 uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]

@@ -347,8 +347,7 @@ dependencies = [
 [[package]]
 name = "cargo-wix"
 version = "0.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73b290f8aa497e7720f9594f7ca4809e7f2b06978f4993e85227be26840e7448"
+source = "git+https://github.com/Gankra/cargo-wix?branch=sort-metadata#a49047611354f5ff51aecf2ff05dfbef10bf1d3e"
 dependencies = [
  "camino",
  "cargo_metadata 0.17.0",
