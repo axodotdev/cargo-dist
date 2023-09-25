@@ -1,6 +1,9 @@
 /target
 *.snap.new
 /book/book/
-oranda-debug.log
-cargo-dist/public
 cargo-dist/wix
+
+# Oranda
+oranda-debug.log
+/public
+cargo-dist/public
