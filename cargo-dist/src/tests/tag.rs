@@ -7,7 +7,7 @@
 use super::mock::*;
 use semver::Version;
 
-use crate::{config::ArtifactMode, parse_tag, DistGraphBuilder};
+use crate::{config::ArtifactMode, select_tag, DistGraphBuilder};
 
 #[test]
 fn parse_one() {
@@ -18,7 +18,7 @@ fn parse_one() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -35,7 +35,7 @@ fn parse_one_v() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -52,7 +52,7 @@ fn parse_one_package_v() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -69,7 +69,7 @@ fn parse_one_package() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -86,7 +86,7 @@ fn parse_one_v_alpha() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -103,7 +103,7 @@ fn parse_one_package_v_alpha() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -120,7 +120,7 @@ fn parse_one_prefix_slashv() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -137,7 +137,7 @@ fn parse_one_prefix_slash() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -154,7 +154,7 @@ fn parse_one_prefix_slash_package_v() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -171,7 +171,7 @@ fn parse_one_prefix_slash_package_slashv() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -188,7 +188,7 @@ fn parse_one_package_slashv() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -205,7 +205,7 @@ fn parse_one_prefix_slash_package_slash() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -222,7 +222,7 @@ fn parse_one_prefix_many_slash_package_slash() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -239,7 +239,7 @@ fn parse_one_package_slash() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -256,7 +256,7 @@ fn parse_one_infer() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, None, true).unwrap();
+    let announcing = select_tag(&graph, None, true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -273,7 +273,7 @@ fn parse_unified_v() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -293,7 +293,7 @@ fn parse_unified_infer() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, None, true).unwrap();
+    let announcing = select_tag(&graph, None, true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -313,7 +313,7 @@ fn parse_unified_lib() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -330,7 +330,7 @@ fn parse_disjoint_v() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -351,7 +351,7 @@ fn parse_disjoint_infer() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, None, true).unwrap();
+    let announcing = select_tag(&graph, None, true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -371,7 +371,7 @@ fn parse_disjoint_v_oddball() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -388,7 +388,7 @@ fn parse_disjoint_lib() {
 
     let tools = mock_tools();
     let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
-    let announcing = parse_tag(&graph, Some(&tag), true).unwrap();
+    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);

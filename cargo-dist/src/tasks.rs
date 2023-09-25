@@ -2198,7 +2198,7 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     };
     info!("selected triples: {:?}", triples);
 
-    let announcing = parse_tag(
+    let announcing = select_tag(
         &graph,
         cfg.announcement_tag.as_deref(),
         cfg.needs_coherent_announcement_tag,
@@ -2280,16 +2280,22 @@ pub fn gather_work(cfg: &Config) -> Result<DistGraph> {
     Ok(graph.inner)
 }
 
-/// See if we should dist this package
+/// See if we should dist this package.
 ///
-/// Some(disabled_reason) is returned if it shouldn't be
+/// Some(disabled_reason) is returned if it shouldn't be.
+///
+/// This code is written to assume a package and its binaries should be distable,
+/// and then runs through a battery of disqualifying reasons.
+///
+/// A notable consequence of this is that if --tag wasn't passed, then we will default to
+/// letting through all the packages that aren't intrinsically disqualified by things like
+/// publish=false. Later steps will then check if a coherent announcement tag exists that
+/// covers everything this function spat out.
 fn check_dist_package(
     graph: &DistGraphBuilder,
     pkg_id: PackageIdx,
     pkg: &axoproject::PackageInfo,
-    announcement_tag: Option<&str>,
-    announcing_package: Option<PackageIdx>,
-    announcing_version: Option<&Version>,
+    announcing: &PartialAnnouncementTag,
 ) -> Option<String> {
     // Nothing to publish if there's no binaries!
     if pkg.binaries.is_empty() {
@@ -2313,21 +2319,21 @@ fn check_dist_package(
     }
 
     // If we're announcing a package, reject every other package
-    if let Some(id) = announcing_package {
+    if let Some(id) = announcing.package {
         if pkg_id != id {
             return Some(format!(
                 "didn't match tag {}",
-                announcement_tag.as_ref().unwrap()
+                announcing.tag.as_ref().unwrap()
             ));
         }
     }
 
     // If we're announcing a version, ignore everything that doesn't match that
-    if let Some(ver) = &announcing_version {
-        if pkg.version.as_ref().unwrap().cargo() != *ver {
+    if let Some(ver) = &announcing.version {
+        if pkg.version.as_ref().unwrap().cargo() != ver {
             return Some(format!(
                 "didn't match tag {}",
-                announcement_tag.as_ref().unwrap()
+                announcing.tag.as_ref().unwrap()
             ));
         }
     }
@@ -2428,17 +2434,112 @@ pub(crate) struct AnnouncementTag {
     pub rust_releases: Vec<(PackageIdx, Vec<String>)>,
 }
 
+/// details on what we're announcing (partially computed)
+struct PartialAnnouncementTag {
+    /// The full tag
+    pub tag: Option<String>,
+    /// The version we're announcing (if doing a unified version announcement)
+    pub version: Option<Version>,
+    /// The package we're announcing (if doing a single-package announcement)
+    pub package: Option<PackageIdx>,
+    /// whether we're prereleasing
+    pub prerelease: bool,
+}
+
 /// Parse the announcement tag and determine what we're announcing
-pub(crate) fn parse_tag(
+///
+/// `tag` being None here is equivalent to `--tag` not being passed, and tells us to infer
+/// the tag based on things like "every package has the same version, assume we're
+/// announcing that version".
+///
+/// `needs_coherent_announcement_tag = false` tells us to produce a result even if inference
+/// fails to find a tag that will unambiguously work. This is used by commands like `init`
+/// and `generate` which want to consider "everything" even if the user never actually
+/// could announce everything at once. In this case dummy values will appear in every field
+/// except for `AnnouncementTag::rust_releases` which will contain every distable binary
+/// in the workspace.
+pub(crate) fn select_tag(
     graph: &DistGraphBuilder,
     tag: Option<&str>,
     needs_coherent_announcement_tag: bool,
 ) -> DistResult<AnnouncementTag> {
+    // Parse the tag
+    let mut announcing = parse_tag(graph, tag)?;
+    // Select which packages/binaries are available from that tag
+    let rust_releases = select_packages(graph, &announcing);
+
+    // Don't proceed if the conclusions don't make sense
+    if rust_releases.is_empty() {
+        // It's ok for there to be no selected binaries if the user explicitly requested an
+        // announcement for a library with `--tag=my-lib-1.0.0`
+        if announcing.package.is_some() {
+            warn!("You're trying to explicitly Release a library, only minimal functionality will work");
+        } else {
+            // No binaries were selected, and they weren't trying to announce a library,
+            // we've gotta bail out, this is too weird.
+            //
+            // To get better help messages, we explore a hypothetical world where they didn't pass
+            // `--tag` so we can get all the options for a good help message.
+            let announcing = parse_tag(graph, None)?;
+            let rust_releases = select_packages(graph, &announcing);
+            let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
+            let help = tag_help(graph, versions, "You may need to pass the current version as --tag, or need to give all your packages the same version");
+            return Err(DistError::NothingToRelease { help });
+        }
+    }
+
+    // If we don't have a tag yet we MUST successfully select one here or fail
+    if announcing.tag.is_none() {
+        // Group distable packages by version, if there's only one then use that as the tag
+        let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
+        if versions.len() == 1 {
+            // Nice, one version, use it
+            let version = *versions.first_key_value().unwrap().0;
+            let tag = format!("v{version}");
+            info!("inferred Announcement tag: {}", tag);
+            announcing.tag = Some(tag);
+            announcing.prerelease = !version.pre.is_empty();
+            announcing.version = Some(version.clone());
+        } else if needs_coherent_announcement_tag {
+            // More than one version, give the user some suggestions
+            let help = tag_help(
+                graph,
+                versions,
+                "Please either specify --tag, or give them all the same version",
+            );
+            return Err(DistError::TooManyUnrelatedApps { help });
+        } else {
+            // Ok we got more than one version but we're being run by a command
+            // like `init` or `generate` which just wants us to hand it everything
+            // and doesn't care about coherent announcements. So use a fake tag
+            // and hand it the fully unconstrained list of rust_releases.
+            announcing.tag = Some("v1.0.0-FAKEVER".to_owned());
+            announcing.prerelease = true;
+            announcing.version = Some("1.0.0-FAKEVER".parse().unwrap());
+        }
+    }
+    Ok(AnnouncementTag {
+        tag: announcing
+            .tag
+            .expect("integrity error: failed to select announcement tag"),
+        version: announcing.version,
+        package: announcing.package,
+        prerelease: announcing.prerelease,
+        rust_releases,
+    })
+}
+
+/// Do the actual parsing logic for a tag
+///
+/// If `tag` is None, then we had no --tag to parse, and need to do inference.
+/// The return value is then essentially a default/empty PartialAnnouncementTag
+/// which later passes will fill in.
+fn parse_tag(graph: &DistGraphBuilder, tag: Option<&str>) -> DistResult<PartialAnnouncementTag> {
     // First thing's first: if they gave us an announcement tag then we should try to parse it
     let mut announcing_package = None;
     let mut announcing_version = None;
     let mut announcing_prerelease = false;
-    let mut announcement_tag = tag.map(|t| t.to_owned());
+    let announcement_tag = tag.map(|t| t.to_owned());
     if let Some(tag) = &announcement_tag {
         let mut tag_suffix;
         // Check if we're using `/`'s to delimit things
@@ -2515,7 +2616,24 @@ pub(crate) fn parse_tag(
             return Err(DistError::NoTagMatch { tag: tag.clone() });
         }
     }
+    Ok(PartialAnnouncementTag {
+        tag: announcement_tag,
+        prerelease: announcing_prerelease,
+        version: announcing_version,
+        package: announcing_package,
+    })
+}
 
+/// Select which packages/binaries the announcement includes and print info about the process
+///
+/// See `check_dist_package` for the actual selection logic and some notes on inference
+/// when `--tag` is absent.
+fn select_packages(
+    graph: &DistGraphBuilder,
+    announcing: &PartialAnnouncementTag,
+) -> Vec<(PackageIdx, Vec<String>)> {
+    info!("");
+    info!("selecting packages from workspace: ");
     // Choose which binaries we want to release
     let disabled_sty = console::Style::new().dim();
     let enabled_sty = console::Style::new();
@@ -2524,14 +2642,7 @@ pub(crate) fn parse_tag(
         let pkg_name = &pkg.name;
 
         // Determine if this package's binaries should be Released
-        let disabled_reason = check_dist_package(
-            graph,
-            pkg_id,
-            pkg,
-            announcement_tag.as_deref(),
-            announcing_package,
-            announcing_version.as_ref(),
-        );
+        let disabled_reason = check_dist_package(graph, pkg_id, pkg, announcing);
 
         // Report our conclusion/discoveries
         let sty;
@@ -2558,79 +2669,80 @@ pub(crate) fn parse_tag(
             rust_releases.push((pkg_id, rust_binaries));
         }
     }
+    info!("");
 
-    // Don't proceed if this doesn't make sense
-    if rust_releases.is_empty() {
-        if announcing_package.is_some() {
-            warn!("You're trying to explicitly Release a library, only minimal functionality will work");
-        } else {
-            return Err(DistError::NothingToRelease);
-        }
+    rust_releases
+}
+
+/// Get a list of possible version --tags to use, given a list of packages we want to Announce
+///
+/// This is the set of options used by tag inference. Inference succeeds if
+/// there's only one key in the output.
+fn possible_tags<'a>(
+    graph: &'a DistGraphBuilder,
+    rust_releases: impl IntoIterator<Item = PackageIdx>,
+) -> SortedMap<&'a Version, Vec<PackageIdx>> {
+    let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
+    for pkg_idx in rust_releases {
+        let info = graph.workspace().package(pkg_idx);
+        let version = info.version.as_ref().unwrap().cargo();
+        versions.entry(version).or_default().push(pkg_idx);
     }
+    versions
+}
 
-    // If we don't have a tag yet we MUST successfully select one here or fail
-    if announcement_tag.is_none() {
-        let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
-        for (pkg_idx, _) in &rust_releases {
-            let info = graph.workspace().package(*pkg_idx);
-            let version = info.version.as_ref().unwrap().cargo();
-            versions.entry(version).or_default().push(*pkg_idx);
-        }
-        if versions.len() == 1 {
-            let version = *versions.first_key_value().unwrap().0;
-            let tag = format!("v{version}");
-            info!("inferred Announcement tag: {}", tag);
-            announcement_tag = Some(tag);
-            announcing_prerelease = !version.pre.is_empty();
-            announcing_version = Some(version.clone());
-        } else if needs_coherent_announcement_tag {
-            use std::fmt::Write;
-            let mut help = String::new();
-            help.push_str("Please either specify --tag, or give them all the same version\n\n");
-            help.push_str("Here are some options:\n\n");
-            for (version, packages) in &versions {
-                write!(help, "--tag=v{version} will Announce: ").unwrap();
-                let mut multi_package = false;
-                for &pkg_id in packages {
-                    let info = &graph.workspace().package(pkg_id);
-                    if multi_package {
-                        write!(help, ", ").unwrap();
-                    } else {
-                        multi_package = true;
-                    }
-                    write!(help, "{}", info.name).unwrap();
-                }
-                writeln!(help).unwrap();
+/// Get a help printout for what --tags could have been passed
+fn tag_help(
+    graph: &DistGraphBuilder,
+    versions: SortedMap<&Version, Vec<PackageIdx>>,
+    base_suggestion: &str,
+) -> String {
+    use std::fmt::Write;
+    let mut help = String::new();
+
+    let Some(some_pkg) = versions
+        .first_key_value()
+        .and_then(|(_, packages)| packages.first())
+    else {
+        return r#"It appears that you have no packages in your workspace with distable binaries. You can rerun with "--verbose=info" to see what cargo-dist thinks is in your workspace. Here are some typical issues:
+
+    If you're trying to use cargo-dist to announce libraries, we require you explicitly select the library with e.g. "--tag=my-library-v1.0.0", as this mode is experimental.
+
+    If you have binaries in your workspace, `publish = false` could be hiding them and adding "dist = true" to [package.metadata.dist] in your Cargo.toml may help."#.to_owned();
+    };
+
+    help.push_str(base_suggestion);
+    help.push_str("\n\n");
+    help.push_str("Here are some options:\n\n");
+    for (version, packages) in &versions {
+        write!(help, "--tag=v{version} will Announce: ").unwrap();
+        let mut multi_package = false;
+        for &pkg_id in packages {
+            let info = &graph.workspace().package(pkg_id);
+            if multi_package {
+                write!(help, ", ").unwrap();
+            } else {
+                multi_package = true;
             }
-            help.push('\n');
-            let some_pkg = *versions.first_key_value().unwrap().1.first().unwrap();
-            let info = &graph.workspace().package(some_pkg);
-            let some_tag = format!(
-                "--tag={}-v{}",
-                info.name,
-                info.version.as_ref().unwrap().cargo()
-            );
-
-            writeln!(
-                help,
-                "you can also request any single package with {some_tag}"
-            )
-            .unwrap();
-            return Err(DistError::TooManyUnrelatedApps { help });
-        } else {
-            // We don't need a coherent announcement tag so use a fake one to continue on
-            announcement_tag = Some("v1.0.0-FAKEVER".to_owned());
-            announcing_prerelease = true;
-            announcing_version = Some("1.0.0-FAKEVER".parse().unwrap());
+            write!(help, "{}", info.name).unwrap();
         }
+        writeln!(help).unwrap();
     }
-    Ok(AnnouncementTag {
-        tag: announcement_tag.expect("integrity error: failed to select announcement tag"),
-        prerelease: announcing_prerelease,
-        version: announcing_version,
-        package: announcing_package,
-        rust_releases,
-    })
+    help.push('\n');
+    let info = &graph.workspace().package(*some_pkg);
+    let some_tag = format!(
+        "--tag={}-v{}",
+        info.name,
+        info.version.as_ref().unwrap().cargo()
+    );
+
+    writeln!(
+        help,
+        "you can also request any single package with {some_tag}"
+    )
+    .unwrap();
+
+    help
 }
 
 /// Try to strip-prefix a package name from the given input, preferring whichever one is longest

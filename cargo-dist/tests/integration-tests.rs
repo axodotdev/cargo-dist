@@ -554,3 +554,33 @@ windows-archive = ".tar.gz"
         Ok(())
     }).unwrap();
 }
+
+#[test]
+#[should_panic(
+    expected = r#"It appears that you have no packages in your workspace with distable"#
+)]
+fn axoasset_basic() {
+    // This is just a library so we should error with a helpful message
+    let test_name = _function_name!();
+    AXOASSET
+        .run_test(|ctx| {
+            let dist_version = ctx.tools.cargo_dist.version().unwrap();
+
+            ctx.patch_cargo_toml(format!(
+                r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+ci = ["github"]
+targets = ["x86_64-pc-windows-msvc"]
+"#
+            ))?;
+
+            // Do usual build+plan checks
+            let main_result = ctx.cargo_dist_build_and_plan(test_name).unwrap();
+            let main_snap = main_result.check_all(ctx, ".cargo/bin/").unwrap();
+            // snapshot all
+            main_snap.snap();
+            Ok(())
+        })
+        .unwrap();
+}

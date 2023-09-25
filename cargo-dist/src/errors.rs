@@ -149,7 +149,11 @@ pub enum DistError {
 
     /// parse_tag concluded there was nothing to release
     #[error("This workspace doesn't have anything for cargo-dist to Release!")]
-    NothingToRelease,
+    NothingToRelease {
+        /// full help printout (very dynamic)
+        #[help]
+        help: String,
+    },
 
     /// parse_tag concluded there are too many unrelated things for a single tag
     #[error("There are too many unrelated apps in your workspace to coherently Announce!")]

@@ -43,6 +43,17 @@ pub static AKAIKATANA_REPACK: TestContextLock<Tools> = TestContextLock::new(
         bins: &["akextract", "akmetadata", "akrepack"],
     },
 );
+/// axoasset only has libraries!
+pub static AXOASSET: TestContextLock<Tools> = TestContextLock::new(
+    &TOOLS,
+    &Repo {
+        repo_owner: "axodotdev",
+        repo_name: "axoasset",
+        commit_sha: "5d6a531428fb645bbb1259fd401575c6c651be94",
+        app_name: "axoasset",
+        bins: &[],
+    },
+);
 
 pub struct Tools {
     pub git: CommandInfo,
