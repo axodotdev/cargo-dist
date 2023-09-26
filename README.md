@@ -66,16 +66,6 @@ As a distribution tool, cargo-dist gets to flex its biggest superpower: **it gen
     * Uploads build artifacts to the Release
     * Adds relevant release notes from your RELEASES/CHANGELOG
 
-(Ideally "host" would come cleanly before "publish", but GitHub Releases doesn't really properly support this kind of staging, so we're forced to race the steps a bit here. Future work may provide a more robust release process.)
-
-Most of the scripts roughly amount to "install cargo-dist", "run it exactly once", "upload the artifacts it reported". **We want you to be able to copy that one cargo-dist invocation CI did, run it on your machine, and get the same results without any fuss** (not to bit-level precision, but to the kinds of precision normal people expect from cargo builds). No setting up docker, no weird linux-only shell scripts that assume a bunch of tools were setup in earlier CI steps.
-
-Of course even if we perfectly achieve this ideal, "you *can* run it locally" and "you *want to* run it locally" are different statements.
-
-To that point, **release.yml can now run partially in pull-requests**. The default is to only run the "plan" step, which includes many integrity checks to help prevent "oops the release process is broken and we only found out when we tried to cut a release".
-
-You can also crank the pull-request mode up to include the "build" step, in which case the PR Workflow Summary will include an artifacts.zip containing all the build results. We don't recommend keeping this on all the time (it's slow and wasteful), but it can be useful to temporarily turn on while testing a PR.
-
 [tarballs]: https://opensource.axo.dev/cargo-dist/book/artifacts/archives.html
 [installers]: https://opensource.axo.dev/cargo-dist/book/installers/index.html
 [manifest]: https://opensource.axo.dev/cargo-dist/book/reference/schema.html
