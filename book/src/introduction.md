@@ -78,7 +78,7 @@ You can also crank the pull-request mode up to include the "build" step, in whic
 
 
 [simple-release]: ./img/simple-github-release.png
-[simple-oranda]: ./img/simple-github-release.png
+[simple-oranda]: ./img/simple-oranda.png
 [workflow-artifacts]: ./img/workflow-artifacts.png
 
 [github-ci]: ./ci/github.md
