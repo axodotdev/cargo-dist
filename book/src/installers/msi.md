@@ -19,7 +19,7 @@ We'll start with the bare-minimum and then explain what we did and how to modify
 msi requires you to specify a "manufacturer" for you application, which is by default sourced from the "authors" field in you Cargo.toml. **If you don’t have that field set, the next step will error out.** If you have an authors entry like `My Cool Company <support@mycoolcompany.org>` then the manufacturer will be "My Cool Company".
 
 
-## Setup Step 2: run init and enable "msi"
+### Setup Step 2: run init and enable "msi"
 
 Rerun `cargo dist init` and when it prompts you to choose installers, enable "msi".
 
@@ -30,7 +30,7 @@ Once init completes, some changes will be made to your project, **check all of t
 3. `wix/main.wxs` will be created for each of your packages with distable binaries. This is a template for your msi. For now assume this file is completely managed by cargo-dist, and can't be hand-edited.
 
 
-## Setup Step 3: you're done! (time to test)
+### Setup Step 3: you're done! (time to test)
 
 See [the quickstart's testing guide][testing] for the various testing options.
 

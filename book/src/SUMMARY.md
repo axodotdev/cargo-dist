@@ -13,7 +13,7 @@
   - [archives](./artifacts/archives.md)
   - [checksums](./artifacts/checksums.md)
   - [symbols](./artifacts/symbols.md)
-- [CI](./ci/customizing-ci.md)
+- [CI](./ci/index.md)
   - [github](./ci/github.md)
 - [Workspaces](./workspaces/index.md)
   - [A Simple Application](./workspaces/simple-guide.md)
