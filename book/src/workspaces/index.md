@@ -12,8 +12,9 @@ Gonna be blunt and say that cargo-dist is still in early days and we still need 
 
 The guide will start by explaining the simple case, and then explain the more complicated cases.
 
-[concepts]: ./concepts.md
-[way-too-quickstart]: ./way-too-quickstart.md
+[concepts]: ../reference/concepts.md
+[way-too-quickstart]: ../way-too-quickstart.md
+[installers]: ../installers/index.md
+
 [issues]: https://github.com/axodotdev/cargo-dist/issues
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[installers]: ./artifacts.md#installers

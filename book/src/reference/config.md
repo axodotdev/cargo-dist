@@ -222,7 +222,7 @@ Specifies how to checksum [executable-zips][]. Supported values:
 * "sha512" - generate a .sha512 file for each archive
 * "false" - do not generate any checksums
 
-The hashes should match the result that sha256sum and sha512sum generate. The current format is just a file containing the hash of that file and nothing else.
+The hashes should match the result that sha256sum and sha512sum generate, and the file should be readable by those sorts of commands.
 
 Future work is planned to [support more robust signed checksums][issue-sigstore].
 
@@ -418,24 +418,24 @@ See [Artifact Modes][artifact-modes] for how you might use this kind of subsetti
 Caveat: the default "host" Artifact Mode does something fuzzier with `--target` to allow you to build binaries that are usable on the current platform. Again see [Artifact Modes][artifact-modes].
 
 
+[issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
 
+[concepts]: ../reference/concepts.md
+[installers]: ../installers/index.md
+[shell-installer]: ../installers/shell.md
+[powershell-installer]: ../installers/powershell.md
+[homebrew-installer]: ../installers/homebrew.md
+[npm installers]: ../installers/npm.md
+[artifact-url]: ../reference/artifact-url.md
+[generate]: ../reference/cli.md#cargo-dist-generate
+[executable-zips]: ../artifacts/archives.md
+[artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
 
 [workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table
 [cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
-[concepts]: ./concepts.md
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[generate]: ./cli.md#cargo-dist-generate
 [semver-version]: https://docs.rs/semver/latest/semver/struct.Version.html
 [rust-version]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field
 [rustup]: https://rust-lang.github.io/rustup/
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-[executable-zips]: ./artifacts.md#executable-zip
-[artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
-[installers]: ./installers.md
-[shell-installer]: ./installers.md#shell
-[powershell-installer]: ./installers.md#powershell
-[homebrew-installer]: ./installers.md#homebrew
-[artifact-url]: ./installers.md#artifact-download-url
 [scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
-[npm installers]: ./installers.md#npm
-[issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120

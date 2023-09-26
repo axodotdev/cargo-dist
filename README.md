@@ -8,18 +8,77 @@
 [![docs](https://docs.rs/cargo-dist/badge.svg)](https://docs.rs/cargo-dist)
 [![Rust CI](https://github.com/axodotdev/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)](https://github.com/axodotdev/cargo-dist/actions/workflows/ci.yml)
 
-`cargo build` but For Building Final Distributable Artifacts and uploading them to an archive.
+*cargo-dist distributes your binaries*
 
-The Big Idea of cargo-dist is that we want to streamline all the steps of providing prebuilt binaries
-for a rust project. This includes:
+The TL;DR is that with cargo-dist setup, just doing this:
 
-1. Generating your "Cut A Release" Github CI for you
-2. Picking good build flags for a "production" release
-3. Making zips and installers for the resulting binaries
-4. Generating a machine-readable manifest so other tools can understand the results
-5. Uploading all the resulting artifacts to a Github Release™️
+```sh
+git commit -am "release: 0.2.0"
+git tag "v0.2.0"
+git push
+git push --tags
+```
 
-Even though cargo-dist is primarily a tool for building and packaging applications (steps 2-4), we put a fair amount of effort into Generating Your CI Scripts For You because we want to be able to run things locally and know what the CI *should* do without actually running it. It also helps avoid needless vendor lock-in -- while the extra conveniences currently only support GitHub Actions, in the future migrating from Github to Gitlab or your own personal infra will be just one invocation of cargo-dist away!
+Will make [this Github Release](https://github.com/axodotdev/axolotlsay/releases/tag/v0.2.0):
+
+Or if you're using [oranda](https://opensource.axo.dev/oranda/), you'll get [this website](https://opensource.axo.dev/axolotlsay/).
+
+
+## Plan, Build, Host, Publish, Announce
+
+Cutting releases of your apps and distributing binaries for them has a lot of steps, and cargo-dist is quickly growing to try to cover them all!
+
+To accomplish this, cargo-dist functionality can be broken up into two parts:
+
+* building (**planning** the release; **building** binaries and installers)
+* distributing (**hosting** artifacts; **publishing** packages; **announcing** releases)
+
+The build functionality can be used on its own if you just want some tarballs and installers, but everything really comes together when you use the distribution functionality too.
+
+
+## Building
+
+As a build tool, cargo-dist can do the following:
+
+* Pick good build flags for "shippable binaries"
+* Make [tarballs][] and [installers][] for the resulting binaries
+* Generate [machine-readable manifests][manifest] so other tools can understand the results
+
+That's a short list because "we make [installers][]" is doing a lot of heavy lifting. Each installer could be (and sometimes is!) an entire standalone tool with its own documentation and ecosystem.
+
+
+## Distributing
+
+As a distribution tool, cargo-dist gets to flex its biggest superpower: **it generates its own CI scripts**. All you need to do is enable the GitHub CI backend, and `cargo dist init` will generate release.yml, which implements the full pipeline of plan, build, host, publish, announce:
+
+* Plan
+    * Waits for you to push a git tag for a new version (v1.0.0, my-app-v1.0.0, my-app/1.0.0, ...)
+    * Selects what apps in your workspace to announce new releases for based on that tag
+    * Generates [a machine-readable manifest][manifest] with changelogs and build plans
+* Build
+    * Spins up machines for each platform you support
+    * Builds your [binaries and tarballs][tarballs]
+    * Builds [installers][] for your binaries
+* Publish:
+    * Uploads to package managers
+* Host + Announce:
+    * Creates (or edits) a GitHub Release
+    * Uploads build artifacts to the Release
+    * Adds relevant release notes from your RELEASES/CHANGELOG
+
+(Ideally "host" would come cleanly before "publish", but GitHub Releases doesn't really properly support this kind of staging, so we're forced to race the steps a bit here. Future work may provide a more robust release process.)
+
+Most of the scripts roughly amount to "install cargo-dist", "run it exactly once", "upload the artifacts it reported". **We want you to be able to copy that one cargo-dist invocation CI did, run it on your machine, and get the same results without any fuss** (not to bit-level precision, but to the kinds of precision normal people expect from cargo builds). No setting up docker, no weird linux-only shell scripts that assume a bunch of tools were setup in earlier CI steps.
+
+Of course even if we perfectly achieve this ideal, "you *can* run it locally" and "you *want to* run it locally" are different statements.
+
+To that point, **release.yml can now run partially in pull-requests**. The default is to only run the "plan" step, which includes many integrity checks to help prevent "oops the release process is broken and we only found out when we tried to cut a release".
+
+You can also crank the pull-request mode up to include the "build" step, in which case the PR Workflow Summary will include an artifacts.zip containing all the build results. We don't recommend keeping this on all the time (it's slow and wasteful), but it can be useful to temporarily turn on while testing a PR.
+
+[tarballs]: https://opensource.axo.dev/cargo-dist/book/artifacts/archives.html
+[installers]: https://opensource.axo.dev/cargo-dist/book/installers/index.html
+[manifest]: https://opensource.axo.dev/cargo-dist/book/reference/schema.html
 
 # Read The Book!
 
@@ -28,8 +87,8 @@ We've got all the docs you need over at the [cargo-dist book](https://axodotdev.
 * [Introduction](https://axodotdev.github.io/cargo-dist/book/introduction.html)
 * [Install](https://axodotdev.github.io/cargo-dist/book/install.html)
 * [Way-Too-Quickstart](https://axodotdev.github.io/cargo-dist/book/way-too-quickstart.html)
-* [Guide](https://axodotdev.github.io/cargo-dist/book/guide.html)
-* [Reference](https://axodotdev.github.io/cargo-dist/book/reference.html)
+* [Workspaces Guide](https://axodotdev.github.io/cargo-dist/book/workspaces-guide.html)
+* [Reference](https://axodotdev.github.io/cargo-dist/book/reference/index.html)
 
 <div class="oranda-hide">
 

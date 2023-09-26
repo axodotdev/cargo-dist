@@ -237,24 +237,26 @@ CI will just invoke cargo-dist in the following sequence:
 (All the upload-artifacts tasks are in parallel, and there are multiple "local" tasks to cover the target platforms.)
 
 
+[config-dist]: ../reference/config.md#dist
 
-[workspace-log]: img/workspace-log.png
-[announce-error]: img/announcement-error.png
-[human-manifest-example]: img/human-manifest-all.png
-[global-build-example]: img/global-build.png
-[local-build-example]: img/local-build.png
+[guide]: ../workspaces/index.md
+[installers]: ../installers/index.md
+[executable-zip]: ../artifacts/archives.md
+[announcements-section]: #announcements-selecting-apps
+[artifact-modes-section]: #artifact-modes-selecting-artifacts
+[defining-your-apps-section]: #defining-your-apps
+
+[workspace-log]: ../img/workspace-log.png
+[announce-error]: ../img/announcement-error.png
+[human-manifest-example]: ../img/human-manifest-all.png
+[global-build-example]: ../img/global-build.png
+[local-build-example]: ../img/local-build.png
 
 [binary targets]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
 [publish-false]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-publish-field
-[config-dist]: ./config.md#dist
 [cdylibs]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#library
 [cargo-conflicts]: https://github.com/rust-lang/cargo/issues/6313
-[announcements-section]: #announcements-selecting-apps
 [rust-platform]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-[executable-zip]: ./artifacts.md#executable-zip
-[artifact-modes-section]: #artifact-modes-selecting-artifacts
-[defining-your-apps-section]: #defining-your-apps
 [cargo-metadata]: https://doc.rust-lang.org/cargo/commands/cargo-metadata.html
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[guide]: ./guide.html
-[installers]: ./installers.md
+
