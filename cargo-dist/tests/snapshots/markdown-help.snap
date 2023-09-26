@@ -106,7 +106,7 @@ cargo dist build [OPTIONS]
 #### `-a, --artifacts <ARTIFACTS>`
 Which subset of the Artifacts to build
 
-Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, msi installers...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
+Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (archives, symbols, msi installers...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
 
 Having this distinction lets us run cargo-dist independently on multiple machines without collisions between the outputs.
 
@@ -117,7 +117,7 @@ The specifics of "host" mode are intentionally unspecified to enable us to provi
 \[default: host]  
 
 Possible values:
-- local:  Build target-specific artifacts like executable-zips and msi installers
+- local:  Build target-specific artifacts like archives and msi installers
 - global: Build unique artifacts like curl-sh installers and npm packages
 - host:   Fuzzily build "as much as possible" for the host system
 - all:    Build all the artifacts; useful for `cargo dist manifest`
@@ -208,7 +208,7 @@ cargo dist manifest [OPTIONS]
 #### `-a, --artifacts <ARTIFACTS>`
 Which subset of the Artifacts to build
 
-Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (executable-zips, symbols, msi installers...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
+Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (archives, symbols, msi installers...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).
 
 Having this distinction lets us run cargo-dist independently on multiple machines without collisions between the outputs.
 
@@ -219,7 +219,7 @@ The specifics of "host" mode are intentionally unspecified to enable us to provi
 \[default: host]  
 
 Possible values:
-- local:  Build target-specific artifacts like executable-zips and msi installers
+- local:  Build target-specific artifacts like archives and msi installers
 - global: Build unique artifacts like curl-sh installers and npm packages
 - host:   Fuzzily build "as much as possible" for the host system
 - all:    Build all the artifacts; useful for `cargo dist manifest`

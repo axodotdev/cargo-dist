@@ -33,13 +33,13 @@ cargo-dist has an internal notion of an "artifact download URL" that is required
 
 ### readme
 
-cargo-dist defaults to trying to include certain "important" static files in your executable-zips. A README is one of them.
+cargo-dist defaults to trying to include certain "important" static files in your archives. A README is one of them.
 
 If you specify a path to a README file, cargo-dist will use that for all the packages it affects. If you don't, then cargo-dist will search for a README* file in the package's root directory and the workspace's root directory (preferring the package).
 
 ### license-file
 
-cargo-dist defaults to trying to include certain "important" static files in your executable-zips. A LICENSE is one of them.
+cargo-dist defaults to trying to include certain "important" static files in your archives. A LICENSE is one of them.
 
 If you specify a path to a license file, cargo-dist will use that for all packages it affects. Otherwise, cargo-dist will search for LICENSE* or UNLICENSE* files in the package's root directory and the workspace's root directory (preferring the package). If multiple are defined in the same directory, we will grab them all (this is necessary for the extremely common dual MIT/Apache license, which often results in two LICENSE-* files).
 
@@ -149,7 +149,7 @@ See the [installers documentation][homebrew-installer] for more information on H
 
 Example: `include = ["my-cool-file.txt", "../other-cool-file.txt", "./some/dir/"]`
 
-This is a list of additional *files* or *directories* to copy into the root of all [executable-zips][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
+This is a list of additional *files* or *directories* to copy into the root of all [archives][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
 
 ### auto-includes
 
@@ -157,7 +157,7 @@ This is a list of additional *files* or *directories* to copy into the root of a
 
 Example: `auto-includes = false`
 
-Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [executable-zips][]. Defaults to true.
+Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [archives][]. Defaults to true.
 
 ### windows-archive
 
@@ -165,7 +165,7 @@ Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE
 
 Example: `windows-archive = ".tar.gz"`
 
-Allows you to specify the file format to use for [executable-zips][] that target windows. The default is
+Allows you to specify the file format to use for [archives][] that target windows. The default is
 ".zip". Supported values:
 
 * ".zip"
@@ -181,7 +181,7 @@ See also unix-archive below.
 
 Example: `unix-archive = ".tar.gz"`
 
-Allows you to specify the file format to use for [executable-zips][] that target not-windows. The default is
+Allows you to specify the file format to use for [archives][] that target not-windows. The default is
 ".tar.xz". See "windows-archive" above for a complete list of supported values.
 
 
@@ -212,7 +212,7 @@ If no scope is specified the package will be global.
 
 Example: `checksum = "sha512"`
 
-Specifies how to checksum [executable-zips][]. Supported values:
+Specifies how to checksum [archives][]. Supported values:
 
 * "sha256" (default) - generate a .sha256 file for each archive
 * "sha512" - generate a .sha512 file for each archive
@@ -446,7 +446,7 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [npm installers]: ../installers/npm.md
 [artifact-url]: ../reference/artifact-url.md
 [generate]: ../reference/cli.md#cargo-dist-generate
-[executable-zips]: ../artifacts/archives.md
+[archives]: ../artifacts/archives.md
 [artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
 
 [workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table

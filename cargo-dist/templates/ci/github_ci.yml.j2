@@ -4,7 +4,7 @@
 # CI that:
 #
 # * checks for a Git Tag that looks like a release
-# * builds artifacts with cargo-dist (executable-zips, installers, hashes)
+# * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
 # * on success, uploads the artifacts to a Github Release™
 {{%- if create_release %}}

@@ -47,7 +47,7 @@ That's a short list because "we make [installers][]" is doing a lot of heavy lif
 
 ## Distributing
 
-As a distribution tool, cargo-dist gets to flex its biggest superpower: **it generates its own CI scripts**. All you need to do is enable the GitHub CI backend, and `cargo dist init` will generate release.yml, which implements the full pipeline of plan, build, host, publish, announce:
+As a distribution tool, cargo-dist gets to flex its biggest superpower: **it generates [its own CI scripts][ci-providers]**. For instance, enabling [GitHub CI][github-ci] with `cargo dist init` will generate release.yml, which implements the full pipeline of plan, build, host, publish, announce:
 
 * Plan
     * Waits for you to push a git tag for a new version (v1.0.0, my-app-v1.0.0, my-app/1.0.0, ...)
@@ -77,11 +77,12 @@ You can also crank the pull-request mode up to include the "build" step, in whic
 ![A GitHub Workflow Summary from running cargo-dist's release.yml with an "artifacts" download link at the bottom][workflow-artifacts]
 
 
-
 [simple-release]: ./img/simple-github-release.png
 [simple-oranda]: ./img/simple-github-release.png
 [workflow-artifacts]: ./img/workflow-artifacts.png
 
+[github-ci]: ./ci/github.md
+[ci-providers]: ./ci/index.md
 [installers]: ./installers/index.md
 [tarballs]: ./artifacts/archives.md
 [manifest]: ./reference/schema.md

@@ -49,7 +49,7 @@ That's a short list because "we make [installers][]" is doing a lot of heavy lif
 
 ## Distributing
 
-As a distribution tool, cargo-dist gets to flex its biggest superpower: **it generates its own CI scripts**. All you need to do is enable the GitHub CI backend, and `cargo dist init` will generate release.yml, which implements the full pipeline of plan, build, host, publish, announce:
+As a distribution tool, cargo-dist gets to flex its biggest superpower: **it generates [its own CI scripts][ci-providers]**. For instance, enabling [GitHub CI][github-ci] with `cargo dist init` will generate release.yml, which implements the full pipeline of plan, build, host, publish, announce:
 
 * Plan
     * Waits for you to push a git tag for a new version (v1.0.0, my-app-v1.0.0, my-app/1.0.0, ...)
@@ -69,6 +69,8 @@ As a distribution tool, cargo-dist gets to flex its biggest superpower: **it gen
 [tarballs]: https://opensource.axo.dev/cargo-dist/book/artifacts/archives.html
 [installers]: https://opensource.axo.dev/cargo-dist/book/installers/index.html
 [manifest]: https://opensource.axo.dev/cargo-dist/book/reference/schema.html
+[github-ci]: https://opensource.axo.dev/cargo-dist/book/ci/github.html
+[ci-providers]: https://opensource.axo.dev/cargo-dist/book/ci/index.html
 
 # Read The Book!
 
