@@ -290,6 +290,17 @@ jobs:
 
 {{%- endif %}}
 
+{{%- for job in user_publish_jobs %}}
+
+  custom-{{{ job|safe }}}:
+    needs: [plan, should-publish]
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+    secrets: inherit
+{{%- endfor %}}
+
   # Create a Github Release with all the results once everything is done,
   publish-release:
     needs: [plan, should-publish]
