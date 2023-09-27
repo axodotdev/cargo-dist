@@ -66,7 +66,7 @@ First the easy part: `profile.dist` is the profile cargo-dist will build everyth
 
 The other 3 fields are defining the various Artifacts that should be produced for each App in the workspace (because this is `[workspace.metadata]` and not `[package.metadata]`).
 
-For each entry in `targets` you will get a build of your App for [that platform][rust-platform] in the form of an [executable-zip][].
+For each entry in `targets` you will get a build of your App for [that platform][rust-platform] in the form of an [archive][].
 
 For each entry in `installers` you get that kind of [installer][installers] for your App. There are two classes of installer: "global" and "local". This will be explained further in [the section on artifact modes][artifact-modes-section], but the tl;dr is that "global" installers are one-per-App while "local" installers are one-per-platform-per-app, similar to a [Github CI Matrix](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs).
 
@@ -124,7 +124,7 @@ Normally cargo-dist will error out if the Announcement Tag selects no Apps, beca
 
 Now that we have a coherent Announcement and therefore have selected what apps we want to Release, we need to select what artifacts we want to build (or get a manifest for). Enumerating the exact artifacts for each invocation of cargo-dist would be tedious and error-prone, so we provide the `--artifacts=...` flag to specify the *Artifact Mode*, which is a certain subset of the Universe of all Artifacts:
 
-* "local": artifacts that are per-target platform ([executable-zips][executable-zip], symbols, msi installers...)
+* "local": artifacts that are per-target platform ([archives][archive], symbols, msi installers...)
 * "global": artifacts that are one-per-app (shell installer, npm package...)
 * "all": both global and local (so the whole Universe)
 * "host": the default mode that kind of breaks the rules to let you test things out locally
@@ -188,7 +188,7 @@ In my case it's "x86_64-pc-windows-msvc", so let's try that:
 cargo dist build --tag=v0.5.0 --artifacts=local --target=x86_64-pc-windows-msvc --no-local-paths
 ```
 
-![A local build producing only executable-zips for the current platform][local-build-example]
+![A local build producing only archives for the current platform][local-build-example]
 
 Note that you can pass `--target` multiple times to select more than one. Note also that `--target` is not allowed to select targets that aren't specified by the config your Cargo.toml. This ensures that global installers are consistently aware of all the platform-specific artifacts they can fetch. ("host" mode breaks this rule.) ((Also in theory `--installer` should work the same for selecting specific installers but it's not well tested because there isn't any reason to ever use that outside of `cargo dist init`.))
 
@@ -218,7 +218,7 @@ Ok so here's what goes through cargo-dist's brains when you run it:
 3. Determine what Targets we're building for
 3. Call the specific Version of each App a "Release" ("my-app-v1.0.0")
 4. For each Release-Target pair, create a "ReleaseVariant" ("my-app-v1.0.0-x86_64-apple-darwin")
-5. Add executable-zip Artifacts to each Release (broadcasted to each Variant, filtered by Artifact Mode)
+5. Add archive Artifacts to each Release (broadcasted to each Variant, filtered by Artifact Mode)
 6. Add all the enabled Installers to each Release (local ones broadcasted to each Variant, filtered by Artifact Mode)
 7. Compute the Build Steps necessary to produce each Artifact ("run cargo, copy this file, ...")
 8. Generate top-level Announcement info like the body for a Github Release
@@ -237,24 +237,26 @@ CI will just invoke cargo-dist in the following sequence:
 (All the upload-artifacts tasks are in parallel, and there are multiple "local" tasks to cover the target platforms.)
 
 
+[config-dist]: ../reference/config.md#dist
 
-[workspace-log]: img/workspace-log.png
-[announce-error]: img/announcement-error.png
-[human-manifest-example]: img/human-manifest-all.png
-[global-build-example]: img/global-build.png
-[local-build-example]: img/local-build.png
+[guide]: ../workspaces/index.md
+[installers]: ../installers/index.md
+[archive]: ../artifacts/archives.md
+[announcements-section]: #announcements-selecting-apps
+[artifact-modes-section]: #artifact-modes-selecting-artifacts
+[defining-your-apps-section]: #defining-your-apps
+
+[workspace-log]: ../img/workspace-log.png
+[announce-error]: ../img/announcement-error.png
+[human-manifest-example]: ../img/human-manifest-all.png
+[global-build-example]: ../img/global-build.png
+[local-build-example]: ../img/local-build.png
 
 [binary targets]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
 [publish-false]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-publish-field
-[config-dist]: ./config.md#dist
 [cdylibs]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#library
 [cargo-conflicts]: https://github.com/rust-lang/cargo/issues/6313
-[announcements-section]: #announcements-selecting-apps
 [rust-platform]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-[executable-zip]: ./artifacts.md#executable-zip
-[artifact-modes-section]: #artifact-modes-selecting-artifacts
-[defining-your-apps-section]: #defining-your-apps
 [cargo-metadata]: https://doc.rust-lang.org/cargo/commands/cargo-metadata.html
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[guide]: ./guide.html
-[installers]: ./installers.md
+

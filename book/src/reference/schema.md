@@ -11,3 +11,7 @@ As a matter of forward-compat and back-compat, basically every field in the form
 The latest schema can be found at:
 
 https://github.com/axodotdev/cargo-dist/releases/latest/download/dist-manifest-schema.json
+
+An example dist-manifest can be found at:
+
+https://github.com/axodotdev/axolotlsay/releases/latest/download/dist-manifest.json

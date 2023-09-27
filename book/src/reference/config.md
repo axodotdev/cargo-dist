@@ -27,23 +27,19 @@ The version of your package is used pervasively, and cargo-dist will generally e
 
 If you set `publish = false` in your Cargo.toml we will treat this as a hint that cargo-dist should ignore all the affected packages completely. You can override this with dist's own `dist = true` config.
 
-### publish-prereleases
-
-If you set `publish-prereleases = true`, cargo-dist will publish prerelease versions to package managers such as Homebrew. By default, cargo-dist will only publish stable versions.
-
 ### repository
 
 cargo-dist has an internal notion of an "artifact download URL" that is required for things like [installers][] that detect the current platform and fetch binaries. If your CI backend is "github" then we will base the "[artifact download URL][artifact-url]" on the "repository" key. To be safe, we will only do this if your workspace agrees on this value. It's fine if only some packages bother setting "repository", as long as the ones that do use the exact same string. If they don't we will fail to compute an "artifact download URL", emit a warning, and ignore your request for installers that require it. (This might want to be a hard error in the future.)
 
 ### readme
 
-cargo-dist defaults to trying to include certain "important" static files in your executable-zips. A README is one of them.
+cargo-dist defaults to trying to include certain "important" static files in your archives. A README is one of them.
 
 If you specify a path to a README file, cargo-dist will use that for all the packages it affects. If you don't, then cargo-dist will search for a README* file in the package's root directory and the workspace's root directory (preferring the package).
 
 ### license-file
 
-cargo-dist defaults to trying to include certain "important" static files in your executable-zips. A LICENSE is one of them.
+cargo-dist defaults to trying to include certain "important" static files in your archives. A LICENSE is one of them.
 
 If you specify a path to a license file, cargo-dist will use that for all packages it affects. Otherwise, cargo-dist will search for LICENSE* or UNLICENSE* files in the package's root directory and the workspace's root directory (preferring the package). If multiple are defined in the same directory, we will grab them all (this is necessary for the extremely common dual MIT/Apache license, which often results in two LICENSE-* files).
 
@@ -153,7 +149,7 @@ See the [installers documentation][homebrew-installer] for more information on H
 
 Example: `include = ["my-cool-file.txt", "../other-cool-file.txt", "./some/dir/"]`
 
-This is a list of additional *files* or *directories* to copy into the root of all [executable-zips][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
+This is a list of additional *files* or *directories* to copy into the root of all [archives][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
 
 ### auto-includes
 
@@ -161,7 +157,7 @@ This is a list of additional *files* or *directories* to copy into the root of a
 
 Example: `auto-includes = false`
 
-Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [executable-zips][]. Defaults to true.
+Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [archives][]. Defaults to true.
 
 ### windows-archive
 
@@ -169,7 +165,7 @@ Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE
 
 Example: `windows-archive = ".tar.gz"`
 
-Allows you to specify the file format to use for [executable-zips][] that target windows. The default is
+Allows you to specify the file format to use for [archives][] that target windows. The default is
 ".zip". Supported values:
 
 * ".zip"
@@ -185,7 +181,7 @@ See also unix-archive below.
 
 Example: `unix-archive = ".tar.gz"`
 
-Allows you to specify the file format to use for [executable-zips][] that target not-windows. The default is
+Allows you to specify the file format to use for [archives][] that target not-windows. The default is
 ".tar.xz". See "windows-archive" above for a complete list of supported values.
 
 
@@ -216,13 +212,13 @@ If no scope is specified the package will be global.
 
 Example: `checksum = "sha512"`
 
-Specifies how to checksum [executable-zips][]. Supported values:
+Specifies how to checksum [archives][]. Supported values:
 
 * "sha256" (default) - generate a .sha256 file for each archive
 * "sha512" - generate a .sha512 file for each archive
 * "false" - do not generate any checksums
 
-The hashes should match the result that sha256sum and sha512sum generate. The current format is just a file containing the hash of that file and nothing else.
+The hashes should match the result that sha256sum and sha512sum generate, and the file should be readable by those sorts of commands.
 
 Future work is planned to [support more robust signed checksums][issue-sigstore].
 
@@ -335,6 +331,28 @@ already exists with the title/body you want, and just upload artifacts to it.
 At the end of a successful publish it will undraft the Github Release.
 
 
+### publish-prereleases
+
+> since 0.2.0
+
+Example: `publish-prereleases = true`
+
+If you set `publish-prereleases = true`, cargo-dist will publish prerelease versions to package managers such as Homebrew. By default, cargo-dist will only publish stable versions.
+
+
+### pr-run-mode
+
+> since 0.3.0
+
+Example: `pr-run-mode = "skip"`
+
+This setting determines to what extent we run your Release CI on pull-requests:
+
+* "skip": don't check the release process in PRs
+* "plan": run 'cargo dist plan' on PRs (recommended, also the default)
+* "upload": build and upload an artifacts.zip to the PR (expensive)
+
+
 ### install-path
 
 > since 0.1.0
@@ -418,24 +436,24 @@ See [Artifact Modes][artifact-modes] for how you might use this kind of subsetti
 Caveat: the default "host" Artifact Mode does something fuzzier with `--target` to allow you to build binaries that are usable on the current platform. Again see [Artifact Modes][artifact-modes].
 
 
+[issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
 
+[concepts]: ../reference/concepts.md
+[installers]: ../installers/index.md
+[shell-installer]: ../installers/shell.md
+[powershell-installer]: ../installers/powershell.md
+[homebrew-installer]: ../installers/homebrew.md
+[npm installers]: ../installers/npm.md
+[artifact-url]: ../reference/artifact-url.md
+[generate]: ../reference/cli.md#cargo-dist-generate
+[archives]: ../artifacts/archives.md
+[artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
 
 [workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table
 [cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
-[concepts]: ./concepts.md
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[generate]: ./cli.md#cargo-dist-generate
 [semver-version]: https://docs.rs/semver/latest/semver/struct.Version.html
 [rust-version]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field
 [rustup]: https://rust-lang.github.io/rustup/
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-[executable-zips]: ./artifacts.md#executable-zip
-[artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
-[installers]: ./installers.md
-[shell-installer]: ./installers.md#shell
-[powershell-installer]: ./installers.md#powershell
-[homebrew-installer]: ./installers.md#homebrew
-[artifact-url]: ./installers.md#artifact-download-url
 [scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
-[npm installers]: ./installers.md#npm
-[issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120

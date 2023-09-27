@@ -10,7 +10,7 @@
 //! 4. for each TargetTriple, create a ReleaseVariant of each Release
 //! 5. add target-specific Binaries to each ReleaseVariant
 //! 6. add Artifacts to each Release, which will be propagated to each ReleaseVariant as necessary
-//!   1. add executable-zips, propagated to ReleaseVariants
+//!   1. add archives, propagated to ReleaseVariants
 //!   2. add installers, each one decides if it's global or local
 //! 7. compute actual BuildSteps from the current graph (a Binary will only induce an actual `cargo build`
 //!    here if one of the Artifacts that was added requires outputs from it!)
@@ -436,7 +436,7 @@ pub struct Archive {
 #[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum ArtifactKind {
-    /// An executable zip
+    /// An Archive containing binaries (aka ExecutableZip)
     ExecutableZip(ExecutableZip),
     /// Symbols
     Symbols(Symbols),
@@ -446,7 +446,7 @@ pub enum ArtifactKind {
     Checksum(ChecksumImpl),
 }
 
-/// An ExecutableZip Artifact
+/// An Archive containing binaries (aka ExecutableZip)
 #[derive(Debug)]
 pub struct ExecutableZip {
     // everything important is already part of Artifact
@@ -505,7 +505,7 @@ pub struct Release {
     pub checksum: ChecksumStyle,
     /// The @scope to include in NPM packages
     pub npm_scope: Option<String>,
-    /// Static assets that should be included in bundles like executable-zips
+    /// Static assets that should be included in bundles like archives
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
     /// Strategy for selecting paths to install to
     pub install_path: InstallPathStrategy,
@@ -523,7 +523,7 @@ pub struct ReleaseVariant {
     pub id: String,
     /// Binaries included in this Release Variant
     pub binaries: Vec<BinaryIdx>,
-    /// Static assets that should be included in bundles like executable-zips
+    /// Static assets that should be included in bundles like archives
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
     /// Artifacts that are "local" to this variant (binaries, symbols, msi-installer...)
     pub local_artifacts: Vec<ArtifactIdx>,
@@ -937,7 +937,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             self.release(to_release).id
         );
 
-        // Create an executable-zip for each Variant
+        // Create an archive for each Variant
         let release = self.release(to_release);
         let variants = release.variants.clone();
         let checksum = release.checksum;

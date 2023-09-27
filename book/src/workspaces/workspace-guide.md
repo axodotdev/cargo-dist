@@ -86,15 +86,17 @@ We'll probably have to add a config for specifying whether you want libraries to
 See [the dedicated guide to using cargo-release with cargo-dist][cargo-release-guide], which covers all sorts of nasty workspaces (it's also just a more useful in-depth look at ).
 
 
-[simple-guide]: ./simple-guide.html
+[publish-config]: ../reference/config.md#publish
+[dist-config]: ../reference/config.md#dist
+
+[installers]: ../installers/index.md
+[simple-guide]: ./simple-guide.md
+[cargo-release-guide]: ./cargo-release-guide.md
+
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
 [package]: https://doc.rust-lang.org/cargo/appendix/glossary.html#package
 [virtual-workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html#virtual-workspace
 [crate]: https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html
 [crates-io]: https://crates.io/
 [bins]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
-[publish-config]: ./config.md#publish
-[dist-config]: ./config.md#dist
-[cargo-release-guide]: ./cargo-release-guide.md
-[installers]: ./installers.md
 [cargo semver]: https://docs.rs/semver/latest/semver/struct.Version.html#errors

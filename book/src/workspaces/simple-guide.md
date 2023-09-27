@@ -178,24 +178,30 @@ If you're publishing a Version with some prerelease bits like "1.0.0-prerelease.
 
 If none of the previous rules apply, "1.0.0-prerelease.1" will also match a special "Unreleased" heading (i.e. "# Unreleased"), which will get rewritten to "# Version 1.0.0-prerelease.1". This lets you maintain a changelog for a pending release without having to commit to what version it will be.
 
-
-
-[simple-app-manifest]: ./img/simple-app-manifest.png
-[simple-app-manifest-with-files]: ./img/simple-app-manifest-with-files.png
-[simple-release]: ./img/simple-github-release.png
-
-[install]: ./install.html
-[concepts]: ./concepts.html
-[way-too-quickstart]: ./way-too-quickstart.md
 [issues]: https://github.com/axodotdev/cargo-dist/issues
+
+[simple-app-manifest]: ../img/simple-app-manifest.png
+[simple-app-manifest-with-files]: ../img/simple-app-manifest-with-files.png
+[simple-release]: ../img/simple-github-release.png
+
+[install]: ../install.md
+[concepts]: ../reference/concepts.md
+[way-too-quickstart]: ../way-too-quickstart.md
+[init]:  ../reference/cli.md#cargo-dist-init
+[generate]:  ../reference/cli.md#cargo-dist-generate
+[plan]:  ../reference/cli.md#cargo-dist-plan
+[build]: ../reference/cli.md#cargo-dist-build
+[artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
+[config]: ../reference/config.html
+[cargo-release-guide]: ./cargo-release-guide.md
+[installers]: ../installers/index.md
+
+
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-[installers]: ./installers.md
 [bin]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
-[config]: ./config.html
+
 [cargo-release]: https://github.com/crate-ci/cargo-release
 [git-tag]: https://git-scm.com/book/en/v2/Git-Basics-Tagging
-[init]:  ./cli.md#cargo-dist-init
-[generate]:  ./cli.md#cargo-dist-generate
 [cargo-profile]: https://doc.rust-lang.org/cargo/reference/profiles.html
 [thin-lto]: https://doc.rust-lang.org/cargo/reference/profiles.html#lto
 [workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table
@@ -204,8 +210,4 @@ If none of the previous rules apply, "1.0.0-prerelease.1" will also match a spec
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [release-yml]: https://github.com/axodotdev/cargo-dist/blob/main/.github/workflows/release.yml
 [jq]: https://stedolan.github.io/jq/
-[plan]:  ./cli.md#cargo-dist-plan
-[build]: ./cli.md#cargo-dist-build
-[artifact-modes]: ./concepts.md#artifact-modes-selecting-artifacts
 [parse-changelog]: https://github.com/taiki-e/parse-changelog
-[cargo-release-guide]: ./cargo-release-guide.md

@@ -103,7 +103,7 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<String>>,
 
-    /// Include the following static files in bundles like executable-zips.
+    /// Include the following static files in bundles like archives.
     ///
     /// Paths are relative to the Cargo.toml this is defined in.
     ///
@@ -461,7 +461,7 @@ pub struct Config {
 /// How we should select the artifacts to build
 #[derive(Clone, Copy, Debug)]
 pub enum ArtifactMode {
-    /// Build target-specific artifacts like executable-zips, symbols, msi installers
+    /// Build target-specific artifacts like archives, symbols, msi installers
     Local,
     /// Build globally unique artifacts like curl-sh installers, npm packages, metadata...
     Global,

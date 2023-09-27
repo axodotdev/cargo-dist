@@ -174,7 +174,7 @@ pub struct BuildArgs {
     /// Which subset of the Artifacts to build
     ///
     /// Artifacts can be broken up into two major classes: "local" ones, which are
-    /// made for each target system (executable-zips, symbols, msi installers...); and "global" ones,
+    /// made for each target system (archives, symbols, msi installers...); and "global" ones,
     /// which are made once per app (curl-sh installers, npm package, metadata...).
     ///
     /// Having this distinction lets us run cargo-dist independently on
@@ -197,7 +197,7 @@ pub struct BuildArgs {
 /// How we should select the artifacts to build
 #[derive(ValueEnum, Copy, Clone, Debug)]
 pub enum ArtifactMode {
-    /// Build target-specific artifacts like executable-zips and msi installers
+    /// Build target-specific artifacts like archives and msi installers
     Local,
     /// Build unique artifacts like curl-sh installers and npm packages
     Global,
