@@ -70,7 +70,11 @@ Most of the scripts roughly amount to "install cargo-dist", "run it exactly once
 
 Of course even if we perfectly achieve this ideal, "you *can* run it locally" and "you *want to* run it locally" are different statements.
 
+## Check Your Release Process Early And Often
+
 To that point, **release.yml can now run partially in pull-requests**. The default is to only run the "plan" step, which includes many integrity checks to help prevent "oops the release process is broken and we only found out when we tried to cut a release".
+
+![A GitHub PR for "chore: innocently update the Cargo.toml (to cause problems)", with the Release / plan PR check failing as a result][pr-fail]
 
 You can also crank the pull-request mode up to include the "build" step, in which case the PR Workflow Summary will include an artifacts.zip containing all the build results. We don't recommend keeping this on all the time (it's slow and wasteful), but it can be useful to temporarily turn on while testing a PR.
 
@@ -80,6 +84,7 @@ You can also crank the pull-request mode up to include the "build" step, in whic
 [simple-release]: ./img/simple-github-release.png
 [simple-oranda]: ./img/simple-oranda.png
 [workflow-artifacts]: ./img/workflow-artifacts.png
+[pr-fail]: ./img/pr-fail.png
 
 [github-ci]: ./ci/github.md
 [ci-providers]: ./ci/index.md
