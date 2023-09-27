@@ -50,7 +50,7 @@ That's a short list because "we make [installers][]" is doing a lot of heavy lif
 As a distribution tool, cargo-dist gets to flex its biggest superpower: **it generates [its own CI scripts][ci-providers]**. For instance, enabling [GitHub CI][github-ci] with `cargo dist init` will generate release.yml, which implements the full pipeline of plan, build, host, publish, announce:
 
 * Plan
-    * Waits for you to push a git tag for a new version (v1.0.0, my-app-v1.0.0, my-app/1.0.0, ...)
+    * Waits for you to push a git tag for a new version (v1.0.0, my-app-1.0.0...)
     * Selects what apps in your workspace to announce new releases for based on that tag
     * Generates [a machine-readable manifest][manifest] with changelogs and build plans
 * Build
