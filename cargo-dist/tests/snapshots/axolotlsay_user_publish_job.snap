@@ -2149,7 +2149,7 @@ maybeInstall(true).then(run);
 # CI that:
 #
 # * checks for a Git Tag that looks like a release
-# * builds artifacts with cargo-dist (executable-zips, installers, hashes)
+# * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
 # * on success, uploads the artifacts to a Github Release™
 #
@@ -2199,7 +2199,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Install cargo-dist
@@ -2238,7 +2238,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: swatinem/rust-cache@v2
@@ -2272,7 +2272,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Install cargo-dist
@@ -2320,7 +2320,7 @@ jobs:
       GITHUB_EMAIL: "admin+bot@axo.dev"
     if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: "axodotdev/homebrew-packages"
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
@@ -2367,7 +2367,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: "Download artifacts"
