@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.3.0 (2023-09-27)
+
 This release is a big overhaul of cargo-dist's UX! [Our CI scripts have been completely redesigned](https://opensource.axo.dev/cargo-dist/book/introduction.html#distributing) to allow your release process to be tested in pull-requests, so you don't have to worry as much about your release process breaking!
 
 Since we can now test your release process frequently, we've also made most cargo-dist commands default to erroring out if anything is out of sync and needs to be regenerated.
