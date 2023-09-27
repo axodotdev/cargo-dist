@@ -99,9 +99,14 @@ This is a list of CI backends you want to support, allowing subsequent runs of [
 
 > since 0.3.0
 
-Example: `allow-dirty = ["ci"]`
+Example: `allow-dirty = ["ci", "msi"]`
 
 This is a list of generate tasks for cargo-dist to ignore when checking if generated configuration is up to date. It's useful for users who customize their own configuration beyond cargo-dist's generated defaults and want to avoid cargo-dist overwriting it.
+
+Possible values are:
+
+* "ci": don't check/regenerate ci scripts (release.yml)
+* "msi": don't check/regenerate msi templates (main.wxs)
 
 ### targets
 

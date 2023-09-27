@@ -1,5 +1,120 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.3.0 (2023-09-27)
+
+This release is a big overhaul of cargo-dist's UX! [Our CI scripts have been completely redesigned](https://opensource.axo.dev/cargo-dist/book/introduction.html#distributing) to allow your release process to be tested in pull-requests, so you don't have to worry as much about your release process breaking!
+
+Since we can now test your release process frequently, we've also made most cargo-dist commands default to erroring out if anything is out of sync and needs to be regenerated.
+
+To make this easier, we've also introduced an experimental new system for [user-defined hooks](https://opensource.axo.dev/cargo-dist/book/ci/github.html#custom-jobs), allowing you to write custom publish jobs without having to actually edit release.yml.
+
+This release also introduces initial support for msi installers with the wonderful help of [cargo-wix](https://github.com/volks73/cargo-wix)!
+
+
+
+## Features
+
+### CI redesign
+
+This is the big ticket item of the release, the CI has been completely redesigned! We recommend reading the docs below for details, but some high-level details:
+
+* The CI now runs `cargo dist plan` on pull-requests
+* This can be cranked up to `cargo dist build`, with results uploaded to the PR workflow, allowing you to download+test them
+* To do this, we now use GitHub's upload-artifact/download-artifact system, instead of using a draft GitHub release as scratch storage
+* This means we also no longer create a draft Release on startup, and instead transactionally create the full Release at the very end
+* `cargo dist plan` will now check that the CI script is up to date and not hand-edited (can be opted out)
+    * The user-defined publish jobs feature helps you avoid hand-edits
+    * More such features are in the pipeline for the next release!
+
+* impl
+    * @mistydemeo + @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/378)
+    * @gankra [cleanup init logic](https://github.com/axodotdev/cargo-dist/pull/392)
+    * @mistydemeo [use checkout@v4](https://github.com/axodotdev/cargo-dist/pull/442)
+    * @mistydemeo [add docs](https://github.com/axodotdev/cargo-dist/pull/443)
+
+* docs
+    * [high-level summary](https://opensource.axo.dev/cargo-dist/book/introduction.html#distributing)
+    * [detailed docs](https://opensource.axo.dev/cargo-dist/book/ci/github.html)
+
+### user-defined publish jobs
+
+You can now define custom hand-written publish jobs that cargo-dist's CI will know how to invoke, without actually having to hand-edit release.yml!
+
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/417)
+* [docs](https://opensource.axo.dev/cargo-dist/book/ci/github.html#custom-jobs)
+
+### default to not publishing prereleases to homebrew
+
+Homebrew doesn't have a notion of package "versions", there is Only The Latest Version, so we changed the default to only publishing to your homebrew tap if you're cutting a stable release. You can opt back in to the old behaviour with `publish-prereleases = true`.
+
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/401)
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#publish-prereleases)
+
+### generate command
+
+This feature is a bit of an internal affair that you don't necessarily need to care about, but it's big enough that we figured it's worth mentioning.
+
+The "plumbing" `generate-ci` command which is invoked by `cargo dist init` has been reworked into a more general `generate` command, as the introduction of msi installers means we now have two kinds of checked-in generated output.
+
+Most notably, `generate --check` now exists, which produces an error if `generate` would change the contents (ignoring newline-style). **Most cargo-dist commands now run `generate --check` on startup, making it an error to have your release.yml out of date or hand-edited**. This is a key piece to the puzzle of the new CI design, as it lets you catch issues with your release process in PRs.
+
+The `allow-dirty = ["ci"]` config was introduced to disable these `generate` modifying or checking release.yml, for users that still really need to hand-edit. We're actively working on several features that should make it less necessary to do hand-edits.
+
+* impl
+    * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/381)
+    * @gankra [generalize for msi](https://github.com/axodotdev/cargo-dist/pull/391)
+    * @gankra [improved --allow-dirty behaviour](https://github.com/axodotdev/cargo-dist/pull/397)
+    * @mistydemeo [default to --artifacts=all in generate](https://github.com/axodotdev/cargo-dist/pull/410)
+    * @gankra [ignore newline style when checking file equality](https://github.com/axodotdev/cargo-dist/pull/414)
+    * @mistydemeo [hide generate-ci alias command](https://github.com/axodotdev/cargo-dist/pull/434)
+    * @gankra [cleanup more references to generate-ci](https://github.com/axodotdev/cargo-dist/pull/444)
+* docs
+    * [generate cli command](https://opensource.axo.dev/cargo-dist/book/reference/cli.html#cargo-dist-generate)
+    * [allow-dirty config](https://opensource.axo.dev/cargo-dist/book/reference/config.html#allow-dirty)
+
+### msi installer
+
+Initial msi installer support is here, based on the wonderful [cargo-wix](https://volks73.github.io/cargo-wix/cargo_wix/). We contributed several upstream improvements to cargo-wix for our purposes, and look forward to helping out even more in the future!
+
+* impl
+    * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/370)
+    * @gankra [properly handle multiple subscribers to a binary](https://github.com/axodotdev/cargo-dist/pull/421)
+    * @gankra [don't forward WiX output to stdout](https://github.com/axodotdev/cargo-dist/pull/418)
+* [docs](https://opensource.axo.dev/cargo-dist/book/installers/msi.html)
+
+## Fixes
+
+### more useful checksum files
+
+The checksum files we generate are now in the expected format for tools like sha256sum, making them more immediately useful.
+
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/420)
+
+## Maintenance
+
+### more polished cli output
+
+CLI Output has been streamlined and cleaned up a lot in this release!
+
+* @gankra [remove redundant output](https://github.com/axodotdev/cargo-dist/pull/411)
+* @gankra [various improvements](https://github.com/axodotdev/cargo-dist/pull/437)
+* @gankra [better help diagnostics](https://github.com/axodotdev/cargo-dist/pull/447)
+
+### refreshed docs
+
+The docs have been significantly reworked to reflect how much cargo-dist has changed and improved over the last few releases. Installers have rapidly grown from "something we're trying out" to "the star of the show", so they're now front-and-center with room for their own guides.
+
+This was a big undertaking, and not everything has been reworked yet. Further improvements will be done more incrementally.
+
+* @gankra [big docs overhaul](https://github.com/axodotdev/cargo-dist/pull/451)
+* @mistydemeo [don't suggest --profile in install instructions](https://github.com/axodotdev/cargo-dist/pull/404)
+* @tshepang [make search more useful](https://github.com/axodotdev/cargo-dist/pull/386)
+* @tshepang [remove stray char](https://github.com/axodotdev/cargo-dist/pull/388)
+
+
 # Version 0.2.0 (2023-08-30)
 
 This release includes a bunch of features that resolve several of our user's needs.
