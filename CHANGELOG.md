@@ -3,6 +3,21 @@
 Nothing Yet!
 
 
+# Version 0.3.1 (2023-09-28)
+
+This is a minor bugfix release which fixes an issue certain builds would encounter on Windows.
+
+## Fixes
+
+### Windows builds run under Powershell
+
+Starting in version 0.3.0, we switched Windows builds to run under bash instead of Powershell. This introduced problems for certain builds, so we've switched them back to Powershell.
+
+The majority of users will not be affected by this and will not need to upgrade; this primarily affects a limited number of users building software with libraries or dependencies which are sensitive to the shell in which they're built. For example, users building OpenSSL on Windows as a part of their cargo-dist build may have been affected.
+
+* @frol + @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/461)
+
+
 # Version 0.3.0 (2023-09-27)
 
 This release is a big overhaul of cargo-dist's UX! [Our CI scripts have been completely redesigned](https://opensource.axo.dev/cargo-dist/book/introduction.html#distributing) to allow your release process to be tested in pull-requests, so you don't have to worry as much about your release process breaking!
