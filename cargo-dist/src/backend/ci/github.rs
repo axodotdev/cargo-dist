@@ -9,7 +9,7 @@ use tracing::warn;
 
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
-    config::ProductionMode,
+    config::{DependencyKind, ProductionMode, SystemDependencies},
     errors::DistResult,
     DistGraph, SortedMap, SortedSet, TargetTriple,
 };
@@ -61,6 +61,7 @@ impl GithubCiInfo {
         let fail_fast = dist.fail_fast;
         let create_release = dist.create_release;
         let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
+        let mut dependencies = SystemDependencies::default();
 
         // Figure out what builds we need to do
         let mut needs_global_build = false;
@@ -70,6 +71,7 @@ impl GithubCiInfo {
                 needs_global_build = true;
             }
             local_targets.extend(release.targets.iter());
+            dependencies.append(&mut release.system_dependencies.clone());
         }
 
         // Get the platform-specific installation methods
@@ -87,6 +89,7 @@ impl GithubCiInfo {
                 runner: Some(GITHUB_LINUX_RUNNER.into()),
                 dist_args: Some("--artifacts=global".into()),
                 install_dist: Some(install_dist_sh.clone()),
+                packages_install: None,
             })
         } else {
             None
@@ -109,13 +112,14 @@ impl GithubCiInfo {
             let install_dist =
                 install_dist_for_github_runner(runner, &install_dist_sh, &install_dist_ps1);
             let mut dist_args = String::from("--artifacts=local");
-            for target in targets {
+            for target in &targets {
                 write!(dist_args, " --target={target}").unwrap();
             }
             tasks.push(GithubMatrixEntry {
                 runner: Some(runner.to_owned()),
                 dist_args: Some(dist_args),
                 install_dist: Some(install_dist.to_owned()),
+                packages_install: package_install_for_targets(&targets, &dependencies),
             });
         }
 
@@ -255,4 +259,99 @@ fn install_dist_for_github_runner<'a>(
     } else {
         unreachable!("internal error: unknown github runner!?")
     }
+}
+
+fn brewfile_from(packages: &[String]) -> String {
+    let brewfile_lines: Vec<String> = packages
+        .iter()
+        .map(|p| format!(r#"brew "{p}""#).to_owned())
+        .collect();
+
+    brewfile_lines.join("\n")
+}
+
+fn brew_bundle_command(packages: &[String]) -> String {
+    format!(
+        r#"cat << EOF >Brewfile
+{}
+EOF
+
+brew bundle install"#,
+        brewfile_from(packages)
+    )
+}
+
+fn package_install_for_targets(
+    targets: &Vec<&TargetTriple>,
+    packages: &SystemDependencies,
+) -> Option<String> {
+    // TODO handle mixed-OS targets
+    for target in targets {
+        match target.as_str() {
+            "i686-apple-darwin" | "x86_64-apple-darwin" | "aarch64-apple-darwin" => {
+                let packages: Vec<String> = packages
+                    .homebrew
+                    .clone()
+                    .into_iter()
+                    .filter(|(_, package)| package.0.wanted_for_target(target))
+                    .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Build))
+                    .map(|(name, _)| name)
+                    .collect();
+
+                if packages.is_empty() {
+                    return None;
+                }
+
+                return Some(brew_bundle_command(&packages));
+            }
+            "i686-unknown-linux-gnu" | "x86_64-unknown-linux-gnu" | "aarch64-unknown-linux-gnu" => {
+                let packages: Vec<String> = packages
+                    .apt
+                    .clone()
+                    .into_iter()
+                    .filter(|(_, package)| package.0.wanted_for_target(target))
+                    .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Build))
+                    .map(|(name, spec)| {
+                        if let Some(version) = spec.0.version {
+                            format!("{name}={version}")
+                        } else {
+                            name
+                        }
+                    })
+                    .collect();
+
+                if packages.is_empty() {
+                    return None;
+                }
+
+                let apts = packages.join(" ");
+                return Some(format!("sudo apt-get install {apts}").to_owned());
+            }
+            "i686-pc-windows-msvc" | "x86_64-pc-windows-msvc" | "aarch64-pc-windows-msvc" => {
+                let commands: Vec<String> = packages
+                    .chocolatey
+                    .clone()
+                    .into_iter()
+                    .filter(|(_, package)| package.0.wanted_for_target(target))
+                    .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Build))
+                    .map(|(name, package)| {
+                        if let Some(version) = package.0.version {
+                            format!("choco install {name} --version={version}")
+                        } else {
+                            format!("choco install {name}")
+                        }
+                    })
+                    .collect();
+
+                if commands.is_empty() {
+                    return None;
+                }
+
+                return Some(commands.join("\n"));
+            }
+            _ => {}
+        }
+    }
+
+    None
 }

@@ -38,6 +38,8 @@ pub struct HomebrewInstallerInfo {
     pub arm64_sha256: Option<String>,
     /// Generic installer info
     pub inner: InstallerInfo,
+    /// Additional packages to specify as dependencies
+    pub dependencies: Vec<String>,
 }
 
 pub(crate) fn write_homebrew_formula(

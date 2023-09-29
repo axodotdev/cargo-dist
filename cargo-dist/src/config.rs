@@ -1,5 +1,7 @@
 //! Config types (for workspace.metadata.dist)
 
+use std::collections::BTreeMap;
+
 use axoproject::WorkspaceSearch;
 use camino::{Utf8Path, Utf8PathBuf};
 use miette::Report;
@@ -87,6 +89,11 @@ pub struct DistMetadata {
 
     /// A Homebrew tap to push the Homebrew formula to, if built
     pub tap: Option<String>,
+
+    /// A set of packages to install before building
+    #[serde(rename = "dependencies")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system_dependencies: Option<SystemDependencies>,
 
     /// The full set of target triples to build for.
     ///
@@ -278,6 +285,7 @@ impl DistMetadata {
             ci: _,
             installers: _,
             tap: _,
+            system_dependencies: _,
             targets: _,
             include,
             auto_includes: _,
@@ -320,6 +328,7 @@ impl DistMetadata {
             ci,
             installers,
             tap,
+            system_dependencies,
             targets,
             include,
             auto_includes,
@@ -418,6 +427,9 @@ impl DistMetadata {
         }
         if tap.is_none() {
             *tap = workspace_config.tap.clone();
+        }
+        if system_dependencies.is_none() {
+            *system_dependencies = workspace_config.system_dependencies.clone();
         }
         if publish_jobs.is_none() {
             *publish_jobs = workspace_config.publish_jobs.clone();
@@ -811,6 +823,128 @@ impl std::fmt::Display for GenerateMode {
             GenerateMode::Ci => "ci".fmt(f),
             GenerateMode::Msi => "msi".fmt(f),
         }
+    }
+}
+
+/// Packages to install before build from the system package manager
+#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct SystemDependencies {
+    /// Packages to install in Homebrew
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    // #[serde(with = "sysdep_derive")]
+    pub homebrew: BTreeMap<String, SystemDependency>,
+    /// Packages to install in apt
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub apt: BTreeMap<String, SystemDependency>,
+    /// Package to install in Chocolatey
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub chocolatey: BTreeMap<String, SystemDependency>,
+}
+
+impl SystemDependencies {
+    /// Extends `self` with the elements of `other`.
+    pub fn append(&mut self, other: &mut Self) {
+        self.homebrew.append(&mut other.homebrew);
+        self.apt.append(&mut other.apt);
+        self.chocolatey.append(&mut other.chocolatey);
+    }
+}
+
+/// Represents a package from a system package manager
+// newtype wrapper to hang a manual derive impl off of
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+pub struct SystemDependency(pub SystemDependencyComplex);
+
+/// Backing type for SystemDependency
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+pub struct SystemDependencyComplex {
+    /// The version to install, as expected by the underlying package manager
+    pub version: Option<String>,
+    /// Stages at which the dependency is required
+    #[serde(default)]
+    pub stage: Vec<DependencyKind>,
+    /// One or more targets this package should be installed on; defaults to all targets if not specified
+    #[serde(default)]
+    pub targets: Vec<String>,
+}
+
+impl SystemDependencyComplex {
+    /// Checks if this dependency should be installed on the specified target.
+    pub fn wanted_for_target(&self, target: &String) -> bool {
+        if self.targets.is_empty() {
+            true
+        } else {
+            self.targets.contains(target)
+        }
+    }
+
+    /// Checks if this dependency should used in the specified stage.
+    pub fn stage_wanted(&self, stage: &DependencyKind) -> bool {
+        if self.stage.is_empty() {
+            match stage {
+                DependencyKind::Build => true,
+                DependencyKind::Run => false,
+            }
+        } else {
+            self.stage.contains(stage)
+        }
+    }
+}
+
+/// Definition for a single package
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SystemDependencyKind {
+    /// Simple specification format, parsed as cmake = 'version'
+    /// The special string "*" is parsed as a None version
+    Untagged(String),
+    /// Complex specification format
+    Tagged(SystemDependencyComplex),
+}
+
+/// Provides detail on when a specific dependency is required
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum DependencyKind {
+    /// A dependency that must be present when the software is being built
+    #[serde(rename = "build")]
+    Build,
+    /// A dependency that must be present when the software is being used
+    #[serde(rename = "run")]
+    Run,
+}
+
+impl std::fmt::Display for DependencyKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DependencyKind::Build => "build".fmt(f),
+            DependencyKind::Run => "run".fmt(f),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for SystemDependency {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let kind: SystemDependencyKind = SystemDependencyKind::deserialize(deserializer)?;
+
+        let res = match kind {
+            SystemDependencyKind::Untagged(version) => {
+                let v = if version == "*" { None } else { Some(version) };
+                SystemDependencyComplex {
+                    version: v,
+                    stage: vec![],
+                    targets: vec![],
+                }
+            }
+            SystemDependencyKind::Tagged(dep) => dep,
+        };
+
+        Ok(SystemDependency(res))
     }
 }
 

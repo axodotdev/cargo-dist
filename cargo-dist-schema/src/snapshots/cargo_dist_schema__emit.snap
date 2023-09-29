@@ -403,6 +403,13 @@ expression: json_schema
             "null"
           ]
         },
+        "packages_install": {
+          "description": "Command to run to install dependencies",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "runner": {
           "description": "Github Runner to user",
           "type": [

@@ -2123,7 +2123,8 @@ maybeInstall(true).then(run);
           {
             "runner": "macos-11",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
+            "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
+            "packages_install": "cat << EOF >Brewfile\nbrew \"libcue\"\nEOF\n\nbrew bundle install"
           },
           {
             "runner": "windows-2019",
@@ -2247,25 +2248,23 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
-      - name: Build artifacts
-        if: ${{ hashFiles('Brewfile') == '' }}
-        run: |
-          # Actually do builds and make zips and whatnot
-          cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-          echo "cargo dist ran successfully"
-      - name: Build artifacts (using Brewfile)
-        if: ${{ hashFiles('Brewfile') != '' }}
-        run: |
-          # Actually do builds and make zips and whatnot
-          brew bundle exec -- cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-          echo "cargo dist ran successfully"
       - id: cargo-dist
-        name: Post-build
+        name: Build
         # We force bash here just because github makes it really hard to get values up
         # to "real" actions without writing to env-vars, and writing to env-vars has
-        # inconsistent syntax between shell and powershell.
+        # inconsistent syntax between shell and powershell. cargo-dist and jq work fine
+        # in powershell.
         shell: bash
         run: |
+          CARGO="cargo"
+          if [[ -f "Brewfile" ]]; then
+            CARGO="brew bundle exec -- cargo"
+          fi
+
+          # Actually do builds and make zips and whatnot
+          $CARGO dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          echo "cargo dist ran successfully"
+
           # Parse out what we just built and upload it to the Github Release™
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
@@ -2354,22 +2353,6 @@ jobs:
             git commit -m "${name} ${version}"
           done
           git push
-
-  custom-custom-task-1:
-    needs: [plan, should-publish]
-    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    uses: ./.github/workflows/custom-task-1.yml
-    with:
-      plan: ${{ needs.plan.outputs.val }}
-    secrets: inherit
-
-  custom-custom-task-2:
-    needs: [plan, should-publish]
-    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    uses: ./.github/workflows/custom-task-2.yml
-    with:
-      plan: ${{ needs.plan.outputs.val }}
-    secrets: inherit
 
   # Create a Github Release with all the results once everything is done,
   publish-release:

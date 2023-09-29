@@ -428,6 +428,43 @@ If you use this you *probably* want to set it on `[package.metadata.dist]` and
 not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
 
 
+### dependencies
+
+> since 0.4.0
+
+Allows specifying dependencies to be installed from a system package manager before the build begins. This is useful if your tool needs certain build tools (say, cmake) or links against C libraries provided by the package manager. This is specified in a Cargo-like format which should be familiar. Dependencies can be specified in two forms:
+
+* A simple form, in which only a version is specified. If any version will do, use `'*'`.
+* A complex form, in several extra options can be specified.
+
+Supported options are:
+
+* `version` - A specific version of the package to install. This must be specified in the format that the package manager itself uses. Not used on Homebrew, since Homebrew does not support any method to specify installing specific versions of software.
+* `stage` - When exactly cargo-dist should make use of this package. Two values are supported: `build`, which specifies that the package should be installed before the build occurs; and `run`, which specifies that the package should be installed alongside your software at the time end users run it. The default is `build`. If `run` is specified for Homebrew dependencies, and you've enabled the Homebrew installer, the Homebrew installer will specify those packages as dependencies.
+* `targets` - A set of one or more targets to install the package on, in Rust target-triple format. If not specified, the package is installed on all targets. This is meant as an override to allow a package to be conditionally installed on only certain platforms; for example, a platform may need a build dependency only on Apple Silicon macOS, or have different build dependencies between x86_64 and ARM Windows.
+
+Supported package managers:
+
+* Apt (Linux)
+* Chocolatey (Windows)
+* Homebrew (macOS)
+
+Example:
+
+```toml
+[workspace.metadata.dist.dependencies.homebrew]
+cmake = '*'
+libcue = { stage = ["build", "run"] }
+
+[workspace.metadata.dist.dependencies.apt]
+cmake = '*'
+libcue-dev = { version = "2.2.1-2" }
+
+[workspace.metadata.dist.dependencies.chocolatey]
+lftp = '*'
+cmake = { version = '3.27.6', targets = ["aarch64-pc-windows-msvc"] }
+```
+
 ## Subsetting CI Flags
 
 Several `metadata.dist` configs have globally available CLI equivalents. These can be used to select a subset of `metadata.dist` list for that run. If you don't pass any, it will be as-if you passed all the values in `metadata.dist`. You can pass these flags multiple times to provide a list. This includes:
