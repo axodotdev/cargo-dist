@@ -612,7 +612,7 @@ fn zip_dir(
     Ok(())
 }
 
-/// Arguments for `cargo dist generate` ([`do_generate][])
+/// Arguments for `cargo dist generate` ([`do_generate`][])
 #[derive(Debug)]
 pub struct GenerateArgs {
     /// Check whether the output differs without writing to disk
