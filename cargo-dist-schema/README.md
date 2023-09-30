@@ -5,7 +5,7 @@
 
 Schema reporting/parsing for cargo-dist's `dist-manifest.json`, which is the result you get from `--output-format=json` when running `cargo dist build` or `cargo dist plan`.
 
-[Read the schema and docs here!][https://axodotdev.github.io/cargo-dist/book/schema.html]
+[Read our documentation here!](https://opensource.axo.dev/cargo-dist/book/)
 
 This can be used to parse the machine-readable manifests produced by cargo-dist. Ideally it should be forward and backward compatible with newer and older versions of the manifests.
 
