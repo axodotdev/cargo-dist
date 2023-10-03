@@ -12,6 +12,7 @@
 
 use std::{
     collections::{BTreeMap, HashMap},
+    env,
     process::Command,
 };
 
@@ -372,7 +373,17 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         target.target_triple, target.profile
     );
 
-    let mut command = Command::new(&dist_graph.tools.cargo.cmd);
+    let cargo = &dist_graph.tools.cargo.cmd;
+    let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
+
+    let mut command;
+    if Utf8Path::new("Brewfile").exists() && !skip_brewfile {
+        command = Command::new("brew");
+        command.arg("bundle").arg("exec").arg("--").arg(cargo);
+    } else {
+        command = Command::new(cargo);
+    }
+
     command
         .arg("build")
         .arg("--profile")
