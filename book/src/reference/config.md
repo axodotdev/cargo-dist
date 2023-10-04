@@ -121,7 +121,7 @@ In v0.0.5 the only properly supported choices are:
 * x64 macOS: "x86_64-apple-darwin"
 * x64 Windows: "x86_64-pc-windows-msvc"
 * x64 Linux: "x86_64-unknown-linux-gnu"
-* arm64 macOS (Apple silicon): "aarch64-apple-darwin" (supported added in v0.0.4)
+* arm64 macOS (Apple silicon): "aarch64-apple-darwin" (support added in v0.0.4)
 
 Future versions should hopefully introduce proper support for important targets like "musl linux".
 
