@@ -7,6 +7,9 @@ expression: json_schema
   "title": "DistManifest",
   "description": "A report of the releases and artifacts that cargo-dist generated",
   "type": "object",
+  "required": [
+    "linkage"
+  ],
   "properties": {
     "announcement_changelog": {
       "description": "A changelog for the announcement",
@@ -65,6 +68,13 @@ expression: json_schema
         "string",
         "null"
       ]
+    },
+    "linkage": {
+      "description": "Data about dynamic linkage in the built libraries",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Linkage"
+      }
     },
     "publish_prereleases": {
       "description": "Whether to publish prereleases to package managers",
@@ -416,6 +426,84 @@ expression: json_schema
             "string",
             "null"
           ]
+        }
+      }
+    },
+    "Library": {
+      "description": "Represents a dynamic library located somewhere on the system",
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "The path to the library; on platforms without that information, it will be a basename instead",
+          "type": "string"
+        },
+        "source": {
+          "description": "The package from which a library comes, if relevant",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Linkage": {
+      "description": "Information about dynamic libraries used by a binary",
+      "type": "object",
+      "required": [
+        "binary",
+        "frameworks",
+        "homebrew",
+        "other",
+        "public_unmanaged",
+        "system",
+        "target"
+      ],
+      "properties": {
+        "binary": {
+          "description": "The filename of the binary",
+          "type": "string"
+        },
+        "frameworks": {
+          "description": "Frameworks, only used on macOS",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Library"
+          }
+        },
+        "homebrew": {
+          "description": "Libraries provided by the Homebrew package manager",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Library"
+          }
+        },
+        "other": {
+          "description": "Libraries which don't fall into any other categories",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Library"
+          }
+        },
+        "public_unmanaged": {
+          "description": "Public libraries not provided by the system and not managed by any package manager",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Library"
+          }
+        },
+        "system": {
+          "description": "Libraries included with the operating system",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Library"
+          }
+        },
+        "target": {
+          "description": "The target triple for which the binary was built",
+          "type": "string"
         }
       }
     },

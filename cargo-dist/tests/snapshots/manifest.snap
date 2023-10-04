@@ -261,7 +261,8 @@ stdout:
       },
       "pr_run_mode": "plan"
     }
-  }
+  },
+  "linkage": []
 }
 
 stderr:

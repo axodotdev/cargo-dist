@@ -206,6 +206,9 @@ Print human-readable output
 #### `--print-json`
 Print output as JSON
 
+#### `--from-json <FROM_JSON>`
+Read linkage data from JSON rather than parsing from binaries
+
 #### `-h, --help`
 Print help (see a summary with '-h')
 

@@ -295,6 +295,9 @@ pub struct LinkageArgs {
     #[clap(hide = true)]
     #[clap(default_value = "")]
     pub artifacts: String,
+    /// Read linkage data from JSON rather than parsing from binaries
+    #[clap(long)]
+    pub from_json: Option<String>,
 }
 
 #[derive(Args, Clone, Debug)]

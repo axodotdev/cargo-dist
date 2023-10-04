@@ -17,7 +17,7 @@ use std::{
     process::Command,
 };
 
-use axoasset::LocalAsset;
+use axoasset::{LocalAsset, SourceFile};
 use backend::{
     ci::CiInfo,
     installer::{self, homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, InstallerImpl},
@@ -32,7 +32,7 @@ use config::{
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
 use semver::Version;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
 use errors::*;
@@ -77,7 +77,7 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
         run_build_step(&dist, step)?;
     }
 
-    Ok(build_manifest(cfg, &dist))
+    Ok(build_manifest(cfg, &dist)?)
 }
 
 /// Just generate the manifest produced by `cargo dist build` without building
@@ -85,10 +85,10 @@ pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
     check_integrity(cfg)?;
     let dist = gather_work(cfg)?;
 
-    Ok(build_manifest(cfg, &dist))
+    Ok(build_manifest(cfg, &dist)?)
 }
 
-fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
+fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistResult<DistManifest> {
     // Report the releases
     let mut releases = vec![];
     let mut all_artifacts = BTreeMap::<String, cargo_dist_schema::Artifact>::new();
@@ -116,6 +116,13 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
             artifacts,
         })
     }
+
+    let linkage = fetch_linkage(
+        cfg.targets.clone(),
+        dist.artifacts.clone(),
+        dist.dist_dir.clone(),
+    )?;
+    let linkage = linkage.iter().map(|l| l.to_schema()).collect();
 
     let mut manifest = DistManifest::new(releases, all_artifacts);
 
@@ -148,7 +155,9 @@ fn build_manifest(cfg: &Config, dist: &DistGraph) -> DistManifest {
 
     manifest.publish_prereleases = dist.publish_prereleases;
 
-    manifest
+    manifest.linkage = linkage;
+
+    Ok(manifest)
 }
 
 fn manifest_artifact(
@@ -634,6 +643,8 @@ pub struct LinkageArgs {
     pub print_output: bool,
     /// Print output as JSON
     pub print_json: bool,
+    /// Read linkage data from JSON rather than performing a live check
+    pub from_json: Option<String>,
 }
 
 fn do_generate_preflight_checks(dist: &DistGraph) -> Result<()> {
@@ -728,15 +739,15 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
     Ok(())
 }
 
-/// Determinage dynamic linkage of built artifacts (impl of `cargo dist linkage`)
-pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
-    let dist = gather_work(cfg)?;
-
+fn fetch_linkage(
+    targets: Vec<String>,
+    artifacts: Vec<Artifact>,
+    dist_dir: Utf8PathBuf,
+) -> DistResult<Vec<Linkage>> {
     let mut reports = vec![];
 
-    for target in cfg.targets.clone() {
-        let artifacts: Vec<Artifact> = dist
-            .artifacts
+    for target in targets {
+        let artifacts: Vec<Artifact> = artifacts
             .clone()
             .into_iter()
             .filter(|r| r.target_triples.contains(&target))
@@ -748,7 +759,7 @@ pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
         }
 
         for artifact in artifacts {
-            let path = Utf8PathBuf::from(&dist.dist_dir).join(format!("{}-{target}", artifact.id));
+            let path = Utf8PathBuf::from(&dist_dir).join(format!("{}-{target}", artifact.id));
 
             for (_, binary) in artifact.required_binaries {
                 let bin_path = path.join(binary);
@@ -760,6 +771,20 @@ pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
             }
         }
     }
+
+    Ok(reports)
+}
+
+/// Determinage dynamic linkage of built artifacts (impl of `cargo dist linkage`)
+pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
+    let dist = gather_work(cfg)?;
+
+    let reports: Vec<Linkage> = if let Some(target) = args.from_json.clone() {
+        let file = SourceFile::load_local(&target)?;
+        file.deserialize_json()?
+    } else {
+        fetch_linkage(cfg.targets.clone(), dist.artifacts, dist.dist_dir)?
+    };
 
     if args.print_output {
         for report in &reports {
@@ -775,7 +800,7 @@ pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
 }
 
 /// Information about dynamic libraries used by a binary
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Linkage {
     /// The filename of the binary
     pub binary: String,
@@ -860,10 +885,26 @@ impl Linkage {
 
         s.to_owned()
     }
+
+    fn to_schema(&self) -> cargo_dist_schema::Linkage {
+        cargo_dist_schema::Linkage {
+            binary: self.binary.clone(),
+            target: self.target.clone(),
+            system: self.system.iter().map(|s| s.to_schema()).collect(),
+            homebrew: self.homebrew.iter().map(|s| s.to_schema()).collect(),
+            public_unmanaged: self
+                .public_unmanaged
+                .iter()
+                .map(|s| s.to_schema())
+                .collect(),
+            other: self.other.iter().map(|s| s.to_schema()).collect(),
+            frameworks: self.frameworks.iter().map(|s| s.to_schema()).collect(),
+        }
+    }
 }
 
 /// Represents a dynamic library located somewhere on the system
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Library {
     /// The path to the library; on platforms without that information, it will be a basename instead
     pub path: String,
@@ -877,6 +918,13 @@ impl Library {
         Self {
             path: library,
             source: None,
+        }
+    }
+
+    fn to_schema(&self) -> cargo_dist_schema::Library {
+        cargo_dist_schema::Library {
+            path: self.path.clone(),
+            source: self.source.clone(),
         }
     }
 

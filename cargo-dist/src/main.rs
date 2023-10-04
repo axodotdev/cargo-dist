@@ -253,6 +253,7 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
     let mut options = cargo_dist::LinkageArgs {
         print_output: args.print_output,
         print_json: args.print_json,
+        from_json: args.from_json.clone(),
     };
     if !args.print_output && !args.print_json {
         options.print_output = true;

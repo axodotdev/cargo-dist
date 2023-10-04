@@ -2139,7 +2139,8 @@ maybeInstall(true).then(run);
       },
       "pr_run_mode": "plan"
     }
-  }
+  },
+  "linkage": []
 }
 
 ================ github-ci.yml ================
@@ -2272,9 +2273,8 @@ jobs:
           echo "EOF" >> "$GITHUB_OUTPUT"
       - name: "Linkage report"
         run: |
-          cargo dist linkage ${{ matrix.dist_args }} --print-output --print-json > linkage.json
-
-          echo "linkage=$(cat linkage.json)" >> "${GITHUB_OUTPUT}"
+          jq .linkage dist-manifest.json > linkage.json
+          cargo dist linkage ${{ matrix.dist_args }} --from-json=linkage.json --print-output
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v3
         with:

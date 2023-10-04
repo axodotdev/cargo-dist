@@ -19,7 +19,8 @@ stdout:
       "artifacts_matrix": {},
       "pr_run_mode": "plan"
     }
-  }
+  },
+  "linkage": []
 }
 
 stderr:
