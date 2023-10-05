@@ -163,7 +163,7 @@ By default cargo-dist breaks build tasks onto more machines than strictly necess
 
 Although most Rust builds are statically linked and contain their own Rust dependencies, some crates will end up dynamically linking against system libraries. It's useful to know what your software picked up&mdash;sometimes this will help you catch things you may not have intended, like dynamically linking to OpenSSL, or allow you to check for package manager-provided libraries your users will need to have installed in order to be able to run your software.
 
-cargo-dist provides a linkage report during your CI build in order to allow you to check for this. For macOS and Linux, it's able to categorize the targets it linked against to help you gauge whether or not it's likely to cause problems for your users. To view this, check the detailed view of your CI build and consult the "Linkage report" step from the `upload-local artifacts` jobs.
+cargo-dist provides a linkage report during your CI build in order to allow you to check for this. For macOS and Linux, it's able to categorize the targets it linked against to help you gauge whether or not it's likely to cause problems for your users. To view this, check the detailed view of your CI build and consult the "Build" step from the `upload-local artifacts` jobs.
 
 This feature is defined for advanced users; most users won't need to use it. It's most useful for developers with specialized build setups who want to ensure that their binaries will be safe for all of their users. A few examples of users who may need to use it:
 

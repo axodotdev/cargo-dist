@@ -2252,13 +2252,13 @@ jobs:
         if: ${{ hashFiles('Brewfile') == '' }}
         run: |
           # Actually do builds and make zips and whatnot
-          cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "cargo dist ran successfully"
       - name: Build artifacts (using Brewfile)
         if: ${{ hashFiles('Brewfile') != '' }}
         run: |
           # Actually do builds and make zips and whatnot
-          brew bundle exec -- cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          brew bundle exec -- cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "cargo dist ran successfully"
       - id: cargo-dist
         name: Post-build
@@ -2271,10 +2271,6 @@ jobs:
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
-      - name: "Linkage report"
-        run: |
-          jq .linkage dist-manifest.json > linkage.json
-          cargo dist linkage ${{ matrix.dist_args }} --from-json=linkage.json --print-output
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v3
         with:

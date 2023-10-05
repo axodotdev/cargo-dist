@@ -901,6 +901,23 @@ impl Linkage {
             frameworks: self.frameworks.iter().map(|s| s.to_schema()).collect(),
         }
     }
+
+    /// Constructs a Linkage from a cargo_dist_schema::Linkage
+    pub fn from_schema(other: &cargo_dist_schema::Linkage) -> Self {
+        Self {
+            binary: other.binary.clone(),
+            target: other.target.clone(),
+            system: other.system.iter().map(Library::from_schema).collect(),
+            homebrew: other.homebrew.iter().map(Library::from_schema).collect(),
+            public_unmanaged: other
+                .public_unmanaged
+                .iter()
+                .map(Library::from_schema)
+                .collect(),
+            other: other.other.iter().map(Library::from_schema).collect(),
+            frameworks: other.frameworks.iter().map(Library::from_schema).collect(),
+        }
+    }
 }
 
 /// Represents a dynamic library located somewhere on the system
@@ -925,6 +942,13 @@ impl Library {
         cargo_dist_schema::Library {
             path: self.path.clone(),
             source: self.source.clone(),
+        }
+    }
+
+    fn from_schema(other: &cargo_dist_schema::Library) -> Self {
+        Self {
+            path: other.path.clone(),
+            source: other.source.clone(),
         }
     }
 

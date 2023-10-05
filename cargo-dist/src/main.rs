@@ -140,6 +140,14 @@ fn print_json(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Erro
     Ok(())
 }
 
+fn print_human_linkage(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Error> {
+    for linkage in &report.linkage {
+        writeln!(out, "{}", Linkage::from_schema(linkage).report())?;
+    }
+
+    Ok(())
+}
+
 fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: true,
@@ -157,6 +165,12 @@ fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
         OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
     }
+
+    let mut err = Term::stderr();
+    if args.print.contains(&"linkage".to_owned()) {
+        print_human_linkage(&mut err, &report).into_diagnostic()?;
+    }
+
     Ok(())
 }
 
@@ -196,6 +210,7 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
     let args = &ManifestArgs {
         build_args: BuildArgs {
             artifacts: cli::ArtifactMode::All,
+            print: vec![],
         },
     };
 

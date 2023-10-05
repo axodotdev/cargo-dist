@@ -195,6 +195,12 @@ pub struct BuildArgs {
     #[clap(long, short, value_enum)]
     #[clap(default_value_t = ArtifactMode::Host)]
     pub artifacts: ArtifactMode,
+
+    /// What extra information to print, if anything. Currently supported:
+    ///
+    /// * linkage: prints information on dynamic libraries used by build artifacts
+    #[clap(long, short)]
+    pub print: Vec<String>,
 }
 
 /// How we should select the artifacts to build
