@@ -426,6 +426,16 @@ expression: json_schema
             "string",
             "null"
           ]
+        },
+        "targets": {
+          "description": "Targets to build for",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

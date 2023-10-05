@@ -86,6 +86,7 @@ impl GithubCiInfo {
         // fast/cheap, so that's a reasonable choice.s
         let global_task = if needs_global_build {
             Some(GithubMatrixEntry {
+                targets: None,
                 runner: Some(GITHUB_LINUX_RUNNER.into()),
                 dist_args: Some("--artifacts=global".into()),
                 install_dist: Some(install_dist_sh.clone()),
@@ -116,6 +117,7 @@ impl GithubCiInfo {
                 write!(dist_args, " --target={target}").unwrap();
             }
             tasks.push(GithubMatrixEntry {
+                targets: Some(targets.iter().map(|s| s.to_string()).collect()),
                 runner: Some(runner.to_owned()),
                 dist_args: Some(dist_args),
                 install_dist: Some(install_dist.to_owned()),

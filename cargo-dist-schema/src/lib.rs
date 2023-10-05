@@ -108,6 +108,9 @@ pub struct GithubMatrix {
 /// Entry for a github matrix
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct GithubMatrixEntry {
+    /// Targets to build for
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub targets: Option<Vec<String>>,
     /// Github Runner to user
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runner: Option<String>,

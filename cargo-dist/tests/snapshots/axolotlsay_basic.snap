@@ -2141,21 +2141,33 @@ maybeInstall(true).then(run);
       "artifacts_matrix": {
         "include": [
           {
+            "targets": [
+              "aarch64-apple-darwin"
+            ],
             "runner": "macos-11",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
           },
           {
+            "targets": [
+              "x86_64-apple-darwin"
+            ],
             "runner": "macos-11",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
           },
           {
+            "targets": [
+              "x86_64-pc-windows-msvc"
+            ],
             "runner": "windows-2019",
             "install_dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex",
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
           },
           {
+            "targets": [
+              "x86_64-unknown-linux-gnu"
+            ],
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
@@ -2263,6 +2275,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
     steps:
       - uses: actions/checkout@v4
         with:
@@ -2296,11 +2309,15 @@ jobs:
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+
+          cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: ${{ steps.cargo-dist.outputs.paths }}
+          path: |
+            ${{ steps.cargo-dist.outputs.paths }}
+            ${{ env.BUILD_MANIFEST_NAME }}
 
   # Build and package all the platform-agnostic(ish) things
   upload-global-artifacts:
@@ -2396,6 +2413,10 @@ jobs:
         with:
           name: artifacts
           path: artifacts
+      - name: Cleanup
+        run: |
+          # Remove the granular manifests
+          rm artifacts/*-dist-manifest.json
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
