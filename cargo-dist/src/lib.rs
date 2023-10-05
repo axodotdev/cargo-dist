@@ -671,7 +671,7 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
             if !dist.allow_dirty.should_run(mode)
                 && matches!(dist.allow_dirty, DirtyMode::AllowList(..))
             {
-                return Err(DistError::ContradictoryGenerateModes {
+                Err(DistError::ContradictoryGenerateModes {
                     generate_mode: mode,
                 })?;
             }

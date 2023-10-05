@@ -266,7 +266,7 @@ fn get_new_dist_metadata(
             if response {
                 meta.cargo_dist_version = Some(current_version);
             } else {
-                return Err(DistError::NoUpdateVersion {
+                Err(DistError::NoUpdateVersion {
                     project_version: desired_version.clone(),
                     running_version: current_version,
                 })?;
@@ -451,10 +451,10 @@ fn get_new_dist_metadata(
             }
         });
         if let Some(inner) = conflict {
-            return Err(DistError::CantEnableGithubUrlInconsistent { inner })?;
+            Err(DistError::CantEnableGithubUrlInconsistent { inner })?;
         } else {
             // Otherwise assume no URL
-            return Err(DistError::CantEnableGithubNoUrl)?;
+            Err(DistError::CantEnableGithubNoUrl)?;
         }
     }
 
@@ -691,7 +691,7 @@ fn get_new_dist_metadata(
                 meta.unix_archive = TAR_GZ;
                 meta.windows_archive = TAR_GZ;
             } else {
-                return Err(DistError::MustEnableTarGz)?;
+                Err(DistError::MustEnableTarGz)?;
             }
         }
     }
