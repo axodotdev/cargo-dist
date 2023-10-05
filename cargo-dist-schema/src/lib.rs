@@ -72,6 +72,8 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<CiInfo>,
+    /// Data about dynamic linkage in the built libraries
+    pub linkage: Vec<Linkage>,
 }
 
 /// CI backend info
@@ -356,6 +358,7 @@ impl DistManifest {
             artifacts,
             publish_prereleases: false,
             ci: None,
+            linkage: vec![],
         }
     }
 
@@ -385,6 +388,35 @@ impl DistManifest {
             .iter()
             .filter_map(|k| Some((&**k, self.artifacts.get(k)?)))
     }
+}
+
+/// Information about dynamic libraries used by a binary
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+pub struct Linkage {
+    /// The filename of the binary
+    pub binary: String,
+    /// The target triple for which the binary was built
+    pub target: String,
+    /// Libraries included with the operating system
+    pub system: Vec<Library>,
+    /// Libraries provided by the Homebrew package manager
+    pub homebrew: Vec<Library>,
+    /// Public libraries not provided by the system and not managed by any package manager
+    pub public_unmanaged: Vec<Library>,
+    /// Libraries which don't fall into any other categories
+    pub other: Vec<Library>,
+    /// Frameworks, only used on macOS
+    pub frameworks: Vec<Library>,
+}
+
+/// Represents a dynamic library located somewhere on the system
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+pub struct Library {
+    /// The path to the library; on platforms without that information, it will be a basename instead
+    pub path: String,
+    /// The package from which a library comes, if relevant
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
 }
 
 /// Helper to read the raw version from serialized json

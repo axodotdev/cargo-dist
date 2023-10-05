@@ -15,7 +15,7 @@ use cli::{
 use console::Term;
 use miette::IntoDiagnostic;
 
-use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs};
+use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs};
 
 mod cli;
 
@@ -33,6 +33,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::Init(args) => cmd_init(config, args),
         Commands::Generate(args) => cmd_generate(config, args),
         Commands::GenerateCi(args) => cmd_generate_ci(config, args),
+        Commands::Linkage(args) => cmd_linkage(config, args),
         Commands::Manifest(args) => cmd_manifest(config, args),
         Commands::Plan(args) => cmd_plan(config, args),
         Commands::HelpMarkdown(args) => cmd_help_md(config, args),
@@ -139,6 +140,14 @@ fn print_json(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Erro
     Ok(())
 }
 
+fn print_human_linkage(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Error> {
+    for linkage in &report.linkage {
+        writeln!(out, "{}", Linkage::from_schema(linkage).report())?;
+    }
+
+    Ok(())
+}
+
 fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: true,
@@ -156,6 +165,12 @@ fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
         OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
     }
+
+    let mut err = Term::stderr();
+    if args.print.contains(&"linkage".to_owned()) {
+        print_human_linkage(&mut err, &report).into_diagnostic()?;
+    }
+
     Ok(())
 }
 
@@ -195,6 +210,7 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
     let args = &ManifestArgs {
         build_args: BuildArgs {
             artifacts: cli::ArtifactMode::All,
+            print: vec![],
         },
     };
 
@@ -236,6 +252,28 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
         modes: args.mode.iter().map(|m| m.to_lib()).collect(),
     };
     do_generate(&config, &args)
+}
+
+fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
+    let config = cargo_dist::config::Config {
+        needs_coherent_announcement_tag: false,
+        artifact_mode: cargo_dist::config::ArtifactMode::All,
+        no_local_paths: cli.no_local_paths,
+        allow_all_dirty: cli.allow_dirty,
+        targets: cli.target.clone(),
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        announcement_tag: cli.tag.clone(),
+    };
+    let mut options = cargo_dist::LinkageArgs {
+        print_output: args.print_output,
+        print_json: args.print_json,
+        from_json: args.from_json.clone(),
+    };
+    if !args.print_output && !args.print_json {
+        options.print_output = true;
+    }
+    do_linkage(&config, &options)
 }
 
 fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Report> {

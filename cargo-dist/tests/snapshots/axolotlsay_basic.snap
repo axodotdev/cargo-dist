@@ -2164,7 +2164,8 @@ maybeInstall(true).then(run);
       },
       "pr_run_mode": "plan"
     }
-  }
+  },
+  "linkage": []
 }
 
 ================ github-ci.yml ================
@@ -2276,13 +2277,13 @@ jobs:
         if: ${{ hashFiles('Brewfile') == '' }}
         run: |
           # Actually do builds and make zips and whatnot
-          cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "cargo dist ran successfully"
       - name: Build artifacts (using Brewfile)
         if: ${{ hashFiles('Brewfile') != '' }}
         run: |
           # Actually do builds and make zips and whatnot
-          brew bundle exec -- cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          brew bundle exec -- cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "cargo dist ran successfully"
       - id: cargo-dist
         name: Post-build

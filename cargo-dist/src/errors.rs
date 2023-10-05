@@ -28,6 +28,10 @@ pub enum DistError {
     #[diagnostic(transparent)]
     Asset(#[from] axoasset::AxoassetError),
 
+    /// random string error
+    #[error(transparent)]
+    FromUtf8Error(#[from] std::string::FromUtf8Error),
+
     /// A problem with a jinja template, which is always a cargo-dist bug
     #[error("Failed to render template")]
     #[diagnostic(help("this is a bug in cargo-dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new"))]
@@ -240,6 +244,21 @@ pub enum DistError {
         /// Name of the msi
         style: String,
     },
+    /// Linkage report can't be run for this combination of OS and target
+    #[error("unable to run linkage report for {target} on {host}")]
+    LinkageCheckInvalidOS {
+        /// The OS the check was run on
+        host: String,
+        /// The OS being checked
+        target: String,
+    },
+    /// Linkage report can't be run for this target
+    #[error("unable to run linkage report for this type of binary")]
+    LinkageCheckUnsupportedBinary {},
+
+    /// random i/o error
+    #[error(transparent)]
+    Goblin(#[from] goblin::error::Error),
 }
 
 impl From<minijinja::Error> for DistError {
