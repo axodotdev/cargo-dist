@@ -966,7 +966,29 @@ impl Library {
         if let Some(prefix) = brew_prefix {
             let cloned = library.clone();
             let stripped = cloned.strip_prefix(prefix).unwrap();
-            let package = stripped.split('/').nth(0).unwrap();
+            let mut package = stripped.split('/').nth(0).unwrap().to_owned();
+
+            // The path alone isn't enough to determine the tap the formula
+            // came from. If the install receipt exists, we can use it to
+            // get the name of the source tap.
+            let receipt = Utf8PathBuf::from(&prefix)
+                .join(&package)
+                .join("INSTALL_RECEIPT.json");
+
+            // If the receipt doesn't exist or can't be loaded, that's not an
+            // error; we can fall back to the package basename we parsed out
+            // of the path.
+            if receipt.exists() {
+                let _ = SourceFile::load_local(&receipt)
+                    .and_then(|file| file.deserialize_json())
+                    .map(|parsed: serde_json::Value| {
+                        if let Some(tap) = parsed["source"]["tap"].as_str() {
+                            if tap != "homebrew/core" {
+                                package = format!("{tap}/{package}");
+                            }
+                        }
+                    });
+            }
 
             Self {
                 path: library,
