@@ -312,7 +312,7 @@ jobs:
     secrets: inherit
 {{%- endfor %}}
 
-  # Create a Github Release with all the results once everything is done,
+  # Create a Github Release with all the results once everything is done
   publish-release:
     needs: [plan, should-publish]
     runs-on: ubuntu-latest
