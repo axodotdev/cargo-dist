@@ -121,7 +121,11 @@ Running `cargo-dist init` for your tool will update your GitHub Actions configur
 
 > since 0.4.0
 
-Sometimes, you may need extra packages from the system package manager to be installed before in the builder before cargo-dist begins building your software. Cargo-dist can do this for you by adding the `dependencies` setting to your `Cargo.toml`. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them. For more information, see the [configuration syntax][config-dependencies].
+Sometimes, you may need extra packages from the system package manager to be installed before in the builder before cargo-dist begins building your software. Cargo-dist can do this for you by adding the `dependencies` setting to your `Cargo.toml`. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them.
+
+Sometimes, you may want to make sure your users also have these dependencies available when they install your software. If you use a package manager-based installer, cargo-dist has the ability to specify these dependencies. By default, cargo-dist will examine your program to try to detect which dependencies it thinks will be necessary. At the moment, [Homebrew][homebrew] is the only supported package manager installer. You can also specify these dependencies manually.
+
+For more information, see the [configuration syntax][config-dependencies].
 
 #### Limitations
 
@@ -217,3 +221,4 @@ The Windows report is currently unable to provide information about the sources 
 [artifact-url]: ../reference/artifact-url.md#github
 [quickstart]: ../way-too-quickstart.md
 [testing]: ../way-too-quickstart.md#test-it-out
+[homebrew]: ../installers/homebrew.md
