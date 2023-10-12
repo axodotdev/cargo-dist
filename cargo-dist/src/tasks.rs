@@ -188,7 +188,9 @@ pub struct DistGraph {
     pub artifact_download_url: Option<String>,
 
     /// Targets we need to build
-    pub build_steps: Vec<BuildStep>,
+    pub local_build_steps: Vec<BuildStep>,
+    /// Targets we need to build
+    pub global_build_steps: Vec<BuildStep>,
     /// Distributable artifacts we want to produce for the releases
     pub artifacts: Vec<Artifact>,
     /// Binaries we want to build
@@ -762,7 +764,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 announcement_title: None,
                 artifact_download_url: None,
                 ci_style: vec![],
-                build_steps: vec![],
+                local_build_steps: vec![],
+                global_build_steps: vec![],
                 artifacts: vec![],
                 binaries: vec![],
                 variants: vec![],
@@ -1751,9 +1754,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     fn compute_build_steps(&mut self) {
         // FIXME: more intelligently schedule these in a proper graph?
 
-        let mut build_steps = vec![];
+        let mut local_build_steps = vec![];
+        let mut global_build_steps = vec![];
         let cargo_builds = self.compute_cargo_builds();
-        build_steps.extend(cargo_builds);
+        local_build_steps.extend(cargo_builds);
 
         Self::add_build_steps_for_artifacts(
             &self
@@ -1762,7 +1766,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 .iter()
                 .filter(|a| !a.is_global)
                 .collect(),
-            &mut build_steps,
+            &mut local_build_steps,
         );
         Self::add_build_steps_for_artifacts(
             &self
@@ -1771,10 +1775,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 .iter()
                 .filter(|a| a.is_global)
                 .collect(),
-            &mut build_steps,
+            &mut global_build_steps,
         );
 
-        self.inner.build_steps = build_steps;
+        self.inner.local_build_steps = local_build_steps;
+        self.inner.global_build_steps = global_build_steps;
     }
 
     fn add_build_steps_for_artifacts(artifacts: &Vec<&Artifact>, build_steps: &mut Vec<BuildStep>) {

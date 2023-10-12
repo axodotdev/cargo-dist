@@ -72,8 +72,13 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
     }
     eprintln!();
 
-    // Run all the build steps
-    for step in &dist.build_steps {
+    // Run all the local build steps first
+    for step in &dist.local_build_steps {
+        run_build_step(&dist, step)?;
+    }
+
+    // Next the global steps
+    for step in &dist.global_build_steps {
         run_build_step(&dist, step)?;
     }
 
