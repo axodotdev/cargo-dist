@@ -47,11 +47,12 @@ pub(crate) fn write_homebrew_formula(
     templates: &Templates,
     graph: &DistGraph,
     source_info: &HomebrewInstallerInfo,
+    manifests: &[DistManifest],
 ) -> DistResult<()> {
     let mut info = source_info.clone();
 
     // Collect all dist-manifests and fetch the appropriate Mac ones
-    let mut manifests = vec![];
+    let mut manifests = manifests.to_owned();
     for file in graph.dist_dir.read_dir()? {
         let path = file?.path();
         if let Some(filename) = path.file_name() {

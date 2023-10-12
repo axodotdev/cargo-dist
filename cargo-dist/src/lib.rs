@@ -72,9 +72,18 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
     }
     eprintln!();
 
-    // Run all the build steps
-    for step in &dist.build_steps {
-        run_build_step(&dist, step)?;
+    // Run all the local build steps first
+    for step in &dist.local_build_steps {
+        run_build_step(&dist, step, &[])?;
+    }
+
+    // Calculate a temporary build manifest from the output of the local builds
+    // (includes their linkage data)
+    let manifests = vec![build_manifest(cfg, &dist)?];
+
+    // Next the global steps
+    for step in &dist.global_build_steps {
+        run_build_step(&dist, step, &manifests)?;
     }
 
     Ok(build_manifest(cfg, &dist)?)
@@ -295,7 +304,11 @@ fn manifest_artifact(
 }
 
 /// Run some build step
-fn run_build_step(dist_graph: &DistGraph, target: &BuildStep) -> Result<()> {
+fn run_build_step(
+    dist_graph: &DistGraph,
+    target: &BuildStep,
+    manifests: &[DistManifest],
+) -> Result<()> {
     match target {
         BuildStep::Cargo(target) => build_cargo_target(dist_graph, target),
         BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd),
@@ -313,7 +326,9 @@ fn run_build_step(dist_graph: &DistGraph, target: &BuildStep) -> Result<()> {
             zip_style,
             with_root,
         }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref()),
-        BuildStep::GenerateInstaller(installer) => generate_installer(dist_graph, installer),
+        BuildStep::GenerateInstaller(installer) => {
+            generate_installer(dist_graph, installer, manifests)
+        }
         BuildStep::Checksum(ChecksumImpl {
             checksum,
             src_path,
@@ -1202,7 +1217,11 @@ pub fn check_integrity(cfg: &Config) -> Result<()> {
 }
 
 /// Build a cargo target
-fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
+fn generate_installer(
+    dist: &DistGraph,
+    style: &InstallerImpl,
+    manifests: &[DistManifest],
+) -> Result<()> {
     match style {
         InstallerImpl::Shell(info) => {
             installer::shell::write_install_sh_script(&dist.templates, info)?
@@ -1212,7 +1231,7 @@ fn generate_installer(dist: &DistGraph, style: &InstallerImpl) -> Result<()> {
         }
         InstallerImpl::Npm(info) => installer::npm::write_npm_project(&dist.templates, info)?,
         InstallerImpl::Homebrew(info) => {
-            installer::homebrew::write_homebrew_formula(&dist.templates, dist, info)?
+            installer::homebrew::write_homebrew_formula(&dist.templates, dist, info, manifests)?
         }
         InstallerImpl::Msi(info) => info.build()?,
     }
