@@ -188,17 +188,13 @@ pub enum DistError {
         details: semver::Error,
     },
     /// Not an error; indicates that a file's contents differ via --check
-    #[error("{}:{line_number} has out of date contents and needs to be regenerated:\n-{existing_line}\n+{new_line}", file.origin_path())]
+    #[error("{} has out of date contents and needs to be regenerated:\n{diff}", file.origin_path())]
     #[diagnostic(help("run 'cargo dist init' to update the file or set 'allow-dirty' in Cargo.toml to ignore out of date contents"))]
     CheckFileMismatch {
         /// The file whose contents differ
         file: axoasset::SourceFile,
-        /// The line in the existing file
-        existing_line: String,
-        /// The line in the new version
-        new_line: String,
-        /// The line number
-        line_number: usize,
+        /// The diff
+        diff: String,
     },
 
     /// `cargo dist generate` was passed an explicit GenerateMode but the config in their Cargo.toml

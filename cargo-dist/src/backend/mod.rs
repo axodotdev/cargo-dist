@@ -1,7 +1,10 @@
 //! The backend of cargo-dist -- things it outputs
 
+use std::time::Duration;
+
 use axoasset::SourceFile;
 use camino::Utf8Path;
+use newline_converter::dos2unix;
 
 use crate::errors::{DistError, DistResult};
 
@@ -18,46 +21,30 @@ pub fn diff_files(existing_file: &Utf8Path, new_file_contents: &str) -> DistResu
         SourceFile::new(existing_file.as_str(), String::new())
     };
 
-    // Check that the files match, ignoring newlines which are too easy
-    // to vary with git crlf settings
-    let mut existing_lines = existing.contents().lines();
-    let mut new_lines = new_file_contents.lines();
+    // Normalize away newline differences, those aren't worth failing things over
+    let a = dos2unix(existing.contents());
+    let b = dos2unix(new_file_contents);
 
-    let existing_line_count = existing_lines.clone().count();
-    let new_line_count = new_lines.clone().count();
-    let max_lines = existing_line_count.max(new_line_count);
+    // Diff the files with the Pretty "patience" algorithm
+    //
+    // The timeout exists because essentially diff algorithms iteratively refine the results,
+    // and can convince themselves to try way too hard for minimum benefit. Hitting the timeout
+    // isn't fatal, it just tells the algorithm to call the result "good enough" if it hits
+    // something pathalogical.
+    let diff = similar::TextDiff::configure()
+        .algorithm(similar::Algorithm::Patience)
+        .timeout(Duration::from_millis(10))
+        .diff_lines(&a, &b)
+        .unified_diff()
+        .header(existing_file.as_str(), existing_file.as_str())
+        .to_string();
 
-    for line_number in 1..=max_lines {
-        match (existing_lines.next(), new_lines.next()) {
-            (Some(existing_line), Some(new_line)) => {
-                if existing_line != new_line {
-                    return Err(DistError::CheckFileMismatch {
-                        existing_line: existing_line.to_owned(),
-                        new_line: new_line.to_owned(),
-                        file: existing,
-                        line_number,
-                    });
-                }
-            }
-            (None, Some(new_line)) => {
-                return Err(DistError::CheckFileMismatch {
-                    existing_line: String::new(),
-                    new_line: new_line.to_owned(),
-                    file: existing,
-                    line_number,
-                });
-            }
-            (Some(existing_line), None) => {
-                return Err(DistError::CheckFileMismatch {
-                    existing_line: existing_line.to_owned(),
-                    new_line: String::new(),
-                    file: existing,
-                    line_number,
-                });
-            }
-            (None, None) => {}
-        }
+    if !diff.is_empty() {
+        Err(DistError::CheckFileMismatch {
+            file: existing,
+            diff,
+        })
+    } else {
+        Ok(())
     }
-
-    Ok(())
 }
