@@ -1,6 +1,42 @@
 # Unreleased
 
-Nothing Yet!
+This release contains several major features related to package dependencies. cargo-dist can now install dependencies for you in CI, ensure your users have those dependencies in their installers, and provide you insights into what external libraries your package links against!
+
+## Features
+
+### Install custom dependencies
+
+Way back in our [very first blog post](https://blog.axo.dev/2023/02/cargo-dist), we wrote about how users could customize the GitHub CI scripts we output to install custom dependencies. As of cargo-dist 0.4.0, you won't need to do that anymore! System dependencies &mdash; that is, dependencies installed via the system's package manager instead of `cargo` &mdash; can now be specified in your cargo-dist config in `Cargo.toml` using a syntax very similar to how your `cargo` dependencies are specified. For example:
+
+```toml
+[workspace.metadata.dist.dependencies.homebrew]
+cmake = { targets = ["x86_64-apple-darwin"] }
+libcue = "2.2.1"
+
+[workspace.metadata.dist.dependencies.apt]
+cmake = '*'
+libcue-dev = { version = "2.2.1-2" }
+```
+
+For more information, see the [documentation](https://opensource.axo.dev/cargo-dist/book/reference/config.html#dependencies).
+
+* impl
+    * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/428)
+
+
+### Find out what your builds linked against
+
+Complementing the ability to specify system dependencies, we've added a new feature that lets you tell which libraries your Rust programs have dynamically linked against. While most Rust software is statically linked, installing external dependencies may mean that your software links against something on the system; you can visualize which libraries your software uses, and which packages they come from, by viewing the output of the build step in CI.
+
+In addition, cargo-dist now uses this information to choose which dependencies to specify when building system package manager installers such as a Homebrew formula. If cargo-dist detects that your binary links against a package provided by Homebrew, it will ensure that a user who `brew install`s your package will also get that other package.
+
+This feature has full support for macOS and Linux. On Windows, we're not able to list which package a system library comes from on Windows.
+
+* impl
+    * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/426)
+    * @mistydemeo [infer dependencies via linkage](https://github.com/axodotdev/cargo-dist/pull/475)
+    * @mistydemeo [fetch full name of Homebrew tap](https://github.com/axodotdev/cargo-dist/pull/474)
+
 
 
 # Version 0.3.1 (2023-09-28)
