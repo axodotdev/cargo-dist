@@ -259,6 +259,10 @@ pub enum DistError {
     /// random i/o error
     #[error(transparent)]
     Goblin(#[from] goblin::error::Error),
+
+    /// random camino conversion error
+    #[error(transparent)]
+    FromPathBufError(#[from] camino::FromPathBufError),
 }
 
 impl From<minijinja::Error> for DistError {

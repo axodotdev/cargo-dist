@@ -104,6 +104,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
     steps:
       - uses: actions/checkout@v4
         with:
@@ -141,11 +142,15 @@ jobs:
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+
+          cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: ${{ steps.cargo-dist.outputs.paths }}
+          path: |
+            ${{ steps.cargo-dist.outputs.paths }}
+            ${{ env.BUILD_MANIFEST_NAME }}
 
 {{%- if global_task %}}
 
@@ -327,6 +332,10 @@ jobs:
         with:
           name: artifacts
           path: artifacts
+      - name: Cleanup
+        run: |
+          # Remove the granular manifests
+          rm artifacts/*-dist-manifest.json
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
