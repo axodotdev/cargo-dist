@@ -187,9 +187,9 @@ pub struct DistGraph {
     /// Base URL that artifacts are downloadable from ("{artifact_download_url}/{artifact.id}")
     pub artifact_download_url: Option<String>,
 
-    /// Targets we need to build
+    /// Targets we need to build (local artifacts)
     pub local_build_steps: Vec<BuildStep>,
-    /// Targets we need to build
+    /// Targets we need to build (global artifacts)
     pub global_build_steps: Vec<BuildStep>,
     /// Distributable artifacts we want to produce for the releases
     pub artifacts: Vec<Artifact>,
