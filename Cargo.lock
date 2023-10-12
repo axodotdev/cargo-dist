@@ -373,12 +373,12 @@ dependencies = [
 
 [[package]]
 name = "cargo-wix"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85eeb8f3f718efdc016df7e55b5d8316f5f0d8c645fe2bab65e36ab5ab2c9a2d"
+checksum = "d03b0780df1dfc4ea697c0aef3db66c437560eeb07b66f69a3e88771ec58a844"
 dependencies = [
  "camino",
- "cargo_metadata 0.17.0",
+ "cargo_metadata 0.18.1",
  "chrono",
  "clap",
  "encoding_rs_io",

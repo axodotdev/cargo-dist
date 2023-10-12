@@ -1,13 +1,15 @@
 //! msi installer
 
 use axoasset::{toml_edit, LocalAsset};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use tracing::info;
+use wix::print::{wxs::WxsRenders, RenderOutput};
 
 use crate::{backend::diff_files, config, errors::*};
 
 const METADATA_WIX: &str = "wix";
 const WIX_GUID_KEYS: &[&str] = &["upgrade-guid", "path-guid"];
+const WIX_LICENSE_KEYS: &[&str] = &["license", "eula"];
 
 /// Info needed to build an msi
 #[derive(Debug, Clone)]
@@ -62,16 +64,23 @@ impl MsiInstallerInfo {
     }
 
     /// run `cargo wix print wxs` to get what the msi should contain
-    pub fn generate_wxs_string(&self) -> DistResult<String> {
+    pub fn generate_wxs_string(&self) -> DistResult<WxsRenders> {
         let mut b = wix::print::wxs::Builder::new();
         // Build this specific package
         b.package(Some(&self.pkg_spec));
+        let output = self
+            .manifest_path
+            .parent()
+            .unwrap()
+            .join("wix")
+            .join("main.wxs");
+        b.output(Some(output.as_str()));
         let exec = b.build();
-        let wsx = exec.render_to_string().map_err(|e| DistError::WixInit {
+        let renders = exec.render().map_err(|e| DistError::WixInit {
             package: self.pkg_spec.clone(),
             details: e,
         })?;
-        Ok(wsx)
+        Ok(renders)
     }
 
     /// msi's impl of `cargo dist genenerate --check`
@@ -92,7 +101,12 @@ impl MsiInstallerInfo {
         let file = &self.wxs_path;
         let rendered = self.generate_wxs_string()?;
 
-        LocalAsset::write_new_all(&rendered, file)?;
+        let WxsRenders { wxs, license, eula } = rendered;
+
+        write_render(Some(wxs))?;
+        write_render(license)?;
+        write_render(eula)?;
+
         eprintln!("generated msi definition to {}", file);
 
         Ok(())
@@ -101,10 +115,15 @@ impl MsiInstallerInfo {
     /// Check whether the new configuration differs from the config on disk
     /// writhout actually writing the result.
     fn check_wxs(&self) -> DistResult<()> {
-        let existing = &self.wxs_path;
-
         let rendered = self.generate_wxs_string()?;
-        diff_files(existing, &rendered)
+
+        let WxsRenders { wxs, license, eula } = rendered;
+
+        diff_render(Some(wxs))?;
+        diff_render(license)?;
+        diff_render(eula)?;
+
+        Ok(())
     }
 
     /// Check that wix GUIDs are set in the package's Cargo.toml
@@ -129,6 +148,28 @@ impl MsiInstallerInfo {
         }
         Ok(())
     }
+}
+
+fn write_render(render: Option<RenderOutput>) -> DistResult<()> {
+    let Some(render) = render else {
+        return Ok(());
+    };
+    let path = render.path.expect("no path!?");
+    let path = Utf8Path::from_path(&path).expect("non utf8 path");
+
+    LocalAsset::write_new_all(&render.rendered, path)?;
+    Ok(())
+}
+
+fn diff_render(render: Option<RenderOutput>) -> DistResult<()> {
+    let Some(render) = render else {
+        return Ok(());
+    };
+    let path = render.path.expect("no path!?");
+    let path = Utf8Path::from_path(&path).expect("non utf8 path");
+
+    diff_files(path, &render.rendered)?;
+    Ok(())
 }
 
 /// Ensure [package.metadata.wix] has persisted GUIDs.
@@ -156,6 +197,13 @@ fn update_wix_metadata(package_toml: &mut toml_edit::Document) -> bool {
                 .to_string()
                 .to_uppercase();
             table.insert(key, toml_edit::value(val));
+        }
+    }
+    // Default to disabling auto-license/eula logic
+    for key in WIX_LICENSE_KEYS {
+        if !table.contains_key(key) {
+            modified = true;
+            table.insert(key, toml_edit::value(false));
         }
     }
 

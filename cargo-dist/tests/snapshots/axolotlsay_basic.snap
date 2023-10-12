@@ -2536,7 +2536,7 @@ jobs:
                       where "<CARGO_TARGET>" is replaced with the "CargoTarget"
                       variable value and "<CARGO_PROFILE>" is replaced with the
                       value from the "CargoProfile" variable. This can also
-                      be overriden manually with tne "target-bin-dir" flag.
+                      be overridden manually with the "target-bin-dir" flag.
   CargoTargetDir    = The path to the directory for the build artifacts, i.e.
                       "target".
   CargoProfile      = The cargo profile used to build the binaries
@@ -2685,7 +2685,7 @@ jobs:
 
                 1. Comment out or remove the two `Publish` tags that follow the
                    `WixVariable` tag.
-                2. Uncomment the `<WixVariable Id='WixUILicenseRtf' Value='Path\to\Eula.rft'>` tag futher down
+                2. Uncomment the `<WixVariable Id='WixUILicenseRtf' Value='Path\to\Eula.rft'>` tag further down
                 3. Replace the `Value` attribute of the `WixVariable` tag with
                    the path to a RTF file that will be used as the EULA and
                    displayed in the license agreement dialog.
