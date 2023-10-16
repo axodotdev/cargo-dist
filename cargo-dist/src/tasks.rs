@@ -1888,6 +1888,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
             }
 
+            if target.ends_with("linux-musl")
+                && self.inner.tools.cargo.host_target.ends_with("linux-gnu")
+            {
+                if let Some(rustup) = self.inner.tools.rustup.clone() {
+                    builds.push(BuildStep::Rustup(RustupStep {
+                        rustup,
+                        target: target.clone(),
+                    }));
+                } else {
+                    warn!("You're trying to cross-compile for musl from glibc, but I can't find rustup to ensure you have the rust toolchains for it!")
+                }
+            }
+
             if self.inner.precise_builds {
                 // `(target, package, features)` uniquely identifies a build we need to do,
                 // so group all the binaries under those buckets and add a build for each one
