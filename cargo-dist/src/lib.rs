@@ -1108,6 +1108,13 @@ fn do_ldd(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
 
     for line in lines {
         let line = line.trim();
+
+        // There's no dynamic linkage at all; we can safely break,
+        // there will be nothing useful to us here.
+        if line.starts_with("not a dynamic executable") {
+            break;
+        }
+
         // Not a library that actually concerns us
         if line.starts_with("linux-vdso") {
             continue;
