@@ -1872,6 +1872,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 rustflags.push_str(" -Ctarget-feature=+crt-static");
             }
 
+            // Likewise, the default for musl will change in the future, so
+            // we can future-proof this by adding the flag now
+            // See: https://github.com/axodotdev/cargo-dist/issues/486
+            if target.ends_with("linux-musl") {
+                rustflags.push_str(" -Ctarget-feature=+crt-static -Clink-self-contained=yes");
+            }
+
             // If we're trying to cross-compile on macOS, ensure the rustup toolchain
             // is setup!
             if target.ends_with("apple-darwin")
