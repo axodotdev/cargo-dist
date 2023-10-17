@@ -75,12 +75,9 @@ pub(crate) fn write_homebrew_formula(
 
     // Fetch any detected dependencies from the linkage data
     let dependencies = manifests.into_iter().flat_map(|m| {
-        m.linkage.into_iter().map(|l| {
-            l.homebrew
-                .into_iter()
-                .filter_map(|lib| lib.source)
-                .collect()
-        })
+        m.linkage
+            .into_iter()
+            .flat_map(|l| l.homebrew.into_iter().filter_map(|lib| lib.source))
     });
 
     // Merge with the manually-specified deps
