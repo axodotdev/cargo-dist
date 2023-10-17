@@ -301,7 +301,7 @@ fn get_new_dist_metadata(
     {
         // Start with builtin targets
         let default_platforms = crate::default_desktop_targets();
-        let mut known = default_platforms.clone();
+        let mut known = crate::known_desktop_targets();
         // If the config doesn't have targets at all, generate them
         let config_vals = meta.targets.as_deref().unwrap_or(&default_platforms);
         let cli_vals = cfg.targets.as_slice();

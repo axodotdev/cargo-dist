@@ -1143,7 +1143,12 @@ fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage> {
     let libraries = match target {
         // Can be run on any OS
         "i686-apple-darwin" | "x86_64-apple-darwin" | "aarch64-apple-darwin" => do_otool(path)?,
-        "i686-unknown-linux-gnu" | "x86_64-unknown-linux-gnu" | "aarch64-unknown-linux-gnu" => {
+        "i686-unknown-linux-gnu"
+        | "x86_64-unknown-linux-gnu"
+        | "aarch64-unknown-linux-gnu"
+        | "i686-unknown-linux-musl"
+        | "x86_64-unknown-linux-musl"
+        | "aarch64-unknown-linux-musl" => {
             // Currently can only be run on Linux
             if std::env::consts::OS != "linux" {
                 return Err(DistError::LinkageCheckInvalidOS {
@@ -1250,6 +1255,22 @@ pub fn default_desktop_targets() -> Vec<String> {
     vec![
         // Everyone can build x64!
         axoproject::platforms::TARGET_X64_LINUX_GNU.to_owned(),
+        axoproject::platforms::TARGET_X64_WINDOWS.to_owned(),
+        axoproject::platforms::TARGET_X64_MAC.to_owned(),
+        // Apple is really easy to cross from Apple
+        axoproject::platforms::TARGET_ARM64_MAC.to_owned(),
+        // other cross-compiles not yet supported
+        // axoproject::platforms::TARGET_ARM64_LINUX_GNU.to_owned(),
+        // axoproject::platforms::TARGET_ARM64_WINDOWS.to_owned(),
+    ]
+}
+
+/// Get the list of all known targets
+pub fn known_desktop_targets() -> Vec<String> {
+    vec![
+        // Everyone can build x64!
+        axoproject::platforms::TARGET_X64_LINUX_GNU.to_owned(),
+        axoproject::platforms::TARGET_X64_LINUX_MUSL.to_owned(),
         axoproject::platforms::TARGET_X64_WINDOWS.to_owned(),
         axoproject::platforms::TARGET_X64_MAC.to_owned(),
         // Apple is really easy to cross from Apple

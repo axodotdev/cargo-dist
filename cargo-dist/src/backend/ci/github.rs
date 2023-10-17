@@ -306,8 +306,13 @@ fn package_install_for_targets(
 
                 return Some(brew_bundle_command(&packages));
             }
-            "i686-unknown-linux-gnu" | "x86_64-unknown-linux-gnu" | "aarch64-unknown-linux-gnu" => {
-                let packages: Vec<String> = packages
+            "i686-unknown-linux-gnu"
+            | "x86_64-unknown-linux-gnu"
+            | "aarch64-unknown-linux-gnu"
+            | "i686-unknown-linux-musl"
+            | "x86_64-unknown-linux-musl"
+            | "aarch64-unknown-linux-musl" => {
+                let mut packages: Vec<String> = packages
                     .apt
                     .clone()
                     .into_iter()
@@ -321,6 +326,12 @@ fn package_install_for_targets(
                         }
                     })
                     .collect();
+
+                // musl builds may require musl-tools to build;
+                // necessary for more complex software
+                if target.ends_with("linux-musl") {
+                    packages.push("musl-tools".to_owned());
+                }
 
                 if packages.is_empty() {
                     return None;
