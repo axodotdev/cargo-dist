@@ -1,6 +1,6 @@
 # Unreleased
 
-This release contains several major features related to package dependencies. cargo-dist can now install dependencies for you in CI, ensure your users have those dependencies in their installers, and provide you insights into what external libraries your package links against!
+This release contains several major features related to package dependencies. cargo-dist can now install dependencies for you in CI, ensure your users have those dependencies in their installers, and provide you insights into what external libraries your package links against! It also enables support for statically-built musl binaries on Linux.
 
 ## Features
 
@@ -37,6 +37,15 @@ This feature has full support for macOS and Linux. On Windows, we're not able to
     * @mistydemeo [infer dependencies via linkage](https://github.com/axodotdev/cargo-dist/pull/475)
     * @mistydemeo [fetch full name of Homebrew tap](https://github.com/axodotdev/cargo-dist/pull/474)
 
+
+### musl support
+
+This release adds support for a long-requested feature, creating Linux binaries statically linked against musl instead of glibc. These can be enabled adding the `x86_64-unknown-linux-musl` target triple to your list of desired targets.
+
+Note that because these binaries are statically linked, they cannot dynamically link against any other C libraries &mdash; including C libraries installed using the system dependency feature mentioned above. If your software links against system libraries, please ensure that a static library is available to the build.
+
+* impl
+    * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/483)
 
 
 # Version 0.3.1 (2023-09-28)
