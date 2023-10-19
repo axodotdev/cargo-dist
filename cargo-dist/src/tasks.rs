@@ -1581,6 +1581,28 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let hint = format!("npm install {npm_package_name}@{npm_package_version}");
         let desc = "Install prebuilt binaries into your npm project".to_owned();
 
+        // See comments above
+        const X64_GNU: &str = "x86_64-unknown-linux-gnu";
+        const X64_MUSL: &str = "x86_64-unknown-linux-musl";
+        const X64_MUSL_STATIC: &str = "x86_64-unknown-linux-musl-static";
+        const X64_MUSL_DYNAMIC: &str = "x86_64-unknown-linux-musl-dynamic";
+        let mut has_gnu_linux = false;
+        let mut has_static_musl_linux = false;
+        // Currently always false, someday this build will exist
+        let has_dynamic_musl_linux = false;
+        for &variant_idx in &release.variants {
+            let variant = self.variant(variant_idx);
+            let target = &variant.target;
+            if target == X64_GNU {
+                has_gnu_linux = true;
+            }
+            if target == X64_MUSL {
+                has_static_musl_linux = true;
+            }
+        }
+        let do_gnu_to_musl_fallback = !has_gnu_linux && has_static_musl_linux;
+        let do_musl_to_musl_fallback = has_static_musl_linux && !has_dynamic_musl_linux;
+
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
         let mut target_triples = SortedSet::new();
@@ -1599,8 +1621,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if variant_zip_style != ZipStyle::Tar(CompressionImpl::Gzip) {
                 has_sketchy_archives = true;
             }
-
-            artifacts.push(ExecutableZipFragment {
+            let mut fragment = ExecutableZipFragment {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
                 zip_style: variant_zip_style,
@@ -1608,7 +1629,27 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .into_iter()
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
-            });
+            };
+            if target == X64_MUSL {
+                // musl-static is actually kind of a fake triple we've invented
+                // to let us specify which is which; we want to ensure it exists
+                // for the installer to act on
+                fragment.target_triples = vec![X64_MUSL_STATIC.to_owned()];
+            }
+            if do_gnu_to_musl_fallback && target == X64_MUSL {
+                // Copy the info but lie that it's actually glibc
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![X64_GNU.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+            if do_musl_to_musl_fallback && target == X64_MUSL {
+                // Copy the info but lie that it's actually dynamic musl
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![X64_MUSL_DYNAMIC.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
+            artifacts.push(fragment);
         }
 
         if has_sketchy_archives {

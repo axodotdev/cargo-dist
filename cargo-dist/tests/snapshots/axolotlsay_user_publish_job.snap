@@ -1311,6 +1311,9 @@ const { version } = require("./package.json");
 const name = "axolotlsay";
 const artifact_download_url = "https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0";
 
+const builder_glibc_major_version = 2;
+const builder_glibc_minor_version = 35;
+
 const supportedPlatforms = {
   "aarch64-apple-darwin": {
     "artifact_name": "axolotlsay-aarch64-apple-darwin.tar.gz",
@@ -1363,6 +1366,29 @@ const getPlatform = () => {
       break;
   }
 
+  if (raw_os_type === "Linux") {
+    if (libc.familySync() == 'musl') {
+      os_type = "unknown-linux-musl-dynamic";
+    } else if (libc.isNonGlibcLinuxSync()) {
+        console.warn("Your libc is neither glibc nor musl; trying static musl binary instead");
+        os_type = "unknown-linux-musl-static";
+    } else {
+      let libc_version = libc.versionSync();
+      let split_libc_version = libc_version.split(".");
+      let libc_major_version = split_libc_version[0];
+      let libc_minor_version = split_libc_version[1];
+      if (
+        libc_major_version != builder_glibc_major_version ||
+        libc_minor_version < builder_glibc_minor_version
+      ) {
+        // We can't run the glibc binaries, but we can run the static musl ones
+        // if they exist
+        console.warn("Your glibc isn't compatible; trying static musl binary instead");
+        os_type = "unknown-linux-musl-static";
+      }
+    }
+  }
+
   // Assume the above succeeded and build a target triple to look things up with.
   // If any of it failed, this lookup will fail and we'll handle it like normal.
   let target_triple = `${arch}-${os_type}`;
@@ -1372,28 +1398,6 @@ const getPlatform = () => {
     error(
       `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(supportedPlatforms).join(",")}`
     );
-  }
-
-  // These are both situation where you might toggle to unknown-linux-musl but we don't support that yet
-  if (raw_os_type === "Linux") {
-    if (libc.isNonGlibcLinuxSync()) {
-      error("This operating system does not support dynamic linking to glibc.");
-    } else {
-      let libc_version = libc.versionSync();
-      let split_libc_version = libc_version.split(".");
-      let libc_major_version = split_libc_version[0];
-      let libc_minor_version = split_libc_version[1];
-      let min_major_version = 2;
-      let min_minor_version = 17;
-      if (
-        libc_major_version < min_major_version ||
-        libc_minor_version < min_minor_version
-      ) {
-        error(
-          `This operating system needs glibc >= ${min_major_version}.${min_minor_version}, but only has ${libc_version} installed.`
-        );
-      }
-    }
   }
 
   return platform;
