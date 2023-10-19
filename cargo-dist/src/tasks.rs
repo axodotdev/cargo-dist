@@ -1582,10 +1582,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let desc = "Install prebuilt binaries into your npm project".to_owned();
 
         // See comments above
+        const X64_MACOS: &str = "x86_64-apple-darwin";
+        const ARM64_MACOS: &str = "aarch64-apple-darwin";
         const X64_GNU: &str = "x86_64-unknown-linux-gnu";
         const X64_MUSL: &str = "x86_64-unknown-linux-musl";
         const X64_MUSL_STATIC: &str = "x86_64-unknown-linux-musl-static";
         const X64_MUSL_DYNAMIC: &str = "x86_64-unknown-linux-musl-dynamic";
+        let mut has_x64_apple = false;
+        let mut has_arm_apple = false;
         let mut has_gnu_linux = false;
         let mut has_static_musl_linux = false;
         // Currently always false, someday this build will exist
@@ -1593,6 +1597,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
+            if target == X64_MACOS {
+                has_x64_apple = true;
+            }
+            if target == ARM64_MACOS {
+                has_arm_apple = true;
+            }
             if target == X64_GNU {
                 has_gnu_linux = true;
             }
@@ -1600,6 +1610,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 has_static_musl_linux = true;
             }
         }
+        let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
         let do_gnu_to_musl_fallback = !has_gnu_linux && has_static_musl_linux;
         let do_musl_to_musl_fallback = has_static_musl_linux && !has_dynamic_musl_linux;
 
@@ -1630,6 +1641,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
             };
+            if do_rosetta_fallback && target == X64_MACOS {
+                // Copy the info but respecify it to be arm64 macos
+                let mut arm_fragment = fragment.clone();
+                arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
+                artifacts.push(arm_fragment);
+            }
             if target == X64_MUSL {
                 // musl-static is actually kind of a fake triple we've invented
                 // to let us specify which is which; we want to ensure it exists
