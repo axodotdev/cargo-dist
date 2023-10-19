@@ -23,6 +23,12 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 
+# glibc provided by our Ubuntu 22.04 runners;
+# in the future, we should actually record which glibc was on the runner,
+# and inject that into the script.
+BUILDER_GLIBC_MAJOR="2"
+BUILDER_GLIBC_SERIES="35"
+
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
     cat <<EOF
@@ -445,13 +451,25 @@ get_architecture() {
     _ostype="$(uname -s)"
     _cputype="$(uname -m)"
     local _clibtype="gnu"
+    local _local_glibc
 
     if [ "$_ostype" = Linux ]; then
         if [ "$(uname -o)" = Android ]; then
             _ostype=Android
         fi
         if ldd --version 2>&1 | grep -q 'musl'; then
-            _clibtype="musl"
+            _clibtype="musl-dynamic"
+        # glibc, but is it a compatible glibc?
+        else
+            # Parsing version out from line 1 like:
+            # ldd (Ubuntu GLIBC 2.35-0ubuntu3.1) 2.35
+            _local_glibc="$(ldd --version | head -1 | awk -F' ' '{ print $NF }')"
+
+            if [ "$(echo "${_local_glibc}" | awk -F. '{ print $1 }')" = $BUILDER_GLIBC_MAJOR ] && [ "$(echo "${_local_glibc}" | awk -F. '{ print $2 }')" -ge $BUILDER_GLIBC_SERIES ]; then
+                _clibtype="gnu"
+            else
+                _clibtype="musl-static"
+            fi
         fi
     fi
 
@@ -716,4 +734,3 @@ downloader() {
 }
 
 download_binary_and_run_installer "$@" || exit 1
-
