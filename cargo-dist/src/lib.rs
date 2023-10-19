@@ -12,7 +12,7 @@
 
 use std::{
     collections::{BTreeMap, HashMap},
-    fs::File,
+    fs::{self, File},
     io::{Cursor, Read},
     process::Command,
 };
@@ -1122,7 +1122,12 @@ fn do_ldd(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
 
         // Format: libname.so.1 => /path/to/libname.so.1 (address)
         if let Some(path) = line.split(" => ").nth(1) {
-            libraries.push((path.split(' ').next().unwrap()).to_owned());
+            // This may be a symlink rather than the actual underlying library;
+            // we resolve the symlink here so that we return the real paths,
+            // making it easier to map them to their packages later.
+            let lib = (path.split(' ').next().unwrap()).to_owned();
+            let realpath = fs::canonicalize(&lib)?;
+            libraries.push(realpath.to_string_lossy().to_string());
         } else {
             continue;
         }
