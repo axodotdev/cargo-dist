@@ -1278,7 +1278,14 @@ Install-Binary "$Args"
       "pr_run_mode": "plan"
     }
   },
-  "linkage": []
+  "linkage": [],
+  "hosting": {
+    "staging_artifacts_url": null,
+    "live_artifacts_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1",
+    "upload_url": null,
+    "publish_url": null,
+    "announce_url": null
+  }
 }
 
 

@@ -1,6 +1,6 @@
 //! Code for generating installer.sh
 
-use axoasset::{LocalAsset, SourceFile};
+use axoasset::LocalAsset;
 use camino::Utf8PathBuf;
 use cargo_dist_schema::DistManifest;
 use serde::Serialize;
@@ -47,38 +47,15 @@ pub(crate) fn write_homebrew_formula(
     templates: &Templates,
     graph: &DistGraph,
     source_info: &HomebrewInstallerInfo,
-    manifests: &[DistManifest],
+    manifest: &DistManifest,
 ) -> DistResult<()> {
     let mut info = source_info.clone();
 
-    // Collect all dist-manifests and fetch the appropriate Mac ones
-    let mut manifests = manifests.to_owned();
-    for file in graph.dist_dir.read_dir()? {
-        let path = file?.path();
-        if let Some(filename) = path.file_name() {
-            if !filename.to_string_lossy().ends_with("-dist-manifest.json") {
-                continue;
-            }
-        }
-
-        let json_path = Utf8PathBuf::try_from(path)?;
-        let data = SourceFile::load_local(json_path)?;
-        let manifest: DistManifest = data.deserialize_json()?;
-
-        if manifest.linkage.iter().any(|l| {
-            info.arm64.is_some() && l.target == "aarch64-apple-darwin"
-                || info.x86_64.is_some() && l.target == "x86_64-apple-darwin"
-        }) {
-            manifests.push(manifest);
-        }
-    }
-
     // Fetch any detected dependencies from the linkage data
-    let dependencies = manifests.into_iter().flat_map(|m| {
-        m.linkage
-            .into_iter()
-            .flat_map(|l| l.homebrew.into_iter().filter_map(|lib| lib.source))
-    });
+    let dependencies = manifest
+        .linkage
+        .iter()
+        .flat_map(|l| l.homebrew.iter().filter_map(|lib| lib.source.clone()));
 
     // Merge with the manually-specified deps
     info.dependencies.extend(dependencies);
