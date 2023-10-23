@@ -126,6 +126,13 @@ pub struct DistMetadata {
     #[serde(rename = "auto-includes")]
     pub auto_includes: Option<bool>,
 
+    /// Whether msvc targets should statically link the crt
+    ///
+    /// Defaults to true.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "msvc-crt-static")]
+    pub msvc_crt_static: Option<bool>,
+
     /// The archive format to use for windows builds (defaults .zip)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "windows-archive")]
@@ -306,6 +313,7 @@ impl DistMetadata {
             pr_run_mode: _,
             allow_dirty: _,
             ssldotcom_windows_sign: _,
+            msvc_crt_static: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -349,6 +357,7 @@ impl DistMetadata {
             pr_run_mode,
             allow_dirty,
             ssldotcom_windows_sign,
+            msvc_crt_static,
         } = self;
 
         // Check for global settings on local packages
@@ -386,6 +395,9 @@ impl DistMetadata {
         }
         if ssldotcom_windows_sign.is_some() {
             warn!("package.metadata.dist.ssldotcom-windows-sign is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if msvc_crt_static.is_some() {
+            warn!("package.metadata.dist.msvc-crt-static is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
