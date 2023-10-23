@@ -604,7 +604,7 @@ fn get_new_dist_metadata(
                     r#"{check} You must provision a GitHub token and expose it as a secret named
     HOMEBREW_TAP_TOKEN in GitHub Actions. For more information,
     see the documentation:
-    https://opensource.axo.dev/cargo-dist/book/installers.html#homebrew"#
+    https://opensource.axo.dev/cargo-dist/book/installers/homebrew.html"#
                 );
             }
         }
