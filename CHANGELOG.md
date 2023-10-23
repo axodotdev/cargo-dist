@@ -22,6 +22,7 @@ For more information, see the [documentation](https://opensource.axo.dev/cargo-d
 
 * impl
     * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/428)
+    * @mistydemeo [improve Homebrew integration](https://github.com/axodotdev/cargo-dist/pull/504)
 
 
 ### Find out what your builds linked against
@@ -36,6 +37,7 @@ This feature has full support for macOS and Linux. On Windows, we're not able to
     * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/426)
     * @mistydemeo [infer dependencies via linkage](https://github.com/axodotdev/cargo-dist/pull/475)
     * @mistydemeo [fetch full name of Homebrew tap](https://github.com/axodotdev/cargo-dist/pull/474)
+    * @mistydemeo [improve apt package resolution](https://github.com/axodotdev/cargo-dist/pull/495)
 
 
 ### musl support
