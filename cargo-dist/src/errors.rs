@@ -259,6 +259,15 @@ pub enum DistError {
     /// random camino conversion error
     #[error(transparent)]
     FromPathBufError(#[from] camino::FromPathBufError),
+
+    /// Error parsing a string containing an environment variable
+    /// in VAR=value syntax
+    #[error("Unable to parse environment variable as a key/value pair: {line}")]
+    #[diagnostic(help("This should be impossible, you did nothing wrong, please file an issue!"))]
+    EnvParseError {
+        /// The line of text that couldn't be parsed
+        line: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

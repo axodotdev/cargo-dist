@@ -218,6 +218,8 @@ pub struct Tools {
     pub cargo: CargoInfo,
     /// rustup, useful for getting specific toolchains
     pub rustup: Option<Tool>,
+    /// homebrew, only available on macOS
+    pub brew: Option<Tool>,
 }
 
 /// Info about the cargo toolchain we're using
@@ -2568,12 +2570,13 @@ fn tool_info() -> Result<Tools> {
     let cargo = get_host_target(cargo_cmd)?;
     Ok(Tools {
         cargo,
-        rustup: find_tool("rustup"),
+        rustup: find_tool("rustup", "-V"),
+        brew: find_tool("brew", "--version"),
     })
 }
 
-fn find_tool(name: &str) -> Option<Tool> {
-    let output = Command::new(name).arg("-V").output().ok()?;
+fn find_tool(name: &str, test_flag: &str) -> Option<Tool> {
+    let output = Command::new(name).arg(test_flag).output().ok()?;
     let string_output = String::from_utf8(output.stdout).ok()?;
     let version = string_output.lines().next()?;
     Some(Tool {

@@ -45,6 +45,7 @@ pub fn mock_tools() -> Tools {
             host_target: "x86_64-unknown-linux-gnu".to_owned(),
         },
         rustup: None,
+        brew: None,
     }
 }
 
