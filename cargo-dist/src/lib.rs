@@ -12,6 +12,7 @@
 
 use std::{
     collections::{BTreeMap, HashMap},
+    env,
     fs::{self, File},
     io::{Cursor, Read},
     process::Command,
@@ -395,12 +396,143 @@ fn write_checksum(checksum: &str, src_path: &Utf8Path, dest_path: &Utf8Path) -> 
     Ok(())
 }
 
+// Takes a string in KEY=value environment variable format and
+// parses it into a BTreeMap. The string syntax is sh-compatible, and also the
+// format returned by `env`.
+// Note that we trust the parsed string to contain a given key only once;
+// if specified more than once, only the final occurrence will be included.
+fn parse_env(env_string: &str) -> DistResult<BTreeMap<&str, &str>> {
+    let mut parsed = BTreeMap::new();
+    for line in env_string.trim_end().split('\n') {
+        let Some((key, value)) = line.split_once('=') else {
+            return Err(DistError::EnvParseError {
+                line: line.to_owned(),
+            });
+        };
+        parsed.insert(key, value);
+    }
+
+    Ok(parsed)
+}
+
+/// Given the environment captured from `brew bundle exec -- env`, returns
+/// a list of all dependencies from that environment and the opt prefixes
+/// to those packages.
+fn formulas_from_env(environment: &BTreeMap<&str, &str>) -> Vec<(String, String)> {
+    let mut packages = vec![];
+
+    // Set by Homebrew/brew bundle - a comma-separated list of all
+    // dependencies in the recursive tree calculated from the dependencies
+    // in the Brewfile.
+    if let Some(formulastring) = environment.get("HOMEBREW_DEPENDENCIES") {
+        // Set by Homebrew/brew bundle - the path to Homebrew's "opt"
+        // directory, which is where links to the private cellar of every
+        // installed package lives.
+        // Usually /opt/homebrew/opt or /usr/local/opt.
+        if let Some(opt_prefix) = environment.get("HOMEBREW_OPT") {
+            for dep in formulastring.split(',') {
+                // Unwrap here is safe because `split` will always return
+                // a collection of at least one item.
+                let short_name = dep.split('/').last().unwrap();
+                let pkg_opt = format!("{opt_prefix}/{short_name}");
+                packages.push((dep.to_owned(), pkg_opt));
+            }
+        }
+    }
+
+    packages
+}
+
+/// Takes a BTreeMap of key/value environment variables produced by
+/// `brew bundle exec` and decides which ones we want to keep for our own builds.
+/// Returns a Vec containing (KEY, value) tuples.
+fn select_brew_env(environment: &BTreeMap<&str, &str>) -> Vec<(String, String)> {
+    let mut desired_env = vec![];
+
+    // Several of Homebrew's environment variables are safe for us to use
+    // unconditionally, so pick those in their entirety.
+    if let Some(value) = environment.get("PKG_CONFIG_PATH") {
+        desired_env.push(("PKG_CONFIG_PATH".to_owned(), value.to_string()))
+    }
+    if let Some(value) = environment.get("PKG_CONFIG_LIBDIR") {
+        desired_env.push(("PKG_CONFIG_LIBDIR".to_owned(), value.to_string()))
+    }
+    if let Some(value) = environment.get("CMAKE_INCLUDE_PATH") {
+        desired_env.push(("CMAKE_INCLUDE_PATH".to_owned(), value.to_string()))
+    }
+    if let Some(value) = environment.get("CMAKE_LIBRARY_PATH") {
+        desired_env.push(("CMAKE_LIBRARY_PATH".to_owned(), value.to_string()))
+    }
+    let mut paths = vec![];
+
+    // For each listed dependency, add it to the PATH
+    for (_, pkg_opt) in formulas_from_env(environment) {
+        // Not every package will have a /bin or /sbin directory,
+        // but it's safe to add both to the PATH just in case.
+        paths.push(format!("{pkg_opt}/bin"));
+        paths.push(format!("{pkg_opt}/sbin"));
+    }
+
+    if !paths.is_empty() {
+        let our_path = env!("PATH");
+        let desired_path = format!("{our_path}:{}", paths.join(":"));
+
+        desired_env.insert(0, ("PATH".to_owned(), desired_path));
+    }
+
+    desired_env
+}
+
+/// Similar to the above, we read Homebrew's recursive dependency tree and
+/// then append link flags to cargo-dist's rustflags.
+/// These ensure that Rust can find C libraries that may exist within
+/// each package's prefix.
+fn determine_brew_rustflags(base_rustflags: &str, environment: &BTreeMap<&str, &str>) -> String {
+    let mut rustflags = base_rustflags.to_owned();
+    // For each listed dependency, add it to CFLAGS/LDFLAGS
+    for (_, pkg_opt) in formulas_from_env(environment) {
+        // Note that this path might not actually exist; not every
+        // package contains libraries. However, it's safe to
+        // append this flag anyway; Rust passes it on to the
+        // compiler/linker, which tolerate missing directories
+        // just fine.
+        rustflags = format!("{rustflags} -L{pkg_opt}/lib");
+    }
+
+    rustflags
+}
+
 /// Build a cargo target
 fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result<()> {
     eprint!(
         "building cargo target ({}/{}",
         target.target_triple, target.profile
     );
+
+    let mut rustflags = target.rustflags.clone();
+    let mut desired_extra_env = vec![];
+    let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
+    if let Some(brew) = &dist_graph.tools.brew {
+        if Utf8Path::new("Brewfile").exists() && !skip_brewfile {
+            // Uses `brew bundle exec` to just print its own environment,
+            // allowing us to capture what it generated and decide what
+            // to do with it.
+            let result = Command::new(&brew.cmd)
+                .arg("bundle")
+                .arg("exec")
+                .arg("--")
+                .arg("/usr/bin/env")
+                .output()
+                .into_diagnostic()
+                .wrap_err_with(|| "failed to exec brew bundle exec".to_string())?;
+
+            let env_output = String::from_utf8_lossy(&result.stdout).to_string();
+
+            let brew_env = parse_env(&env_output)?;
+            desired_extra_env = select_brew_env(&brew_env);
+            rustflags = determine_brew_rustflags(&rustflags, &brew_env);
+        }
+    }
 
     let mut command = Command::new(&dist_graph.tools.cargo.cmd);
     command
@@ -410,7 +542,7 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         .arg("--message-format=json-render-diagnostics")
         .arg("--target")
         .arg(&target.target_triple)
-        .env("RUSTFLAGS", &target.rustflags)
+        .env("RUSTFLAGS", &rustflags)
         .stdout(std::process::Stdio::piped());
     if !target.features.default_features {
         command.arg("--no-default-features");
@@ -438,6 +570,9 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
             eprintln!(" --package={})", package);
         }
     }
+    // If we generated any extra environment variables to
+    // inject into the environment, apply them now.
+    command.envs(desired_extra_env);
     info!("exec: {:?}", command);
     let mut task = command
         .spawn()
