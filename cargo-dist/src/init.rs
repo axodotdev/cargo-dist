@@ -223,6 +223,7 @@ fn get_new_dist_metadata(
             pr_run_mode: None,
             allow_dirty: None,
             ssldotcom_windows_sign: None,
+            msvc_crt_static: None,
         }
     };
 
@@ -740,6 +741,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         pr_run_mode,
         allow_dirty,
         ssldotcom_windows_sign,
+        msvc_crt_static,
     } = &meta;
 
     apply_optional_value(
@@ -910,6 +912,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "allow-dirty",
         "# Skip checking whether the specified configuration files are up to date\n",
         allow_dirty.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "msvc-crt-static",
+        "Whether +crt-static should be used on msvc\n",
+        *msvc_crt_static,
     );
 
     apply_optional_value(

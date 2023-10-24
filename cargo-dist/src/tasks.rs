@@ -209,6 +209,8 @@ pub struct DistGraph {
     pub publish_prereleases: bool,
     /// A GitHub repo to publish the Homebrew formula to
     pub tap: Option<String>,
+    /// Whether msvc targets should statically link the crt
+    pub msvc_crt_static: bool,
 }
 
 /// Various tools we have found installed on the system
@@ -663,11 +665,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             publish_jobs: _,
             publish_prereleases,
             features,
-            default_features: no_default_features,
+            default_features,
             all_features,
             create_release,
             pr_run_mode: _,
             allow_dirty,
+            msvc_crt_static,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -678,6 +681,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let merge_tasks = merge_tasks.unwrap_or(false);
         let fail_fast = fail_fast.unwrap_or(false);
         let create_release = create_release.unwrap_or(true);
+        let msvc_crt_static = msvc_crt_static.unwrap_or(true);
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -693,7 +697,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Only do workspace builds if all the packages agree with the workspace feature settings
             if &package_config.features != features
                 || &package_config.all_features != all_features
-                || &package_config.default_features != no_default_features
+                || &package_config.default_features != default_features
             {
                 packages_with_mismatched_features.push(package.name.clone());
             }
@@ -779,6 +783,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 user_publish_jobs,
                 publish_prereleases,
                 allow_dirty,
+                msvc_crt_static,
             },
             package_metadata,
             workspace_metadata,
@@ -1964,7 +1969,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
             // You're *supposed* to link libc statically on windows but Rust has a bad default.
             // See: https://rust-lang.github.io/rfcs/1721-crt-static.html
-            if target.contains("windows-msvc") {
+            //
+            // ... well ok it's actually more complicated than that. Most rust applications
+            // don't dynamically link anything non-trivial, so statically linking libc is fine.
+            // However if you need to dynamically link stuff there starts to be issues about
+            // agreeing to the crt in play. At that point you should ship a
+            // Visual C(++) Redistributable that installs the version of the runtime you depend
+            // on. Not doing that is basically rolling some dice and hoping the user already
+            // has it installed, which isn't great. We should support redists eventually,
+            // but for now this hacky global flag is here to let you roll dice.
+            if self.inner.msvc_crt_static && target.contains("windows-msvc") {
                 rustflags.push_str(" -Ctarget-feature=+crt-static");
             }
 
