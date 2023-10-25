@@ -31,7 +31,7 @@ Complementing the ability to specify system dependencies, we've added a new feat
 
 In addition, cargo-dist now uses this information to choose which dependencies to specify when building system package manager installers such as a Homebrew formula. If cargo-dist detects that your binary links against a package provided by Homebrew, it will ensure that a user who `brew install`s your package will also get that other package.
 
-This feature has full support for macOS and Linux. On Windows, we're not able to list which package a system library comes from on Windows.
+This feature has full support for macOS and Linux. On Windows, we're not able to list which package a system library comes.
 
 * impl
     * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/426)
@@ -48,6 +48,7 @@ Note that because these binaries are statically linked, they cannot dynamically 
 
 * impl
     * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/483)
+    * @gankra + @mistydemeo [use musl binaries in installers](https://github.com/axodotdev/cargo-dist/pull/497)
 
 
 # Version 0.3.1 (2023-09-28)
