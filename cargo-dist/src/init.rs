@@ -917,7 +917,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     apply_optional_value(
         table,
         "msvc-crt-static",
-        "Whether +crt-static should be used on msvc\n",
+        "# Whether +crt-static should be used on msvc\n",
         *msvc_crt_static,
     );
 
