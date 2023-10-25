@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.4.0 (2023-10-25)
+
 This release contains several major features related to package dependencies. cargo-dist can now install dependencies for you in CI, ensure your users have those dependencies in their installers, and provide you insights into what external libraries your package links against! It also enables support for statically-built musl binaries on Linux.
 
 ## Features
