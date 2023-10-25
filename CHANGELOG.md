@@ -50,6 +50,15 @@ Note that because these binaries are statically linked, they cannot dynamically 
     * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/483)
     * @gankra + @mistydemeo [use musl binaries in installers](https://github.com/axodotdev/cargo-dist/pull/497)
 
+### msvc-crt-static opt-out
+
+cargo-dist has [always forced +crt-static on, as it is considered more correct for targetting Windows with the typical statically linked Rust binary](https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md). However with the introduction of initial support for chocolatey as a system package manager, it's now very easy for our users to dynamically link other DLLs. Once you do, [it once again becomes more correct to dynamically link the windows crt, and to use systems like Visual C(++) Redistributables](https://github.com/axodotdev/cargo-dist/issues/496).
+
+Although we [would like to teach cargo-dist to handle redistributables for you](https://github.com/axodotdev/cargo-dist/issues/496), we're starting with a simple escape hatch: if you set `msvc-crt-static = false` in `[workspace.metadata.dist]`, we'll revert to the typical Rust behaviour of dynamically linking the CRT.
+
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/507)
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#msvc-crt-static)
+
 
 # Version 0.3.1 (2023-09-28)
 
