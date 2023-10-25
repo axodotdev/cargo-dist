@@ -15,27 +15,6 @@ As discussed in [concepts][], all of your config should be persistently stored i
 
 The [builtin Cargo.toml fields][cargo-manifest] define a lot of things that cargo-dist cares about. Here's the ones that matter:
 
-### name
-
-The name of your package will become the name cargo-dist uses to refer to your package. There is currently no notion of a "prettier display name" (if you have a use for that, let us know!).
-
-### version
-
-The version of your package is used pervasively, and cargo-dist will generally error out if you ask it to build "my-app-1.0.0" when the actual "my-app" package is set to version "1.1.0".
-
-### publish
-
-If you set `publish = false` in your Cargo.toml we will treat this as a hint that cargo-dist should ignore all the affected packages completely. You can override this with dist's own `dist = true` config.
-
-### repository
-
-cargo-dist has an internal notion of an "artifact download URL" that is required for things like [installers][] that detect the current platform and fetch binaries. If your CI backend is "github" then we will base the "[artifact download URL][artifact-url]" on the "repository" key. To be safe, we will only do this if your workspace agrees on this value. It's fine if only some packages bother setting "repository", as long as the ones that do use the exact same string. If they don't we will fail to compute an "artifact download URL", emit a warning, and ignore your request for installers that require it. (This might want to be a hard error in the future.)
-
-### readme
-
-cargo-dist defaults to trying to include certain "important" static files in your archives. A README is one of them.
-
-If you specify a path to a README file, cargo-dist will use that for all the packages it affects. If you don't, then cargo-dist will search for a README* file in the package's root directory and the workspace's root directory (preferring the package).
 
 ### license-file
 
@@ -46,54 +25,37 @@ If you specify a path to a license file, cargo-dist will use that for all packag
 Note that the Cargo license-file flag only accepts one path, so it can't handle the dual-license-file case. This cargo feature largely exists as an escape hatch for weird licenses which can't be described by the SPDX format of the "license" field.
 
 
+### name
+
+The name of your package will become the name cargo-dist uses to refer to your package. There is currently no notion of a "prettier display name" (if you have a use for that, let us know!).
+
+
+### publish
+
+If you set `publish = false` in your Cargo.toml we will treat this as a hint that cargo-dist should ignore all the affected packages completely. You can override this with dist's own `dist = true` config.
+
+
+### readme
+
+cargo-dist defaults to trying to include certain "important" static files in your archives. A README is one of them.
+
+If you specify a path to a README file, cargo-dist will use that for all the packages it affects. If you don't, then cargo-dist will search for a README* file in the package's root directory and the workspace's root directory (preferring the package).
+
+
+### repository
+
+cargo-dist has an internal notion of an "artifact download URL" that is required for things like [installers][] that detect the current platform and fetch binaries. If your CI backend is "github" then we will base the "[artifact download URL][artifact-url]" on the "repository" key. To be safe, we will only do this if your workspace agrees on this value. It's fine if only some packages bother setting "repository", as long as the ones that do use the exact same string. If they don't we will fail to compute an "artifact download URL", emit a warning, and ignore your request for installers that require it. (This might want to be a hard error in the future.)
+
+### version
+
+The version of your package is used pervasively, and cargo-dist will generally error out if you ask it to build "my-app-1.0.0" when the actual "my-app" package is set to version "1.1.0".
+
+
 
 ## workspace.metadata.dist
 
 Cargo allows other tools to include their own project-wide settings in [metadata tables][workspace-metadata]. The one cargo-dist uses is `[workspace.metadata.dist]`, which must appear in your root Cargo.toml (whether or not it's [virtual][workspace]). You can override them on a per-package basis with `[package.metadata.dist]`, which accepts all the same fields (except for those which must be specified once globally, see the docs for each individual option).
 
-### cargo-dist-version
-
-> since 0.0.3
-
-Example: `cargo-dist-version = "0.0.3"`
-
-**This can only be set globally**
-
-This is added automatically by `cargo dist init`, and is a recording of its own version for the sake of reproducibility and documentation. When you run [generate][] the resulting CI scripts will use that version of cargo-dist to build your applications.
-
-The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a VersionReq!).
-
-If you delete the key, generate will just use the version of cargo-dist that's currently running.
-
-### rust-toolchain-version
-
-> since 0.0.3 (deprecated in 0.1.0)
-
-Example: `rust-toolchain-version = "1.67.1"`
-
-> Deprecation reason: [rust-toolchain.toml](https://rust-lang.github.io/rustup/overrides.html#the-toolchain-file) is a more standard/universal mechanism for pinning toolchain versions for reproducibility. Teams without dedicated release engineers will likely benefit from unpinning their toolchain and letting the underlying CI vendor silently update them to "some recent stable toolchain", as they will get updates/improvements and are unlikely to have regressions.
-
-**This can only be set globally**
-
-This is added automatically by `cargo dist init`, recorded for the sake of reproducibility and documentation. It represents the "ideal" Rust toolchain to build your project with. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
-
-The syntax must be a valid rustup toolchain like "1.60.0" or "stable" (should not specify the platform, we want to install this toolchain on all platforms).
-
-If you delete the key, generate won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal). Before being deprecated the default was to `rustup update stable`, but this is no longer the case.
-
-### ci
-
-> since 0.0.3
-
-Example: `ci = ["github"]`
-
-**This can only be set globally**
-
-This is a list of CI backends you want to support, allowing subsequent runs of [generate][] to know what CI scripts to generate. Its presence also enables certain CI-specific features. For instance if "github" is included we'll try to generate the body for a Github Release and tell [installers][] to fetch binaries from a Github Release.  Once we introduce more CI backends we'll need to more completely rationalize what that means. In all likelihood each set of CI scripts will need to explicitly select just its own CI by passing `--ci=...` for every invocation.
-
-"github" is currently the only supported CI backend.
-
-`cargo dist init` can set this if you pass `--ci=...`
 
 ### allow-dirty
 
@@ -108,53 +70,20 @@ Possible values are:
 * "ci": don't check/regenerate ci scripts (release.yml)
 * "msi": don't check/regenerate msi templates (main.wxs)
 
-### targets
 
-> since 0.0.3
-
-Example: `targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc"]`
-
-This is a list of [target platforms][platforms] you want your application(s) to be built for. In principle this can be overridden on a per-package basis but that is not well tested.
-
-In v0.0.5 the only properly supported choices are:
-
-* x64 macOS: "x86_64-apple-darwin"
-* x64 Windows: "x86_64-pc-windows-msvc"
-* x64 Linux: "x86_64-unknown-linux-gnu"
-* arm64 macOS (Apple silicon): "aarch64-apple-darwin" (support added in v0.0.4)
-
-Future versions should hopefully introduce proper support for important targets like "musl linux".
-
-By default all runs of `cargo-dist` will be trying to handle all platforms specified here at once. If you specify `--target=...` on the CLI this will focus the run to only those platforms. As discussed in [concepts][], this cannot be used to specify platforms that are not listed in `metadata.dist`, to ensure different runs agree on the maximum set of platforms.
-
-### installers
-
-> since 0.0.3
-
-Example: `installers = ["shell", "powershell"]`
-
-This is a list of installers you want to be made for your application(s). In principle this can be overridden on a per-package basis but that is not well tested. See [the full docs on installers for the full list of values][installers].
-
-See "repository" for some discussion on the "Artifact Download URL".
-
-
-### tap
+### all-features
 
 > since 0.2.0
 
-Example: `tap = "axodotdev/homebrew-formulae"`
+Example: `all-features = true`
 
-This is the name of a GitHub repository which cargo-dist should publish the Homebrew installer to. It must already exist, and the token which creates releases must have write access.
+Specifies that all features for a package should be enabled when building it (when set to true this tells us to pass `--all-features` to Cargo).
 
-See the [installers documentation][homebrew-installer] for more information on Homebrew support.
+Defaults false.
 
-### include
+If you use this you *probably* want to set it on `[package.metadata.dist]` and
+not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
 
-> since 0.0.3
-
-Example: `include = ["my-cool-file.txt", "../other-cool-file.txt", "./some/dir/"]`
-
-This is a list of additional *files* or *directories* to copy into the root of all [archives][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
 
 ### auto-includes
 
@@ -164,51 +93,20 @@ Example: `auto-includes = false`
 
 Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [archives][]. Defaults to true.
 
-### windows-archive
 
-> since 0.0.5
-
-Example: `windows-archive = ".tar.gz"`
-
-Allows you to specify the file format to use for [archives][] that target windows. The default is
-".zip". Supported values:
-
-* ".zip"
-* ".tar.gz"
-* ".tar.xz"
-* ".tar.zstd"
-
-See also unix-archive below.
-
-### unix-archive
-
-> since 0.0.5
-
-Example: `unix-archive = ".tar.gz"`
-
-Allows you to specify the file format to use for [archives][] that target not-windows. The default is
-".tar.xz". See "windows-archive" above for a complete list of supported values.
-
-
-
-### dist
+### cargo-dist-version
 
 > since 0.0.3
 
-Example: `dist = false`
+Example: `cargo-dist-version = "0.0.3"`
 
-Specifies whether cargo-dist should ignore this package. It primarily exists as an alternative for `publish=false` or an override for `publish=false`.
+**This can only be set globally**
 
+This is added automatically by `cargo dist init`, and is a recording of its own version for the sake of reproducibility and documentation. When you run [generate][] the resulting CI scripts will use that version of cargo-dist to build your applications.
 
-### npm-scope
+The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a VersionReq!).
 
-> since 0.0.6
-
-Example `npm-scope = "@axodotdev"`
-
-Specifies that [npm installers][] should be published under the given [scope][]. The leading `@` is mandatory. If you newly enable the npm installer in `cargo dist init`'s interactive UI, then it will give you an opportunity to add the scope.
-
-If no scope is specified the package will be global.
+If you delete the key, generate will just use the version of cargo-dist that's currently running.
 
 
 ### checksum
@@ -226,6 +124,227 @@ Specifies how to checksum [archives][]. Supported values:
 The hashes should match the result that sha256sum and sha512sum generate, and the file should be readable by those sorts of commands.
 
 Future work is planned to [support more robust signed checksums][issue-sigstore].
+
+
+### ci
+
+> since 0.0.3
+
+Example: `ci = ["github"]`
+
+**This can only be set globally**
+
+This is a list of CI backends you want to support, allowing subsequent runs of [generate][] to know what CI scripts to generate. Its presence also enables certain CI-specific features. For instance if "github" is included we'll try to generate the body for a Github Release and tell [installers][] to fetch binaries from a Github Release.  Once we introduce more CI backends we'll need to more completely rationalize what that means. In all likelihood each set of CI scripts will need to explicitly select just its own CI by passing `--ci=...` for every invocation.
+
+"github" is currently the only supported CI backend.
+
+`cargo dist init` can set this if you pass `--ci=...`
+
+
+### create-release
+
+> since 0.2.0
+
+Example: `create-release = false`
+
+**This can only be set globally**
+
+Whether we should create the Github Release for you in your Release CI.
+
+If true (default), cargo-dist will create a new Github Release and generate
+a title/body for it based on your changelog.
+
+If false, cargo-dist will assume a draft Github Release for the current git tag
+already exists with the title/body you want, and just upload artifacts to it.
+At the end of a successful publish it will undraft the Github Release.
+
+
+### default-features
+
+> since 0.2.0
+
+Example: `default-features = false`
+
+Specifies that default features for a package should be enabled when building it (when set to false, this tells us to pass `--no-default-features` to Cargo).
+
+Defaults true.
+
+If you use this you *probably* want to set it on `[package.metadata.dist]` and not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
+
+
+### dependencies
+
+> since 0.4.0
+
+Allows specifying dependencies to be installed from a system package manager before the build begins. This is useful if your tool needs certain build tools (say, cmake) or links against C libraries provided by the package manager. This is specified in a Cargo-like format which should be familiar. Dependencies can be specified in two forms:
+
+* A simple form, in which only a version is specified. If any version will do, use `'*'`.
+* A complex form, in several extra options can be specified.
+
+Supported options are:
+
+* `version` - A specific version of the package to install. This must be specified in the format that the package manager itself uses. Not used on Homebrew, since Homebrew does not support any method to specify installing specific versions of software.
+* `stage` - When exactly cargo-dist should make use of this package. Two values are supported: `build`, which specifies that the package should be installed before the build occurs; and `run`, which specifies that the package should be installed alongside your software at the time end users run it. The default is `build`. If `run` is specified for Homebrew dependencies, and you've enabled the Homebrew installer, the Homebrew installer will specify those packages as dependencies.
+* `targets` - A set of one or more targets to install the package on, in Rust target-triple format. If not specified, the package is installed on all targets. This is meant as an override to allow a package to be conditionally installed on only certain platforms; for example, a platform may need a build dependency only on Apple Silicon macOS, or have different build dependencies between x86_64 and ARM Windows.
+
+Supported package managers:
+
+* Apt (Linux)
+* Chocolatey (Windows)
+* Homebrew (macOS)
+
+Example:
+
+```toml
+[workspace.metadata.dist.dependencies.homebrew]
+cmake = '*'
+libcue = { stage = ["build", "run"] }
+
+[workspace.metadata.dist.dependencies.apt]
+cmake = '*'
+libcue-dev = { version = "2.2.1-2" }
+
+[workspace.metadata.dist.dependencies.chocolatey]
+lftp = '*'
+cmake = { version = '3.27.6', targets = ["aarch64-pc-windows-msvc"] }
+```
+
+### dist
+
+> since 0.0.3
+
+Example: `dist = false`
+
+Specifies whether cargo-dist should ignore this package. It primarily exists as an alternative for `publish=false` or an override for `publish=false`.
+
+
+### fail-fast
+
+> since 0.1.0
+
+Example: `fail-fast = true`
+
+**This can only be set globally**
+
+Whether failing tasks should make us give up on all other tasks. (defaults to false)
+
+When building a release you might discover that an obscure platform's build is broken. When this happens you have two options: give up on the release entirely (`fail-fast = true`), or keep trying to build all the other platforms anyway (`fail-fast = false`).
+
+cargo-dist was designed around the "keep trying" approach, as we create a draft Release
+and upload results to it over time, undrafting the release only if all tasks succeeded.
+The idea is that even if a platform fails to build, you can decide that's acceptable
+and manually undraft the release with some missing platforms.
+
+(Note that the dist-manifest.json is produced before anything else, and so it will assume
+that all tasks succeeded when listing out supported platforms/artifacts. This may make
+you sad if you do this kind of undrafting and also trust the dist-manifest to be correct.)
+
+Prior to 0.1.0 we didn't set the correct flags in our CI scripts to do this, but now we do.
+This flag was introduced to allow you to restore the old behaviour if you prefer.
+
+
+### features
+
+> since 0.2.0
+
+Example: `features = ["serde-support", "fancy-output"]`
+
+Specifies feature-flags that should be passed to a package when building it. This lets you enable features that should be on "in production" but for whatever reason shouldn't be on by default.
+
+For instance for packages that are a library and a CLI binary, some developers prefer to make the library the default and the CLI opt-in. In such a case you would want to add `features = ["cli"]` to your `[package.metadata.dist]`.
+
+If you use this you *probably* want to set it on `[package.metadata.dist]` and
+not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
+
+
+### include
+
+> since 0.0.3
+
+Example: `include = ["my-cool-file.txt", "../other-cool-file.txt", "./some/dir/"]`
+
+This is a list of additional *files* or *directories* to copy into the root of all [archives][] that this setting affects. The paths are relative to the directory of the Cargo.toml that you placed this setting in. Globs are not supported.
+
+
+### installers
+
+> since 0.0.3
+
+Example: `installers = ["shell", "powershell"]`
+
+This is a list of installers you want to be made for your application(s). In principle this can be overridden on a per-package basis but that is not well tested. See [the full docs on installers for the full list of values][installers].
+
+See "repository" for some discussion on the "Artifact Download URL".
+
+
+### install-path
+
+> since 0.1.0
+
+Example: `install-path = "~/.my-app/"`
+
+The strategy that script installers ([shell][shell-installer], [powershell][powershell-installer]) should use for selecting a path to install things at, with 3 possible syntaxes:
+
+* `CARGO_HOME`: (default) installs as if `cargo install` did it (tries `$CARGO_HOME/bin/`, but if `$CARGO_HOME` isn't set uses `$HOME/.cargo/bin/`). Note that we do not (yet) properly update some of the extra metadata files Cargo maintains, so Cargo may be confused if you ask it to manage the binary.
+
+* `~/some/subdir/`: installs to the given subdir of the user's `$HOME`
+
+* `$SOME_VAR/some/subdir`: installs to the given subdir of the dir defined by `$SOME_VAR`
+
+> NOTE: `$HOME/some/subdir` is technically valid syntax but it won't behave the way you want on Windows, because `$HOME` isn't a proper environment variable. Let us handle those details for you and just use `~/subdir/`.
+
+All of these error out if none of the required env-vars are set to a non-empty value.
+
+We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. `~/My cargo-dist Documents/bin/` works), but we won't be surprised if things misbehave on Interesting Inputs.
+
+Future Improvements:
+
+* In the future [we may expand this setting to allow you to pass an array of options that are tried in sequence until one succeeds](https://github.com/axodotdev/cargo-dist/issues/286).
+* In the future [we may support XDG dirs](https://github.com/axodotdev/cargo-dist/issues/287)
+* In the future [we may support %windows dirs%](https://github.com/axodotdev/cargo-dist/issues/288)
+
+(Please file an issue if you have other requirements!)
+
+
+### merge-tasks
+
+> since 0.1.0
+
+Example: `merge-tasks = true`
+
+**This can only be set globally**
+
+Whether we should try to merge otherwise-parallelizable tasks onto the same machine, sacrificing latency and fault-isolation for more the sake of minor effeciency gains.
+
+For example, if you build for x64 macos and arm64 macos, by default we will generate ci which builds those independently on separate logical machines. With this enabled we will build both of those platforms together on the same machine, making it take twice as long as any other build and making it impossible for only one of them to succeed.
+
+The default is `false`. Before 0.1.0 it was always `true` and couldn't be changed, making releases annoyingly slow (and technically less fault-isolated). This config was added to allow you to restore the old behaviour, if you really want.
+
+
+### msvc-crt-static
+
+> since 0.4.0
+
+Example: `msvc-crt-static = false`
+
+Specifies how The C Runtime (CRT) should be linked when building for Windows. Rust defaults to this being `= false` (dynamically link the CRT), but cargo-dist actually defaults to making this `= true` (statically link the CRT). [The Rust default is mostly a historical accident, and it's widely regarded to be an error that should one day be changed][crt-static]. Specifically it's a mistake for the typical Rust application which statically links everything else, because Windows doesn't actually guarantee that the desired things are installed on all machines by default, and statically linking the CRT is a supported solution to this issue.
+
+However when you *do* want a Rust application that dynamically links more things, it then becomes correct to dynamically link the CRT so that your app and the DLLs it uses can agree on things like malloc. However Rust's default is still insufficient for reliably shipping such a binary, because you really should also bundle a "Visual C(++) Redistributable" with your app that installs your required version of the CRT. The only case where it's *probably* fine to not do this is when shipping tools for programmers who probably already have all of that stuff installed (i.e. anyone who installs the Rust toolchain will have that stuff installed).
+
+This config exists as a blunt way to return to the default Rust behaviour of dynamically linking the CRT if you really want it, but more work is needed to handle Redistributables for that usecase.
+
+[See this issue for details and discussion][issue-msvc-crt-static].
+
+
+### npm-scope
+
+> since 0.0.6
+
+Example: `npm-scope = "@axodotdev"`
+
+Specifies that [npm installers][] should be published under the given [scope][]. The leading `@` is mandatory. If you newly enable the npm installer in `cargo dist init`'s interactive UI, then it will give you an opportunity to add the scope.
+
+If no scope is specified the package will be global.
 
 
 ### precise-builds
@@ -278,73 +397,6 @@ all-features = true
 Will just make us pass `--all-features` to `cargo build --workspace`.
 
 
-### merge-tasks
-
-> since 0.1.0
-
-Example: `merge-tasks = true`
-
-**This can only be set globally**
-
-Whether we should try to merge otherwise-parallelizable tasks onto the same machine, sacrificing latency and fault-isolation for more the sake of minor effeciency gains.
-
-For example, if you build for x64 macos and arm64 macos, by default we will generate ci which builds those independently on separate logical machines. With this enabled we will build both of those platforms together on the same machine, making it take twice as long as any other build and making it impossible for only one of them to succeed.
-
-The default is `false`. Before 0.1.0 it was always `true` and couldn't be changed, making releases annoyingly slow (and technically less fault-isolated). This config was added to allow you to restore the old behaviour, if you really want.
-
-
-### fail-fast
-
-> since 0.1.0
-
-Example: `fail-fast = true`
-
-**This can only be set globally**
-
-Whether failing tasks should make us give up on all other tasks. (defaults to false)
-
-When building a release you might discover that an obscure platform's build is broken. When this happens you have two options: give up on the release entirely (`fail-fast = true`), or keep trying to build all the other platforms anyway (`fail-fast = false`).
-
-cargo-dist was designed around the "keep trying" approach, as we create a draft Release
-and upload results to it over time, undrafting the release only if all tasks succeeded.
-The idea is that even if a platform fails to build, you can decide that's acceptable
-and manually undraft the release with some missing platforms.
-
-(Note that the dist-manifest.json is produced before anything else, and so it will assume
-that all tasks succeeded when listing out supported platforms/artifacts. This may make
-you sad if you do this kind of undrafting and also trust the dist-manifest to be correct.)
-
-Prior to 0.1.0 we didn't set the correct flags in our CI scripts to do this, but now we do.
-This flag was introduced to allow you to restore the old behaviour if you prefer.
-
-
-### create-release
-
-> since 0.2.0
-
-Example: `create-release = false`
-
-**This can only be set globally**
-
-Whether we should create the Github Release for you in your Release CI.
-
-If true (default), cargo-dist will create a new Github Release and generate
-a title/body for it based on your changelog.
-
-If false, cargo-dist will assume a draft Github Release for the current git tag
-already exists with the title/body you want, and just upload artifacts to it.
-At the end of a successful publish it will undraft the Github Release.
-
-
-### publish-prereleases
-
-> since 0.2.0
-
-Example: `publish-prereleases = true`
-
-If you set `publish-prereleases = true`, cargo-dist will publish prerelease versions to package managers such as Homebrew. By default, cargo-dist will only publish stable versions.
-
-
 ### pr-run-mode
 
 > since 0.3.0
@@ -358,112 +410,91 @@ This setting determines to what extent we run your Release CI on pull-requests:
 * "upload": build and upload an artifacts.zip to the PR (expensive)
 
 
-### install-path
-
-> since 0.1.0
-
-Example: `install-path = "~/.my-app/"`
-
-The strategy that script installers ([shell][shell-installer], [powershell][powershell-installer]) should use for selecting a path to install things at, with 3 possible syntaxes:
-
-* `CARGO_HOME`: (default) installs as if `cargo install` did it (tries `$CARGO_HOME/bin/`, but if `$CARGO_HOME` isn't set uses `$HOME/.cargo/bin/`). Note that we do not (yet) properly update some of the extra metadata files Cargo maintains, so Cargo may be confused if you ask it to manage the binary.
-
-* `~/some/subdir/`: installs to the given subdir of the user's `$HOME`
-
-* `$SOME_VAR/some/subdir`: installs to the given subdir of the dir defined by `$SOME_VAR`
-
-> NOTE: `$HOME/some/subdir` is technically valid syntax but it won't behave the way you want on Windows, because `$HOME` isn't a proper environment variable. Let us handle those details for you and just use `~/subdir/`.
-
-All of these error out if none of the required env-vars are set to a non-empty value.
-
-We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. `~/My cargo-dist Documents/bin/` works), but we won't be surprised if things misbehave on Interesting Inputs.
-
-Future Improvements:
-
-* In the future [we may expand this setting to allow you to pass an array of options that are tried in sequence until one succeeds](https://github.com/axodotdev/cargo-dist/issues/286).
-* In the future [we may support XDG dirs](https://github.com/axodotdev/cargo-dist/issues/287)
-* In the future [we may support %windows dirs%](https://github.com/axodotdev/cargo-dist/issues/288)
-
-(Please file an issue if you have other requirements!)
-
-
-### features
+### publish-prereleases
 
 > since 0.2.0
 
-Example: `features = ["serde-support", "fancy-output"]`
+Example: `publish-prereleases = true`
 
-Specifies feature-flags that should be passed to a package when building it. This lets you enable features that should be on "in production" but for whatever reason shouldn't be on by default.
-
-For instance for packages that are a library and a CLI binary, some developers prefer to make the library the default and the CLI opt-in. In such a case you would want to add `features = ["cli"]` to your `[package.metadata.dist]`.
-
-If you use this you *probably* want to set it on `[package.metadata.dist]` and
-not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
+If you set `publish-prereleases = true`, cargo-dist will publish prerelease versions to package managers such as Homebrew. By default, cargo-dist will only publish stable versions.
 
 
-### default-features
+### rust-toolchain-version
+
+> since 0.0.3 (deprecated in 0.1.0)
+
+Example: `rust-toolchain-version = "1.67.1"`
+
+> Deprecation reason: [rust-toolchain.toml](https://rust-lang.github.io/rustup/overrides.html#the-toolchain-file) is a more standard/universal mechanism for pinning toolchain versions for reproducibility. Teams without dedicated release engineers will likely benefit from unpinning their toolchain and letting the underlying CI vendor silently update them to "some recent stable toolchain", as they will get updates/improvements and are unlikely to have regressions.
+
+**This can only be set globally**
+
+This is added automatically by `cargo dist init`, recorded for the sake of reproducibility and documentation. It represents the "ideal" Rust toolchain to build your project with. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
+
+The syntax must be a valid rustup toolchain like "1.60.0" or "stable" (should not specify the platform, we want to install this toolchain on all platforms).
+
+If you delete the key, generate won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal). Before being deprecated the default was to `rustup update stable`, but this is no longer the case.
+
+
+### tap
 
 > since 0.2.0
 
-Example: `default-features = false`
+Example: `tap = "axodotdev/homebrew-formulae"`
 
-Specifies that default features for a package should be enabled when building it (when set to false, this tells us to pass `--no-default-features` to Cargo).
+This is the name of a GitHub repository which cargo-dist should publish the Homebrew installer to. It must already exist, and the token which creates releases must have write access.
 
-Defaults true.
-
-If you use this you *probably* want to set it on `[package.metadata.dist]` and not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
+See the [installers documentation][homebrew-installer] for more information on Homebrew support.
 
 
-### all-features
+### targets
 
-> since 0.2.0
+> since 0.0.3
 
-Example: `all-features = true`
+Example: `targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc"]`
 
-Specifies that all features for a package should be enabled when building it (when set to true this tells us to pass `--all-features` to Cargo).
+This is a list of [target platforms][platforms] you want your application(s) to be built for. In principle this can be overridden on a per-package basis but that is not well tested.
 
-Defaults false.
+In v0.0.5 the only properly supported choices are:
 
-If you use this you *probably* want to set it on `[package.metadata.dist]` and
-not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
+* x64 macOS: "x86_64-apple-darwin"
+* x64 Windows: "x86_64-pc-windows-msvc"
+* x64 Linux: "x86_64-unknown-linux-gnu"
+* arm64 macOS (Apple silicon): "aarch64-apple-darwin" (support added in v0.0.4)
+
+Future versions should hopefully introduce proper support for important targets like "musl linux".
+
+By default all runs of `cargo-dist` will be trying to handle all platforms specified here at once. If you specify `--target=...` on the CLI this will focus the run to only those platforms. As discussed in [concepts][], this cannot be used to specify platforms that are not listed in `metadata.dist`, to ensure different runs agree on the maximum set of platforms.
 
 
-### dependencies
+### unix-archive
 
-> since 0.4.0
+> since 0.0.5
 
-Allows specifying dependencies to be installed from a system package manager before the build begins. This is useful if your tool needs certain build tools (say, cmake) or links against C libraries provided by the package manager. This is specified in a Cargo-like format which should be familiar. Dependencies can be specified in two forms:
+Example: `unix-archive = ".tar.gz"`
 
-* A simple form, in which only a version is specified. If any version will do, use `'*'`.
-* A complex form, in several extra options can be specified.
+Allows you to specify the file format to use for [archives][] that target not-windows. The default is
+".tar.xz". See "windows-archive" below for a complete list of supported values.
 
-Supported options are:
 
-* `version` - A specific version of the package to install. This must be specified in the format that the package manager itself uses. Not used on Homebrew, since Homebrew does not support any method to specify installing specific versions of software.
-* `stage` - When exactly cargo-dist should make use of this package. Two values are supported: `build`, which specifies that the package should be installed before the build occurs; and `run`, which specifies that the package should be installed alongside your software at the time end users run it. The default is `build`. If `run` is specified for Homebrew dependencies, and you've enabled the Homebrew installer, the Homebrew installer will specify those packages as dependencies.
-* `targets` - A set of one or more targets to install the package on, in Rust target-triple format. If not specified, the package is installed on all targets. This is meant as an override to allow a package to be conditionally installed on only certain platforms; for example, a platform may need a build dependency only on Apple Silicon macOS, or have different build dependencies between x86_64 and ARM Windows.
 
-Supported package managers:
+### windows-archive
 
-* Apt (Linux)
-* Chocolatey (Windows)
-* Homebrew (macOS)
+> since 0.0.5
 
-Example:
+Example: `windows-archive = ".tar.gz"`
 
-```toml
-[workspace.metadata.dist.dependencies.homebrew]
-cmake = '*'
-libcue = { stage = ["build", "run"] }
+Allows you to specify the file format to use for [archives][] that target windows. The default is
+".zip". Supported values:
 
-[workspace.metadata.dist.dependencies.apt]
-cmake = '*'
-libcue-dev = { version = "2.2.1-2" }
+* ".zip"
+* ".tar.gz"
+* ".tar.xz"
+* ".tar.zstd"
 
-[workspace.metadata.dist.dependencies.chocolatey]
-lftp = '*'
-cmake = { version = '3.27.6', targets = ["aarch64-pc-windows-msvc"] }
-```
+See also unix-archive below.
+
+
 
 ## Subsetting CI Flags
 
@@ -479,6 +510,7 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 
 
 [issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
+[issue-msvc-crt-static]: https://github.com/axodotdev/cargo-dist/issues/496
 
 [concepts]: ../reference/concepts.md
 [installers]: ../installers/index.md
@@ -499,3 +531,4 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [rustup]: https://rust-lang.github.io/rustup/
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
+[crt-static]: https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md#future-work
