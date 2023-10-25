@@ -321,11 +321,26 @@ For example, if you build for x64 macos and arm64 macos, by default we will gene
 The default is `false`. Before 0.1.0 it was always `true` and couldn't be changed, making releases annoyingly slow (and technically less fault-isolated). This config was added to allow you to restore the old behaviour, if you really want.
 
 
+### msvc-crt-static
+
+> since 0.4.0
+
+Example: `msvc-crt-static = false`
+
+Specifies how The C Runtime (CRT) should be linked when building for Windows. Rust defaults to this being `= false` (dynamically link the CRT), but cargo-dist actually defaults to making this `= true` (statically link the CRT). [The Rust default is mostly a historical accident, and it's widely regarded to be an error that should one day be changed][crt-static]. Specifically it's a mistake for the typical Rust application which statically links everything else, because Windows doesn't actually guarantee that the desired things are installed on all machines by default, and statically linking the CRT is a supported solution to this issue.
+
+However when you *do* want a Rust application that dynamically links more things, it then becomes correct to dynamically link the CRT so that your app and the DLLs it uses can agree on things like malloc. However Rust's default is still insufficient for reliably shipping such a binary, because you really should also bundle a "Visual C(++) Redistributable" with your app that installs your required version of the CRT. The only case where it's *probably* fine to not do this is when shipping tools for programmers who probably already have all of that stuff installed (i.e. anyone who installs the Rust toolchain will have that stuff installed).
+
+This config exists as a blunt way to return to the default Rust behaviour of dynamically linking the CRT if you really want it, but more work is needed to handle Redistributables for that usecase.
+
+[See this issue for details and discussion][issue-msvc-crt-static].
+
+
 ### npm-scope
 
 > since 0.0.6
 
-Example `npm-scope = "@axodotdev"`
+Example: `npm-scope = "@axodotdev"`
 
 Specifies that [npm installers][] should be published under the given [scope][]. The leading `@` is mandatory. If you newly enable the npm installer in `cargo dist init`'s interactive UI, then it will give you an opportunity to add the scope.
 
@@ -495,6 +510,7 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 
 
 [issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
+[issue-msvc-crt-static]: https://github.com/axodotdev/cargo-dist/issues/496
 
 [concepts]: ../reference/concepts.md
 [installers]: ../installers/index.md
@@ -515,3 +531,4 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [rustup]: https://rust-lang.github.io/rustup/
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
+[crt-static]: https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md#future-work
