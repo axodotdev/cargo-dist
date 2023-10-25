@@ -553,8 +553,10 @@ fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result
         }
         CargoTargetFeatureList::List(features) => {
             if !features.is_empty() {
-                command.arg("--features");
+                // The way we pass these, Cargo wants us to use --features
+                // once for each arg, idk why exactly (might be a windows quirk).
                 for feature in features {
+                    command.arg("--features");
                     command.arg(feature);
                 }
             }
