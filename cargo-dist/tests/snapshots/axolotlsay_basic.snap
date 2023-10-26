@@ -22,8 +22,8 @@ fi
 set -u
 
 APP_NAME="axolotlsay"
-APP_VERSION="0.1.0"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0}"
+APP_VERSION="0.2.1"
+ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
@@ -39,10 +39,10 @@ usage() {
     cat <<EOF
 axolotlsay-installer.sh
 
-The installer for axolotlsay 0.1.0
+The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
+https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
 then unpacks the binaries and installs them to \$CARGO_HOME/bin (\$HOME/.cargo/bin)
 
 It will then add that dir to PATH by adding the appropriate line to \$HOME/.profile
@@ -722,11 +722,11 @@ download_binary_and_run_installer "$@" || exit 1
 class Axolotlsay < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
   if Hardware::CPU.type == :arm
-    url "https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz"
+    url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
   else
-    url "https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz"
+    url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
   end
-  version "0.1.0"
+  version "0.2.1"
   license "MIT OR Apache-2.0"
 
   def install
@@ -751,12 +751,12 @@ end
 <#
 .SYNOPSIS
 
-The installer for axolotlsay 0.1.0
+The installer for axolotlsay 0.2.1
 
 .DESCRIPTION
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0
+https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
 then unpacks the binaries and installs them to $env:CARGO_HOME\bin ($HOME\.cargo\bin)
 
 It will then add that dir to PATH by editing your Environment.Path registry key
@@ -774,7 +774,7 @@ Print help
 
 param (
     [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
-    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0',
+    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1',
     [Parameter(HelpMessage = "Don't add the install directory to PATH")]
     [switch]$NoModifyPath,
     [Parameter(HelpMessage = "Print Help")]
@@ -782,7 +782,7 @@ param (
 )
 
 $app_name = 'axolotlsay'
-$app_version = '0.1.0'
+$app_version = '0.2.1'
 
 function Install-Binary($install_args) {
   if ($Help) {
@@ -1030,6 +1030,26 @@ Install-Binary "$Args"
 /node_modules
 
 ================ npm-package.tar.gz/package/CHANGELOG.md ================
+# Version 0.2.1
+
+```text
+         +--------------------------------------+
+         | now with linux static musl binary!!! |
+         +--------------------------------------+
+        /
+≽(◕ ᴗ ◕)≼
+```
+
+# Version 0.2.0
+
+```text
+         +-----------------------------------------+
+         | now with homebrew and msi installers!!! |
+         +-----------------------------------------+
+        /
+≽(◕ ᴗ ◕)≼
+```
+
 # Version 0.1.0
 
 ```text
@@ -1039,6 +1059,7 @@ Install-Binary "$Args"
         /
 ≽(◕ ᴗ ◕)≼
 ```
+
 ================ npm-package.tar.gz/package/LICENSE-APACHE ================
                               Apache License
                         Version 2.0, January 2004
@@ -1309,7 +1330,7 @@ const error = (msg) => {
 
 const { version } = require("./package.json");
 const name = "axolotlsay";
-const artifact_download_url = "https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0";
+const artifact_download_url = "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1";
 
 const builder_glibc_major_version = 2;
 const builder_glibc_minor_version = 35;
@@ -1443,13 +1464,13 @@ install(false);
 ================ npm-package.tar.gz/package/npm-shrinkwrap.json ================
 {
   "name": "axolotlsay",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "axolotlsay",
-      "version": "0.1.0",
+      "version": "0.2.1",
       "license": "MIT OR Apache-2.0",
       "hasInstallScript": true,
       "dependencies": {
@@ -1799,11 +1820,11 @@ install(false);
 ================ npm-package.tar.gz/package/package.json ================
 {
   "name": "axolotlsay",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "repository": "https://github.com/axodotdev/axolotlsay",
   "license": "MIT OR Apache-2.0",
-  "author": "axo.dev",
+  "author": "axodotdev <hello@axo.dev>",
   "bin": {
     "axolotlsay": "run.js"
   },
@@ -1840,18 +1861,18 @@ maybeInstall(true).then(run);
 ================ dist-manifest.json ================
 {
   "dist_version": "CENSORED",
-  "announcement_tag": "v0.1.0",
+  "announcement_tag": "v0.2.1",
   "announcement_is_prerelease": false,
-  "announcement_title": "Version 0.1.0",
-  "announcement_changelog": "```text\n         +------------------------+\n         | the initial release!!! |\n         +------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +------------------------+\n         | the initial release!!! |\n         +------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.1.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.ps1 | iex\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/homebrew-packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install axolotlsay@0.1.0\n```\n\n## Download axolotlsay 0.1.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz) | macOS Apple Silicon | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz) | macOS Intel | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | Linux x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.msi) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n\n",
+  "announcement_title": "Version 0.2.1",
+  "announcement_changelog": "```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.1\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/homebrew-packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install axolotlsay@0.2.1\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz) | macOS Apple Silicon | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz) | macOS Intel | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | Linux x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.msi) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n\n",
   "system_info": {
     "cargo_version_line": "CENSORED"
   },
   "releases": [
     {
       "app_name": "axolotlsay",
-      "app_version": "0.1.0",
+      "app_version": "0.2.1",
       "artifacts": [
         "axolotlsay-installer.sh",
         "axolotlsay-installer.ps1",
@@ -1919,7 +1940,7 @@ maybeInstall(true).then(run);
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "irm https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.ps1 | iex",
+      "install_hint": "irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex",
       "description": "Install prebuilt binaries via powershell script"
     },
     "axolotlsay-installer.sh": {
@@ -1930,7 +1951,7 @@ maybeInstall(true).then(run);
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu"
       ],
-      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.1.0/axolotlsay-installer.sh | sh",
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
     "axolotlsay-npm-package.tar.gz": {
@@ -1994,7 +2015,7 @@ maybeInstall(true).then(run);
           "kind": "unknown"
         }
       ],
-      "install_hint": "npm install axolotlsay@0.1.0",
+      "install_hint": "npm install axolotlsay@0.2.1",
       "description": "Install prebuilt binaries into your npm project"
     },
     "axolotlsay-x86_64-apple-darwin.tar.gz": {
@@ -2506,7 +2527,7 @@ jobs:
         Id='*'
         Name='axolotlsay'
         UpgradeCode='B36177BE-EA4D-44FB-B05C-EDDABDAA95CA'
-        Manufacturer='axo.dev'
+        Manufacturer='axodotdev'
         Language='1033'
         Codepage='1252'
         Version='$(var.Version)'>
@@ -2514,7 +2535,7 @@ jobs:
         <Package Id='*'
             Keywords='Installer'
             Description='💬 a CLI for learning to distribute CLIs in rust'
-            Manufacturer='axo.dev'
+            Manufacturer='axodotdev'
             InstallerVersion='450'
             Languages='1033'
             Compressed='yes'
