@@ -1173,10 +1173,15 @@ impl Library {
                 let output = String::from_utf8(output.stdout)?;
 
                 let package = output.split(':').nth(0).unwrap();
+                let source = if package.is_empty() {
+                    None
+                } else {
+                    Some(package.to_owned())
+                };
 
                 Ok(Self {
                     path: library,
-                    source: Some(package.to_owned()),
+                    source,
                 })
             }
             // Couldn't find a package for this file
