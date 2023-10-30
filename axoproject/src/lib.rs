@@ -13,6 +13,9 @@ use camino::{Utf8Path, Utf8PathBuf};
 use errors::{AxoprojectError, Result};
 use tracing::info;
 
+#[cfg(feature = "cargo-projects")]
+pub use guppy::PackageId;
+
 pub mod changelog;
 pub mod errors;
 #[cfg(feature = "npm-projects")]
@@ -281,7 +284,7 @@ pub struct PackageInfo {
     pub cargo_metadata_table: Option<serde_json::Value>,
     /// A unique id used by Cargo to refer to the package
     #[cfg(feature = "cargo-projects")]
-    pub cargo_package_id: Option<guppy::PackageId>,
+    pub cargo_package_id: Option<PackageId>,
 }
 
 impl PackageInfo {
@@ -536,7 +539,7 @@ pub fn find_file(
             .unwrap_or(true);
 
         if improperly_nested {
-            return Err(AxoassetError::SearchFailed {
+            Err(AxoassetError::SearchFailed {
                 start_dir: start_dir.to_owned(),
                 desired_filename: name.to_owned(),
             })?;
