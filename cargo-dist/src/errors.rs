@@ -268,6 +268,10 @@ pub enum DistError {
         /// The line of text that couldn't be parsed
         line: String,
     },
+
+    /// random dialoguer error
+    #[error(transparent)]
+    DialoguerError(#[from] dialoguer::Error),
 }
 
 impl From<minijinja::Error> for DistError {
