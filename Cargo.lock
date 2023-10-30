@@ -129,7 +129,7 @@ dependencies = [
  "tar",
  "thiserror",
  "toml",
- "toml_edit",
+ "toml_edit 0.19.15",
  "url",
  "walkdir",
  "xz2",
@@ -172,7 +172,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "toml_edit",
+ "toml_edit 0.19.15",
  "tracing",
  "url",
 ]
@@ -322,7 +322,7 @@ dependencies = [
  "similar",
  "tar",
  "thiserror",
- "toml_edit",
+ "toml_edit 0.20.7",
  "tracing",
  "uuid",
 ]
@@ -2340,6 +2340,17 @@ name = "toml_edit"
 version = "0.19.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
+dependencies = [
+ "indexmap 2.0.2",
+ "toml_datetime",
+ "winnow",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.20.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70f427fce4d84c72b5b732388bf4a9f4531b53f74e2887e3ecb2481f68f66d81"
 dependencies = [
  "indexmap 2.0.2",
  "toml_datetime",
