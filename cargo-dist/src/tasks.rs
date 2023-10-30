@@ -52,10 +52,9 @@ use itertools::Itertools;
 use std::process::Command;
 
 use axoproject::platforms::triple_to_display_name;
-use axoproject::{PackageIdx, WorkspaceInfo};
+use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
 use cruet::to_class_case;
-use guppy::PackageId;
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use tracing::{info, warn};

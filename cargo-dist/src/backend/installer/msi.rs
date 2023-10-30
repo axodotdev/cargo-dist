@@ -1,6 +1,6 @@
 //! msi installer
 
-use axoasset::LocalAsset;
+use axoasset::{toml_edit, LocalAsset};
 use camino::Utf8PathBuf;
 use tracing::info;
 
