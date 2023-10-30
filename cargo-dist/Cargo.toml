@@ -46,7 +46,7 @@ guppy = "0.15.0"
 camino = "1.1.1"
 semver = "1.0.14"
 toml_edit = "0.19.0"
-newline-converter = "0.2.2"
+newline-converter = "0.3.0"
 dialoguer = "0.10.4"
 sha2 = "0.10.6"
 minijinja = { version = "1.0.5", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
