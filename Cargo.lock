@@ -163,7 +163,7 @@ dependencies = [
  "camino",
  "clap",
  "console",
- "guppy",
+ "guppy 0.15.2",
  "itertools 0.10.5",
  "miette",
  "parse-changelog",
@@ -307,7 +307,7 @@ dependencies = [
  "dialoguer",
  "flate2",
  "goblin",
- "guppy",
+ "guppy 0.17.1",
  "include_dir",
  "insta",
  "itertools 0.11.0",
@@ -882,7 +882,33 @@ dependencies = [
  "serde_json",
  "smallvec",
  "static_assertions",
- "target-spec",
+ "target-spec 1.4.0",
+]
+
+[[package]]
+name = "guppy"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0831ad7ff3b6af88fdc493844f02f7ca0ccfe0852cdf19f8c80a0f6223d41fa3"
+dependencies = [
+ "camino",
+ "cargo_metadata 0.17.0",
+ "cfg-if",
+ "debug-ignore",
+ "fixedbitset",
+ "guppy-workspace-hack",
+ "indexmap 1.9.3",
+ "itertools 0.11.0",
+ "nested",
+ "once_cell",
+ "pathdiff",
+ "petgraph",
+ "semver",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "static_assertions",
+ "target-spec 3.0.1",
 ]
 
 [[package]]
@@ -2161,6 +2187,18 @@ dependencies = [
  "cfg-expr",
  "guppy-workspace-hack",
  "target-lexicon",
+]
+
+[[package]]
+name = "target-spec"
+version = "3.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48b81540ee78bd9de9f7dca2378f264cf1f4193da6e2d09b54c0d595131a48f1"
+dependencies = [
+ "cfg-expr",
+ "guppy-workspace-hack",
+ "target-lexicon",
+ "unicode-ident",
 ]
 
 [[package]]
