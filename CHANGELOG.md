@@ -2,6 +2,13 @@
 
 Nothing Yet!
 
+# Version 0.4.1 (2023-10-30)
+
+Just a little release to get a couple small fixes in people's hands!
+
+* @mistydemeo [Linkage report: Fixed an issue where Linux libraries not associated with an apt package would be followed by ()](https://github.com/axodotdev/cargo-dist/pull/525)
+* @gankra [Includes: check for existence of included files/dirs as late as possible to allow build.rs to generate them](https://github.com/axodotdev/cargo-dist/pull/528)
+
 
 # Version 0.4.0 (2023-10-25)
 
