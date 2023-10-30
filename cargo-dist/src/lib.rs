@@ -313,14 +313,18 @@ fn run_build_step(
     match target {
         BuildStep::Cargo(target) => build_cargo_target(dist_graph, target),
         BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd),
-        BuildStep::CopyFile(CopyFileStep {
+        BuildStep::CopyFile(CopyStep {
             src_path,
             dest_path,
         }) => copy_file(src_path, dest_path),
-        BuildStep::CopyDir(CopyDirStep {
+        BuildStep::CopyDir(CopyStep {
             src_path,
             dest_path,
         }) => copy_dir(src_path, dest_path),
+        BuildStep::CopyFileOrDir(CopyStep {
+            src_path,
+            dest_path,
+        }) => copy_file_or_dir(src_path, dest_path),
         BuildStep::Zip(ZipDirStep {
             src_path,
             dest_path,
@@ -753,6 +757,14 @@ pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()>
 pub(crate) fn copy_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
     LocalAsset::copy_dir_named(src_path, dest_path)?;
     Ok(())
+}
+
+pub(crate) fn copy_file_or_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+    if src_path.is_dir() {
+        copy_dir(src_path, dest_path)
+    } else {
+        copy_file(src_path, dest_path)
+    }
 }
 
 fn zip_dir(

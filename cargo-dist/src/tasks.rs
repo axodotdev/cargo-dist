@@ -287,9 +287,11 @@ pub enum BuildStep {
     /// Run rustup to get a toolchain
     Rustup(RustupStep),
     /// Copy a file
-    CopyFile(CopyFileStep),
+    CopyFile(CopyStep),
     /// Copy a dir
-    CopyDir(CopyDirStep),
+    CopyDir(CopyStep),
+    /// Copy a file or dir (unknown, don't check which until the last possible second)
+    CopyFileOrDir(CopyStep),
     /// Zip up a directory
     Zip(ZipDirStep),
     /// Generate some kind of installer
@@ -341,16 +343,7 @@ pub struct ZipDirStep {
 
 /// Copy a file
 #[derive(Debug)]
-pub struct CopyFileStep {
-    /// from here
-    pub src_path: Utf8PathBuf,
-    /// to here
-    pub dest_path: Utf8PathBuf,
-}
-
-/// Copy a dir
-#[derive(Debug)]
-pub struct CopyDirStep {
+pub struct CopyStep {
     /// from here
     pub src_path: Utf8PathBuf,
     /// to here
@@ -1918,17 +1911,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     let src_path = src_path.clone();
                     let file_name = src_path.file_name().unwrap();
                     let dest_path = artifact_dir.join(file_name);
-                    if src_path.is_dir() {
-                        build_steps.push(BuildStep::CopyDir(CopyDirStep {
-                            src_path,
-                            dest_path,
-                        }))
-                    } else {
-                        build_steps.push(BuildStep::CopyFile(CopyFileStep {
-                            src_path,
-                            dest_path,
-                        }))
-                    }
+                    // We want to let this path be created by build.rs, so we defer
+                    // checking if it's a file or a dir until the last possible second
+                    build_steps.push(BuildStep::CopyFileOrDir(CopyStep {
+                        src_path,
+                        dest_path,
+                    }))
                 }
 
                 // Zip up the artifact
