@@ -539,7 +539,7 @@ pub fn find_file(
             .unwrap_or(true);
 
         if improperly_nested {
-            return Err(AxoassetError::SearchFailed {
+            Err(AxoassetError::SearchFailed {
                 start_dir: start_dir.to_owned(),
                 desired_filename: name.to_owned(),
             })?;
