@@ -130,7 +130,7 @@ For more information, see the [configuration syntax][config-dependencies].
 #### Limitations
 
 * Currently, the only supported package managers are Apt (Linux), Chocolatey (Windows) and Homebrew (macOS).
-* On macOS, system dependencies can only be enabled for x86_64 builds because GitHub does not provide Apple Silicon runners and Apple Silicon Homebrew can't be installed on x86_64 macOS.
+* GitHub currently only provides x86_64 macOS runners. When you request packages, the Intel versions will always be installed regardless of build targets. While Apple Silicon builds can use CLI tools installed this way, you will not be able to build software for Apple Silicon if it requires C libraries from Homebrew.
 
 
 
