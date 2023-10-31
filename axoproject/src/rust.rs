@@ -136,6 +136,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         cargo_profiles,
 
         warnings,
+        build_command: None,
     })
 }
 

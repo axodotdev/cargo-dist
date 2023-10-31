@@ -22,22 +22,23 @@ name = "axoproject"
 required-features = ["cli"]
 
 [features]
-default = ["cli", "cargo-projects", "npm-projects"]
+default = ["cli", "generic-projects", "cargo-projects", "npm-projects"]
 cli = ["axocli"]
+generic-projects = ["semver"]
 cargo-projects = ["guppy", "semver"]
 npm-projects = ["oro-common", "oro-package-spec", "node-semver"]
 
 [dependencies]
-axoasset = { version = "0.6.0", default-features = false, features = ["json-serde", "toml-edit"] }
+axoasset = { version = "0.6.0", default-features = false, features = ["json-serde", "toml-edit", "toml-serde"] }
 axocli = { version = "0.1.0", optional = true }
-camino = "1.1.4"
+camino = { version = "1.1.4", default-features = true, features = ["serde1"] }
 console = "0.15.5"
 miette = "5.6.0"
 guppy = { version = "0.17.1", optional = true }
 tracing = "0.1.40"
 oro-common = { version = "0.3.34", optional = true }
 serde = "1.0.192"
-semver = { version = "1.0.20", optional = true }
+semver = { version = "1.0.20", optional = true, default-features = true, features = ["serde"] }
 node-semver = { version = "2.1.0", optional = true }
 oro-package-spec = { version = "0.3.34", optional = true }
 thiserror = "1.0.50"

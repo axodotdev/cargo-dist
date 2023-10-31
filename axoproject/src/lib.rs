@@ -20,6 +20,8 @@ pub use guppy::PackageId;
 
 pub mod changelog;
 pub mod errors;
+#[cfg(feature = "generic-projects")]
+pub mod generic;
 #[cfg(feature = "npm-projects")]
 pub mod javascript;
 pub mod platforms;
@@ -34,6 +36,9 @@ use crate::repo::GithubRepoInput;
 
 /// Information about various kinds of workspaces
 pub struct Workspaces {
+    /// Info about the generic workspace
+    #[cfg(feature = "generic-projects")]
+    pub generic: WorkspaceSearch,
     /// Info about the cargo/rust workspace
     #[cfg(feature = "cargo-projects")]
     pub rust: WorkspaceSearch,
@@ -50,6 +55,9 @@ impl Workspaces {
         let mut best_project = None;
         let mut max_depth = 0;
         let mut projects = vec![];
+
+        #[cfg(feature = "generic-projects")]
+        projects.push(self.generic);
 
         // FIXME: should we provide feedback/logging here?
         #[cfg(feature = "cargo-projects")]
@@ -96,6 +104,9 @@ pub enum WorkspaceSearch {
 /// Kind of workspace
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WorkspaceKind {
+    /// generic cargo-dist compatible workspace
+    #[cfg(feature = "generic-projects")]
+    Generic,
     /// cargo/rust workspace
     #[cfg(feature = "cargo-projects")]
     Rust,
@@ -137,6 +148,8 @@ pub struct WorkspaceInfo {
     pub root_auto_includes: AutoIncludes,
     /// Non-fatal issues that were encountered and should probably be reported
     pub warnings: Vec<AxoprojectError>,
+    /// Build command to run for this workspace; not required for cargo
+    pub build_command: Option<Vec<String>>,
     /// Raw cargo `[workspace.metadata]` table
     #[cfg(feature = "cargo-projects")]
     pub cargo_metadata_table: Option<serde_json::Value>,
@@ -312,6 +325,9 @@ pub struct PackageIdx(pub usize);
 /// A Version abstracted over project type
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Version {
+    /// generic version (assumed to be semver)
+    #[cfg(feature = "generic-projects")]
+    Generic(semver::Version),
     /// cargo version
     #[cfg(feature = "cargo-projects")]
     Cargo(semver::Version),
@@ -323,6 +339,8 @@ pub enum Version {
 impl Display for Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            #[cfg(feature = "generic-projects")]
+            Version::Generic(v) => v.fmt(f),
             #[cfg(feature = "cargo-projects")]
             Version::Cargo(v) => v.fmt(f),
             #[cfg(feature = "npm-projects")]
@@ -343,6 +361,19 @@ impl Version {
         }
     }
 
+    /// Returns a semver-based Version
+    #[cfg(any(feature = "generic-projects", feature = "cargo-projects"))]
+    pub fn semver(&self) -> &semver::Version {
+        #[allow(unreachable_patterns)]
+        match self {
+            #[cfg(feature = "generic-projects")]
+            Version::Generic(v) => v,
+            #[cfg(feature = "cargo-projects")]
+            Version::Cargo(v) => v,
+            _ => panic!("Version wasn't in semver format"),
+        }
+    }
+
     /// Assume it's an npm Version
     #[cfg(feature = "npm-projects")]
     pub fn npm(&self) -> &node_semver::Version {
@@ -357,6 +388,8 @@ impl Version {
     /// Returns whether the version is stable (no pre/build component)
     pub fn is_stable(&self) -> bool {
         match self {
+            #[cfg(feature = "generic-projects")]
+            Version::Generic(v) => v.pre.is_empty() && v.build.is_empty(),
             #[cfg(feature = "cargo-projects")]
             Version::Cargo(v) => v.pre.is_empty() && v.build.is_empty(),
             #[cfg(feature = "npm-projects")]
@@ -367,6 +400,10 @@ impl Version {
     /// Gets a copy of the version with only the stable parts (pre/build components stripped)
     pub fn stable_part(&self) -> Self {
         match self {
+            #[cfg(feature = "generic-projects")]
+            Version::Generic(v) => {
+                Version::Generic(semver::Version::new(v.major, v.minor, v.patch))
+            }
             #[cfg(feature = "cargo-projects")]
             Version::Cargo(v) => Version::Cargo(semver::Version::new(v.major, v.minor, v.patch)),
             #[cfg(feature = "npm-projects")]
@@ -411,6 +448,8 @@ pub struct AutoIncludes {
 /// the top level [`WorkspaceKind`][].
 pub fn get_workspaces(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> Workspaces {
     Workspaces {
+        #[cfg(feature = "generic-projects")]
+        generic: generic::get_workspace(start_dir, clamp_to_dir),
         #[cfg(feature = "cargo-projects")]
         rust: rust::get_workspace(start_dir, clamp_to_dir),
         #[cfg(feature = "npm-projects")]
