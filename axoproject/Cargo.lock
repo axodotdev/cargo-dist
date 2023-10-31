@@ -140,7 +140,6 @@ dependencies = [
  "pathdiff",
  "semver",
  "serde",
- "serde_json",
  "thiserror",
  "tracing",
  "url",
