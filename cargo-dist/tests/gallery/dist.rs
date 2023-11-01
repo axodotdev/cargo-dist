@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use axoasset::{LocalAsset, SourceFile};
+use axoasset::{toml_edit, LocalAsset, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
 use miette::miette;
 

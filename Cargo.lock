@@ -114,9 +114,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "axoasset"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0abeed6da58c1314a5d31459a2986b5d4b01f788852968c14845560095a0ea12"
+checksum = "fe76cc16032e54b99a01bb644f3207ffad49823c57d2114c25a751415acff317"
 dependencies = [
  "camino",
  "flate2",
@@ -155,9 +155,9 @@ dependencies = [
 
 [[package]]
 name = "axoproject"
-version = "0.4.7"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fff7bed7640f7b5ca3cbe96c49887f18f731ac2b8de26b7ce433ce21c78888c"
+checksum = "b13503c331b8e2d419c29a0614ec8f9b7c95ace01b045cafd7c465d2fe777e1a"
 dependencies = [
  "axoasset",
  "camino",
@@ -170,9 +170,7 @@ dependencies = [
  "pathdiff",
  "semver",
  "serde",
- "serde_json",
  "thiserror",
- "toml_edit",
  "tracing",
  "url",
 ]
@@ -298,7 +296,7 @@ dependencies = [
  "camino",
  "cargo-dist-schema",
  "cargo-wix",
- "cargo_metadata 0.17.0",
+ "cargo_metadata",
  "clap",
  "clap-cargo",
  "comfy-table",
@@ -307,7 +305,6 @@ dependencies = [
  "dialoguer",
  "flate2",
  "goblin",
- "guppy",
  "include_dir",
  "insta",
  "itertools 0.11.0",
@@ -322,7 +319,6 @@ dependencies = [
  "similar",
  "tar",
  "thiserror",
- "toml_edit",
  "tracing",
  "uuid",
 ]
@@ -355,7 +351,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85eeb8f3f718efdc016df7e55b5d8316f5f0d8c645fe2bab65e36ab5ab2c9a2d"
 dependencies = [
  "camino",
- "cargo_metadata 0.17.0",
+ "cargo_metadata",
  "chrono",
  "clap",
  "encoding_rs_io",
@@ -372,20 +368,6 @@ dependencies = [
  "sxd-xpath",
  "termcolor",
  "uuid",
-]
-
-[[package]]
-name = "cargo_metadata"
-version = "0.15.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eee4243f1f26fc7a42710e7439c149e2b10b05472f88090acce52632f231a73a"
-dependencies = [
- "camino",
- "cargo-platform",
- "semver",
- "serde",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -862,18 +844,18 @@ dependencies = [
 
 [[package]]
 name = "guppy"
-version = "0.15.2"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f822a2716041492e071691606474f5a7e4fa7c2acbfd7da7b29884fb448291c7"
+checksum = "0831ad7ff3b6af88fdc493844f02f7ca0ccfe0852cdf19f8c80a0f6223d41fa3"
 dependencies = [
  "camino",
- "cargo_metadata 0.15.4",
+ "cargo_metadata",
  "cfg-if",
  "debug-ignore",
  "fixedbitset",
  "guppy-workspace-hack",
  "indexmap 1.9.3",
- "itertools 0.10.5",
+ "itertools 0.11.0",
  "nested",
  "once_cell",
  "pathdiff",
@@ -2155,13 +2137,14 @@ checksum = "14c39fd04924ca3a864207c66fc2cd7d22d7c016007f9ce846cbb9326331930a"
 
 [[package]]
 name = "target-spec"
-version = "1.4.0"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0bf4306559bd50cb358e7af5692694d6f6fad95cf2c0bea2571dd419f5298e12"
+checksum = "48b81540ee78bd9de9f7dca2378f264cf1f4193da6e2d09b54c0d595131a48f1"
 dependencies = [
  "cfg-expr",
  "guppy-workspace-hack",
  "target-lexicon",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -2337,9 +2320,9 @@ checksum = "3550f4e9685620ac18a50ed434eb3aec30db8ba93b0287467bca5826ea25baf1"
 
 [[package]]
 name = "toml_edit"
-version = "0.19.15"
+version = "0.20.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
+checksum = "70f427fce4d84c72b5b732388bf4a9f4531b53f74e2887e3ecb2481f68f66d81"
 dependencies = [
  "indexmap 2.0.2",
  "toml_datetime",

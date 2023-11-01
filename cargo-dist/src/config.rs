@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use axoasset::toml_edit;
 use axoproject::WorkspaceSearch;
 use camino::{Utf8Path, Utf8PathBuf};
 use miette::Report;
