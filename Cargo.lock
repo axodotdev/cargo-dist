@@ -119,6 +119,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0abeed6da58c1314a5d31459a2986b5d4b01f788852968c14845560095a0ea12"
 dependencies = [
  "camino",
+ "image",
+ "miette",
+ "mime",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "toml_edit 0.19.15",
+ "url",
+ "walkdir",
+]
+
+[[package]]
+name = "axoasset"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe76cc16032e54b99a01bb644f3207ffad49823c57d2114c25a751415acff317"
+dependencies = [
+ "camino",
  "flate2",
  "image",
  "miette",
@@ -129,7 +147,7 @@ dependencies = [
  "tar",
  "thiserror",
  "toml",
- "toml_edit",
+ "toml_edit 0.20.7",
  "url",
  "walkdir",
  "xz2",
@@ -159,7 +177,7 @@ version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6fff7bed7640f7b5ca3cbe96c49887f18f731ac2b8de26b7ce433ce21c78888c"
 dependencies = [
- "axoasset",
+ "axoasset 0.5.1",
  "camino",
  "clap",
  "console",
@@ -172,7 +190,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "toml_edit",
+ "toml_edit 0.19.15",
  "tracing",
  "url",
 ]
@@ -292,7 +310,7 @@ dependencies = [
 name = "cargo-dist"
 version = "0.4.2"
 dependencies = [
- "axoasset",
+ "axoasset 0.6.0",
  "axocli",
  "axoproject",
  "camino",
@@ -322,7 +340,7 @@ dependencies = [
  "similar",
  "tar",
  "thiserror",
- "toml_edit",
+ "toml_edit 0.19.15",
  "tracing",
  "uuid",
 ]
@@ -2340,6 +2358,17 @@ name = "toml_edit"
 version = "0.19.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
+dependencies = [
+ "indexmap 2.0.2",
+ "toml_datetime",
+ "winnow",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.20.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70f427fce4d84c72b5b732388bf4a9f4531b53f74e2887e3ecb2481f68f66d81"
 dependencies = [
  "indexmap 2.0.2",
  "toml_datetime",

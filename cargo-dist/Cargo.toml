@@ -32,7 +32,7 @@ axocli = { version = "0.1.0", optional = true }
 # Features used by the cli and library
 cargo-dist-schema = { version = "=0.4.2", path = "../cargo-dist-schema" }
 
-axoasset = { version = "0.5.1", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
+axoasset = { version = "0.6.0", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
 axoproject = { version = "0.4.7", default-features = false, features = ["cargo-projects"] }
 
 comfy-table = "7.0.1"
