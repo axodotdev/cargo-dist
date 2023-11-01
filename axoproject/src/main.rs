@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use axoasset::LocalAsset;
+use axoasset::{serde_json, LocalAsset};
 use axoproject::{WorkspaceInfo, WorkspaceKind, WorkspaceSearch, Workspaces};
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::Parser;

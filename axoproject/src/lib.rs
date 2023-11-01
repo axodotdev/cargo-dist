@@ -8,6 +8,8 @@
 
 use std::fmt::Display;
 
+#[cfg(feature = "cargo-projects")]
+use axoasset::serde_json;
 use axoasset::{AxoassetError, LocalAsset};
 use camino::{Utf8Path, Utf8PathBuf};
 use errors::{AxoprojectError, Result};

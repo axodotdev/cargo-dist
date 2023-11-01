@@ -14,6 +14,8 @@ use guppy::{
 };
 use itertools::{concat, Itertools};
 
+pub use axoasset::toml_edit::Document;
+
 /// All the `[profile]` entries we found in the root Cargo.toml
 pub type CargoProfiles = BTreeMap<String, CargoProfile>;
 
@@ -287,7 +289,7 @@ fn workspace_manifest(
 }
 
 /// Load the root workspace toml into toml-edit form
-pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<toml_edit::Document> {
+pub fn load_root_cargo_toml(manifest_path: &Utf8Path) -> Result<Document> {
     let manifest_src = SourceFile::load_local(manifest_path)?;
     let manifest = manifest_src.deserialize_toml_edit()?;
     Ok(manifest)

@@ -39,7 +39,7 @@ pub enum AxoprojectError {
         span: Option<miette::SourceSpan>,
         /// The underlying issue
         #[source]
-        details: toml_edit::TomlError,
+        details: axoasset::toml_edit::TomlError,
     },
 
     /// We found a package.json but it didn't have "name" set
