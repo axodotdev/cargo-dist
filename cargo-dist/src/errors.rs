@@ -248,6 +248,14 @@ pub enum DistError {
     /// random axotag error
     #[error(transparent)]
     AxotagError(#[from] axotag::errors::TagError),
+
+    /// No workspace found from axoproject
+    #[error("No workspace found; either your project doesn't have a Cargo.toml/dist.toml, or we couldn't read it")]
+    ProjectMissing {
+        /// axoproject's error for the unidentified project
+        #[related]
+        sources: Vec<AxoprojectError>,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

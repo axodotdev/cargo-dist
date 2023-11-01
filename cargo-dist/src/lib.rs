@@ -21,6 +21,7 @@ use cargo_dist_schema::DistManifest;
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
+use generic_build::build_generic_target;
 use semver::Version;
 use tracing::info;
 
@@ -33,7 +34,9 @@ pub mod announce;
 pub mod backend;
 pub mod cargo_build;
 pub mod config;
+pub mod env;
 pub mod errors;
+pub mod generic_build;
 mod init;
 pub mod linkage;
 pub mod manifest;
@@ -96,6 +99,7 @@ fn run_build_step(
     manifest: &DistManifest,
 ) -> Result<()> {
     match target {
+        BuildStep::Generic(target) => build_generic_target(dist_graph, target),
         BuildStep::Cargo(target) => build_cargo_target(dist_graph, target),
         BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd),
         BuildStep::CopyFile(CopyStep {

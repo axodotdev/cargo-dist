@@ -2,8 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use axoasset::toml_edit;
-use axoproject::WorkspaceSearch;
+use axoasset::{toml_edit, SourceFile};
+use axoproject::{WorkspaceKind, WorkspaceSearch};
 use camino::{Utf8Path, Utf8PathBuf};
 use miette::Report;
 use semver::Version;
@@ -15,6 +15,13 @@ use crate::{
     errors::{DistError, DistResult},
     TargetTriple, METADATA_DIST,
 };
+
+/// A container to assist deserializing metadata from generic, non-Cargo projects
+#[derive(Debug, Deserialize)]
+pub struct GenericConfig {
+    /// The dist field within dist.toml
+    pub dist: DistMetadata,
+}
 
 /// Contents of METADATA_DIST in Cargo.toml files
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -973,6 +980,23 @@ impl std::fmt::Display for ProductionMode {
     }
 }
 
+pub(crate) fn parse_metadata_table_or_manifest(
+    workspace_type: WorkspaceKind,
+    manifest_path: &Utf8Path,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<DistMetadata> {
+    match workspace_type {
+        // Pre-parsed Rust metadata table
+        WorkspaceKind::Rust => parse_metadata_table(manifest_path, metadata_table),
+        // Generic dist.toml
+        WorkspaceKind::Generic => {
+            let config: GenericConfig =
+                SourceFile::load_local(manifest_path)?.deserialize_toml()?;
+            Ok(config.dist)
+        }
+    }
+}
+
 pub(crate) fn parse_metadata_table(
     manifest_path: &Utf8Path,
     metadata_table: Option<&serde_json::Value>,
@@ -992,29 +1016,41 @@ pub(crate) fn parse_metadata_table(
 pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
-    match axoproject::rust::get_workspace(&start_dir, None) {
-        WorkspaceSearch::Found(mut workspace) => {
-            // This is a goofy as heck workaround for two facts:
-            //   * the convenient Report approach requires us to provide an Error by-val
-            //   * many error types (like std::io::Error) don't impl Clone, so we can't
-            //     clone axoproject Errors.
-            //
-            // So we temporarily take ownership of the warnings and then pull them back
-            // out of the Report with runtime reflection to put them back in :)
-            let mut warnings = std::mem::take(&mut workspace.warnings);
-            for warning in warnings.drain(..) {
-                let report = Report::new(warning);
-                warn!("{:?}", report);
-                workspace.warnings.push(report.downcast().unwrap());
+    let workspaces = axoproject::get_workspaces(&start_dir, None);
+
+    let mut missing = vec![];
+
+    for ws in [workspaces.rust, workspaces.generic] {
+        match ws {
+            WorkspaceSearch::Found(mut workspace) => {
+                // This is a goofy as heck workaround for two facts:
+                //   * the convenient Report approach requires us to provide an Error by-val
+                //   * many error types (like std::io::Error) don't impl Clone, so we can't
+                //     clone axoproject Errors.
+                //
+                // So we temporarily take ownership of the warnings and then pull them back
+                // out of the Report with runtime reflection to put them back in :)
+                let mut warnings = std::mem::take(&mut workspace.warnings);
+                for warning in warnings.drain(..) {
+                    let report = Report::new(warning);
+                    warn!("{:?}", report);
+                    workspace.warnings.push(report.downcast().unwrap());
+                }
+                return Ok(workspace);
             }
-            Ok(workspace)
+            WorkspaceSearch::Broken {
+                manifest_path: _,
+                cause,
+            } => {
+                return Err(Report::new(cause)
+                    .wrap_err("We encountered an issue trying to read your workspace"))
+            }
+            // Ignore the missing case; iterate through to the next project type
+            WorkspaceSearch::Missing(e) => missing.push(e),
         }
-        WorkspaceSearch::Missing(e) => Err(Report::new(e).wrap_err("no cargo workspace found")),
-        WorkspaceSearch::Broken {
-            manifest_path: _,
-            cause,
-        } => Err(Report::new(cause).wrap_err("your cargo workspace has an issue")),
     }
+
+    Err(Report::new(DistError::ProjectMissing { sources: missing }))
 }
 
 /// Load a Cargo.toml into toml-edit form
