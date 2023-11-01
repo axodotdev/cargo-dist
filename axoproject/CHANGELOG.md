@@ -1,3 +1,7 @@
+# Version 0.5.0 (2023-11-01)
+
+* Uses axoasset's reexports of toml_edit and serde_json in place of direct dependencies
+
 # Version 0.4.7 (2023-09-05)
 
 * Now uses parse_changelog::title_no_link to strip links on titles
