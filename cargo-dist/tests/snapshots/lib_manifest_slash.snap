@@ -20,7 +20,14 @@ stdout:
       "pr_run_mode": "plan"
     }
   },
-  "linkage": []
+  "linkage": [],
+  "hosting": {
+    "staging_artifacts_url": null,
+    "live_artifacts_url": "https://github.com/axodotdev/cargo-dist/releases/download/cargo-dist-schema/v1.0.0-FAKEVERSION",
+    "upload_url": null,
+    "publish_url": null,
+    "announce_url": null
+  }
 }
 
 stderr:

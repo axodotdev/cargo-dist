@@ -6,7 +6,7 @@ use std::io::Write;
 
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
-use cargo_dist::*;
+use cargo_dist::{linkage::Linkage, *};
 use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{
@@ -265,7 +265,7 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
     };
-    let mut options = cargo_dist::LinkageArgs {
+    let mut options = cargo_dist::linkage::LinkageArgs {
         print_output: args.print_output,
         print_json: args.print_json,
         from_json: args.from_json.clone(),
@@ -273,7 +273,7 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
     if !args.print_output && !args.print_json {
         options.print_output = true;
     }
-    do_linkage(&config, &options)
+    cargo_dist::linkage::do_linkage(&config, &options)
 }
 
 fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Report> {

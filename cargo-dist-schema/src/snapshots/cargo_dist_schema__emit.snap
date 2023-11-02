@@ -69,6 +69,17 @@ expression: json_schema
         "null"
       ]
     },
+    "hosting": {
+      "description": "Hosting info",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Hosting"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "linkage": {
       "description": "Data about dynamic linkage in the built libraries",
       "type": "array",
@@ -436,6 +447,47 @@ expression: json_schema
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Hosting": {
+      "description": "Information about how artifacts are hosted",
+      "type": "object",
+      "properties": {
+        "announce_url": {
+          "description": "A URL you can PUT, announces the release",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "live_artifacts_url": {
+          "description": "A URL you can GET uploaded artifacts from when it's published",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "publish_url": {
+          "description": "A URL you can PUT, transitions the release from staged to published",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "staging_artifacts_url": {
+          "description": "A URL you can GET uploaded artifacts from while the release is staged",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "upload_url": {
+          "description": "A URL you can PUT (upload) artifacts to",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

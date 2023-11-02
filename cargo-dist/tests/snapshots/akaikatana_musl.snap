@@ -980,7 +980,14 @@ download_binary_and_run_installer "$@" || exit 1
       "pr_run_mode": "plan"
     }
   },
-  "linkage": []
+  "linkage": [],
+  "hosting": {
+    "staging_artifacts_url": null,
+    "live_artifacts_url": "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0",
+    "upload_url": null,
+    "publish_url": null,
+    "announce_url": null
+  }
 }
 
 ================ github-ci.yml ================

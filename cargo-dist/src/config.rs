@@ -18,6 +18,7 @@ use crate::{
 
 /// Contents of METADATA_DIST in Cargo.toml files
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "kebab-case")]
 pub struct DistMetadata {
     /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
     ///
@@ -27,14 +28,12 @@ pub struct DistMetadata {
     /// it shouldn't be a problem and newer versions should just be Better... probably you
     /// Really want to have the exact version when running generate to avoid generating
     /// things other cargo-dist versions can't handle!
-    #[serde(rename = "cargo-dist-version")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo_dist_version: Option<Version>,
 
     /// (deprecated) The intended version of Rust/Cargo to build with (rustup toolchain syntax)
     ///
     /// When generating full tasks graphs (such as CI scripts) we will pick this version.
-    #[serde(rename = "rust-toolchain-version")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rust_toolchain_version: Option<String>,
 
@@ -62,12 +61,10 @@ pub struct DistMetadata {
     /// "upload" will build and upload release artifacts, while "plan" will
     /// only plan out the release without running builds and "skip" will disable
     /// pull request runs entirely.
-    #[serde(rename = "pr-run-mode")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
 
     /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
-    #[serde(rename = "allow-dirty")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_dirty: Option<Vec<GenerateMode>>,
 
@@ -124,31 +121,26 @@ pub struct DistMetadata {
     ///
     /// Defaults to true.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "auto-includes")]
     pub auto_includes: Option<bool>,
 
     /// Whether msvc targets should statically link the crt
     ///
     /// Defaults to true.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "msvc-crt-static")]
     pub msvc_crt_static: Option<bool>,
 
     /// The archive format to use for windows builds (defaults .zip)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "windows-archive")]
     pub windows_archive: Option<ZipStyle>,
 
     /// The archive format to use for non-windows builds (defaults .tar.xz)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "unix-archive")]
     pub unix_archive: Option<ZipStyle>,
 
     /// A scope to prefix npm packages with (@ should be included).
     ///
     /// This is required if you're using an npm installer.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "npm-scope")]
     pub npm_scope: Option<String>,
 
     /// A scope to prefix npm packages with (@ should be included).
@@ -180,7 +172,6 @@ pub struct DistMetadata {
     ///
     /// [workspace-hack]: https://docs.rs/cargo-hakari/latest/cargo_hakari/about/index.html
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "precise-builds")]
     pub precise_builds: Option<bool>,
 
     /// Whether we should try to merge otherwise-parallelizable tasks onto the same machine,
@@ -193,7 +184,6 @@ pub struct DistMetadata {
     /// build both of those platforms together on the same machine, making it take twice as long
     /// as any other build and making it impossible for only one of them to succeed.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "merge-tasks")]
     pub merge_tasks: Option<bool>,
 
     /// Whether failing tasks should make us give up on all other tasks
@@ -216,7 +206,6 @@ pub struct DistMetadata {
     /// Prior to 0.1.0 we didn't set the correct flags in our CI scripts to do this, but now we do.
     /// This flag was introduced to allow you to restore the old behaviour if you prefer.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "fail-fast")]
     pub fail_fast: Option<bool>,
 
     /// The strategy to use for selecting a path to install things at:
@@ -229,39 +218,33 @@ pub struct DistMetadata {
     /// All of these error out if the required env-vars aren't set. In the future this may
     /// allow for the input to be an array of options to try in sequence.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "install-path")]
     pub install_path: Option<InstallPathStrategy>,
     /// A list of features to enable when building a package with cargo-dist
     ///
     /// (defaults to none)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "features")]
     pub features: Option<Vec<String>>,
     /// Whether to enable when building a package with cargo-dist
     ///
     /// (defaults to true)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "default-features")]
     pub default_features: Option<bool>,
     /// Whether to enable all features building a package with cargo-dist
     ///
     /// (defaults to false)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "all-features")]
     pub all_features: Option<bool>,
 
     /// Publish jobs to run in CI
     ///
     /// (defaults to none)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "publish-jobs")]
     pub publish_jobs: Option<Vec<PublishStyle>>,
 
     /// Whether to publish prereleases to package managers
     ///
     /// (defaults to false)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "publish-prereleases")]
     pub publish_prereleases: Option<bool>,
 
     /// Whether we should create the Github Release for you when you push a tag.
@@ -273,12 +256,10 @@ pub struct DistMetadata {
     /// with the title/body you want. At the end of a successful publish it will
     /// undraft the Github Release.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "create-release")]
     pub create_release: Option<bool>,
 
     /// \[unstable\] Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ssldotcom-windows-sign")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 }
 
@@ -498,9 +479,9 @@ pub enum ArtifactMode {
 
 /// The style of CI we should generate
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "kebab-case")]
 pub enum CiStyle {
     /// Generate Github CI
-    #[serde(rename = "github")]
     Github,
 }
 
@@ -515,21 +496,17 @@ impl std::fmt::Display for CiStyle {
 
 /// The style of Installer we should generate
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
 pub enum InstallerStyle {
-    /// Generate a shell script that fetches from [`crate::tasks::DistGraph::artifact_download_url`][]
-    #[serde(rename = "shell")]
+    /// Generate a shell script that fetches from [`cargo_dist_schema::DistManifest::artifact_download_url`][]
     Shell,
-    /// Generate a powershell script that fetches from [`crate::tasks::DistGraph::artifact_download_url`][]
-    #[serde(rename = "powershell")]
+    /// Generate a powershell script that fetches from [`cargo_dist_schema::DistManifest::artifact_download_url`][]
     Powershell,
-    /// Generate an npm project that fetches from [`crate::tasks::DistGraph::artifact_download_url`][]
-    #[serde(rename = "npm")]
+    /// Generate an npm project that fetches from [`cargo_dist_schema::DistManifest::artifact_download_url`][]
     Npm,
-    /// Generate a Homebrew formula that fetches from [`crate::tasks::DistGraph::artifact_download_url`][]
-    #[serde(rename = "homebrew")]
+    /// Generate a Homebrew formula that fetches from [`cargo_dist_schema::DistManifest::artifact_download_url`][]
     Homebrew,
     /// Generate an msi installer that embeds the binary
-    #[serde(rename = "msi")]
     Msi,
 }
 
@@ -548,9 +525,9 @@ impl std::fmt::Display for InstallerStyle {
 
 /// The publish jobs we should run
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
 pub enum PublishStyle {
     /// Publish a Homebrew formula to a tap repository
-    #[serde(rename = "homebrew")]
     Homebrew,
     /// User-supplied value
     User(String),
@@ -796,15 +773,13 @@ impl InstallPathStrategy {
 
 /// A checksumming algorithm
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum ChecksumStyle {
     /// sha256sum (using the sha2 crate)
-    #[serde(rename = "sha256")]
     Sha256,
     /// sha512sum (using the sha2 crate)
-    #[serde(rename = "sha512")]
     Sha512,
     /// Do not checksum
-    #[serde(rename = "false")]
     False,
 }
 
@@ -920,12 +895,11 @@ pub enum SystemDependencyKind {
 
 /// Provides detail on when a specific dependency is required
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum DependencyKind {
     /// A dependency that must be present when the software is being built
-    #[serde(rename = "build")]
     Build,
     /// A dependency that must be present when the software is being used
-    #[serde(rename = "run")]
     Run,
 }
 
@@ -982,12 +956,11 @@ impl DirtyMode {
 
 /// For features that can be generated in "test" or "production" mode
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum ProductionMode {
     /// test mode
-    #[serde(rename = "test")]
     Test,
     /// production mode
-    #[serde(rename = "prod")]
     Prod,
 }
 

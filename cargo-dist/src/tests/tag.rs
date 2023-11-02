@@ -7,7 +7,8 @@
 use super::mock::*;
 use semver::Version;
 
-use crate::{config::ArtifactMode, select_tag, DistGraphBuilder};
+use crate::announce::select_tag;
+use crate::{config::ArtifactMode, DistGraphBuilder};
 
 #[test]
 fn parse_one() {
