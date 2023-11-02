@@ -28,6 +28,11 @@ pub enum DistError {
     #[diagnostic(transparent)]
     Asset(#[from] axoasset::AxoassetError),
 
+    /// random gazenot error
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    Gazenot(#[from] gazenot::error::GazenotError),
+
     /// random string error
     #[error(transparent)]
     FromUtf8Error(#[from] std::string::FromUtf8Error),

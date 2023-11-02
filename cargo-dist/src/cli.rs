@@ -170,6 +170,10 @@ pub enum Commands {
     ///
     #[clap(disable_version_flag = true)]
     Plan(PlanArgs),
+
+    /// Host artifacts
+    #[clap(disable_version_flag = true)]
+    Host(HostArgs),
 }
 
 #[derive(Args, Clone, Debug)]
@@ -371,3 +375,35 @@ pub enum OutputFormat {
 
 #[derive(Args, Clone, Debug)]
 pub struct ManifestSchemaArgs {}
+
+#[derive(Args, Clone, Debug)]
+pub struct HostArgs {
+    /// The hosting steps to perform
+    #[clap(long)]
+    pub steps: Vec<HostStyle>,
+}
+
+impl HostStyle {
+    /// Convert the application version of this enum to the library version
+    pub fn to_lib(self) -> cargo_dist::config::HostStyle {
+        match self {
+            HostStyle::Create => cargo_dist::config::HostStyle::Create,
+            HostStyle::Upload => cargo_dist::config::HostStyle::Upload,
+            HostStyle::Release => cargo_dist::config::HostStyle::Release,
+            HostStyle::Announce => cargo_dist::config::HostStyle::Announce,
+        }
+    }
+}
+
+/// What parts of hosting to perform
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum HostStyle {
+    /// Create a location to host artifacts
+    Create,
+    /// Upload artifacts
+    Upload,
+    /// Release artifacts
+    Release,
+    /// Announce artifacts
+    Announce,
+}

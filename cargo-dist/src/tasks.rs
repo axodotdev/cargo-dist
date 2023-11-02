@@ -52,7 +52,7 @@ use std::process::Command;
 
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{DistManifest, Hosting};
+use cargo_dist_schema::DistManifest;
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use tracing::{info, warn};
@@ -73,7 +73,7 @@ use crate::{
     },
     config::{
         self, ArtifactMode, ChecksumStyle, CiStyle, CompressionImpl, Config, DistMetadata,
-        InstallPathStrategy, InstallerStyle, PublishStyle, ZipStyle,
+        HostingStyle, InstallPathStrategy, InstallerStyle, PublishStyle, ZipStyle,
     },
     errors::{DistError, DistResult, Result},
 };
@@ -194,6 +194,23 @@ pub struct DistGraph {
     pub tap: Option<String>,
     /// Whether msvc targets should statically link the crt
     pub msvc_crt_static: bool,
+    ///
+    pub hosting: Option<HostingInfo>,
+}
+
+/// Info about artifacts should be hosted
+#[derive(Debug, Clone)]
+pub struct HostingInfo {
+    /// Hosting backends
+    pub hosts: HostingStyle,
+    /// Repo url
+    pub repo_url: String,
+    /// Source hosting provider (e.g. "github")
+    pub source_host: String,
+    /// Project owner
+    pub owner: String,
+    /// Project name
+    pub project: String,
 }
 
 /// Various tools we have found installed on the system
@@ -619,12 +636,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             merge_tasks,
             fail_fast,
             ssldotcom_windows_sign,
-            // Processed elsewhere
+            // Partially Processed elsewhere
             //
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
             // after this function, seems like we should finish the job..? (Doing a big
             // refactor already, don't want to mess with this right now.)
-            ci: _,
+            ci,
             // Only the final value merged into a package_config matters
             //
             // Note that we do *use* an auto-include from the workspace when doing
@@ -663,6 +680,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             pr_run_mode: _,
             allow_dirty,
             msvc_crt_static,
+            hosting,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -742,6 +760,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let cargo_version_line = tools.cargo.version_line.clone();
 
+        let hosting = crate::host::select_hosting(workspace, *hosting, ci.as_deref());
+
         Ok(Self {
             inner: DistGraph {
                 is_init: desired_cargo_dist_version.is_some(),
@@ -771,6 +791,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 user_publish_jobs,
                 allow_dirty,
                 msvc_crt_static,
+                hosting,
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
@@ -785,7 +806,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 publish_prereleases,
                 ci: None,
                 linkage: vec![],
-                hosting: None,
             },
             package_metadata,
             workspace_metadata,
@@ -1197,7 +1217,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self.manifest.artifact_download_url() else {
+        let Some(download_url) = self
+            .manifest
+            .release_by_name(&release.app_name)
+            .and_then(|r| r.artifact_download_url())
+        else {
             warn!("skipping shell installer: couldn't compute a URL to download artifacts from");
             return;
         };
@@ -1331,7 +1355,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self.manifest.artifact_download_url() else {
+        let Some(download_url) = self
+            .manifest
+            .release_by_name(&release.app_name)
+            .and_then(|r| r.artifact_download_url())
+        else {
             warn!("skipping Homebrew formula: couldn't compute a URL to download artifacts from");
             return;
         };
@@ -1488,7 +1516,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Get the basic info about the installer
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self.manifest.artifact_download_url() else {
+        let Some(download_url) = self
+            .manifest
+            .release_by_name(&release.app_name)
+            .and_then(|r| r.artifact_download_url())
+        else {
             warn!(
                 "skipping powershell installer: couldn't compute a URL to download artifacts from"
             );
@@ -1559,7 +1591,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self.manifest.artifact_download_url() else {
+        let Some(download_url) = self
+            .manifest
+            .release_by_name(&release.app_name)
+            .and_then(|r| r.artifact_download_url())
+        else {
             warn!("skipping npm installer: couldn't compute a URL to download artifacts from");
             return;
         };
@@ -1944,25 +1980,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }));
             }
         }
-    }
-
-    fn compute_hosting(&mut self, _cfg: &Config, announcing: &AnnouncementTag) -> Result<()> {
-        // If this was already provided by a merged dist-manifest, don't redo it
-        if self.manifest.hosting.is_some() {
-            return Ok(());
-        }
-
-        if let Some(repo_url) = self.workspace().web_url()?.as_ref() {
-            let tag = &announcing.tag;
-            self.manifest.hosting = Some(Hosting {
-                staging_artifacts_url: None,
-                live_artifacts_url: Some(format!("{repo_url}/releases/download/{tag}")),
-                upload_url: None,
-                publish_url: None,
-                announce_url: None,
-            });
-        }
-        Ok(())
     }
 
     fn compute_releases(

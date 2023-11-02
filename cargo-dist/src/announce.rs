@@ -96,7 +96,6 @@ impl<'a> DistGraphBuilder<'a> {
         }
 
         let mut gh_body = String::new();
-        let download_url = self.manifest.artifact_download_url();
 
         // add release notes
         if let Some(changelog) = self.manifest.announcement_changelog.as_ref() {
@@ -171,6 +170,11 @@ impl<'a> DistGraphBuilder<'a> {
                 .chain(local_installers.iter().map(|i| i.0))
                 .chain(symbols.iter().map(|i| i.0))
                 .collect();
+
+            let download_url = self
+                .manifest
+                .release_by_name(&release.app_name)
+                .and_then(|r| r.artifact_download_url());
             if !other_artifacts.is_empty() && download_url.is_some() {
                 let download_url = download_url.as_ref().unwrap();
                 writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();

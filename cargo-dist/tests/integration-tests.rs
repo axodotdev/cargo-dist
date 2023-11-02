@@ -63,6 +63,41 @@ path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 }
 
 #[test]
+fn axolotlsay_abyss() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+scope = "@axodotdev"
+hosting = "axodotdev"
+
+[package.metadata.wix]
+upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
+path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
 fn axolotlsay_no_homebrew_publish() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {

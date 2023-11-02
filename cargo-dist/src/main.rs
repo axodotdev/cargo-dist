@@ -10,7 +10,8 @@ use cargo_dist::{linkage::Linkage, *};
 use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{
-    Cli, Commands, FakeCli, GenerateMode, HelpMarkdownArgs, ManifestArgs, OutputFormat, PlanArgs,
+    Cli, Commands, FakeCli, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat,
+    PlanArgs,
 };
 use console::Term;
 use miette::IntoDiagnostic;
@@ -28,6 +29,14 @@ fn main() {
 }
 
 fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .max_blocking_threads(128)
+        .enable_all()
+        .build()
+        .expect("Initializing tokio runtime failed");
+    let _guard = runtime.enter();
+
     let config = &cli.config;
     match &config.command {
         Commands::Init(args) => cmd_init(config, args),
@@ -38,8 +47,40 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::Plan(args) => cmd_plan(config, args),
         Commands::HelpMarkdown(args) => cmd_help_md(config, args),
         Commands::ManifestSchema(args) => cmd_manifest_schema(config, args),
-        Commands::Build(args) => cmd_dist(config, args),
+        Commands::Build(args) => cmd_build(config, args),
+        Commands::Host(args) => cmd_host(config, args),
     }
+}
+
+fn print(
+    cli: &Cli,
+    report: &DistManifest,
+    print_linkage: bool,
+    warn_cmd: Option<&str>,
+) -> Result<(), miette::Report> {
+    let mut out = Term::stdout();
+    match cli.output_format {
+        OutputFormat::Human => {
+            print_human(&mut out, report).into_diagnostic()?;
+
+            // Add some context if we're printing predicted paths
+            if let Some(name) = warn_cmd {
+                if !cli.no_local_paths {
+                    let message = format!("\nNOTE: 'cargo dist {name}' does not perform builds, these paths may not exist yet!");
+                    writeln!(out, "{}", out.style().yellow().apply_to(message))
+                        .into_diagnostic()?;
+                }
+            }
+        }
+        OutputFormat::Json => print_json(&mut out, report).into_diagnostic()?,
+    }
+
+    let mut err = Term::stderr();
+    if print_linkage {
+        print_human_linkage(&mut err, report).into_diagnostic()?;
+    }
+
+    Ok(())
 }
 
 fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::Error> {
@@ -148,9 +189,10 @@ fn print_human_linkage(out: &mut Term, report: &DistManifest) -> Result<(), std:
     Ok(())
 }
 
-fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
+fn cmd_build(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: true,
+        create_hosting: false,
         artifact_mode: args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,
@@ -160,23 +202,38 @@ fn cmd_dist(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         announcement_tag: cli.tag.clone(),
     };
     let report = do_build(&config)?;
-    let mut out = Term::stdout();
-    match cli.output_format {
-        OutputFormat::Human => print_human(&mut out, &report).into_diagnostic()?,
-        OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
-    }
+    print(
+        cli,
+        &report,
+        args.print.contains(&"linkage".to_owned()),
+        None,
+    )
+}
 
-    let mut err = Term::stderr();
-    if args.print.contains(&"linkage".to_owned()) {
-        print_human_linkage(&mut err, &report).into_diagnostic()?;
-    }
+fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
+    let config = cargo_dist::config::Config {
+        needs_coherent_announcement_tag: true,
+        create_hosting: false,
+        artifact_mode: config::ArtifactMode::All,
+        no_local_paths: true,
+        allow_all_dirty: cli.allow_dirty,
+        targets: cli.target.clone(),
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        announcement_tag: cli.tag.clone(),
+    };
 
-    Ok(())
+    let args = cargo_dist::config::HostArgs {
+        steps: args.steps.iter().map(|m| m.to_lib()).collect(),
+    };
+    let report = cargo_dist::host::do_host(&config, args)?;
+    print(cli, &report, false, Some("host"))
 }
 
 fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: true,
+        create_hosting: false,
         artifact_mode: args.build_args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,
@@ -186,20 +243,7 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
         announcement_tag: cli.tag.clone(),
     };
     let report = do_manifest(&config)?;
-    let mut out = Term::stdout();
-    match cli.output_format {
-        OutputFormat::Human => {
-            print_human(&mut out, &report).into_diagnostic()?;
-
-            // Add some context if we're printing predicted paths
-            if !cli.no_local_paths {
-                let message = "\nNOTE: 'cargo dist manifest' does not perform builds, these paths may not exist yet!";
-                writeln!(out, "{}", out.style().yellow().apply_to(message)).into_diagnostic()?;
-            }
-        }
-        OutputFormat::Json => print_json(&mut out, &report).into_diagnostic()?,
-    }
-    Ok(())
+    print(cli, &report, false, Some("manifest"))
 }
 
 fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
@@ -220,6 +264,7 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: false,
+        create_hosting: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,
@@ -239,6 +284,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
 fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: false,
+        create_hosting: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,
@@ -257,6 +303,7 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
 fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         needs_coherent_announcement_tag: false,
+        create_hosting: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,

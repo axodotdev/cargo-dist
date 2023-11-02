@@ -33,7 +33,7 @@ pub struct GithubCiInfo {
     /// What kind of job to run on pull request
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
     /// global task
-    pub global_task: Option<GithubMatrixEntry>,
+    pub global_task: GithubMatrixEntry,
     /// homebrew tap
     pub tap: Option<String>,
     /// publish jobs
@@ -64,12 +64,8 @@ impl GithubCiInfo {
         let mut dependencies = SystemDependencies::default();
 
         // Figure out what builds we need to do
-        let mut needs_global_build = false;
         let mut local_targets = SortedSet::new();
         for release in &dist.releases {
-            if !release.global_artifacts.is_empty() {
-                needs_global_build = true;
-            }
             local_targets.extend(release.targets.iter());
             dependencies.append(&mut release.system_dependencies.clone());
         }
@@ -81,19 +77,19 @@ impl GithubCiInfo {
         // Build up the task matrix for building Artifacts
         let mut tasks = vec![];
 
-        // If we have Global Artifacts, we need one task for that. If we've done a Good Job
-        // then these artifacts should be possible to build on *any* platform. Linux is usually
-        // fast/cheap, so that's a reasonable choice.s
-        let global_task = if needs_global_build {
-            Some(GithubMatrixEntry {
-                targets: None,
-                runner: Some(GITHUB_LINUX_RUNNER.into()),
-                dist_args: Some("--artifacts=global".into()),
-                install_dist: Some(install_dist_sh.clone()),
-                packages_install: None,
-            })
-        } else {
-            None
+        // The global task is responsible for:
+        //
+        // 1. building "global artifacts" like platform-agnostic installers
+        // 2. stitching together dist-manifests from all builds to produce a final one
+        //
+        // If we've done a Good Job, then these artifacts should be possible to build on *any*
+        // platform. Linux is usually fast/cheap, so that's a reasonable choice.
+        let global_task = GithubMatrixEntry {
+            targets: None,
+            runner: Some(GITHUB_LINUX_RUNNER.into()),
+            dist_args: Some("--artifacts=global".into()),
+            install_dist: Some(install_dist_sh.clone()),
+            packages_install: None,
         };
 
         let pr_run_mode = dist.pr_run_mode;

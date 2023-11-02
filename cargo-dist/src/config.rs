@@ -268,6 +268,10 @@ pub struct DistMetadata {
     /// \[unstable\] Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+
+    /// Hosting provider
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hosting: Option<HostingStyle>,
 }
 
 impl DistMetadata {
@@ -303,6 +307,7 @@ impl DistMetadata {
             allow_dirty: _,
             ssldotcom_windows_sign: _,
             msvc_crt_static: _,
+            hosting: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -347,6 +352,7 @@ impl DistMetadata {
             allow_dirty,
             ssldotcom_windows_sign,
             msvc_crt_static,
+            hosting,
         } = self;
 
         // Check for global settings on local packages
@@ -387,6 +393,9 @@ impl DistMetadata {
         }
         if msvc_crt_static.is_some() {
             warn!("package.metadata.dist.msvc-crt-static is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if hosting.is_some() {
+            warn!("package.metadata.dist.hosting is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
@@ -449,12 +458,16 @@ impl DistMetadata {
 }
 
 /// Global config for commands
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     /// Whether we need to compute an announcement tag or if we can fudge it
     ///
     /// Commands like generate and init don't need announcements, but want to run gather_work
     pub needs_coherent_announcement_tag: bool,
+    /// Whether to actually try to side-effectfully create a hosting directory on a server
+    ///
+    /// this is used for compute_hosting
+    pub create_hosting: bool,
     /// The subset of artifacts we want to build
     pub artifact_mode: ArtifactMode,
     /// Whether local paths to files should be in the final dist json output
@@ -491,6 +504,14 @@ pub enum CiStyle {
     /// Generate Github CI
     Github,
 }
+impl CiStyle {
+    /// If the CI provider provides a native release hosting system, get it
+    pub(crate) fn native_hosting(&self) -> Option<HostingStyle> {
+        match self {
+            CiStyle::Github => Some(HostingStyle::Github),
+        }
+    }
+}
 
 impl std::fmt::Display for CiStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -525,6 +546,26 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Npm => "npm",
             InstallerStyle::Homebrew => "homebrew",
             InstallerStyle::Msi => "msi",
+        };
+        string.fmt(f)
+    }
+}
+
+/// The style of hosting we should use for artifacts
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum HostingStyle {
+    /// Host on Github Releases
+    Github,
+    /// Host on Axo Releases ("Abyss")
+    Axodotdev,
+}
+
+impl std::fmt::Display for HostingStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            HostingStyle::Github => "github",
+            HostingStyle::Axodotdev => "axodotdev",
         };
         string.fmt(f)
     }
@@ -819,6 +860,28 @@ impl std::fmt::Display for GenerateMode {
             GenerateMode::Msi => "msi".fmt(f),
         }
     }
+}
+
+/// Arguments to `cargo dist host`
+#[derive(Clone, Debug)]
+pub struct HostArgs {
+    /// Which hosting steps to run
+    pub steps: Vec<HostStyle>,
+}
+
+/// What parts of hosting to perform
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum HostStyle {
+    /// Check that hosting API keys are working
+    Check,
+    /// Create a location to host artifacts
+    Create,
+    /// Upload artifacts
+    Upload,
+    /// Release artifacts
+    Release,
+    /// Announce artifacts
+    Announce,
 }
 
 /// Packages to install before build from the system package manager

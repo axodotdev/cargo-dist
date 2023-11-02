@@ -25,6 +25,7 @@ cargo dist <COMMAND>
 * [linkage](#cargo-dist-linkage): Report on the dynamic libraries used by the built artifacts
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
+* [host](#cargo-dist-host): Host artifacts
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
 
 ### Options
@@ -291,6 +292,32 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
+## cargo dist host
+Host artifacts
+
+### Usage
+
+```text
+cargo dist host [OPTIONS]
+```
+
+### Options
+#### `--steps <STEPS>`
+The hosting steps to perform
+
+Possible values:
+- create:   Create a location to host artifacts
+- upload:   Upload artifacts
+- release:  Release artifacts
+- announce: Announce artifacts
+
+#### `-h, --help`
+Print help (see a summary with '-h')
+
+### GLOBAL OPTIONS
+This subcommand accepts all the [global options](#global-options)
+
+<br><br><br>
 ## cargo dist help
 Print this message or the help of the given subcommand(s)
 
@@ -307,6 +334,7 @@ cargo dist help [COMMAND]
 * [linkage](#cargo-dist-linkage): Report on the dynamic libraries used by the built artifacts
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
+* [host](#cargo-dist-host): Host artifacts
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
 
 
