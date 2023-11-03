@@ -227,7 +227,11 @@ pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Re
         FastMap::<String, FastMap<String, Vec<(Utf8PathBuf, Utf8PathBuf)>>>::new();
     for &binary_idx in &target.expected_binaries {
         let binary = &dist_graph.binary(binary_idx);
-        let package_id = binary.pkg_id.to_string();
+        let package_id = binary
+            .pkg_id
+            .clone()
+            .expect("pkg_id is mandatory for cargo builds")
+            .to_string();
         let exe_name = binary.name.clone();
         for exe_dest in &binary.copy_exe_to {
             expected_exes

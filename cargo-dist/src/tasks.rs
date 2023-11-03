@@ -236,7 +236,7 @@ pub struct Binary {
     ///
     /// This is an "opaque" string that will show up in things like cargo machine-readable output,
     /// but **this is not the format that cargo -p flags expect**. Use pkg_spec for that.
-    pub pkg_id: PackageId,
+    pub pkg_id: Option<PackageId>,
     /// An ideally unambiguous way to refer to a package for the purpose of cargo -p flags.
     pub pkg_spec: String,
     /// The name of the binary (as defined by the Cargo.toml)
@@ -889,8 +889,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         for (pkg_idx, binary_name) in bins.clone() {
             let package = self.workspace.package(pkg_idx);
             let package_metadata = self.package_metadata(pkg_idx);
-            let version = package.version.as_ref().unwrap().cargo();
-            let pkg_id = package.cargo_package_id.clone().unwrap();
+            let version = package
+                .version
+                .as_ref()
+                .expect("Package version is mandatory!")
+                .cargo();
+            let pkg_id = package.cargo_package_id.clone();
             // For now we just use the name of the package as its package_spec.
             // I'm not sure if there are situations where this is ambiguous when
             // referring to a package in your workspace that you want to build an app for.
