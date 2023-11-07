@@ -54,7 +54,6 @@ use std::process::Command;
 use axoproject::platforms::triple_to_display_name;
 use axoproject::{PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
-use cruet::to_class_case;
 use guppy::PackageId;
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
@@ -66,7 +65,9 @@ use crate::config::{DependencyKind, DirtyMode, ProductionMode, SystemDependencie
 use crate::{
     backend::{
         installer::{
-            homebrew::HomebrewInstallerInfo, msi::MsiInstallerInfo, npm::NpmInstallerInfo,
+            homebrew::{to_class_case, HomebrewInstallerInfo},
+            msi::MsiInstallerInfo,
+            npm::NpmInstallerInfo,
             ExecutableZipFragment, InstallerImpl, InstallerInfo,
         },
         templates::Templates,
