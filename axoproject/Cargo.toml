@@ -43,7 +43,7 @@ oro-package-spec = { version = "0.3.14", optional = true }
 thiserror = "1.0.50"
 clap = { version = "4.2.1", features = ["derive"] }
 pathdiff = { version = "0.2.1", features = ["camino"] }
-itertools = "0.10.5"
+itertools = "0.11.0"
 url = "2.4.0"
 parse-changelog = "0.6.4"
 
