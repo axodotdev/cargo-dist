@@ -786,9 +786,9 @@ dependencies = [
 
 [[package]]
 name = "oro-package-spec"
-version = "0.3.27"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b10f40f6e160f8199129b8468ab34808cbbddedd0b3ecffc61bdb818dd7f816e"
+checksum = "d173bc0dd2ada252032b36fbbbf2ce5118562033ee6a4a2098a8c11659965cb2"
 dependencies = [
  "bytecount",
  "miette",
