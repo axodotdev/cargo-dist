@@ -51,7 +51,6 @@
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{DistManifest, Hosting};
-use cruet::to_class_case;
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use std::process::Command;
@@ -64,7 +63,9 @@ use crate::config::{DependencyKind, DirtyMode, ProductionMode, SystemDependencie
 use crate::{
     backend::{
         installer::{
-            homebrew::HomebrewInstallerInfo, msi::MsiInstallerInfo, npm::NpmInstallerInfo,
+            homebrew::{to_class_case, HomebrewInstallerInfo},
+            msi::MsiInstallerInfo,
+            npm::NpmInstallerInfo,
             ExecutableZipFragment, InstallerImpl, InstallerInfo,
         },
         templates::Templates,
