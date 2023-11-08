@@ -3,6 +3,13 @@
 Nothing Yet!
 
 
+# Version 0.4.3 (2023-11-08)
+
+This is a small bugfix release which resolves an issue where we would sometimes generate non-working Homebrew installers.
+
+* @mistydemeo [Homebrew: Fixed an issue where generated class names might not match the name Homebrew looks for](https://github.com/axodotdev/cargo-dist/pull/554)
+
+
 # Version 0.4.2 (2023-10-31)
 
 Just a little release to get a couple small fixes in people's hands!
