@@ -1,3 +1,7 @@
+# Version 0.6.0 (2023-11-09)
+
+* Adds a new language-agnostic "generic" project type, with the package definition coming from a new `dist.toml` metadata file. This is gated behind the new `generic-projects` feature.
+
 # Version 0.5.0 (2023-11-01)
 
 * Uses axoasset's reexports of toml_edit and serde_json in place of direct dependencies
