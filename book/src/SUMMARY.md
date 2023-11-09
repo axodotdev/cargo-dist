@@ -3,6 +3,7 @@
 - [Introduction](./introduction.md)
 - [Install](./install.md)
 - [Way Too Quick Start](./way-too-quickstart.md)
+- [Generic Builds](./generic-builds.md)
 - [Installers](./installers/index.md)
   - [shell](./installers/shell.md)
   - [powershell](./installers/powershell.md)
