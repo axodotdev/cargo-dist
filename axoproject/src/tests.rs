@@ -559,3 +559,19 @@ fn test_changelog_errors() {
         Err(AxoprojectError::ParseChangelog(..))
     ));
 }
+
+#[test]
+fn test_generic_c() {
+    let project = crate::get_workspaces("tests/projects/generic-c/".into(), None)
+        .best()
+        .unwrap();
+    assert_eq!(project.kind, WorkspaceKind::Generic);
+    assert_eq!(project.package_info.len(), 1);
+
+    let package = &project.package_info[0];
+    assert_eq!(package.name, "testprog");
+    assert_eq!(package.binaries.len(), 1);
+
+    let binary = &package.binaries[0];
+    assert_eq!(binary, "main");
+}

@@ -39,6 +39,8 @@ fn real_main(app: &axocli::CliApp<Cli>) -> Result<(), Report> {
 }
 
 fn print_searches(workspaces: Workspaces) {
+    #[cfg(feature = "generic-projects")]
+    print_search(workspaces.generic, "generic");
     #[cfg(feature = "cargo-projects")]
     print_search(workspaces.rust, "rust");
     #[cfg(feature = "npm-projects")]
@@ -158,6 +160,8 @@ fn print_workspace(project: &WorkspaceInfo) {
 fn print_searches_json(root: Option<&Utf8Path>, workspaces: Workspaces) {
     let output = JsonOutput {
         root: root.map(|p| p.to_owned()),
+        #[cfg(feature = "generic-projects")]
+        generic: JsonWorkspaceSearch::from_real(root, workspaces.generic),
         #[cfg(feature = "cargo-projects")]
         rust: JsonWorkspaceSearch::from_real(root, workspaces.rust),
         #[cfg(feature = "npm-projects")]
@@ -170,6 +174,8 @@ fn print_searches_json(root: Option<&Utf8Path>, workspaces: Workspaces) {
 #[derive(Serialize, Deserialize)]
 struct JsonOutput {
     root: Option<Utf8PathBuf>,
+    #[cfg(feature = "generic-projects")]
+    generic: JsonWorkspaceSearch,
     #[cfg(feature = "cargo-projects")]
     rust: JsonWorkspaceSearch,
     #[cfg(feature = "npm-projects")]
@@ -357,6 +363,10 @@ impl JsonRelPath {
 /// Kind of workspace
 #[derive(Debug, Serialize, Deserialize)]
 pub enum JsonWorkspaceKind {
+    /// generic workspace
+    #[cfg(feature = "generic-projects")]
+    #[serde(rename = "generic")]
+    Generic,
     /// cargo/rust workspace
     #[cfg(feature = "cargo-projects")]
     #[serde(rename = "rust")]
@@ -370,6 +380,8 @@ pub enum JsonWorkspaceKind {
 impl JsonWorkspaceKind {
     fn from_real(real: WorkspaceKind) -> Self {
         match real {
+            #[cfg(feature = "generic-projects")]
+            WorkspaceKind::Generic => Self::Generic,
             #[cfg(feature = "cargo-projects")]
             WorkspaceKind::Rust => Self::Rust,
             #[cfg(feature = "npm-projects")]
