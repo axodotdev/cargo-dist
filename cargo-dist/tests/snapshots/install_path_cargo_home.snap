@@ -721,12 +721,20 @@ download_binary_and_run_installer "$@" || exit 1
 ================ formula.rb ================
 class Axolotlsay < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
-  if Hardware::CPU.type == :arm
-    url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
-  else
-    url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
-  end
   version "0.2.1"
+  on_macos do
+    on_arm
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
+    end
+    on_intel
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
+    end
+  end
+  on_linux do
+    on_intel do
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
+    end
+  end
   license "MIT OR Apache-2.0"
 
   def install
@@ -1250,7 +1258,8 @@ Install-Binary "$Args"
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
-        "x86_64-apple-darwin"
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
       ],
       "install_hint": "brew install axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"

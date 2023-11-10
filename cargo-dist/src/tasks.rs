@@ -1332,16 +1332,34 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let hint = format!("brew install {}", install_target);
         let desc = "Install prebuilt binaries via Homebrew".to_owned();
 
-        // If they have an x64 macos build but not an arm64 one, add a fallback entry
-        // to try to install x64 on arm64 and let rosetta2 deal with it.
+        // If they have an x64 macOS build but not an arm64 one, add a fallback entry
+        // to try to install x64 on arm64 and let Rosetta2 deal with it.
         //
-        // (This isn't strictly correct because rosetta2 isn't installed by default
-        // on macos, and the auto-installer only triggers for "real" apps, and not CLIs.
+        // (This isn't strictly correct because Rosetta2 isn't installed by default
+        // on macOS, and the auto-installer only triggers for "real" apps, and not CLIs.
         // Still, we think this is better than not trying at all.)
         const X64_MACOS: &str = "x86_64-apple-darwin";
         const ARM64_MACOS: &str = "aarch64-apple-darwin";
+        const ARM64_GNU: &str = "aarch64-unknown-linux-gnu";
+        const ARM64_MUSL: &str = "aarch64-unknown-linux-musl";
+        const X64_GNU: &str = "x86_64-unknown-linux-gnu";
+        const X64_MUSL: &str = "x86_64-unknown-linux-musl";
+        const X64_MUSL_STATIC: &str = "x86_64-unknown-linux-musl-static";
+        const X64_MUSL_DYNAMIC: &str = "x86_64-unknown-linux-musl-dynamic";
+        const ARM64_MUSL_STATIC: &str = "aarch64-unknown-linux-musl-static";
+        const ARM64_MUSL_DYNAMIC: &str = "aarch64-unknown-linux-musl-dynamic";
+
         let mut has_x64_apple = false;
         let mut has_arm_apple = false;
+        let mut has_x86_gnu_linux = false;
+        let mut has_arm_gnu_linux = false;
+        let mut has_x86_static_musl_linux = false;
+        let mut has_arm_static_musl_linux = false;
+
+        // Currently always false, someday these builds will exist
+        let has_x86_dynamic_musl_linux = false;
+        let has_arm_dynamic_musl_linux = false;
+
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
@@ -1351,28 +1369,52 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if target == ARM64_MACOS {
                 has_arm_apple = true;
             }
+            if target == X64_GNU {
+                has_x86_gnu_linux = true;
+            }
+            if target == ARM64_GNU {
+                has_arm_gnu_linux = true;
+            }
+            if target == X64_MUSL {
+                has_x86_static_musl_linux = true;
+            }
+            if target == ARM64_MUSL {
+                has_arm_static_musl_linux = true;
+            }
         }
-        let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
 
-        let mut arm64 = None;
-        let mut x86_64 = None;
+        let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
+        let do_x86_gnu_to_musl_fallback = !has_x86_gnu_linux && has_x86_static_musl_linux;
+        let do_arm_gnu_to_musl_fallback = !has_arm_gnu_linux && has_arm_static_musl_linux;
+        let do_x86_musl_to_musl_fallback = has_x86_static_musl_linux && !has_x86_dynamic_musl_linux;
+        let do_arm_musl_to_musl_fallback = has_arm_static_musl_linux && !has_arm_dynamic_musl_linux;
+
+        let mut arm64_macos = None;
+        let mut x86_64_macos = None;
+        let mut arm64_linux = None;
+        let mut x86_64_linux = None;
 
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
         let mut target_triples = SortedSet::new();
+
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
-            if target.contains("windows") || target.contains("linux-gnu") {
+
+            if target.contains("windows") {
                 continue;
             }
+
             // Compute the artifact zip this variant *would* make *if* it were built
             // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
             // way to add artifacts to the graph and then say "ok but don't build it".
             let (artifact, binaries) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
+
             target_triples.insert(target.clone());
-            let fragment = ExecutableZipFragment {
+
+            let mut fragment = ExecutableZipFragment {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
                 zip_style: artifact.archive.as_ref().unwrap().zip_style,
@@ -1383,10 +1425,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             };
 
             if target == X64_MACOS {
-                x86_64 = Some(fragment.clone());
+                x86_64_macos = Some(fragment.clone());
             }
+
             if target == ARM64_MACOS {
-                arm64 = Some(fragment.clone());
+                arm64_macos = Some(fragment.clone());
+            }
+
+            if target == X64_GNU {
+                x86_64_linux = Some(fragment.clone());
+            }
+
+            if target == ARM64_GNU {
+                arm64_linux = Some(fragment.clone());
             }
 
             if do_rosetta_fallback && target == X64_MACOS {
@@ -1394,8 +1445,45 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 let mut arm_fragment = fragment.clone();
                 arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
                 artifacts.push(arm_fragment.clone());
-                arm64 = Some(arm_fragment);
+                arm64_macos = Some(arm_fragment);
             }
+
+            // musl-static is actually kind of a fake triple we've invented
+            // to let us specify which is which; we want to ensure it exists
+            // for the installer to act on
+            if target == X64_MUSL {
+                fragment.target_triples = vec![X64_MUSL_STATIC.to_owned()];
+            }
+
+            if target == ARM64_MUSL {
+                fragment.target_triples = vec![ARM64_MUSL_STATIC.to_owned()];
+            }
+
+            // Copy the info but lie that it's actually glibc
+            if do_x86_gnu_to_musl_fallback && target == X64_MUSL {
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![X64_GNU.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
+            if do_x86_musl_to_musl_fallback && target == X64_MUSL {
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![X64_MUSL_DYNAMIC.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
+            if do_arm_gnu_to_musl_fallback && target == ARM64_MUSL {
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![ARM64_GNU.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
+            if do_arm_musl_to_musl_fallback && target == ARM64_MUSL {
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![ARM64_MUSL_DYNAMIC.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
             artifacts.push(fragment);
         }
         if artifacts.is_empty() {
@@ -1436,10 +1524,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             required_binaries: FastMap::new(),
             checksum: None,
             kind: ArtifactKind::Installer(InstallerImpl::Homebrew(HomebrewInstallerInfo {
-                arm64,
-                arm64_sha256: None,
-                x86_64,
-                x86_64_sha256: None,
+                arm64_macos,
+                arm64_macos_sha256: None,
+                x86_64_macos,
+                x86_64_macos_sha256: None,
+                arm64_linux,
+                arm64_linux_sha256: None,
+                x86_64_linux,
+                x86_64_linux_sha256: None,
                 name: app_name,
                 formula_class: formula_name,
                 desc: app_desc,

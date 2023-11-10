@@ -5,26 +5,56 @@ class {{ formula_class }} < Formula
   {%- if homepage %}
   homepage "{{ homepage }}"
   {%- endif %}
+  version "{{ inner.app_version }}"
   {#- #}
-  {#- If arm64/x86_64 builds are the same, skip the Hardware::CPU.type if statement #}
-  {%- if arm64.id == x86_64.id %}
-  url "{{ inner.base_url }}/{{ arm64.id }}"
-  {%- if arm64_sha256 %}
-  sha256 "{{ arm64_sha256 }}"
-  {%- endif %}
-  {%- else %}
-  if Hardware::CPU.type == :arm
-    url "{{ inner.base_url }}/{{ arm64.id }}"
-    {%- if arm64_sha256 %}
-    sha256 "{{ arm64_sha256 }}"
+  {%- if arm64_macos.id or x86_64_macos.id %}
+  on_macos do
+    {#- If arm64/x86_64 builds are the same, skip the Hardware::CPU.type if statement #}
+    {%- if arm64_macos.id == x86_64_macos.id %}
+    url "{{ inner.base_url }}/{{ arm64_macos.id }}"
+    {%- if arm64_macos_sha256 %}
+    sha256 "{{ arm64_macos_sha256 }}"
     {%- endif %}
-  else
-    url "{{ inner.base_url }}/{{ x86_64.id }}"
-    {%- if x86_64_sha256 %}
-    sha256 "{{ x86_64_sha256 }}"
+    {%- else %}
+    {%- if arm64_macos.id %}
+    on_arm
+      url "{{ inner.base_url }}/{{ arm64_macos.id }}"
+      {%- if arm64_macos_sha256 %}
+      sha256 "{{ arm64_macos_sha256 }}"
+      {%- endif %}
+    end
+    {%- endif %}
+    {%- if x86_64_macos.id %}
+    on_intel
+      url "{{ inner.base_url }}/{{ x86_64_macos.id }}"
+      {%- if x86_64_macos_sha256 %}
+      sha256 "{{ x86_64_macos_sha256 }}"
+      {%- endif %}
+    end
+    {%- endif %}
     {%- endif %}
   end
-  version "{{ inner.app_version }}"
+  {%- endif %}
+  {#- #}
+  {%- if arm64_linux.id or x86_64_linux.id %}
+  on_linux do
+    {%- if arm64_linux.id %}
+    on_arm do
+      url "{{ inner.base_url }}/{{ arm64_linux.id }}"
+      {%- if arm64_linux %}
+      sha256 "{{ arm64_linux_sha256 }}"
+      {%- endif %}
+    end
+    {%- endif %}
+    {%- if x86_64_linux.id %}
+    on_intel do
+      url "{{ inner.base_url }}/{{ x86_64_linux.id }}"
+      {%- if x86_64_linux_sha256 %}
+      sha256 "{{ x86_64_linux_sha256 }}"
+      {%- endif %}
+    end
+    {%- endif %}
+  end
   {%- endif %}
   {#- #}
   {%- if license %}
@@ -38,13 +68,13 @@ class {{ formula_class }} < Formula
 
   def install
     {#- Like the URL case above, write out a single install line in the case that the binary artifacts are the same across architectures #}
-    {%- if arm64.binaries == x86_64.binaries %}
-    bin.install {% for binary in arm64.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+    {%- if arm64_macos.binaries == x86_64_macos.binaries %}
+    bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
     {%- else %}
     if Hardware::CPU.type == :arm
-      bin.install {% for binary in arm64.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
     else
-      bin.install {% for binary in x86_64.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      bin.install {% for binary in x86_64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
     end
     {%- endif %}
 

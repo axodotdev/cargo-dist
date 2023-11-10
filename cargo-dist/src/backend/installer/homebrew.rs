@@ -29,14 +29,22 @@ pub struct HomebrewInstallerInfo {
     pub desc: Option<String>,
     /// A GitHub repository to write the formula to, in owner/name format
     pub tap: Option<String>,
-    /// AMD64 artifact
-    pub x86_64: Option<ExecutableZipFragment>,
-    /// sha256 of AMD64 artifact
-    pub x86_64_sha256: Option<String>,
-    /// ARM64 artifact
-    pub arm64: Option<ExecutableZipFragment>,
-    /// sha256 of ARM64 artifact
-    pub arm64_sha256: Option<String>,
+    /// macOS AMD64 artifact
+    pub x86_64_macos: Option<ExecutableZipFragment>,
+    /// sha256 of macOS AMD64 artifact
+    pub x86_64_macos_sha256: Option<String>,
+    /// macOS ARM64 artifact
+    pub arm64_macos: Option<ExecutableZipFragment>,
+    /// sha256 of macOS ARM64 artifact
+    pub arm64_macos_sha256: Option<String>,
+    /// Linux AMD64 artifact
+    pub x86_64_linux: Option<ExecutableZipFragment>,
+    /// sha256 of Linux AMD64 artifact
+    pub x86_64_linux_sha256: Option<String>,
+    /// Linux ARM64 artifact
+    pub arm64_linux: Option<ExecutableZipFragment>,
+    /// sha256 of Linux ARM64 artifact
+    pub arm64_linux_sha256: Option<String>,
     /// Generic installer info
     pub inner: InstallerInfo,
     /// Additional packages to specify as dependencies
@@ -62,18 +70,34 @@ pub(crate) fn write_homebrew_formula(
 
     // Generate sha256 as late as possible; the artifacts might not exist
     // earlier to do that.
-    if let Some(arm64_ref) = &info.arm64 {
+    if let Some(arm64_ref) = &info.arm64_macos {
         let path = Utf8PathBuf::from(&graph.dist_dir).join(&arm64_ref.id);
         if path.exists() {
             let sha256 = generate_checksum(&crate::config::ChecksumStyle::Sha256, &path)?;
-            info.arm64_sha256 = Some(sha256);
+            info.arm64_macos_sha256 = Some(sha256);
         }
     }
-    if let Some(x86_64_ref) = &info.x86_64 {
+    if let Some(x86_64_ref) = &info.x86_64_macos {
         let path = Utf8PathBuf::from(&graph.dist_dir).join(&x86_64_ref.id);
         if path.exists() {
             let sha256 = generate_checksum(&crate::config::ChecksumStyle::Sha256, &path)?;
-            info.x86_64_sha256 = Some(sha256);
+            info.x86_64_macos_sha256 = Some(sha256);
+        }
+    }
+
+    // Linuxbrew
+    if let Some(arm64_ref) = &info.arm64_linux {
+        let path = Utf8PathBuf::from(&graph.dist_dir).join(&arm64_ref.id);
+        if path.exists() {
+            let sha256 = generate_checksum(&crate::config::ChecksumStyle::Sha256, &path)?;
+            info.arm64_linux_sha256 = Some(sha256);
+        }
+    }
+    if let Some(x86_64_ref) = &info.x86_64_linux {
+        let path = Utf8PathBuf::from(&graph.dist_dir).join(&x86_64_ref.id);
+        if path.exists() {
+            let sha256 = generate_checksum(&crate::config::ChecksumStyle::Sha256, &path)?;
+            info.x86_64_linux_sha256 = Some(sha256);
         }
     }
 

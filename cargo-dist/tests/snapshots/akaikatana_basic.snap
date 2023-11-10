@@ -720,12 +720,20 @@ download_binary_and_run_installer "$@" || exit 1
 
 ================ formula.rb ================
 class AkaikatanaRepack < Formula
-  if Hardware::CPU.type == :arm
-    url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz"
-  else
-    url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz"
-  end
   version "0.2.0"
+  on_macos do
+    on_arm
+      url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz"
+    end
+    on_intel
+      url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz"
+    end
+  end
+  on_linux do
+    on_intel do
+      url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz"
+    end
+  end
   license "GPL-2.0-or-later"
 
   def install
@@ -1248,7 +1256,8 @@ Install-Binary "$Args"
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
-        "x86_64-apple-darwin"
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
       ],
       "install_hint": "brew install mistydemeo/homebrew-formulae/akaikatana-repack",
       "description": "Install prebuilt binaries via Homebrew"
