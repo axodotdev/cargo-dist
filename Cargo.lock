@@ -176,6 +176,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "axotag"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c829b645ea7cf09741466b895747c27918275a4b21e6bd57ccacdc512bc0c7f3"
+dependencies = [
+ "miette",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -293,6 +304,7 @@ dependencies = [
  "axoasset",
  "axocli",
  "axoproject",
+ "axotag",
  "camino",
  "cargo-dist-schema",
  "cargo-wix",
