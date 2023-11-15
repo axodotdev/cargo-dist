@@ -1,6 +1,6 @@
 use axoasset::toml_edit;
-use axoproject::WorkspaceInfo;
 use axoproject::{errors::AxoprojectError, platforms::triple_to_display_name};
+use axoproject::{WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::PrRunMode;
 use semver::Version;
@@ -51,7 +51,11 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     let check = console::style("✔".to_string()).for_stderr().green();
 
     // Init things
-    let did_add_profile = init_dist_profile(cfg, &mut workspace_toml)?;
+    let did_add_profile = if workspace.kind == WorkspaceKind::Rust {
+        init_dist_profile(cfg, &mut workspace_toml)?
+    } else {
+        false
+    };
 
     eprintln!("let's setup your cargo-dist config...");
     eprintln!();
@@ -71,7 +75,13 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     };
 
     if let Some(meta) = &multi_meta.workspace {
-        let metadata = config::get_toml_metadata(&mut workspace_toml, true);
+        let metadata = if workspace.kind == WorkspaceKind::Rust {
+            // Write to metadata table
+            config::get_toml_metadata(&mut workspace_toml, true)
+        } else {
+            // Write to document root
+            workspace_toml.as_item_mut()
+        };
         apply_dist_to_metadata(metadata, meta);
     }
 
@@ -171,6 +181,25 @@ fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) ->
     Ok(true)
 }
 
+fn has_metadata_table(workspace_info: &WorkspaceInfo) -> bool {
+    if workspace_info.kind == WorkspaceKind::Rust {
+        // Setup [workspace.metadata.dist]
+        workspace_info
+            .cargo_metadata_table
+            .as_ref()
+            .and_then(|t| t.as_object())
+            .map(|t| t.contains_key(METADATA_DIST))
+            .unwrap_or(false)
+    } else {
+        config::parse_metadata_table_or_manifest(
+            workspace_info.kind,
+            &workspace_info.manifest_path,
+            workspace_info.cargo_metadata_table.as_ref(),
+        )
+        .is_ok()
+    }
+}
+
 /// Initialize [workspace.metadata.dist] with default values based on what was passed on the CLI
 ///
 /// Returns whether the initialization was actually done
@@ -181,15 +210,11 @@ fn get_new_dist_metadata(
     workspace_info: &WorkspaceInfo,
 ) -> DistResult<DistMetadata> {
     use dialoguer::{Confirm, Input, MultiSelect, Select};
-    // Setup [workspace.metadata.dist]
-    let has_config = workspace_info
-        .cargo_metadata_table
-        .as_ref()
-        .and_then(|t| t.as_object())
-        .map(|t| t.contains_key(METADATA_DIST))
-        .unwrap_or(false);
+    let has_config = has_metadata_table(workspace_info);
+
     let mut meta = if has_config {
-        config::parse_metadata_table(
+        config::parse_metadata_table_or_manifest(
+            workspace_info.kind,
             &workspace_info.manifest_path,
             workspace_info.cargo_metadata_table.as_ref(),
         )?

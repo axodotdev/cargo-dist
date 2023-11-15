@@ -263,7 +263,7 @@ fn check_dist_package(
             }
         }
         ReleaseType::Version(ver) => {
-            if pkg.version.as_ref().unwrap().cargo() != ver {
+            if pkg.version.as_ref().unwrap().semver() != ver {
                 return Some(format!("didn't match tag {}", announcing.tag));
             }
         }
@@ -438,7 +438,7 @@ fn possible_tags<'a>(
     let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
     for pkg_idx in rust_releases {
         let info = graph.workspace().package(pkg_idx);
-        let version = info.version.as_ref().unwrap().cargo();
+        let version = info.version.as_ref().unwrap().semver();
         versions.entry(version).or_default().push(pkg_idx);
     }
     versions
@@ -486,7 +486,7 @@ fn tag_help(
     let some_tag = format!(
         "--tag={}-v{}",
         info.name,
-        info.version.as_ref().unwrap().cargo()
+        info.version.as_ref().unwrap().semver()
     );
 
     writeln!(
