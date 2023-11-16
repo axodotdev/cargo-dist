@@ -2284,18 +2284,18 @@ jobs:
       publishing: ${{ !github.event.pull_request }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_DASHBOARD_ARTIFACTS_ACTION_SECRET }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Install cargo-dist
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      # TODO: handle remote PRs (cargo dist plan)
+      # TODO: handle pr-run-mode=plan (cargo dist host --steps=check)
       - id: plan
         run: |
           cargo dist host --steps=create ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }} --output-format=json > dist-manifest.json
-          # cargo dist plan ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }} --output-format=json > dist-manifest.json
-          echo "cargo dist plan ran successfully"
+          echo "cargo dist host ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
@@ -2305,7 +2305,8 @@ jobs:
           path: dist-manifest.json
 
   # Build and packages all the platform-specific things
-  upload-local-artifacts:
+  build-local-artifacts:
+    name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
     # Let the initial task tell us to not run (currently very blunt)
     needs: plan
     if: ${{ fromJson(needs.plan.outputs.val).releases != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
@@ -2369,12 +2370,11 @@ jobs:
             ${{ env.BUILD_MANIFEST_NAME }}
 
   # Build and package all the platform-agnostic(ish) things
-  upload-global-artifacts:
-    needs: [plan, upload-local-artifacts]
+  build-global-artifacts:
+    needs: [plan, build-local-artifacts]
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_DASHBOARD_ARTIFACTS_ACTION_SECRET }}
       BUILD_MANIFEST_NAME: target/distrib/dist-manifest.json
     steps:
       - uses: actions/checkout@v4
@@ -2407,19 +2407,31 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
-      - name: "Host artifacts"
-        run: |
-          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --steps=announce
 
   should-publish:
     needs:
       - plan
-      - upload-global-artifacts
+      - build-global-artifacts
     if: ${{ needs.plan.outputs.publishing == 'true' }}
-    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: "ubuntu-20.04"
     steps:
-      - name: print tag
-        run: echo "ok we're publishing!"
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install cargo-dist
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      # Fetch artifacts from scratch-storage to upload them to permanent storage
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: target/distrib/
+      - id: cargo-dist
+        shell: bash
+        run: |
+          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release
 
   publish-homebrew-formula:
     needs: [plan, should-publish]
@@ -2456,12 +2468,11 @@ jobs:
           git push
 
   # Create a Github Release with all the results once everything is done
-  publish-release:
+  announce-release:
     needs: [plan, should-publish]
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_DASHBOARD_ARTIFACTS_ACTION_SECRET }}
     steps:
       - uses: actions/checkout@v4
         with:

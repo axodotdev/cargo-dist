@@ -180,7 +180,6 @@ fn release_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot) 
     // Perform all the releases
     let releases = manifest.releases.iter().filter_map(|release| {
         if let Some(cargo_dist_schema::Hosting::Abyss(set)) = &release.hosting {
-            // Upload all files associated with this Release, plus the dist-manifest.json
             let release = gazenot::ReleaseKey {
                 version: release.app_version.clone(),
                 tag: manifest.announcement_tag.clone().unwrap(),
@@ -203,7 +202,6 @@ fn announce_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot)
         .iter()
         .filter_map(|release| {
             if let Some(cargo_dist_schema::Hosting::Abyss(set)) = &release.hosting {
-                // Upload all files associated with this Release, plus the dist-manifest.json
                 Some(set.to_release(manifest.announcement_tag.clone().unwrap()))
             } else {
                 None

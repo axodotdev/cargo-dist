@@ -61,7 +61,9 @@ jobs:
       publishing: ${{ !github.event.pull_request }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_DASHBOARD_ARTIFACTS_ACTION_SECRET }}
+    {{%- if hosting_provider == "axodotdev" %}}
+      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
+    {{%- endif %}}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -72,11 +74,12 @@ jobs:
       {{%- endif %}}
       - name: Install cargo-dist
         run: {{{ install_dist_sh }}}
+      # TODO: handle remote PRs (cargo dist plan)
+      # TODO: handle pr-run-mode=plan (cargo dist host --steps=check)
       - id: plan
         run: |
           cargo dist host --steps=create ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }} --output-format=json > dist-manifest.json
-          # cargo dist plan ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }} --output-format=json > dist-manifest.json
-          echo "cargo dist plan ran successfully"
+          echo "cargo dist host ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
@@ -86,7 +89,8 @@ jobs:
           path: dist-manifest.json
 
   # Build and packages all the platform-specific things
-  upload-local-artifacts:
+  build-local-artifacts:
+    name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
     # Let the initial task tell us to not run (currently very blunt)
     needs: plan
     if: ${{ fromJson(needs.plan.outputs.val).releases != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
@@ -154,12 +158,11 @@ jobs:
             ${{ env.BUILD_MANIFEST_NAME }}
 
   # Build and package all the platform-agnostic(ish) things
-  upload-global-artifacts:
-    needs: [plan, upload-local-artifacts]
+  build-global-artifacts:
+    needs: [plan, build-local-artifacts]
     runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_DASHBOARD_ARTIFACTS_ACTION_SECRET }}
       BUILD_MANIFEST_NAME: target/distrib/dist-manifest.json
     steps:
       - uses: actions/checkout@v4
@@ -196,9 +199,6 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
-      - name: "Host artifacts"
-        run: |
-          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --steps=announce
 
 {{%- if ssldotcom_windows_sign %}}
 
@@ -206,7 +206,7 @@ jobs:
   sign-windows-artifacts:
     needs:
       - plan
-      - upload-global-artifacts
+      - build-global-artifacts
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -259,15 +259,38 @@ jobs:
   should-publish:
     needs:
       - plan
-      - upload-global-artifacts
+      - build-global-artifacts
     {{%- if ssldotcom_windows_sign %}}
       - sign-windows-artifacts
     {{%- endif %}}
     if: ${{ needs.plan.outputs.publishing == 'true' }}
-    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    {{%- if hosting_provider == "axodotdev" %}}
+      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
+    {{%- endif %}}
+    runs-on: {{{ global_task.runner }}}
     steps:
-      - name: print tag
-        run: echo "ok we're publishing!"
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      {{%- if rust_version %}}
+      - name: Install Rust
+        run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
+      {{%- endif %}}
+      - name: Install cargo-dist
+        run: {{{ global_task.install_dist }}}
+      # Fetch artifacts from scratch-storage to upload them to permanent storage
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: target/distrib/
+      - id: cargo-dist
+        shell: bash
+        run: |
+          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release
+
 
 {{%- if 'homebrew' in publish_jobs and tap %}}
 
@@ -319,16 +342,34 @@ jobs:
 {{%- endfor %}}
 
   # Create a Github Release with all the results once everything is done
-  publish-release:
+  announce-release:
     needs: [plan, should-publish]
-    runs-on: ubuntu-latest
+    runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_DASHBOARD_ARTIFACTS_ACTION_SECRET }}
+    {{%- if hosting_provider == "axodotdev" %}}
+      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
+    {{%- endif %}}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+    {{%- if hosting_provider == "axodotdev" %}}
+      {{%- if rust_version %}}
+      - name: Install Rust
+        run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
+      {{%- endif %}}
+      - name: Install cargo-dist
+        run: {{{ global_task.install_dist }}}
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: target/distrib/
+      - name: Announce Releases
+        run: |
+          cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
+    {{%- elif hosting_provider == "github" %}}
       - name: "Download artifacts"
         uses: actions/download-artifact@v3
         with:
@@ -353,3 +394,6 @@ jobs:
         {{%- endif %}}
           prerelease: ${{ fromJson(needs.plan.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
+    {{%- else %}}
+        {{ error("unimplemented hosting_provider: " ~ hosting_provider) }}
+    {{%- endif %}}

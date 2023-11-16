@@ -526,13 +526,13 @@ impl std::fmt::Display for CiStyle {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum InstallerStyle {
-    /// Generate a shell script that fetches from [`cargo_dist_schema::DistManifest::artifact_download_url`][]
+    /// Generate a shell script that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
     Shell,
-    /// Generate a powershell script that fetches from [`cargo_dist_schema::DistManifest::artifact_download_url`][]
+    /// Generate a powershell script that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
     Powershell,
-    /// Generate an npm project that fetches from [`cargo_dist_schema::DistManifest::artifact_download_url`][]
+    /// Generate an npm project that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
     Npm,
-    /// Generate a Homebrew formula that fetches from [`cargo_dist_schema::DistManifest::artifact_download_url`][]
+    /// Generate a Homebrew formula that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
     Homebrew,
     /// Generate an msi installer that embeds the binary
     Msi,

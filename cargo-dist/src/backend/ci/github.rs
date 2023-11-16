@@ -9,7 +9,7 @@ use tracing::warn;
 
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
-    config::{DependencyKind, ProductionMode, SystemDependencies},
+    config::{DependencyKind, HostingStyle, ProductionMode, SystemDependencies},
     errors::DistResult,
     DistGraph, SortedMap, SortedSet, TargetTriple,
 };
@@ -44,6 +44,8 @@ pub struct GithubCiInfo {
     pub create_release: bool,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// what hosting provider we're using
+    pub hosting_provider: HostingStyle,
 }
 
 impl GithubCiInfo {
@@ -73,6 +75,11 @@ impl GithubCiInfo {
         // Get the platform-specific installation methods
         let install_dist_sh = super::install_dist_sh_for_version(dist_version);
         let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
+        let hosting_provider = dist
+            .hosting
+            .as_ref()
+            .expect("should not be possible to have the Github CI backend without hosting!?")
+            .hosts;
 
         // Build up the task matrix for building Artifacts
         let mut tasks = vec![];
@@ -134,6 +141,7 @@ impl GithubCiInfo {
             global_task,
             create_release,
             ssldotcom_windows_sign,
+            hosting_provider,
         }
     }
 
