@@ -296,7 +296,7 @@ pub(crate) fn select_tag(
         .packages()
         .map(|(_, info)| Package {
             name: info.name.clone(),
-            version: info.version.clone().map(|v| v.cargo().clone()),
+            version: info.version.clone().map(|v| v.semver().clone()),
         })
         .collect();
 
