@@ -6,16 +6,23 @@
 # * checks for a Git Tag that looks like a release
 # * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
-# * on success, uploads the artifacts to a Github Release™
-{{%- if create_release %}}
+{{%- if hosting_provider == "axodotdev" %}}
+# * on success, uploads the artifacts to Axo Releases and makes an Announcement
+{{%- elif hosting_provider == "github" %}}
+# * on success, uploads the artifacts to a Github Release
+  {{%- if create_release %}}
 #
-# Note that the Github Release™ will be created with a generated
+# Note that the Github Release will be created with a generated
 # title/body based on your changelogs.
-{{%- else %}}
+  {{%- else %}}
 #
-# Note that a Github Release™ with this tag is assumed to exist as a draft
+# Note that a Github Release with this tag is assumed to exist as a draft
 # with the appropriate title/body, and will be undrafted for you.
+  {{%- endif %}}
+{{%- else %}}
+  {{ error("unimplemented hosting_provider: " ~ hosting_provider) }}
 {{%- endif %}}
+
 name: Release
 
 permissions:
@@ -27,20 +34,20 @@ permissions:
 # PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
 # must be a Cargo-style SemVer Version (must have at least major.minor.patch).
 #
-# If PACKAGE_NAME is specified, then the release will be for that
+# If PACKAGE_NAME is specified, then the announcement will be for that
 # package (erroring out if it doesn't have the given version or isn't cargo-dist-able).
 #
-# If PACKAGE_NAME isn't specified, then the release will be for all
+# If PACKAGE_NAME isn't specified, then the announcement will be for all
 # (cargo-dist-able) packages in the workspace with that version (this mode is
 # intended for workspaces with only one dist-able package, or with all dist-able
 # packages versioned/released in lockstep).
 #
 # If you push multiple tags at once, separate instances of this workflow will
-# spin up, creating an independent Github Release™ for each one. However Github
+# spin up, creating an independent announcement for each one. However Github
 # will hard limit this to 3 tags per commit, as it will assume more tags is a
 # mistake.
 #
-# If there's a prerelease-style suffix to the version, then the Github Release™
+# If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
   push:
@@ -51,7 +58,7 @@ on:
   {{%- endif %}}
 
 jobs:
-  # Run 'cargo dist plan' to determine what tasks we need to do
+  # Run 'cargo dist plan' (or host) to determine what tasks we need to do
   plan:
     runs-on: ubuntu-latest
     outputs:
@@ -74,12 +81,15 @@ jobs:
       {{%- endif %}}
       - name: Install cargo-dist
         run: {{{ install_dist_sh }}}
-      # TODO: handle remote PRs (cargo dist plan)
-      # TODO: handle pr-run-mode=plan (cargo dist host --steps=check)
+      # sure would be cool if github gave us proper conditionals...
+      # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
+      # functionality based on whether this is a pull_request, and whether it's from a fork.
+      # (PRs run on the *source* but secrets are usually on the *target* -- that's *good*
+      # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist host --steps=create ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }} --output-format=json > dist-manifest.json
-          echo "cargo dist host ran successfully"
+          cargo dist ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name) || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json
+          echo "cargo dist ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
@@ -143,7 +153,7 @@ jobs:
         # inconsistent syntax between shell and powershell.
         shell: bash
         run: |
-          # Parse out what we just built and upload it to the Github Release™
+          # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -186,7 +196,7 @@ jobs:
           cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json {{{ global_task.dist_args }}} > dist-manifest.json
           echo "cargo dist ran successfully"
 
-          # Parse out what we just built and upload it to the Github Release™
+          # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -266,7 +276,7 @@ jobs:
     if: ${{ needs.plan.outputs.publishing == 'true' }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    {{%- if hosting_provider == "axodotdev" %}}
+    {{%- if hosting_provider == "axodotdev" %}}s
       AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     {{%- endif %}}
     runs-on: {{{ global_task.runner }}}
@@ -341,7 +351,15 @@ jobs:
     secrets: inherit
 {{%- endfor %}}
 
+{{%- if hosting_provider == "axodotdev" %}}
+
+  # Create an Announcement for all the Axo Releases
+{{%- elif hosting_provider == "github" %}}
+
   # Create a Github Release with all the results once everything is done
+{{%- else %}}
+    {{ error("unimplemented hosting_provider: " ~ hosting_provider) }}
+{{%- endif %}}
   announce-release:
     needs: [plan, should-publish]
     runs-on: {{{ global_task.runner }}}

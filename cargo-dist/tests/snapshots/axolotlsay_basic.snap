@@ -2237,10 +2237,11 @@ maybeInstall(true).then(run);
 # * checks for a Git Tag that looks like a release
 # * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
-# * on success, uploads the artifacts to a Github Release™
+# * on success, uploads the artifacts to a Github Release
 #
-# Note that the Github Release™ will be created with a generated
+# Note that the Github Release will be created with a generated
 # title/body based on your changelogs.
+
 name: Release
 
 permissions:
@@ -2252,20 +2253,20 @@ permissions:
 # PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
 # must be a Cargo-style SemVer Version (must have at least major.minor.patch).
 #
-# If PACKAGE_NAME is specified, then the release will be for that
+# If PACKAGE_NAME is specified, then the announcement will be for that
 # package (erroring out if it doesn't have the given version or isn't cargo-dist-able).
 #
-# If PACKAGE_NAME isn't specified, then the release will be for all
+# If PACKAGE_NAME isn't specified, then the announcement will be for all
 # (cargo-dist-able) packages in the workspace with that version (this mode is
 # intended for workspaces with only one dist-able package, or with all dist-able
 # packages versioned/released in lockstep).
 #
 # If you push multiple tags at once, separate instances of this workflow will
-# spin up, creating an independent Github Release™ for each one. However Github
+# spin up, creating an independent announcement for each one. However Github
 # will hard limit this to 3 tags per commit, as it will assume more tags is a
 # mistake.
 #
-# If there's a prerelease-style suffix to the version, then the Github Release™
+# If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
   push:
@@ -2274,7 +2275,7 @@ on:
   pull_request:
 
 jobs:
-  # Run 'cargo dist plan' to determine what tasks we need to do
+  # Run 'cargo dist plan' (or host) to determine what tasks we need to do
   plan:
     runs-on: ubuntu-latest
     outputs:
@@ -2290,11 +2291,14 @@ jobs:
           submodules: recursive
       - name: Install cargo-dist
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-      # TODO: handle remote PRs (cargo dist plan)
-      # TODO: handle pr-run-mode=plan (cargo dist host --steps=check)
+      # sure would be cool if github gave us proper conditionals...
+      # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
+      # functionality based on whether this is a pull_request, and whether it's from a fork.
+      # (PRs run on the *source* but secrets are usually on the *target* -- that's *good*
+      # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist host --steps=create ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }} --output-format=json > dist-manifest.json
+          cargo dist ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name) || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json
           echo "cargo dist host ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -2355,7 +2359,7 @@ jobs:
         # inconsistent syntax between shell and powershell.
         shell: bash
         run: |
-          # Parse out what we just built and upload it to the Github Release™
+          # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -2394,7 +2398,7 @@ jobs:
           cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json "--artifacts=global" > dist-manifest.json
           echo "cargo dist ran successfully"
 
-          # Parse out what we just built and upload it to the Github Release™
+          # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
