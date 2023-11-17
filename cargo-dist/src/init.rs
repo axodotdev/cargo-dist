@@ -251,6 +251,7 @@ fn get_new_dist_metadata(
             ssldotcom_windows_sign: None,
             msvc_crt_static: None,
             hosting: None,
+            environment_variables: None,
         }
     };
 
@@ -770,6 +771,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         ssldotcom_windows_sign,
         msvc_crt_static,
         hosting,
+        environment_variables,
     } = &meta;
 
     apply_optional_value(
@@ -961,6 +963,15 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "hosting",
         "# Where to host releases\n",
         hosting.as_ref().map(|p| p.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "environment-variables",
+        "# Environment variables set during the build\n",
+        environment_variables
+            .as_ref()
+            .map(|map| map.iter().collect::<toml_edit::InlineTable>()),
     );
 
     // Finalize the table

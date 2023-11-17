@@ -1,6 +1,6 @@
 //! Config types (for workspace.metadata.dist)
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use axoasset::{toml_edit, SourceFile};
 use axoproject::{WorkspaceKind, WorkspaceSearch};
@@ -272,6 +272,10 @@ pub struct DistMetadata {
     /// Hosting provider
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hosting: Option<HostingStyle>,
+
+    /// User-defined environment variables
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub environment_variables: Option<HashMap<String, String>>,
 }
 
 impl DistMetadata {
@@ -308,6 +312,7 @@ impl DistMetadata {
             ssldotcom_windows_sign: _,
             msvc_crt_static: _,
             hosting: _,
+            environment_variables: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -353,6 +358,7 @@ impl DistMetadata {
             ssldotcom_windows_sign,
             msvc_crt_static,
             hosting,
+            environment_variables,
         } = self;
 
         // Check for global settings on local packages
@@ -396,6 +402,9 @@ impl DistMetadata {
         }
         if hosting.is_some() {
             warn!("package.metadata.dist.hosting is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if environment_variables.is_some() {
+            warn!("package.metadata.dist.environment-variables is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
@@ -443,6 +452,9 @@ impl DistMetadata {
         }
         if publish_jobs.is_none() {
             *publish_jobs = workspace_config.publish_jobs.clone();
+        }
+        if environment_variables.is_none() {
+            *environment_variables = workspace_config.environment_variables.clone();
         }
 
         // This was historically implemented as extend, but I'm not convinced the

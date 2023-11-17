@@ -5,6 +5,7 @@
 use axoasset::LocalAsset;
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
 use serde::Serialize;
+use std::collections::HashMap;
 use tracing::warn;
 
 use crate::{
@@ -46,6 +47,8 @@ pub struct GithubCiInfo {
     pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// what hosting provider we're using
     pub hosting_provider: HostingStyle,
+    /// Environment variables set during the build
+    pub environment_variables: Option<HashMap<String, String>>,
 }
 
 impl GithubCiInfo {
@@ -63,6 +66,8 @@ impl GithubCiInfo {
         let fail_fast = dist.fail_fast;
         let create_release = dist.create_release;
         let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
+        let environment_variables = dist.environment_variables.clone();
+
         let mut dependencies = SystemDependencies::default();
 
         // Figure out what builds we need to do
@@ -142,6 +147,7 @@ impl GithubCiInfo {
             create_release,
             ssldotcom_windows_sign,
             hosting_provider,
+            environment_variables,
         }
     }
 
