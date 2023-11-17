@@ -312,7 +312,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist"
-version = "0.4.2"
+version = "0.5.0-prerelease.1"
 dependencies = [
  "axoasset",
  "axocli",
@@ -351,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist-schema"
-version = "0.4.2"
+version = "0.5.0-prerelease.1"
 dependencies = [
  "camino",
  "gazenot",

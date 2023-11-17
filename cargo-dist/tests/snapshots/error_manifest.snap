@@ -14,7 +14,8 @@ stderr:
         
         --tag=v1.0.0-FAKEVERSION will Announce: cargo-dist
         
-        you can also request any single package with --tag=cargo-dist-v1.0.0-FAKEVERSION
+        you can also request any single package with --tag=cargo-dist-
+        v1.0.0-FAKEVERSION
         
 
 
