@@ -1,6 +1,10 @@
 //! Functionality required to invoke a generic build's `build-command`
 
-use std::{env, process::Command};
+use std::{
+    env,
+    io::{stderr, Write},
+    process::Command,
+};
 
 use camino::Utf8Path;
 use miette::{miette, Context, IntoDiagnostic};
@@ -68,6 +72,8 @@ pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -
             .first()
             .expect("The build command must contain at least one entry"),
     );
+    command.stdout(std::process::Stdio::piped());
+    command.stderr(std::process::Stdio::inherit());
     for arg in args {
         command.arg(arg);
     }
@@ -92,10 +98,17 @@ pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -
     }
 
     info!("exec: {:?}", command);
-    command
+    let result = command
         .output()
         .into_diagnostic()
         .wrap_err_with(|| format!("failed to exec generic build: {command:?}"))?;
+
+    if !result.status.success() {
+        println!("Build exited non-zero: {}", result.status);
+    }
+    eprintln!();
+    eprintln!("stdout:");
+    stderr().write_all(&result.stdout).into_diagnostic()?;
 
     // Check that we got everything we expected, and normalize to ArtifactIdx => Artifact Path
     for binary_idx in &target.expected_binaries {
