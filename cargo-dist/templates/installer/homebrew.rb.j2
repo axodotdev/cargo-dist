@@ -17,7 +17,7 @@ class {{ formula_class }} < Formula
     {%- endif %}
     {%- else %}
     {%- if arm64_macos.id %}
-    on_arm
+    on_arm do
       url "{{ inner.base_url }}/{{ arm64_macos.id }}"
       {%- if arm64_macos_sha256 %}
       sha256 "{{ arm64_macos_sha256 }}"
@@ -25,7 +25,7 @@ class {{ formula_class }} < Formula
     end
     {%- endif %}
     {%- if x86_64_macos.id %}
-    on_intel
+    on_intel do
       url "{{ inner.base_url }}/{{ x86_64_macos.id }}"
       {%- if x86_64_macos_sha256 %}
       sha256 "{{ x86_64_macos_sha256 }}"

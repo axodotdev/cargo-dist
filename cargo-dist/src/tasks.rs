@@ -1333,9 +1333,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let desc = "Install prebuilt binaries via Homebrew".to_owned();
 
         // If they have an x64 macOS build but not an arm64 one, add a fallback entry
-        // to try to install x64 on arm64 and let Rosetta2 deal with it.
+        // to try to install x64 on arm64 and let Rosetta 2 deal with it.
         //
-        // (This isn't strictly correct because Rosetta2 isn't installed by default
+        // (This isn't strictly correct because Rosetta 2 isn't installed by default
         // on macOS, and the auto-installer only triggers for "real" apps, and not CLIs.
         // Still, we think this is better than not trying at all.)
         const X64_MACOS: &str = "x86_64-apple-darwin";
