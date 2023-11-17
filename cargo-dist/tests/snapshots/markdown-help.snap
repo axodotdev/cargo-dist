@@ -306,6 +306,7 @@ cargo dist host [OPTIONS]
 The hosting steps to perform
 
 Possible values:
+- check:    Check that hosting is properly setup without doing other effects
 - create:   Create a location to host artifacts
 - upload:   Upload artifacts
 - release:  Release artifacts

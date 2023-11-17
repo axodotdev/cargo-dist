@@ -387,6 +387,7 @@ impl HostStyle {
     /// Convert the application version of this enum to the library version
     pub fn to_lib(self) -> cargo_dist::config::HostStyle {
         match self {
+            HostStyle::Check => cargo_dist::config::HostStyle::Check,
             HostStyle::Create => cargo_dist::config::HostStyle::Create,
             HostStyle::Upload => cargo_dist::config::HostStyle::Upload,
             HostStyle::Release => cargo_dist::config::HostStyle::Release,
@@ -398,6 +399,8 @@ impl HostStyle {
 /// What parts of hosting to perform
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum HostStyle {
+    /// Check that hosting is properly setup without doing other effects
+    Check,
     /// Create a location to host artifacts
     Create,
     /// Upload artifacts
