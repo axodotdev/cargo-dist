@@ -19,12 +19,16 @@ use crate::{
 
 impl<'a> DistGraphBuilder<'a> {
     pub(crate) fn compute_generic_builds(&mut self) -> Vec<BuildStep> {
+        // For now we can be really simplistic and just do a workspace build for every
+        // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
         for (binary_idx, binary) in self.inner.binaries.iter().enumerate() {
-            targets
-                .entry(binary.target.clone())
-                .or_default()
-                .push(BinaryIdx(binary_idx));
+            if !binary.copy_exe_to.is_empty() || !binary.copy_symbols_to.is_empty() {
+                targets
+                    .entry(binary.target.clone())
+                    .or_default()
+                    .push(BinaryIdx(binary_idx));
+            }
         }
 
         let mut builds = vec![];
