@@ -246,21 +246,42 @@ impl<'a> TestContext<'a, Tools> {
 }
 
 impl DistResult {
+    /// check_all but for when you don't expect the installers to run properly (due to hosting)
+    pub fn check_all_no_ruin(
+        &self,
+        ctx: &TestContext<Tools>,
+        _expected_bin_dir: &str,
+    ) -> Result<Snapshots> {
+        self.linttests(ctx)?;
+        // Now that all other checks have passed, it's safe to check snapshots
+        self.snapshot()
+    }
+
     pub fn check_all(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<Snapshots> {
+        self.linttests(ctx)?;
+        self.runtests(ctx, expected_bin_dir)?;
+        // Now that all other checks have passed, it's safe to check snapshots
+        self.snapshot()
+    }
+
+    pub fn linttests(&self, ctx: &TestContext<Tools>) -> Result<()> {
         // If we have shellcheck, check our shell script
         self.shellcheck(ctx)?;
 
         // If we have PsScriptAnalyzer, check our powershell script
         self.psanalyzer(ctx)?;
 
+        Ok(())
+    }
+
+    pub fn runtests(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<()> {
         // If we can, run the script in a temp HOME
         self.runtest_shell_installer(ctx, expected_bin_dir)?;
 
         // If we can, run the script in a temp HOME
         self.runtest_homebrew_installer(ctx)?;
 
-        // Now that all other checks have passed, it's safe to check snapshots
-        self.snapshot()
+        Ok(())
     }
 
     /// Run shellcheck on the shell scripts
@@ -520,6 +541,18 @@ impl PlanResult {
 }
 
 impl BuildAndPlanResult {
+    pub fn check_all_no_ruin(
+        &self,
+        ctx: &TestContext<Tools>,
+        expected_bin_dir: &str,
+    ) -> Result<Snapshots> {
+        let build_snaps = self.build.check_all_no_ruin(ctx, expected_bin_dir)?;
+        let plan_snaps = self.plan.check_all()?;
+
+        // Merge snapshots
+        let snaps = build_snaps.join(plan_snaps);
+        Ok(snaps)
+    }
     pub fn check_all(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<Snapshots> {
         let build_snaps = self.build.check_all(ctx, expected_bin_dir)?;
         let plan_snaps = self.plan.check_all()?;

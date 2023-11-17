@@ -9,7 +9,7 @@ use tracing::warn;
 
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
-    config::{DependencyKind, ProductionMode, SystemDependencies},
+    config::{DependencyKind, HostingStyle, ProductionMode, SystemDependencies},
     errors::DistResult,
     DistGraph, SortedMap, SortedSet, TargetTriple,
 };
@@ -33,7 +33,7 @@ pub struct GithubCiInfo {
     /// What kind of job to run on pull request
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
     /// global task
-    pub global_task: Option<GithubMatrixEntry>,
+    pub global_task: GithubMatrixEntry,
     /// homebrew tap
     pub tap: Option<String>,
     /// publish jobs
@@ -44,6 +44,8 @@ pub struct GithubCiInfo {
     pub create_release: bool,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// what hosting provider we're using
+    pub hosting_provider: HostingStyle,
 }
 
 impl GithubCiInfo {
@@ -64,12 +66,8 @@ impl GithubCiInfo {
         let mut dependencies = SystemDependencies::default();
 
         // Figure out what builds we need to do
-        let mut needs_global_build = false;
         let mut local_targets = SortedSet::new();
         for release in &dist.releases {
-            if !release.global_artifacts.is_empty() {
-                needs_global_build = true;
-            }
             local_targets.extend(release.targets.iter());
             dependencies.append(&mut release.system_dependencies.clone());
         }
@@ -77,23 +75,28 @@ impl GithubCiInfo {
         // Get the platform-specific installation methods
         let install_dist_sh = super::install_dist_sh_for_version(dist_version);
         let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
+        let hosting_provider = dist
+            .hosting
+            .as_ref()
+            .expect("should not be possible to have the Github CI backend without hosting!?")
+            .hosts;
 
         // Build up the task matrix for building Artifacts
         let mut tasks = vec![];
 
-        // If we have Global Artifacts, we need one task for that. If we've done a Good Job
-        // then these artifacts should be possible to build on *any* platform. Linux is usually
-        // fast/cheap, so that's a reasonable choice.s
-        let global_task = if needs_global_build {
-            Some(GithubMatrixEntry {
-                targets: None,
-                runner: Some(GITHUB_LINUX_RUNNER.into()),
-                dist_args: Some("--artifacts=global".into()),
-                install_dist: Some(install_dist_sh.clone()),
-                packages_install: None,
-            })
-        } else {
-            None
+        // The global task is responsible for:
+        //
+        // 1. building "global artifacts" like platform-agnostic installers
+        // 2. stitching together dist-manifests from all builds to produce a final one
+        //
+        // If we've done a Good Job, then these artifacts should be possible to build on *any*
+        // platform. Linux is usually fast/cheap, so that's a reasonable choice.
+        let global_task = GithubMatrixEntry {
+            targets: None,
+            runner: Some(GITHUB_LINUX_RUNNER.into()),
+            dist_args: Some("--artifacts=global".into()),
+            install_dist: Some(install_dist_sh.clone()),
+            packages_install: None,
         };
 
         let pr_run_mode = dist.pr_run_mode;
@@ -138,6 +141,7 @@ impl GithubCiInfo {
             global_task,
             create_release,
             ssldotcom_windows_sign,
+            hosting_provider,
         }
     }
 

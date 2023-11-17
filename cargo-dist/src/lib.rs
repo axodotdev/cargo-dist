@@ -37,6 +37,7 @@ pub mod config;
 pub mod env;
 pub mod errors;
 pub mod generic_build;
+pub mod host;
 mod init;
 pub mod linkage;
 pub mod manifest;
@@ -361,7 +362,10 @@ pub fn check_integrity(cfg: &Config) -> Result<()> {
     // We need to avoid overwriting any parts of configuration from CLI here,
     // so construct a clean copy of config to run the check generate
     let check_config = Config {
+        // check the whole system is in a good state
         needs_coherent_announcement_tag: false,
+        // don't do side-effecting networking
+        create_hosting: false,
         artifact_mode: ArtifactMode::All,
         no_local_paths: false,
         allow_all_dirty: cfg.allow_all_dirty,

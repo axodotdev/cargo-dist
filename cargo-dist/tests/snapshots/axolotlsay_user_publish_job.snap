@@ -1886,7 +1886,12 @@ maybeInstall(true).then(run);
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
-      ]
+      ],
+      "hosting": {
+        "github": {
+          "artifact_download_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1"
+        }
+      }
     }
   ],
   "artifacts": {
@@ -2195,14 +2200,7 @@ maybeInstall(true).then(run);
       "pr_run_mode": "plan"
     }
   },
-  "linkage": [],
-  "hosting": {
-    "staging_artifacts_url": null,
-    "live_artifacts_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1",
-    "upload_url": null,
-    "publish_url": null,
-    "announce_url": null
-  }
+  "linkage": []
 }
 
 ================ github-ci.yml ================
@@ -2214,10 +2212,11 @@ maybeInstall(true).then(run);
 # * checks for a Git Tag that looks like a release
 # * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
-# * on success, uploads the artifacts to a Github Release™
+# * on success, uploads the artifacts to a Github Release
 #
-# Note that the Github Release™ will be created with a generated
+# Note that the Github Release will be created with a generated
 # title/body based on your changelogs.
+
 name: Release
 
 permissions:
@@ -2229,20 +2228,20 @@ permissions:
 # PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
 # must be a Cargo-style SemVer Version (must have at least major.minor.patch).
 #
-# If PACKAGE_NAME is specified, then the release will be for that
+# If PACKAGE_NAME is specified, then the announcement will be for that
 # package (erroring out if it doesn't have the given version or isn't cargo-dist-able).
 #
-# If PACKAGE_NAME isn't specified, then the release will be for all
+# If PACKAGE_NAME isn't specified, then the announcement will be for all
 # (cargo-dist-able) packages in the workspace with that version (this mode is
 # intended for workspaces with only one dist-able package, or with all dist-able
 # packages versioned/released in lockstep).
 #
 # If you push multiple tags at once, separate instances of this workflow will
-# spin up, creating an independent Github Release™ for each one. However Github
+# spin up, creating an independent announcement for each one. However Github
 # will hard limit this to 3 tags per commit, as it will assume more tags is a
 # mistake.
 #
-# If there's a prerelease-style suffix to the version, then the Github Release™
+# If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
   push:
@@ -2251,7 +2250,7 @@ on:
   pull_request:
 
 jobs:
-  # Run 'cargo dist plan' to determine what tasks we need to do
+  # Run 'cargo dist plan' (or host) to determine what tasks we need to do
   plan:
     runs-on: ubuntu-latest
     outputs:
@@ -2267,10 +2266,15 @@ jobs:
           submodules: recursive
       - name: Install cargo-dist
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      # sure would be cool if github gave us proper conditionals...
+      # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
+      # functionality based on whether this is a pull_request, and whether it's from a fork.
+      # (PRs run on the *source* but secrets are usually on the *target* -- that's *good*
+      # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist plan ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }} --output-format=json > dist-manifest.json
-          echo "cargo dist plan ran successfully"
+          cargo dist ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name) || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json
+          echo "cargo dist ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
@@ -2280,7 +2284,8 @@ jobs:
           path: dist-manifest.json
 
   # Build and packages all the platform-specific things
-  upload-local-artifacts:
+  build-local-artifacts:
+    name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
     # Let the initial task tell us to not run (currently very blunt)
     needs: plan
     if: ${{ fromJson(needs.plan.outputs.val).releases != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
@@ -2308,6 +2313,12 @@ jobs:
       - uses: swatinem/rust-cache@v2
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
+      # Get the dist-manifest
+      - name: Fetch local artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: target/distrib/
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
@@ -2323,7 +2334,7 @@ jobs:
         # inconsistent syntax between shell and powershell.
         shell: bash
         run: |
-          # Parse out what we just built and upload it to the Github Release™
+          # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -2338,11 +2349,12 @@ jobs:
             ${{ env.BUILD_MANIFEST_NAME }}
 
   # Build and package all the platform-agnostic(ish) things
-  upload-global-artifacts:
-    needs: [plan, upload-local-artifacts]
+  build-global-artifacts:
+    needs: [plan, build-local-artifacts]
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BUILD_MANIFEST_NAME: target/distrib/dist-manifest.json
     steps:
       - uses: actions/checkout@v4
         with:
@@ -2361,26 +2373,44 @@ jobs:
           cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json "--artifacts=global" > dist-manifest.json
           echo "cargo dist ran successfully"
 
-          # Parse out what we just built and upload it to the Github Release™
+          # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+
+          cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: ${{ steps.cargo-dist.outputs.paths }}
+          path: |
+            ${{ steps.cargo-dist.outputs.paths }}
+            ${{ env.BUILD_MANIFEST_NAME }}
 
   should-publish:
     needs:
       - plan
-      - upload-local-artifacts
-      - upload-global-artifacts
+      - build-global-artifacts
     if: ${{ needs.plan.outputs.publishing == 'true' }}
-    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: "ubuntu-20.04"
     steps:
-      - name: print tag
-        run: echo "ok we're publishing!"
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install cargo-dist
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      # Fetch artifacts from scratch-storage to upload them to permanent storage
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: target/distrib/
+      - id: cargo-dist
+        shell: bash
+        run: |
+          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release
 
   publish-homebrew-formula:
     needs: [plan, should-publish]
@@ -2433,9 +2463,9 @@ jobs:
     secrets: inherit
 
   # Create a Github Release with all the results once everything is done
-  publish-release:
+  announce-release:
     needs: [plan, should-publish]
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:

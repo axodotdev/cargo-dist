@@ -23,7 +23,7 @@ set -u
 
 APP_NAME="axolotlsay"
 APP_VERSION="0.2.1"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1}"
+ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
@@ -42,7 +42,7 @@ axolotlsay-installer.sh
 The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
+https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload
 then unpacks the binaries and installs them to \$CARGO_HOME/bin (\$HOME/.cargo/bin)
 
 It will then add that dir to PATH by adding the appropriate line to \$HOME/.profile
@@ -722,9 +722,9 @@ download_binary_and_run_installer "$@" || exit 1
 class Axolotlsay < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
   if Hardware::CPU.type == :arm
-    url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
+    url "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-aarch64-apple-darwin.tar.gz"
   else
-    url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
+    url "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-apple-darwin.tar.gz"
   end
   version "0.2.1"
   license "MIT OR Apache-2.0"
@@ -756,7 +756,7 @@ The installer for axolotlsay 0.2.1
 .DESCRIPTION
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
+https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload
 then unpacks the binaries and installs them to $env:CARGO_HOME\bin ($HOME\.cargo\bin)
 
 It will then add that dir to PATH by editing your Environment.Path registry key
@@ -774,7 +774,7 @@ Print help
 
 param (
     [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
-    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1',
+    [string]$ArtifactDownloadUrl = 'https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload',
     [Parameter(HelpMessage = "Don't add the install directory to PATH")]
     [switch]$NoModifyPath,
     [Parameter(HelpMessage = "Print Help")]
@@ -1330,7 +1330,7 @@ const error = (msg) => {
 
 const { version } = require("./package.json");
 const name = "axolotlsay";
-const artifact_download_url = "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1";
+const artifact_download_url = "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload";
 
 const builder_glibc_major_version = 2;
 const builder_glibc_minor_version = 35;
@@ -1865,7 +1865,7 @@ maybeInstall(true).then(run);
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.1",
   "announcement_changelog": "```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.1\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/homebrew-packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install axolotlsay@0.2.1\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz) | macOS Apple Silicon | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz) | macOS Intel | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | Linux x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.msi) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.1\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-installer.ps1 | iex\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install axolotlsay@0.2.1\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-aarch64-apple-darwin.tar.gz) | macOS Apple Silicon | [checksum](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-apple-darwin.tar.gz) | macOS Intel | [checksum](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | Windows x64 | [checksum](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | Linux x64 | [checksum](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-pc-windows-msvc.msi) | Windows x64 | [checksum](https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n\n",
   "system_info": {
     "cargo_version_line": "CENSORED"
   },
@@ -1890,8 +1890,13 @@ maybeInstall(true).then(run);
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
       ],
       "hosting": {
-        "github": {
-          "artifact_download_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1"
+        "abyss": {
+          "package": "axolotlsay",
+          "public_id": "fake-id-do-not-upload",
+          "set_download_url": "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload",
+          "upload_url": null,
+          "release_url": null,
+          "announce_url": null
         }
       }
     }
@@ -1945,7 +1950,7 @@ maybeInstall(true).then(run);
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex",
+      "install_hint": "irm https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-installer.ps1 | iex",
       "description": "Install prebuilt binaries via powershell script"
     },
     "axolotlsay-installer.sh": {
@@ -1956,7 +1961,7 @@ maybeInstall(true).then(run);
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu"
       ],
-      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh",
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
     "axolotlsay-npm-package.tar.gz": {
@@ -2179,7 +2184,7 @@ maybeInstall(true).then(run);
         "aarch64-apple-darwin",
         "x86_64-apple-darwin"
       ],
-      "install_hint": "brew install axodotdev/homebrew-packages/axolotlsay",
+      "install_hint": "brew install axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"
     }
   },
@@ -2237,10 +2242,7 @@ maybeInstall(true).then(run);
 # * checks for a Git Tag that looks like a release
 # * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
-# * on success, uploads the artifacts to a Github Release
-#
-# Note that the Github Release will be created with a generated
-# title/body based on your changelogs.
+# * on success, uploads the artifacts to Axo Releases and makes an Announcement
 
 name: Release
 
@@ -2285,6 +2287,7 @@ jobs:
       publishing: ${{ !github.event.pull_request }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -2418,7 +2421,8 @@ jobs:
       - build-global-artifacts
     if: ${{ needs.plan.outputs.publishing == 'true' }}
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}s
+      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     runs-on: "ubuntu-20.04"
     steps:
       - uses: actions/checkout@v4
@@ -2437,67 +2441,27 @@ jobs:
         run: |
           cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release
 
-  publish-homebrew-formula:
-    needs: [plan, should-publish]
-    runs-on: "ubuntu-20.04"
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PLAN: ${{ needs.plan.outputs.val }}
-      GITHUB_USER: "axo bot"
-      GITHUB_EMAIL: "admin+bot@axo.dev"
-    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: "axodotdev/homebrew-packages"
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-      # So we have access to the formula
-      - name: Fetch local artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: artifacts
-          path: Formula/
-      - name: Commit formula files
-        run: |
-          git config --global user.name "${GITHUB_USER}"
-          git config --global user.email "${GITHUB_EMAIL}"
-
-          for release in $(echo "$PLAN" | jq --compact-output '.releases[]'); do
-            name=$(echo "$release" | jq .app_name --raw-output)
-            version=$(echo "$release" | jq .app_version --raw-output)
-
-            git add Formula/${name}.rb
-            git commit -m "${name} ${version}"
-          done
-          git push
-
-  # Create a Github Release with all the results once everything is done
+  # Create an Announcement for all the Axo Releases
   announce-release:
     needs: [plan, should-publish]
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: "Download artifacts"
+      - name: Install cargo-dist
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      - name: Fetch artifacts
         uses: actions/download-artifact@v3
         with:
           name: artifacts
-          path: artifacts
-      - name: Cleanup
+          path: target/distrib/
+      - name: Announce Releases
         run: |
-          # Remove the granular manifests
-          rm artifacts/*-dist-manifest.json
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ needs.plan.outputs.tag }}
-          name: ${{ fromJson(needs.plan.outputs.val).announcement_title }}
-          body: ${{ fromJson(needs.plan.outputs.val).announcement_github_body }}
-          prerelease: ${{ fromJson(needs.plan.outputs.val).announcement_is_prerelease }}
-          artifacts: "artifacts/*"
+          cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
 
 ================ main.wxs ================
 <?xml version='1.0' encoding='windows-1252'?>

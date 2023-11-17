@@ -74,10 +74,6 @@ pub struct DistManifest {
     pub ci: Option<CiInfo>,
     /// Data about dynamic linkage in the built libraries
     pub linkage: Vec<Linkage>,
-    /// Hosting info
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub hosting: Option<Hosting>,
 }
 
 /// CI backend info
@@ -188,6 +184,10 @@ pub struct Release {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub artifacts: Vec<ArtifactId>,
+    /// Hosting info
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hosting: Option<Hosting>,
 }
 
 /// A distributable artifact that's part of a Release
@@ -366,7 +366,6 @@ impl DistManifest {
             publish_prereleases: false,
             ci: None,
             linkage: vec![],
-            hosting: None,
         }
     }
 
@@ -397,9 +396,60 @@ impl DistManifest {
             .filter_map(|k| Some((&**k, self.artifacts.get(k)?)))
     }
 
+    /// Look up a release by its name
+    pub fn release_by_name(&self, name: &str) -> Option<&Release> {
+        self.releases.iter().find(|r| r.app_name == name)
+    }
+
+    /// Either get the release with the given name, or make a minimal one
+    /// with no hosting/artifacts (to be populated)
+    pub fn ensure_release(&mut self, name: String, version: String) -> &mut Release {
+        // Written slightly awkwardly to make the borrowchecker happy :/
+        if let Some(position) = self.releases.iter().position(|r| r.app_name == name) {
+            &mut self.releases[position]
+        } else {
+            self.releases.push(Release {
+                app_name: name,
+                app_version: version,
+                artifacts: vec![],
+                hosting: None,
+            });
+            self.releases.last_mut().unwrap()
+        }
+    }
+}
+
+impl Release {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
     pub fn artifact_download_url(&self) -> Option<&str> {
-        self.hosting.as_ref()?.live_artifacts_url.as_deref()
+        self.hosting.as_ref()?.artifact_download_url()
+    }
+}
+
+/// Possible hosting providers
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum Hosting {
+    /// Hosted on Github Releases
+    Github(GithubHosting),
+    /// Hosted in The Abyss
+    Abyss(gazenot::ArtifactSet),
+}
+
+/// Github Hosting
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+pub struct GithubHosting {
+    /// The URL of the Github Release's artifact downloads
+    pub artifact_download_url: String,
+}
+
+impl Hosting {
+    /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
+    pub fn artifact_download_url(&self) -> Option<&str> {
+        match self {
+            Hosting::Github(host) => Some(&host.artifact_download_url),
+            Hosting::Abyss(host) => host.set_download_url.as_deref(),
+        }
     }
 }
 
@@ -430,21 +480,6 @@ pub struct Library {
     /// The package from which a library comes, if relevant
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
-}
-
-/// Information about how artifacts are hosted
-#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
-pub struct Hosting {
-    /// A URL you can GET uploaded artifacts from while the release is staged
-    pub staging_artifacts_url: Option<String>,
-    /// A URL you can GET uploaded artifacts from when it's published
-    pub live_artifacts_url: Option<String>,
-    /// A URL you can PUT (upload) artifacts to
-    pub upload_url: Option<String>,
-    /// A URL you can PUT, transitions the release from staged to published
-    pub publish_url: Option<String>,
-    /// A URL you can PUT, announces the release
-    pub announce_url: Option<String>,
 }
 
 /// Helper to read the raw version from serialized json
