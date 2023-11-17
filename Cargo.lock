@@ -838,7 +838,8 @@ dependencies = [
 [[package]]
 name = "gazenot"
 version = "0.1.0"
-source = "git+https://github.com/axodotdev/gazenot#4a5c2f7b2b5784610643466ad9af0b9272606810"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "777b98eff9012555989ee78ad7633e2f62647201306d8c279e73dbb7fa5e89f7"
 dependencies = [
  "axoasset",
  "camino",
