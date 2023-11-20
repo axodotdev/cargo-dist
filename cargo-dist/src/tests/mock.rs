@@ -88,6 +88,7 @@ pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceInfo {
             changelog: None,
         },
         warnings: vec![],
+        build_command: None,
         cargo_metadata_table: None,
         cargo_profiles: Default::default(),
     }

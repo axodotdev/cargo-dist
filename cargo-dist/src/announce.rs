@@ -4,6 +4,7 @@
 
 use axoproject::platforms::triple_to_display_name;
 use axoproject::PackageIdx;
+use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
 use itertools::Itertools;
 use semver::Version;
 use tracing::{info, warn};
@@ -27,18 +28,6 @@ pub(crate) struct AnnouncementTag {
     pub prerelease: bool,
     /// Which packages+bins we're announcing
     pub rust_releases: Vec<(PackageIdx, Vec<String>)>,
-}
-
-/// details on what we're announcing (partially computed)
-struct PartialAnnouncementTag {
-    /// The full tag
-    pub tag: Option<String>,
-    /// The version we're announcing (if doing a unified version announcement)
-    pub version: Option<Version>,
-    /// The package we're announcing (if doing a single-package announcement)
-    pub package: Option<PackageIdx>,
-    /// whether we're prereleasing
-    pub prerelease: bool,
 }
 
 impl<'a> DistGraphBuilder<'a> {
@@ -107,7 +96,6 @@ impl<'a> DistGraphBuilder<'a> {
         }
 
         let mut gh_body = String::new();
-        let download_url = self.manifest.artifact_download_url();
 
         // add release notes
         if let Some(changelog) = self.manifest.announcement_changelog.as_ref() {
@@ -182,6 +170,11 @@ impl<'a> DistGraphBuilder<'a> {
                 .chain(local_installers.iter().map(|i| i.0))
                 .chain(symbols.iter().map(|i| i.0))
                 .collect();
+
+            let download_url = self
+                .manifest
+                .release_by_name(&release.app_name)
+                .and_then(|r| r.artifact_download_url());
             if !other_artifacts.is_empty() && download_url.is_some() {
                 let download_url = download_url.as_ref().unwrap();
                 writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();
@@ -267,23 +260,18 @@ fn check_dist_package(
     }
 
     // If we're announcing a package, reject every other package
-    if let Some(id) = announcing.package {
-        if pkg_id != id {
-            return Some(format!(
-                "didn't match tag {}",
-                announcing.tag.as_ref().unwrap()
-            ));
+    match &announcing.release {
+        ReleaseType::Package(id) => {
+            if pkg_id != PackageIdx(*id) {
+                return Some(format!("didn't match tag {}", announcing.tag));
+            }
         }
-    }
-
-    // If we're announcing a version, ignore everything that doesn't match that
-    if let Some(ver) = &announcing.version {
-        if pkg.version.as_ref().unwrap().cargo() != ver {
-            return Some(format!(
-                "didn't match tag {}",
-                announcing.tag.as_ref().unwrap()
-            ));
+        ReleaseType::Version(ver) => {
+            if pkg.version.as_ref().unwrap().semver() != ver {
+                return Some(format!("didn't match tag {}", announcing.tag));
+            }
         }
+        ReleaseType::None => {}
     }
 
     // If it passes the guantlet, dist it
@@ -307,8 +295,21 @@ pub(crate) fn select_tag(
     tag: Option<&str>,
     needs_coherent_announcement_tag: bool,
 ) -> DistResult<AnnouncementTag> {
+    let packages: Vec<Package> = graph
+        .workspace()
+        .packages()
+        .map(|(_, info)| Package {
+            name: info.name.clone(),
+            version: info.version.clone().map(|v| v.semver().clone()),
+        })
+        .collect();
+
     // Parse the tag
-    let mut announcing = parse_tag(graph, tag)?;
+    let mut announcing = if let Some(tag) = tag {
+        parse_tag(&packages, tag)?
+    } else {
+        PartialAnnouncementTag::default()
+    };
     // Select which packages/binaries are available from that tag
     let rust_releases = select_packages(graph, &announcing);
 
@@ -316,7 +317,7 @@ pub(crate) fn select_tag(
     if rust_releases.is_empty() {
         // It's ok for there to be no selected binaries if the user explicitly requested an
         // announcement for a library with `--tag=my-lib-1.0.0`
-        if announcing.package.is_some() {
+        if matches!(announcing.release, ReleaseType::Package(_)) {
             warn!("You're trying to explicitly Release a library, only minimal functionality will work");
         } else {
             // No binaries were selected, and they weren't trying to announce a library,
@@ -324,7 +325,7 @@ pub(crate) fn select_tag(
             //
             // To get better help messages, we explore a hypothetical world where they didn't pass
             // `--tag` so we can get all the options for a good help message.
-            let announcing = parse_tag(graph, None)?;
+            let announcing = PartialAnnouncementTag::default();
             let rust_releases = select_packages(graph, &announcing);
             let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
             let help = tag_help(graph, versions, "You may need to pass the current version as --tag, or need to give all your packages the same version");
@@ -333,7 +334,7 @@ pub(crate) fn select_tag(
     }
 
     // If we don't have a tag yet we MUST successfully select one here or fail
-    if announcing.tag.is_none() {
+    if matches!(announcing.release, ReleaseType::None) {
         // Group distable packages by version, if there's only one then use that as the tag
         let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
         if versions.len() == 1 {
@@ -341,9 +342,9 @@ pub(crate) fn select_tag(
             let version = *versions.first_key_value().unwrap().0;
             let tag = format!("v{version}");
             info!("inferred Announcement tag: {}", tag);
-            announcing.tag = Some(tag);
+            announcing.tag = tag;
             announcing.prerelease = !version.pre.is_empty();
-            announcing.version = Some(version.clone());
+            announcing.release = ReleaseType::Version(version.clone());
         } else if needs_coherent_announcement_tag {
             // More than one version, give the user some suggestions
             let help = tag_help(
@@ -357,114 +358,26 @@ pub(crate) fn select_tag(
             // like `init` or `generate` which just wants us to hand it everything
             // and doesn't care about coherent announcements. So use a fake tag
             // and hand it the fully unconstrained list of rust_releases.
-            announcing.tag = Some("v1.0.0-FAKEVER".to_owned());
+            announcing.tag = "v1.0.0-FAKEVER".to_owned();
             announcing.prerelease = true;
-            announcing.version = Some("1.0.0-FAKEVER".parse().unwrap());
+            announcing.release = ReleaseType::Version("1.0.0-FAKEVER".parse().unwrap());
         }
     }
+
+    let mut version = None;
+    let mut package = None;
+    match &announcing.release {
+        ReleaseType::Package(id) => package = Some(PackageIdx(*id)),
+        ReleaseType::Version(ver) => version = Some(ver.clone()),
+        ReleaseType::None => {}
+    }
+
     Ok(AnnouncementTag {
-        tag: announcing
-            .tag
-            .expect("integrity error: failed to select announcement tag"),
-        version: announcing.version,
-        package: announcing.package,
+        tag: announcing.tag,
+        version,
+        package,
         prerelease: announcing.prerelease,
         rust_releases,
-    })
-}
-
-/// Do the actual parsing logic for a tag
-///
-/// If `tag` is None, then we had no --tag to parse, and need to do inference.
-/// The return value is then essentially a default/empty PartialAnnouncementTag
-/// which later passes will fill in.
-fn parse_tag(graph: &DistGraphBuilder, tag: Option<&str>) -> DistResult<PartialAnnouncementTag> {
-    // First thing's first: if they gave us an announcement tag then we should try to parse it
-    let mut announcing_package = None;
-    let mut announcing_version = None;
-    let mut announcing_prerelease = false;
-    let announcement_tag = tag.map(|t| t.to_owned());
-    if let Some(tag) = &announcement_tag {
-        let mut tag_suffix;
-        // Check if we're using `/`'s to delimit things
-        if let Some((prefix, suffix)) = tag.rsplit_once('/') {
-            // We're at least in "blah/v1.0.0" format
-            let maybe_package = if let Some((_prefix, package)) = prefix.rsplit_once('/') {
-                package
-            } else {
-                // There's only one `/`, assume the whole prefix could be a package name
-                prefix
-            };
-            // Check if this is "blah/blah/some-package/v1.0.0" format by checking if the last slash-delimited
-            // component is exactly a package name (strip_prefix produces empty string)
-            if let Some((package, "")) = strip_prefix_package(maybe_package, graph) {
-                announcing_package = Some(package);
-            }
-            tag_suffix = suffix;
-        } else {
-            tag_suffix = tag;
-        };
-
-        // If we don't have an announcing_package yet, check if this is "some-package-v1.0.0" format
-        if announcing_package.is_none() {
-            if let Some((package, suffix)) = strip_prefix_package(tag_suffix, graph) {
-                // Must be followed by a dash to be accepted
-                if let Some(suffix) = suffix.strip_prefix('-') {
-                    tag_suffix = suffix;
-                    announcing_package = Some(package);
-                }
-            }
-        }
-
-        // At this point, assuming the input is valid, tag_suffix should just be the version
-        // component with an optional "v" prefix, so strip that "v"
-        if let Some(suffix) = tag_suffix.strip_prefix('v') {
-            tag_suffix = suffix;
-        }
-
-        // Now parse the version out
-        match tag_suffix.parse::<Version>() {
-            Ok(version) => {
-                // Register whether we're announcing a prerelease
-                announcing_prerelease = !version.pre.is_empty();
-
-                // If there's an announcing package, validate that the version matches
-                if let Some(pkg_idx) = announcing_package {
-                    let package = graph.workspace().package(pkg_idx);
-                    if let Some(real_version) = &package.version {
-                        if real_version.cargo() != &version {
-                            return Err(DistError::ContradictoryTagVersion {
-                                tag: tag.clone(),
-                                package_name: package.name.clone(),
-                                tag_version: version,
-                                real_version: real_version.clone(),
-                            });
-                        }
-                    }
-                } else {
-                    // We had no announcing_package, so looks like we're doing a unified release.
-                    // Set this value to indicate that.
-                    announcing_version = Some(version);
-                }
-            }
-            Err(e) => {
-                return Err(DistError::TagVersionParse {
-                    tag: tag.clone(),
-                    details: e,
-                })
-            }
-        }
-
-        // If none of the approaches work, refuse to proceed
-        if announcing_package.is_none() && announcing_version.is_none() {
-            return Err(DistError::NoTagMatch { tag: tag.clone() });
-        }
-    }
-    Ok(PartialAnnouncementTag {
-        tag: announcement_tag,
-        prerelease: announcing_prerelease,
-        version: announcing_version,
-        package: announcing_package,
     })
 }
 
@@ -529,7 +442,7 @@ fn possible_tags<'a>(
     let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
     for pkg_idx in rust_releases {
         let info = graph.workspace().package(pkg_idx);
-        let version = info.version.as_ref().unwrap().cargo();
+        let version = info.version.as_ref().unwrap().semver();
         versions.entry(version).or_default().push(pkg_idx);
     }
     versions
@@ -577,7 +490,7 @@ fn tag_help(
     let some_tag = format!(
         "--tag={}-v{}",
         info.name,
-        info.version.as_ref().unwrap().cargo()
+        info.version.as_ref().unwrap().semver()
     );
 
     writeln!(
@@ -587,28 +500,4 @@ fn tag_help(
     .unwrap();
 
     help
-}
-
-/// Try to strip-prefix a package name from the given input, preferring whichever one is longest
-/// (to disambiguate situations where you have `my-app` and `my-app-helper`).
-///
-/// If a match is found, then the return value is:
-/// * the idx of the package
-/// * the rest of the input
-fn strip_prefix_package<'a>(
-    input: &'a str,
-    graph: &DistGraphBuilder,
-) -> Option<(PackageIdx, &'a str)> {
-    let mut result: Option<(PackageIdx, &'a str)> = None;
-    for (pkg_id, package) in graph.workspace().packages() {
-        if let Some(rest) = input.strip_prefix(&package.name) {
-            if let Some((_, best)) = result {
-                if best.len() <= rest.len() {
-                    continue;
-                }
-            }
-            result = Some((pkg_id, rest))
-        }
-    }
-    result
 }

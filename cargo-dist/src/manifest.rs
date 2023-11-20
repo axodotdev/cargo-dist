@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
+use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Hosting};
 
 use crate::{
     backend::{
@@ -30,13 +30,8 @@ pub fn load_and_merge_manifests(
             dist_version: _,
             // one value N machines
             system_info: _,
-            // These should absolutely be merged, but we currently rely on these values
-            // being a bit constrained to the work the local machine is doing to compute
-            // what to upload from that machine. In the future we should do some refactors
-            // to make merging these possible!
-            releases: _,
             artifacts: _,
-
+            releases,
             publish_prereleases,
             announcement_tag,
             announcement_is_prerelease,
@@ -45,8 +40,25 @@ pub fn load_and_merge_manifests(
             announcement_github_body,
             ci,
             linkage,
-            hosting,
-        }: DistManifest = manifest;
+        } = manifest;
+
+        // Merge every release
+        for release in releases {
+            // Ensure a release with this name and version exists
+            let out_release =
+                output.ensure_release(release.app_name.clone(), release.app_version.clone());
+            // If the input has hosting info, apply it
+            let Hosting { axodotdev, github } = release.hosting;
+            if let Some(hosting) = axodotdev {
+                out_release.hosting.axodotdev = Some(hosting);
+            }
+            if let Some(hosting) = github {
+                out_release.hosting.github = Some(hosting);
+            }
+            // NOTE: *do not* merge artifact info, it's currently load-bearing for each machine
+            // to only list the artifacts it specifically generates, so we don't want to merge
+            // in artifacts from other machines (`cargo dist plan` should know them all for now).
+        }
 
         if let Some(val) = announcement_tag {
             output.announcement_tag = Some(val);
@@ -63,10 +75,6 @@ pub fn load_and_merge_manifests(
         if let Some(val) = announcement_github_body {
             output.announcement_github_body = Some(val);
         }
-        if let Some(val) = hosting {
-            // Don't bother doing an inner merge here, all or nothing
-            output.hosting = Some(val);
-        };
         if let Some(val) = ci {
             // Don't bother doing an inner merge here, all or nothing
             output.ci = Some(val);
@@ -106,13 +114,19 @@ fn load_manifests(manifest_dir: &Utf8Path) -> DistResult<Vec<crate::DistManifest
     Ok(manifests)
 }
 
+/// Save a manifest to the given path
+pub fn save_manifest(manifest_path: &Utf8Path, manifest: &crate::DistManifest) -> DistResult<()> {
+    let contents = serde_json::to_string_pretty(manifest).unwrap();
+    axoasset::LocalAsset::write_new_all(&contents, manifest_path)?;
+    Ok(())
+}
+
 /// Add release/artifact info to the current dist-manifest
 pub(crate) fn add_releases_to_manifest(
     cfg: &Config,
     dist: &DistGraph,
     manifest: &mut DistManifest,
 ) -> DistResult<()> {
-    let mut releases = vec![];
     let mut all_artifacts = BTreeMap::<String, cargo_dist_schema::Artifact>::new();
     for release in &dist.releases {
         // Gather up all the local and global artifacts
@@ -131,15 +145,11 @@ pub(crate) fn add_releases_to_manifest(
             }
         }
 
-        // And report the release
-        releases.push(cargo_dist_schema::Release {
-            app_name: release.app_name.clone(),
-            app_version: release.version.to_string(),
-            artifacts,
-        })
+        // Add the artifacts to this release
+        manifest
+            .ensure_release(release.app_name.clone(), release.version.to_string())
+            .artifacts = artifacts;
     }
-
-    manifest.releases = releases;
     manifest.artifacts = all_artifacts;
 
     Ok(())

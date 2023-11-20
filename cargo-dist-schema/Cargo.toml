@@ -1,7 +1,7 @@
 [package]
 name = "cargo-dist-schema"
 description = "Schema information for cargo-dist's dist-manifest.json"
-version = "0.4.2"
+version = "0.5.0-prerelease.4"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
@@ -14,10 +14,11 @@ exclude = [
 
 [dependencies]
 camino = "1.1.1"
-schemars = "0.8.11"
+schemars = "0.8.16"
 semver = "1.0.14"
 serde = { version = "1.0.192", features = ["derive"] }
 serde_json = "1.0.87"
+gazenot = { version = "0.1.2", default-features = false }
 
 [dev-dependencies]
 insta = "1.26.0"

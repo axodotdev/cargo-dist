@@ -21,6 +21,7 @@ use cargo_dist_schema::DistManifest;
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
+use generic_build::build_generic_target;
 use semver::Version;
 use tracing::info;
 
@@ -33,7 +34,10 @@ pub mod announce;
 pub mod backend;
 pub mod cargo_build;
 pub mod config;
+pub mod env;
 pub mod errors;
+pub mod generic_build;
+pub mod host;
 mod init;
 pub mod linkage;
 pub mod manifest;
@@ -96,6 +100,7 @@ fn run_build_step(
     manifest: &DistManifest,
 ) -> Result<()> {
     match target {
+        BuildStep::Generic(target) => build_generic_target(dist_graph, target),
         BuildStep::Cargo(target) => build_cargo_target(dist_graph, target),
         BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd),
         BuildStep::CopyFile(CopyStep {
@@ -357,7 +362,10 @@ pub fn check_integrity(cfg: &Config) -> Result<()> {
     // We need to avoid overwriting any parts of configuration from CLI here,
     // so construct a clean copy of config to run the check generate
     let check_config = Config {
+        // check the whole system is in a good state
         needs_coherent_announcement_tag: false,
+        // don't do side-effecting networking
+        create_hosting: false,
         artifact_mode: ArtifactMode::All,
         no_local_paths: false,
         allow_all_dirty: cfg.allow_all_dirty,

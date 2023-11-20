@@ -28,6 +28,11 @@ pub enum DistError {
     #[diagnostic(transparent)]
     Asset(#[from] axoasset::AxoassetError),
 
+    /// random gazenot error
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    Gazenot(#[from] gazenot::error::GazenotError),
+
     /// random string error
     #[error(transparent)]
     FromUtf8Error(#[from] std::string::FromUtf8Error),
@@ -144,13 +149,6 @@ pub enum DistError {
         packages: Vec<String>,
     },
 
-    /// parse_tag couldn't make sense of the --tag provided
-    #[error("The provided announcement tag ({tag}) didn't match any Package or Version")]
-    NoTagMatch {
-        /// The --tag
-        tag: String,
-    },
-
     /// parse_tag concluded there was nothing to release
     #[error("This workspace doesn't have anything for cargo-dist to Release!")]
     NothingToRelease {
@@ -165,27 +163,6 @@ pub enum DistError {
         /// full help printout (very dynamic)
         #[help]
         help: String,
-    },
-    /// parse_tag concluded that versions didn't line up
-    #[error("The provided announcement tag ({tag}) claims we're releasing {package_name} {tag_version}, but that package is version {real_version}")]
-    ContradictoryTagVersion {
-        /// The full tag
-        tag: String,
-        /// The package name
-        package_name: String,
-        /// The version the tag claimed
-        tag_version: semver::Version,
-        /// The version the package actually has
-        real_version: axoproject::Version,
-    },
-    /// parse_tag couldn't parse the version component at all
-    #[error("Couldn't parse the version from the provided announcement tag ({tag})")]
-    TagVersionParse {
-        /// the full tag
-        tag: String,
-        /// parse error
-        #[source]
-        details: semver::Error,
     },
     /// Not an error; indicates that a file's contents differ via --check
     #[error("{} has out of date contents and needs to be regenerated:\n{diff}", file.origin_path())]
@@ -272,6 +249,18 @@ pub enum DistError {
     /// random dialoguer error
     #[error(transparent)]
     DialoguerError(#[from] dialoguer::Error),
+
+    /// random axotag error
+    #[error(transparent)]
+    AxotagError(#[from] axotag::errors::TagError),
+
+    /// No workspace found from axoproject
+    #[error("No workspace found; either your project doesn't have a Cargo.toml/dist.toml, or we couldn't read it")]
+    ProjectMissing {
+        /// axoproject's error for the unidentified project
+        #[related]
+        sources: Vec<AxoprojectError>,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

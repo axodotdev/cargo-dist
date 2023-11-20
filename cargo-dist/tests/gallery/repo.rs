@@ -67,6 +67,7 @@ where
 
     /// Run a test on this repo
     pub fn run_test(&self, test: impl FnOnce(&TestContext<Tools>) -> Result<()>) -> Result<()> {
+        std::env::set_var("CARGO_DIST_MOCK_NETWORKING", "1");
         let maybe_tools = self.tools.lock();
         let maybe_repo = self.ctx.lock();
         // Intentionally unwrapping here to poison the mutexes if we can't fetch

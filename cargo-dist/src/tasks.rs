@@ -48,12 +48,13 @@
 //! Also note that the BuildSteps for installers are basically monolithic "build that installer"
 //! steps to give them the freedom to do whatever they need to do.
 
+use std::process::Command;
+
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{DistManifest, Hosting};
+use cargo_dist_schema::DistManifest;
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
-use std::process::Command;
 use tracing::{info, warn};
 
 use crate::announce::{self, AnnouncementTag};
@@ -72,7 +73,7 @@ use crate::{
     },
     config::{
         self, ArtifactMode, ChecksumStyle, CiStyle, CompressionImpl, Config, DistMetadata,
-        InstallPathStrategy, InstallerStyle, PublishStyle, ZipStyle,
+        HostingStyle, InstallPathStrategy, InstallerStyle, PublishStyle, ZipStyle,
     },
     errors::{DistError, DistResult, Result},
 };
@@ -193,6 +194,23 @@ pub struct DistGraph {
     pub tap: Option<String>,
     /// Whether msvc targets should statically link the crt
     pub msvc_crt_static: bool,
+    ///
+    pub hosting: Option<HostingInfo>,
+}
+
+/// Info about artifacts should be hosted
+#[derive(Debug, Clone)]
+pub struct HostingInfo {
+    /// Hosting backends
+    pub hosts: Vec<HostingStyle>,
+    /// Repo url
+    pub repo_url: String,
+    /// Source hosting provider (e.g. "github")
+    pub source_host: String,
+    /// Project owner
+    pub owner: String,
+    /// Project name
+    pub project: String,
 }
 
 /// Various tools we have found installed on the system
@@ -264,6 +282,8 @@ pub struct Binary {
 #[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum BuildStep {
+    /// Do a generic build (and copy the outputs to various locations)
+    Generic(GenericBuildStep),
     /// Do a cargo build (and copy the outputs to various locations)
     Cargo(CargoBuildStep),
     /// Run rustup to get a toolchain
@@ -299,6 +319,17 @@ pub struct CargoBuildStep {
     pub rustflags: String,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+}
+
+/// A cargo build (and copy the outputs to various locations)
+#[derive(Debug)]
+pub struct GenericBuildStep {
+    /// The --target triple to pass
+    pub target_triple: TargetTriple,
+    /// Binaries we expect from this build
+    pub expected_binaries: Vec<BinaryIdx>,
+    /// The command to run to produce the expected binaries
+    pub build_command: Vec<String>,
 }
 
 /// A cargo build (and copy the outputs to various locations)
@@ -583,12 +614,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let workspace_dir = workspace.workspace_dir.clone();
         let dist_dir = target_dir.join(TARGET_DIST);
 
-        // Read the global config
-        let dist_profile = workspace.cargo_profiles.get(PROFILE_DIST);
-        let mut workspace_metadata = config::parse_metadata_table(
-            &workspace.manifest_path,
-            workspace.cargo_metadata_table.as_ref(),
-        )?;
+        let mut workspace_metadata =
+            // Read the global config
+            config::parse_metadata_table_or_manifest(
+                workspace.kind,
+                &workspace.manifest_path,
+                workspace.cargo_metadata_table.as_ref(),
+            )?;
+
         workspace_metadata.make_relative_to(&workspace.workspace_dir);
 
         // This is intentionally written awkwardly to make you update this
@@ -603,12 +636,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             merge_tasks,
             fail_fast,
             ssldotcom_windows_sign,
-            // Processed elsewhere
+            // Partially Processed elsewhere
             //
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
             // after this function, seems like we should finish the job..? (Doing a big
             // refactor already, don't want to mess with this right now.)
-            ci: _,
+            ci,
             // Only the final value merged into a package_config matters
             //
             // Note that we do *use* an auto-include from the workspace when doing
@@ -647,6 +680,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             pr_run_mode: _,
             allow_dirty,
             msvc_crt_static,
+            hosting,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -726,9 +760,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let cargo_version_line = tools.cargo.version_line.clone();
 
+        let hosting = crate::host::select_hosting(workspace, hosting.clone(), ci.as_deref());
+
         Ok(Self {
             inner: DistGraph {
-                is_init: dist_profile.is_some(),
+                is_init: desired_cargo_dist_version.is_some(),
                 target_dir,
                 workspace_dir,
                 dist_dir,
@@ -755,6 +791,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 user_publish_jobs,
                 allow_dirty,
                 msvc_crt_static,
+                hosting,
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
@@ -769,7 +806,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 publish_prereleases,
                 ci: None,
                 linkage: vec![],
-                hosting: None,
             },
             package_metadata,
             workspace_metadata,
@@ -791,7 +827,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let package_info = self.workspace().package(pkg_idx);
         let package_config = self.package_metadata(pkg_idx);
 
-        let version = package_info.version.as_ref().unwrap().cargo().clone();
+        let version = package_info.version.as_ref().unwrap().semver().clone();
         let app_name = package_info.name.clone();
         let app_desc = package_info.description.clone();
         let app_authors = package_info.authors.clone();
@@ -894,7 +930,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 .version
                 .as_ref()
                 .expect("Package version is mandatory!")
-                .cargo();
+                .semver();
             let pkg_id = package.cargo_package_id.clone();
             // For now we just use the name of the package as its package_spec.
             // I'm not sure if there are situations where this is ambiguous when
@@ -1181,7 +1217,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self.manifest.artifact_download_url() else {
+        let Some(download_url) = self
+            .manifest
+            .release_by_name(&release.app_name)
+            .and_then(|r| r.artifact_download_url())
+        else {
             warn!("skipping shell installer: couldn't compute a URL to download artifacts from");
             return;
         };
@@ -1315,7 +1355,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self.manifest.artifact_download_url() else {
+        let Some(download_url) = self
+            .manifest
+            .release_by_name(&release.app_name)
+            .and_then(|r| r.artifact_download_url())
+        else {
             warn!("skipping Homebrew formula: couldn't compute a URL to download artifacts from");
             return;
         };
@@ -1564,7 +1608,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Get the basic info about the installer
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self.manifest.artifact_download_url() else {
+        let Some(download_url) = self
+            .manifest
+            .release_by_name(&release.app_name)
+            .and_then(|r| r.artifact_download_url())
+        else {
             warn!(
                 "skipping powershell installer: couldn't compute a URL to download artifacts from"
             );
@@ -1635,7 +1683,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self.manifest.artifact_download_url() else {
+        let Some(download_url) = self
+            .manifest
+            .release_by_name(&release.app_name)
+            .and_then(|r| r.artifact_download_url())
+        else {
             warn!("skipping npm installer: couldn't compute a URL to download artifacts from");
             return;
         };
@@ -1939,8 +1991,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let mut local_build_steps = vec![];
         let mut global_build_steps = vec![];
-        let cargo_builds = self.compute_cargo_builds();
-        local_build_steps.extend(cargo_builds);
+        let builds = match self.workspace.kind {
+            axoproject::WorkspaceKind::Generic => self.compute_generic_builds(),
+            axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(),
+        };
+        local_build_steps.extend(builds);
 
         Self::add_build_steps_for_artifacts(
             &self
@@ -2017,25 +2072,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }));
             }
         }
-    }
-
-    fn compute_hosting(&mut self, _cfg: &Config, announcing: &AnnouncementTag) -> Result<()> {
-        // If this was already provided by a merged dist-manifest, don't redo it
-        if self.manifest.hosting.is_some() {
-            return Ok(());
-        }
-
-        if let Some(repo_url) = self.workspace().web_url()?.as_ref() {
-            let tag = &announcing.tag;
-            self.manifest.hosting = Some(Hosting {
-                staging_artifacts_url: None,
-                live_artifacts_url: Some(format!("{repo_url}/releases/download/{tag}")),
-                upload_url: None,
-                publish_url: None,
-                announce_url: None,
-            });
-        }
-        Ok(())
     }
 
     fn compute_releases(

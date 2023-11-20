@@ -33,7 +33,7 @@ pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
     let (dist, _manifest) = gather_work(cfg)?;
 
     let reports: Vec<Linkage> = if let Some(target) = args.from_json.clone() {
-        let file = SourceFile::load_local(&target)?;
+        let file = SourceFile::load_local(target)?;
         file.deserialize_json()?
     } else {
         fetch_linkage(cfg.targets.clone(), dist.artifacts, dist.dist_dir)?
