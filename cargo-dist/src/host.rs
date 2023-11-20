@@ -208,8 +208,12 @@ fn announce_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot)
             }
         })
         .collect::<Vec<_>>();
+
+    // Create a merged announcement body to send, announcement_title should always be set at this point
+    let title = manifest.announcement_title.clone().unwrap_or_default();
+    let body = manifest.announcement_changelog.clone().unwrap_or_default();
     let announcement = AnnouncementKey {
-        body: manifest.announcement_changelog.clone().unwrap_or_default(),
+        body: format!("# {title}\n\n{body}"),
     };
     tokio::runtime::Handle::current()
         .block_on(abyss.create_announcements(&releases, announcement))?;
