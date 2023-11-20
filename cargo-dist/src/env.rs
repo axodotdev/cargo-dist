@@ -1,6 +1,6 @@
 //! Functions to parse and manipulate the environment
 
-use std::process::Command;
+use std::{env, process::Command};
 
 use camino::Utf8Path;
 use miette::{Context, IntoDiagnostic};
@@ -111,10 +111,11 @@ pub fn select_brew_env(environment: &SortedMap<&str, &str>) -> Vec<(String, Stri
     }
 
     if !paths.is_empty() {
-        let our_path = env!("PATH");
-        let desired_path = format!("{our_path}:{}", paths.join(":"));
+        if let Ok(our_path) = env::var("PATH") {
+            let desired_path = format!("{our_path}:{}", paths.join(":"));
 
-        desired_env.insert(0, ("PATH".to_owned(), desired_path));
+            desired_env.insert(0, ("PATH".to_owned(), desired_path));
+        }
     }
 
     desired_env
