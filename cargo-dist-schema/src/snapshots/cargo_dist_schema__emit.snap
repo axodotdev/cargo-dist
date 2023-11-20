@@ -494,34 +494,31 @@ expression: json_schema
     },
     "Hosting": {
       "description": "Possible hosting providers",
-      "oneOf": [
-        {
-          "description": "Hosted on Github Releases",
-          "type": "object",
-          "required": [
-            "github"
-          ],
-          "properties": {
-            "github": {
-              "$ref": "#/definitions/GithubHosting"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Hosted in The Abyss",
-          "type": "object",
-          "required": [
-            "abyss"
-          ],
-          "properties": {
-            "abyss": {
+      "type": "object",
+      "properties": {
+        "axodotdev": {
+          "description": "Hosted on Axo Releases",
+          "anyOf": [
+            {
               "$ref": "#/definitions/ArtifactSet"
+            },
+            {
+              "type": "null"
             }
-          },
-          "additionalProperties": false
+          ]
+        },
+        "github": {
+          "description": "Hosted on Github Releases",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GithubHosting"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
-      ]
+      }
     },
     "Library": {
       "description": "Represents a dynamic library located somewhere on the system",
@@ -652,12 +649,9 @@ expression: json_schema
         },
         "hosting": {
           "description": "Hosting info",
-          "anyOf": [
+          "allOf": [
             {
               "$ref": "#/definitions/Hosting"
-            },
-            {
-              "type": "null"
             }
           ]
         }

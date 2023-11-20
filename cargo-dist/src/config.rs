@@ -271,7 +271,7 @@ pub struct DistMetadata {
 
     /// Hosting provider
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hosting: Option<HostingStyle>,
+    pub hosting: Option<Vec<HostingStyle>>,
 }
 
 impl DistMetadata {

@@ -6,9 +6,10 @@
 # * checks for a Git Tag that looks like a release
 # * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
-{{%- if hosting_provider == "axodotdev" %}}
+{{%- if "axodotdev" in hosting_providers %}}
 # * on success, uploads the artifacts to Axo Releases and makes an Announcement
-{{%- elif hosting_provider == "github" %}}
+{{%- endif %}}
+{{%- if "github" in hosting_providers %}}
 # * on success, uploads the artifacts to a Github Release
   {{%- if create_release %}}
 #
@@ -19,8 +20,6 @@
 # Note that a Github Release with this tag is assumed to exist as a draft
 # with the appropriate title/body, and will be undrafted for you.
   {{%- endif %}}
-{{%- else %}}
-  {{ error("unimplemented hosting_provider: " ~ hosting_provider) }}
 {{%- endif %}}
 
 name: Release
@@ -68,7 +67,7 @@ jobs:
       publishing: ${{ !github.event.pull_request }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    {{%- if hosting_provider == "axodotdev" %}}
+    {{%- if "axodotdev" in hosting_providers %}}
       AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     {{%- endif %}}
     steps:
@@ -276,7 +275,7 @@ jobs:
     if: ${{ needs.plan.outputs.publishing == 'true' }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    {{%- if hosting_provider == "axodotdev" %}}s
+    {{%- if "axodotdev" in hosting_providers %}}
       AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     {{%- endif %}}
     runs-on: {{{ global_task.runner }}}
@@ -351,44 +350,44 @@ jobs:
     secrets: inherit
 {{%- endfor %}}
 
-{{%- if hosting_provider == "axodotdev" %}}
+{{%- if "axodotdev" in hosting_providers %}}
 
   # Create an Announcement for all the Axo Releases
-{{%- elif hosting_provider == "github" %}}
+{{%- endif %}}
+{{%- if "github" in hosting_providers %}}
 
   # Create a Github Release with all the results once everything is done
-{{%- else %}}
-    {{ error("unimplemented hosting_provider: " ~ hosting_provider) }}
 {{%- endif %}}
   announce-release:
     needs: [plan, should-publish]
     runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    {{%- if hosting_provider == "axodotdev" %}}
+    {{%- if "axodotdev" in hosting_providers %}}
       AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     {{%- endif %}}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-    {{%- if hosting_provider == "axodotdev" %}}
+    {{%- if "axodotdev" in hosting_providers %}}
       {{%- if rust_version %}}
       - name: Install Rust
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - name: Install cargo-dist
         run: {{{ global_task.install_dist }}}
-      - name: Fetch artifacts
+      - name: Fetch Axo Artifacts
         uses: actions/download-artifact@v3
         with:
           name: artifacts
           path: target/distrib/
-      - name: Announce Releases
+      - name: Announce Axo Releases
         run: |
           cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
-    {{%- elif hosting_provider == "github" %}}
-      - name: "Download artifacts"
+    {{%- endif %}}
+    {{%- if "github" in hosting_providers %}}
+      - name: "Download Github Artifacts"
         uses: actions/download-artifact@v3
         with:
           name: artifacts
@@ -397,7 +396,7 @@ jobs:
         run: |
           # Remove the granular manifests
           rm artifacts/*-dist-manifest.json
-      - name: Create Release
+      - name: Create Github Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ needs.plan.outputs.tag }}
@@ -412,6 +411,4 @@ jobs:
         {{%- endif %}}
           prerelease: ${{ fromJson(needs.plan.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
-    {{%- else %}}
-        {{ error("unimplemented hosting_provider: " ~ hosting_provider) }}
     {{%- endif %}}

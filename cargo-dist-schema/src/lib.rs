@@ -186,8 +186,8 @@ pub struct Release {
     pub artifacts: Vec<ArtifactId>,
     /// Hosting info
     #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub hosting: Option<Hosting>,
+    #[serde(skip_serializing_if = "Hosting::is_empty")]
+    pub hosting: Hosting,
 }
 
 /// A distributable artifact that's part of a Release
@@ -412,7 +412,7 @@ impl DistManifest {
                 app_name: name,
                 app_version: version,
                 artifacts: vec![],
-                hosting: None,
+                hosting: Hosting::default(),
             });
             self.releases.last_mut().unwrap()
         }
@@ -422,18 +422,22 @@ impl DistManifest {
 impl Release {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
     pub fn artifact_download_url(&self) -> Option<&str> {
-        self.hosting.as_ref()?.artifact_download_url()
+        self.hosting.artifact_download_url()
     }
 }
 
 /// Possible hosting providers
-#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
-pub enum Hosting {
+pub struct Hosting {
     /// Hosted on Github Releases
-    Github(GithubHosting),
-    /// Hosted in The Abyss
-    Abyss(gazenot::ArtifactSet),
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github: Option<GithubHosting>,
+    /// Hosted on Axo Releases
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub axodotdev: Option<gazenot::ArtifactSet>,
 }
 
 /// Github Hosting
@@ -446,10 +450,20 @@ pub struct GithubHosting {
 impl Hosting {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
     pub fn artifact_download_url(&self) -> Option<&str> {
-        match self {
-            Hosting::Github(host) => Some(&host.artifact_download_url),
-            Hosting::Abyss(host) => host.set_download_url.as_deref(),
+        let Hosting { axodotdev, github } = &self;
+        // Prefer axodotdev is present, otherwise github
+        if let Some(host) = &axodotdev {
+            return host.set_download_url.as_deref();
         }
+        if let Some(host) = &github {
+            return Some(&host.artifact_download_url);
+        }
+        None
+    }
+    /// Gets whether there's no hosting
+    pub fn is_empty(&self) -> bool {
+        let Hosting { axodotdev, github } = &self;
+        axodotdev.is_none() && github.is_none()
     }
 }
 
