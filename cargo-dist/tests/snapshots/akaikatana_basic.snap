@@ -722,10 +722,10 @@ download_binary_and_run_installer "$@" || exit 1
 class AkaikatanaRepack < Formula
   version "0.2.0"
   on_macos do
-    on_arm
+    on_arm do
       url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz"
     end
-    on_intel
+    on_intel do
       url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz"
     end
   end

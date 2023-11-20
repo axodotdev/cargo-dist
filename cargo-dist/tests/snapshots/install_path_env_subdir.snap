@@ -706,10 +706,10 @@ class Axolotlsay < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
   version "0.2.1"
   on_macos do
-    on_arm
+    on_arm do
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
     end
-    on_intel
+    on_intel do
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
     end
   end
