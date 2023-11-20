@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset};
+use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Hosting};
 
 use crate::{
     backend::{
@@ -48,8 +48,12 @@ pub fn load_and_merge_manifests(
             let out_release =
                 output.ensure_release(release.app_name.clone(), release.app_version.clone());
             // If the input has hosting info, apply it
-            if let Some(hosting) = release.hosting {
-                out_release.hosting = Some(hosting);
+            let Hosting { axodotdev, github } = release.hosting;
+            if let Some(hosting) = axodotdev {
+                out_release.hosting.axodotdev = Some(hosting);
+            }
+            if let Some(hosting) = github {
+                out_release.hosting.github = Some(hosting);
             }
             // NOTE: *do not* merge artifact info, it's currently load-bearing for each machine
             // to only list the artifacts it specifically generates, so we don't want to merge

@@ -1890,7 +1890,10 @@ maybeInstall(true).then(run);
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
       ],
       "hosting": {
-        "abyss": {
+        "github": {
+          "artifact_download_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1"
+        },
+        "axodotdev": {
           "package": "axolotlsay",
           "public_id": "fake-id-do-not-upload",
           "set_download_url": "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload",
@@ -2243,6 +2246,10 @@ maybeInstall(true).then(run);
 # * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
 # * on success, uploads the artifacts to Axo Releases and makes an Announcement
+# * on success, uploads the artifacts to a Github Release
+#
+# Note that the Github Release will be created with a generated
+# title/body based on your changelogs.
 
 name: Release
 
@@ -2421,7 +2428,7 @@ jobs:
       - build-global-artifacts
     if: ${{ needs.plan.outputs.publishing == 'true' }}
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}s
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     runs-on: "ubuntu-20.04"
     steps:
@@ -2442,6 +2449,8 @@ jobs:
           cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release
 
   # Create an Announcement for all the Axo Releases
+
+  # Create a Github Release with all the results once everything is done
   announce-release:
     needs: [plan, should-publish]
     runs-on: "ubuntu-20.04"
@@ -2454,14 +2463,31 @@ jobs:
           submodules: recursive
       - name: Install cargo-dist
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-      - name: Fetch artifacts
+      - name: Fetch Axo Artifacts
         uses: actions/download-artifact@v3
         with:
           name: artifacts
           path: target/distrib/
-      - name: Announce Releases
+      - name: Announce Axo Releases
         run: |
           cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
+      - name: "Download Github Artifacts"
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: artifacts
+      - name: Cleanup
+        run: |
+          # Remove the granular manifests
+          rm artifacts/*-dist-manifest.json
+      - name: Create Github Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.plan.outputs.tag }}
+          name: ${{ fromJson(needs.plan.outputs.val).announcement_title }}
+          body: ${{ fromJson(needs.plan.outputs.val).announcement_github_body }}
+          prerelease: ${{ fromJson(needs.plan.outputs.val).announcement_is_prerelease }}
+          artifacts: "artifacts/*"
 
 ================ main.wxs ================
 <?xml version='1.0' encoding='windows-1252'?>

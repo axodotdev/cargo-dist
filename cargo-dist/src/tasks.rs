@@ -202,7 +202,7 @@ pub struct DistGraph {
 #[derive(Debug, Clone)]
 pub struct HostingInfo {
     /// Hosting backends
-    pub hosts: HostingStyle,
+    pub hosts: Vec<HostingStyle>,
     /// Repo url
     pub repo_url: String,
     /// Source hosting provider (e.g. "github")
@@ -760,7 +760,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let cargo_version_line = tools.cargo.version_line.clone();
 
-        let hosting = crate::host::select_hosting(workspace, *hosting, ci.as_deref());
+        let hosting = crate::host::select_hosting(workspace, hosting.clone(), ci.as_deref());
 
         Ok(Self {
             inner: DistGraph {

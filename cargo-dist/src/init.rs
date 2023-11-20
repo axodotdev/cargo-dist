@@ -956,11 +956,11 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         ssldotcom_windows_sign.as_ref().map(|p| p.to_string()),
     );
 
-    apply_optional_value(
+    apply_string_list(
         table,
         "hosting",
         "# Where to host releases\n",
-        hosting.as_ref().map(|p| p.to_string()),
+        hosting.as_ref(),
     );
 
     // Finalize the table

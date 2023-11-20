@@ -76,7 +76,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 scope = "@axodotdev"
-hosting = "axodotdev"
+hosting = ["axodotdev", "github"]
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
