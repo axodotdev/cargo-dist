@@ -256,11 +256,12 @@ For instance for packages that are a library and a CLI binary, some developers p
 If you use this you *probably* want to set it on `[package.metadata.dist]` and
 not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
 
+
 ### hosting
 
 > since 0.5.0
 
-Example: `hosting = ["axodotdev", "github"]
+Example: `hosting = ["axodotdev", "github"]`
 
 Possible values:
 
@@ -275,6 +276,7 @@ If Axo Releases and Github Releases are both enabled, we will host/announce on b
 
 (Ideally files uploaded to both hosts should be bitwise identical, which means we have to "pick"
 a host to win for fetching installers, and if you're using Axo Releases at all you *probably* want that one to win.)
+
 
 ### include
 

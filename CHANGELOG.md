@@ -2,6 +2,118 @@
 
 Nothing Yet!
 
+
+# Version 0.5.0 (2023-11-27)
+
+This release was probably going to be several releases, but everything got finished at the same time, so here's a Mega Release!
+
+The headline features are:
+
+* New Support For Axo Releases, As An Alternative To Github Releases (Launching Soon™)
+* New Support For Generic Build Steps, In Any Language (Experimental)
+* Significantly Improved MSI Installer Support
+
+## Features
+
+### Axo Releases
+
+Axo Releases users can now enable builtin cargo-dist support by setting `hosting = "axodotdev"` in their
+`[workspace.metadata.dist]`.
+
+To sign up for the Axo Releases closed beta, go to https://dash.axo.dev/
+
+You can ask for more details by [joining our discord](https://discord.gg/ECnWuUUXQk) or sending a message to `hello@axo.dev`!
+
+Axo Releases has a more robust pipelined model for creating and hosting a release, which more
+closely matches the actual design of cargo-dist. But since we'd only ever supported Github Releases,
+some significant internal reckoning was required.
+
+This reckoning primarily appears in the existence of the new "cargo dist host" subcommand, which
+was created to make "side-effectful networking" explicit, instead of riddling several random commands
+with various --dry-run flags.
+
+`host` takes several --steps:
+
+* create: ask Axo Releases to create hosting for the Apps we want to publish
+* upload: upload built Artifacts to the hosting that `create` made
+* release: create Releases for the hosted artifacts, making perma-urls like /v1.0.0/ live
+* announce: announce all the Releases, wiring them into "list all releases" and "latest release" endpoints
+* check: equivalent to `create` but just checks that authentication is properly setup, without side-effects
+
+The distinction between upload, release, and announce in particular lets us provide a more
+reliable/transactional release process -- we can make the hosting live, publish to package managers,
+and *then* update URLs like /latest/ once everything works, instead of racily doing it all
+at once and having to frantically hack things back to normal when something weird happens.
+It should also make it possible for us to provide features like Release/PR Previews.
+
+* docs
+    * [hosting config](https://opensource.axo.dev/cargo-dist/book/reference/config.html#hosting)
+* impl
+    * @gankra [preparatory refactor](https://github.com/axodotdev/cargo-dist/pull/546)
+    * @gankra [create gazenot client library](https://github.com/axodotdev/gazenot)
+    * @mistydemeo [break tag parsing into "axotag" crate](https://github.com/axodotdev/cargo-dist/pull/567)
+    * @gankra [properly set announcement body for abyss](https://github.com/axodotdev/cargo-dist/pull/586)
+    * @mistydemeo [add a comment about Axo Releases beta](https://github.com/axodotdev/cargo-dist/pull/600)
+    * @gankra [cleanup github releases / ci contents](https://github.com/axodotdev/cargo-dist/pull/596)
+
+
+### Generic Builds
+
+0.5.0 contains experimental support for building non-cargo-based projects. These can be in any language, and follow any repository layout, so long as they're accompanied by a cargo-dist manifest file that provides information on how to build and install it. For more information, consult the documentation.
+
+* docs
+    * [guide](https://opensource.axo.dev/cargo-dist/book/generic-builds.html)
+    * [example npm project](https://github.com/axodotdev/axolotlsay-js)
+    * [example C project](https://github.com/axodotdev/cargo-dist-c-example)
+* impl
+    * @mistydemeo [add generic project type](https://github.com/axodotdev/axoproject/pull/45)
+    * @mistydemeo [handle missing PackageId](https://github.com/axodotdev/cargo-dist/pull/549)
+    * @mistydemeo [implement generic builds](https://github.com/axodotdev/cargo-dist/pull/553)
+    * @mistydemeo [rebase fixup](https://github.com/axodotdev/cargo-dist/pull/569)
+    * @mistydemeo [print stdout from generic builds](https://github.com/axodotdev/cargo-dist/pull/570)
+    * @mistydemeo [fix --artifacts=global with generic builds](https://github.com/axodotdev/cargo-dist/pull/573)
+
+
+### MSI
+
+We've contributed several upstream improvements to cargo-wix, the tool we use to build MSIs, and integrated
+that functionality back into cargo-dist.
+
+Where previously you needed to use cargo-wix CLI flags to set various images in your installers,
+they are now exposed in `[package.metadata.wix]` as well as `banner`, `dialog`, and `product-icon`.
+
+There are now also `eula` and `license` configs on `[package.metadata.wix]` that allow you to specify
+where to source the eula/license from, and also allow you to explicitly disable auto-eula/auto-license
+functionality with `eula = false` and `license = false`. `cargo dist init` will by default set those
+to false if it sees they aren't defined in `[package.metadata.wix]` yet, making things more well-behaved
+by default. To restore the old auto-eula behaviour, set them to `true`.
+
+In addition, significant refactoring was done to the eula/license backend of cargo-wix so that cargo-dist
+can properly understand when those files need to be auto-generated. Previously auto-generated licenses/eulas
+would just produce broken templates, because cargo-dist wouldn't know about them and get confused.
+
+* docs
+    * [cargo-wix docs](https://volks73.github.io/cargo-wix/cargo_wix/#configuration)
+    * [cargo-dist msi docs](https://opensource.axo.dev/cargo-dist/book/installers/msi.html)
+* impl
+    * @gankra [refactor eulas and add new config](https://github.com/volks73/cargo-wix/pull/247)
+    * @gankra [add config for setting installer images](https://github.com/volks73/cargo-wix/pull/250)
+    * @gankra [use new cargo-wix features](https://github.com/axodotdev/cargo-dist/pull/503)
+
+
+### Source Tarballs
+
+cargo-dist will now generate its own source tarballs, and upload them to your release, named "source.tar.gz". The source tarballs that github provides are actually generated on demand with unspecified settings, so to ensure both Axo Releases and Github Releases have access to the same results, we need cargo-dist to generate the source tarball itself. We use the same mechanism as Github (asking git itself to generate them), but we can't bitwise-identically reproduce their (unspecified, technically-not-guaranteed) behaviour.
+
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/604)
+
+
+## Maintenance/Fixes
+
+* @rukai [Remove rust-toolchain-version from the workspaces setup guide](https://github.com/axodotdev/cargo-dist/pull/578)
+* @jwodder [Give "upload-local-artifacts" jobs friendlier display names](https://github.com/axodotdev/cargo-dist/pull/557)
+
+
 # Version 0.4.3 (2023-11-08)
 
 This is a small bugfix release which resolves an issue where we would sometimes generate non-working Homebrew installers.
