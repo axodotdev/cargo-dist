@@ -60,8 +60,6 @@ Next let's talk about `[workspace.metadata.dist]`. Cargo allows other tools to i
 
 `cargo-dist-version = "0.0.6"` is cargo-dist recording its own version in your config for the sake of reproducibility and documentation. When you run [generate][] the resulting CI scripts will use that version of cargo-dist.
 
-`rust-toolchain-version = "1.67.1"` is the Rust toolchain that is considered "ideal" for building your application, recorded for the sake of reproducibility and documentation. This is in contrast to the builtin Cargo [rust-version][] which is used to specify the *minimum* supported Rust version. When you run [generate][] the resulting CI scripts will install that version of the Rust toolchain with [rustup][]. There's nothing special about the chosen value, it's just a hardcoded "recent stable version".
-
 `ci = ["github"]` lets subsequent runs of [generate][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. It will be enabled by default if you have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). ("github" is currently the only supported CI backend.)
 
 `installer = []` is just saying that we haven't enabled any [installers][]. Installers are intentionally excluded here to keep this example focused.
