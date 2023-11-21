@@ -1,7 +1,7 @@
 //! Details for hosting artifacts
 
 use crate::{
-    announce::AnnouncementTag,
+    announce::{announcement_axodotdev, announcement_github, AnnouncementTag},
     check_integrity,
     config::{CiStyle, Config, HostArgs, HostStyle, HostingStyle},
     errors::{DistResult, Result},
@@ -23,7 +23,7 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> Result<DistManifest> {
         create_hosting: host_args.steps.contains(&HostStyle::Create),
         ..cfg.clone()
     };
-    let (dist, manifest) = gather_work(&cfg)?;
+    let (dist, mut manifest) = gather_work(&cfg)?;
 
     // The rest of the steps are more self-contained
 
@@ -40,7 +40,7 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> Result<DistManifest> {
                         upload_to_hosting(&dist, &manifest, &abyss)?;
                     }
                     if host_args.steps.contains(&HostStyle::Release) {
-                        release_hosting(&dist, &manifest, &abyss)?;
+                        release_hosting(&dist, &mut manifest, &abyss)?;
                     }
                     if host_args.steps.contains(&HostStyle::Announce) {
                         announce_hosting(&dist, &manifest, &abyss)?;
@@ -189,8 +189,12 @@ fn upload_to_hosting(dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot)
     Ok(())
 }
 
-fn release_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot) -> DistResult<()> {
-    // Perform all the releases
+fn release_hosting(
+    _dist: &DistGraph,
+    manifest: &mut DistManifest,
+    abyss: &Gazenot,
+) -> DistResult<()> {
+    // Gather up the releases
     let releases = manifest.releases.iter().filter_map(|release| {
         // Github Releases only has semantics on Announce
         let Hosting {
@@ -208,7 +212,21 @@ fn release_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot) 
             None
         }
     });
-    tokio::runtime::Handle::current().block_on(abyss.create_releases(releases))?;
+
+    // Tell The Abyss To Release
+    let new_releases =
+        tokio::runtime::Handle::current().block_on(abyss.create_releases(releases))?;
+
+    // Update artifact download URLs with release results
+    for new_release in new_releases {
+        if let Some(new_url) = new_release.release_download_url {
+            manifest.update_release_axodotdev_artifact_download_url(&new_release.package, new_url);
+        }
+    }
+
+    // Update Github Announcement body with new URLs
+    announcement_github(manifest);
+
     eprintln!("release published!");
     Ok(())
 }
@@ -230,11 +248,8 @@ fn announce_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot)
         })
         .collect::<Vec<_>>();
 
-    // Create a merged announcement body to send, announcement_title should always be set at this point
-    let title = manifest.announcement_title.clone().unwrap_or_default();
-    let body = manifest.announcement_changelog.clone().unwrap_or_default();
     let announcement = AnnouncementKey {
-        body: format!("# {title}\n\n{body}"),
+        body: announcement_axodotdev(manifest),
     };
     tokio::runtime::Handle::current()
         .block_on(abyss.create_announcements(&releases, announcement))?;

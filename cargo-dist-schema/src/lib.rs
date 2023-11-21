@@ -401,6 +401,35 @@ impl DistManifest {
         self.releases.iter().find(|r| r.app_name == name)
     }
 
+    /// Update the download url for an Axo Release (to a prettier one)
+    pub fn update_release_axodotdev_artifact_download_url(&mut self, name: &str, new_url: String) {
+        // Find the release
+        let release = self.releases.iter_mut().find(|r| r.app_name == name);
+        let Some(release) = release else {
+            return;
+        };
+
+        // Swap the new URL in
+        let mut old_url = None;
+        if let Some(host) = &mut release.hosting.axodotdev {
+            old_url = host.set_download_url.take();
+            host.set_download_url = Some(new_url.clone());
+        }
+
+        // If the url changed, update install_hints
+        if let Some(old_url) = old_url {
+            for artifact_name in &release.artifacts {
+                let artifact = self
+                    .artifacts
+                    .get_mut(artifact_name)
+                    .expect("release referenced non-existent artifacts");
+                if let Some(hint) = &mut artifact.install_hint {
+                    *hint = hint.replace(&old_url, &new_url);
+                }
+            }
+        }
+    }
+
     /// Either get the release with the given name, or make a minimal one
     /// with no hosting/artifacts (to be populated)
     pub fn ensure_release(&mut self, name: String, version: String) -> &mut Release {
