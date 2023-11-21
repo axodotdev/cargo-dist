@@ -194,7 +194,7 @@ pub struct DistGraph {
     pub tap: Option<String>,
     /// Whether msvc targets should statically link the crt
     pub msvc_crt_static: bool,
-    ///
+    /// List of hosting providers to use
     pub hosting: Option<HostingInfo>,
 }
 
