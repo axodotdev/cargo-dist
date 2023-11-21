@@ -251,6 +251,7 @@ fn get_new_dist_metadata(
             ssldotcom_windows_sign: None,
             msvc_crt_static: None,
             hosting: None,
+            extra_artifacts: None,
         }
     };
 
@@ -770,6 +771,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         ssldotcom_windows_sign,
         msvc_crt_static,
         hosting,
+        extra_artifacts: _,
     } = &meta;
 
     apply_optional_value(

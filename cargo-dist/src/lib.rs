@@ -25,7 +25,7 @@ use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
 use console::Term;
-use generic_build::build_generic_target;
+use generic_build::{build_generic_target, run_extra_artifacts_build};
 use semver::Version;
 use tracing::info;
 
@@ -138,6 +138,7 @@ fn run_build_step(
             prefix,
             target,
         }) => Ok(generate_source_tarball(committish, prefix, target)?),
+        BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target),
     }
 }
 

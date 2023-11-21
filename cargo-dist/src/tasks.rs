@@ -60,7 +60,7 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::config::{DependencyKind, DirtyMode, ProductionMode, SystemDependencies};
+use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
 use crate::{
     backend::{
         installer::{
@@ -196,6 +196,8 @@ pub struct DistGraph {
     pub msvc_crt_static: bool,
     /// List of hosting providers to use
     pub hosting: Option<HostingInfo>,
+    /// Additional artifacts to build and upload
+    pub extra_artifacts: Vec<ExtraArtifact>,
 }
 
 /// Info about artifacts should be hosted
@@ -286,6 +288,8 @@ pub enum BuildStep {
     Generic(GenericBuildStep),
     /// Do a cargo build (and copy the outputs to various locations)
     Cargo(CargoBuildStep),
+    /// Do an extra artifact build (and copy the outputs to various locations)
+    Extra(ExtraBuildStep),
     /// Run rustup to get a toolchain
     Rustup(RustupStep),
     /// Copy a file
@@ -330,6 +334,15 @@ pub struct GenericBuildStep {
     pub target_triple: TargetTriple,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+    /// The command to run to produce the expected binaries
+    pub build_command: Vec<String>,
+}
+
+/// An "extra" build step, producing new sidecar artifacts
+#[derive(Debug)]
+pub struct ExtraBuildStep {
+    /// Binaries we expect from this build
+    pub expected_artifacts: Vec<String>,
     /// The command to run to produce the expected binaries
     pub build_command: Vec<String>,
 }
@@ -474,6 +487,8 @@ pub enum ArtifactKind {
     Checksum(ChecksumImpl),
     /// A source tarball
     SourceTarball(SourceTarball),
+    /// An extra artifact specified via config
+    ExtraArtifact(ExtraArtifactImpl),
 }
 
 /// An Archive containing binaries (aka ExecutableZip)
@@ -499,6 +514,15 @@ pub struct SourceTarball {
     pub prefix: String,
     /// target filename
     pub target: Utf8PathBuf,
+}
+
+/// An extra artifact of some kind
+#[derive(Clone, Debug)]
+pub struct ExtraArtifactImpl {
+    /// The build command to run to produce this artifact
+    pub build: Vec<String>,
+    /// The artifact this build should produce
+    pub artifact: Utf8PathBuf,
 }
 
 /// A logical release of an application that artifacts are grouped under
@@ -709,6 +733,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             allow_dirty,
             msvc_crt_static,
             hosting,
+            extra_artifacts,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -820,6 +845,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 allow_dirty,
                 msvc_crt_static,
                 hosting,
+                extra_artifacts: extra_artifacts.clone().unwrap_or_default(),
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
@@ -1053,11 +1079,40 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
     }
 
+    fn add_extra_artifacts(&mut self, dist_metadata: &DistMetadata, to_release: ReleaseIdx) {
+        if !self.global_artifacts_enabled() {
+            return;
+        }
+        let dist_dir = &self.inner.dist_dir.to_owned();
+        let artifacts = dist_metadata.extra_artifacts.to_owned().unwrap_or_default();
+
+        for extra in artifacts {
+            for filename in extra.artifacts.clone() {
+                let target_path = dist_dir.join(&filename);
+
+                let artifact = Artifact {
+                    id: filename.to_owned(),
+                    target_triples: vec![],
+                    file_path: target_path.to_owned(),
+                    required_binaries: FastMap::new(),
+                    archive: None,
+                    kind: ArtifactKind::ExtraArtifact(ExtraArtifactImpl {
+                        build: extra.build.to_owned(),
+                        artifact: target_path.to_owned(),
+                    }),
+                    checksum: None,
+                    is_global: true,
+                };
+
+                self.add_global_artifact(to_release, artifact);
+            }
+        }
+    }
+
     fn add_source_tarball(&mut self, _tag: &str, to_release: ReleaseIdx) {
         if !self.global_artifacts_enabled() {
             return;
         }
-
         let release = self.release(to_release);
         let checksum = release.checksum;
         info!("adding source tarball to release {}", release.id);
@@ -2073,6 +2128,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         idx
     }
 
+    fn compute_extra_builds(&mut self) -> Vec<BuildStep> {
+        self.inner
+            .extra_artifacts
+            .iter()
+            .map(|extra| {
+                BuildStep::Extra(ExtraBuildStep {
+                    expected_artifacts: extra.artifacts.clone(),
+                    build_command: extra.build.clone(),
+                })
+            })
+            .collect()
+    }
+
     fn compute_build_steps(&mut self) {
         // FIXME: more intelligently schedule these in a proper graph?
 
@@ -2083,6 +2151,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(),
         };
         local_build_steps.extend(builds);
+        local_build_steps.extend(self.compute_extra_builds());
 
         Self::add_build_steps_for_artifacts(
             &self
@@ -2139,6 +2208,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         prefix: tarball.prefix.to_owned(),
                         target: tarball.target.to_owned(),
                     }));
+                }
+                ArtifactKind::ExtraArtifact(_) => {
+                    // compute_extra_builds handles this
                 }
             }
 
@@ -2217,6 +2289,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
             // Always add the source tarball
             self.add_source_tarball(&announcing.tag, release);
+
+            // Add any extra artifacts defined in the config
+            self.add_extra_artifacts(&package_config, release);
 
             // Add installers to the Release
             // Prefer the CLI's choices (`cfg`) if they're non-empty
