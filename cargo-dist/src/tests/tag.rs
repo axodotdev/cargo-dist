@@ -319,7 +319,7 @@ fn parse_unified_lib() {
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
-    assert_eq!(announcing.rust_releases, vec![]);
+    assert_eq!(announcing.rust_releases, vec![entry_some_lib()]);
 }
 
 #[test]
@@ -394,5 +394,5 @@ fn parse_disjoint_lib() {
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
     assert_eq!(announcing.version, None);
-    assert_eq!(announcing.rust_releases, vec![]);
+    assert_eq!(announcing.rust_releases, vec![entry_other_lib()]);
 }

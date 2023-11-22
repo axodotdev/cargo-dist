@@ -1997,6 +1997,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Create a Release for this binary
             let release = self.add_release(*pkg_idx);
 
+            // Don't bother with any of this without binaries
+            // (releases a library, nothing to Build)
+            if binaries.is_empty() {
+                continue;
+            }
+
             // Tell the Release to include these binaries
             for binary in binaries {
                 self.add_binary(release, *pkg_idx, (*binary).clone());

@@ -8,7 +8,7 @@ use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
 use cargo_dist_schema::DistManifest;
 use itertools::Itertools;
 use semver::Version;
-use tracing::{info, warn};
+use tracing::info;
 
 use crate::{
     errors::{DistError, DistResult},
@@ -185,22 +185,16 @@ pub(crate) fn select_tag(
 
     // Don't proceed if the conclusions don't make sense
     if rust_releases.is_empty() {
-        // It's ok for there to be no selected binaries if the user explicitly requested an
-        // announcement for a library with `--tag=my-lib-1.0.0`
-        if matches!(announcing.release, ReleaseType::Package(_)) {
-            warn!("You're trying to explicitly Release a library, only minimal functionality will work");
-        } else {
-            // No binaries were selected, and they weren't trying to announce a library,
-            // we've gotta bail out, this is too weird.
-            //
-            // To get better help messages, we explore a hypothetical world where they didn't pass
-            // `--tag` so we can get all the options for a good help message.
-            let announcing = PartialAnnouncementTag::default();
-            let rust_releases = select_packages(graph, &announcing);
-            let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
-            let help = tag_help(graph, versions, "You may need to pass the current version as --tag, or need to give all your packages the same version");
-            return Err(DistError::NothingToRelease { help });
-        }
+        // No binaries were selected, and they weren't trying to announce a library,
+        // we've gotta bail out, this is too weird.
+        //
+        // To get better help messages, we explore a hypothetical world where they didn't pass
+        // `--tag` so we can get all the options for a good help message.
+        let announcing = PartialAnnouncementTag::default();
+        let rust_releases = select_packages(graph, &announcing);
+        let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
+        let help = tag_help(graph, versions, "You may need to pass the current version as --tag, or need to give all your packages the same version");
+        return Err(DistError::NothingToRelease { help });
     }
 
     // If we don't have a tag yet we MUST successfully select one here or fail
@@ -297,6 +291,14 @@ fn select_packages(
         }
     }
     info!("");
+
+    // If no binaries were selected but we are trying to specifically release One Package,
+    // add that package as a release still, on the assumption it's a Library
+    if rust_releases.is_empty() {
+        if let ReleaseType::Package(idx) = announcing.release {
+            rust_releases.push((PackageIdx(idx), vec![]));
+        }
+    }
 
     rust_releases
 }

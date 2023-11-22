@@ -14,6 +14,7 @@ pub const BIN_AXO_IDX: PackageIdx = PackageIdx(0);
 
 pub const LIB_SOME_NAME: &str = "some-lib";
 pub const LIB_SOME_VER: &str = BIN_AXO_VER;
+pub const LIB_SOME_IDX: PackageIdx = PackageIdx(1);
 
 pub const BIN_HELPER_NAME: &str = "helper-bin";
 pub const BIN_HELPER_NAME2: &str = "helper-bin-utils";
@@ -22,6 +23,7 @@ pub const BIN_HELPER_IDX: PackageIdx = PackageIdx(2);
 
 pub const LIB_OTHER_NAME: &str = "other-lib";
 pub const LIB_OTHER_VER: &str = "0.5.0";
+pub const LIB_OTHER_IDX: PackageIdx = PackageIdx(3);
 
 pub const BIN_ODDBALL_NAME: &str = "oddball-bin";
 pub const BIN_ODDBALL_VER: &str = "0.1.0";
@@ -118,6 +120,9 @@ pub fn pkg_some_lib() -> PackageInfo {
         ..mock_package(LIB_SOME_NAME, LIB_SOME_VER)
     }
 }
+pub fn entry_some_lib() -> (PackageIdx, Vec<String>) {
+    (LIB_SOME_IDX, vec![])
+}
 
 /// helper-bin 1.0.0 (has 2 binaries)
 pub fn pkg_helper_bin() -> PackageInfo {
@@ -138,6 +143,9 @@ pub fn pkg_other_lib() -> PackageInfo {
     PackageInfo {
         ..mock_package(LIB_OTHER_NAME, LIB_OTHER_VER)
     }
+}
+pub fn entry_other_lib() -> (PackageIdx, Vec<String>) {
+    (LIB_OTHER_IDX, vec![])
 }
 
 /// oddball-bin 0.1.0 (non-harmonious version)

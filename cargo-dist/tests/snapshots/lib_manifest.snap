@@ -13,6 +13,17 @@ stdout:
   "system_info": {
     "cargo_version_line": "CENSORED"
   },
+  "releases": [
+    {
+      "app_name": "cargo-dist-schema",
+      "app_version": "1.0.0-FAKEVERSION",
+      "hosting": {
+        "github": {
+          "artifact_download_url": "https://github.com/axodotdev/cargo-dist/releases/download/cargo-dist-schema-v1.0.0-FAKEVERSION"
+        }
+      }
+    }
+  ],
   "publish_prereleases": false,
   "ci": {
     "github": {
@@ -24,5 +35,4 @@ stdout:
 }
 
 stderr:
- WARN You're trying to explicitly Release a library, only minimal functionality will work
 
