@@ -105,6 +105,15 @@ pub struct GithubMatrix {
     pub include: Vec<GithubMatrixEntry>,
 }
 
+impl GithubMatrix {
+    /// Gets if the matrix has no entries
+    ///
+    /// this is useful for checking if there should be No matrix
+    pub fn is_empty(&self) -> bool {
+        self.include.is_empty()
+    }
+}
+
 /// Entry for a github matrix
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct GithubMatrixEntry {
