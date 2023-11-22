@@ -405,13 +405,13 @@ jobs:
     {{%- for job in user_publish_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
-        # use "always() && ..." to allow us to wait for all publish jobs while
-        # still allowing individual publish jobs to skip themselves (for prereleases).
-        # "host" however must run to completion, no skipping allowed!
-        if: ${{ always() && needs.host.result == 'success'
-        {{%- if 'homebrew' in publish_jobs and tap %}} && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') {{%- endif %}}
-        {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
-        {{{- " }}" | safe }}}
+    # use "always() && ..." to allow us to wait for all publish jobs while
+    # still allowing individual publish jobs to skip themselves (for prereleases).
+    # "host" however must run to completion, no skipping allowed!
+    if: ${{ always() && needs.host.result == 'success'
+    {{%- if 'homebrew' in publish_jobs and tap %}} && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') {{%- endif %}}
+    {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
+    {{{- " }}" | safe }}}
     runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -2467,10 +2467,10 @@ jobs:
       - plan
       - host
       - publish-homebrew-formula
-        # use "always() && ..." to allow us to wait for all publish jobs while
-        # still allowing individual publish jobs to skip themselves (for prereleases).
-        # "host" however must run to completion, no skipping allowed!
-        if: ${{ always() && needs.host.result == 'success' && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') }}
+    # use "always() && ..." to allow us to wait for all publish jobs while
+    # still allowing individual publish jobs to skip themselves (for prereleases).
+    # "host" however must run to completion, no skipping allowed!
+    if: ${{ always() && needs.host.result == 'success' && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') }}
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
