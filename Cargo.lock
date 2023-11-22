@@ -858,9 +858,9 @@ dependencies = [
 
 [[package]]
 name = "gazenot"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5da8a49fae45cd39bfde93f31df04b118166ea53ca2513dfd216b6e38b4aa32"
+checksum = "1087dc68c0b94691e7d2fb69460bb91c3da95cf5630fe6be21f67a5bc95161dc"
 dependencies = [
  "axoasset",
  "backon",
