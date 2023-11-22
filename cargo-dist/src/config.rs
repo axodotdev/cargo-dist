@@ -18,9 +18,9 @@ use crate::{
 
 /// A container to assist deserializing metadata from generic, non-Cargo projects
 #[derive(Debug, Deserialize)]
-pub struct GenericConfig {
+struct GenericConfig {
     /// The dist field within dist.toml
-    pub dist: DistMetadata,
+    dist: DistMetadata,
 }
 
 /// Contents of METADATA_DIST in Cargo.toml files
