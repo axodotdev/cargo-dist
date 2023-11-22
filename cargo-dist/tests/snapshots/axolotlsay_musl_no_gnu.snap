@@ -2029,6 +2029,8 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-20.04"
+    outputs:
+      val: ${{ steps.host.outputs.manifest }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -2041,10 +2043,18 @@ jobs:
         with:
           name: artifacts
           path: target/distrib/
-      - id: cargo-dist
+      - id: host
         shell: bash
         run: |
-          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release
+          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --output-format=json > dist-manifest.json
+          echo "artifacts uploaded and released successfully"
+          cat dist-manifest.json
+          echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
+      - name: "Upload dist-manifest.json"
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: dist-manifest.json
 
   # Create a Github Release with all the results once everything is done
   announce-release:
@@ -2069,9 +2079,9 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ needs.plan.outputs.tag }}
-          name: ${{ fromJson(needs.plan.outputs.val).announcement_title }}
-          body: ${{ fromJson(needs.plan.outputs.val).announcement_github_body }}
-          prerelease: ${{ fromJson(needs.plan.outputs.val).announcement_is_prerelease }}
+          name: ${{ fromJson(needs.should-publish.outputs.val).announcement_title }}
+          body: ${{ fromJson(needs.should-publish.outputs.val).announcement_github_body }}
+          prerelease: ${{ fromJson(needs.should-publish.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
 
 
