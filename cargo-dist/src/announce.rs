@@ -5,15 +5,14 @@
 use axoproject::platforms::triple_to_display_name;
 use axoproject::PackageIdx;
 use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
+use cargo_dist_schema::DistManifest;
 use itertools::Itertools;
 use semver::Version;
-use tracing::{info, warn};
+use tracing::info;
 
 use crate::{
-    backend::installer::{homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, InstallerImpl},
-    config::CiStyle,
     errors::{DistError, DistResult},
-    ArtifactKind, DistGraphBuilder, SortedMap,
+    DistGraphBuilder, SortedMap,
 };
 
 /// details on what we're announcing
@@ -88,136 +87,7 @@ impl<'a> DistGraphBuilder<'a> {
 
     /// If we're publishing to Github, generate some Github notes
     fn compute_announcement_github(&mut self) {
-        use std::fmt::Write;
-
-        if !self.inner.ci_style.contains(&CiStyle::Github) {
-            info!("not publishing to Github, skipping Github Release Notes");
-            return;
-        }
-
-        let mut gh_body = String::new();
-
-        // add release notes
-        if let Some(changelog) = self.manifest.announcement_changelog.as_ref() {
-            gh_body.push_str("## Release Notes\n\n");
-            gh_body.push_str(changelog);
-            gh_body.push_str("\n\n");
-        }
-
-        // Add the contents of each Release to the body
-        for release in &self.inner.releases {
-            let heading_suffix = format!("{} {}", release.app_name, release.version);
-
-            // Delineate releases if there's more than 1
-            if self.inner.releases.len() > 1 {
-                writeln!(gh_body, "# {heading_suffix}\n").unwrap();
-            }
-
-            // Sort out all the artifacts in this Release
-            let mut global_installers = vec![];
-            let mut local_installers = vec![];
-            let mut bundles = vec![];
-            let mut symbols = vec![];
-
-            for &artifact_idx in &release.global_artifacts {
-                let artifact = self.artifact(artifact_idx);
-                match &artifact.kind {
-                    ArtifactKind::ExecutableZip(zip) => bundles.push((artifact, zip)),
-                    ArtifactKind::Symbols(syms) => symbols.push((artifact, syms)),
-                    ArtifactKind::Checksum(_) => {}
-                    ArtifactKind::Installer(installer) => {
-                        global_installers.push((artifact, installer))
-                    }
-                }
-            }
-
-            for &variant_idx in &release.variants {
-                let variant = self.variant(variant_idx);
-                for &artifact_idx in &variant.local_artifacts {
-                    let artifact = self.artifact(artifact_idx);
-                    match &artifact.kind {
-                        ArtifactKind::ExecutableZip(zip) => bundles.push((artifact, zip)),
-                        ArtifactKind::Symbols(syms) => symbols.push((artifact, syms)),
-                        ArtifactKind::Checksum(_) => {}
-                        ArtifactKind::Installer(installer) => {
-                            local_installers.push((artifact, installer))
-                        }
-                    }
-                }
-            }
-
-            if !global_installers.is_empty() {
-                writeln!(gh_body, "## Install {heading_suffix}\n").unwrap();
-                for (_installer, details) in global_installers {
-                    let info = match details {
-                        InstallerImpl::Shell(info)
-                        | InstallerImpl::Homebrew(HomebrewInstallerInfo { inner: info, .. })
-                        | InstallerImpl::Powershell(info)
-                        | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. }) => info,
-                        InstallerImpl::Msi(_) => {
-                            // Should be unreachable, but let's not crash over it
-                            continue;
-                        }
-                    };
-                    writeln!(&mut gh_body, "### {}\n", info.desc).unwrap();
-                    writeln!(&mut gh_body, "```sh\n{}\n```\n", info.hint).unwrap();
-                }
-            }
-
-            let other_artifacts: Vec<_> = bundles
-                .iter()
-                .map(|i| i.0)
-                .chain(local_installers.iter().map(|i| i.0))
-                .chain(symbols.iter().map(|i| i.0))
-                .collect();
-
-            let download_url = self
-                .manifest
-                .release_by_name(&release.app_name)
-                .and_then(|r| r.artifact_download_url());
-            if !other_artifacts.is_empty() && download_url.is_some() {
-                let download_url = download_url.as_ref().unwrap();
-                writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();
-                gh_body.push_str("|  File  | Platform | Checksum |\n");
-                gh_body.push_str("|--------|----------|----------|\n");
-
-                for artifact in other_artifacts {
-                    let mut targets = String::new();
-                    let mut multi_target = false;
-                    for target in &artifact.target_triples {
-                        if multi_target {
-                            targets.push_str(", ");
-                        }
-                        targets.push_str(target);
-                        multi_target = true;
-                    }
-                    let name = &artifact.id;
-                    let artifact_download_url = format!("{download_url}/{name}");
-                    let download = format!("[{name}]({artifact_download_url})");
-                    let checksum = if let Some(checksum_idx) = artifact.checksum {
-                        let checksum_name = &self.artifact(checksum_idx).id;
-                        let checksum_download_url = format!("{download_url}/{checksum_name}");
-                        format!("[checksum]({checksum_download_url})")
-                    } else {
-                        String::new()
-                    };
-                    let mut triple = artifact
-                        .target_triples
-                        .iter()
-                        .filter_map(|t| triple_to_display_name(t))
-                        .join(", ");
-                    if triple.is_empty() {
-                        triple = "Unknown".to_string();
-                    }
-                    writeln!(&mut gh_body, "| {download} | {triple} | {checksum} |").unwrap();
-                }
-                writeln!(&mut gh_body).unwrap();
-            }
-        }
-
-        info!("successfully generated github release body!");
-        // self.inner.artifact_download_url = Some(download_url);
-        self.manifest.announcement_github_body = Some(gh_body);
+        announcement_github(&mut self.manifest);
     }
 }
 
@@ -315,22 +185,16 @@ pub(crate) fn select_tag(
 
     // Don't proceed if the conclusions don't make sense
     if rust_releases.is_empty() {
-        // It's ok for there to be no selected binaries if the user explicitly requested an
-        // announcement for a library with `--tag=my-lib-1.0.0`
-        if matches!(announcing.release, ReleaseType::Package(_)) {
-            warn!("You're trying to explicitly Release a library, only minimal functionality will work");
-        } else {
-            // No binaries were selected, and they weren't trying to announce a library,
-            // we've gotta bail out, this is too weird.
-            //
-            // To get better help messages, we explore a hypothetical world where they didn't pass
-            // `--tag` so we can get all the options for a good help message.
-            let announcing = PartialAnnouncementTag::default();
-            let rust_releases = select_packages(graph, &announcing);
-            let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
-            let help = tag_help(graph, versions, "You may need to pass the current version as --tag, or need to give all your packages the same version");
-            return Err(DistError::NothingToRelease { help });
-        }
+        // No binaries were selected, and they weren't trying to announce a library,
+        // we've gotta bail out, this is too weird.
+        //
+        // To get better help messages, we explore a hypothetical world where they didn't pass
+        // `--tag` so we can get all the options for a good help message.
+        let announcing = PartialAnnouncementTag::default();
+        let rust_releases = select_packages(graph, &announcing);
+        let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
+        let help = tag_help(graph, versions, "You may need to pass the current version as --tag, or need to give all your packages the same version");
+        return Err(DistError::NothingToRelease { help });
     }
 
     // If we don't have a tag yet we MUST successfully select one here or fail
@@ -428,6 +292,14 @@ fn select_packages(
     }
     info!("");
 
+    // If no binaries were selected but we are trying to specifically release One Package,
+    // add that package as a release still, on the assumption it's a Library
+    if rust_releases.is_empty() {
+        if let ReleaseType::Package(idx) = announcing.release {
+            rust_releases.push((PackageIdx(idx), vec![]));
+        }
+    }
+
     rust_releases
 }
 
@@ -500,4 +372,139 @@ fn tag_help(
     .unwrap();
 
     help
+}
+
+/// If we're publishing to Axodotdev, generate the announcement body
+pub fn announcement_axodotdev(manifest: &DistManifest) -> String {
+    // Create a merged announcement body to send, announcement_title should always be set at this point
+    let title = manifest.announcement_title.clone().unwrap_or_default();
+    let body = manifest.announcement_changelog.clone().unwrap_or_default();
+    format!("# {title}\n\n{body}")
+}
+
+/// If we're publishing to Github, generate the announcement body
+///
+/// Currently mutates the manifest, in the future it should output it
+pub fn announcement_github(manifest: &mut DistManifest) {
+    use std::fmt::Write;
+
+    let mut gh_body = String::new();
+
+    // add release notes
+    if let Some(changelog) = manifest.announcement_changelog.as_ref() {
+        gh_body.push_str("## Release Notes\n\n");
+        gh_body.push_str(changelog);
+        gh_body.push_str("\n\n");
+    }
+
+    // Add the contents of each Release to the body
+    let mut announcing_github = false;
+    for release in &manifest.releases {
+        // Only bother if there's actually github hosting
+        if release.hosting.github.is_none() {
+            continue;
+        }
+        announcing_github = true;
+
+        let heading_suffix = format!("{} {}", release.app_name, release.app_version);
+
+        // Delineate releases if there's more than 1
+        if manifest.releases.len() > 1 {
+            writeln!(gh_body, "# {heading_suffix}\n").unwrap();
+        }
+
+        // Sort out all the artifacts in this Release
+        let mut global_installers = vec![];
+        let mut local_installers = vec![];
+        let mut bundles = vec![];
+        let mut symbols = vec![];
+
+        for (_name, artifact) in manifest.artifacts_for_release(release) {
+            match artifact.kind {
+                cargo_dist_schema::ArtifactKind::ExecutableZip => bundles.push(artifact),
+                cargo_dist_schema::ArtifactKind::Symbols => symbols.push(artifact),
+                cargo_dist_schema::ArtifactKind::Installer => {
+                    if let (Some(desc), Some(hint)) =
+                        (&artifact.description, &artifact.install_hint)
+                    {
+                        global_installers.push((desc, hint));
+                    } else {
+                        local_installers.push(artifact);
+                    }
+                }
+                cargo_dist_schema::ArtifactKind::Checksum => {
+                    // Do Nothing (will be included with the artifact it checksums)
+                }
+                cargo_dist_schema::ArtifactKind::Unknown => {
+                    // Do nothing
+                }
+                _ => {
+                    // Do nothing
+                }
+            }
+        }
+
+        if !global_installers.is_empty() {
+            writeln!(gh_body, "## Install {heading_suffix}\n").unwrap();
+            for (desc, hint) in global_installers {
+                writeln!(&mut gh_body, "### {}\n", desc).unwrap();
+                writeln!(&mut gh_body, "```sh\n{}\n```\n", hint).unwrap();
+            }
+        }
+
+        let other_artifacts: Vec<_> = bundles
+            .into_iter()
+            .chain(local_installers)
+            .chain(symbols)
+            .collect();
+
+        let download_url = release.artifact_download_url();
+        if !other_artifacts.is_empty() && download_url.is_some() {
+            let download_url = download_url.as_ref().unwrap();
+            writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();
+            gh_body.push_str("|  File  | Platform | Checksum |\n");
+            gh_body.push_str("|--------|----------|----------|\n");
+
+            for artifact in other_artifacts {
+                // Artifacts with no name do not exist as files, and should have had install-hints
+                let Some(name) = &artifact.name else {
+                    continue;
+                };
+
+                let mut targets = String::new();
+                let mut multi_target = false;
+                for target in &artifact.target_triples {
+                    if multi_target {
+                        targets.push_str(", ");
+                    }
+                    targets.push_str(target);
+                    multi_target = true;
+                }
+
+                let artifact_download_url = format!("{download_url}/{name}");
+                let download = format!("[{name}]({artifact_download_url})");
+                let checksum = if let Some(checksum_name) = &artifact.checksum {
+                    let checksum_download_url = format!("{download_url}/{checksum_name}");
+                    format!("[checksum]({checksum_download_url})")
+                } else {
+                    String::new()
+                };
+                let mut triple = artifact
+                    .target_triples
+                    .iter()
+                    .filter_map(|t| triple_to_display_name(t))
+                    .join(", ");
+                if triple.is_empty() {
+                    triple = "Unknown".to_string();
+                }
+                writeln!(&mut gh_body, "| {download} | {triple} | {checksum} |").unwrap();
+            }
+            writeln!(&mut gh_body).unwrap();
+        }
+    }
+
+    if announcing_github {
+        info!("successfully generated github release body!");
+        manifest.announcement_github_body = Some(gh_body);
+    }
 }
