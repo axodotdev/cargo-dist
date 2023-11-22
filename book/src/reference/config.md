@@ -256,6 +256,25 @@ For instance for packages that are a library and a CLI binary, some developers p
 If you use this you *probably* want to set it on `[package.metadata.dist]` and
 not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
 
+### hosting
+
+> since 0.5.0
+
+Example: `hosting = ["axodotdev", "github"]
+
+Possible values:
+
+* `axodotdev`: Use Axo Releases (currently in closed beta)
+* `github`: Use Github Releases (default if ci = "github")
+
+Specifies what hosting provider to use when hosting/announcing new releases.
+
+By default we will automatically use the native hosting of your CI provider, so when running on Github CI, we'll default to using Github Releases for hosting/announcing.
+
+If Axo Releases and Github Releases are both enabled, we will host/announce on both platforms, but the Github Release's contents will regard the Axo Release as the canonical source for the files. Specifically if you have a shell installer, the Github Release will contain a shell installer that fetches from Axo Releases and it will tell you to `curl | sh` with a URL to Axo Releases.
+
+(Ideally files uploaded to both hosts should be bitwise identical, which means we have to "pick"
+a host to win for fetching installers, and if you're using Axo Releases at all you *probably* want that one to win.)
 
 ### include
 
