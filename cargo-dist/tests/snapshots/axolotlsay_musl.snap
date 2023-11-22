@@ -2038,7 +2038,9 @@ jobs:
 
   # Build and package all the platform-agnostic(ish) things
   build-global-artifacts:
-    needs: [plan, build-local-artifacts]
+    needs:
+      - plan
+      - build-local-artifacts
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -2074,8 +2076,8 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
-
-  should-publish:
+  # Determines if we should publish/announce
+  host:
     needs:
       - plan
       - build-global-artifacts
@@ -2091,12 +2093,13 @@ jobs:
           submodules: recursive
       - name: Install cargo-dist
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-      # Fetch artifacts from scratch-storage to upload them to permanent storage
+      # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
         uses: actions/download-artifact@v3
         with:
           name: artifacts
           path: target/distrib/
+      # This is a harmless no-op for Github Releases, hosting for that happens in "announce"
       - id: host
         shell: bash
         run: |
@@ -2110,9 +2113,15 @@ jobs:
           name: artifacts
           path: dist-manifest.json
 
-  # Create a Github Release with all the results once everything is done
-  announce-release:
-    needs: [plan, should-publish]
+  # Create a Github Release while uploading all files to it
+  announce:
+    needs:
+      - plan
+      - host
+        # use "always() && ..." to allow us to wait for all publish jobs while
+        # still allowing individual publish jobs to skip themselves (for prereleases).
+        # "host" however must run to completion, no skipping allowed!
+        if: ${{ always() && needs.host.result == 'success' }}
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -2133,9 +2142,9 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ needs.plan.outputs.tag }}
-          name: ${{ fromJson(needs.should-publish.outputs.val).announcement_title }}
-          body: ${{ fromJson(needs.should-publish.outputs.val).announcement_github_body }}
-          prerelease: ${{ fromJson(needs.should-publish.outputs.val).announcement_is_prerelease }}
+          name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
+          body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
+          prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
 
 

@@ -168,7 +168,9 @@ jobs:
 
   # Build and package all the platform-agnostic(ish) things
   build-global-artifacts:
-    needs: [plan, build-local-artifacts]
+    needs:
+      - plan
+      - build-local-artifacts
     runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -265,7 +267,21 @@ jobs:
           path: ${{ env.SIGN_DIR_OUT }}
 {{%- endif %}}
 
-  should-publish:
+{{%- if "axodotdev" in hosting_providers %}}
+  # Uploads the artifacts to Axo Releases and tentatively creates Releases for them.
+  # This makes perma URLs like /v1.0.0/ live for subsequent publish steps to use, but
+  # leaves them "disconnected" from the release history (for the purposes of
+  # "list the releases" or "give me the latest releases").
+  #
+  # If all the subsequent "publish" steps succeed, the "announce" job will "connect"
+  # the releases and concepts like "latest" will be updated. Otherwise you're hopefully
+  # in a decent position to roll back the release without anyone noticing it!
+  # This is imperfect with things like "publish to crates.io" being irreversible, but
+  # at worst you're in a better position to yank the version with minimum disruption.
+{{%- else %}}
+  # Determines if we should publish/announce
+{{%- endif %}}
+  host:
     needs:
       - plan
       - build-global-artifacts
@@ -291,12 +307,18 @@ jobs:
       {{%- endif %}}
       - name: Install cargo-dist
         run: {{{ global_task.install_dist }}}
-      # Fetch artifacts from scratch-storage to upload them to permanent storage
+      # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
         uses: actions/download-artifact@v3
         with:
           name: artifacts
           path: target/distrib/
+    {{%- if "axodotdev" in hosting_providers %}}
+      # Upload files to Axo Releases and create the Releases
+    {{%- endif %}}
+    {{%- if "github" in hosting_providers %}}
+      # This is a harmless no-op for Github Releases, hosting for that happens in "announce"
+    {{%- endif %}}
       - id: host
         shell: bash
         run: |
@@ -314,7 +336,9 @@ jobs:
 {{%- if 'homebrew' in publish_jobs and tap %}}
 
   publish-homebrew-formula:
-    needs: [plan, should-publish]
+    needs:
+      - plan
+      - host
     runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -352,7 +376,9 @@ jobs:
 {{%- for job in user_publish_jobs %}}
 
   custom-{{{ job|safe }}}:
-    needs: [plan, should-publish]
+    needs:
+      - plan
+      - host
     if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
     uses: ./.github/workflows/{{{ job|safe }}}.yml
     with:
@@ -360,16 +386,32 @@ jobs:
     secrets: inherit
 {{%- endfor %}}
 
+{{#- being extremely Normal about whitespace/newlines -#}}
+{{{- "
+" | safe }}}
 {{%- if "axodotdev" in hosting_providers %}}
-
-  # Create an Announcement for all the Axo Releases
+  # Create an Announcement for all the Axo Releases, updating the "latest" release
 {{%- endif %}}
 {{%- if "github" in hosting_providers %}}
-
-  # Create a Github Release with all the results once everything is done
+  # Create a Github Release while uploading all files to it
 {{%- endif %}}
-  announce-release:
-    needs: [plan, should-publish]
+  announce:
+    needs:
+      - plan
+      - host
+    {{%- if 'homebrew' in publish_jobs and tap %}}
+      - publish-homebrew-formula
+    {{%- endif %}}
+    {{%- for job in user_publish_jobs %}}
+      - custom-{{{ job|safe }}}
+    {{%- endfor %}}
+        # use "always() && ..." to allow us to wait for all publish jobs while
+        # still allowing individual publish jobs to skip themselves (for prereleases).
+        # "host" however must run to completion, no skipping allowed!
+        if: ${{ always() && needs.host.result == 'success'
+        {{%- if 'homebrew' in publish_jobs and tap %}} && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') {{%- endif %}}
+        {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
+        {{{- " }}" | safe }}}
     runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -411,14 +453,14 @@ jobs:
         with:
           tag: ${{ needs.plan.outputs.tag }}
         {{%- if create_release %}}
-          name: ${{ fromJson(needs.should-publish.outputs.val).announcement_title }}
-          body: ${{ fromJson(needs.should-publish.outputs.val).announcement_github_body }}
+          name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
+          body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
         {{%- else %}}
           allowUpdates: true
           updateOnlyUnreleased: true
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
         {{%- endif %}}
-          prerelease: ${{ fromJson(needs.should-publish.outputs.val).announcement_is_prerelease }}
+          prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
     {{%- endif %}}
