@@ -10,6 +10,8 @@
 //! It's currently not terribly well-suited to being used as a pure library because it happily
 //! writes to stderr/stdout whenever it pleases. Suboptimal for a library.
 
+use std::io::Write;
+
 use axoasset::LocalAsset;
 use backend::{
     ci::CiInfo,
@@ -21,13 +23,14 @@ use cargo_dist_schema::DistManifest;
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
+use console::Term;
 use generic_build::build_generic_target;
 use semver::Version;
 use tracing::info;
 
 use errors::*;
 pub use init::{do_init, InitArgs};
-use miette::miette;
+use miette::{miette, IntoDiagnostic};
 pub use tasks::*;
 
 pub mod announce;
@@ -375,6 +378,20 @@ pub fn check_integrity(cfg: &Config) -> Result<()> {
         announcement_tag: None,
     };
     let (dist, _manifest) = tasks::gather_work(&check_config)?;
+
+    if let Some(hosting) = &dist.hosting {
+        if hosting.hosts.contains(&config::HostingStyle::Axodotdev) {
+            let mut out = Term::stderr();
+            let info = "INFO:";
+            let message = r"You've enabled Axo Releases, which is currently in Closed Beta.
+If you haven't yet signed up, please join our discord
+(https://discord.gg/ECnWuUUXQk) or message hello@axo.dev to get started!
+";
+
+            writeln!(out, "{} {}", out.style().yellow().apply_to(info), message)
+                .into_diagnostic()?;
+        }
+    }
 
     run_generate(
         &dist,
