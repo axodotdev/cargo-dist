@@ -298,6 +298,8 @@ pub enum BuildStep {
     Zip(ZipDirStep),
     /// Generate some kind of installer
     GenerateInstaller(InstallerImpl),
+    /// Generates a source tarball
+    GenerateSourceTarball(SourceTarballStep),
     /// Checksum a file
     Checksum(ChecksumImpl),
     // FIXME: For macos universal builds we'll want
@@ -372,6 +374,18 @@ pub struct ChecksumImpl {
     pub src_path: Utf8PathBuf,
     /// and write it to here
     pub dest_path: Utf8PathBuf,
+}
+
+/// Create a source tarball
+#[derive(Debug, Clone)]
+pub struct SourceTarballStep {
+    /// the ref/tag/commit/branch/etc. to archive
+    pub committish: String,
+    /// A root directory to nest the archive's contents under
+    // Note: GitHub uses `appname-tag` for this
+    pub prefix: String,
+    /// target filename
+    pub target: Utf8PathBuf,
 }
 
 /// A kind of symbols (debuginfo)
@@ -458,6 +472,8 @@ pub enum ArtifactKind {
     Installer(InstallerImpl),
     /// A checksum
     Checksum(ChecksumImpl),
+    /// A source tarball
+    SourceTarball(SourceTarball),
 }
 
 /// An Archive containing binaries (aka ExecutableZip)
@@ -471,6 +487,18 @@ pub struct ExecutableZip {
 pub struct Symbols {
     /// The kind of symbols this is
     kind: SymbolKind,
+}
+
+/// A source tarball artifact
+#[derive(Clone, Debug)]
+pub struct SourceTarball {
+    /// the ref/tag/commit/branch/etc. to archive
+    pub committish: String,
+    /// A root directory to nest the archive's contents under
+    // Note: GitHub uses `appname-tag` for this
+    pub prefix: String,
+    /// target filename
+    pub target: Utf8PathBuf,
 }
 
 /// A logical release of an application that artifacts are grouped under
@@ -1023,6 +1051,38 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 self.add_artifact_checksum(variant_idx, zip_artifact_idx, checksum);
             }
         }
+    }
+
+    fn add_source_tarball(&mut self, tag: &String, to_release: ReleaseIdx) {
+        if !self.global_artifacts_enabled() {
+            return;
+        }
+
+        let release = self.release(to_release);
+        info!("adding source tarball to release {}", release.id);
+
+        let dist_dir = &self.inner.dist_dir;
+
+        let filename = "source.tar.gz".to_owned();
+        let target_path = dist_dir.join(&filename);
+        let prefix = format!("{}-{}/", release.app_name, release.version);
+
+        let artifact = Artifact {
+            id: filename,
+            target_triples: vec![],
+            file_path: target_path.clone(),
+            required_binaries: FastMap::new(),
+            archive: None,
+            kind: ArtifactKind::SourceTarball(SourceTarball {
+                committish: tag.to_owned(),
+                prefix,
+                target: target_path,
+            }),
+            checksum: None,
+            is_global: true,
+        };
+
+        self.add_global_artifact(to_release, artifact);
     }
 
     fn add_artifact_checksum(
@@ -1954,6 +2014,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ArtifactKind::Checksum(checksum) => {
                     build_steps.push(BuildStep::Checksum(checksum.clone()));
                 }
+                ArtifactKind::SourceTarball(tarball) => {
+                    build_steps.push(BuildStep::GenerateSourceTarball(SourceTarballStep {
+                        committish: tarball.committish.to_owned(),
+                        prefix: tarball.prefix.to_owned(),
+                        target: tarball.target.to_owned(),
+                    }));
+                }
             }
 
             if let Some(archive) = &artifact.archive {
@@ -2028,6 +2095,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
             // Add executable zips to the Release
             self.add_executable_zip(release);
+
+            // Always add the source tarball
+            self.add_source_tarball(&announcing.tag, release);
 
             // Add installers to the Release
             // Prefer the CLI's choices (`cfg`) if they're non-empty

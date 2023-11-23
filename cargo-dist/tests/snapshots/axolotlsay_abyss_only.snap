@@ -1873,6 +1873,7 @@ maybeInstall(true).then(run);
       "app_name": "axolotlsay",
       "app_version": "0.2.1",
       "artifacts": [
+        "source.tar.gz",
         "axolotlsay-installer.sh",
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
@@ -2185,6 +2186,10 @@ maybeInstall(true).then(run);
       ],
       "install_hint": "brew install axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "source.tar.gz": {
+      "name": "source.tar.gz",
+      "kind": "source-tarball"
     }
   },
   "publish_prereleases": false,

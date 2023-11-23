@@ -1018,6 +1018,7 @@ Install-Binary "$Args"
       "app_name": "axolotlsay",
       "app_version": "0.2.1",
       "artifacts": [
+        "source.tar.gz",
         "axolotlsay-installer.sh",
         "axolotlsay-installer.ps1",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
@@ -1249,6 +1250,10 @@ Install-Binary "$Args"
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ]
+    },
+    "source.tar.gz": {
+      "name": "source.tar.gz",
+      "kind": "source-tarball"
     }
   },
   "publish_prereleases": false,

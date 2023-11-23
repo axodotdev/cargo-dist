@@ -743,6 +743,7 @@ download_binary_and_run_installer "$@" || exit 1
       "app_name": "akaikatana-repack",
       "app_version": "0.2.0",
       "artifacts": [
+        "source.tar.gz",
         "akaikatana-repack-installer.sh",
         "akaikatana-repack-aarch64-apple-darwin.tar.xz",
         "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256",
@@ -940,6 +941,10 @@ download_binary_and_run_installer "$@" || exit 1
       "target_triples": [
         "x86_64-unknown-linux-musl"
       ]
+    },
+    "source.tar.gz": {
+      "name": "source.tar.gz",
+      "kind": "source-tarball"
     }
   },
   "publish_prereleases": false,

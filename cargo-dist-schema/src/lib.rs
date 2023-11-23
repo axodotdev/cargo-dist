@@ -299,6 +299,9 @@ pub enum ArtifactKind {
     /// A checksum of another artifact
     #[serde(rename = "checksum")]
     Checksum,
+    /// A tarball containing the source code
+    #[serde(rename = "source-tarball")]
+    SourceTarball,
     /// Unknown to this version of cargo-dist-schema
     ///
     /// This is a fallback for forward/backward-compat

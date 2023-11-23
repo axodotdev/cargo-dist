@@ -269,6 +269,11 @@ fn manifest_artifact(
             description = None;
             kind = cargo_dist_schema::ArtifactKind::Checksum;
         }
+        ArtifactKind::SourceTarball(_) => {
+            install_hint = None;
+            description = None;
+            kind = cargo_dist_schema::ArtifactKind::SourceTarball;
+        }
     };
 
     let checksum = artifact.checksum.map(|idx| dist.artifact(idx).id.clone());

@@ -147,7 +147,7 @@ where
             eprintln!("repo already cloned, updating it...");
             std::env::set_current_dir(repo_dir).into_diagnostic()?;
             git.output_checked(|c| c.arg("remote").arg("set-url").arg("origin").arg(repo_url))?;
-            git.output_checked(|c| c.arg("fetch").arg("origin").arg(commit_sha))?;
+            git.output_checked(|c| c.arg("fetch").arg("origin").arg(commit_sha).arg("--tags"))?;
             git.output_checked(|c| c.arg("reset").arg("--hard").arg("FETCH_HEAD"))?;
         } else {
             eprintln!("fetching {repo_url}");
@@ -155,7 +155,7 @@ where
             std::env::set_current_dir(repo_dir).into_diagnostic()?;
             git.output_checked(|c| c.arg("init"))?;
             git.output_checked(|c| c.arg("remote").arg("add").arg("origin").arg(repo_url))?;
-            git.output_checked(|c| c.arg("fetch").arg("origin").arg(commit_sha))?;
+            git.output_checked(|c| c.arg("fetch").arg("origin").arg(commit_sha).arg("--tags"))?;
             git.output_checked(|c| c.arg("reset").arg("--hard").arg("FETCH_HEAD"))?;
         }
 

@@ -1040,6 +1040,7 @@ Install-Binary "$Args"
       "app_name": "akaikatana-repack",
       "app_version": "0.2.0",
       "artifacts": [
+        "source.tar.gz",
         "akaikatana-repack-installer.sh",
         "akaikatana-repack-installer.ps1",
         "akaikatana-repack.rb",
@@ -1257,6 +1258,10 @@ Install-Binary "$Args"
       ],
       "install_hint": "brew install mistydemeo/homebrew-formulae/akaikatana-repack",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "source.tar.gz": {
+      "name": "source.tar.gz",
+      "kind": "source-tarball"
     }
   },
   "publish_prereleases": false,
