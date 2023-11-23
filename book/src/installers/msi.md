@@ -67,9 +67,9 @@ The values we added to `[package.metadata.wix]` are:
 * `license = false` (since 0.5.0)
 * `eula = false` (since 0.5.0)
 
-The two GUIDs are used by Windows to determine that two msi's with different versions refer to the same application and install location, which is required for it to properly handle things like upgrades. They are persisted in your Cargo.toml to keep them stable  across regenerations of `main.wxs`.
+The two GUIDs are used by Windows to determine that two MSIs with different versions refer to the same application and install location, which is required for it to properly handle things like upgrades. They are persisted in your Cargo.toml to keep them stable across regenerations of `main.wxs`.
 
-The license/eula settings are there to disable the auto-license/eula feature of cargo-wix. That feature *would* look at your package's license and potentially turn it into a EULA agreement. While this is a thing some folks want, most of our users aren't interested in getting their end-users to "agree to the MIT License". You can opt back into auto-eulas by setting both of those to `true` (if you just delete the keys cargo-dist will keep adding them back as `false`).
+The license/EULA settings are there to disable the auto-license/EULA feature of cargo-wix. That feature *would* look at your package's license and potentially turn it into a EULA agreement. While this is a thing some folks want, most of our users aren't interested in getting their end-users to "agree to the MIT License". You can opt back into auto-EULAs by setting both of those to `true` (if you just delete the keys cargo-dist will keep adding them back as `false`).
 
 **All of the logic for generating wxs files is part of [cargo-wix][], which cargo-dist includes as a library.** It's a great project we happily contribute to, although some TLC is still needed to make the integration perfect (some of its warnings/errors may mention its own CLI's flags, and those sure won't work if you pass them to cargo-dist). The `[package.metadata.wix]` config is purely cargo-wix's, see [their docs for all the knobs it exposes][cargo-wix].
 
