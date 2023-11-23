@@ -1059,30 +1059,53 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
 
         let release = self.release(to_release);
+        let checksum = release.checksum;
         info!("adding source tarball to release {}", release.id);
 
-        let dist_dir = &self.inner.dist_dir;
+        let dist_dir = &self.inner.dist_dir.to_owned();
 
         let filename = "source.tar.gz".to_owned();
         let target_path = dist_dir.join(&filename);
         let prefix = format!("{}-{}/", release.app_name, release.version);
 
         let artifact = Artifact {
-            id: filename,
+            id: filename.to_owned(),
             target_triples: vec![],
-            file_path: target_path.clone(),
+            file_path: target_path.to_owned(),
             required_binaries: FastMap::new(),
             archive: None,
             kind: ArtifactKind::SourceTarball(SourceTarball {
                 committish: tag.to_owned(),
                 prefix,
-                target: target_path,
+                target: target_path.to_owned(),
             }),
             checksum: None,
             is_global: true,
         };
 
-        self.add_global_artifact(to_release, artifact);
+        let artifact_idx = self.add_global_artifact(to_release, artifact);
+
+        if checksum != ChecksumStyle::False {
+            let checksum_id = format!("{filename}.{}", checksum.ext());
+            let checksum_path = dist_dir.join(&checksum_id);
+            let checksum = Artifact {
+                id: checksum_id.to_owned(),
+                target_triples: vec![],
+                file_path: checksum_path.to_owned(),
+                required_binaries: FastMap::new(),
+                archive: None,
+                kind: ArtifactKind::Checksum(ChecksumImpl {
+                    checksum,
+                    src_path: target_path,
+                    dest_path: checksum_path,
+                }),
+                checksum: None,
+                is_global: true,
+            };
+
+            let checksum_idx = self.add_global_artifact(to_release, checksum);
+            self.artifact_mut(artifact_idx).checksum = Some(checksum_idx);
+        }
     }
 
     fn add_artifact_checksum(
