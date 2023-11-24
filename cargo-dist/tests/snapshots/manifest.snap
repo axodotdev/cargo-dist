@@ -18,6 +18,8 @@ stdout:
       "app_name": "cargo-dist",
       "app_version": "1.0.0-FAKEVERSION",
       "artifacts": [
+        "source.tar.gz",
+        "source.tar.gz.sha256",
         "cargo-dist-installer.sh",
         "cargo-dist-installer.ps1",
         "cargo-dist.rb",
@@ -281,6 +283,15 @@ stdout:
       ],
       "install_hint": "brew install axodotdev/homebrew-tap/cargo-dist",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "source.tar.gz": {
+      "name": "source.tar.gz",
+      "kind": "source-tarball",
+      "checksum": "source.tar.gz.sha256"
+    },
+    "source.tar.gz.sha256": {
+      "name": "source.tar.gz.sha256",
+      "kind": "checksum"
     }
   },
   "publish_prereleases": false,

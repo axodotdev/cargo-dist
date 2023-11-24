@@ -1022,6 +1022,8 @@ Install-Binary "$Args"
       "app_name": "axolotlsay",
       "app_version": "0.2.1",
       "artifacts": [
+        "source.tar.gz",
+        "source.tar.gz.sha256",
         "axolotlsay-installer.sh",
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
@@ -1239,6 +1241,15 @@ Install-Binary "$Args"
       ],
       "install_hint": "brew install axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "source.tar.gz": {
+      "name": "source.tar.gz",
+      "kind": "source-tarball",
+      "checksum": "source.tar.gz.sha256"
+    },
+    "source.tar.gz.sha256": {
+      "name": "source.tar.gz.sha256",
+      "kind": "checksum"
     }
   },
   "publish_prereleases": false,

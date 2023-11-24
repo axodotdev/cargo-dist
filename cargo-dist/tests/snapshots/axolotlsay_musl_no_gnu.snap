@@ -1581,6 +1581,8 @@ maybeInstall(true).then(run);
       "app_name": "axolotlsay",
       "app_version": "0.2.1",
       "artifacts": [
+        "source.tar.gz",
+        "source.tar.gz.sha256",
         "axolotlsay-installer.sh",
         "axolotlsay-npm-package.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
@@ -1797,6 +1799,15 @@ maybeInstall(true).then(run);
       "target_triples": [
         "x86_64-unknown-linux-musl"
       ]
+    },
+    "source.tar.gz": {
+      "name": "source.tar.gz",
+      "kind": "source-tarball",
+      "checksum": "source.tar.gz.sha256"
+    },
+    "source.tar.gz.sha256": {
+      "name": "source.tar.gz.sha256",
+      "kind": "checksum"
     }
   },
   "publish_prereleases": false,

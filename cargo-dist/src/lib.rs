@@ -11,6 +11,7 @@
 //! writes to stderr/stdout whenever it pleases. Suboptimal for a library.
 
 use std::io::Write;
+use std::process::Command;
 
 use axoasset::LocalAsset;
 use backend::{
@@ -132,6 +133,11 @@ fn run_build_step(
             src_path,
             dest_path,
         }) => Ok(generate_and_write_checksum(checksum, src_path, dest_path)?),
+        BuildStep::GenerateSourceTarball(SourceTarballStep {
+            committish,
+            prefix,
+            target,
+        }) => Ok(generate_source_tarball(committish, prefix, target)?),
     }
 }
 
@@ -173,6 +179,27 @@ fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResul
         write!(&mut output, "{:02x}", byte).unwrap();
     }
     Ok(output)
+}
+
+/// Creates a source code tarball from the git archive from
+/// tag/ref/commit `committish`, with the directory prefix `prefix`,
+/// at the output file `target`.
+fn generate_source_tarball(committish: &str, prefix: &str, target: &Utf8Path) -> DistResult<()> {
+    let status = Command::new("git")
+        .arg("archive")
+        .arg(committish)
+        .arg("--format=tar.gz")
+        .arg("--prefix")
+        .arg(prefix)
+        .arg("--output")
+        .arg(target)
+        .status()?;
+
+    if !status.success() {
+        return Err(DistError::GitArchiveError {});
+    }
+
+    Ok(())
 }
 
 /// Write the checksum to dest_path

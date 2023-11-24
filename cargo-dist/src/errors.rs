@@ -261,6 +261,11 @@ pub enum DistError {
         #[related]
         sources: Vec<AxoprojectError>,
     },
+
+    /// An error running `git archive`
+    #[error("We failed to generate a source tarball for your project")]
+    #[diagnostic(help("This is probably not your fault, please file an issue!"))]
+    GitArchiveError {},
 }
 
 impl From<minijinja::Error> for DistError {
