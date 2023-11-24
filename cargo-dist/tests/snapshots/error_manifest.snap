@@ -7,15 +7,13 @@ stdout:
 
 stderr:
   × This workspace doesn't have anything for cargo-dist to Release!
-  help: You may need to pass the current version as --tag, or need to give
-        all your packages the same version
+  help: You may need to pass the current version as --tag, or need to give all your packages the same version
         
         Here are some options:
         
         --tag=v1.0.0-FAKEVERSION will Announce: cargo-dist
         
-        you can also request any single package with --tag=cargo-dist-
-        v1.0.0-FAKEVERSION
+        you can also request any single package with --tag=cargo-dist-v1.0.0-FAKEVERSION
         
 
 
