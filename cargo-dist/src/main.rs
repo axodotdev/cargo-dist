@@ -4,6 +4,7 @@
 
 use std::io::Write;
 
+use axoasset::LocalAsset;
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
 use cargo_dist::{linkage::Linkage, *};
@@ -492,10 +493,16 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
 
 fn cmd_manifest_schema(
     _config: &Cli,
-    _args: &cli::ManifestSchemaArgs,
+    args: &cli::ManifestSchemaArgs,
 ) -> Result<(), miette::ErrReport> {
     let schema = cargo_dist_schema::DistManifest::json_schema();
     let json_schema = serde_json::to_string_pretty(&schema).expect("failed to stringify schema!?");
-    println!("{json_schema}");
+
+    if let Some(destination) = args.output.to_owned() {
+        let contents = json_schema + "\n";
+        LocalAsset::write_new(&contents, destination)?;
+    } else {
+        println!("{json_schema}");
+    }
     Ok(())
 }
