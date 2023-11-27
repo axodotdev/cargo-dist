@@ -1053,7 +1053,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
     }
 
-    fn add_source_tarball(&mut self, tag: &String, to_release: ReleaseIdx) {
+    fn add_source_tarball(&mut self, _tag: &str, to_release: ReleaseIdx) {
         if !self.global_artifacts_enabled() {
             return;
         }
@@ -1075,7 +1075,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             required_binaries: FastMap::new(),
             archive: None,
             kind: ArtifactKind::SourceTarball(SourceTarball {
-                committish: tag.to_owned(),
+                // FIXME: it would be nice to verify that HEAD == tag when it Really Must
+                // (as in when cutting a real release), but to make everything work when testing
+                // locally or in CI without a tag, we just always use HEAD (since releases will
+                // checkout the tag anyway, so HEAD==tag should always be true when it matters).
+                committish: "HEAD".to_owned(),
                 prefix,
                 target: target_path.to_owned(),
             }),
