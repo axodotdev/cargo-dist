@@ -2,6 +2,7 @@
 *.snap.new
 /book/book/
 cargo-dist/wix
+/dist-manifest-schema.json
 
 # Oranda
 oranda-debug.log
