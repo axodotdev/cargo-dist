@@ -17,8 +17,11 @@ The headline features are:
 
 ### Axo Releases
 
-Axo Releases users can now enable builtin cargo-dist support by setting `hosting = "axodotdev"` in their
-`[workspace.metadata.dist]`.
+Axo Releases users can now enable builtin cargo-dist support by setting
+
+`hosting = ["axodotdev"]`
+
+in their `[workspace.metadata.dist]`.
 
 To sign up for the Axo Releases closed beta, go to https://dash.axo.dev/
 
