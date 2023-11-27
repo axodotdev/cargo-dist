@@ -4,6 +4,11 @@
 
 Although cargo-dist was originally designed specifically for Cargo-based builds, we've introduced experimental features to allow you to use it to build and distribute any software written in any language. This feature is currently a *prerelease*: details may change before it becomes stable.
 
+## Examples
+
+* [example npm project](https://github.com/axodotdev/axolotlsay-js)
+* [example C project](https://github.com/axodotdev/cargo-dist-c-example)
+
 ## Configuration
 
 In order for cargo-dist to recognize your application, it requires a [TOML][toml] configuration file named `dist.toml`. This file is similar to Cargo's [`Cargo.toml`][cargo-toml], so users who are already familiar with Cargo should feel comfortable right away. Many of `dist.toml`'s fields are identical to `Cargo.toml`, but there are a few extra fields specific to this file.
