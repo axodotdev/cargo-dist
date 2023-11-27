@@ -30,7 +30,7 @@ npm-projects = ["oro-common", "oro-package-spec", "node-semver"]
 
 [dependencies]
 axoasset = { version = "0.6.0", default-features = false, features = ["json-serde", "toml-edit", "toml-serde"] }
-axocli = { version = "0.1.0", optional = true }
+axocli = { version = "0.1.1", optional = true }
 camino = { version = "1.1.4", default-features = true, features = ["serde1"] }
 console = "0.15.5"
 miette = "5.6.0"
