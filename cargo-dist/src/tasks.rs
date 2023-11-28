@@ -734,6 +734,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             msvc_crt_static,
             hosting,
             extra_artifacts,
+            arm64_linux_runner: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();

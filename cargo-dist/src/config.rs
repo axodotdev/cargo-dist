@@ -276,6 +276,10 @@ pub struct DistMetadata {
     /// Any extra artifacts and their buildscripts
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra_artifacts: Option<Vec<ExtraArtifact>>,
+
+    /// The GitHub runner to use for Linux arm64 builds.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub arm64_linux_runner: Option<String>,
 }
 
 impl DistMetadata {
@@ -313,6 +317,7 @@ impl DistMetadata {
             msvc_crt_static: _,
             hosting: _,
             extra_artifacts: _,
+            arm64_linux_runner: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -359,6 +364,7 @@ impl DistMetadata {
             msvc_crt_static,
             hosting,
             extra_artifacts,
+            arm64_linux_runner,
         } = self;
 
         // Check for global settings on local packages
@@ -453,6 +459,9 @@ impl DistMetadata {
         if extra_artifacts.is_none() {
             *extra_artifacts = workspace_config.extra_artifacts.clone();
         }
+        if arm64_linux_runner.is_none() {
+            *arm64_linux_runner = workspace_config.arm64_linux_runner.clone();
+        }
 
         // This was historically implemented as extend, but I'm not convinced the
         // inconsistency is worth the inconvenience...
@@ -491,6 +500,8 @@ pub struct Config {
     pub installers: Vec<InstallerStyle>,
     /// The (git) tag to use for this Announcement.
     pub announcement_tag: Option<String>,
+    /// The GitHub runner to use for Linux arm64 builds.
+    pub arm64_linux_runner: Option<String>,
 }
 
 /// How we should select the artifacts to build

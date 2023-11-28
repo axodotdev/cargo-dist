@@ -252,6 +252,7 @@ fn get_new_dist_metadata(
             msvc_crt_static: None,
             hosting: None,
             extra_artifacts: None,
+            arm64_linux_runner: None,
         }
     };
 
@@ -772,6 +773,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         msvc_crt_static,
         hosting,
         extra_artifacts: _,
+        arm64_linux_runner,
     } = &meta;
 
     apply_optional_value(
@@ -963,6 +965,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "hosting",
         "# Where to host releases\n",
         hosting.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "arm64-linux-runner",
+        "# The GitHub runner to use for Linux arm64 builds\n",
+        arm64_linux_runner.as_deref(),
     );
 
     // Finalize the table

@@ -201,6 +201,7 @@ fn cmd_build(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
+        arm64_linux_runner: None,
     };
     let report = do_build(&config)?;
     print(
@@ -222,6 +223,7 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
+        arm64_linux_runner: None,
     };
 
     let args = cargo_dist::config::HostArgs {
@@ -242,6 +244,7 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
+        arm64_linux_runner: None,
     };
     let report = do_manifest(&config)?;
     print(cli, &report, false, Some("manifest"))
@@ -273,6 +276,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
+        arm64_linux_runner: None,
     };
     let args = cargo_dist::InitArgs {
         yes: args.yes,
@@ -293,6 +297,7 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
+        arm64_linux_runner: None,
     };
     let args = cargo_dist::GenerateArgs {
         check: args.check,
@@ -312,6 +317,7 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         announcement_tag: cli.tag.clone(),
+        arm64_linux_runner: None,
     };
     let mut options = cargo_dist::linkage::LinkageArgs {
         print_output: args.print_output,
