@@ -48,6 +48,30 @@ impl<'a> DistGraphBuilder<'a> {
     }
 }
 
+fn platform_appropriate_cc(target: &str) -> &str {
+    if target.contains("darwin") {
+        "clang"
+    } else if target.contains("linux") {
+        "gcc"
+    } else if target.contains("windows") {
+        "cl.exe"
+    } else {
+        "cc"
+    }
+}
+
+fn platform_appropriate_cxx(target: &str) -> &str {
+    if target.contains("darwin") {
+        "clang++"
+    } else if target.contains("linux") {
+        "g++"
+    } else if target.contains("windows") {
+        "cl.exe"
+    } else {
+        "c++"
+    }
+}
+
 /// Build a generic target
 pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -> Result<()> {
     let mut command_string = target.build_command.clone();
@@ -88,6 +112,13 @@ pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -
     // Ensure we inform the build what architecture and platform
     // it's building for.
     command.env("CARGO_DIST_TARGET", &target.target_triple);
+
+    let cc =
+        std::env::var("CC").unwrap_or(platform_appropriate_cc(&target.target_triple).to_owned());
+    command.env("CC", cc);
+    let cxx =
+        std::env::var("CXX").unwrap_or(platform_appropriate_cxx(&target.target_triple).to_owned());
+    command.env("CXX", cxx);
 
     // Pass CFLAGS/LDFLAGS for C builds
     if let Some(cflags) = cflags {
