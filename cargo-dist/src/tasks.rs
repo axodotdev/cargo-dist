@@ -199,8 +199,8 @@ pub struct DistGraph {
     pub hosting: Option<HostingInfo>,
     /// Additional artifacts to build and upload
     pub extra_artifacts: Vec<ExtraArtifact>,
-    /// Custom GitHub runners, mapped by triple
-    pub custom_runners: HashMap<String, String>,
+    /// Custom GitHub runners, mapped by triple target
+    pub github_custom_runners: HashMap<String, String>,
 }
 
 /// Info about artifacts should be hosted
@@ -737,7 +737,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             msvc_crt_static,
             hosting,
             extra_artifacts,
-            custom_runners: _,
+            github_custom_runners: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -850,8 +850,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 msvc_crt_static,
                 hosting,
                 extra_artifacts: extra_artifacts.clone().unwrap_or_default(),
-                custom_runners: workspace_metadata
-                    .custom_runners
+                github_custom_runners: workspace_metadata
+                    .github_custom_runners
                     .clone()
                     .unwrap_or_default(),
             },

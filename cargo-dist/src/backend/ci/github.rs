@@ -110,14 +110,14 @@ impl GithubCiInfo {
 
         // Figure out what Local Artifact tasks we need
         let local_runs = if dist.merge_tasks {
-            distribute_targets_to_runners_merged(local_targets, &dist.custom_runners)
+            distribute_targets_to_runners_merged(local_targets, &dist.github_custom_runners)
         } else {
-            distribute_targets_to_runners_split(local_targets, &dist.custom_runners)
+            distribute_targets_to_runners_split(local_targets, &dist.github_custom_runners)
         };
         for (runner, targets) in local_runs {
             use std::fmt::Write;
             let install_dist =
-                install_dist_for_github_runner(&runner, &install_dist_sh, &install_dist_ps1);
+                install_dist_for_targets(&targets, &install_dist_sh, &install_dist_ps1);
             let mut dist_args = String::from("--artifacts=local");
             for target in &targets {
                 write!(dist_args, " --target={target}").unwrap();
@@ -194,9 +194,9 @@ impl GithubCiInfo {
 /// succeed (uploading itself to the draft release).
 ///
 /// In priniciple it does remove some duplicated setup work, so this is ostensibly "cheaper".
-fn distribute_targets_to_runners_merged<'a, 'b>(
+fn distribute_targets_to_runners_merged<'a>(
     targets: SortedSet<&'a TargetTriple>,
-    custom_runners: &'b HashMap<String, String>,
+    custom_runners: &HashMap<String, String>,
 ) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTriple>)> {
     let mut groups = SortedMap::<GithubRunner, Vec<&TargetTriple>>::new();
     for target in targets {
@@ -215,9 +215,9 @@ fn distribute_targets_to_runners_merged<'a, 'b>(
 
 /// Given a set of targets we want to build local artifacts for, map them to Github Runners
 /// while preferring each target gets its own runner for latency and fault-isolation.
-fn distribute_targets_to_runners_split<'a, 'b>(
+fn distribute_targets_to_runners_split<'a>(
     targets: SortedSet<&'a TargetTriple>,
-    custom_runners: &'b HashMap<String, String>,
+    custom_runners: &HashMap<String, String>,
 ) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTriple>)> {
     let mut groups = vec![];
     for target in targets {
@@ -265,25 +265,20 @@ fn github_runner_for_target(
 }
 
 /// Select the cargo-dist installer approach for a given Github Runner
-fn install_dist_for_github_runner<'a>(
-    runner: &'a GithubRunner,
+fn install_dist_for_targets<'a>(
+    targets: &'a [&'a TargetTriple],
     install_sh: &'a str,
     install_ps1: &'a str,
 ) -> &'a str {
-    dbg!(runner);
-
-    if runner.contains("linux")
-        || runner.contains("ubuntu")
-        || runner.contains("apple")
-        || runner.contains("macos")
-        || runner.contains("darwin")
-    {
-        install_sh
-    } else if runner.contains("windows") || runner.contains("msvc") {
-        install_ps1
-    } else {
-        unreachable!("internal error: unknown github runner!?")
+    for target in targets {
+        if target.contains("linux") || target.contains("apple") {
+            return install_sh;
+        } else if target.contains("windows") {
+            return install_ps1;
+        }
     }
+
+    unreachable!("internal error: unknown target triple!?")
 }
 
 fn brewfile_from(packages: &[String]) -> String {
