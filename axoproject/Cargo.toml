@@ -42,7 +42,7 @@ semver = { version = "1.0.20", optional = true, default-features = true, feature
 node-semver = { version = "2.1.0", optional = true }
 oro-package-spec = { version = "0.3.34", optional = true }
 thiserror = "1.0.50"
-clap = { version = "4.4.8", features = ["derive"] }
+clap = { version = "4.4.10", features = ["derive"] }
 pathdiff = { version = "0.2.1", features = ["camino"] }
 itertools = "0.12.0"
 url = "2.5.0"
