@@ -1,8 +1,5 @@
 [workspace]
-members = [
-    "cargo-dist",
-    "cargo-dist-schema",
-]
+members = ["cargo-dist", "cargo-dist-schema"]
 resolver = "2"
 
 [workspace.metadata.release]
@@ -24,13 +21,30 @@ tap = "axodotdev/homebrew-tap"
 # Publish jobs to run in CI
 publish-jobs = ["homebrew"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "x86_64-unknown-linux-musl",
+    "x86_64-pc-windows-msvc",
+    "aarch64-unknown-linux-gnu",
+]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
 
 [[workspace.metadata.dist.extra-artifacts]]
 artifacts = ["dist-manifest-schema.json"]
-build = ["cargo", "run", "--", "dist", "manifest-schema", "--output=dist-manifest-schema.json"]
+build = [
+    "cargo",
+    "run",
+    "--",
+    "dist",
+    "manifest-schema",
+    "--output=dist-manifest-schema.json",
+]
+
+[workspace.metadata.dist.custom-runners]
+aarch64-unknown-linux-gnu = "buildjet-16vcpu-ubuntu-2204-arm"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

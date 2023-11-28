@@ -2,6 +2,8 @@
 //!
 //! In the future this may get split up into submodules.
 
+use std::collections::HashMap;
+
 use axoasset::LocalAsset;
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
 use serde::Serialize;
@@ -108,14 +110,14 @@ impl GithubCiInfo {
 
         // Figure out what Local Artifact tasks we need
         let local_runs = if dist.merge_tasks {
-            distribute_targets_to_runners_merged(local_targets)
+            distribute_targets_to_runners_merged(local_targets, &dist.custom_runners)
         } else {
-            distribute_targets_to_runners_split(local_targets)
+            distribute_targets_to_runners_split(local_targets, &dist.custom_runners)
         };
         for (runner, targets) in local_runs {
             use std::fmt::Write;
             let install_dist =
-                install_dist_for_github_runner(runner, &install_dist_sh, &install_dist_ps1);
+                install_dist_for_github_runner(&runner, &install_dist_sh, &install_dist_ps1);
             let mut dist_args = String::from("--artifacts=local");
             for target in &targets {
                 write!(dist_args, " --target={target}").unwrap();
@@ -192,16 +194,17 @@ impl GithubCiInfo {
 /// succeed (uploading itself to the draft release).
 ///
 /// In priniciple it does remove some duplicated setup work, so this is ostensibly "cheaper".
-fn distribute_targets_to_runners_merged(
-    targets: SortedSet<&TargetTriple>,
-) -> std::vec::IntoIter<(GithubRunner, Vec<&TargetTriple>)> {
+fn distribute_targets_to_runners_merged<'a, 'b>(
+    targets: SortedSet<&'a TargetTriple>,
+    custom_runners: &'b HashMap<String, String>,
+) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTriple>)> {
     let mut groups = SortedMap::<GithubRunner, Vec<&TargetTriple>>::new();
     for target in targets {
-        let runner = github_runner_for_target(target);
+        let runner = github_runner_for_target(target, custom_runners);
         let runner = runner.unwrap_or_else(|| {
             let default = GITHUB_LINUX_RUNNER;
             warn!("not sure which github runner should be used for {target}, assuming {default}");
-            default
+            default.to_owned()
         });
         groups.entry(runner).or_default().push(target);
     }
@@ -212,16 +215,17 @@ fn distribute_targets_to_runners_merged(
 
 /// Given a set of targets we want to build local artifacts for, map them to Github Runners
 /// while preferring each target gets its own runner for latency and fault-isolation.
-fn distribute_targets_to_runners_split(
-    targets: SortedSet<&TargetTriple>,
-) -> std::vec::IntoIter<(GithubRunner, Vec<&TargetTriple>)> {
+fn distribute_targets_to_runners_split<'a, 'b>(
+    targets: SortedSet<&'a TargetTriple>,
+    custom_runners: &'b HashMap<String, String>,
+) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTriple>)> {
     let mut groups = vec![];
     for target in targets {
-        let runner = github_runner_for_target(target);
+        let runner = github_runner_for_target(target, custom_runners);
         let runner = runner.unwrap_or_else(|| {
             let default = GITHUB_LINUX_RUNNER;
             warn!("not sure which github runner should be used for {target}, assuming {default}");
-            default
+            default.to_owned()
         });
         groups.push((runner, vec![target]));
     }
@@ -229,7 +233,7 @@ fn distribute_targets_to_runners_split(
 }
 
 /// A string representing a Github Runner
-type GithubRunner = &'static str;
+type GithubRunner = String;
 /// The Github Runner to use for Linux
 const GITHUB_LINUX_RUNNER: &str = "ubuntu-20.04";
 /// The Github Runner to use for macos
@@ -238,16 +242,23 @@ const GITHUB_MACOS_RUNNER: &str = "macos-11";
 const GITHUB_WINDOWS_RUNNER: &str = "windows-2019";
 
 /// Get the appropriate Github Runner for building a target
-fn github_runner_for_target(target: &TargetTriple) -> Option<GithubRunner> {
+fn github_runner_for_target(
+    target: &TargetTriple,
+    custom_runners: &HashMap<String, String>,
+) -> Option<GithubRunner> {
+    if let Some(runner) = custom_runners.get(target) {
+        return Some(runner.to_owned());
+    }
+
     // We want to default to older runners to minimize the places
     // where random system dependencies can creep in and be very
     // recent. This helps with portability!
     if target.contains("linux") {
-        Some(GITHUB_LINUX_RUNNER)
+        Some(GITHUB_LINUX_RUNNER.to_owned())
     } else if target.contains("apple") {
-        Some(GITHUB_MACOS_RUNNER)
+        Some(GITHUB_MACOS_RUNNER.to_owned())
     } else if target.contains("windows") {
-        Some(GITHUB_WINDOWS_RUNNER)
+        Some(GITHUB_WINDOWS_RUNNER.to_owned())
     } else {
         None
     }
@@ -255,13 +266,20 @@ fn github_runner_for_target(target: &TargetTriple) -> Option<GithubRunner> {
 
 /// Select the cargo-dist installer approach for a given Github Runner
 fn install_dist_for_github_runner<'a>(
-    runner: GithubRunner,
+    runner: &'a GithubRunner,
     install_sh: &'a str,
     install_ps1: &'a str,
 ) -> &'a str {
-    if runner == GITHUB_LINUX_RUNNER || runner == GITHUB_MACOS_RUNNER {
+    dbg!(runner);
+
+    if runner.contains("linux")
+        || runner.contains("ubuntu")
+        || runner.contains("apple")
+        || runner.contains("macos")
+        || runner.contains("darwin")
+    {
         install_sh
-    } else if runner == GITHUB_WINDOWS_RUNNER {
+    } else if runner.contains("windows") || runner.contains("msvc") {
         install_ps1
     } else {
         unreachable!("internal error: unknown github runner!?")

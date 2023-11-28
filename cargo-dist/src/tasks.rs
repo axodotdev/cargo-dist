@@ -48,6 +48,7 @@
 //! Also note that the BuildSteps for installers are basically monolithic "build that installer"
 //! steps to give them the freedom to do whatever they need to do.
 
+use std::collections::HashMap;
 use std::process::Command;
 
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
@@ -198,6 +199,8 @@ pub struct DistGraph {
     pub hosting: Option<HostingInfo>,
     /// Additional artifacts to build and upload
     pub extra_artifacts: Vec<ExtraArtifact>,
+    /// Custom GitHub runners, mapped by triple
+    pub custom_runners: HashMap<String, String>,
 }
 
 /// Info about artifacts should be hosted
@@ -734,7 +737,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             msvc_crt_static,
             hosting,
             extra_artifacts,
-            arm64_linux_runner: _,
+            custom_runners: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -847,6 +850,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 msvc_crt_static,
                 hosting,
                 extra_artifacts: extra_artifacts.clone().unwrap_or_default(),
+                custom_runners: workspace_metadata
+                    .custom_runners
+                    .clone()
+                    .unwrap_or_default(),
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),

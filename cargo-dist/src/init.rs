@@ -252,7 +252,7 @@ fn get_new_dist_metadata(
             msvc_crt_static: None,
             hosting: None,
             extra_artifacts: None,
-            arm64_linux_runner: None,
+            custom_runners: None,
         }
     };
 
@@ -773,7 +773,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         msvc_crt_static,
         hosting,
         extra_artifacts: _,
-        arm64_linux_runner,
+        custom_runners: _,
     } = &meta;
 
     apply_optional_value(
@@ -967,12 +967,12 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         hosting.as_ref(),
     );
 
-    apply_optional_value(
-        table,
-        "arm64-linux-runner",
-        "# The GitHub runner to use for Linux arm64 builds\n",
-        arm64_linux_runner.as_deref(),
-    );
+    // apply_optional_value(
+    //     table,
+    //     "custom_runners",
+    //     "# Custom GitHub runners to use for builds, mapped by triple\n",
+    //     custom_runners.as_ref(),
+    // );
 
     // Finalize the table
     table

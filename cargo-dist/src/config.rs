@@ -1,6 +1,6 @@
 //! Config types (for workspace.metadata.dist)
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use axoasset::{toml_edit, SourceFile};
 use axoproject::{WorkspaceKind, WorkspaceSearch};
@@ -277,9 +277,9 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra_artifacts: Option<Vec<ExtraArtifact>>,
 
-    /// The GitHub runner to use for Linux arm64 builds.
+    /// Custom GitHub runners, mapped by triple
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub arm64_linux_runner: Option<String>,
+    pub custom_runners: Option<HashMap<String, String>>,
 }
 
 impl DistMetadata {
@@ -317,7 +317,7 @@ impl DistMetadata {
             msvc_crt_static: _,
             hosting: _,
             extra_artifacts: _,
-            arm64_linux_runner: _,
+            custom_runners: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -364,7 +364,7 @@ impl DistMetadata {
             msvc_crt_static,
             hosting,
             extra_artifacts,
-            arm64_linux_runner,
+            custom_runners,
         } = self;
 
         // Check for global settings on local packages
@@ -459,8 +459,8 @@ impl DistMetadata {
         if extra_artifacts.is_none() {
             *extra_artifacts = workspace_config.extra_artifacts.clone();
         }
-        if arm64_linux_runner.is_none() {
-            *arm64_linux_runner = workspace_config.arm64_linux_runner.clone();
+        if custom_runners.is_none() {
+            *custom_runners = workspace_config.custom_runners.clone();
         }
 
         // This was historically implemented as extend, but I'm not convinced the
@@ -500,8 +500,6 @@ pub struct Config {
     pub installers: Vec<InstallerStyle>,
     /// The (git) tag to use for this Announcement.
     pub announcement_tag: Option<String>,
-    /// The GitHub runner to use for Linux arm64 builds.
-    pub arm64_linux_runner: Option<String>,
 }
 
 /// How we should select the artifacts to build
