@@ -374,7 +374,11 @@ pub enum OutputFormat {
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct ManifestSchemaArgs {}
+pub struct ManifestSchemaArgs {
+    /// Write the manifest schema to the named file instead of stdout
+    #[clap(long)]
+    pub output: Option<String>,
+}
 
 #[derive(Args, Clone, Debug)]
 pub struct HostArgs {

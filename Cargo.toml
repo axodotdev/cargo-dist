@@ -28,6 +28,10 @@ targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-dar
 # Publish jobs to run in CI
 pr-run-mode = "plan"
 
+[[workspace.metadata.dist.extra-artifacts]]
+artifacts = ["dist-manifest-schema.json"]
+build = ["cargo", "run", "--", "dist", "manifest-schema", "--output=dist-manifest-schema.json"]
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"

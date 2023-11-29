@@ -20,6 +20,7 @@ stdout:
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",
+        "dist-manifest-schema.json",
         "cargo-dist-installer.sh",
         "cargo-dist-installer.ps1",
         "cargo-dist.rb",
@@ -284,6 +285,10 @@ stdout:
       ],
       "install_hint": "brew install axodotdev/homebrew-tap/cargo-dist",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "dist-manifest-schema.json": {
+      "name": "dist-manifest-schema.json",
+      "kind": "extra-artifact"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

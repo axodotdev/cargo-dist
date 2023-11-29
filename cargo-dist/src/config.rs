@@ -272,6 +272,10 @@ pub struct DistMetadata {
     /// Hosting provider
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hosting: Option<Vec<HostingStyle>>,
+
+    /// Any extra artifacts and their buildscripts
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra_artifacts: Option<Vec<ExtraArtifact>>,
 }
 
 impl DistMetadata {
@@ -308,6 +312,7 @@ impl DistMetadata {
             ssldotcom_windows_sign: _,
             msvc_crt_static: _,
             hosting: _,
+            extra_artifacts: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -353,6 +358,7 @@ impl DistMetadata {
             ssldotcom_windows_sign,
             msvc_crt_static,
             hosting,
+            extra_artifacts,
         } = self;
 
         // Check for global settings on local packages
@@ -443,6 +449,9 @@ impl DistMetadata {
         }
         if publish_jobs.is_none() {
             *publish_jobs = workspace_config.publish_jobs.clone();
+        }
+        if extra_artifacts.is_none() {
+            *extra_artifacts = workspace_config.extra_artifacts.clone();
         }
 
         // This was historically implemented as extend, but I'm not convinced the
@@ -1032,6 +1041,16 @@ pub enum ProductionMode {
     Test,
     /// production mode
     Prod,
+}
+
+/// An extra artifact to upload alongside the release tarballs,
+/// and the build command which produces it.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ExtraArtifact {
+    /// The build command to invoke
+    pub build: Vec<String>,
+    /// The artifact(s) produced via this build script
+    pub artifacts: Vec<String>,
 }
 
 impl std::fmt::Display for ProductionMode {

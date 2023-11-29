@@ -181,6 +181,21 @@ expression: json_schema
           }
         },
         {
+          "description": "Some form of extra artifact produced by a sidecar build",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "extra-artifact"
+              ]
+            }
+          }
+        },
+        {
           "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
           "type": "object",
           "required": [
