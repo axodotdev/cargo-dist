@@ -10,10 +10,10 @@ on:
   workflow_run:
     workflows: ["Release"]
     types:
-        - completed
+      - completed
 
 jobs:
-  # Check if we should actually run by looking for the should-publish job
+  # Check if we should actually run by looking for the host job
   should-run:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -31,7 +31,7 @@ jobs:
               run_id: context.payload.workflow_run.id,
             });
             for (const job of allRuns.data.jobs) {
-              if (job.name == "should-publish") {
+              if (job.name == "host") {
                 if (job.status == "completed" && job.conclusion == "success") {
                   return "run"
                 }
