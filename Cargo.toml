@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "cargo-dist", 
+    "cargo-dist",
     "cargo-dist-schema",
 ]
 resolver = "2"
