@@ -967,14 +967,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         hosting.as_ref(),
     );
 
-    // NOTE: HashMap not supported by axoasset
-    // apply_optional_value(
-    //     table,
-    //     "github-custom-runners",
-    //     "# Custom GitHub runners to use for builds, mapped by triple target\n",
-    //     github_custom_runners.as_ref(),
-    // );
-
     // Finalize the table
     table
         .decor_mut()
