@@ -1,6 +1,6 @@
 //! Config types (for workspace.metadata.dist)
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use axoasset::{toml_edit, SourceFile};
 use axoproject::{WorkspaceKind, WorkspaceSearch};
@@ -276,6 +276,10 @@ pub struct DistMetadata {
     /// Any extra artifacts and their buildscripts
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra_artifacts: Option<Vec<ExtraArtifact>>,
+
+    /// Custom GitHub runners, mapped by triple target
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_custom_runners: Option<HashMap<String, String>>,
 }
 
 impl DistMetadata {
@@ -313,6 +317,7 @@ impl DistMetadata {
             msvc_crt_static: _,
             hosting: _,
             extra_artifacts: _,
+            github_custom_runners: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -359,6 +364,7 @@ impl DistMetadata {
             msvc_crt_static,
             hosting,
             extra_artifacts,
+            github_custom_runners,
         } = self;
 
         // Check for global settings on local packages
@@ -452,6 +458,9 @@ impl DistMetadata {
         }
         if extra_artifacts.is_none() {
             *extra_artifacts = workspace_config.extra_artifacts.clone();
+        }
+        if github_custom_runners.is_none() {
+            *github_custom_runners = workspace_config.github_custom_runners.clone();
         }
 
         // This was historically implemented as extend, but I'm not convinced the

@@ -252,6 +252,7 @@ fn get_new_dist_metadata(
             msvc_crt_static: None,
             hosting: None,
             extra_artifacts: None,
+            github_custom_runners: None,
         }
     };
 
@@ -772,6 +773,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         msvc_crt_static,
         hosting,
         extra_artifacts: _,
+        github_custom_runners: _,
     } = &meta;
 
     apply_optional_value(
@@ -964,6 +966,14 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "# Where to host releases\n",
         hosting.as_ref(),
     );
+
+    // NOTE: HashMap not supported by axoasset
+    // apply_optional_value(
+    //     table,
+    //     "github-custom-runners",
+    //     "# Custom GitHub runners to use for builds, mapped by triple target\n",
+    //     github_custom_runners.as_ref(),
+    // );
 
     // Finalize the table
     table
