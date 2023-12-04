@@ -45,7 +45,7 @@ This script detects what platform you're on and fetches an appropriate archive f
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
 then unpacks the binaries and installs them to \$HOME/.axolotlsay/bins
 
-It will then add that dir to PATH by adding the appropriate line to \$HOME/.profile
+It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
 USAGE:
     axolotlsay-installer.sh [OPTIONS]
@@ -273,8 +273,32 @@ install() {
     say "everything's installed!"
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
-        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv"
     fi
+}
+
+print_home_for_script() {
+    local script="$1"
+
+    local _home
+    case "$script" in
+        # zsh has a special ZDOTDIR directory, which if set
+        # should be considered instead of $HOME
+        .zsh*)
+            if [ -n "$ZDOTDIR" ]; then
+                _home="$ZDOTDIR"
+            else
+                _home="$HOME"
+            fi
+            ;;
+        *)
+            _home="$HOME"
+            ;;
+    esac
+
+    echo "$_home"
 }
 
 add_install_dir_to_path() {
@@ -288,8 +312,33 @@ add_install_dir_to_path() {
     local _install_dir_expr="$1"
     local _env_script_path="$2"
     local _env_script_path_expr="$3"
+    local _rcfiles="$4"
+
     if [ -n "${HOME:-}" ]; then
-        local _rcfile="$HOME/.profile"
+        local _target
+        local _home
+
+        # Find the first file in the array that exists and choose
+        # that as our target to write to
+        for _rcfile_relative in $_rcfiles; do
+            _home="$(print_home_for_script "$_rcfile_relative")"
+            local _rcfile="$_home/$_rcfile_relative"
+
+            if [ -f "$_rcfile" ]; then
+                _target="$_rcfile"
+                break
+            fi
+        done
+
+        # If we didn't find anything, pick the first entry in the
+        # list as the default to create and write to
+        if [ -z "${_target:-}" ]; then
+            local _rcfile_relative
+            _rcfile_relative="$(echo "$_rcfiles" | awk '{ print $1 }')"
+            _home="$(print_home_for_script "$_rcfile_relative")"
+            _target="$_home/$_rcfile_relative"
+        fi
+
         # `source x` is an alias for `. x`, and the latter is more portable/actually-posix.
         # This apparently comes up a lot on freebsd. It's easy enough to always add
         # the more robust line to rcfiles, but when telling the user to apply the change
@@ -315,14 +364,14 @@ add_install_dir_to_path() {
         # (on error we want to create the file, which >> conveniently does)
         #
         # We search for both kinds of line here just to do the right thing in more cases.
-        if ! grep -F "$_robust_line" "$_rcfile" > /dev/null 2>/dev/null && \
-           ! grep -F "$_pretty_line" "$_rcfile" > /dev/null 2>/dev/null
+        if ! grep -F "$_robust_line" "$_target" > /dev/null 2>/dev/null && \
+           ! grep -F "$_pretty_line" "$_target" > /dev/null 2>/dev/null
         then
             # If the script now exists, add the line to source it to the rcfile
             # (This will also create the rcfile if it doesn't exist)
             if [ -f "$_env_script_path" ]; then
-                say_verbose "adding $_robust_line to $_rcfile"
-                ensure echo "$_robust_line" >> "$_rcfile"
+                say_verbose "adding $_robust_line to $_target"
+                ensure echo "$_robust_line" >> "$_target"
                 say ""
                 say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
                 say ""
