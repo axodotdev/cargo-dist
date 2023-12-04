@@ -306,6 +306,28 @@ install() {
     fi
 }
 
+print_home_for_script() {
+    local script="$1"
+
+    local _home
+    case "$script" in
+        # zsh has a special ZDOTDIR directory, which if set
+        # should be considered instead of $HOME
+        .zsh*)
+            if [ -n "$ZDOTDIR" ]; then
+                _home="$ZDOTDIR"
+            else
+                _home="$HOME"
+            fi
+            ;;
+        *)
+            _home="$HOME"
+            ;;
+    esac
+
+    echo "$_home"
+}
+
 add_install_dir_to_path() {
     # Edit rcfiles ($HOME/.profile) to add install_dir to $PATH
     #
@@ -321,11 +343,13 @@ add_install_dir_to_path() {
 
     if [ -n "${HOME:-}" ]; then
         local _target
+        local _home
 
         # Find the first file in the array that exists and choose
         # that as our target to write to
         for _rcfile_relative in $_rcfiles; do
-            local _rcfile="$HOME/$_rcfile_relative"
+            _home="$(print_home_for_script "$_rcfile_relative")"
+            local _rcfile="$_home/$_rcfile_relative"
 
             if [ -f "$_rcfile" ]; then
                 _target="$_rcfile"
@@ -338,7 +362,8 @@ add_install_dir_to_path() {
         if [ -z "${_target:-}" ]; then
             local _rcfile_relative
             _rcfile_relative="$(echo "$_rcfiles" | awk '{ print $1 }')"
-            _target="$HOME/$_rcfile_relative"
+            _home="$(print_home_for_script "$_rcfile_relative")"
+            _target="$_home/$_rcfile_relative"
         fi
 
         # `source x` is an alias for `. x`, and the latter is more portable/actually-posix.

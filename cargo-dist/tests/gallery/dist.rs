@@ -370,6 +370,7 @@ impl DistResult {
             let app_home = tempdir.join(format!(".{app_name}"));
             let _output = script.output_checked(|cmd| {
                 cmd.env("HOME", &tempdir)
+                    .env("ZDOTDIR", &tempdir)
                     .env("MY_ENV_VAR", &app_home)
                     .env_remove("CARGO_HOME")
             })?;
