@@ -376,7 +376,11 @@ impl DistResult {
             // we could theoretically look at the above output and parse out the `source` line...
 
             // Check that the script wrote files where we expected
-            let rcfile = tempdir.join(".profile");
+            let rcfiles = &[
+                tempdir.join(".profile"),
+                tempdir.join(".bash_profile"),
+                tempdir.join(".zshrc"),
+            ];
             let expected_bin_dir = Utf8PathBuf::from(expected_bin_dir);
             let bin_dir = tempdir.join(&expected_bin_dir);
             let env_dir = if expected_bin_dir
@@ -390,7 +394,9 @@ impl DistResult {
             let env_script = env_dir.join("env");
 
             assert!(bin_dir.exists(), "bin dir wasn't created");
-            assert!(rcfile.exists(), ".profile wasn't created");
+            for rcfile in rcfiles {
+                assert!(rcfile.exists(), "{} wasn't created", rcfile);
+            }
             assert!(env_script.exists(), "env script wasn't created");
 
             // Check that all the binaries work
@@ -411,9 +417,10 @@ impl DistResult {
                 let test_script_text = format!(
                     r#"#!/bin/sh
 
-                . {rcfile}
+                . {}
                 which {bin_name}
-                "#
+                "#,
+                    rcfiles.first().expect("rcfiles was empty?!")
                 );
                 LocalAsset::write_new(&test_script_text, &test_script_path)?;
                 std::fs::set_permissions(&test_script_path, std::fs::Permissions::from_mode(0o755))
