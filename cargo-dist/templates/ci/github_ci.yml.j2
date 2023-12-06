@@ -100,6 +100,13 @@ jobs:
           name: artifacts
           path: dist-manifest.json
 
+{{%- for job in plan_jobs %}}
+
+  custom-{{{ job|safe }}}:
+    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    secrets: inherit
+{{%- endfor %}}
+
   # Build and packages all the platform-specific things
   build-local-artifacts:
     name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
@@ -169,6 +176,17 @@ jobs:
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
 
+{{%- for job in local_artifacts_jobs %}}
+
+  custom-{{{ job|safe }}}:
+    needs:
+      - plan
+    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+    secrets: inherit
+{{%- endfor %}}
+
   # Build and package all the platform-agnostic(ish) things
   build-global-artifacts:
     needs:
@@ -213,6 +231,18 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
+
+{{%- for job in global_artifacts_jobs %}}
+
+  custom-{{{ job|safe }}}:
+    needs:
+      - plan
+      - build-local-artifacts
+    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+    secrets: inherit
+{{%- endfor %}}
 
 {{%- if ssldotcom_windows_sign %}}
 
@@ -337,6 +367,22 @@ jobs:
           name: artifacts
           path: dist-manifest.json
 
+
+{{%- for job in host_jobs %}}
+
+  custom-{{{ job|safe }}}:
+    needs:
+      - plan
+      - build-local-artifacts
+      - build-global-artifacts
+    {{%- if ssldotcom_windows_sign %}}
+      - sign-windows-artifacts
+    {{%- endif %}}
+    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+    secrets: inherit
+{{%- endfor %}}
 
 {{%- if 'homebrew' in publish_jobs and tap %}}
 
