@@ -342,6 +342,8 @@ pub enum InstallerStyle {
     Homebrew,
     /// Generates an msi for each windows platform
     Msi,
+    /// Generate a docker image for x86_64-unknown-linux-gnu
+    Docker,
 }
 
 impl InstallerStyle {
@@ -353,6 +355,7 @@ impl InstallerStyle {
             InstallerStyle::Npm => cargo_dist::config::InstallerStyle::Npm,
             InstallerStyle::Homebrew => cargo_dist::config::InstallerStyle::Homebrew,
             InstallerStyle::Msi => cargo_dist::config::InstallerStyle::Msi,
+            InstallerStyle::Docker => cargo_dist::config::InstallerStyle::Docker,
         }
     }
 }

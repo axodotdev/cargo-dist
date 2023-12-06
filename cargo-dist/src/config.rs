@@ -602,6 +602,8 @@ pub enum InstallerStyle {
     Homebrew,
     /// Generate an msi installer that embeds the binary
     Msi,
+    /// Generate a docker image for x86_64-unknown-linux-gnu
+    Docker,
 }
 
 impl std::fmt::Display for InstallerStyle {
@@ -612,6 +614,7 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Npm => "npm",
             InstallerStyle::Homebrew => "homebrew",
             InstallerStyle::Msi => "msi",
+            InstallerStyle::Docker => "docker",
         };
         string.fmt(f)
     }

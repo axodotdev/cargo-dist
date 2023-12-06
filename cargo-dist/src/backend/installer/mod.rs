@@ -10,10 +10,12 @@ use crate::{
     TargetTriple,
 };
 
+use self::docker::DockerInstallerInfo;
 use self::homebrew::HomebrewInstallerInfo;
 use self::msi::MsiInstallerInfo;
 use self::npm::NpmInstallerInfo;
 
+pub mod docker;
 pub mod homebrew;
 pub mod msi;
 pub mod npm;
@@ -34,6 +36,8 @@ pub enum InstallerImpl {
     Homebrew(HomebrewInstallerInfo),
     /// Windows msi installer
     Msi(MsiInstallerInfo),
+    /// Docker installer
+    Docker(DockerInstallerInfo),
 }
 
 /// Generic info about an installer

@@ -448,6 +448,7 @@ fn generate_installer(
             installer::homebrew::write_homebrew_formula(&dist.templates, dist, info, manifest)?
         }
         InstallerImpl::Msi(info) => info.build()?,
+        InstallerImpl::Docker(info) => info.build(&dist.templates, dist, manifest)?,
     }
     Ok(())
 }

@@ -1,0 +1,13 @@
+FROM {{ runner.image }}
+{%- if runner.apt_deps %}
+RUN apt-get update && apt-get install -y {{ runner.apt_deps }} && rm -rf /var/lib/apt/lists/*
+{%- endif %}
+{%- for bin in bins %}
+COPY {{ bin.source }} /usr/local/bin/
+{%- endfor %}
+{%- for include in includes %}
+COPY {{ include }} /
+{%- endfor %}
+CMD [{%- for bin in bins %}"{{ bin.name }}"{{ ", " if not loop.last else "" }}{%- endfor %}]
+
+

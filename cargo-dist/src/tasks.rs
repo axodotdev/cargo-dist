@@ -61,6 +61,7 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
+use crate::backend::installer::docker::DockerInstallerInfo;
 use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
 use crate::{
     backend::{
@@ -235,6 +236,8 @@ pub struct Tools {
     pub rustup: Option<Tool>,
     /// homebrew, only available on macOS
     pub brew: Option<Tool>,
+    /// docker, only available on gnu x64 linux
+    pub docker: Option<Tool>,
 }
 
 /// Info about the cargo toolchain we're using
@@ -1437,6 +1440,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             InstallerStyle::Npm => self.add_npm_installer(to_release),
             InstallerStyle::Homebrew => self.add_homebrew_installer(to_release),
             InstallerStyle::Msi => self.add_msi_installer(to_release)?,
+            InstallerStyle::Docker => self.add_docker_installer(to_release)?,
         }
         Ok(())
     }
@@ -2184,6 +2188,93 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         Ok(())
     }
 
+    fn add_docker_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
+        if !self.local_artifacts_enabled() {
+            return Ok(());
+        }
+        if self.inner.tools.docker.is_none() {
+            warn!(
+                "skipping docker installer: couldn't find a local docker install to build images"
+            );
+            return Ok(());
+        }
+
+        // Clone info we need from the release to avoid borrowing across the loop
+        let release = self.release(to_release);
+        let variants = release.variants.clone();
+        let checksum = release.checksum;
+        let app_name = &release.app_name;
+        let app_version = &release.version;
+        let tag = format!("{app_name}/{app_version}");
+
+        // Make an msi for every windows platform
+        for variant_idx in variants {
+            let variant = self.variant(variant_idx);
+            let binaries = variant.binaries.clone();
+            let target = &variant.target;
+            if target != axoproject::platforms::TARGET_X64_LINUX_GNU {
+                continue;
+            }
+
+            let variant_id = &variant.id;
+            let artifact_name = format!("{variant_id}_dockerimage.tar");
+            let artifact_path = self.inner.dist_dir.join(&artifact_name);
+            let dir_name = format!("{variant_id}_docker");
+            let dir_path = self.inner.dist_dir.join(&dir_name);
+
+            let mut bins = vec![];
+            for &bin_idx in &binaries {
+                let bin = self.binary(bin_idx);
+                bins.push(bin.file_name.clone());
+            }
+
+            // FIXME: introduce a way to specify what should go in a docker image and where
+            let static_assets = vec![];
+            // Gather up the bundles the installer supports
+            let installer_artifact = Artifact {
+                id: artifact_name,
+                // this *contains* linux but it's not *for* linux... empty feels right for now
+                target_triples: vec![],
+                file_path: artifact_path.clone(),
+                required_binaries: FastMap::new(),
+                archive: Some(Archive {
+                    with_root: None,
+                    dir_path: dir_path.clone(),
+                    zip_style: ZipStyle::TempDir,
+                    static_assets: static_assets.clone(),
+                }),
+                checksum: None,
+                kind: ArtifactKind::Installer(InstallerImpl::Docker(DockerInstallerInfo {
+                    target: target.clone(),
+                    release_idx: to_release,
+                    tag: tag.clone(),
+                    package_dir: dir_path.clone(),
+                    bins,
+                    includes: static_assets.clone().into_iter().map(|(_, p)| p).collect(),
+                    file_path: artifact_path.clone(),
+                })),
+                is_global: false,
+            };
+
+            // Register the artifact to various things
+            let installer_idx = self.add_local_artifact(variant_idx, installer_artifact);
+            for binary_idx in binaries {
+                let binary = self.binary(binary_idx);
+                self.require_binary(
+                    installer_idx,
+                    variant_idx,
+                    binary_idx,
+                    dir_path.join(&binary.file_name),
+                );
+            }
+            if checksum != ChecksumStyle::False {
+                self.add_artifact_checksum(variant_idx, installer_idx, checksum);
+            }
+        }
+
+        Ok(())
+    }
+
     fn add_local_artifact(
         &mut self,
         to_variant: ReleaseVariantIdx,
@@ -2653,6 +2744,7 @@ fn tool_info() -> Result<Tools> {
         cargo,
         rustup: find_tool("rustup", "-V"),
         brew: find_tool("brew", "--version"),
+        docker: find_tool("docker", "--version"),
     })
 }
 

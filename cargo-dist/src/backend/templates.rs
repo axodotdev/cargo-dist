@@ -15,10 +15,13 @@ pub type TemplateId = &'static str;
 pub const TEMPLATE_INSTALLER_PS1: TemplateId = "installer/installer.ps1";
 /// Template key for installer.sh
 pub const TEMPLATE_INSTALLER_SH: TemplateId = "installer/installer.sh";
+/// Template key for the dockerfile
+pub const TEMPLATE_INSTALLER_DOCKER: TemplateId = "installer/Dockerfile";
 /// Template key for Homebrew formula
 pub const TEMPLATE_INSTALLER_RB: TemplateId = "installer/homebrew.rb";
 /// Template key for the npm installer dir
 pub const TEMPLATE_INSTALLER_NPM: TemplateId = "installer/npm";
+
 /// Template key for the github ci.yml
 pub const TEMPLATE_CI_GITHUB: TemplateId = "ci/github_ci.yml";
 
@@ -310,6 +313,9 @@ mod test {
         let templates = Templates::new().unwrap();
 
         templates.get_template_file(TEMPLATE_INSTALLER_SH).unwrap();
+        templates
+            .get_template_file(TEMPLATE_INSTALLER_DOCKER)
+            .unwrap();
         templates.get_template_file(TEMPLATE_INSTALLER_RB).unwrap();
         templates.get_template_file(TEMPLATE_INSTALLER_PS1).unwrap();
         templates.get_template_dir(TEMPLATE_INSTALLER_NPM).unwrap();

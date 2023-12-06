@@ -264,6 +264,11 @@ fn manifest_artifact(
             description = Some("install via msi".to_owned());
             kind = cargo_dist_schema::ArtifactKind::Installer;
         }
+        ArtifactKind::Installer(InstallerImpl::Docker(..)) => {
+            install_hint = None;
+            description = Some("try it out in docker".to_owned());
+            kind = cargo_dist_schema::ArtifactKind::Installer;
+        }
         ArtifactKind::Checksum(_) => {
             install_hint = None;
             description = None;

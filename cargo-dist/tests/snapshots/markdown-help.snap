@@ -65,6 +65,7 @@ Possible values:
 - npm:        Generates an npm project that fetches the right build to your node_modules
 - homebrew:   Generates a Homebrew formula
 - msi:        Generates an msi for each windows platform
+- docker:     Generate a docker image for x86_64-unknown-linux-gnu
 
 #### `-c, --ci <CI>`
 CI we want to support

@@ -6,6 +6,8 @@
 //!
 //! If we ever change this decision, this will be a lot more important!
 
+use std::process::ExitStatus;
+
 use axoproject::errors::AxoprojectError;
 use camino::Utf8PathBuf;
 use miette::Diagnostic;
@@ -266,6 +268,23 @@ pub enum DistError {
     #[error("We failed to generate a source tarball for your project")]
     #[diagnostic(help("This is probably not your fault, please file an issue!"))]
     GitArchiveError {},
+    /// Error running a random Command
+    #[error("We failed to {command_summary}")]
+    CommandFail {
+        /// user-friendly summary of what we were doing
+        command_summary: String,
+        /// Underlying error
+        #[source]
+        cause: std::io::Error,
+    },
+    /// Command returning a non-Ok status
+    #[error("We failed to {command_summary} ({status})")]
+    CommandStatus {
+        /// user-friendly summary of what we were doing
+        command_summary: String,
+        /// bad status
+        status: ExitStatus,
+    },
 }
 
 impl From<minijinja::Error> for DistError {
