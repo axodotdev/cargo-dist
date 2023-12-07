@@ -2359,7 +2359,8 @@ jobs:
   build-local-artifacts:
     name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
     # Let the initial task tell us to not run (currently very blunt)
-    needs: plan
+    needs:
+      - plan
     if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
     strategy:
       fail-fast: false
@@ -2523,6 +2524,8 @@ jobs:
     needs:
       - plan
       - host
+      - custom-my-plan-job-1
+      - custom-my-plan-job-2
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -2561,6 +2564,8 @@ jobs:
       - plan
       - host
       - publish-homebrew-formula
+      - custom-my-plan-job-1
+      - custom-my-plan-job-2
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
