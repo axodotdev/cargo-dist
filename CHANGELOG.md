@@ -1,6 +1,78 @@
 # Unreleased
 
-Nothing Yet!
+The headlining features of this release are:
+
+* Support for specifying arbitrary GitHub Actions Runners
+* The ability to build and upload extra artifacts along side your main build
+
+We also now distribute aarch64 Linux binaries, which makes it easier to use cargo-dist to build software on aarch64 hosts.
+
+## Features
+
+### Custom Runners in GitHub Actions
+
+This adds support for specifying which runners to use in GitHub CI. This is useful in order to allow cargo-dist to use paid runners, rather than the free runners it defaults to, and to force Linux builds to use a newer version of Ubuntu. By using paid runners, it's also possible to create builds running on ARM64 hosts.
+
+* impl @milesj [Support custom github runners (and arm64)](https://github.com/axodotdev/cargo-dist/pull/614)
+
+Thanks to @milesj for contributing this!
+
+### Build and Host Extra Artifacts
+
+This feature makes it possible to build and upload extra artifacts beyond what the primary build produces. For example, cargo-dist uses this to build and upload its `dist-manifest-schema.json` to each release. You can use this feature to help build and upload docs, manage extra assets for your release, and more.
+
+* impl @mistydemeo [feat: extra build artifacts](https://github.com/axodotdev/cargo-dist/pull/613)
+
+### Generic Builds Now Set CC/CXX Environment Variables
+
+In generic builds, the `CC` and `CXX` environment variables are now set to platform-appropriate compilers. This is mainly applicable to software written in C and C++.
+
+* impl @mistydemeo [feat: set CC/CXX in generic builds](https://github.com/axodotdev/cargo-dist/pull/616)
+
+### Installer improvements
+
+The installer now updates additional shell configuration files, ensuring that users are able to use your software after installing. The installer now also respects the `ZDOTDIR` configuration variable when run in the zsh shell.
+
+* impl @mistydemep
+    * [feat(installer): add additional shell config](https://github.com/axodotdev/cargo-dist/pull/555)
+    * [fix(installer): only print source once](https://github.com/axodotdev/cargo-dist/pull/641)
+    * [fix: handle unset ZDOTDIR better](https://github.com/axodotdev/cargo-dist/pull/640)
+
+## Improvements
+
+### Generic build output
+
+stdout from generic build tasks is now merged with stderr at the time the job is run instead of printed separately after the build completes.
+
+* impl @mistydemeo [feat(generic): adjust stdout=>stderr redirect](https://github.com/axodotdev/cargo-dist/pull/649)
+
+## Fixes
+
+### "Broken pipe" message in install script
+
+Fixes an issue where the installer script could report a spurious "broken pipe" message in Linux. Note that this didn't affect the installer's behaviour; it still worked as expected.
+
+* impl @rotu [Fix ldd broken pipe error](https://github.com/axodotdev/cargo-dist/pull/627)
+
+### Better installation failure handling in CI
+
+In the rare case that installing cargo-dist failed in CI, the build would formerly continue anyway and fail in a more confusing way. This has been corrected so that the build now fails immediately.
+
+* impl @mistydemeo [fix(ci): fail fast if installer is missing](https://github.com/axodotdev/cargo-dist/pull/618)
+
+### Source tarball fixes
+
+Generating source tarballs will now be skipped if the workspace being built isn't a git repository. It will also be skipped if git isn't installed.
+
+* impl @mistydemeo
+    * [fix: check for git presence before calling](https://github.com/axodotdev/cargo-dist/pull/648)
+    * [fix: check for git presence before calling](https://github.com/axodotdev/cargo-dist/pull/648)
+
+### Improved error reporting in Powershell installer
+
+The Windows Powershell installer now provides better error output on the terminal.
+
+* impl @mistydemeo + @gankra [fix(powershell): replace errors with throw](https://github.com/axodotdev/cargo-dist/pull/651)
 
 
 # Version 0.5.0 (2023-11-27)
