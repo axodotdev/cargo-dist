@@ -445,6 +445,21 @@ impl DistMetadata {
         if hosting.is_some() {
             warn!("package.metadata.dist.hosting is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
+        if plan_jobs.is_some() {
+            warn!("package.metadata.dist.plan-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if local_artifacts_jobs.is_some() {
+            warn!("package.metadata.dist.local-artifacts-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if global_artifacts_jobs.is_some() {
+            warn!("package.metadata.dist.global-artifacts-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if host_jobs.is_some() {
+            warn!("package.metadata.dist.host-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if publish_jobs.is_some() {
+            warn!("package.metadata.dist.publish-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
 
         // Merge non-global settings
         if installers.is_none() {
@@ -488,21 +503,6 @@ impl DistMetadata {
         }
         if system_dependencies.is_none() {
             *system_dependencies = workspace_config.system_dependencies.clone();
-        }
-        if plan_jobs.is_none() {
-            *plan_jobs = workspace_config.plan_jobs.clone();
-        }
-        if local_artifacts_jobs.is_none() {
-            *local_artifacts_jobs = workspace_config.local_artifacts_jobs.clone();
-        }
-        if global_artifacts_jobs.is_none() {
-            *global_artifacts_jobs = workspace_config.global_artifacts_jobs.clone();
-        }
-        if host_jobs.is_none() {
-            *host_jobs = workspace_config.host_jobs.clone();
-        }
-        if publish_jobs.is_none() {
-            *publish_jobs = workspace_config.publish_jobs.clone();
         }
         if extra_artifacts.is_none() {
             *extra_artifacts = workspace_config.extra_artifacts.clone();
