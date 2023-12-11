@@ -664,6 +664,17 @@ expression: json_schema
         "path"
       ],
       "properties": {
+        "package_manager": {
+          "description": "Which package manager provided this library",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PackageManager"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "path": {
           "description": "The path to the library; on platforms without that information, it will be a basename instead",
           "type": "string"
@@ -722,6 +733,25 @@ expression: json_schema
           "uniqueItems": true
         }
       }
+    },
+    "PackageManager": {
+      "description": "Represents the package manager a library was installed by",
+      "oneOf": [
+        {
+          "description": "Homebrew (usually for Mac)",
+          "type": "string",
+          "enum": [
+            "Homebrew"
+          ]
+        },
+        {
+          "description": "Apt (Debian, Ubuntu, etc)",
+          "type": "string",
+          "enum": [
+            "Apt"
+          ]
+        }
+      ]
     },
     "PrRunMode": {
       "description": "Type of job to run on pull request",

@@ -8,7 +8,7 @@ use std::{
 use axoasset::SourceFile;
 use axoprocess::Cmd;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{AssetInfo, DistManifest, Library, Linkage};
+use cargo_dist_schema::{AssetInfo, DistManifest, Library, Linkage, PackageManager};
 use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
@@ -226,11 +226,13 @@ pub fn library_from_homebrew(library: String) -> Library {
         Library {
             path: library,
             source: Some(package.to_owned()),
+            package_manager: Some(PackageManager::Homebrew),
         }
     } else {
         Library {
             path: library,
             source: None,
+            package_manager: None,
         }
     }
 }
@@ -242,6 +244,7 @@ pub fn library_from_apt(library: String) -> DistResult<Library> {
         return Ok(Library {
             path: library,
             source: None,
+            package_manager: None,
         });
     }
 
@@ -259,16 +262,23 @@ pub fn library_from_apt(library: String) -> DistResult<Library> {
             } else {
                 Some(package.to_owned())
             };
+            let package_manager = if source.is_some() {
+                Some(PackageManager::Apt)
+            } else {
+                None
+            };
 
             Ok(Library {
                 path: library,
                 source,
+                package_manager,
             })
         }
         // Couldn't find a package for this file
         Err(_) => Ok(Library {
             path: library,
             source: None,
+            package_manager: None,
         }),
     }
 }
