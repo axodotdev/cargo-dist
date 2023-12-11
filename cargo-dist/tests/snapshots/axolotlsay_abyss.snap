@@ -291,8 +291,18 @@ install() {
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile"
+        exit1=$?
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc"
+        exit2=$?
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv"
+        exit3=$?
+
+        if [ "${exit1:-0}" = 1 ] || [ "${exit2:-0}" = 1 ] || [ "${exit3:-0}" = 1 ]; then
+            say ""
+            say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
+            say ""
+            say "    source $_env_script_path_expr"
+        fi
     fi
 }
 
@@ -389,10 +399,7 @@ add_install_dir_to_path() {
             if [ -f "$_env_script_path" ]; then
                 say_verbose "adding $_robust_line to $_target"
                 ensure echo "$_robust_line" >> "$_target"
-                say ""
-                say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
-                say ""
-                say "    $_pretty_line"
+                return 1
             fi
         else
             say_verbose "$_install_dir already on PATH"
