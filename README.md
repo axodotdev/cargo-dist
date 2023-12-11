@@ -76,11 +76,11 @@ As a distribution tool, cargo-dist gets to flex its biggest superpower: **it gen
 
 We've got all the docs you need over at the [cargo-dist book](https://axodotdev.github.io/cargo-dist/book/)!
 
-* [Introduction](https://axodotdev.github.io/cargo-dist/book/introduction.html)
-* [Install](https://axodotdev.github.io/cargo-dist/book/install.html)
-* [Way-Too-Quickstart](https://axodotdev.github.io/cargo-dist/book/way-too-quickstart.html)
-* [Workspaces Guide](https://axodotdev.github.io/cargo-dist/book/workspaces-guide.html)
-* [Reference](https://axodotdev.github.io/cargo-dist/book/reference/index.html)
+* [Introduction](https://opensource.axo.dev/cargo-dist/book/introduction.html)
+* [Install](https://opensource.axo.dev/cargo-dist/book/install.html)
+* [Way-Too-Quickstart](https://opensource.axo.dev/cargo-dist/book/way-too-quickstart.html)
+* [Workspaces Guide](https://opensource.axo.dev/cargo-dist/book/workspaces/index.html)
+* [Reference](https://opensource.axo.dev/cargo-dist/book/reference/index.html)
 
 <div class="oranda-hide">
 
