@@ -26,6 +26,10 @@ stdout:
         "cargo-dist.rb",
         "cargo-dist-aarch64-apple-darwin.tar.xz",
         "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
+        "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
+        "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256",
+        "cargo-dist-aarch64-unknown-linux-musl.tar.xz",
+        "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256",
         "cargo-dist-x86_64-apple-darwin.tar.xz",
         "cargo-dist-x86_64-apple-darwin.tar.xz.sha256",
         "cargo-dist-x86_64-pc-windows-msvc.zip",
@@ -85,6 +89,90 @@ stdout:
         "aarch64-apple-darwin"
       ]
     },
+    "cargo-dist-aarch64-unknown-linux-gnu.tar.xz": {
+      "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "cargo-dist",
+          "path": "cargo-dist",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256"
+    },
+    "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-unknown-linux-gnu"
+      ]
+    },
+    "cargo-dist-aarch64-unknown-linux-musl.tar.xz": {
+      "name": "cargo-dist-aarch64-unknown-linux-musl.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-unknown-linux-musl"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "cargo-dist",
+          "path": "cargo-dist",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256"
+    },
+    "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256": {
+      "name": "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-unknown-linux-musl"
+      ]
+    },
     "cargo-dist-installer.ps1": {
       "name": "cargo-dist-installer.ps1",
       "kind": "installer",
@@ -99,6 +187,8 @@ stdout:
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu",
         "x86_64-unknown-linux-musl"
@@ -279,6 +369,8 @@ stdout:
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu",
         "x86_64-unknown-linux-musl"
@@ -310,15 +402,32 @@ stdout:
               "aarch64-apple-darwin"
             ],
             "runner": "macos-11",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
+            "install_dist": "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch=main cargo-dist",
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
+          },
+          {
+            "targets": [
+              "aarch64-unknown-linux-gnu"
+            ],
+            "runner": "buildjet-8vcpu-ubuntu-2204-arm",
+            "install_dist": "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch=main cargo-dist",
+            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu"
+          },
+          {
+            "targets": [
+              "aarch64-unknown-linux-musl"
+            ],
+            "runner": "buildjet-8vcpu-ubuntu-2204-arm",
+            "install_dist": "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch=main cargo-dist",
+            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-musl",
+            "packages_install": "sudo apt-get install musl-tools"
           },
           {
             "targets": [
               "x86_64-apple-darwin"
             ],
             "runner": "macos-11",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
+            "install_dist": "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch=main cargo-dist",
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
           },
           {
@@ -326,7 +435,7 @@ stdout:
               "x86_64-pc-windows-msvc"
             ],
             "runner": "windows-2019",
-            "install_dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex",
+            "install_dist": "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch=main cargo-dist",
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
           },
           {
@@ -334,7 +443,7 @@ stdout:
               "x86_64-unknown-linux-gnu"
             ],
             "runner": "ubuntu-20.04",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
+            "install_dist": "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch=main cargo-dist",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
           },
           {
@@ -342,7 +451,7 @@ stdout:
               "x86_64-unknown-linux-musl"
             ],
             "runner": "ubuntu-20.04",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
+            "install_dist": "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch=main cargo-dist",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
             "packages_install": "sudo apt-get install musl-tools"
           }
