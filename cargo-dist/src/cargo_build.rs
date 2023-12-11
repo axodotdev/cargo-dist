@@ -31,7 +31,6 @@ impl<'a> DistGraphBuilder<'a> {
         let mut builds = vec![];
         for (target, binaries) in targets {
             let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
-            let mut added_rustup_step = false;
 
             // FIXME: is there a more principled way for us to add things to RUSTFLAGS
             // without breaking everything. Cargo has some builtin ways like keys
@@ -61,6 +60,12 @@ impl<'a> DistGraphBuilder<'a> {
             // See: https://github.com/axodotdev/cargo-dist/issues/486
             if target.ends_with("linux-musl") {
                 rustflags.push_str(" -Ctarget-feature=+crt-static -Clink-self-contained=yes");
+
+                if self.inner.tools.cargo.host_target.ends_with("linux-gnu")
+                    && self.inner.tools.rustup.is_none()
+                {
+                    warn!("You're trying to cross-compile for musl from glibc, but I can't find rustup to ensure you have the rust toolchains for it!")
+                }
             }
 
             // If we're trying to cross-compile on macOS, ensure the rustup toolchain
@@ -68,40 +73,17 @@ impl<'a> DistGraphBuilder<'a> {
             if target.ends_with("apple-darwin")
                 && self.inner.tools.cargo.host_target.ends_with("apple-darwin")
                 && target != self.inner.tools.cargo.host_target
+                && self.inner.tools.rustup.is_none()
             {
-                if let Some(rustup) = self.inner.tools.rustup.clone() {
-                    added_rustup_step = true;
-                    builds.push(BuildStep::Rustup(RustupStep {
-                        rustup,
-                        target: target.clone(),
-                    }));
-                } else {
-                    warn!("You're trying to cross-compile on macOS, but I can't find rustup to ensure you have the rust toolchains for it!")
-                }
-            }
-
-            if target.ends_with("linux-musl")
-                && self.inner.tools.cargo.host_target.ends_with("linux-gnu")
-            {
-                if let Some(rustup) = self.inner.tools.rustup.clone() {
-                    added_rustup_step = true;
-                    builds.push(BuildStep::Rustup(RustupStep {
-                        rustup,
-                        target: target.clone(),
-                    }));
-                } else {
-                    warn!("You're trying to cross-compile for musl from glibc, but I can't find rustup to ensure you have the rust toolchains for it!")
-                }
+                warn!("You're trying to cross-compile on macOS, but I can't find rustup to ensure you have the rust toolchains for it!")
             }
 
             // Always ensure the rustup target exists, even if not cross compiling
-            if !added_rustup_step {
-                if let Some(rustup) = self.inner.tools.rustup.clone() {
-                    builds.push(BuildStep::Rustup(RustupStep {
-                        rustup,
-                        target: target.clone(),
-                    }));
-                }
+            if let Some(rustup) = self.inner.tools.rustup.clone() {
+                builds.push(BuildStep::Rustup(RustupStep {
+                    rustup,
+                    target: target.clone(),
+                }));
             }
 
             if self.inner.precise_builds {
