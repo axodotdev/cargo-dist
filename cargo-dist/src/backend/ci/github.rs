@@ -38,6 +38,14 @@ pub struct GithubCiInfo {
     pub global_task: GithubMatrixEntry,
     /// homebrew tap
     pub tap: Option<String>,
+    /// plan jobs
+    pub plan_jobs: Vec<String>,
+    /// local artifacts jobs
+    pub local_artifacts_jobs: Vec<String>,
+    /// global artifacts jobs
+    pub global_artifacts_jobs: Vec<String>,
+    /// host jobs
+    pub host_jobs: Vec<String>,
     /// publish jobs
     pub publish_jobs: Vec<String>,
     /// user-specified publish jobs
@@ -105,6 +113,10 @@ impl GithubCiInfo {
         let pr_run_mode = dist.pr_run_mode;
 
         let tap = dist.tap.clone();
+        let plan_jobs = dist.plan_jobs.clone();
+        let local_artifacts_jobs = dist.local_artifacts_jobs.clone();
+        let global_artifacts_jobs = dist.global_artifacts_jobs.clone();
+        let host_jobs = dist.host_jobs.clone();
         let publish_jobs = dist.publish_jobs.iter().map(|j| j.to_string()).collect();
         let user_publish_jobs = dist.user_publish_jobs.clone();
 
@@ -137,6 +149,10 @@ impl GithubCiInfo {
             install_dist_ps1,
             fail_fast,
             tap,
+            plan_jobs,
+            local_artifacts_jobs,
+            global_artifacts_jobs,
+            host_jobs,
             publish_jobs,
             user_publish_jobs,
             artifacts_matrix: GithubMatrix { include: tasks },

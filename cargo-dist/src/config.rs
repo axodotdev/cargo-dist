@@ -242,6 +242,34 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub all_features: Option<bool>,
 
+    /// Plan jobs to run in CI
+    ///
+    /// The core plan job is always run, but this allows additional hooks
+    /// to be added to the process to run concurrently with plan.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plan_jobs: Option<Vec<JobStyle>>,
+
+    /// Local artifacts jobs to run in CI
+    ///
+    /// The core build job is always run, but this allows additional hooks
+    /// to be added to the process to run concurrently with "upload local artifacts".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub local_artifacts_jobs: Option<Vec<JobStyle>>,
+
+    /// Global artifacts jobs to run in CI
+    ///
+    /// The core build job is always run, but this allows additional hooks
+    /// to be added to the process to run concurrently with "upload global artifacts".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub global_artifacts_jobs: Option<Vec<JobStyle>>,
+
+    /// Host jobs to run in CI
+    ///
+    /// The core build job is always run, but this allows additional hooks
+    /// to be added to the process to run concurrently with host.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub host_jobs: Option<Vec<JobStyle>>,
+
     /// Publish jobs to run in CI
     ///
     /// (defaults to none)
@@ -308,6 +336,10 @@ impl DistMetadata {
             features: _,
             default_features: _,
             all_features: _,
+            plan_jobs: _,
+            local_artifacts_jobs: _,
+            global_artifacts_jobs: _,
+            host_jobs: _,
             publish_jobs: _,
             publish_prereleases: _,
             create_release: _,
@@ -355,6 +387,10 @@ impl DistMetadata {
             features,
             default_features,
             all_features,
+            plan_jobs,
+            local_artifacts_jobs,
+            global_artifacts_jobs,
+            host_jobs,
             publish_jobs,
             publish_prereleases,
             create_release,
@@ -409,6 +445,21 @@ impl DistMetadata {
         if hosting.is_some() {
             warn!("package.metadata.dist.hosting is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
+        if plan_jobs.is_some() {
+            warn!("package.metadata.dist.plan-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if local_artifacts_jobs.is_some() {
+            warn!("package.metadata.dist.local-artifacts-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if global_artifacts_jobs.is_some() {
+            warn!("package.metadata.dist.global-artifacts-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if host_jobs.is_some() {
+            warn!("package.metadata.dist.host-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if publish_jobs.is_some() {
+            warn!("package.metadata.dist.publish-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
 
         // Merge non-global settings
         if installers.is_none() {
@@ -452,9 +503,6 @@ impl DistMetadata {
         }
         if system_dependencies.is_none() {
             *system_dependencies = workspace_config.system_dependencies.clone();
-        }
-        if publish_jobs.is_none() {
-            *publish_jobs = workspace_config.publish_jobs.clone();
         }
         if extra_artifacts.is_none() {
             *extra_artifacts = workspace_config.extra_artifacts.clone();
@@ -631,6 +679,47 @@ impl std::fmt::Display for PublishStyle {
         match self {
             PublishStyle::Homebrew => write!(f, "homebrew"),
             PublishStyle::User(s) => write!(f, "./{s}"),
+        }
+    }
+}
+
+/// Extra CI jobs we should run
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum JobStyle {
+    /// User-supplied value
+    User(String),
+}
+
+impl std::str::FromStr for JobStyle {
+    type Err = DistError;
+    fn from_str(s: &str) -> DistResult<Self> {
+        if let Some(slug) = s.strip_prefix("./") {
+            Ok(Self::User(slug.to_owned()))
+        } else {
+            Err(DistError::UnrecognizedStyle {
+                style: s.to_owned(),
+            })
+        }
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for JobStyle {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let path = String::deserialize(deserializer)?;
+        path.parse().map_err(|e| D::Error::custom(format!("{e}")))
+    }
+}
+
+impl std::fmt::Display for JobStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            JobStyle::User(s) => write!(f, "./{s}"),
         }
     }
 }

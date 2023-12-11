@@ -243,6 +243,10 @@ fn get_new_dist_metadata(
             features: None,
             default_features: None,
             all_features: None,
+            plan_jobs: None,
+            local_artifacts_jobs: None,
+            global_artifacts_jobs: None,
+            host_jobs: None,
             publish_jobs: None,
             publish_prereleases: None,
             create_release: None,
@@ -764,6 +768,10 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         features,
         all_features,
         default_features,
+        plan_jobs,
+        local_artifacts_jobs,
+        global_artifacts_jobs,
+        host_jobs,
         publish_jobs,
         publish_prereleases,
         create_release,
@@ -916,6 +924,34 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "all-features",
         "# Whether to pass --all-features to cargo build\n",
         *all_features,
+    );
+
+    apply_string_list(
+        table,
+        "plan-jobs",
+        "# Plan jobs to run in CI\n",
+        plan_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "local-artifacts-jobs",
+        "# Local artifacts jobs to run in CI\n",
+        local_artifacts_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "global-artifacts-jobs",
+        "# Global artifacts jobs to run in CI\n",
+        global_artifacts_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "host-jobs",
+        "# Host jobs to run in CI\n",
+        host_jobs.as_ref(),
     );
 
     apply_string_list(

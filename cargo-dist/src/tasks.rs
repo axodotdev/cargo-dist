@@ -187,6 +187,14 @@ pub struct DistGraph {
     pub releases: Vec<Release>,
     /// Info about CI backends
     pub ci: CiInfo,
+    /// List of plan jobs to run
+    pub plan_jobs: Vec<String>,
+    /// List of local artifacts jobs to run
+    pub local_artifacts_jobs: Vec<String>,
+    /// List of global artifacts jobs to run
+    pub global_artifacts_jobs: Vec<String>,
+    /// List of host jobs to run
+    pub host_jobs: Vec<String>,
     /// List of publish jobs to run
     pub publish_jobs: Vec<PublishStyle>,
     /// Extra user-specified publish jobs to run
@@ -726,6 +734,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Only the final value merged into a package_config matters
             install_path: _,
             // Only the final value merged into a package_config matters
+            plan_jobs: _,
+            // Only the final value merged into a package_config matters
+            local_artifacts_jobs: _,
+            // Only the final value merged into a package_config matters
+            global_artifacts_jobs: _,
+            // Only the final value merged into a package_config matters
+            host_jobs: _,
+            // Only the final value merged into a package_config matters
             publish_jobs: _,
             publish_prereleases,
             features,
@@ -786,6 +802,66 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             requires_precise
         };
 
+        let plan_jobs = workspace_metadata
+            .plan_jobs
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|s| {
+                let string = s.to_string();
+                if let Some(stripped) = string.strip_prefix("./") {
+                    stripped.to_owned()
+                } else {
+                    string
+                }
+            })
+            .collect();
+
+        let local_artifacts_jobs = workspace_metadata
+            .local_artifacts_jobs
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|s| {
+                let string = s.to_string();
+                if let Some(stripped) = string.strip_prefix("./") {
+                    stripped.to_owned()
+                } else {
+                    string
+                }
+            })
+            .collect();
+
+        let global_artifacts_jobs = workspace_metadata
+            .global_artifacts_jobs
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|s| {
+                let string = s.to_string();
+                if let Some(stripped) = string.strip_prefix("./") {
+                    stripped.to_owned()
+                } else {
+                    string
+                }
+            })
+            .collect();
+
+        let host_jobs = workspace_metadata
+            .host_jobs
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|s| {
+                let string = s.to_string();
+                if let Some(stripped) = string.strip_prefix("./") {
+                    stripped.to_owned()
+                } else {
+                    string
+                }
+            })
+            .collect();
+
         let templates = Templates::new()?;
         let publish_jobs: Vec<PublishStyle>;
         let user_publish_jobs: Vec<PublishStyle>;
@@ -844,6 +920,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ci: CiInfo::default(),
                 pr_run_mode: workspace_metadata.pr_run_mode.unwrap_or_default(),
                 tap: workspace_metadata.tap.clone(),
+                plan_jobs,
+                local_artifacts_jobs,
+                global_artifacts_jobs,
+                host_jobs,
                 publish_jobs,
                 user_publish_jobs,
                 allow_dirty,

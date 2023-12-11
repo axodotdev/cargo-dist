@@ -147,16 +147,6 @@ download_binary_and_run_installer() {
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             ;;
-        "x86_64-unknown-linux-musl-dynamic")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
-            ;;
-        "x86_64-unknown-linux-musl-static")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
-            ;;
         *)
             err "there isn't a package for $_arch"
             ;;
@@ -301,18 +291,8 @@ install() {
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile"
-        exit1=$?
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc"
-        exit2=$?
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv"
-        exit3=$?
-
-        if [ "${exit1:-0}" = 1 ] || [ "${exit2:-0}" = 1 ] || [ "${exit3:-0}" = 1 ]; then
-            say ""
-            say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
-            say ""
-            say "    source $_env_script_path_expr"
-        fi
     fi
 }
 
@@ -324,7 +304,7 @@ print_home_for_script() {
         # zsh has a special ZDOTDIR directory, which if set
         # should be considered instead of $HOME
         .zsh*)
-            if [ -n "${ZDOTDIR:-}" ]; then
+            if [ -n "$ZDOTDIR" ]; then
                 _home="$ZDOTDIR"
             else
                 _home="$HOME"
@@ -409,7 +389,10 @@ add_install_dir_to_path() {
             if [ -f "$_env_script_path" ]; then
                 say_verbose "adding $_robust_line to $_target"
                 ensure echo "$_robust_line" >> "$_target"
-                return 1
+                say ""
+                say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
+                say ""
+                say "    $_pretty_line"
             fi
         else
             say_verbose "$_install_dir already on PATH"
@@ -784,6 +767,322 @@ downloader() {
 
 download_binary_and_run_installer "$@" || exit 1
 
+================ formula.rb ================
+class Axolotlsay < Formula
+  desc "💬 a CLI for learning to distribute CLIs in rust"
+  version "0.2.1"
+  on_macos do
+    on_arm do
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
+    end
+    on_intel do
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
+    end
+  end
+  on_linux do
+    on_intel do
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
+    end
+  end
+  license "MIT OR Apache-2.0"
+
+  def install
+    bin.install "axolotlsay"
+
+    # Homebrew will automatically install these, so we don't need to do that
+    doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
+    leftover_contents = Dir["*"] - doc_files
+
+    # Install any leftover files in pkgshare; these are probably config or
+    # sample files.
+    pkgshare.install *leftover_contents unless leftover_contents.empty?
+  end
+end
+
+================ installer.ps1 ================
+# Licensed under the MIT license
+# <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+# option. This file may not be copied, modified, or distributed
+# except according to those terms.
+
+<#
+.SYNOPSIS
+
+The installer for axolotlsay 0.2.1
+
+.DESCRIPTION
+
+This script detects what platform you're on and fetches an appropriate archive from
+https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
+then unpacks the binaries and installs them to $env:CARGO_HOME\bin ($HOME\.cargo\bin)
+
+It will then add that dir to PATH by editing your Environment.Path registry key
+
+.PARAMETER ArtifactDownloadUrl
+The URL of the directory where artifacts can be fetched from
+
+.PARAMETER NoModifyPath
+Don't add the install directory to PATH
+
+.PARAMETER Help
+Print help
+
+#>
+
+param (
+    [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
+    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1',
+    [Parameter(HelpMessage = "Don't add the install directory to PATH")]
+    [switch]$NoModifyPath,
+    [Parameter(HelpMessage = "Print Help")]
+    [switch]$Help
+)
+
+$app_name = 'axolotlsay'
+$app_version = '0.2.1'
+
+function Install-Binary($install_args) {
+  if ($Help) {
+    Get-Help $PSCommandPath -Detailed
+    Exit
+  }
+  $old_erroractionpreference = $ErrorActionPreference
+  $ErrorActionPreference = 'stop'
+
+  Initialize-Environment
+
+  # Platform info injected by cargo-dist
+  $platforms = @{
+    "x86_64-pc-windows-msvc" = @{
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+      "bins" = "axolotlsay.exe"
+      "zip_ext" = ".tar.gz"
+    }
+  }
+
+  $fetched = Download "$ArtifactDownloadUrl" $platforms
+  # FIXME: add a flag that lets the user not do this step
+  Invoke-Installer $fetched "$install_args"
+
+  $ErrorActionPreference = $old_erroractionpreference
+}
+
+function Get-TargetTriple() {
+  try {
+    # NOTE: this might return X64 on ARM64 Windows, which is OK since emulation is available.
+    # It works correctly starting in PowerShell Core 7.3 and Windows PowerShell in Win 11 22H2.
+    # Ideally this would just be
+    #   [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+    # but that gets a type from the wrong assembly on Windows PowerShell (i.e. not Core)
+    $a = [System.Reflection.Assembly]::LoadWithPartialName("System.Runtime.InteropServices.RuntimeInformation")
+    $t = $a.GetType("System.Runtime.InteropServices.RuntimeInformation")
+    $p = $t.GetProperty("OSArchitecture")
+    # Possible OSArchitecture Values: https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.architecture
+    # Rust supported platforms: https://doc.rust-lang.org/stable/rustc/platform-support.html
+    switch ($p.GetValue($null).ToString())
+    {
+      "X86" { return "i686-pc-windows-msvc" }
+      "X64" { return "x86_64-pc-windows-msvc" }
+      "Arm" { return "thumbv7a-pc-windows-msvc" }
+      "Arm64" { return "aarch64-pc-windows-msvc" }
+    }
+  } catch {
+    # The above was added in .NET 4.7.1, so Windows PowerShell in versions of Windows
+    # prior to Windows 10 v1709 may not have this API.
+    Write-Verbose "Get-TargetTriple: Exception when trying to determine OS architecture."
+    Write-Verbose $_
+  }
+
+  # This is available in .NET 4.0. We already checked for PS 5, which requires .NET 4.5.
+  Write-Verbose("Get-TargetTriple: falling back to Is64BitOperatingSystem.")
+  if ([System.Environment]::Is64BitOperatingSystem) {
+    return "x86_64-pc-windows-msvc"
+  } else {
+    return "i686-pc-windows-msvc"
+  }
+}
+
+function Download($download_url, $platforms) {
+  $arch = Get-TargetTriple
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # X64 is well-supported, including in emulation on ARM64
+    Write-Verbose "$arch is not availablem falling back to X64"
+    $arch = "x86_64-pc-windows-msvc"
+  }
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # should not be possible, as currently we always produce X64 binaries.
+    $platforms_json = ConvertTo-Json $platforms
+    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
+  }
+
+  # Lookup what we expect this platform to look like
+  $info = $platforms[$arch]
+  $zip_ext = $info["zip_ext"]
+  $bin_names = $info["bins"]
+  $artifact_name = $info["artifact_name"]
+
+  # Make a new temp dir to unpack things to
+  $tmp = New-Temp-Dir
+  $dir_path = "$tmp\$app_name$zip_ext"
+
+  # Download and unpack!
+  $url = "$download_url/$artifact_name"
+  Write-Information "Downloading $app_name $app_version ($arch)"
+  Write-Verbose "  from $url"
+  Write-Verbose "  to $dir_path"
+  $wc = New-Object Net.Webclient
+  $wc.downloadFile($url, $dir_path)
+
+  Write-Verbose "Unpacking to $tmp"
+
+  # Select the tool to unpack the files with.
+  #
+  # As of windows 10(?), powershell comes with tar preinstalled, but in practice
+  # it only seems to support .tar.gz, and not xz/zstd. Still, we should try to
+  # forward all tars to it in case the user has a machine that can handle it!
+  switch -Wildcard ($zip_ext) {
+    ".zip" {
+      Expand-Archive -Path $dir_path -DestinationPath "$tmp";
+      Break
+    }
+    ".tar.*" {
+      tar xf $dir_path --strip-components 1 -C "$tmp";
+      Break
+    }
+    Default {
+      throw "ERROR: unknown archive format $zip_ext"
+    }
+  }
+
+  # Let the next step know what to copy
+  $bin_paths = @()
+  foreach ($bin_name in $bin_names) {
+    Write-Verbose "  Unpacked $bin_name"
+    $bin_paths += "$tmp\$bin_name"
+  }
+  return $bin_paths
+}
+
+function Invoke-Installer($bin_paths) {
+
+  # first try CARGO_HOME, then fallback to HOME
+  # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
+  $dest_dir = if (($base_dir = $env:CARGO_HOME)) {
+    Join-Path $base_dir "bin"
+  } elseif (($base_dir = $HOME)) {
+    Join-Path $base_dir ".cargo\bin"
+  } else {
+    throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
+  }
+
+  $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
+  Write-Information "Installing to $dest_dir"
+  # Just copy the binaries from the temp location to the install dir
+  foreach ($bin_path in $bin_paths) {
+    $installed_file = Split-Path -Path "$bin_path" -Leaf
+    Copy-Item "$bin_path" -Destination "$dest_dir"
+    Remove-Item "$bin_path" -Recurse -Force
+    Write-Information "  $installed_file"
+  }
+
+  Write-Information "Everything's installed!"
+  if (-not $NoModifyPath) {
+    if (Add-Path $dest_dir) {
+        Write-Information ""
+        Write-Information "$dest_dir was added to your PATH, you may need to restart your shell for that to take effect."
+    }
+  }
+}
+
+# Try to add the given path to PATH via the registry
+#
+# Returns true if the registry was modified, otherwise returns false
+# (indicating it was already on PATH)
+function Add-Path($OrigPathToAdd) {
+  $RegistryPath = "HKCU:\Environment"
+  $PropertyName = "Path"
+  $PathToAdd = $OrigPathToAdd
+
+  $Item = if (Test-Path $RegistryPath) {
+    # If the registry key exists, get it
+    Get-Item -Path $RegistryPath
+  } else {
+    # If the registry key doesn't exist, create it
+    Write-Verbose  "Creating $RegistryPath"
+    New-Item -Path $RegistryPath -Force
+  }
+
+  $OldPath = ""
+  try {
+    # Try to get the old PATH value. If that fails, assume we're making it from scratch.
+    # Otherwise assume there's already paths in here and use a ; separator
+    $OldPath = $Item | Get-ItemPropertyValue -Name $PropertyName
+    $PathToAdd = "$PathToAdd;"
+  } catch {
+    # We'll be creating the PATH from scratch
+    Write-Verbose "Adding $PropertyName Property to $RegistryPath"
+  }
+
+  # Check if the path is already there
+  #
+  # We don't want to incorrectly match "C:\blah\" to "C:\blah\blah\", so we include the semicolon
+  # delimiters when searching, ensuring exact matches. To avoid corner cases we add semicolons to
+  # both sides of the input, allowing us to pretend we're always in the middle of a list.
+  if (";$OldPath;" -like "*;$OrigPathToAdd;*") {
+    # Already on path, nothing to do
+    Write-Verbose "install dir already on PATH, all done!"
+    return $false
+  } else {
+    # Actually update PATH
+    Write-Verbose "Adding $OrigPathToAdd to your PATH"
+    $NewPath = $PathToAdd + $OldPath
+    # We use -Force here to make the value already existing not be an error
+    $Item | New-ItemProperty -Name $PropertyName -Value $NewPath -PropertyType String -Force | Out-Null
+    return $true
+  }
+}
+
+function Initialize-Environment() {
+  If (($PSVersionTable.PSVersion.Major) -lt 5) {
+    Write-Error "PowerShell 5 or later is required to install $app_name."
+    Write-Error "Upgrade PowerShell: https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell"
+    break
+  }
+
+  # show notification to change execution policy:
+  $allowedExecutionPolicy = @('Unrestricted', 'RemoteSigned', 'ByPass')
+  If ((Get-ExecutionPolicy).ToString() -notin $allowedExecutionPolicy) {
+    Write-Error "PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ", ")] to run $app_name."
+    Write-Error "For example, to set the execution policy to 'RemoteSigned' please run :"
+    Write-Error "'Set-ExecutionPolicy RemoteSigned -scope CurrentUser'"
+    break
+  }
+
+  # GitHub requires TLS 1.2
+  If ([System.Enum]::GetNames([System.Net.SecurityProtocolType]) -notcontains 'Tls12') {
+    Write-Error "Installing $app_name requires at least .NET Framework 4.5"
+    Write-Error "Please download and install it first:"
+    Write-Error "https://www.microsoft.com/net/download"
+    break
+  }
+}
+
+function New-Temp-Dir() {
+  [CmdletBinding(SupportsShouldProcess)]
+  param()
+  $parent = [System.IO.Path]::GetTempPath()
+  [string] $name = [System.Guid]::NewGuid()
+  New-Item -ItemType Directory -Path (Join-Path $parent $name)
+}
+
+# PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
+$Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
+# Make Write-Information statements be visible
+$InformationPreference = "Continue"
+Install-Binary "$Args"
+
 ================ npm-package.tar.gz/package/.gitignore ================
 /node_modules
 
@@ -1104,18 +1403,13 @@ const supportedPlatforms = {
     "bins": ["axolotlsay"],
     "zip_ext": ".tar.gz"
   },
+  "x86_64-pc-windows-msvc": {
+    "artifact_name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+    "bins": ["axolotlsay.exe"],
+    "zip_ext": ".tar.gz"
+  },
   "x86_64-unknown-linux-gnu": {
     "artifact_name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
-    "bins": ["axolotlsay"],
-    "zip_ext": ".tar.gz"
-  },
-  "x86_64-unknown-linux-musl-dynamic": {
-    "artifact_name": "axolotlsay-x86_64-unknown-linux-musl.tar.gz",
-    "bins": ["axolotlsay"],
-    "zip_ext": ".tar.gz"
-  },
-  "x86_64-unknown-linux-musl-static": {
-    "artifact_name": "axolotlsay-x86_64-unknown-linux-musl.tar.gz",
     "bins": ["axolotlsay"],
     "zip_ext": ".tar.gz"
   }
@@ -1628,7 +1922,7 @@ maybeInstall(true).then(run);
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.1",
   "announcement_changelog": "```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.1\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install axolotlsay@0.2.1\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz) | macOS Apple Silicon | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz) | macOS Intel | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | Linux x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-musl.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-musl.tar.gz) | musl Linux x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-musl.tar.gz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.1\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\nirm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/homebrew-packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install axolotlsay@0.2.1\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz) | macOS Apple Silicon | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz) | macOS Intel | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | Windows x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | Linux x64 | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
   "system_info": {
     "cargo_version_line": "CENSORED"
   },
@@ -1640,15 +1934,17 @@ maybeInstall(true).then(run);
         "source.tar.gz",
         "source.tar.gz.sha256",
         "axolotlsay-installer.sh",
+        "axolotlsay-installer.ps1",
+        "axolotlsay.rb",
         "axolotlsay-npm-package.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
-        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256",
-        "axolotlsay-x86_64-unknown-linux-musl.tar.gz",
-        "axolotlsay-x86_64-unknown-linux-musl.tar.gz.sha256"
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
       ],
       "hosting": {
         "github": {
@@ -1700,14 +1996,22 @@ maybeInstall(true).then(run);
         "aarch64-apple-darwin"
       ]
     },
+    "axolotlsay-installer.ps1": {
+      "name": "axolotlsay-installer.ps1",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "install_hint": "irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex",
+      "description": "Install prebuilt binaries via powershell script"
+    },
     "axolotlsay-installer.sh": {
       "name": "axolotlsay-installer.sh",
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
-        "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl"
+        "x86_64-unknown-linux-gnu"
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
@@ -1718,8 +2022,8 @@ maybeInstall(true).then(run);
       "target_triples": [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
-        "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl"
+        "x86_64-pc-windows-msvc",
+        "x86_64-unknown-linux-gnu"
       ],
       "assets": [
         {
@@ -1818,6 +2122,48 @@ maybeInstall(true).then(run);
         "x86_64-apple-darwin"
       ]
     },
+    "axolotlsay-x86_64-pc-windows-msvc.tar.gz": {
+      "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ]
+    },
     "axolotlsay-x86_64-unknown-linux-gnu.tar.gz": {
       "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
       "kind": "executable-zip",
@@ -1860,47 +2206,16 @@ maybeInstall(true).then(run);
         "x86_64-unknown-linux-gnu"
       ]
     },
-    "axolotlsay-x86_64-unknown-linux-musl.tar.gz": {
-      "name": "axolotlsay-x86_64-unknown-linux-musl.tar.gz",
-      "kind": "executable-zip",
+    "axolotlsay.rb": {
+      "name": "axolotlsay.rb",
+      "kind": "installer",
       "target_triples": [
-        "x86_64-unknown-linux-musl"
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu"
       ],
-      "assets": [
-        {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
-          "kind": "license"
-        },
-        {
-          "name": "README.md",
-          "path": "README.md",
-          "kind": "readme"
-        },
-        {
-          "name": "axolotlsay",
-          "path": "axolotlsay",
-          "kind": "executable"
-        }
-      ],
-      "checksum": "axolotlsay-x86_64-unknown-linux-musl.tar.gz.sha256"
-    },
-    "axolotlsay-x86_64-unknown-linux-musl.tar.gz.sha256": {
-      "name": "axolotlsay-x86_64-unknown-linux-musl.tar.gz.sha256",
-      "kind": "checksum",
-      "target_triples": [
-        "x86_64-unknown-linux-musl"
-      ]
+      "install_hint": "brew install axodotdev/homebrew-packages/axolotlsay",
+      "description": "Install prebuilt binaries via Homebrew"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",
@@ -1935,20 +2250,19 @@ maybeInstall(true).then(run);
           },
           {
             "targets": [
+              "x86_64-pc-windows-msvc"
+            ],
+            "runner": "windows-2019",
+            "install_dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex",
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
+          },
+          {
+            "targets": [
               "x86_64-unknown-linux-gnu"
             ],
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
-          },
-          {
-            "targets": [
-              "x86_64-unknown-linux-musl"
-            ],
-            "runner": "ubuntu-20.04",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
-            "packages_install": "sudo apt-get install musl-tools"
           }
         ]
       },
@@ -2041,12 +2355,22 @@ jobs:
           name: artifacts
           path: dist-manifest.json
 
+  custom-my-plan-job-1:
+    uses: ./.github/workflows/my-plan-job-1.yml
+    secrets: inherit
+
+  custom-my-plan-job-2:
+    uses: ./.github/workflows/my-plan-job-2.yml
+    secrets: inherit
+
   # Build and packages all the platform-specific things
   build-local-artifacts:
     name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
     # Let the initial task tell us to not run (currently very blunt)
     needs:
       - plan
+      - custom-my-plan-job-1
+      - custom-my-plan-job-2
     if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
     strategy:
       fail-fast: false
@@ -2186,15 +2510,52 @@ jobs:
           name: artifacts
           path: dist-manifest.json
 
+  publish-homebrew-formula:
+    needs:
+      - plan
+      - host
+    runs-on: "ubuntu-20.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PLAN: ${{ needs.plan.outputs.val }}
+      GITHUB_USER: "axo bot"
+      GITHUB_EMAIL: "admin+bot@axo.dev"
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: "axodotdev/homebrew-packages"
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      # So we have access to the formula
+      - name: Fetch local artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts
+          path: Formula/
+      - name: Commit formula files
+        run: |
+          git config --global user.name "${GITHUB_USER}"
+          git config --global user.email "${GITHUB_EMAIL}"
+
+          for release in $(echo "$PLAN" | jq --compact-output '.releases[]'); do
+            name=$(echo "$release" | jq .app_name --raw-output)
+            version=$(echo "$release" | jq .app_version --raw-output)
+
+            git add Formula/${name}.rb
+            git commit -m "${name} ${version}"
+          done
+          git push
+
   # Create a Github Release while uploading all files to it
   announce:
     needs:
       - plan
       - host
+      - publish-homebrew-formula
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
-    if: ${{ always() && needs.host.result == 'success' }}
+    if: ${{ always() && needs.host.result == 'success' && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') }}
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
