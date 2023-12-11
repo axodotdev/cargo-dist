@@ -287,7 +287,7 @@ print_home_for_script() {
         # zsh has a special ZDOTDIR directory, which if set
         # should be considered instead of $HOME
         .zsh*)
-            if [ -n "$ZDOTDIR" ]; then
+            if [ -n "${ZDOTDIR:-}" ]; then
                 _home="$ZDOTDIR"
             else
                 _home="$HOME"
