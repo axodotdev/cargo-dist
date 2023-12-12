@@ -35,7 +35,7 @@ cargo-dist-schema = { version = "=0.6.0-prerelease.4", path = "../cargo-dist-sch
 
 axoasset = { version = "0.6.0", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
 axoproject = { version = "0.6.0", default-features = false, features = ["cargo-projects", "generic-projects"] }
-gazenot = { version = "0.1.4" }
+gazenot = { version = "0.2.1" }
 
 comfy-table = "7.0.1"
 miette = { version = "5.6.0" }
