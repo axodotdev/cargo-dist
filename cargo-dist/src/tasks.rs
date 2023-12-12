@@ -2205,7 +2205,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let checksum = release.checksum;
         let app_name = &release.app_name;
         let app_version = &release.version;
-        let tag = format!("{app_name}/{app_version}");
+        let tag = format!("{app_name}:{app_version}");
 
         // Make an msi for every windows platform
         for variant_idx in variants {

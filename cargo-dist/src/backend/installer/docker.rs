@@ -16,7 +16,7 @@ use crate::{
     DistGraph, ReleaseIdx,
 };
 
-/// Info needed to build an msi
+/// Info needed to build a docker image
 #[derive(Debug, Clone)]
 pub struct DockerInstallerInfo {
     /// Target triple this image is for
@@ -65,9 +65,11 @@ struct RunnerImage {
 }
 
 /// As of this rewriting this is the latest debian release
-const RUNNER_IMAGE: &str = "debian:bookworm-slim";
+const RUNNER_IMAGE: &str = "ubuntu:20.04";
 /// What to call the temporary dockerfile we generate
 const DOCKERFILE_NAME: &str = "Dockerfile";
+/// The buildx builder backend we need to install + use
+const DIST_BUILDER: &str = "dist-container";
 
 impl DockerInstallerInfo {
     /// Build the docker image
@@ -92,7 +94,7 @@ impl DockerInstallerInfo {
         // and to also auto-include runtime deps they forgot to mention!
         // (soft-blocked on doing a sysdeps refactor)
         let release = dist.release(self.release_idx);
-        let packages: Vec<String> = release
+        release
             .system_dependencies
             .apt
             .clone()
@@ -106,8 +108,7 @@ impl DockerInstallerInfo {
                     name
                 }
             })
-            .collect();
-        packages
+            .collect()
     }
 
     /// Compute the data for the dockerfile
@@ -150,50 +151,70 @@ impl DockerInstallerInfo {
         let Some(docker) = &dist.tools.docker else {
             unreachable!("docker didn't exist, tasks.rs was supposed to catch that!");
         };
-        // FIXME: in theory we can do "build" and "save" in one shot with
+        // 1. check if the cargo-dist docker backend is setup
+        // 2. create it if not
+        // 3. do a build with the cargo-dist backend
         //
-        //    docker buildx build --output type=docker,dest=/path/to/output.tar
+        // We do this because the kind of build+export we want to do requires a
+        // "docker-container" buildx builder, which doesn't exist by default. So
+        // we need to create one, and then use it. Unfortunately this is persistent
+        // and non-idempotent, so we need to check if we've already done it first.
         //
-        // which is what the Github Action seems to do, but locally (in WSL) i get:
-        //
-        // > ERROR: Docker exporter feature is currently not supported for docker driver.
-        // > Please switch to a different driver (eg. "docker buildx create --use")
-        //
-        // So for now just use `save` which Does work
-        {
+        // FIXME: is there any way to do this that doesn't require persistently modifying
+        // the current docker install?
+        let has_dist_builder = {
             let mut cmd = Command::new(&docker.cmd);
-            cmd.arg("build")
-                .arg(".")
-                .arg("-t")
-                .arg(&self.tag)
+            cmd.arg("buildx")
+                .arg("inspect")
+                .arg(DIST_BUILDER)
+                .current_dir(&self.package_dir);
+            let output = cmd.output().map_err(|cause| DistError::CommandFail {
+                command_summary: "inspect your docker install with 'docker buildx inspect'"
+                    .to_owned(),
+                cause,
+            })?;
+            output.status.success()
+        };
+        if !has_dist_builder {
+            let mut cmd = Command::new(&docker.cmd);
+            cmd.arg("buildx")
+                .arg("create")
+                .arg("--name")
+                .arg(DIST_BUILDER)
+                .arg("--driver=docker-container")
                 .current_dir(&self.package_dir);
             let status = cmd.status().map_err(|cause| DistError::CommandFail {
-                command_summary: "export your docker image with 'docker build'".to_owned(),
+                command_summary: "configure docker to use the docker-container driver with 'docker buildx create'".to_owned(),
                 cause,
             })?;
 
             if !status.success() {
                 return Err(DistError::CommandStatus {
-                    command_summary: "build your docker image with 'docker build'".to_owned(),
+                    command_summary: "configure docker to use the docker-container driver with 'docker buildx create'".to_owned(),
                     status,
                 });
             }
         }
         {
             let mut cmd = Command::new(&docker.cmd);
-            cmd.arg("save")
-                .arg("--output")
-                .arg(&self.file_path)
+            cmd.arg("buildx")
+                .arg("build")
+                .arg(".")
+                .arg("--tag")
                 .arg(&self.tag)
+                .arg(format!("--builder={DIST_BUILDER}"))
+                .arg("--output")
+                .arg(format!("type=docker,dest={}", self.file_path))
                 .current_dir(&self.package_dir);
             let status = cmd.status().map_err(|cause| DistError::CommandFail {
-                command_summary: "export your docker image with 'docker save'".to_owned(),
+                command_summary: "build your docker image with 'docker buildx build'".to_owned(),
                 cause,
             })?;
 
             if !status.success() {
                 return Err(DistError::CommandStatus {
-                    command_summary: "export your docker image with 'docker save'".to_owned(),
+                    command_summary: "build your docker image with 'docker buildx build'"
+                        .to_owned(),
                     status,
                 });
             }
