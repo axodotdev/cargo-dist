@@ -2,8 +2,7 @@
 
 use std::{
     env,
-    io::{stderr, Write},
-    process::{Command, Output},
+    process::{Command, ExitStatus},
 };
 
 use camino::Utf8Path;
@@ -77,7 +76,7 @@ fn run_build(
     dist_graph: &DistGraph,
     command_string: &[String],
     target: Option<&str>,
-) -> Result<Output> {
+) -> Result<ExitStatus> {
     let mut command_string = command_string.to_owned();
 
     let mut desired_extra_env = vec![];
@@ -99,7 +98,7 @@ fn run_build(
             .first()
             .expect("The build command must contain at least one entry"),
     );
-    command.stdout(std::process::Stdio::piped());
+    command.stdout(std::io::stderr());
     command.stderr(std::process::Stdio::inherit());
     for arg in args {
         command.arg(arg);
@@ -133,7 +132,7 @@ fn run_build(
 
     info!("exec: {:?}", command);
     command
-        .output()
+        .status()
         .into_diagnostic()
         .wrap_err_with(|| format!("failed to exec generic build: {command:?}"))
 }
@@ -152,12 +151,9 @@ pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -
         Some(&target.target_triple),
     )?;
 
-    if !result.status.success() {
-        println!("Build exited non-zero: {}", result.status);
+    if !result.success() {
+        println!("Build exited non-zero: {}", result);
     }
-    eprintln!();
-    eprintln!("stdout:");
-    stderr().write_all(&result.stdout).into_diagnostic()?;
 
     // Check that we got everything we expected, and normalize to ArtifactIdx => Artifact Path
     for binary_idx in &target.expected_binaries {
@@ -189,12 +185,9 @@ pub fn run_extra_artifacts_build(dist_graph: &DistGraph, target: &ExtraBuildStep
     let result = run_build(dist_graph, &target.build_command, None)?;
     let dest = dist_graph.dist_dir.to_owned();
 
-    if !result.status.success() {
-        println!("Build exited non-zero: {}", result.status);
+    if !result.success() {
+        println!("Build exited non-zero: {}", result);
     }
-    eprintln!();
-    eprintln!("stdout:");
-    stderr().write_all(&result.stdout).into_diagnostic()?;
 
     // Check that we got everything we expected, and copy into the distribution path
     for artifact in &target.expected_artifacts {
