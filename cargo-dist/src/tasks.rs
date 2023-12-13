@@ -1201,6 +1201,32 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         if !self.global_artifacts_enabled() {
             return;
         }
+
+        // It's possible to run cargo-dist in something that's not a git
+        // repo, including a brand-new repo that hasn't been `git init`ted yet;
+        // we can't act on those.
+        //
+        // Note we don't need the output of --show-toplevel,
+        // just the exit status.
+        let status = Command::new("git")
+            .arg("rev-parse")
+            .arg("--show-toplevel")
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .status();
+        let is_git_repo = if let Ok(status) = status {
+            status.success()
+        } else {
+            false
+        };
+        if !is_git_repo {
+            warn!(
+                "skipping source tarball; no git repo found at {}",
+                self.inner.workspace_dir
+            );
+            return;
+        }
+
         let release = self.release(to_release);
         let checksum = release.checksum;
         info!("adding source tarball to release {}", release.id);
