@@ -155,9 +155,11 @@ pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -
     if !result.status.success() {
         println!("Build exited non-zero: {}", result.status);
     }
-    eprintln!();
-    eprintln!("stdout:");
-    stderr().write_all(&result.stdout).into_diagnostic()?;
+    if !result.stdout.is_empty() {
+        eprintln!();
+        eprintln!("stdout:");
+        stderr().write_all(&result.stdout).into_diagnostic()?;
+    }
 
     // Check that we got everything we expected, and normalize to ArtifactIdx => Artifact Path
     for binary_idx in &target.expected_binaries {
@@ -192,9 +194,11 @@ pub fn run_extra_artifacts_build(dist_graph: &DistGraph, target: &ExtraBuildStep
     if !result.status.success() {
         println!("Build exited non-zero: {}", result.status);
     }
-    eprintln!();
-    eprintln!("stdout:");
-    stderr().write_all(&result.stdout).into_diagnostic()?;
+    if !result.stdout.is_empty() {
+        eprintln!();
+        eprintln!("stdout:");
+        stderr().write_all(&result.stdout).into_diagnostic()?;
+    }
 
     // Check that we got everything we expected, and copy into the distribution path
     for artifact in &target.expected_artifacts {

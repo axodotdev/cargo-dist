@@ -2,7 +2,7 @@
 //!
 //! In the future this may get split up into submodules.
 
-use std::process::Command;
+use std::{io::Write, process::Command};
 
 use axoasset::LocalAsset;
 use camino::Utf8PathBuf;
@@ -151,6 +151,7 @@ impl DockerInstallerInfo {
         let Some(docker) = &dist.tools.docker else {
             unreachable!("docker didn't exist, tasks.rs was supposed to catch that!");
         };
+        eprintln!("building docker image ({})", self.target);
         // 1. check if the cargo-dist docker backend is setup
         // 2. create it if not
         // 3. do a build with the cargo-dist backend
@@ -182,16 +183,25 @@ impl DockerInstallerInfo {
                 .arg("--name")
                 .arg(DIST_BUILDER)
                 .arg("--driver=docker-container")
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::inherit())
                 .current_dir(&self.package_dir);
-            let status = cmd.status().map_err(|cause| DistError::CommandFail {
+            let output = cmd.output().map_err(|cause| DistError::CommandFail {
                 command_summary: "configure docker to use the docker-container driver with 'docker buildx create'".to_owned(),
                 cause,
             })?;
 
-            if !status.success() {
+            if !output.stdout.is_empty() {
+                eprintln!();
+                eprintln!("docker stdout:");
+                std::io::stderr()
+                    .write_all(&output.stdout)
+                    .expect("failed to write to stdout");
+            }
+            if !output.status.success() {
                 return Err(DistError::CommandStatus {
                     command_summary: "configure docker to use the docker-container driver with 'docker buildx create'".to_owned(),
-                    status,
+                    status: output.status,
                 });
             }
         }
@@ -205,17 +215,26 @@ impl DockerInstallerInfo {
                 .arg(format!("--builder={DIST_BUILDER}"))
                 .arg("--output")
                 .arg(format!("type=docker,dest={}", self.file_path))
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::inherit())
                 .current_dir(&self.package_dir);
-            let status = cmd.status().map_err(|cause| DistError::CommandFail {
+            let output = cmd.output().map_err(|cause| DistError::CommandFail {
                 command_summary: "build your docker image with 'docker buildx build'".to_owned(),
                 cause,
             })?;
 
-            if !status.success() {
+            if !output.stdout.is_empty() {
+                eprintln!();
+                eprintln!("docker stdout:");
+                std::io::stderr()
+                    .write_all(&output.stdout)
+                    .expect("failed to write to stdout");
+            }
+            if !output.status.success() {
                 return Err(DistError::CommandStatus {
                     command_summary: "build your docker image with 'docker buildx build'"
                         .to_owned(),
-                    status,
+                    status: output.status,
                 });
             }
         }
