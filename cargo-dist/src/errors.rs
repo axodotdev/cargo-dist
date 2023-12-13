@@ -266,6 +266,14 @@ pub enum DistError {
     #[error("We failed to generate a source tarball for your project")]
     #[diagnostic(help("This is probably not your fault, please file an issue!"))]
     GitArchiveError {},
+
+    /// A required tool is missing
+    #[error("{tool}, required to run this task, is missing")]
+    #[diagnostic(help("Ensure {tool} is installed"))]
+    ToolMissing {
+        /// the name of the missing tool
+        tool: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

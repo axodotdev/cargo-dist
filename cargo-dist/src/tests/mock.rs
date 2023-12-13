@@ -48,6 +48,7 @@ pub fn mock_tools() -> Tools {
         },
         rustup: None,
         brew: None,
+        git: None,
     }
 }
 
