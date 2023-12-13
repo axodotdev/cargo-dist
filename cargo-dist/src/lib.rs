@@ -137,7 +137,9 @@ fn run_build_step(
             committish,
             prefix,
             target,
-        }) => Ok(generate_source_tarball(committish, prefix, target)?),
+        }) => Ok(generate_source_tarball(
+            dist_graph, committish, prefix, target,
+        )?),
         BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target),
     }
 }
@@ -185,8 +187,21 @@ fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResul
 /// Creates a source code tarball from the git archive from
 /// tag/ref/commit `committish`, with the directory prefix `prefix`,
 /// at the output file `target`.
-fn generate_source_tarball(committish: &str, prefix: &str, target: &Utf8Path) -> DistResult<()> {
-    let status = Command::new("git")
+fn generate_source_tarball(
+    graph: &DistGraph,
+    committish: &str,
+    prefix: &str,
+    target: &Utf8Path,
+) -> DistResult<()> {
+    let git = if let Some(tool) = &graph.tools.git {
+        tool.cmd.to_owned()
+    } else {
+        return Err(DistError::ToolMissing {
+            tool: "git".to_owned(),
+        });
+    };
+
+    let status = Command::new(git)
         .arg("archive")
         .arg(committish)
         .arg("--format=tar.gz")

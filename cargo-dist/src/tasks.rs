@@ -235,6 +235,8 @@ pub struct Tools {
     pub rustup: Option<Tool>,
     /// homebrew, only available on macOS
     pub brew: Option<Tool>,
+    /// git, used if the repository is a git repo
+    pub git: Option<Tool>,
 }
 
 /// Info about the cargo toolchain we're using
@@ -1202,13 +1204,20 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         }
 
+        let git = if let Some(tool) = &self.inner.tools.git {
+            tool.cmd.to_owned()
+        } else {
+            warn!("skipping source tarball; git not installed");
+            return;
+        };
+
         // It's possible to run cargo-dist in something that's not a git
         // repo, including a brand-new repo that hasn't been `git init`ted yet;
         // we can't act on those.
         //
         // Note we don't need the output of --show-toplevel,
         // just the exit status.
-        let status = Command::new("git")
+        let status = Command::new(git)
             .arg("rev-parse")
             .arg("--show-toplevel")
             .stdout(std::process::Stdio::piped())
@@ -2679,6 +2688,7 @@ fn tool_info() -> Result<Tools> {
         cargo,
         rustup: find_tool("rustup", "-V"),
         brew: find_tool("brew", "--version"),
+        git: find_tool("git", "--version"),
     })
 }
 
