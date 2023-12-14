@@ -836,8 +836,6 @@ function Install-Binary($install_args) {
     Get-Help $PSCommandPath -Detailed
     Exit
   }
-  $old_erroractionpreference = $ErrorActionPreference
-  $ErrorActionPreference = 'stop'
 
   Initialize-Environment
 
@@ -853,8 +851,6 @@ function Install-Binary($install_args) {
   $fetched = Download "$ArtifactDownloadUrl" $platforms
   # FIXME: add a flag that lets the user not do this step
   Invoke-Installer $fetched "$install_args"
-
-  $ErrorActionPreference = $old_erroractionpreference
 }
 
 function Get-TargetTriple() {
@@ -1033,26 +1029,35 @@ function Add-Path($OrigPathToAdd) {
 
 function Initialize-Environment() {
   If (($PSVersionTable.PSVersion.Major) -lt 5) {
-    Write-Error "PowerShell 5 or later is required to install $app_name."
-    Write-Error "Upgrade PowerShell: https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell"
-    break
+    throw @"
+Error: PowerShell 5 or later is required to install $app_name.
+Upgrade PowerShell:
+
+    https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell
+
+"@
   }
 
   # show notification to change execution policy:
   $allowedExecutionPolicy = @('Unrestricted', 'RemoteSigned', 'ByPass')
   If ((Get-ExecutionPolicy).ToString() -notin $allowedExecutionPolicy) {
-    Write-Error "PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ", ")] to run $app_name."
-    Write-Error "For example, to set the execution policy to 'RemoteSigned' please run :"
-    Write-Error "'Set-ExecutionPolicy RemoteSigned -scope CurrentUser'"
-    break
+    throw @"
+Error: PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ", ")] to run $app_name. For example, to set the execution policy to 'RemoteSigned' please run:
+
+    Set-ExecutionPolicy RemoteSigned -scope CurrentUser
+
+"@
   }
 
   # GitHub requires TLS 1.2
   If ([System.Enum]::GetNames([System.Net.SecurityProtocolType]) -notcontains 'Tls12') {
-    Write-Error "Installing $app_name requires at least .NET Framework 4.5"
-    Write-Error "Please download and install it first:"
-    Write-Error "https://www.microsoft.com/net/download"
-    break
+    throw @"
+Error: Installing $app_name requires at least .NET Framework 4.5
+Please download and install it first:
+
+    https://www.microsoft.com/net/download
+
+"@
   }
 }
 
@@ -1068,7 +1073,14 @@ function New-Temp-Dir() {
 $Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
 # Make Write-Information statements be visible
 $InformationPreference = "Continue"
-Install-Binary "$Args"
+
+# The default interactive handler
+try {
+  Install-Binary "$Args"
+} catch {
+  Write-Information $_
+  exit 1
+}
 
 ================ dist-manifest.json ================
 {
