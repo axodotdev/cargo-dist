@@ -1,5 +1,9 @@
 # Unreleased
 
+Nothing yet!
+
+# 0.6.0 (2023-12-18)
+
 The headlining features of this release are:
 
 * Support for specifying arbitrary GitHub Actions Runners
