@@ -11,9 +11,9 @@
 //! writes to stderr/stdout whenever it pleases. Suboptimal for a library.
 
 use std::io::Write;
-use std::process::Command;
 
 use axoasset::LocalAsset;
+use axoprocess::Cmd;
 use backend::{
     ci::CiInfo,
     installer::{self, InstallerImpl},
@@ -201,7 +201,7 @@ fn generate_source_tarball(
         });
     };
 
-    let status = Command::new(git)
+    Cmd::new(git, "generate a source tarball for your project")
         .arg("archive")
         .arg(committish)
         .arg("--format=tar.gz")
@@ -209,11 +209,7 @@ fn generate_source_tarball(
         .arg(prefix)
         .arg("--output")
         .arg(target)
-        .status()?;
-
-    if !status.success() {
-        return Err(DistError::GitArchiveError {});
-    }
+        .run()?;
 
     Ok(())
 }

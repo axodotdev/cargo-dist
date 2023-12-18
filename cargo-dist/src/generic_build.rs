@@ -1,13 +1,10 @@
 //! Functionality required to invoke a generic build's `build-command`
 
-use std::{
-    env,
-    process::{Command, ExitStatus},
-};
+use std::{env, process::ExitStatus};
 
+use axoprocess::Cmd;
 use camino::Utf8Path;
-use miette::{miette, Context, IntoDiagnostic};
-use tracing::info;
+use miette::miette;
 
 use crate::{
     copy_file,
@@ -93,13 +90,11 @@ fn run_build(
     }
 
     let args = command_string.split_off(1);
-    let mut command = Command::new(
-        command_string
-            .first()
-            .expect("The build command must contain at least one entry"),
-    );
-    command.stdout(std::io::stderr());
-    command.stderr(std::process::Stdio::inherit());
+    let command_name = command_string
+        .first()
+        .expect("The build command must contain at least one entry");
+    let mut command = Cmd::new(command_name, format!("exec generic build: {command_name}"));
+    command.stdout_to_stderr();
     for arg in args {
         command.arg(arg);
     }
@@ -130,11 +125,7 @@ fn run_build(
         command.env("LDFLAGS", &ldflags);
     }
 
-    info!("exec: {:?}", command);
-    command
-        .status()
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to exec generic build: {command:?}"))
+    Ok(command.status()?)
 }
 
 /// Build a generic target

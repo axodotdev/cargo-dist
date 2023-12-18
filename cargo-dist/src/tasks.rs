@@ -49,8 +49,8 @@
 //! steps to give them the freedom to do whatever they need to do.
 
 use std::collections::HashMap;
-use std::process::Command;
 
+use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::DistManifest;
@@ -255,7 +255,7 @@ pub struct CargoInfo {
 /// A tool we have found installed on the system
 #[derive(Debug, Clone, Default)]
 pub struct Tool {
-    /// The string to pass to Command::new
+    /// The string to pass to Cmd::new
     pub cmd: String,
     /// The version the tool reported (in case useful)
     pub version: String,
@@ -1237,11 +1237,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         //
         // Note we don't need the output of --show-toplevel,
         // just the exit status.
-        let status = Command::new(git)
+        let status = Cmd::new(git, "detect a git repo")
             .arg("rev-parse")
             .arg("--show-toplevel")
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
+            .check(false)
             .status();
         let is_git_repo = if let Ok(status) = status {
             status.success()
@@ -2660,13 +2661,9 @@ pub fn cargo() -> Result<String> {
 
 /// Get the host target triple from cargo
 pub fn get_host_target(cargo: String) -> Result<CargoInfo> {
-    let mut command = Command::new(&cargo);
+    let mut command = Cmd::new(&cargo, "get your Rust toolchain's version");
     command.arg("-vV");
-    info!("exec: {:?}", command);
-    let output = command
-        .output()
-        .into_diagnostic()
-        .wrap_err("failed to run 'cargo -vV' (trying to get info about host platform)")?;
+    let output = command.output()?;
     let output = String::from_utf8(output.stdout)
         .into_diagnostic()
         .wrap_err("'cargo -vV' wasn't utf8? Really?")?;
@@ -2723,7 +2720,11 @@ fn tool_info() -> Result<Tools> {
 }
 
 fn find_tool(name: &str, test_flag: &str) -> Option<Tool> {
-    let output = Command::new(name).arg(test_flag).output().ok()?;
+    let output = Cmd::new(name, "detect tool")
+        .arg(test_flag)
+        .check(false)
+        .output()
+        .ok()?;
     let string_output = String::from_utf8(output.stdout).ok()?;
     let version = string_output.lines().next()?;
     Some(Tool {

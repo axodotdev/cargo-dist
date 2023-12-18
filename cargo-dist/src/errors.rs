@@ -28,6 +28,11 @@ pub enum DistError {
     #[diagnostic(transparent)]
     Asset(#[from] axoasset::AxoassetError),
 
+    /// random axoprocess error
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    Cmd(#[from] axoprocess::AxoprocessError),
+
     /// random gazenot error
     #[error(transparent)]
     #[diagnostic(transparent)]

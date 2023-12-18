@@ -1,8 +1,8 @@
 //! Functionality required to invoke `cargo build` properly
 
 use std::env;
-use std::process::Command;
 
+use axoprocess::Cmd;
 use camino::Utf8PathBuf;
 use miette::{miette, Context, IntoDiagnostic};
 use tracing::{info, warn};
@@ -151,7 +151,7 @@ pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Re
         }
     }
 
-    let mut command = Command::new(&dist_graph.tools.cargo.cmd);
+    let mut command = Cmd::new(&dist_graph.tools.cargo.cmd, "build your app with Cargo");
     command
         .arg("build")
         .arg("--profile")
@@ -192,11 +192,7 @@ pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Re
     // If we generated any extra environment variables to
     // inject into the environment, apply them now.
     command.envs(desired_extra_env);
-    info!("exec: {:?}", command);
-    let mut task = command
-        .spawn()
-        .into_diagnostic()
-        .wrap_err_with(|| format!("failed to exec cargo build: {command:?}"))?;
+    let mut task = command.spawn()?;
 
     // Create entries for all the binaries we expect to find, and the paths they should
     // be copied to (according to the copy_exe_to subscribers list).
@@ -330,17 +326,11 @@ pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Re
 /// Build a cargo target
 pub fn rustup_toolchain(_dist_graph: &DistGraph, cmd: &RustupStep) -> Result<()> {
     eprintln!("running rustup to ensure you have {} installed", cmd.target);
-    let status = Command::new(&cmd.rustup.cmd)
+    Cmd::new(&cmd.rustup.cmd, "install rustup toolchain")
         .arg("target")
         .arg("add")
         .arg(&cmd.target)
-        .status()
-        .into_diagnostic()
-        .wrap_err("Failed to install rustup toolchain")?;
-
-    if !status.success() {
-        return Err(miette!("Failed to install rustup toolchain"));
-    }
+        .run()?;
     Ok(())
 }
 

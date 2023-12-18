@@ -2,17 +2,16 @@
 
 use std::{
     fs::{self, File},
-    io::{stderr, stdout, Cursor, Read, Write},
-    process::Command,
+    io::{Cursor, Read},
 };
 
 use axoasset::SourceFile;
+use axoprocess::Cmd;
 use camino::Utf8PathBuf;
 use cargo_dist_schema::DistManifest;
 use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
-use miette::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 
 use crate::{config::Config, errors::*, gather_work, Artifact, DistGraph};
@@ -31,11 +30,6 @@ pub struct LinkageArgs {
 /// Determinage dynamic linkage of built artifacts (impl of `cargo dist linkage`)
 pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
     let (dist, _manifest) = gather_work(cfg)?;
-
-    // Flush stdout/err before printing our own results
-    // in order to avoid possibly awkward stream merging
-    stderr().flush().into_diagnostic()?;
-    stdout().flush().into_diagnostic()?;
 
     let reports: Vec<Linkage> = if let Some(target) = args.from_json.clone() {
         let file = SourceFile::load_local(target)?;
@@ -323,11 +317,10 @@ impl Library {
             });
         }
 
-        let process = Command::new("dpkg")
+        let process = Cmd::new("dpkg", "get linkage info from dpkg")
             .arg("--search")
             .arg(&library)
-            .output()
-            .into_diagnostic();
+            .output();
         match process {
             Ok(output) => {
                 let output = String::from_utf8(output.stdout)?;
@@ -400,10 +393,9 @@ fn do_otool(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
 fn do_ldd(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
     let mut libraries = vec![];
 
-    let output = Command::new("ldd")
+    let output = Cmd::new("ldd", "get linkage info from ldd")
         .arg(path)
-        .output()
-        .expect("Unable to run ldd");
+        .output()?;
 
     let result = String::from_utf8_lossy(&output.stdout).to_string();
     let lines = result.trim_end().split('\n');

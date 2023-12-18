@@ -20,6 +20,9 @@ required-features = ["cli"]
 [features]
 default = ["cli"]
 cli = ["clap", "axocli", "serde_json", "console", "clap-cargo"]
+# Use bleeding edge features that might mess up people using 'cargo install'
+# with older toolchains. This is used for our prebuilt binaries.
+fear_no_msrv = ["axoprocess/stdout_to_stderr_modern"]
 
 [dependencies]
 # Features only used by the cli
@@ -34,6 +37,7 @@ axotag = "0.1.0"
 cargo-dist-schema = { version = "=0.7.0", path = "../cargo-dist-schema" }
 
 axoasset = { version = "0.6.1", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
+axoprocess = { version = "0.1.0" }
 axoproject = { version = "0.6.0", default-features = false, features = ["cargo-projects", "generic-projects"] }
 gazenot = { version = "0.2.1" }
 
@@ -62,6 +66,9 @@ tokio = { version = "1.35.1", features = ["full"] }
 insta = { version = "1.26.0", features = ["filters"] }
 tar = "0.4.38"
 flate2 = "1.0.24"
+
+[package.metadata.dist]
+features = ["fear_no_msrv"]
 
 [package.metadata.release]
 pre-release-replacements = [
