@@ -218,6 +218,26 @@ Example: `dist = false`
 Specifies whether cargo-dist should ignore this package. It primarily exists as an alternative for `publish=false` or an override for `publish=false`.
 
 
+### extra-artifacts
+
+> since 0.6.0
+
+Example:
+
+```toml
+[[workspace.metadata.dist.extra-artifacts]]
+artifacts = ["dist-manifest-schema.json"]
+build = ["cargo", "dist", "manifest-schema", "--output=dist-manifest-schema.json"]
+```
+
+Allows building extra artifacts to upload to your releases. Users can download these directly alongside artifacts like release tarballs or installers. To enable this feature, create an `extra-artifacts` array on your workspace or package configuration. This takes two keys:
+
+* `build`: A command or script to run to produce these artifacts. This is an array of one or more strings; the first string is the command cargo-dist will run, and any subsequent strings are arguments to pass to that command.
+* `artifacts`: An array of artifacts that cargo-dist expects to exist after the `build` command is run. Every artifact in this list will be uploaded individually to your release.
+
+cargo-dist uses this feature to distribute its `dist-manifest-schema.json`.
+
+
 ### fail-fast
 
 > since 0.1.0
