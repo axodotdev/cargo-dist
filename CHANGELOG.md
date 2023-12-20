@@ -2,6 +2,32 @@
 
 Nothing yet!
 
+# 0.6.1 (2023-12-20)
+
+This is a minor bugfix release.
+
+## Features
+
+### Improvements to liblzma integration
+
+This release removes an external dependency on liblzma on certain platforms.
+
+We integrate compressed artifact support from the [axoasset](https://github.com/axodotdev/axoasset) crate. A quirk in a dependency we use means that cargo-dist builds would dynamically link against an external liblzma, but only if it was found in the build environment. As a result, some of our binaries use liblzma from the system and others use an embedded static build. This release unifies the behaviour so that every target uses a static build.
+
+This shouldn't affect most users; we've made this change primarily for consistency. It does, however, ensure that the x86_64 macOS binaries are compatible with a wider variety of systems than they were in the past.
+
+* impl @mistydemeo
+    * [feat: use xz2 static feature](https://github.com/axodotdev/axoasset/pull/74)
+    * [chore: update axoasset](https://github.com/axodotdev/cargo-dist/pull/657)
+
+## Fixes
+
+### Extra artifacts would always be built
+
+A bug in our build configuration meant that we would always build extra artifacts when they're configured, even for local-only builds. They're now built only at the appropriate time.
+
+* impl @mistydemeo [fix(extra artifacts): avoid inappropriate builds](https://github.com/axodotdev/cargo-dist/pull/661)
+
 # 0.6.0 (2023-12-18)
 
 The headlining features of this release are:
@@ -37,7 +63,7 @@ In generic builds, the `CC` and `CXX` environment variables are now set to platf
 
 The installer now updates additional shell configuration files, ensuring that users are able to use your software after installing. The installer now also respects the `ZDOTDIR` configuration variable when run in the zsh shell.
 
-* impl @mistydemep
+* impl @mistydemeo
     * [feat(installer): add additional shell config](https://github.com/axodotdev/cargo-dist/pull/555)
     * [fix(installer): only print source once](https://github.com/axodotdev/cargo-dist/pull/641)
     * [fix: handle unset ZDOTDIR better](https://github.com/axodotdev/cargo-dist/pull/640)
