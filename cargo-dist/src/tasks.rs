@@ -2252,9 +2252,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn compute_extra_builds(&mut self) -> Vec<BuildStep> {
+        let artifacts = self
+            .inner
+            .artifacts
+            .iter()
+            .map(|artifact| artifact.id.clone())
+            .collect::<Vec<String>>();
+
         self.inner
             .extra_artifacts
             .iter()
+            // We want to avoid adding build jobs for any artifacts
+            // that were already filtered out in a previous step
+            .filter(|extra| extra.artifacts.iter().any(|a| artifacts.contains(a)))
             .map(|extra| {
                 BuildStep::Extra(ExtraBuildStep {
                     expected_artifacts: extra.artifacts.clone(),
@@ -2274,7 +2284,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(),
         };
         local_build_steps.extend(builds);
-        local_build_steps.extend(self.compute_extra_builds());
+        global_build_steps.extend(self.compute_extra_builds());
 
         Self::add_build_steps_for_artifacts(
             &self
