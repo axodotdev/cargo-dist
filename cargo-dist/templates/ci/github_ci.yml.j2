@@ -205,7 +205,7 @@ jobs:
     runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      BUILD_MANIFEST_NAME: target/distrib/dist-manifest.json
+      BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
     steps:
       - uses: actions/checkout@v4
         with:
