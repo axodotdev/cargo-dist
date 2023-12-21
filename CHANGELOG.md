@@ -2,6 +2,19 @@
 
 Nothing yet!
 
+# 0.6.2 (2023-12-21)
+
+This is a minor bugfix release.
+
+## Fixes
+
+### Upload final dist-manifest.json to Axo Releases
+
+Fixes an issue where the non-merged `dist-manifest.json` was being uploaded to Axo Releases instead of the final, merged manifest. This issue didn't affect users of GitHub releases.
+
+* impl @Gankra [fix: properly upload the "final" dist-manifest to axo releases](https://github.com/axodotdev/cargo-dist/pull/665)
+
+
 # 0.6.1 (2023-12-20)
 
 This is a minor bugfix release.
