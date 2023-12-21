@@ -37,9 +37,16 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> Result<DistManifest> {
                         check_hosting(&dist, &manifest, &abyss)?;
                     }
                     if host_args.steps.contains(&HostStyle::Upload) {
+                        // pre-save the hosting info so that it will be found on the FS to upload.
+                        // The currently in-memory manifest has more information about stuff that
+                        // the original 'plan' couldn't: system info, linkage, hashes, symbols, ...
+                        save_manifest(&dist.dist_dir.join("dist-manifest.json"), &manifest)?;
                         upload_to_hosting(&dist, &manifest, &abyss)?;
                     }
                     if host_args.steps.contains(&HostStyle::Release) {
+                        // note that this mutates the manifest with new Release URLs, to be written back!
+                        // this makes Axo Releases and Github Releases diverge on the dist-manifest.json
+                        // uploaded to them, differing specifically in the URLs in install-hints. This is OK.
                         release_hosting(&dist, &mut manifest, &abyss)?;
                     }
                     if host_args.steps.contains(&HostStyle::Announce) {
@@ -53,6 +60,7 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> Result<DistManifest> {
         }
     }
 
+    // save the potentially updated dist-manifest with hosting info
     save_manifest(&dist.dist_dir.join("dist-manifest.json"), &manifest)?;
 
     Ok(manifest)
