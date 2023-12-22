@@ -161,6 +161,15 @@ A path to a json file containing values to set in workspace.metadata.dist and pa
 
 This is the same toml => json format that `cargo metadata` produces when reporting `workspace.metadata.dist`. There is some additional hierarchy for specifying which values go to which packages, but this is currently intentionally undocumented to give us some flexibility to change it.
 
+#### `--hosting <HOSTING>`
+releases hosting backends we want to support
+
+If left unspecified we will use the value in [workspace.metadata.dist]. (If no such value exists we will use the one "native" to your CI provider) `cargo dist init` will persist the values you pass to that location.
+
+Possible values:
+- github:    Host on Github Releases
+- axodotdev: Host on Axo Releases ("Abyss")
+
 #### `-h, --help`
 Print help (see a summary with '-h')
 

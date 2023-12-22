@@ -252,6 +252,13 @@ pub struct InitArgs {
     /// is currently intentionally undocumented to give us some flexibility to change it.
     #[clap(long)]
     pub with_json_config: Option<Utf8PathBuf>,
+    /// releases hosting backends we want to support
+    ///
+    /// If left unspecified we will use the value in [workspace.metadata.dist].
+    /// (If no such value exists we will use the one "native" to your CI provider)
+    /// `cargo dist init` will persist the values you pass to that location.
+    #[clap(long)]
+    pub hosting: Vec<HostingStyle>,
 }
 
 /// Which style(s) of configuration to generate
@@ -413,4 +420,23 @@ pub enum HostStyle {
     Release,
     /// Announce artifacts
     Announce,
+}
+
+impl HostingStyle {
+    /// Convert the application version of this enum to the library version
+    pub fn to_lib(self) -> cargo_dist::config::HostingStyle {
+        match self {
+            HostingStyle::Github => cargo_dist::config::HostingStyle::Github,
+            HostingStyle::Axodotdev => cargo_dist::config::HostingStyle::Axodotdev,
+        }
+    }
+}
+
+/// Hosting Providers
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum HostingStyle {
+    /// Host on Github Releases
+    Github,
+    /// Host on Axo Releases ("Abyss")
+    Axodotdev,
 }
