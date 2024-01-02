@@ -2,7 +2,7 @@
 
 use std::{
     fs::{self, File},
-    io::{Cursor, Read},
+    io::{stderr, stdout, Cursor, Read, Write},
     process::Command,
 };
 
@@ -31,6 +31,11 @@ pub struct LinkageArgs {
 /// Determinage dynamic linkage of built artifacts (impl of `cargo dist linkage`)
 pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
     let (dist, _manifest) = gather_work(cfg)?;
+
+    // Flush stdout/err before printing our own results
+    // in order to avoid possibly awkward stream merging
+    stderr().flush().into_diagnostic()?;
+    stdout().flush().into_diagnostic()?;
 
     let reports: Vec<Linkage> = if let Some(target) = args.from_json.clone() {
         let file = SourceFile::load_local(target)?;
