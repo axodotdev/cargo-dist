@@ -76,7 +76,7 @@ cargo-dist will then spit out paths to the files it created, so you can inspect 
 cargo dist plan
 ```
 
-![Running "cargo dist plan" on a project, producing a full printout of the tarballs/zips that will be produced for all platforms (mac, linux, windows), and all installers (shell, powershell)][quickstart-build]
+![Running "cargo dist plan" on a project, producing a full printout of the tarballs/zips that will be produced for all platforms (mac, linux, windows), and all installers (shell, powershell)][quickstart-plan]
 
 The [plan command][plan] should be running the exact same logic that cargo-dist's generated CI will run, but without actually building anything. This lets you quickly check what cutting a new release will produce. It will also try to catch any inconsistencies that could make the CI error out.
 
