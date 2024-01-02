@@ -8,8 +8,8 @@ use serde::Deserialize;
 
 use crate::{
     config::{
-        self, CiStyle, CompressionImpl, Config, DistMetadata, InstallerStyle, PublishStyle,
-        ZipStyle,
+        self, CiStyle, CompressionImpl, Config, DistMetadata, HostingStyle, InstallerStyle,
+        PublishStyle, ZipStyle,
     },
     do_generate,
     errors::{DistError, DistResult, Result},
@@ -25,6 +25,8 @@ pub struct InitArgs {
     pub no_generate: bool,
     /// A path to a json file containing values to set in workspace.metadata.dist
     pub with_json_config: Option<Utf8PathBuf>,
+    /// Hosts to enable
+    pub host: Vec<HostingStyle>,
 }
 
 /// Input for --with-json-config
@@ -275,6 +277,10 @@ fn get_new_dist_metadata(
     // Some indicators we'll use in a few places
     let check = console::style("✔".to_string()).for_stderr().green();
     let notice = console::style("⚠️".to_string()).for_stderr().yellow();
+
+    if !args.host.is_empty() {
+        meta.hosting = Some(args.host.clone());
+    }
 
     // Set cargo-dist-version
     let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();

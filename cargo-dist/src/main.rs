@@ -278,6 +278,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         yes: args.yes,
         no_generate: args.no_generate,
         with_json_config: args.with_json_config.clone(),
+        host: args.hosting.iter().map(|host| host.to_lib()).collect(),
     };
     do_init(&config, &args)
 }
