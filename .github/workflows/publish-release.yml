@@ -8,38 +8,22 @@
 name: PublishRelease
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      tag:
-        description: 'Release Tag'
+      plan:
         required: true
         type: string
 
 jobs:
-  # This is a bit convoluted so that the other parts of this workflow remain
-  # the same even if the way the tag is defined is more complicated
-  download-tag:
-    runs-on: ubuntu-latest
-    outputs:
-        tag: ${{ steps.print-tag.outputs.tag }}
-    steps:
-      - id: print-tag
-        run: echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
-
   # publish the current repo state to crates.io
   cargo-publish:
     runs-on: ubuntu-latest
-    needs: download-tag
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
         with:
-          ref: ${{needs.download-tag.outputs.tag}}
-          fetch-depth: 0
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
+          ref: ${{ inputs.plan.outputs.tag }}
+          submodules: recursive
       - run: cargo publish -p cargo-dist-schema --token ${CRATES_TOKEN}
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
