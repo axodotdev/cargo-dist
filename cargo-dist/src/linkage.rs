@@ -48,10 +48,12 @@ pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
         for report in &reports {
             eprintln!("{}", report.report());
         }
+        stderr().flush().into_diagnostic()?;
     }
     if args.print_json {
         let j = serde_json::to_string(&reports).unwrap();
         println!("{}", j);
+        stdout().flush().into_diagnostic()?;
     }
 
     Ok(())
