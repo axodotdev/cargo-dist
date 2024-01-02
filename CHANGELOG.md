@@ -1,6 +1,15 @@
 # Unreleased
 
-Nothing yet!
+Nothing Yet!
+
+
+# Version 0.6.3 (2024-01-02)
+
+This is a minor release to update dependencies and add some cli flags for init.
+
+* @Gankra [add --hosting flag to init to streamline that workflow](https://github.com/axodotdev/cargo-dist/pull/668)
+* @illicitonion [Fix image reference in docs](https://github.com/axodotdev/cargo-dist/pull/670)
+* @mistydemeo [attempt to more aggressively flush streams for github CI](https://github.com/axodotdev/cargo-dist/pull/679)
 
 # 0.6.2 (2023-12-21)
 
