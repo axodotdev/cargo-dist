@@ -257,7 +257,7 @@ pub struct InitArgs {
     /// If left unspecified we will use the value in [workspace.metadata.dist].
     /// (If no such value exists we will use the one "native" to your CI provider)
     /// `cargo dist init` will persist the values you pass to that location.
-    #[clap(long)]
+    #[clap(long, value_delimiter(','))]
     pub hosting: Vec<HostingStyle>,
 }
 
