@@ -55,7 +55,7 @@ cargo-wix = "0.3.8"
 uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
 goblin = "0.7.1"
-similar = "2.3.0"
+similar = "2.4.0"
 tokio = { version = "1.35.1", features = ["full"] }
 
 [dev-dependencies]
