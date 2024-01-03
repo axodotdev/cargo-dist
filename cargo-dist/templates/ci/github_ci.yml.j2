@@ -546,3 +546,15 @@ jobs:
           prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
     {{%- endif %}}
+
+{{%- for job in post_announce_jobs %}}
+
+  custom-{{{ job|safe }}}:
+    needs:
+      - plan
+      - announce
+    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+    secrets: inherit
+{{%- endfor %}}
