@@ -94,6 +94,24 @@ Example: `auto-includes = false`
 Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [archives][]. Defaults to true.
 
 
+### build-global-artifacts-jobs
+
+> since 0.7.0
+
+Example: `build-global-artifacts-jobs = ["./my-job"]`
+
+This setting determines which custom jobs to run during the "build global artifacts" phase, during which installers are built.
+
+
+### build-local-artifacts-jobs
+
+> since 0.7.0
+
+Example: `build-local-artifacts-jobs = ["./my-job"]`
+
+This setting determines which custom jobs to run during the "build local artifacts" phase, during which binaries are built.
+
+
 ### cargo-dist-version
 
 > since 0.0.3
@@ -277,6 +295,15 @@ If you use this you *probably* want to set it on `[package.metadata.dist]` and
 not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
 
 
+### host-jobs
+
+> since 0.7.0
+
+Example: `host-jobs = ["./my-job"]`
+
+This setting determines which custom jobs to run during the "host" phase, during which cargo-dist decides whether to proceed with publishing the release.
+
+
 ### hosting
 
 > since 0.5.0
@@ -388,6 +415,24 @@ Specifies that [npm installers][] should be published under the given [scope][].
 If no scope is specified the package will be global.
 
 
+### plan-jobs
+
+> since 0.7.0
+
+Example: `plan-jobs = ["./my-job"]`
+
+This setting determines which custom jobs to run during the "plan" phase, which happens at the very start of the build.
+
+
+### post-announce-jobs
+
+> since 0.7.0
+
+Example: `post-announce-jobs = ["./my-job"]`
+
+This setting determines which custom jobs to run after the "announce" phase. "Announce" is the final phase during which cargo-dist schedules any jobs, so any custom jobs specified here are guaranteed to run after everything else.
+
+
 ### precise-builds
 
 > since 0.1.0
@@ -449,6 +494,15 @@ This setting determines to what extent we run your Release CI on pull-requests:
 * "skip": don't check the release process in PRs
 * "plan": run 'cargo dist plan' on PRs (recommended, also the default)
 * "upload": build and upload an artifacts.zip to the PR (expensive)
+
+
+### publish-jobs
+
+> since 0.2.0
+
+Example: `publish-jobs = ["homebrew"]`
+
+This setting determines which publish jobs to run. It includes one builtin job (`homebrew`) and, since 0.3.0, the ability to specify custom jobs.
 
 
 ### publish-prereleases

@@ -65,68 +65,6 @@ If you set `create-release = false` in your cargo-dist config, cargo-dist will a
 
 
 
-### Custom jobs
-
-> since 0.3.0
-
-cargo-dist's CI can be configured to call additional jobs on top of the ones it has builtin. Currently, we support adding extra jobs to the publish step; in the future, we'll allow extending all of the lifecycle steps of the CI workflow. To add one, you need to follow two steps:
-
-1. Define the new job as a reusable workflow using the standard method defined by your CI system. For GitHub actions, see the documentation on [reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows#creating-a-reusable-workflow).
-2. Add the name of your new workflow file to the `publish-jobs` array in your `Cargo.toml`'s cargo-dist config, prefixed with a `./`. For example, if your job name is `.github/workflows/my-publish.yml`, you would write it like this:
-
-```toml
-publish-jobs = ["./my-publish"]
-```
-
-Here's an example reusable workflow written using GitHub Actions. It won't do any real publishing, just echo text to the CI output. First, create a file named `.github/workflows/publish-greeter.yml` with these contents:
-
-```yaml
-name: Greeter
-
-on:
-  # Defining workflow_call means that this workflow can be called from
-  # your main workflow job
-  workflow_call:
-    # cargo-dist exposes the plan from the plan step, as a JSON string,
-    # to your job if it needs it
-    inputs:
-      plan:
-        required: true
-        type: string
-
-jobs:
-  greeter:
-    runs-on: ubuntu-latest
-    # This is optional; it exposes the plan to your job as an environment variable
-    env:
-      PLAN: ${{ inputs.plan }}
-    steps:
-      - name: Step 1
-        run: |
-          echo "Hello!"
-          echo "Plan is: ${PLAN}"
-```
-
-Then, add the following to your `publish-jobs` array:
-
-```toml
-publish-jobs = ["./publish-greeter"]
-```
-
-Running `cargo-dist init` for your tool will update your GitHub Actions configuration to make use of the new reusable workflow during the publish step.
-
-
-
-### Install extra packages
-
-> since 0.4.0
-
-Sometimes, you may need extra packages from the system package manager to be installed before in the builder before cargo-dist begins building your software. Cargo-dist can do this for you by adding the `dependencies` setting to your `Cargo.toml`. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them.
-
-Sometimes, you may want to make sure your users also have these dependencies available when they install your software. If you use a package manager-based installer, cargo-dist has the ability to specify these dependencies. By default, cargo-dist will examine your program to try to detect which dependencies it thinks will be necessary. At the moment, [Homebrew][homebrew] is the only supported package manager installer. You can also specify these dependencies manually.
-
-For more information, see the [configuration syntax][config-dependencies].
-
 #### Limitations
 
 * Currently, the only supported package managers are Apt (Linux), Chocolatey (Windows) and Homebrew (macOS).
@@ -216,9 +154,7 @@ The Windows report is currently unable to provide information about the sources 
 [config-merge-tasks]: ../reference/config.md#merge-tasks
 [config-allow-dirty]: ../reference/config.md#allow-dirty
 [config-pr-run-mode]: ../reference/config.md#pr-run-mode
-[config-dependencies]: ../reference/config.md#dependencies
 
 [artifact-url]: ../reference/artifact-url.md#github
 [quickstart]: ../way-too-quickstart.md
 [testing]: ../way-too-quickstart.md#test-it-out
-[homebrew]: ../installers/homebrew.md
