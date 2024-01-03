@@ -199,6 +199,8 @@ pub struct DistGraph {
     pub publish_jobs: Vec<PublishStyle>,
     /// Extra user-specified publish jobs to run
     pub user_publish_jobs: Vec<String>,
+    /// List of post-announce jobs to run
+    pub post_announce_jobs: Vec<String>,
     /// A GitHub repo to publish the Homebrew formula to
     pub tap: Option<String>,
     /// Whether msvc targets should statically link the crt
@@ -745,6 +747,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             host_jobs: _,
             // Only the final value merged into a package_config matters
             publish_jobs: _,
+            // Only the final value merged into a package_config matters
+            post_announce_jobs: _,
             publish_prereleases,
             features,
             default_features,
@@ -864,6 +868,21 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             })
             .collect();
 
+        let post_announce_jobs = workspace_metadata
+            .post_announce_jobs
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|s| {
+                let string = s.to_string();
+                if let Some(stripped) = string.strip_prefix("./") {
+                    stripped.to_owned()
+                } else {
+                    string
+                }
+            })
+            .collect();
+
         let templates = Templates::new()?;
         let publish_jobs: Vec<PublishStyle>;
         let user_publish_jobs: Vec<PublishStyle>;
@@ -928,6 +947,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 host_jobs,
                 publish_jobs,
                 user_publish_jobs,
+                post_announce_jobs,
                 allow_dirty,
                 msvc_crt_static,
                 hosting,
