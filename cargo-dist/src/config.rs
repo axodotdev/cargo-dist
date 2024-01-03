@@ -276,6 +276,13 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub publish_jobs: Option<Vec<PublishStyle>>,
 
+    /// Post-announce jobs to run in CI
+    ///
+    /// This allows custom jobs to be configured to run after the announce job
+    // runs in its entirety.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub post_announce_jobs: Option<Vec<JobStyle>>,
+
     /// Whether to publish prereleases to package managers
     ///
     /// (defaults to false)
@@ -341,6 +348,7 @@ impl DistMetadata {
             global_artifacts_jobs: _,
             host_jobs: _,
             publish_jobs: _,
+            post_announce_jobs: _,
             publish_prereleases: _,
             create_release: _,
             pr_run_mode: _,
@@ -392,6 +400,7 @@ impl DistMetadata {
             global_artifacts_jobs,
             host_jobs,
             publish_jobs,
+            post_announce_jobs,
             publish_prereleases,
             create_release,
             pr_run_mode,
@@ -459,6 +468,9 @@ impl DistMetadata {
         }
         if publish_jobs.is_some() {
             warn!("package.metadata.dist.publish-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if post_announce_jobs.is_some() {
+            warn!("package.metadata.dist.post-announce-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings

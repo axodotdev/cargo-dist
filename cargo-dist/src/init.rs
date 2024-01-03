@@ -250,6 +250,7 @@ fn get_new_dist_metadata(
             global_artifacts_jobs: None,
             host_jobs: None,
             publish_jobs: None,
+            post_announce_jobs: None,
             publish_prereleases: None,
             create_release: None,
             pr_run_mode: None,
@@ -779,6 +780,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         global_artifacts_jobs,
         host_jobs,
         publish_jobs,
+        post_announce_jobs,
         publish_prereleases,
         create_release,
         pr_run_mode,
@@ -965,6 +967,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "publish-jobs",
         "# Publish jobs to run in CI\n",
         publish_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "post-announce-jobs",
+        "# Post-announce jobs to run in CI\n",
+        post_announce_jobs.as_ref(),
     );
 
     apply_optional_value(
