@@ -3,6 +3,11 @@
 Nothing Yet!
 
 
+# Version 0.6.4 (2024-01-04)
+
+This is a minor release which makes internal changes to our packaging process. The actual cargo-dist program is unchanged from 0.6.3.
+
+
 # Version 0.6.3 (2024-01-02)
 
 This is a minor release to update dependencies and add some cli flags for init.
