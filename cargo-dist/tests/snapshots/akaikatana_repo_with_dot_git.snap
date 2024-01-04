@@ -909,7 +909,7 @@ function Download($download_url, $platforms) {
 
   if (-not $platforms.ContainsKey($arch)) {
     # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not availablem falling back to X64"
+    Write-Verbose "$arch is not available, falling back to X64"
     $arch = "x86_64-pc-windows-msvc"
   }
 
