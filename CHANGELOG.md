@@ -3,6 +3,33 @@
 Nothing Yet!
 
 
+# Version 0.7.0 (2024-01-04)
+
+This release contains new customization options for CI.
+
+## Features
+
+### New hooks for custom jobs in CI
+
+In [0.3.0](https://github.com/axodotdev/cargo-dist/releases/tag/v0.3.0), we added support for custom publish jobs. This feature let you customize the CI process with your own jobs at publish-time without having to edit cargo-dist's generated CI scripts, but it was limited to just that one phase. This release expands on that by adding hooks for a number of other steps of the build process. This enables fine-grained customization without having to touch any of the generated scripts. The phases at which custom jobs are available are:
+
+* plan (the beginning of the build process)
+* build-local-artifacts
+* build-global-artifacts
+* host (pre-publish)
+* publish
+* post-announce (after the release is created)
+
+* impl @mistydemeo
+    * [feat(ci): custom steps for other phases](https://github.com/axodotdev/cargo-dist/pull/632)
+    * [feat(ci): post-announce jobs](https://github.com/axodotdev/cargo-dist/pull/683)
+
+
+# Version 0.6.4 (2024-01-04)
+
+This is a minor release which makes internal changes to our packaging process. The actual cargo-dist program is unchanged from 0.6.3.
+
+
 # Version 0.6.3 (2024-01-02)
 
 This is a minor release to update dependencies and add some cli flags for init.
