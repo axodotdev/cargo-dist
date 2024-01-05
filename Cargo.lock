@@ -167,6 +167,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "axoprocess"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41498f64097d1018019acba4ffe65acf502fbbce2310945d34c3c17c2d89fb1d"
+dependencies = [
+ "miette",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "axoproject"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -328,6 +339,7 @@ version = "0.7.0"
 dependencies = [
  "axoasset",
  "axocli",
+ "axoprocess",
  "axoproject",
  "axotag",
  "camino",

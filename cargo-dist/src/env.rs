@@ -1,30 +1,27 @@
 //! Functions to parse and manipulate the environment
 
-use std::{env, process::Command};
-
-use camino::Utf8Path;
-use miette::{Context, IntoDiagnostic};
+use std::env;
 
 use crate::{
-    errors::{DistError, DistResult, Result},
+    errors::{DistError, DistResult},
     DistGraph, SortedMap,
 };
+use axoprocess::Cmd;
+use camino::Utf8Path;
 
 /// Fetches the Homebrew environment from `brew bundle exec`
-pub fn fetch_brew_env(dist_graph: &DistGraph) -> Result<Option<String>> {
+pub fn fetch_brew_env(dist_graph: &DistGraph) -> DistResult<Option<String>> {
     if let Some(brew) = &dist_graph.tools.brew {
         if Utf8Path::new("Brewfile").exists() {
             // Uses `brew bundle exec` to just print its own environment,
             // allowing us to capture what it generated and decide what
             // to do with it.
-            let result = Command::new(&brew.cmd)
+            let result = Cmd::new(&brew.cmd, "brew bundle exec")
                 .arg("bundle")
                 .arg("exec")
                 .arg("--")
                 .arg("/usr/bin/env")
-                .output()
-                .into_diagnostic()
-                .wrap_err_with(|| "failed to exec brew bundle exec".to_string())?;
+                .output()?;
 
             return Ok(Some(String::from_utf8_lossy(&result.stdout).to_string()));
         }
