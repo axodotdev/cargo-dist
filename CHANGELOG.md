@@ -1,6 +1,6 @@
 # Unreleased
 
-Nothing Yet!
+This release lowers the MSRV for people who install with cargo-install.
 
 
 # Version 0.7.0 (2024-01-04)
