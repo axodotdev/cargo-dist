@@ -16,7 +16,23 @@ As discussed in [concepts][], all of your config should be persistently stored i
 The [builtin Cargo.toml fields][cargo-manifest] define a lot of things that cargo-dist cares about. Here's the ones that matter:
 
 
+### authors
+
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-authors-fields)
+
+This is required by [MSI installers](../installers/msi.md), as they need a "manufacturer".
+
+
+### `[[bin]]`
+
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries)
+
+This is the list of binaries a package defines. Because we consider an "App" to be "A Cargo Package", this field lets you nest multiple binaries under a single "App" or just rename the main binary.
+
+
 ### license-file
+
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields)
 
 cargo-dist defaults to trying to include certain "important" static files in your archives. A LICENSE is one of them.
 
@@ -27,15 +43,21 @@ Note that the Cargo license-file flag only accepts one path, so it can't handle 
 
 ### name
 
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-name-field)
+
 The name of your package will become the name cargo-dist uses to refer to your package. There is currently no notion of a "prettier display name" (if you have a use for that, let us know!).
 
 
 ### publish
 
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-publish-field)
+
 If you set `publish = false` in your Cargo.toml we will treat this as a hint that cargo-dist should ignore all the affected packages completely. You can override this with dist's own `dist = true` config.
 
 
 ### readme
+
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-readme-field)
 
 cargo-dist defaults to trying to include certain "important" static files in your archives. A README is one of them.
 
@@ -44,9 +66,14 @@ If you specify a path to a README file, cargo-dist will use that for all the pac
 
 ### repository
 
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-repository-field)
+
 cargo-dist has an internal notion of an "artifact download URL" that is required for things like [installers][] that detect the current platform and fetch binaries. If your CI backend is "github" then we will base the "[artifact download URL][artifact-url]" on the "repository" key. To be safe, we will only do this if your workspace agrees on this value. It's fine if only some packages bother setting "repository", as long as the ones that do use the exact same string. If they don't we will fail to compute an "artifact download URL", emit a warning, and ignore your request for installers that require it. (This might want to be a hard error in the future.)
 
+
 ### version
+
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-version-field)
 
 The version of your package is used pervasively, and cargo-dist will generally error out if you ask it to build "my-app-1.0.0" when the actual "my-app" package is set to version "1.1.0".
 

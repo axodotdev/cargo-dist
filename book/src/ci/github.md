@@ -61,7 +61,7 @@ pr-run-mode = "upload"
 
 By default, cargo-dist will want to create its own GitHub Release and set the title/body with things like your CHANGELOG/RELEASES and some info about how to install the release. However if you have your own process for generating the contents of GitHub Release, we support that.
 
-If you set `create-release = false` in your cargo-dist config, cargo-dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the GitHub Release for you.
+If you set [`create-release = false`](../reference/config.md#create-release) in your cargo-dist config, cargo-dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the GitHub Release for you.
 
 
 
