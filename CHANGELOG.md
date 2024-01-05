@@ -3,6 +3,11 @@
 Nothing Yet!
 
 
+# Version 0.7.1 (2024-01-05)
+
+This release lowers the MSRV for people who install with cargo-install.
+
+
 # Version 0.7.0 (2024-01-04)
 
 This release contains new customization options for CI.
