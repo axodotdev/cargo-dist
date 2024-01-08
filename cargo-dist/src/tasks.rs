@@ -1237,7 +1237,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         //
         // Note we don't need the output of --show-toplevel,
         // just the exit status.
-        let status = Cmd::new(git, "detect a git repo")
+        let status = Cmd::new(&git, "detect a git repo")
             .arg("rev-parse")
             .arg("--show-toplevel")
             .stdout(std::process::Stdio::piped())
@@ -1249,9 +1249,31 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             false
         };
+
+        let status = Cmd::new(&git, "check for HEAD commit")
+            .arg("rev-parse")
+            .arg("HEAD")
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .check(false)
+            .status();
+        let has_head = if let Ok(status) = status {
+            status.success()
+        } else {
+            false
+        };
+
         if !is_git_repo {
             warn!(
                 "skipping source tarball; no git repo found at {}",
+                self.inner.workspace_dir
+            );
+            return;
+        }
+
+        if !has_head {
+            warn!(
+                "skipping source tarball; git repo at {} has no commits yet",
                 self.inner.workspace_dir
             );
             return;
