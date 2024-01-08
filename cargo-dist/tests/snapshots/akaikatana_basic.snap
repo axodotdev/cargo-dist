@@ -793,7 +793,21 @@ class AkaikatanaRepack < Formula
   license "GPL-2.0-or-later"
 
   def install
-    bin.install "akextract", "akmetadata", "akrepack"
+    on_macos do
+      on_arm do
+        bin.install "akextract", "akmetadata", "akrepack"
+      end
+    end
+    on_macos do
+      on_intel do
+        bin.install "akextract", "akmetadata", "akrepack"
+      end
+    end
+    on_linux do
+      on_intel do
+        bin.install "akextract", "akmetadata", "akrepack"
+      end
+    end
 
     # Homebrew will automatically install these, so we don't need to do that
     doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
