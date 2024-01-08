@@ -68,15 +68,29 @@ class {{ formula_class }} < Formula
 
   def install
     {#- Like the URL case above, write out a single install line in the case that the binary artifacts are the same across architectures #}
-    {%- if arm64_macos.binaries == x86_64_macos.binaries %}
-    bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-    {%- else %}
-    if Hardware::CPU.type == :arm
+    on_macos do
+      {%- if arm64_macos.binaries == x86_64_macos.binaries %}
       bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-    else
-      bin.install {% for binary in x86_64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      {%- else %}
+      if Hardware::CPU.type == :arm
+        bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      else
+        bin.install {% for binary in x86_64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      end
+      {%- endif %}
     end
-    {%- endif %}
+
+    on_linux do
+      {%- if arm64_linux.binaries == x86_64_linux.binaries %}
+      bin.install {% for binary in arm64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      {%- else %}
+      if Hardware::CPU.type == :arm
+        bin.install {% for binary in arm64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      else
+        bin.install {% for binary in x86_64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      end
+      {%- endif %}
+    end
 
     # Homebrew will automatically install these, so we don't need to do that
     doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
