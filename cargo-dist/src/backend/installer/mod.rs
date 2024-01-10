@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::{
     config::{JinjaInstallPathStrategy, ZipStyle},
-    TargetTriple,
+    InstallReceipt, TargetTriple,
 };
 
 use self::homebrew::HomebrewInstallerInfo;
@@ -55,6 +55,8 @@ pub struct InstallerInfo {
     pub hint: String,
     /// Where to install binaries
     pub install_path: JinjaInstallPathStrategy,
+    /// Install receipt to write, if any
+    pub receipt: Option<InstallReceipt>,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

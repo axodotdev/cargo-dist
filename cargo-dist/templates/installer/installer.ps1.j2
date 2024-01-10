@@ -47,6 +47,11 @@ param (
 $app_name = '{{ app_name }}'
 $app_version = '{{ app_version }}'
 
+$receipt = @"
+{{ receipt | tojson }}
+"@
+$receipt_home = "${env:LOCALAPPDATA}\{{ app_name }}"
+
 function Install-Binary($install_args) {
   if ($Help) {
     Get-Help $PSCommandPath -Detailed
@@ -175,13 +180,18 @@ function Invoke-Installer($bin_paths) {
 {% if install_path.kind == "CargoHome" %}
   # first try CARGO_HOME, then fallback to HOME
   # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
-  $dest_dir = if (($base_dir = $env:CARGO_HOME)) {
-    Join-Path $base_dir "bin"
+  $root = if (($base_dir = $env:CARGO_HOME)) {
+    $base_dir
   } elseif (($base_dir = $HOME)) {
-    Join-Path $base_dir ".cargo\bin"
+    Join-Path $base_dir ".cargo"
   } else {
     throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
   }
+
+  $dest_dir = Join-Path $root "bin"
+
+  # The replace call here ensures proper escaping is inlined into the receipt
+  $receipt = $receipt.Replace('AXO_CARGO_HOME', $root.replace("\", "\\"))
 {% elif install_path.kind == "HomeSubdir" %}
   # Install to this subdir of the user's home dir
   $dest_dir = if (($base_dir = $HOME)) {
@@ -208,6 +218,16 @@ function Invoke-Installer($bin_paths) {
     Remove-Item "$bin_path" -Recurse -Force
     Write-Information "  $installed_file"
   }
+
+  # Replaces the placeholder binary entry with the actual list of binaries
+  $arch = Get-TargetTriple
+  $info = $platforms[$arch]
+  $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
+  $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
+
+  # Write the install receipt
+  $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue
+  Out-File -FilePath $receipt_home/{{ app_name }}-receipt.json -InputObject $receipt -Encoding utf8
 
   Write-Information "Everything's installed!"
   if (-not $NoModifyPath) {

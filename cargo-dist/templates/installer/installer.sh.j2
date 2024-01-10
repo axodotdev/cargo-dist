@@ -22,6 +22,11 @@ ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-{{ base_url }}}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
+read -r RECEIPT <<EORECEIPT
+{{ receipt | tojson }}
+EORECEIPT
+# Are we happy with this same path on Linux and Mac?
+RECEIPT_HOME="${HOME}/.config/{{ app_name }}"
 
 # glibc provided by our Ubuntu 20.04 runners;
 # in the future, we should actually record which glibc was on the runner,
@@ -139,11 +144,15 @@ download_binary_and_run_installer() {
             _artifact_name="{{ artifact.id }}"
             _zip_ext="{{ artifact.zip_style }}"
             _bins="{% for bin in artifact.binaries %}{{ bin }}{{ " " if not loop.last else "" }}{% endfor %}"
+            _bins_js_array='{% for bin in artifact.binaries %}"{{ bin }}"{{ "," if not loop.last else ""}}{% endfor %}'
             ;;{% endfor %}
         *)
             err "there isn't a package for $_arch"
             ;;
     esac
+
+    # Replace the placeholder binaries with the calculated array from above
+    RECEIPT="$(echo "$RECEIPT" | sed s,'"CARGO_DIST_BINS"',"$_bins_js_array",)"
 
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
@@ -185,8 +194,19 @@ download_binary_and_run_installer() {
 
     install "$_dir" "$_bins" "$@"
     local _retval=$?
+    if [ "$_retval" != 0 ]; then
+        return "$_retval"
+    fi
 
     ignore rm -rf "$_dir"
+
+    # Install the install receipt
+    mkdir -p "$RECEIPT_HOME" || {
+        err "unable to create receipt directory at $RECEIPT_HOME"
+    }
+    echo "$RECEIPT" > "$RECEIPT_HOME/$APP_NAME-receipt.json"
+    # shellcheck disable=SC2320
+    local _retval=$?
 
     return "$_retval"
 }
@@ -240,6 +260,7 @@ install() {
 {% if install_path.kind == "CargoHome" %}
     # first try CARGO_HOME, then fallback to HOME
     if [ -n "${CARGO_HOME:-}" ]; then
+        _install_home="$CARGO_HOME"
         _install_dir="$CARGO_HOME/bin"
         _env_script_path="$CARGO_HOME/env"
         # If CARGO_HOME was set but it ended up being the default $HOME-based path,
@@ -258,6 +279,7 @@ install() {
             _env_script_path_expr="$_env_script_path"
         fi
     elif [ -n "${HOME:-}" ]; then
+        _install_home="$HOME/.cargo"
         _install_dir="$HOME/.cargo/bin"
         _env_script_path="$HOME/.cargo/env"
         _install_dir_expr='$HOME/.cargo/bin'
@@ -265,6 +287,8 @@ install() {
     else
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
+    # Replace the temporary cargo home with the calculated one
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_home,")
 {% elif install_path.kind == "HomeSubdir" %}
     # Install to this subdir of the user's home dir
     # In this case we want to be late-bound, as $HOME is reliable/nice.

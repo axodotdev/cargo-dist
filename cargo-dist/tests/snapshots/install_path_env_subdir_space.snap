@@ -27,6 +27,11 @@ ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/ax
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
+read -r RECEIPT <<EORECEIPT
+{"binaries":["CARGO_DIST_BINS"],"install_prefix":"$MY_ENV_VAR/My Axolotlsay Documents","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+EORECEIPT
+# Are we happy with this same path on Linux and Mac?
+RECEIPT_HOME="${HOME}/.config/axolotlsay"
 
 # glibc provided by our Ubuntu 20.04 runners;
 # in the future, we should actually record which glibc was on the runner,
@@ -136,21 +141,27 @@ download_binary_and_run_installer() {
             _artifact_name="axolotlsay-aarch64-apple-darwin.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
             ;;
         "x86_64-apple-darwin")
             _artifact_name="axolotlsay-x86_64-apple-darwin.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
             ;;
         "x86_64-unknown-linux-gnu")
             _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
             ;;
         *)
             err "there isn't a package for $_arch"
             ;;
     esac
+
+    # Replace the placeholder binaries with the calculated array from above
+    RECEIPT="$(echo "$RECEIPT" | sed s,'"CARGO_DIST_BINS"',"$_bins_js_array",)"
 
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
@@ -192,8 +203,19 @@ download_binary_and_run_installer() {
 
     install "$_dir" "$_bins" "$@"
     local _retval=$?
+    if [ "$_retval" != 0 ]; then
+        return "$_retval"
+    fi
 
     ignore rm -rf "$_dir"
+
+    # Install the install receipt
+    mkdir -p "$RECEIPT_HOME" || {
+        err "unable to create receipt directory at $RECEIPT_HOME"
+    }
+    echo "$RECEIPT" > "$RECEIPT_HOME/$APP_NAME-receipt.json"
+    # shellcheck disable=SC2320
+    local _retval=$?
 
     return "$_retval"
 }
@@ -846,6 +868,11 @@ param (
 $app_name = 'axolotlsay'
 $app_version = '0.2.1'
 
+$receipt = @"
+{"binaries":["CARGO_DIST_BINS"],"install_prefix":"$MY_ENV_VAR/My Axolotlsay Documents","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+"@
+$receipt_home = "${env:LOCALAPPDATA}\axolotlsay"
+
 function Install-Binary($install_args) {
   if ($Help) {
     Get-Help $PSCommandPath -Detailed
@@ -984,6 +1011,16 @@ function Invoke-Installer($bin_paths) {
     Remove-Item "$bin_path" -Recurse -Force
     Write-Information "  $installed_file"
   }
+
+  # Replaces the placeholder binary entry with the actual list of binaries
+  $arch = Get-TargetTriple
+  $info = $platforms[$arch]
+  $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
+  $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
+
+  # Write the install receipt
+  $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue
+  Out-File -FilePath $receipt_home/axolotlsay-receipt.json -InputObject $receipt -Encoding utf8
 
   Write-Information "Everything's installed!"
   if (-not $NoModifyPath) {
