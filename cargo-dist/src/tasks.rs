@@ -1347,7 +1347,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     /// Make an executable zip for a variant, but don't yet integrate it into the graph
     ///
     /// This is useful for installers which want to know about *potential* executable zips
-    fn make_executable_zip_for_variant(
+    pub(crate) fn make_executable_zip_for_variant(
         &self,
         release_idx: ReleaseIdx,
         variant_idx: ReleaseVariantIdx,

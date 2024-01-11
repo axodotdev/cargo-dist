@@ -45,6 +45,7 @@ pub mod host;
 mod init;
 pub mod linkage;
 pub mod manifest;
+pub mod platform;
 pub mod tasks;
 #[cfg(test)]
 mod tests;
