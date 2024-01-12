@@ -79,6 +79,7 @@ pub enum DistError {
 
     /// Error parsing metadata in Cargo.toml (json because it's from cargo-metadata)
     #[error("Malformed metadata.dist in {manifest_path}")]
+    #[diagnostic(help("you can find a reference for the configuration schema at https://opensource.axo.dev/cargo-dist/book/reference/config.html"))]
     CargoTomlParse {
         /// path to file
         manifest_path: Utf8PathBuf,
