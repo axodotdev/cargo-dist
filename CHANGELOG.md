@@ -3,6 +3,17 @@
 Nothing Yet!
 
 
+# Version 0.7.2 (2024-01-15)
+
+This release contains a fix for certain ARM64 Linux builds.
+
+## Fixes
+
+Fixes a regression caused by an overly-strict check for the exit status of `ldd`. This primarily affected certain builds on ARM64 Linux and didn't affect builds on x86_64 Linux.
+
+* impl @gankra [fix: ignore ldd status](https://github.com/axodotdev/cargo-dist/pull/711)
+
+
 # Version 0.7.1 (2024-01-05)
 
 This release lowers the MSRV for people who install with cargo-install.
