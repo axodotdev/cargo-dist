@@ -393,8 +393,13 @@ fn do_otool(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
 fn do_ldd(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
     let mut libraries = vec![];
 
+    // We ignore the status here because for whatever reason arm64 glibc ldd can decide
+    // to return non-zero status on binaries with no dynamic linkage (e.g. musl-static).
+    // This was observed both in arm64 ubuntu and asahi (both glibc ldd).
+    // x64 glibc ldd is perfectly fine with this and returns 0, so... *shrug* compilers!
     let output = Cmd::new("ldd", "get linkage info from ldd")
         .arg(path)
+        .check(false)
         .output()?;
 
     let result = String::from_utf8_lossy(&output.stdout).to_string();
@@ -405,7 +410,7 @@ fn do_ldd(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
 
         // There's no dynamic linkage at all; we can safely break,
         // there will be nothing useful to us here.
-        if line.starts_with("not a dynamic executable") {
+        if line.starts_with("not a dynamic executable") || line.starts_with("statically linked") {
             break;
         }
 
