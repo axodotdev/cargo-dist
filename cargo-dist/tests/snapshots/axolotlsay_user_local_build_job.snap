@@ -2443,6 +2443,7 @@ jobs:
   custom-my-plan-job-1:
     needs:
       - plan
+    if: ${{ needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload' }}
     uses: ./.github/workflows/my-plan-job-1.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
@@ -2451,6 +2452,7 @@ jobs:
   custom-my-plan-job-2:
     needs:
       - plan
+    if: ${{ needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload' }}
     uses: ./.github/workflows/my-plan-job-2.yml
     with:
       plan: ${{ needs.plan.outputs.val }}

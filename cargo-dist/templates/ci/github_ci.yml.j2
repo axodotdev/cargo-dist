@@ -27,7 +27,13 @@ name: Release
 permissions:
   contents: write
 
+{{%- if dispatch_releases %}}
+
+# This task will run whenever you workflow_dispatch with a tag that looks like a version
+{{%- else %}}
+
 # This task will run whenever you push a git tag that looks like a version
+{{%- endif %}}
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
 # Various formats will be parsed into a VERSION and an optional PACKAGE_NAME, where
 # PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
@@ -49,9 +55,19 @@ permissions:
 # If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
+  {{%- if dispatch_releases %}}
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag'
+        required: true
+        default: 'dry-run'
+        type: string
+  {{%- else %}}
   push:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
+  {{%- endif %}}
   {{%- if pr_run_mode != "skip" %}}
   pull_request:
   {{%- endif %}}
@@ -62,9 +78,15 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
+      {{%- if dispatch_releases %}}
+      tag: ${{ (inputs.tag != 'dry-run' && inputs.tag) || '' }}
+      tag-flag: ${{ inputs.tag && inputs.tag != 'dry-run' && format('--tag={0}', inputs.tag) || '' }}
+      publishing: ${{ inputs.tag && inputs.tag != 'dry-run' }}
+      {{%- else %}}
       tag: ${{ !github.event.pull_request && github.ref_name || '' }}
       tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
       publishing: ${{ !github.event.pull_request }}
+      {{%- endif %}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     {{%- if "axodotdev" in hosting_providers %}}
@@ -90,7 +112,11 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name) || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json
+          cargo dist
+          {{%- if dispatch_releases %}} ${{ inputs.tag && (inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag) || format('host --steps=create', inputs.tag))
+          {{%- else %}} ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)
+          {{%- endif %}}
+          {{{- " || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json" | safe }}}
           echo "cargo dist ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -107,6 +133,8 @@ jobs:
     secrets: inherit
 {{%- endfor %}}
 
+{{%- if build_local_artifacts %}}
+
   # Build and packages all the platform-specific things
   build-local-artifacts:
     name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
@@ -116,7 +144,9 @@ jobs:
     {{%- for job in plan_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
-    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
+    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload')
+    {{%- if dispatch_releases %}} || inputs.tag == 'dry-run' {{%- endif %}}
+    {{{- " }}" | safe }}}
     strategy:
       fail-fast: {{{ fail_fast }}}
       # Target platforms/runners are computed by cargo-dist in create-release.
@@ -179,6 +209,7 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
+{{%- endif %}}
 
 {{%- for job in local_artifacts_jobs %}}
 
@@ -188,6 +219,9 @@ jobs:
     {{%- for job in plan_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
+    if: ${{ needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload'
+    {{%- if dispatch_releases %}} || inputs.tag == 'dry-run' {{%- endif %}}
+    {{{- " }}" | safe }}}
     uses: ./.github/workflows/{{{ job|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
@@ -198,7 +232,9 @@ jobs:
   build-global-artifacts:
     needs:
       - plan
+    {{%- if build_local_artifacts %}}
       - build-local-artifacts
+    {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
@@ -247,7 +283,9 @@ jobs:
   custom-{{{ job|safe }}}:
     needs:
       - plan
+    {{%- if build_local_artifacts %}}
       - build-local-artifacts
+    {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
@@ -333,7 +371,9 @@ jobs:
   host:
     needs:
       - plan
+    {{%- if build_local_artifacts %}}
       - build-local-artifacts
+    {{%- endif %}}
       - build-global-artifacts
     {{%- if ssldotcom_windows_sign %}}
       - sign-windows-artifacts
@@ -342,7 +382,9 @@ jobs:
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
     # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success')
+    {{%- if build_local_artifacts %}} && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') {{%- endif %}}
+    {{{- " }}" | safe }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     {{%- if "axodotdev" in hosting_providers %}}
@@ -392,7 +434,9 @@ jobs:
   custom-{{{ job|safe }}}:
     needs:
       - plan
+    {{%- if build_local_artifacts %}}
       - build-local-artifacts
+    {{%- endif %}}
       - build-global-artifacts
     {{%- if ssldotcom_windows_sign %}}
       - sign-windows-artifacts
