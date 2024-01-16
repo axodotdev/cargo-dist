@@ -60,7 +60,8 @@ on:
     inputs:
       tag:
         description: 'Release Tag'
-        required: false
+        required: true
+        default: 'dry-run'
         type: string
   {{%- else %}}
   push:
@@ -78,9 +79,9 @@ jobs:
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
       {{%- if dispatch_releases %}}
-      tag: ${{ inputs.tag || '' }}
-      tag-flag: ${{ inputs.tag && format('--tag={0}', inputs.tag) || '' }}
-      publishing: ${{ !!inputs.tag }}
+      tag: ${{ (inputs.tag != 'dry-run' && inputs.tag) || '' }}
+      tag-flag: ${{ inputs.tag && inputs.tag != 'dry-run' && format('--tag={0}', inputs.tag) || '' }}
+      publishing: ${{ inputs.tag && inputs.tag != 'dry-run' }}
       {{%- else %}}
       tag: ${{ !github.event.pull_request && github.ref_name || '' }}
       tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
@@ -112,7 +113,7 @@ jobs:
       - id: plan
         run: |
           cargo dist
-          {{%- if dispatch_releases %}} ${{ inputs.tag && format('host --steps=create --tag={0}', inputs.tag)
+          {{%- if dispatch_releases %}} ${{ inputs.tag && (inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag) || format('host --steps=create', inputs.tag))
           {{%- else %}} ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)
           {{%- endif %}}
           {{{- " || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json" | safe }}}
@@ -143,7 +144,9 @@ jobs:
     {{%- for job in plan_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
-    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
+    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload')
+    {{%- if dispatch_releases %}} || inputs.tag == 'dry-run' {{%- endif %}}
+    {{{- " }}" | safe }}}
     strategy:
       fail-fast: {{{ fail_fast }}}
       # Target platforms/runners are computed by cargo-dist in create-release.
@@ -216,7 +219,9 @@ jobs:
     {{%- for job in plan_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
-    if: ${{ needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload' }}
+    if: ${{ needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload'
+    {{%- if dispatch_releases %}} || inputs.tag == 'dry-run' {{%- endif %}}
+    {{{- " }}" | safe }}}
     uses: ./.github/workflows/{{{ job|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
