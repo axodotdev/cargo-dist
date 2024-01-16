@@ -112,6 +112,15 @@ Example: `build-local-artifacts-jobs = ["./my-job"]`
 This setting determines which custom jobs to run during the "build local artifacts" phase, during which binaries are built.
 
 
+### build-local-artifacts
+
+> since 0.7.3
+
+Example: `build-local-artifacts = false`
+
+This setting determines whether the builtin `build-local-artifacts` CI task should be generated (defaults true). If disabled, you are expected to use `build-local-artifacts-jobs` to generate the same artifacts the builtin task would have generated.
+
+
 ### cargo-dist-version
 
 > since 0.0.3

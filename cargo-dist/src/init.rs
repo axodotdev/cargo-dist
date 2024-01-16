@@ -241,6 +241,7 @@ fn get_new_dist_metadata(
             precise_builds: None,
             merge_tasks: None,
             fail_fast: None,
+            build_local_artifacts: None,
             install_path: None,
             features: None,
             default_features: None,
@@ -771,6 +772,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         precise_builds,
         merge_tasks,
         fail_fast,
+        build_local_artifacts,
         install_path,
         features,
         all_features,
@@ -897,6 +899,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "fail-fast",
         "# Whether failing tasks should make us give up on all other tasks\n",
         *fail_fast,
+    );
+
+    apply_optional_value(
+        table,
+        "build-local-artifacts",
+        "# Whether CI should include auto-generated code to build local artifacts\n",
+        *build_local_artifacts,
     );
 
     apply_optional_value(

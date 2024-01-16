@@ -215,6 +215,13 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fail_fast: Option<bool>,
 
+    /// Whether CI should include logic to build local artifacts (default true)
+    ///
+    /// If false, it will be assumed that the local_artifacts_jobs will include custom
+    /// jobs to build them.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub build_local_artifacts: Option<bool>,
+
     /// The strategy to use for selecting a path to install things at:
     ///
     /// * `CARGO_HOME`: (default) install as if cargo did
@@ -339,6 +346,7 @@ impl DistMetadata {
             precise_builds: _,
             fail_fast: _,
             merge_tasks: _,
+            build_local_artifacts: _,
             install_path: _,
             features: _,
             default_features: _,
@@ -391,6 +399,7 @@ impl DistMetadata {
             precise_builds,
             merge_tasks,
             fail_fast,
+            build_local_artifacts,
             install_path,
             features,
             default_features,
@@ -430,6 +439,9 @@ impl DistMetadata {
         }
         if fail_fast.is_some() {
             warn!("package.metadata.dist.fail-fast is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if build_local_artifacts.is_some() {
+            warn!("package.metadata.dist.build-local-artifacts is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if create_release.is_some() {
             warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

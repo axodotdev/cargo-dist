@@ -107,6 +107,8 @@ jobs:
     secrets: inherit
 {{%- endfor %}}
 
+{{%- if build_local_artifacts %}}
+
   # Build and packages all the platform-specific things
   build-local-artifacts:
     name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
@@ -179,6 +181,7 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
+{{%- endif %}}
 
 {{%- for job in local_artifacts_jobs %}}
 
@@ -198,7 +201,9 @@ jobs:
   build-global-artifacts:
     needs:
       - plan
+    {{%- if build_local_artifacts %}}
       - build-local-artifacts
+    {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
@@ -247,7 +252,9 @@ jobs:
   custom-{{{ job|safe }}}:
     needs:
       - plan
+    {{%- if build_local_artifacts %}}
       - build-local-artifacts
+    {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
@@ -333,7 +340,9 @@ jobs:
   host:
     needs:
       - plan
+    {{%- if build_local_artifacts %}}
       - build-local-artifacts
+    {{%- endif %}}
       - build-global-artifacts
     {{%- if ssldotcom_windows_sign %}}
       - sign-windows-artifacts
@@ -342,7 +351,9 @@ jobs:
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
     # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success')
+    {{%- if build_local_artifacts %}} && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') {{%- endif %}}
+    {{{- " }}" | safe }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     {{%- if "axodotdev" in hosting_providers %}}
@@ -392,7 +403,9 @@ jobs:
   custom-{{{ job|safe }}}:
     needs:
       - plan
+    {{%- if build_local_artifacts %}}
       - build-local-artifacts
+    {{%- endif %}}
       - build-global-artifacts
     {{%- if ssldotcom_windows_sign %}}
       - sign-windows-artifacts
