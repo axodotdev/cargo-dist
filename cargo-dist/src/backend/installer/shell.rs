@@ -13,6 +13,7 @@ pub(crate) fn write_install_sh_script(
     templates: &Templates,
     info: &InstallerInfo,
 ) -> DistResult<()> {
+
     let script = templates.render_file_to_clean_string(TEMPLATE_INSTALLER_SH, info)?;
     LocalAsset::write_new(&script, &info.dest_path)?;
     Ok(())

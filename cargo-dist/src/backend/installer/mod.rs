@@ -6,8 +6,8 @@ use camino::Utf8PathBuf;
 use serde::Serialize;
 
 use crate::{
-    config::{JinjaInstallPathStrategy, ZipStyle},
-    TargetTriple,
+    config::ZipStyle,
+    TargetTriple, ReleaseIdx,
 };
 
 use self::homebrew::HomebrewInstallerInfo;
@@ -41,20 +41,15 @@ pub enum InstallerImpl {
 pub struct InstallerInfo {
     /// The path to generate the installer at
     pub dest_path: Utf8PathBuf,
-    /// App name to use (display only)
-    pub app_name: String,
-    /// App version to use (display only)
-    pub app_version: String,
     /// URL of the directory where artifacts can be fetched from
     pub base_url: String,
-    /// Artifacts this installer can fetch
-    pub artifacts: Vec<ExecutableZipFragment>,
     /// Description of the installer (a good heading)
     pub desc: String,
     /// Hint for how to run the installer
     pub hint: String,
-    /// Where to install binaries
-    pub install_path: JinjaInstallPathStrategy,
+    /// The release this is installing
+    #[serde(skip)]
+    pub release: ReleaseIdx,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers
