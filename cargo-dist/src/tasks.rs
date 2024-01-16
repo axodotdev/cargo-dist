@@ -157,6 +157,8 @@ pub struct DistGraph {
     pub fail_fast: bool,
     /// Whether CI should include auto-generated local artifacts tasks
     pub build_local_artifacts: bool,
+    /// Whether releases should be triggered by explicit dispatch, instead of tags
+    pub dispatch_releases: bool,
     /// Whether to create a github release or edit an existing draft
     pub create_release: bool,
     /// \[unstable\] if Some, sign binaries with ssl.com
@@ -705,6 +707,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             merge_tasks,
             fail_fast,
             build_local_artifacts,
+            dispatch_releases,
             ssldotcom_windows_sign,
             // Partially Processed elsewhere
             //
@@ -774,6 +777,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let fail_fast = fail_fast.unwrap_or(false);
         let create_release = create_release.unwrap_or(true);
         let build_local_artifacts = build_local_artifacts.unwrap_or(true);
+        let dispatch_releases = dispatch_releases.unwrap_or(false);
         let msvc_crt_static = msvc_crt_static.unwrap_or(true);
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
 
@@ -930,6 +934,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 fail_fast,
                 merge_tasks,
                 build_local_artifacts,
+                dispatch_releases,
                 create_release,
                 ssldotcom_windows_sign,
                 desired_cargo_dist_version,

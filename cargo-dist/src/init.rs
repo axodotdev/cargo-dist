@@ -242,6 +242,7 @@ fn get_new_dist_metadata(
             merge_tasks: None,
             fail_fast: None,
             build_local_artifacts: None,
+            dispatch_releases: None,
             install_path: None,
             features: None,
             default_features: None,
@@ -773,6 +774,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         merge_tasks,
         fail_fast,
         build_local_artifacts,
+        dispatch_releases,
         install_path,
         features,
         all_features,
@@ -906,6 +908,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "build-local-artifacts",
         "# Whether CI should include auto-generated code to build local artifacts\n",
         *build_local_artifacts,
+    );
+
+    apply_optional_value(
+        table,
+        "dispatch-releases",
+        "# Whether CI should trigger releases with dispatches instead of tag pushes\n",
+        *dispatch_releases,
     );
 
     apply_optional_value(

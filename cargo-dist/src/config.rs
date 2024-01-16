@@ -222,6 +222,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build_local_artifacts: Option<bool>,
 
+    /// Whether CI should trigger releases by dispatch instead of tag push (default false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dispatch_releases: Option<bool>,
+
     /// The strategy to use for selecting a path to install things at:
     ///
     /// * `CARGO_HOME`: (default) install as if cargo did
@@ -347,6 +351,7 @@ impl DistMetadata {
             fail_fast: _,
             merge_tasks: _,
             build_local_artifacts: _,
+            dispatch_releases: _,
             install_path: _,
             features: _,
             default_features: _,
@@ -400,6 +405,7 @@ impl DistMetadata {
             merge_tasks,
             fail_fast,
             build_local_artifacts,
+            dispatch_releases,
             install_path,
             features,
             default_features,
@@ -442,6 +448,9 @@ impl DistMetadata {
         }
         if build_local_artifacts.is_some() {
             warn!("package.metadata.dist.build-local-artifacts is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if dispatch_releases.is_some() {
+            warn!("package.metadata.dist.dispatch-releases is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if create_release.is_some() {
             warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

@@ -236,6 +236,16 @@ lftp = '*'
 cmake = { version = '3.27.6', targets = ["aarch64-pc-windows-msvc"] }
 ```
 
+
+### dispatch-releases
+
+> since 0.7.3
+
+Example: `dispatch-releases = true`
+
+This setting determines whether workflow_dispatch should be the trigger for a release, instead of tag push (defaults false).
+
+
 ### dist
 
 > since 0.0.3

@@ -32,6 +32,8 @@ pub struct GithubCiInfo {
     pub fail_fast: bool,
     /// Whether to include builtin local artifacts tasks
     pub build_local_artifacts: bool,
+    /// Whether to make CI get dispatched manually instead of by tag
+    pub dispatch_releases: bool,
     /// Matrix for upload-local-artifacts
     pub artifacts_matrix: cargo_dist_schema::GithubMatrix,
     /// What kind of job to run on pull request
@@ -76,6 +78,7 @@ impl GithubCiInfo {
             .unwrap_or(&self_dist_version);
         let fail_fast = dist.fail_fast;
         let build_local_artifacts = dist.build_local_artifacts;
+        let dispatch_releases = dist.dispatch_releases;
         let create_release = dist.create_release;
         let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
         let mut dependencies = SystemDependencies::default();
@@ -155,6 +158,7 @@ impl GithubCiInfo {
             install_dist_ps1,
             fail_fast,
             build_local_artifacts,
+            dispatch_releases,
             tap,
             plan_jobs,
             local_artifacts_jobs,

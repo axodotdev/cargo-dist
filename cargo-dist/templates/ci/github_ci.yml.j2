@@ -27,7 +27,13 @@ name: Release
 permissions:
   contents: write
 
+{{%- if dispatch_releases %}}
+
+# This task will run whenever you workflow_dispatch with a tag that looks like a version
+{{%- else %}}
+
 # This task will run whenever you push a git tag that looks like a version
+{{%- endif %}}
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
 # Various formats will be parsed into a VERSION and an optional PACKAGE_NAME, where
 # PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
@@ -49,9 +55,18 @@ permissions:
 # If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
+  {{%- if dispatch_releases %}}
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag'
+        required: false
+        type: string
+  {{%- else %}}
   push:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
+  {{%- endif %}}
   {{%- if pr_run_mode != "skip" %}}
   pull_request:
   {{%- endif %}}
@@ -62,9 +77,15 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
+      {{%- if dispatch_releases %}}
+      tag: ${{ inputs.tag || '' }}
+      tag-flag: ${{ inputs.tag && format('--tag={0}', inputs.tag) || '' }}
+      publishing: ${{ !!inputs.tag }}
+      {{%- else %}}
       tag: ${{ !github.event.pull_request && github.ref_name || '' }}
       tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
       publishing: ${{ !github.event.pull_request }}
+      {{%- endif %}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     {{%- if "axodotdev" in hosting_providers %}}
@@ -90,7 +111,11 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name) || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json
+          cargo dist
+          {{%- if dispatch_releases %}} ${{ inputs.tag && format('host --steps=create --tag={0}', inputs.tag)
+          {{%- else %}} ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)
+          {{%- endif %}}
+          {{{- " || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json" | safe }}}
           echo "cargo dist ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
