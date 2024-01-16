@@ -216,6 +216,7 @@ jobs:
     {{%- for job in plan_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
+    if: ${{ needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload' }}
     uses: ./.github/workflows/{{{ job|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
