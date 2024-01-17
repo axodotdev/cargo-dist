@@ -1938,6 +1938,7 @@ maybeInstall(true).then(run);
 {
   "dist_version": "CENSORED",
   "announcement_tag": "v0.2.1",
+  "announcement_tag_is_implicit": true,
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.1",
   "announcement_changelog": "```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",

@@ -34,6 +34,7 @@ pub fn load_and_merge_manifests(
             releases,
             publish_prereleases,
             announcement_tag,
+            announcement_tag_is_implicit,
             announcement_is_prerelease,
             announcement_title,
             announcement_changelog,
@@ -64,6 +65,7 @@ pub fn load_and_merge_manifests(
             output.announcement_tag = Some(val);
             // Didn't wrap these in an option, so use announcement_tag as a proxy
             output.announcement_is_prerelease = announcement_is_prerelease;
+            output.announcement_tag_is_implicit = announcement_tag_is_implicit;
             output.publish_prereleases = publish_prereleases;
         }
         if let Some(val) = announcement_title {

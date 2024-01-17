@@ -37,6 +37,11 @@ expression: json_schema
         "null"
       ]
     },
+    "announcement_tag_is_implicit": {
+      "description": "True if --tag wasn't explicitly passed to cargo-dist. This usually indicates some kind of dry-run state like pr-run-mode=upload. Some third-party tools may use this as a proxy for \"is dry run\"",
+      "default": false,
+      "type": "boolean"
+    },
     "announcement_title": {
       "description": "A title for the announcement",
       "type": [

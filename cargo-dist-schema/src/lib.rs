@@ -38,6 +38,11 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announcement_tag: Option<String>,
+    /// True if --tag wasn't explicitly passed to cargo-dist. This usually indicates
+    /// some kind of dry-run state like pr-run-mode=upload. Some third-party tools
+    /// may use this as a proxy for "is dry run"
+    #[serde(default)]
+    pub announcement_tag_is_implicit: bool,
     /// Whether this announcement appears to be a prerelease
     #[serde(default)]
     pub announcement_is_prerelease: bool,
@@ -371,6 +376,7 @@ impl DistManifest {
         Self {
             dist_version: None,
             announcement_tag: None,
+            announcement_tag_is_implicit: false,
             announcement_is_prerelease: false,
             announcement_title: None,
             announcement_changelog: None,
