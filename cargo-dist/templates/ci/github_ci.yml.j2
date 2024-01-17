@@ -59,9 +59,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release Tag'
+        description: Release Tag
         required: true
-        default: 'dry-run'
+        default: dry-run
         type: string
   {{%- else %}}
   push:
@@ -507,6 +507,10 @@ jobs:
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
+    # publish jobs get escalated permissions
+    permissions:
+      id-token: write
+      packages: write
 {{%- endfor %}}
 
 {{#- being extremely Normal about whitespace/newlines -#}}
