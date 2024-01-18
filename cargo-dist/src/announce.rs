@@ -492,7 +492,7 @@ pub fn announcement_github(manifest: &mut DistManifest) {
                 let mut triple = artifact
                     .target_triples
                     .iter()
-                    .filter_map(|t| triple_to_display_name(t))
+                    .map(|t| triple_to_display_name(t).unwrap_or_else(|| t))
                     .join(", ");
                 if triple.is_empty() {
                     triple = "Unknown".to_string();
