@@ -23,11 +23,11 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 
-# glibc provided by our Ubuntu 22.04 runners;
+# glibc provided by our Ubuntu 20.04 runners;
 # in the future, we should actually record which glibc was on the runner,
 # and inject that into the script.
 BUILDER_GLIBC_MAJOR="2"
-BUILDER_GLIBC_SERIES="35"
+BUILDER_GLIBC_SERIES="31"
 
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
