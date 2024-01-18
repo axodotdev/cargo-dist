@@ -517,6 +517,7 @@ get_architecture() {
             if [ "$(echo "${_local_glibc}" | awk -F. '{ print $1 }')" = $BUILDER_GLIBC_MAJOR ] && [ "$(echo "${_local_glibc}" | awk -F. '{ print $2 }')" -ge $BUILDER_GLIBC_SERIES ]; then
                 _clibtype="gnu"
             else
+                say "System glibc version (\`${_local_glibc}') is too old; using musl" >&2
                 _clibtype="musl-static"
             fi
         fi
