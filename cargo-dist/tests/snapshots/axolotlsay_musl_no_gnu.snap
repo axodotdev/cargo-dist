@@ -1092,7 +1092,7 @@ const name = "axolotlsay";
 const artifact_download_url = "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1";
 
 const builder_glibc_major_version = 2;
-const builder_glibc_minor_version = 35;
+const builder_glibc_minor_version = 31;
 
 const supportedPlatforms = {
   "aarch64-apple-darwin": {
