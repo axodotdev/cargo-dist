@@ -1,7 +1,61 @@
 # Unreleased
 
-Nothing Yet!
+This release is a mix of quality-of-life changes and fixes.
 
+`dispatch-releases = true` adds a new experimental mode where releases are triggered with workflow-dispatch instead of tag-push.
+
+`build-local-artifacts = false` disables the builtin CI jobs that would build your binaries and archives (and MSI installers). This allows a Sufficiently Motivated user to use custom `build-local-jobs` to completely replace cargo-dist's binary building with something like maturin.
+
+## Features
+
+### dispatch-releases
+
+`dispatch-releases = true` adds a new experimental mode where releases are triggered with workflow-dispatch instead of tag-push (relying on creating a github release implicitly tagging).
+
+Enabling this disables tag-push releases, but keeps pr checks enabled.
+
+By default the workflow dispatch form will have "dry-run" populated as the tag, which is taken to have the same meaning as `pr-run-mode = upload`: run the plan and build steps, but not the publish or announce ones. Currently hosting is also disabled, but future versions may add some forms of hosting in this mode.
+
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/717)
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases)
+
+
+
+### build-local-artifacts
+
+`build-local-artifacts = false` disables the builtin CI jobs that would build your binaries and archives (and MSI installers). This allows a Sufficiently Motivated user to use custom `build-local-jobs` to completely replace cargo-dist's binary building with something like maturin.
+
+The requirements are simply that you need your custom actions to:
+
+* build archives (tarballs/zips) and checksums that the local CI was expected to produce
+* use the github upload-artifacts action to upload all of those to an artifact named `artifacts`
+
+You can get a listing of the exact artifact names to use and their expected contents with:
+
+```
+cargo dist manifest --artifacts=local --no-local-paths
+```
+
+(`[checksum]` entries are separate artifacts and not actually stored in the archives.)
+
+Also note that for legacy reasons a tarball is expected to have all the contents nested under a root dir with the same name as the tarball (sans extension), while zips are expected to have all the files directly in the root (installers pass `--strip-components=1` to tar when extracting).
+
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/717)
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#build-local-artifacts)
+
+
+
+## Fixes
+
+* better platform printing
+    * @gankra [more pleasant fallback for unknown platforms](https://github.com/axodotdev/cargo-dist/pull/728)
+    * @gankra [more known platforms, better display names](https://github.com/axodotdev/axoproject/pull/82)
+    * @gankra [better sort](https://github.com/axodotdev/cargo-dist/pull/732)
+* @gankra [add proper pr-run-mode guards to custom build jobs](https://github.com/axodotdev/cargo-dist/pull/717)
+* @gankra [elevate privileges for custom publish jobs](https://github.com/axodotdev/cargo-dist/pull/722)
+* @mistydemeo [tighten minimum glibc requirements in shell installer](https://github.com/axodotdev/cargo-dist/pull/727)
+* @gankra [add announcement_tag_is_implicit as a --dry-run signal to dist-manifest](https://github.com/axodotdev/cargo-dist/pull/725)
+* @mistydemeo [don't print warnings in some tests, making them run more reliable in some setups](https://github.com/axodotdev/cargo-dist/pull/730)
 
 # Version 0.7.2 (2024-01-15)
 
