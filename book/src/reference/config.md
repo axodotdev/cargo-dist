@@ -121,31 +121,30 @@ Example: `auto-includes = false`
 Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [archives][]. Defaults to true.
 
 
-### build-global-artifacts-jobs
-
-> since 0.7.0
-
-Example: `build-global-artifacts-jobs = ["./my-job"]`
-
-This setting determines which custom jobs to run during the "build global artifacts" phase, during which installers are built.
-
-
-### build-local-artifacts-jobs
-
-> since 0.7.0
-
-Example: `build-local-artifacts-jobs = ["./my-job"]`
-
-This setting determines which custom jobs to run during the "build local artifacts" phase, during which binaries are built.
-
-
 ### build-local-artifacts
 
-> since 0.7.3
+> since 0.8.0
 
 Example: `build-local-artifacts = false`
 
-This setting determines whether the builtin `build-local-artifacts` CI task should be generated (defaults true). If disabled, you are expected to use `build-local-artifacts-jobs` to generate the same artifacts the builtin task would have generated.
+(defaults `true`)
+
+`build-local-artifacts = false` disables the builtin CI jobs that would build your binaries and archives (and MSI installers). This allows a Sufficiently Motivated user to use custom `build-local-jobs` to completely replace cargo-dist's binary building with something like maturin.
+
+The requirements are simply that you need your custom actions to:
+
+* build archives (tarballs/zips) and checksums that the local CI was expected to produce
+* use the github upload-artifacts action to upload all of those to an artifact named `artifacts`
+
+You can get a listing of the exact artifact names to use and their expected contents with:
+
+```
+cargo dist manifest --artifacts=local --no-local-paths
+```
+
+(`[checksum]` entries are separate artifacts and not actually stored in the archives.)
+
+Also note that for legacy reasons a tarball is expected to have all the contents nested under a root dir with the same name as the tarball (sans extension), while zips are expected to have all the files directly in the root (installers pass `--strip-components=1` to tar when extracting).
 
 
 ### cargo-dist-version
@@ -266,11 +265,17 @@ cmake = { version = '3.27.6', targets = ["aarch64-pc-windows-msvc"] }
 
 ### dispatch-releases
 
-> since 0.7.3
+> since 0.8.0
 
 Example: `dispatch-releases = true`
 
-This setting determines whether workflow_dispatch should be the trigger for a release, instead of tag push (defaults false).
+(defaults `false`)
+
+`dispatch-releases = true` adds a new experimental mode where releases are triggered with workflow_dispatch instead of tag-push (relying on creating a github release implicitly tagging).
+
+Enabling this disables tag-push releases, but keeps pr checks enabled.
+
+By default the workflow dispatch form will have "dry-run" populated as the tag, which is taken to have the same meaning as `pr-run-mode = upload`: run the plan and build steps, but not the publish or announce ones. Currently hosting is also disabled, but future versions may add some forms of hosting in this mode.
 
 
 ### dist
@@ -339,6 +344,15 @@ For instance for packages that are a library and a CLI binary, some developers p
 
 If you use this you *probably* want to set it on `[package.metadata.dist]` and
 not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
+
+
+### global-artifacts-jobs
+
+> since 0.7.0
+
+Example: `global-artifacts-jobs = ["./my-job"]`
+
+This setting determines which custom jobs to run during the "build global artifacts" phase, during which installers are built.
 
 
 ### host-jobs
@@ -418,6 +432,15 @@ Future Improvements:
 * In the future [we may support %windows dirs%](https://github.com/axodotdev/cargo-dist/issues/288)
 
 (Please file an issue if you have other requirements!)
+
+
+### local-artifacts-jobs
+
+> since 0.7.0
+
+Example: `local-artifacts-jobs = ["./my-job"]`
+
+This setting determines which custom jobs to run during the "build local artifacts" phase, during which binaries are built.
 
 
 ### merge-tasks
