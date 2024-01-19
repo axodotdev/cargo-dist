@@ -6,6 +6,7 @@ stdout:
 {
   "dist_version": "1.0.0-FAKEVERSION",
   "announcement_tag": "CENSORED",
+  "announcement_tag_is_implicit": true,
   "announcement_is_prerelease": "CENSORED"
   "announcement_title": "CENSORED"
   "announcement_changelog": "CENSORED"

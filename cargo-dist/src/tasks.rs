@@ -680,6 +680,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         workspace: &'pkg_graph WorkspaceInfo,
         artifact_mode: ArtifactMode,
         allow_all_dirty: bool,
+        announcement_tag_is_implicit: bool,
     ) -> DistResult<Self> {
         let target_dir = workspace.target_dir.clone();
         let workspace_dir = workspace.workspace_dir.clone();
@@ -972,6 +973,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 system_info: Some(cargo_dist_schema::SystemInfo { cargo_version_line }),
                 announcement_tag: None,
                 announcement_is_prerelease: false,
+                announcement_tag_is_implicit,
                 announcement_title: None,
                 announcement_changelog: None,
                 announcement_github_body: None,
@@ -2601,8 +2603,13 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
     let workspace = crate::config::get_project()?;
-    let mut graph =
-        DistGraphBuilder::new(tools, &workspace, cfg.artifact_mode, cfg.allow_all_dirty)?;
+    let mut graph = DistGraphBuilder::new(
+        tools,
+        &workspace,
+        cfg.artifact_mode,
+        cfg.allow_all_dirty,
+        cfg.announcement_tag.is_none(),
+    )?;
 
     // Immediately check if there's other manifests kicking around that provide info
     // we don't want to recompute (lets us move towards more of an architecture where

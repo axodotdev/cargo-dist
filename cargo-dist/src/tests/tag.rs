@@ -18,7 +18,7 @@ fn parse_one() {
     let tag = format!("{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -35,7 +35,7 @@ fn parse_one_v() {
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -52,7 +52,7 @@ fn parse_one_package_v() {
     let tag = format!("{BIN_AXO_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -69,7 +69,7 @@ fn parse_one_package() {
     let tag = format!("{BIN_AXO_NAME}-{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -86,7 +86,7 @@ fn parse_one_v_alpha() {
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(announcing.prerelease);
@@ -103,7 +103,7 @@ fn parse_one_package_v_alpha() {
     let tag = format!("{BIN_AXO_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(announcing.prerelease);
@@ -120,7 +120,7 @@ fn parse_one_prefix_slashv() {
     let tag = format!("release/v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -137,7 +137,7 @@ fn parse_one_prefix_slash() {
     let tag = format!("release/{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -154,7 +154,7 @@ fn parse_one_prefix_slash_package_v() {
     let tag = format!("release/{BIN_AXO_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -171,7 +171,7 @@ fn parse_one_prefix_slash_package_slashv() {
     let tag = format!("releases/{BIN_AXO_NAME}/v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -188,7 +188,7 @@ fn parse_one_package_slashv() {
     let tag = format!("{BIN_AXO_NAME}/v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -205,7 +205,7 @@ fn parse_one_prefix_slash_package_slash() {
     let tag = format!("releases/{BIN_AXO_NAME}/{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -222,7 +222,7 @@ fn parse_one_prefix_many_slash_package_slash() {
     let tag = format!("blah/blah/releases/{BIN_AXO_NAME}/{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -239,7 +239,7 @@ fn parse_one_package_slash() {
     let tag = format!("{BIN_AXO_NAME}/{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -256,7 +256,7 @@ fn parse_one_infer() {
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, None, true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -273,7 +273,7 @@ fn parse_unified_v() {
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -293,7 +293,7 @@ fn parse_unified_infer() {
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, None, true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -313,7 +313,7 @@ fn parse_unified_lib() {
     let tag = format!("{LIB_SOME_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -330,7 +330,7 @@ fn parse_disjoint_v() {
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -351,7 +351,7 @@ fn parse_disjoint_infer() {
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, None, true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -371,7 +371,7 @@ fn parse_disjoint_v_oddball() {
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
@@ -388,7 +388,7 @@ fn parse_disjoint_lib() {
     let tag = format!("{LIB_OTHER_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true).unwrap();
+    let graph = DistGraphBuilder::new(tools, &workspace, ArtifactMode::All, true, false).unwrap();
     let announcing = select_tag(&graph, Some(&tag), true).unwrap();
 
     assert!(!announcing.prerelease);
