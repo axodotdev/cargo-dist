@@ -12,7 +12,7 @@ use tracing::info;
 
 use crate::{
     errors::{DistError, DistResult},
-    DistGraphBuilder, SortedMap,
+    DistGraphBuilder, SortedMap, TargetTriple,
 };
 
 /// details on what we're announcing
@@ -452,11 +452,13 @@ pub fn announcement_github(manifest: &mut DistManifest) {
             }
         }
 
-        let other_artifacts: Vec<_> = bundles
+        let mut other_artifacts: Vec<_> = bundles
             .into_iter()
             .chain(local_installers)
             .chain(symbols)
             .collect();
+
+        other_artifacts.sort_by_cached_key(|a| sortable_triples(&a.target_triples));
 
         let download_url = release.artifact_download_url();
         if !other_artifacts.is_empty() && download_url.is_some() {
@@ -506,5 +508,101 @@ pub fn announcement_github(manifest: &mut DistManifest) {
     if announcing_github {
         info!("successfully generated github release body!");
         manifest.announcement_github_body = Some(gh_body);
+    }
+}
+
+/// Create a key for Properly sorting a list of target triples
+fn sortable_triples(triples: &[TargetTriple]) -> Vec<Vec<String>> {
+    // Make each triple sortable, and then sort the list of triples by those
+    // (usually there's only one triple but DETERMINISM)
+    let mut output: Vec<Vec<String>> = triples.iter().map(sortable_triple).collect();
+    output.sort();
+    output
+}
+
+/// Create a key for Properly sorting target triples
+fn sortable_triple(triple: &TargetTriple) -> Vec<String> {
+    // We want to sort lexically by: os, abi, arch
+    // We are given arch, vendor, os, abi
+    //
+    // vendor is essentially irrelevant / pairs with os,
+    // ("unknown" as a vendor is basically "not windows or macos")
+    // so a simple solution here is to just move arch to the end,
+    // giving us a sort of: vendor, os, abi, arch.
+    //
+    // In particular doing sorting this way avoids worrying about
+    // gunk like fuchsia omitting vendor sometimes, or the occasional
+    // absence of abi.
+    //
+    // Notable inputs:
+    //
+    //  arch    vendor     os      abi
+    // --------------------------------------
+    // x86_64  -pc      -windows -msvc
+    // aarch64 -apple   -darwin
+    // aarch64 -unknown -linux   -musl
+    // aarch64 -unknown -linux   -gnu
+    // armv7   -unknown -linux   -gnueabihf
+    // aarch64 -unknown -fuchsia
+    // aarch64          -fuchsia
+    let mut parts = triple.split('-');
+    let arch = parts.next();
+    let order = parts.chain(arch);
+    order.map(|s| s.to_owned()).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sortable_triple;
+    #[test]
+    fn sort_platforms() {
+        let mut targets = vec![
+            "aarch64-unknown-linux-gnu",
+            "x86_64-unknown-linux-gnu",
+            "i686-unknown-linux-gnu",
+            "aarch64-apple-darwin",
+            "x86_64-apple-darwin",
+            "aarch64-unknown-linux-musl",
+            "x86_64-unknown-linux-musl",
+            "i686-unknown-linux-musl",
+            "aarch64-pc-windows-msvc",
+            "x86_64-pc-windows-msvc",
+            "i686-pc-windows-msvc",
+            "armv7-unknown-linux-gnueabihf",
+            "powerpc64-unknown-linux-gnu",
+            "powerpc64le-unknown-linux-gnu",
+            "s390x-unknown-linux-gnu",
+            "aarch64-fuschsia",
+            "x86_64-fuschsia",
+            "universal2-apple-darwin",
+            "x86_64-unknown-linux-gnu.2.31",
+            "x86_64-unknown-linux-musl-static",
+        ];
+        targets.sort_by_cached_key(|t| sortable_triple(&t.to_string()));
+        assert_eq!(
+            targets,
+            vec![
+                "aarch64-apple-darwin",
+                "universal2-apple-darwin",
+                "x86_64-apple-darwin",
+                "aarch64-fuschsia",
+                "x86_64-fuschsia",
+                "aarch64-pc-windows-msvc",
+                "i686-pc-windows-msvc",
+                "x86_64-pc-windows-msvc",
+                "aarch64-unknown-linux-gnu",
+                "i686-unknown-linux-gnu",
+                "powerpc64-unknown-linux-gnu",
+                "powerpc64le-unknown-linux-gnu",
+                "s390x-unknown-linux-gnu",
+                "x86_64-unknown-linux-gnu",
+                "x86_64-unknown-linux-gnu.2.31",
+                "armv7-unknown-linux-gnueabihf",
+                "aarch64-unknown-linux-musl",
+                "i686-unknown-linux-musl",
+                "x86_64-unknown-linux-musl-static",
+                "x86_64-unknown-linux-musl",
+            ]
+        );
     }
 }
