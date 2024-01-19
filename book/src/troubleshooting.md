@@ -19,7 +19,7 @@ These are also great steps to follow proactively, if you're updating your cargo-
 
 ## Nothing To Release / Missing Packages / Too Many Packages
 
-cargo-dist tries to support as many release workflows as possible, and that means it needs you to tell it what you're interested in releasing. There are several ways to opt things in and out of being released, the most important are:
+cargo-dist tries to support as many release workflows as possible, and that means it needs you to tell it what you're interested in releasing. There are several ways to opt things in and out of being released; the most important are:
 
 * [git tag formats](./workspaces/workspace-guide.md#announcement-tags)
     * git tags select which packages you're interested in doing a release for
