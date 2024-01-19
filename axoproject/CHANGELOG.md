@@ -1,3 +1,7 @@
+# Version 0.6.1 (2024-01-19)
+
+* Adds more platforms and improves their display names
+
 # Version 0.6.0 (2023-11-09)
 
 * Adds a new language-agnostic "generic" project type, with the package definition coming from a new `dist.toml` metadata file. This is gated behind the new `generic-projects` feature.
