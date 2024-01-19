@@ -319,7 +319,7 @@ fn do_generate_preflight_checks(dist: &DistGraph) -> Result<()> {
             && !desired_version.pre.starts_with("github-")
             && !matches!(dist.allow_dirty, DirtyMode::AllowAll)
         {
-            return Err(miette!("you're running cargo-dist {}, but 'cargo-dist-version = {}' is set in your Cargo.toml\n\nYou should update cargo-dist-version if you want to update to this version", current_version, desired_version));
+            return Err(miette!("you're running cargo-dist {}, but 'cargo-dist-version = {}' is set in your Cargo.toml\n\nRerun 'cargo dist init' to update to this version.", current_version, desired_version));
         }
     }
     if !dist.is_init {
