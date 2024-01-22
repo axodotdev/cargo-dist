@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.8.0 (2024-01-19)
+
 This release is a mix of quality-of-life changes and fixes.
 
 `dispatch-releases = true` adds a new experimental mode where releases are triggered with workflow-dispatch instead of tag-push.
