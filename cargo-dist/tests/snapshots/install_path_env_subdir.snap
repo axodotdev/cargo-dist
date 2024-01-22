@@ -778,7 +778,21 @@ class Axolotlsay < Formula
   license "MIT OR Apache-2.0"
 
   def install
-    bin.install "axolotlsay"
+    on_macos do
+      on_arm do
+        bin.install "axolotlsay"
+      end
+    end
+    on_macos do
+      on_intel do
+        bin.install "axolotlsay"
+      end
+    end
+    on_linux do
+      on_intel do
+        bin.install "axolotlsay"
+      end
+    end
 
     # Homebrew will automatically install these, so we don't need to do that
     doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]

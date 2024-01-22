@@ -67,14 +67,32 @@ class {{ formula_class }} < Formula
   {%- endif %}
 
   def install
-    {#- Like the URL case above, write out a single install line in the case that the binary artifacts are the same across architectures #}
-    {%- if arm64_macos.binaries == x86_64_macos.binaries %}
-    bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-    {%- else %}
-    if Hardware::CPU.type == :arm
-      bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-    else
-      bin.install {% for binary in x86_64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+    {%- if arm64_macos.binaries %}
+    on_macos do
+      on_arm do
+        bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      end
+    end
+    {%- endif %}
+    {%- if x86_64_macos.binaries %}
+    on_macos do
+      on_intel do
+        bin.install {% for binary in x86_64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      end
+    end
+    {%- endif %}
+    {%- if arm64_linux.binaries %}
+    on_linux do
+      on_arm do
+        bin.install {% for binary in arm64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      end
+    end
+    {%- endif %}
+    {%- if x86_64_linux.binaries %}
+    on_linux do
+      on_intel do
+        bin.install {% for binary in x86_64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      end
     end
     {%- endif %}
 
