@@ -1260,7 +1260,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .stderr(std::process::Stdio::piped())
             .check(false)
             .status();
-        let is_git_repo = if let Ok(status) = status {
+        // We'll be stubbing the actual generation in this case
+        let is_git_repo = if self.inner.local_builds_are_lies {
+            true
+        } else if let Ok(status) = status {
             status.success()
         } else {
             false
@@ -1273,7 +1276,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .stderr(std::process::Stdio::piped())
             .check(false)
             .status();
-        let has_head = if let Ok(status) = status {
+        let has_head = if self.inner.local_builds_are_lies {
+            true
+        } else if let Ok(status) = status {
             status.success()
         } else {
             false
