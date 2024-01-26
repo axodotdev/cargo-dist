@@ -1,6 +1,12 @@
 # Unreleased
 
-Nothing Yet!
+Just a small release with a pile of bugfixes!
+
+## Fixes
+
+@dsully [Fix Linuxbrew installers](https://github.com/axodotdev/cargo-dist/pull/697)
+@gankra [Fix zstd archive support (was never properly implemented)](https://github.com/axodotdev/axoasset/pull/77)
+@gankra [Fix dependabot's interaction with axo releases](https://github.com/axodotdev/cargo-dist/pull/739)
 
 
 # Version 0.8.0 (2024-01-19)
