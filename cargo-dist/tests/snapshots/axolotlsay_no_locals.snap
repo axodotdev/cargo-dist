@@ -10,7 +10,7 @@ expression: self.payload
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.1",
   "announcement_changelog": "```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-unknown-linux-gnu.tar.xz) | ARM64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-unknown-linux-gnu.tar.xz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n| [axolotlsay-aarch64-unknown-linux-musl.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-unknown-linux-musl.tar.xz) | ARM64 MUSL Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-unknown-linux-musl.tar.xz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-musl.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-musl.tar.xz) | x64 MUSL Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-musl.tar.xz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.zip](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.zip.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
   "system_info": {
     "cargo_version_line": "CENSORED"
   },
@@ -21,14 +21,14 @@ expression: self.payload
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",
-        "axolotlsay-aarch64-unknown-linux-gnu.tar.xz",
-        "axolotlsay-aarch64-unknown-linux-gnu.tar.xz.sha256",
-        "axolotlsay-aarch64-unknown-linux-musl.tar.xz",
-        "axolotlsay-aarch64-unknown-linux-musl.tar.xz.sha256",
+        "axolotlsay-aarch64-apple-darwin.tar.xz",
+        "axolotlsay-aarch64-apple-darwin.tar.xz.sha256",
+        "axolotlsay-x86_64-apple-darwin.tar.xz",
+        "axolotlsay-x86_64-apple-darwin.tar.xz.sha256",
+        "axolotlsay-x86_64-pc-windows-msvc.zip",
+        "axolotlsay-x86_64-pc-windows-msvc.zip.sha256",
         "axolotlsay-x86_64-unknown-linux-gnu.tar.xz",
-        "axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256",
-        "axolotlsay-x86_64-unknown-linux-musl.tar.xz",
-        "axolotlsay-x86_64-unknown-linux-musl.tar.xz.sha256"
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256"
       ],
       "hosting": {
         "github": {
@@ -38,11 +38,11 @@ expression: self.payload
     }
   ],
   "artifacts": {
-    "axolotlsay-aarch64-unknown-linux-gnu.tar.xz": {
-      "name": "axolotlsay-aarch64-unknown-linux-gnu.tar.xz",
+    "axolotlsay-aarch64-apple-darwin.tar.xz": {
+      "name": "axolotlsay-aarch64-apple-darwin.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
-        "aarch64-unknown-linux-gnu"
+        "aarch64-apple-darwin"
       ],
       "assets": [
         {
@@ -71,20 +71,20 @@ expression: self.payload
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-aarch64-unknown-linux-gnu.tar.xz.sha256"
+      "checksum": "axolotlsay-aarch64-apple-darwin.tar.xz.sha256"
     },
-    "axolotlsay-aarch64-unknown-linux-gnu.tar.xz.sha256": {
-      "name": "axolotlsay-aarch64-unknown-linux-gnu.tar.xz.sha256",
+    "axolotlsay-aarch64-apple-darwin.tar.xz.sha256": {
+      "name": "axolotlsay-aarch64-apple-darwin.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
-        "aarch64-unknown-linux-gnu"
+        "aarch64-apple-darwin"
       ]
     },
-    "axolotlsay-aarch64-unknown-linux-musl.tar.xz": {
-      "name": "axolotlsay-aarch64-unknown-linux-musl.tar.xz",
+    "axolotlsay-x86_64-apple-darwin.tar.xz": {
+      "name": "axolotlsay-x86_64-apple-darwin.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
-        "aarch64-unknown-linux-musl"
+        "x86_64-apple-darwin"
       ],
       "assets": [
         {
@@ -113,13 +113,55 @@ expression: self.payload
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-aarch64-unknown-linux-musl.tar.xz.sha256"
+      "checksum": "axolotlsay-x86_64-apple-darwin.tar.xz.sha256"
     },
-    "axolotlsay-aarch64-unknown-linux-musl.tar.xz.sha256": {
-      "name": "axolotlsay-aarch64-unknown-linux-musl.tar.xz.sha256",
+    "axolotlsay-x86_64-apple-darwin.tar.xz.sha256": {
+      "name": "axolotlsay-x86_64-apple-darwin.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
-        "aarch64-unknown-linux-musl"
+        "x86_64-apple-darwin"
+      ]
+    },
+    "axolotlsay-x86_64-pc-windows-msvc.zip": {
+      "name": "axolotlsay-x86_64-pc-windows-msvc.zip",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-pc-windows-msvc.zip.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-msvc.zip.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-msvc.zip.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
       ]
     },
     "axolotlsay-x86_64-unknown-linux-gnu.tar.xz": {
@@ -164,48 +206,6 @@ expression: self.payload
         "x86_64-unknown-linux-gnu"
       ]
     },
-    "axolotlsay-x86_64-unknown-linux-musl.tar.xz": {
-      "name": "axolotlsay-x86_64-unknown-linux-musl.tar.xz",
-      "kind": "executable-zip",
-      "target_triples": [
-        "x86_64-unknown-linux-musl"
-      ],
-      "assets": [
-        {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
-          "kind": "license"
-        },
-        {
-          "name": "README.md",
-          "path": "README.md",
-          "kind": "readme"
-        },
-        {
-          "name": "axolotlsay",
-          "path": "axolotlsay",
-          "kind": "executable"
-        }
-      ],
-      "checksum": "axolotlsay-x86_64-unknown-linux-musl.tar.xz.sha256"
-    },
-    "axolotlsay-x86_64-unknown-linux-musl.tar.xz.sha256": {
-      "name": "axolotlsay-x86_64-unknown-linux-musl.tar.xz.sha256",
-      "kind": "checksum",
-      "target_triples": [
-        "x86_64-unknown-linux-musl"
-      ]
-    },
     "source.tar.gz": {
       "name": "source.tar.gz",
       "kind": "source-tarball",
@@ -223,37 +223,35 @@ expression: self.payload
         "include": [
           {
             "targets": [
-              "aarch64-unknown-linux-gnu"
+              "aarch64-apple-darwin"
             ],
-            "runner": "buildjet-8vcpu-ubuntu-2204-arm",
+            "runner": "macos-11",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu"
+            "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
           },
           {
             "targets": [
-              "aarch64-unknown-linux-musl"
+              "x86_64-apple-darwin"
             ],
-            "runner": "buildjet-8vcpu-ubuntu-2204-arm",
+            "runner": "macos-11",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-musl",
-            "packages_install": "sudo apt-get install musl-tools"
+            "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
+          },
+          {
+            "targets": [
+              "x86_64-pc-windows-msvc"
+            ],
+            "runner": "windows-2019",
+            "install_dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex",
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
           },
           {
             "targets": [
               "x86_64-unknown-linux-gnu"
             ],
-            "runner": "buildjet-8vcpu-ubuntu-2204",
+            "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
-          },
-          {
-            "targets": [
-              "x86_64-unknown-linux-musl"
-            ],
-            "runner": "buildjet-8vcpu-ubuntu-2204",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
-            "packages_install": "sudo apt-get install musl-tools"
           }
         ]
       },
@@ -346,77 +344,10 @@ jobs:
           name: artifacts
           path: dist-manifest.json
 
-  # Build and packages all the platform-specific things
-  build-local-artifacts:
-    name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
-    # Let the initial task tell us to not run (currently very blunt)
-    needs:
-      - plan
-    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
-    strategy:
-      fail-fast: false
-      # Target platforms/runners are computed by cargo-dist in create-release.
-      # Each member of the matrix has the following arguments:
-      #
-      # - runner: the github runner
-      # - dist-args: cli flags to pass to cargo dist
-      # - install-dist: expression to run to install cargo-dist on the runner
-      #
-      # Typically there will be:
-      # - 1 "global" task that builds universal installers
-      # - N "local" tasks that build each platform's binaries and platform-specific installers
-      matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix }}
-    runs-on: ${{ matrix.runner }}
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: swatinem/rust-cache@v2
-      - name: Install cargo-dist
-        run: ${{ matrix.install_dist }}
-      # Get the dist-manifest
-      - name: Fetch local artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: artifacts
-          path: target/distrib/
-      - name: Install dependencies
-        run: |
-          ${{ matrix.packages_install }}
-      - name: Build artifacts
-        run: |
-          # Actually do builds and make zips and whatnot
-          cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-          echo "cargo dist ran successfully"
-      - id: cargo-dist
-        name: Post-build
-        # We force bash here just because github makes it really hard to get values up
-        # to "real" actions without writing to env-vars, and writing to env-vars has
-        # inconsistent syntax between shell and powershell.
-        shell: bash
-        run: |
-          # Parse out what we just built and upload it to scratch storage
-          echo "paths<<EOF" >> "$GITHUB_OUTPUT"
-          jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-
-          cp dist-manifest.json "$BUILD_MANIFEST_NAME"
-      - name: "Upload artifacts"
-        uses: actions/upload-artifact@v3
-        with:
-          name: artifacts
-          path: |
-            ${{ steps.cargo-dist.outputs.paths }}
-            ${{ env.BUILD_MANIFEST_NAME }}
-
   # Build and package all the platform-agnostic(ish) things
   build-global-artifacts:
     needs:
       - plan
-      - build-local-artifacts
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -456,10 +387,9 @@ jobs:
   host:
     needs:
       - plan
-      - build-local-artifacts
       - build-global-artifacts
     # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-20.04"

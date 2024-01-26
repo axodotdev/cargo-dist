@@ -113,10 +113,11 @@ jobs:
       - id: plan
         run: |
           cargo dist
-          {{%- if dispatch_releases %}} ${{ inputs.tag && (inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag) || format('host --steps=create', inputs.tag))
-          {{%- else %}} ${{ !github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)
+          {{%- if dispatch_releases %}} ${{ (inputs.tag && inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag))
+          {{%- else %}} ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name))
           {{%- endif %}}
-          {{{- " || (github.event.pull_request.head.repo.fork && 'plan' || 'host --steps=check') }} --output-format=json > dist-manifest.json" | safe }}}
+          {{%- if "axodotdev" in hosting_providers %}} || (env.AXO_RELEASES_TOKEN && 'host --steps=check') {{%- endif %}}
+          {{{- " || 'plan' }} --output-format=json > dist-manifest.json" | safe }}}
           echo "cargo dist ran successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
