@@ -215,6 +215,8 @@ pub struct DistGraph {
     pub extra_artifacts: Vec<ExtraArtifact>,
     /// Custom GitHub runners, mapped by triple target
     pub github_custom_runners: HashMap<String, String>,
+    /// LIES ALL LIES
+    pub local_builds_are_lies: bool,
 }
 
 /// Info about artifacts should be hosted
@@ -780,6 +782,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let build_local_artifacts = build_local_artifacts.unwrap_or(true);
         let dispatch_releases = dispatch_releases.unwrap_or(false);
         let msvc_crt_static = msvc_crt_static.unwrap_or(true);
+        let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
 
         let mut packages_with_mismatched_features = vec![];
@@ -941,6 +944,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
                 tools,
+                local_builds_are_lies,
                 templates,
                 ci_style: vec![],
                 local_build_steps: vec![],
@@ -1256,7 +1260,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .stderr(std::process::Stdio::piped())
             .check(false)
             .status();
-        let is_git_repo = if let Ok(status) = status {
+        // We'll be stubbing the actual generation in this case
+        let is_git_repo = if self.inner.local_builds_are_lies {
+            true
+        } else if let Ok(status) = status {
             status.success()
         } else {
             false
@@ -1269,7 +1276,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .stderr(std::process::Stdio::piped())
             .check(false)
             .status();
-        let has_head = if let Ok(status) = status {
+        let has_head = if self.inner.local_builds_are_lies {
+            true
+        } else if let Ok(status) = status {
             status.success()
         } else {
             false
@@ -2567,6 +2576,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             ArtifactMode::Global => false,
             ArtifactMode::Host => true,
             ArtifactMode::All => true,
+            ArtifactMode::Lies => true,
         }
     }
     pub(crate) fn global_artifacts_enabled(&self) -> bool {
@@ -2575,6 +2585,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             ArtifactMode::Global => true,
             ArtifactMode::Host => true,
             ArtifactMode::All => true,
+            ArtifactMode::Lies => true,
         }
     }
 }

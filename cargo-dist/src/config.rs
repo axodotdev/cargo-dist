@@ -584,7 +584,7 @@ pub struct Config {
 }
 
 /// How we should select the artifacts to build
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ArtifactMode {
     /// Build target-specific artifacts like archives, symbols, msi installers
     Local,
@@ -594,6 +594,8 @@ pub enum ArtifactMode {
     Host,
     /// Build all the artifacts; only really appropriate for `cargo-dist manifest`
     All,
+    /// Fake all the artifacts; useful for testing/mocking/staging
+    Lies,
 }
 
 /// The style of CI we should generate

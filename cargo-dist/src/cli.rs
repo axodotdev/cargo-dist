@@ -218,6 +218,8 @@ pub enum ArtifactMode {
     Host,
     /// Build all the artifacts; useful for `cargo dist manifest`
     All,
+    /// Fake all the artifacts; useful for testing/mocking/staging
+    Lies,
 }
 
 impl ArtifactMode {
@@ -228,6 +230,7 @@ impl ArtifactMode {
             ArtifactMode::Global => cargo_dist::config::ArtifactMode::Global,
             ArtifactMode::Host => cargo_dist::config::ArtifactMode::Host,
             ArtifactMode::All => cargo_dist::config::ArtifactMode::All,
+            ArtifactMode::Lies => cargo_dist::config::ArtifactMode::Lies,
         }
     }
 }

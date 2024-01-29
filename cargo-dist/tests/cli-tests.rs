@@ -82,7 +82,7 @@ fn test_manifest() {
     let output = Command::new(BIN)
         .arg("dist")
         .arg("manifest")
-        .arg("--artifacts=all")
+        .arg("--artifacts=lies")
         .arg("--no-local-paths")
         .arg("--allow-dirty")
         .arg("--output-format=json")
