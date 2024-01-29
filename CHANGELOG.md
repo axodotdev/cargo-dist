@@ -3,6 +3,19 @@
 Nothing Yet!
 
 
+# Version 0.8.2 (2024-01-29)
+
+This release contains a new testing feature: `--artifacts=lies`. This allows generating fake artifacts during builds instead of real artifacts, allowing for dry-run tests to proceed without the need for real cross-compilation.
+
+## Features
+
+### --artifacts=lies
+
+Calling `cargo dist build --artifacts=lies` now produces stubbed out artifacts for native builds and certain installers, such as the MSI installer and the source tarball. This allows a fake build which nonetheless contains a full set of real artifacts to be run on any machine, including a a local machine without cargo cross-compilation support. This is especially useful for staging releases to test axo Releases.
+
+* @mistydemeo + @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/741)
+
+
 # Version 0.8.1 (2024-01-26)
 
 Just a small release with a pile of bugfixes!
