@@ -123,6 +123,7 @@ Possible values:
 - global: Build unique artifacts like curl-sh installers and npm packages
 - host:   Fuzzily build "as much as possible" for the host system
 - all:    Build all the artifacts; useful for `cargo dist manifest`
+- lies:   Fake all the artifacts; useful for testing/mocking/staging
 
 #### `-p, --print <PRINT>`
 What extra information to print, if anything. Currently supported:
@@ -265,6 +266,7 @@ Possible values:
 - global: Build unique artifacts like curl-sh installers and npm packages
 - host:   Fuzzily build "as much as possible" for the host system
 - all:    Build all the artifacts; useful for `cargo dist manifest`
+- lies:   Fake all the artifacts; useful for testing/mocking/staging
 
 #### `-p, --print <PRINT>`
 What extra information to print, if anything. Currently supported:

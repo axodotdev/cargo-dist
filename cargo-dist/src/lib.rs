@@ -16,7 +16,7 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use backend::{
     ci::CiInfo,
-    installer::{self, InstallerImpl},
+    installer::{self, msi::MsiInstallerInfo, InstallerImpl},
 };
 use camino::Utf8Path;
 use cargo_build::{build_cargo_target, rustup_toolchain};
@@ -75,7 +75,11 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
 
     // Run all the local build steps first
     for step in &dist.local_build_steps {
-        run_build_step(&dist, step, &manifest)?;
+        if dist.local_builds_are_lies {
+            build_fake(&dist, step, &manifest)?;
+        } else {
+            run_build_step(&dist, step, &manifest)?;
+        }
     }
 
     // Compute linkage data now that we're done all builds
@@ -83,7 +87,11 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
 
     // Next the global steps
     for step in &dist.global_build_steps {
-        run_build_step(&dist, step, &manifest)?;
+        if dist.local_builds_are_lies {
+            build_fake(&dist, step, &manifest)?;
+        } else {
+            run_build_step(&dist, step, &manifest)?;
+        }
     }
 
     Ok(manifest)
@@ -142,6 +150,106 @@ fn run_build_step(
         )?),
         BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target),
     }
+}
+
+fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifest) -> Result<()> {
+    match target {
+        // These two are the meat: don't actually run these at all, just
+        // fake them out
+        BuildStep::Generic(target) => build_fake_generic_artifacts(dist_graph, target),
+        BuildStep::Cargo(target) => build_fake_cargo_artifacts(dist_graph, target),
+        // Never run rustup
+        BuildStep::Rustup(_) => Ok(()),
+        // Copying files is fairly safe
+        BuildStep::CopyFile(CopyStep {
+            src_path,
+            dest_path,
+        }) => copy_file(src_path, dest_path),
+        BuildStep::CopyDir(CopyStep {
+            src_path,
+            dest_path,
+        }) => copy_dir(src_path, dest_path),
+        BuildStep::CopyFileOrDir(CopyStep {
+            src_path,
+            dest_path,
+        }) => copy_file_or_dir(src_path, dest_path),
+        // The remainder of these are mostly safe to run as fake steps
+        BuildStep::Zip(ZipDirStep {
+            src_path,
+            dest_path,
+            zip_style,
+            with_root,
+        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref()),
+        BuildStep::GenerateInstaller(installer) => match installer {
+            // MSI, unlike other installers, isn't safe to generate on any platform
+            InstallerImpl::Msi(msi) => generate_fake_msi(dist_graph, msi, manifest),
+            _ => generate_installer(dist_graph, installer, manifest),
+        },
+        BuildStep::Checksum(ChecksumImpl {
+            checksum,
+            src_path,
+            dest_path,
+        }) => Ok(generate_and_write_checksum(checksum, src_path, dest_path)?),
+        // Except source tarballs, which are definitely not okay
+        // We mock these because it requires:
+        // 1. git to be installed;
+        // 2. the app to be a git checkout
+        // The latter case is true during CI, but might not be in other
+        // circumstances. Notably, this fixes our tests during nix's builds,
+        // which runs in an unpacked tarball rather than a git checkout.
+        BuildStep::GenerateSourceTarball(SourceTarballStep {
+            committish,
+            prefix,
+            target,
+        }) => Ok(generate_fake_source_tarball(
+            dist_graph, committish, prefix, target,
+        )?),
+        // Or extra artifacts, which may involve real builds
+        BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target),
+    }
+}
+
+fn build_fake_cargo_artifacts(dist: &DistGraph, target: &CargoBuildStep) -> Result<()> {
+    generate_fake_artifacts(dist, &target.expected_binaries)
+}
+
+fn build_fake_generic_artifacts(dist: &DistGraph, target: &GenericBuildStep) -> Result<()> {
+    generate_fake_artifacts(dist, &target.expected_binaries)
+}
+
+fn run_fake_extra_artifacts_build(dist: &DistGraph, target: &ExtraBuildStep) -> Result<()> {
+    for artifact in &target.expected_artifacts {
+        let path = dist.dist_dir.join(artifact);
+        LocalAsset::write_new_all("", &path)?;
+    }
+
+    Ok(())
+}
+
+fn generate_fake_msi(
+    _dist: &DistGraph,
+    msi: &MsiInstallerInfo,
+    _manifest: &DistManifest,
+) -> Result<()> {
+    LocalAsset::write_new_all("", &msi.file_path)?;
+
+    Ok(())
+}
+
+fn generate_fake_artifacts(dist: &DistGraph, binaries: &[BinaryIdx]) -> Result<()> {
+    for idx in binaries {
+        let binary = dist.binary(*idx);
+
+        for exe_dest in &binary.copy_exe_to {
+            LocalAsset::write_new_all("", exe_dest)?;
+        }
+
+        for sym_dest in &binary.copy_symbols_to {
+            LocalAsset::write_new_all("", sym_dest)?;
+        }
+    }
+
+    Ok(())
 }
 
 /// Generate a checksum for the src_path to dest_path
@@ -210,6 +318,17 @@ fn generate_source_tarball(
         .arg("--output")
         .arg(target)
         .run()?;
+
+    Ok(())
+}
+
+fn generate_fake_source_tarball(
+    _graph: &DistGraph,
+    _committish: &str,
+    _prefix: &str,
+    target: &Utf8Path,
+) -> DistResult<()> {
+    LocalAsset::write_new_all("", target)?;
 
     Ok(())
 }
