@@ -2466,9 +2466,9 @@ jobs:
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-dist-manifest
           path: dist-manifest.json
 
   # Build and packages all the platform-specific things
@@ -2504,10 +2504,11 @@ jobs:
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: target/distrib/
+          merge-multiple: true
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
@@ -2530,9 +2531,9 @@ jobs:
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-build-local-${{ join(matrix.targets, '_') }}
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
@@ -2554,10 +2555,11 @@ jobs:
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: target/distrib/
+          merge-multiple: true
       - id: cargo-dist
         shell: bash
         run: |
@@ -2571,9 +2573,9 @@ jobs:
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-build-global
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
@@ -2608,10 +2610,11 @@ jobs:
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
       # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: target/distrib/
+          merge-multiple: true
       # Upload files to Axo Releases and create the Releases
       # This is a harmless no-op for Github Releases, hosting for that happens in "announce"
       - id: host
@@ -2622,10 +2625,12 @@ jobs:
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          # Overwrite the previous copy
+          name: artifacts-dist-manifest
           path: dist-manifest.json
+          overwrite: true
 
   # Create an Announcement for all the Axo Releases, updating the "latest" release
   # Create a Github Release while uploading all files to it
@@ -2648,18 +2653,20 @@ jobs:
       - name: Install cargo-dist
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
       - name: Fetch Axo Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: target/distrib/
+          merge-multiple: true
       - name: Announce Axo Releases
         run: |
           cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
       - name: "Download Github Artifacts"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: artifacts
+          merge-multiple: true
       - name: Cleanup
         run: |
           # Remove the granular manifests
