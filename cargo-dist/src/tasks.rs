@@ -56,6 +56,7 @@ use camino::Utf8PathBuf;
 use cargo_dist_schema::DistManifest;
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
+use serde::Serialize;
 use tracing::{info, warn};
 
 use crate::announce::{self, AnnouncementTag};
@@ -1671,6 +1672,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 artifacts,
                 hint,
                 desc,
+                receipt: InstallReceipt::from_metadata(&self.inner, release),
             })),
             is_global: true,
         };
@@ -1921,6 +1923,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     artifacts,
                     hint,
                     desc,
+                    receipt: None,
                 },
             })),
             is_global: true,
@@ -1999,6 +2002,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 artifacts,
                 hint,
                 desc,
+                receipt: InstallReceipt::from_metadata(&self.inner, release),
             })),
             is_global: true,
         };
@@ -2180,6 +2184,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     artifacts,
                     hint,
                     desc,
+                    receipt: None,
                 },
             })),
             is_global: true,
@@ -2781,4 +2786,102 @@ fn find_tool(name: &str, test_flag: &str) -> Option<Tool> {
         cmd: name.to_owned(),
         version: version.to_owned(),
     })
+}
+
+/// Represents the source for the canonical form of this app's releases
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ReleaseSourceType {
+    /// GitHub Releases
+    GitHub,
+    /// Axo releases
+    Axo,
+}
+
+/// Where to look up releases for this app
+#[derive(Clone, Debug, Serialize)]
+pub struct ReleaseSource {
+    /// Which type of remote resource to look up
+    pub release_type: ReleaseSourceType,
+    /// The owner, from the owner/name format
+    pub owner: String,
+    /// The name, from the owner/name format
+    pub name: String,
+    /// The app's name
+    pub app_name: String,
+}
+
+/// The software which installed this receipt
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ProviderSource {
+    /// cargo-dist
+    CargoDist,
+}
+
+/// Information about the source of this receipt
+#[derive(Clone, Debug, Serialize)]
+pub struct Provider {
+    /// The software this receipt was installed via
+    pub source: ProviderSource,
+    /// The version of the above software
+    pub version: String,
+}
+
+/// Struct representing an install receipt
+#[derive(Clone, Debug, Serialize)]
+pub struct InstallReceipt {
+    /// The location on disk where this app was installed
+    pub install_prefix: Utf8PathBuf,
+    /// A list of all binaries installed by this app
+    pub binaries: Vec<String>,
+    /// Information about where to request information on new releases
+    pub source: ReleaseSource,
+    /// The version that was installed
+    pub version: String,
+    /// The software which installed this receipt
+    pub provider: Provider,
+}
+
+impl InstallReceipt {
+    /// Produces an install receipt for the given DistGraph.
+    pub fn from_metadata(manifest: &DistGraph, release: &Release) -> Option<InstallReceipt> {
+        let hosting = if let Some(hosting) = &manifest.hosting {
+            hosting
+        } else {
+            return None;
+        };
+        let source_type = if hosting.hosts.contains(&HostingStyle::Axodotdev) {
+            ReleaseSourceType::Axo
+        } else {
+            ReleaseSourceType::GitHub
+        };
+
+        let install_prefix = match &release.install_path {
+            // The actual value of $CARGO_HOME isn't known until inside the
+            // install script, so we write out a temporary value that the
+            // install script will replace with the real one later.
+            InstallPathStrategy::CargoHome => "AXO_CARGO_HOME".to_owned(),
+            InstallPathStrategy::HomeSubdir { subdir } => format!("$HOME/{}", subdir),
+            InstallPathStrategy::EnvSubdir { env_key, subdir } => {
+                format!("${}/{}", env_key, subdir)
+            }
+        };
+
+        Some(InstallReceipt {
+            install_prefix: Utf8PathBuf::from(install_prefix),
+            binaries: vec!["CARGO_DIST_BINS".to_owned()],
+            version: release.version.to_string(),
+            source: ReleaseSource {
+                release_type: source_type,
+                owner: hosting.owner.to_owned(),
+                name: hosting.project.to_owned(),
+                app_name: release.app_name.to_owned(),
+            },
+            provider: Provider {
+                source: ProviderSource::CargoDist,
+                version: env!("CARGO_PKG_VERSION").to_owned(),
+            },
+        })
+    }
 }
