@@ -117,15 +117,15 @@ jobs:
           {{%- else %}} ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name))
           {{%- endif %}}
           {{%- if "axodotdev" in hosting_providers %}} || (env.AXO_RELEASES_TOKEN && 'host --steps=check') {{%- endif %}}
-          {{{- " || 'plan' }} --output-format=json > dist-manifest.json" | safe }}}
+          {{{- " || 'plan' }} --output-format=json > plan-dist-manifest.json" | safe }}}
           echo "cargo dist ran successfully"
-          cat dist-manifest.json
-          echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          cat plan-dist-manifest.json
+          echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts-dist-manifest
-          path: dist-manifest.json
+          name: artifacts-plan-dist-manifest
+          path: plan-dist-manifest.json
 
 {{%- for job in plan_jobs %}}
 
@@ -435,7 +435,6 @@ jobs:
           # Overwrite the previous copy
           name: artifacts-dist-manifest
           path: dist-manifest.json
-          overwrite: true
 
 
 {{%- for job in host_jobs %}}
