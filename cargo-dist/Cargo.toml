@@ -54,7 +54,7 @@ dialoguer = "0.11.0"
 sha2 = "0.10.6"
 minijinja = { version = "1.0.12", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.3"
-itertools = "0.12.0"
+itertools = "0.12.1"
 cargo-wix = "0.3.8"
 uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
