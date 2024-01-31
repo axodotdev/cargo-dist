@@ -264,8 +264,10 @@ fn distribute_targets_to_runners_split<'a>(
 type GithubRunner = String;
 /// The Github Runner to use for Linux
 const GITHUB_LINUX_RUNNER: &str = "ubuntu-20.04";
-/// The Github Runner to use for macos
-const GITHUB_MACOS_RUNNER: &str = "macos-11";
+/// The Github Runner to use for Intel macos
+const GITHUB_MACOS_INTEL_RUNNER: &str = "macos-11";
+/// The Github Runner to use for Apple Silicon macos
+const GITHUB_MACOS_ARM64_RUNNER: &str = "macos-14";
 /// The Github Runner to use for windows
 const GITHUB_WINDOWS_RUNNER: &str = "windows-2019";
 
@@ -283,8 +285,10 @@ fn github_runner_for_target(
     // recent. This helps with portability!
     if target.contains("linux") {
         Some(GITHUB_LINUX_RUNNER.to_owned())
-    } else if target.contains("apple") {
-        Some(GITHUB_MACOS_RUNNER.to_owned())
+    } else if target.contains("x86_64-apple") {
+        Some(GITHUB_MACOS_INTEL_RUNNER.to_owned())
+    } else if target.contains("aarch64-apple") {
+        Some(GITHUB_MACOS_ARM64_RUNNER.to_owned())
     } else if target.contains("windows") {
         Some(GITHUB_WINDOWS_RUNNER.to_owned())
     } else {
