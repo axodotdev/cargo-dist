@@ -3,6 +3,32 @@
 Nothing Yet!
 
 
+# Version 0.9.0 (2024-02-01)
+
+This release contains several new features for users of GitHub Actions. In particular, we've updated the runners we use by default and we now use the latest versions of the upload-artifact and download-artifact GitHub actions.
+
+## Features
+
+### Newer macOS runners for GitHub Actions
+
+In preparation for the retirement of the `macos-11` runners, we've upgraded to the slightly newer `macos-12`. We still prefer running on these older runners, and not the newer `macos-13` or `macos-14` options, for broader compatibility across OS versions.
+
+Users who wish to take advantage of GitHub's [new Apple Silicon runners](https://github.blog/changelog/2024-01-30-github-actions-introducing-the-new-m1-macos-runner-available-to-open-source/), which entered public beta on January 30, should consider setting up custom runners in their `Cargo.toml`:
+
+```toml
+[workspace.metadata.dist.github-custom-runners]
+aarch64-apple-darwin = "macos-14"
+```
+
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/754)
+
+### Updated to the latest upload-artifact/download-artifact GitHub actions
+
+We now use the latest (v4) versions of the upload-artifact and download-artifact GitHub actions. There's no need to change anything in your app, and most users won't see any changes from this. However, users with custom jobs which read from or write to artifacts will need to update their jobs to account for the new structure.
+
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/755)
+
+
 # Version 0.8.2 (2024-01-29)
 
 This release contains a new testing feature: `--artifacts=lies`. This allows generating fake artifacts during builds instead of real artifacts, allowing for dry-run tests to proceed without the need for real cross-compilation.
