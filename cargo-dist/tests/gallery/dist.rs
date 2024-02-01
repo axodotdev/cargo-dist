@@ -642,7 +642,7 @@ pub fn snapshot_settings_with_gallery_filter() -> insta::Settings {
         r"cargo-dist/releases/download/v\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?/",
         "cargo-dist/releases/download/vSOME_VERSION/",
     );
-    settings.add_filter(r#""version":"[a-zA-Z\.0-9]*""#, r#""version":"CENSORED""#);
+    settings.add_filter(r#""version":"[a-zA-Z\.0-9\-]*""#, r#""version":"CENSORED""#);
     settings
 }
 
