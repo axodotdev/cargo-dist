@@ -117,15 +117,15 @@ jobs:
           {{%- else %}} ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name))
           {{%- endif %}}
           {{%- if "axodotdev" in hosting_providers %}} || (env.AXO_RELEASES_TOKEN && 'host --steps=check') {{%- endif %}}
-          {{{- " || 'plan' }} --output-format=json > dist-manifest.json" | safe }}}
+          {{{- " || 'plan' }} --output-format=json > plan-dist-manifest.json" | safe }}}
           echo "cargo dist ran successfully"
-          cat dist-manifest.json
-          echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          cat plan-dist-manifest.json
+          echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
-          path: dist-manifest.json
+          name: artifacts-plan-dist-manifest
+          path: plan-dist-manifest.json
 
 {{%- for job in plan_jobs %}}
 
@@ -178,10 +178,11 @@ jobs:
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: target/distrib/
+          merge-multiple: true
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
@@ -204,9 +205,9 @@ jobs:
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-build-local-${{ join(matrix.targets, '_') }}
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
@@ -255,10 +256,11 @@ jobs:
         run: {{{ global_task.install_dist }}}
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: target/distrib/
+          merge-multiple: true
       - id: cargo-dist
         shell: bash
         run: |
@@ -272,9 +274,9 @@ jobs:
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-build-global
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
@@ -314,9 +316,11 @@ jobs:
     steps:
       # Get all the artifacts for the signing tasks to use
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          # At the moment we hardcode this, as this is the only Windows
+          # triple we support.
+          name: artifacts-build-local-x86_64-pc-windows-msvc
           path: target/distrib/
       # Only try to sign files that the tool can handle
       - name: Select Signable Artifacts
@@ -349,10 +353,11 @@ jobs:
           popd
       # Upload the result, overwriting old files
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-build-local-x86_64-pc-windows-msvc
           path: ${{ env.SIGN_DIR_OUT }}
+          overwrite: true
 {{%- endif %}}
 
 {{%- if "axodotdev" in hosting_providers %}}
@@ -406,10 +411,11 @@ jobs:
         run: {{{ global_task.install_dist }}}
       # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: target/distrib/
+          merge-multiple: true
     {{%- if "axodotdev" in hosting_providers %}}
       # Upload files to Axo Releases and create the Releases
     {{%- endif %}}
@@ -424,9 +430,10 @@ jobs:
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          # Overwrite the previous copy
+          name: artifacts-dist-manifest
           path: dist-manifest.json
 
 
@@ -474,10 +481,11 @@ jobs:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: Formula/
+          merge-multiple: true
       - name: Commit formula files
         run: |
           git config --global user.name "${GITHUB_USER}"
@@ -561,20 +569,22 @@ jobs:
       - name: Install cargo-dist
         run: {{{ global_task.install_dist }}}
       - name: Fetch Axo Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: target/distrib/
+          merge-multiple: true
       - name: Announce Axo Releases
         run: |
           cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
     {{%- endif %}}
     {{%- if "github" in hosting_providers %}}
       - name: "Download Github Artifacts"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          pattern: artifacts-*
           path: artifacts
+          merge-multiple: true
       - name: Cleanup
         run: |
           # Remove the granular manifests
