@@ -346,6 +346,21 @@ If you use this you *probably* want to set it on `[package.metadata.dist]` and
 not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
 
 
+### github-custom-runners
+
+> since 0.6.0
+
+Example:
+
+```toml
+[workspace.metadata.dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
+aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
+```
+
+Allows specifying which runner to use for a target. The keys within this table are target triples in the same format as the ["targets"](#targets) setting. Any targets not specified in this table will use the defaults.
+
+
 ### global-artifacts-jobs
 
 > since 0.7.0
