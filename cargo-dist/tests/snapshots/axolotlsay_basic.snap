@@ -2342,7 +2342,7 @@ maybeInstall(true).then(run);
             "targets": [
               "aarch64-apple-darwin"
             ],
-            "runner": "macos-14",
+            "runner": "macos-12",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
           },

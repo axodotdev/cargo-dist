@@ -267,7 +267,7 @@ const GITHUB_LINUX_RUNNER: &str = "ubuntu-20.04";
 /// The Github Runner to use for Intel macos
 const GITHUB_MACOS_INTEL_RUNNER: &str = "macos-12";
 /// The Github Runner to use for Apple Silicon macos
-const GITHUB_MACOS_ARM64_RUNNER: &str = "macos-14";
+const GITHUB_MACOS_ARM64_RUNNER: &str = "macos-12";
 /// The Github Runner to use for windows
 const GITHUB_WINDOWS_RUNNER: &str = "windows-2019";
 

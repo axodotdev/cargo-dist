@@ -87,7 +87,7 @@ By default, cargo-dist uses the following runners:
 
 * Linux (x86_64): `ubuntu-20.04`
 * macOS (x86_64): `macos-12`
-* macOS (Apple Silicon): `macos-14`
+* macOS (Apple Silicon): `macos-12`
 * Windows (x86_64): `windows-2019`
 
 It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the [`github-custom-runners`](config-github-custom-runners) configuration setting in `Cargo.toml`. Here's an example which adds support for Linux (aarch64) using runners from [Buildjet](https://buildjet.com/for-github-actions):
@@ -98,7 +98,12 @@ aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
 aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
 ```
 
-In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to opt into cross-compiling for Apple Silicon from an Intel-based runner.
+In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to opt into building for Apple Silicon from a native runner by using the `macos-14` runner. Here's an example which uses `macos-14` for native Apple Silicon builds:
+
+```toml
+[workspace.metadata.dist.github-custom-runners]
+aarch64-apple-darwin = "macos-14"
+```
 
 [config-dependencies]: ../reference/config.md#dependencies
 [config-plan]: ../reference/config.md#plan-jobs
