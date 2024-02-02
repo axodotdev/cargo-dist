@@ -105,9 +105,9 @@ In addition to adding support for new targets, some users may find it useful to 
 [config-build-local]: ../reference/config.md#build-local-artifacts-jobs
 [config-build-global]: ../reference/config.md#build-global-artifacts-jobs
 [config-github-custom-runners]: ../reference/config.md#github-custom-runners
-[host-jobs]: ../reference/config.md#host-jobs
-[publish-jobs]: ../reference/config.md#publish-jobs
-[post-announce-jobs]: ../reference/config.md#post-announce-jobs
+[config-host-jobs]: ../reference/config.md#host-jobs
+[config-publish-jobs]: ../reference/config.md#publish-jobs
+[config-post-announce]: ../reference/config.md#post-announce-jobs
 
 [schema]: ../reference/schema.md
 
