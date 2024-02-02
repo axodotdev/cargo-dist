@@ -79,10 +79,32 @@ publish-jobs = ["./publish-greeter"]
 
 Running `cargo-dist init` for your tool will update your GitHub Actions configuration to make use of the new reusable workflow during the publish step.
 
+## Custom runners
+
+(since 0.6.0)
+
+By default, cargo-dist uses the following runners:
+
+* Linux (x86_64): `ubuntu-20.04`
+* macOS (x86_64): `macos-11`
+* macOS (Apple Silicon): `macos-14`
+* Windows (x86_64): `windows-2019`
+
+It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the [`github-custom-runners`](config-github-custom-runners) configuration setting in `Cargo.toml`. Here's an example which adds support for Linux (aarch64) using runners from [Buildjet](https://buildjet.com/for-github-actions):
+
+```toml
+[workspace.metadata.dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
+aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
+```
+
+In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to opt into cross-compiling for Apple Silicon from an Intel-based runner.
+
 [config-dependencies]: ../reference/config.md#dependencies
 [config-plan]: ../reference/config.md#plan-jobs
 [config-build-local]: ../reference/config.md#build-local-artifacts-jobs
 [config-build-global]: ../reference/config.md#build-global-artifacts-jobs
+[config-github-custom-runners]: ../reference/config.md#github-custom-runners
 [host-jobs]: ../reference/config.md#host-jobs
 [publish-jobs]: ../reference/config.md#publish-jobs
 [post-announce-jobs]: ../reference/config.md#post-announce-jobs
