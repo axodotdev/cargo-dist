@@ -86,7 +86,7 @@ Running `cargo-dist init` for your tool will update your GitHub Actions configur
 By default, cargo-dist uses the following runners:
 
 * Linux (x86_64): `ubuntu-20.04`
-* macOS (x86_64): `macos-11`
+* macOS (x86_64): `macos-12`
 * macOS (Apple Silicon): `macos-14`
 * Windows (x86_64): `windows-2019`
 
