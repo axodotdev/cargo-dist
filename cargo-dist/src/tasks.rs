@@ -220,6 +220,8 @@ pub struct DistGraph {
     pub local_builds_are_lies: bool,
     /// Prefix git tags must include to be picked up (also renames release.yml)
     pub tag_namespace: Option<String>,
+    /// Whether to install updaters alongside with binaries
+    pub install_updater: bool,
 }
 
 /// Info about artifacts should be hosted
@@ -777,6 +779,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             hosting,
             extra_artifacts,
             github_custom_runners: _,
+            install_updater,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -981,6 +984,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .github_custom_runners
                     .clone()
                     .unwrap_or_default(),
+                install_updater: install_updater.unwrap_or_default(),
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
