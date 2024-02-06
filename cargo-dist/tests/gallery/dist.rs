@@ -382,6 +382,7 @@ impl DistResult {
                 tempdir.join(".bash_profile"),
                 tempdir.join(".zshrc"),
             ];
+            let receipt_file = tempdir.join(format!(".config/{app_name}/{app_name}-receipt.json"));
             let expected_bin_dir = Utf8PathBuf::from(expected_bin_dir);
             let bin_dir = tempdir.join(&expected_bin_dir);
             let env_dir = if expected_bin_dir
@@ -438,6 +439,52 @@ impl DistResult {
                     bin_path.as_str(),
                     "bin path wasn't right"
                 );
+            }
+
+            // Check that the install receipt works
+            {
+                use serde::Deserialize;
+
+                #[derive(Deserialize)]
+                #[allow(dead_code)]
+                struct InstallReceipt {
+                    binaries: Vec<String>,
+                    install_prefix: String,
+                    provider: InstallReceiptProvider,
+                    source: InstallReceiptSource,
+                    version: String,
+                }
+                #[derive(Deserialize)]
+                #[allow(dead_code)]
+                struct InstallReceiptProvider {
+                    source: String,
+                    version: String,
+                }
+                #[derive(Deserialize)]
+                #[allow(dead_code)]
+                struct InstallReceiptSource {
+                    app_name: String,
+                    name: String,
+                    owner: String,
+                    release_type: String,
+                }
+
+                assert!(receipt_file.exists());
+                let receipt_src =
+                    SourceFile::load_local(receipt_file).expect("couldn't load receipt file");
+                let receipt: InstallReceipt = receipt_src.deserialize_json().unwrap();
+                assert_eq!(receipt.source.app_name, app_name);
+                assert_eq!(
+                    receipt.binaries,
+                    ctx.repo
+                        .bins
+                        .iter()
+                        .map(|s| s.to_owned())
+                        .collect::<Vec<_>>()
+                );
+                let receipt_bin_dir = receipt.install_prefix.trim_end_matches('/').to_owned();
+                let expected_bin_dir = bin_dir.to_string().trim_end_matches('/').to_owned();
+                assert_eq!(receipt_bin_dir, expected_bin_dir);
             }
         }
         Ok(())
