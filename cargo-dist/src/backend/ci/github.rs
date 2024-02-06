@@ -62,6 +62,8 @@ pub struct GithubCiInfo {
     pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// what hosting provider we're using
     pub hosting_providers: Vec<HostingStyle>,
+    /// whether to prefix release.yml and the tag pattern
+    pub tag_namespace: Option<String>,
 }
 
 impl GithubCiInfo {
@@ -81,6 +83,7 @@ impl GithubCiInfo {
         let dispatch_releases = dist.dispatch_releases;
         let create_release = dist.create_release;
         let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
+        let tag_namespace = dist.tag_namespace.clone();
         let mut dependencies = SystemDependencies::default();
 
         // Figure out what builds we need to do
@@ -153,6 +156,7 @@ impl GithubCiInfo {
         }
 
         GithubCiInfo {
+            tag_namespace,
             rust_version,
             install_dist_sh,
             install_dist_ps1,
@@ -178,7 +182,14 @@ impl GithubCiInfo {
 
     fn github_ci_path(&self, dist: &DistGraph) -> camino::Utf8PathBuf {
         let ci_dir = dist.workspace_dir.join(GITHUB_CI_DIR);
-        ci_dir.join(GITHUB_CI_FILE)
+        // If tag-namespace is set, apply the prefix to the filename to emphasize it's
+        // just one of many workflows in this project
+        let prefix = self
+            .tag_namespace
+            .as_deref()
+            .map(|p| format!("{p}-"))
+            .unwrap_or_default();
+        ci_dir.join(format!("{prefix}{GITHUB_CI_FILE}"))
     }
 
     /// Generate the requested configuration and returns it as a string.

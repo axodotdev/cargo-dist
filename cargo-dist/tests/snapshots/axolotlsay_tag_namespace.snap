@@ -10,6 +10,7 @@ expression: self.payload
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.1",
   "announcement_changelog": "```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.zip](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.zip.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
   "system_info": {
     "cargo_version_line": "CENSORED"
   },
@@ -30,13 +31,8 @@ expression: self.payload
         "axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256"
       ],
       "hosting": {
-        "axodotdev": {
-          "package": "axolotlsay",
-          "public_id": "fake-id-do-not-upload",
-          "set_download_url": "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload",
-          "upload_url": null,
-          "release_url": null,
-          "announce_url": null
+        "github": {
+          "artifact_download_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1"
         }
       }
     }
@@ -265,7 +261,7 @@ expression: self.payload
   "linkage": []
 }
 
-================ release.yml ================
+================ owo-release.yml ================
 # Copyright 2022-2023, axodotdev
 # SPDX-License-Identifier: MIT or Apache-2.0
 #
@@ -274,14 +270,17 @@ expression: self.payload
 # * checks for a Git Tag that looks like a release
 # * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
-# * on success, uploads the artifacts to Axo Releases and makes an Announcement
+# * on success, uploads the artifacts to a Github Release
+#
+# Note that the Github Release will be created with a generated
+# title/body based on your changelogs.
 
 name: Release
 
 permissions:
   contents: write
 
-# This task will run whenever you workflow_dispatch with a tag that looks like a version
+# This task will run whenever you push a git tag that looks like a version
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
 # Various formats will be parsed into a VERSION and an optional PACKAGE_NAME, where
 # PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
@@ -303,13 +302,9 @@ permissions:
 # If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: Release Tag
-        required: true
-        default: dry-run
-        type: string
+  push:
+    tags:
+      - 'owo**[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
 
 jobs:
@@ -318,12 +313,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
-      tag: ${{ (inputs.tag != 'dry-run' && inputs.tag) || '' }}
-      tag-flag: ${{ inputs.tag && inputs.tag != 'dry-run' && format('--tag={0}', inputs.tag) || '' }}
-      publishing: ${{ inputs.tag && inputs.tag != 'dry-run' }}
+      tag: ${{ !github.event.pull_request && github.ref_name || '' }}
+      tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
+      publishing: ${{ !github.event.pull_request }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -340,7 +334,7 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist ${{ (inputs.tag && inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag)) || (env.AXO_RELEASES_TOKEN && 'host --steps=check') || 'plan' }} --output-format=json > plan-dist-manifest.json
+          cargo dist ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)) || 'plan' }} --output-format=json > plan-dist-manifest.json
           echo "cargo dist ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -356,7 +350,7 @@ jobs:
     # Let the initial task tell us to not run (currently very blunt)
     needs:
       - plan
-    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') || inputs.tag == 'dry-run' }}
+    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
     strategy:
       fail-fast: false
       # Target platforms/runners are computed by cargo-dist in create-release.
@@ -458,16 +452,7 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
-  # Uploads the artifacts to Axo Releases and tentatively creates Releases for them.
-  # This makes perma URLs like /v1.0.0/ live for subsequent publish steps to use, but
-  # leaves them "disconnected" from the release history (for the purposes of
-  # "list the releases" or "give me the latest releases").
-  #
-  # If all the subsequent "publish" steps succeed, the "announce" job will "connect"
-  # the releases and concepts like "latest" will be updated. Otherwise you're hopefully
-  # in a decent position to roll back the release without anyone noticing it!
-  # This is imperfect with things like "publish to crates.io" being irreversible, but
-  # at worst you're in a better position to yank the version with minimum disruption.
+  # Determines if we should publish/announce
   host:
     needs:
       - plan
@@ -477,7 +462,6 @@ jobs:
     if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     runs-on: "ubuntu-20.04"
     outputs:
       val: ${{ steps.host.outputs.manifest }}
@@ -494,7 +478,7 @@ jobs:
           pattern: artifacts-*
           path: target/distrib/
           merge-multiple: true
-      # Upload files to Axo Releases and create the Releases
+      # This is a harmless no-op for Github Releases, hosting for that happens in "announce"
       - id: host
         shell: bash
         run: |
@@ -509,7 +493,7 @@ jobs:
           name: artifacts-dist-manifest
           path: dist-manifest.json
 
-  # Create an Announcement for all the Axo Releases, updating the "latest" release
+  # Create a Github Release while uploading all files to it
   announce:
     needs:
       - plan
@@ -521,21 +505,27 @@ jobs:
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-      - name: Fetch Axo Artifacts
+      - name: "Download Github Artifacts"
         uses: actions/download-artifact@v4
         with:
           pattern: artifacts-*
-          path: target/distrib/
+          path: artifacts
           merge-multiple: true
-      - name: Announce Axo Releases
+      - name: Cleanup
         run: |
-          cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
+          # Remove the granular manifests
+          rm -f artifacts/*-dist-manifest.json
+      - name: Create Github Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.plan.outputs.tag }}
+          name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
+          body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
+          prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
+          artifacts: "artifacts/*"
 
 

@@ -326,6 +326,11 @@ pub struct DistMetadata {
     /// Custom GitHub runners, mapped by triple target
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_custom_runners: Option<HashMap<String, String>>,
+
+    /// a prefix to add to the release.yml and tag pattern so that
+    /// cargo-dist can co-exist with other release workflows in complex workspaces
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tag_namespace: Option<String>,
 }
 
 impl DistMetadata {
@@ -371,6 +376,7 @@ impl DistMetadata {
             hosting: _,
             extra_artifacts: _,
             github_custom_runners: _,
+            tag_namespace: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -425,6 +431,7 @@ impl DistMetadata {
             hosting,
             extra_artifacts,
             github_custom_runners,
+            tag_namespace,
         } = self;
 
         // Check for global settings on local packages
@@ -492,6 +499,9 @@ impl DistMetadata {
         }
         if post_announce_jobs.is_some() {
             warn!("package.metadata.dist.post-announce-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if tag_namespace.is_some() {
+            warn!("package.metadata.dist.tag-namespace is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
