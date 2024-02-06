@@ -152,7 +152,7 @@ download_binary_and_run_installer() {
     esac
 
     # Replace the placeholder binaries with the calculated array from above
-    RECEIPT="$(echo "$RECEIPT" | sed s,'"CARGO_DIST_BINS"',"$_bins_js_array",)"
+    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_BINS"'/"$_bins_js_array"/)"
 
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
