@@ -297,7 +297,7 @@ install() {
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
     # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_home,")
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
@@ -1028,7 +1028,7 @@ function Invoke-Installer($bin_paths) {
   $dest_dir = Join-Path $root "bin"
 
   # The replace call here ensures proper escaping is inlined into the receipt
-  $receipt = $receipt.Replace('AXO_CARGO_HOME', $root.replace("\", "\\"))
+  $receipt = $receipt.Replace('AXO_CARGO_HOME', $dest_dir.replace("\", "\\"))
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
   Write-Information "Installing to $dest_dir"

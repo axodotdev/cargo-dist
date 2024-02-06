@@ -309,7 +309,7 @@ install() {
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
     # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_home,")
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
