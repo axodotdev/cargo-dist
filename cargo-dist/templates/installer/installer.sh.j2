@@ -152,7 +152,7 @@ download_binary_and_run_installer() {
     esac
 
     # Replace the placeholder binaries with the calculated array from above
-    RECEIPT="$(echo "$RECEIPT" | sed s,'"CARGO_DIST_BINS"',"$_bins_js_array",)"
+    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_BINS"'/"$_bins_js_array"/)"
 
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
@@ -288,7 +288,7 @@ install() {
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
     # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_home,")
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
 {% elif install_path.kind == "HomeSubdir" %}
     # Install to this subdir of the user's home dir
     # In this case we want to be late-bound, as $HOME is reliable/nice.

@@ -191,7 +191,7 @@ function Invoke-Installer($bin_paths) {
   $dest_dir = Join-Path $root "bin"
 
   # The replace call here ensures proper escaping is inlined into the receipt
-  $receipt = $receipt.Replace('AXO_CARGO_HOME', $root.replace("\", "\\"))
+  $receipt = $receipt.Replace('AXO_CARGO_HOME', $dest_dir.replace("\", "\\"))
 {% elif install_path.kind == "HomeSubdir" %}
   # Install to this subdir of the user's home dir
   $dest_dir = if (($base_dir = $HOME)) {
