@@ -1,6 +1,28 @@
 # Unreleased
 
-Nothing Yet!
+This release fixes an issue with shell installers and adds an experimental feature for letting cargo-dist coexist with other release tooling.
+
+## Features
+
+### tag-namespace
+
+A new experimental config, `tag-namespace = "some-prefix"` has been added. Setting `tag-name = "owo"` will change the tag matching expression we put in your github ci, to require the tag to start with "owo" for cargo-dist to care about it. This can be useful for situations where you have several things with different tag/release workflows in the same workspace. It also renames `release.yaml` to `owo-release.yml` to make it clear it's just one of many release workflows.
+
+* [docs](opensource.axo.dev/cargo-dist/book/reference/config.html#tag-namespace)
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/779)
+
+
+## Fixes
+
+### Shell Replaces
+
+0.9.0 had a minor error in a new experimental shell installer feature that would cause scary sed errors to appear in the terminal output for apps with multiple binaries. The core functionality of the installer would work perfectly, with the only degradation in functionality being an optional "install-receipt" failing to be saved to the end-user's system.
+
+In addition, the receipt would point to `$CARGO_HOME` instead of `$CARGO_HOME/bin` in the default configuration, which has now been changed.
+
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/776)
+
+
 
 
 # Version 0.9.0 (2024-02-01)
