@@ -43,6 +43,14 @@ stdout:
       "hosting": {
         "github": {
           "artifact_download_url": "https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION"
+        },
+        "axodotdev": {
+          "package": "cargo-dist",
+          "public_id": "fake-id-do-not-upload",
+          "set_download_url": "https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload",
+          "upload_url": null,
+          "release_url": null,
+          "announce_url": null
         }
       }
     }
@@ -180,7 +188,7 @@ stdout:
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "irm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex",
+      "install_hint": "irm https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.ps1 | iex",
       "description": "Install prebuilt binaries via powershell script"
     },
     "cargo-dist-installer.sh": {
@@ -194,7 +202,7 @@ stdout:
         "x86_64-unknown-linux-gnu",
         "x86_64-unknown-linux-musl"
       ],
-      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
     "cargo-dist-x86_64-apple-darwin.tar.xz": {
@@ -465,4 +473,8 @@ stdout:
 }
 
 stderr:
+INFO: You've enabled Axo Releases, which is currently in Closed Beta.
+If you haven't yet signed up, please join our discord
+(https://discord.gg/ECnWuUUXQk) or message hello@axo.dev to get started!
+
 

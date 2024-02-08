@@ -21,6 +21,14 @@ stdout:
       "hosting": {
         "github": {
           "artifact_download_url": "https://github.com/axodotdev/cargo-dist/releases/download/cargo-dist-schema/v1.0.0-FAKEVERSION"
+        },
+        "axodotdev": {
+          "package": "cargo-dist-schema",
+          "public_id": "fake-id-do-not-upload",
+          "set_download_url": "https://fake.axo.dev/faker/cargo-dist-schema/fake-id-do-not-upload",
+          "upload_url": null,
+          "release_url": null,
+          "announce_url": null
         }
       }
     }
@@ -36,4 +44,8 @@ stdout:
 }
 
 stderr:
+INFO: You've enabled Axo Releases, which is currently in Closed Beta.
+If you haven't yet signed up, please join our discord
+(https://discord.gg/ECnWuUUXQk) or message hello@axo.dev to get started!
+
 
