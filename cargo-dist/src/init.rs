@@ -262,6 +262,7 @@ fn get_new_dist_metadata(
             hosting: None,
             extra_artifacts: None,
             github_custom_runners: None,
+            tag_namespace: None,
         }
     };
 
@@ -792,6 +793,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         ssldotcom_windows_sign,
         msvc_crt_static,
         hosting,
+        tag_namespace,
         extra_artifacts: _,
         github_custom_runners: _,
     } = &meta;
@@ -1034,6 +1036,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "hosting",
         "# Where to host releases\n",
         hosting.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "tag-namespace",
+        "# A prefix git tags must include for cargo-dist to care about them\n",
+        tag_namespace.as_ref(),
     );
 
     // Finalize the table

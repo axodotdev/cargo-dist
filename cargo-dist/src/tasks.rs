@@ -218,6 +218,8 @@ pub struct DistGraph {
     pub github_custom_runners: HashMap<String, String>,
     /// LIES ALL LIES
     pub local_builds_are_lies: bool,
+    /// Prefix git tags must include to be picked up (also renames release.yml)
+    pub tag_namespace: Option<String>,
 }
 
 /// Info about artifacts should be hosted
@@ -713,6 +715,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             build_local_artifacts,
             dispatch_releases,
             ssldotcom_windows_sign,
+            tag_namespace,
             // Partially Processed elsewhere
             //
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
@@ -785,6 +788,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let msvc_crt_static = msvc_crt_static.unwrap_or(true);
         let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
+        let tag_namespace = tag_namespace.clone();
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -944,6 +948,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ssldotcom_windows_sign,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
+                tag_namespace,
                 tools,
                 local_builds_are_lies,
                 templates,

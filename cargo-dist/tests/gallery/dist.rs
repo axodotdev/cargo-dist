@@ -172,7 +172,17 @@ impl<'a> TestContext<'a, Tools> {
     }
     /// Run 'cargo dist generate' and return paths to various files that were generated
     pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateResult> {
-        let github_ci_path = Utf8Path::new(".github/workflows/release.yml").to_owned();
+        self.cargo_dist_generate_prefixed(test_name, "")
+    }
+    /// Run 'cargo dist generate' and return paths to various files that were generated
+    /// (also apply a prefix to the github filename)
+    pub fn cargo_dist_generate_prefixed(
+        &self,
+        test_name: &str,
+        prefix: &str,
+    ) -> Result<GenerateResult> {
+        let ci_file_name = format!("{prefix}release.yml");
+        let github_ci_path = Utf8Path::new(".github/workflows/").join(ci_file_name);
         let wxs_path = Utf8Path::new("wix/main.wxs").to_owned();
         // Delete files if they already exist
         if github_ci_path.exists() {
@@ -582,9 +592,13 @@ impl GenerateResult {
         // in one test (necessitating rerunning it multiple times or passing special flags to get all the changes)
         let mut snapshots = String::new();
 
+        eprintln!("{:?}", self.github_ci_path);
         append_snapshot_file(
             &mut snapshots,
-            "github-ci.yml",
+            self.github_ci_path
+                .as_deref()
+                .and_then(|p| p.file_name())
+                .unwrap_or_default(),
             self.github_ci_path.as_deref(),
         )?;
 

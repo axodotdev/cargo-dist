@@ -1085,7 +1085,7 @@ download_binary_and_run_installer "$@" || exit 1
   "linkage": []
 }
 
-================ github-ci.yml ================
+================ release.yml ================
 # Copyright 2022-2023, axodotdev
 # SPDX-License-Identifier: MIT or Apache-2.0
 #
