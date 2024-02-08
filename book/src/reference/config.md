@@ -615,6 +615,15 @@ The syntax must be a valid rustup toolchain like "1.60.0" or "stable" (should no
 If you delete the key, generate won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal). Before being deprecated the default was to `rustup update stable`, but this is no longer the case.
 
 
+### tag-namespace
+
+> since 0.10.0
+
+Example: `tag-namespace = "some-prefix"`
+
+Setting `tag-name = "owo"` will change the tag matching expression we put in your github ci, to require the tag to start with "owo" for cargo-dist to care about it. This can be useful for situations where you have several things with different tag/release workflows in the same workspace. It also renames `release.yaml` to `owo-release.yml` to make it clear it's just one of many release workflows.
+
+
 ### tap
 
 > since 0.2.0
