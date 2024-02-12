@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.10.0 (2024-02-09)
+
 This release fixes an issue with shell installers and adds an experimental feature for letting cargo-dist coexist with other release tooling.
 
 ## Features
