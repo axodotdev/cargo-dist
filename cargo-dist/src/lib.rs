@@ -27,6 +27,7 @@ use config::{
 use console::Term;
 use generic_build::{build_generic_target, run_extra_artifacts_build};
 use semver::Version;
+use temp_dir::TempDir;
 use tracing::info;
 
 use errors::*;
@@ -149,7 +150,42 @@ fn run_build_step(
             dist_graph, committish, prefix, target,
         )?),
         BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target),
+        BuildStep::Updater(updater) => fetch_updater(dist_graph, updater),
     }
+}
+
+/// Fetches an installer executable and installs it in the expected target path.
+pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> Result<()> {
+    let tmpdir = TempDir::new().into_diagnostic()?;
+
+    // Update this to work from releases, and to fetch prebuilt binaries,
+    // once this has been released at least once.
+    let mut cmd = Cmd::new(
+        "cargo",
+        format!("Fetch installer for {}", updater.target_triple),
+    );
+
+    // Install to a temporary path before moving it to the destination
+    cmd.arg("install")
+        .arg("--root")
+        .arg(tmpdir.path())
+        .arg("--git")
+        .arg("https://github.com/axodotdev/axoupdater")
+        .arg("--all-features")
+        .arg("--bin")
+        .arg("axoupdater");
+
+    cmd.run()?;
+
+    // OK, now we have a binary in the tempdir
+    let mut source = tmpdir.path().join("bin").join("axoupdater");
+    if updater.target_triple.contains("windows") {
+        source.set_extension("exe");
+    }
+    std::fs::copy(source, dist_graph.target_dir.join(&updater.target_filename))
+        .into_diagnostic()?;
+
+    Ok(())
 }
 
 fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifest) -> Result<()> {
@@ -206,6 +242,7 @@ fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifes
         )?),
         // Or extra artifacts, which may involve real builds
         BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target),
+        BuildStep::Updater(_) => todo!(),
     }
 }
 

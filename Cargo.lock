@@ -399,6 +399,7 @@ dependencies = [
  "sha2",
  "similar",
  "tar",
+ "temp-dir",
  "thiserror",
  "tokio",
  "tracing",
@@ -2322,6 +2323,12 @@ dependencies = [
  "target-lexicon",
  "unicode-ident",
 ]
+
+[[package]]
+name = "temp-dir"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd16aa9ffe15fe021c6ee3766772132c6e98dfa395a167e16864f61a9cfb71d6"
 
 [[package]]
 name = "tempfile"

@@ -332,6 +332,8 @@ pub enum BuildStep {
     GenerateSourceTarball(SourceTarballStep),
     /// Checksum a file
     Checksum(ChecksumImpl),
+    /// Fetch or build an updater binary
+    Updater(UpdaterStep),
     // FIXME: For macos universal builds we'll want
     // Lipo(LipoStep)
 }
@@ -427,6 +429,15 @@ pub struct SourceTarballStep {
     pub target: Utf8PathBuf,
 }
 
+/// Fetch or build an updater
+#[derive(Debug, Clone)]
+pub struct UpdaterStep {
+    /// The target triple this updater is for
+    pub target_triple: TargetTriple,
+    /// The file this should produce
+    pub target_filename: Utf8PathBuf,
+}
+
 /// A kind of symbols (debuginfo)
 #[derive(Copy, Clone, Debug)]
 pub enum SymbolKind {
@@ -515,6 +526,8 @@ pub enum ArtifactKind {
     SourceTarball(SourceTarball),
     /// An extra artifact specified via config
     ExtraArtifact(ExtraArtifactImpl),
+    /// An updater executable
+    Updater(UpdaterImpl),
 }
 
 /// An Archive containing binaries (aka ExecutableZip)
@@ -550,6 +563,10 @@ pub struct ExtraArtifactImpl {
     /// The artifact this build should produce
     pub artifact: Utf8PathBuf,
 }
+
+/// An updater executable
+#[derive(Clone, Debug)]
+pub struct UpdaterImpl {}
 
 /// A logical release of an application that artifacts are grouped under
 #[derive(Clone, Debug)]
@@ -1401,6 +1418,30 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let checksum_idx = self.add_local_artifact(to_variant, checksum_artifact);
         self.artifact_mut(artifact_idx).checksum = Some(checksum_idx);
         checksum_idx
+    }
+
+    fn add_updater(&mut self, release_idx: ReleaseIdx, variant_idx: ReleaseVariantIdx) {
+        if !self.local_artifacts_enabled() {
+            return;
+        }
+
+        let release = self.release(release_idx);
+        let variant = self.variant(variant_idx);
+        let filename = format!("{}-{}-update", release.app_name, variant.target);
+        let target_path = &self.inner.dist_dir.to_owned().join(&filename);
+
+        let artifact = Artifact {
+            id: filename.to_owned(),
+            target_triples: vec![variant.target.to_owned()],
+            file_path: target_path.to_owned(),
+            required_binaries: FastMap::new(),
+            archive: None,
+            kind: ArtifactKind::Updater(UpdaterImpl {}),
+            checksum: None,
+            is_global: false,
+        };
+
+        self.add_local_artifact(variant_idx, artifact);
     }
 
     /// Make an executable zip for a variant, but don't yet integrate it into the graph
@@ -2515,6 +2556,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ArtifactKind::ExtraArtifact(_) => {
                     // compute_extra_builds handles this
                 }
+                ArtifactKind::Updater(_) => {
+                    build_steps.push(BuildStep::Updater(UpdaterStep {
+                        // There should only be one triple per artifact
+                        target_triple: artifact.target_triples.first().unwrap().to_owned(),
+                        target_filename: artifact.file_path.to_owned(),
+                    }))
+                }
             }
 
             if let Some(archive) = &artifact.archive {
@@ -2585,7 +2633,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
 
                 // Create the variant
-                self.add_variant(release, target.clone());
+                let variant = self.add_variant(release, target.clone());
+
+                if self.inner.install_updater {
+                    self.add_updater(release, variant);
+                }
             }
             // Add executable zips to the Release
             self.add_executable_zip(release);

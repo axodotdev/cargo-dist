@@ -1080,7 +1080,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         table,
         "install-updater",
         "# Whether to install an updater program\n",
-        install_updater.as_ref().map(|p| p.to_string()),
+        *install_updater,
     );
 
     // Finalize the table
