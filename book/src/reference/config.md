@@ -621,7 +621,9 @@ If you delete the key, generate won't explicitly setup a toolchain, so whatever'
 
 Example: `tag-namespace = "some-prefix"`
 
-Setting `tag-name = "owo"` will change the tag matching expression we put in your github ci, to require the tag to start with "owo" for cargo-dist to care about it. This can be useful for situations where you have several things with different tag/release workflows in the same workspace. It also renames `release.yaml` to `owo-release.yml` to make it clear it's just one of many release workflows.
+Setting `tag-namespace = "owo"` will change the tag matching expression we put in your github ci, to require the tag to start with "owo" for cargo-dist to care about it. This can be useful for situations where you have several things with different tag/release workflows in the same workspace. It also renames `release.yaml` to `owo-release.yml` to make it clear it's just one of many release workflows.
+
+**NOTE**: if you change tag-namespace, cargo-dist will generate the new `owo-release.yml` file, but not delete the old one. Be sure to manually delete the old `release.yml`!
 
 
 ### tap
