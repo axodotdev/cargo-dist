@@ -229,6 +229,7 @@ fn get_new_dist_metadata(
             ci: None,
             installers: None,
             tap: None,
+            formula: None,
             system_dependencies: None,
             targets: None,
             dist: None,
@@ -763,6 +764,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         ci,
         installers,
         tap,
+        formula,
         system_dependencies: _,
         targets,
         include,
@@ -826,6 +828,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "tap",
         "# A GitHub repo to push Homebrew formulas to\n",
         tap.clone(),
+    );
+
+    apply_optional_value(
+        table,
+        "formula",
+        "# Customize the Homebrew formula name\n",
+        formula.clone(),
     );
 
     apply_string_list(

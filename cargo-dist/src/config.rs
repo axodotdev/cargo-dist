@@ -94,6 +94,8 @@ pub struct DistMetadata {
 
     /// A Homebrew tap to push the Homebrew formula to, if built
     pub tap: Option<String>,
+    /// Customize the name of the Homebrew formula
+    pub formula: Option<String>,
 
     /// A set of packages to install before building
     #[serde(rename = "dependencies")]
@@ -344,6 +346,7 @@ impl DistMetadata {
             ci: _,
             installers: _,
             tap: _,
+            formula: _,
             system_dependencies: _,
             targets: _,
             include,
@@ -399,6 +402,7 @@ impl DistMetadata {
             ci,
             installers,
             tap,
+            formula,
             system_dependencies,
             targets,
             include,
@@ -543,6 +547,9 @@ impl DistMetadata {
         }
         if tap.is_none() {
             *tap = workspace_config.tap.clone();
+        }
+        if formula.is_none() {
+            *formula = workspace_config.formula.clone();
         }
         if system_dependencies.is_none() {
             *system_dependencies = workspace_config.system_dependencies.clone();
