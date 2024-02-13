@@ -147,7 +147,7 @@ dependencies = [
  "camino",
  "flate2",
  "image",
- "miette",
+ "miette 5.10.0",
  "mime",
  "reqwest",
  "serde",
@@ -172,7 +172,7 @@ dependencies = [
  "backtrace",
  "backtrace-ext",
  "console",
- "miette",
+ "miette 5.10.0",
  "serde",
  "serde_json",
  "thiserror",
@@ -186,7 +186,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41498f64097d1018019acba4ffe65acf502fbbce2310945d34c3c17c2d89fb1d"
 dependencies = [
- "miette",
+ "miette 5.10.0",
  "thiserror",
  "tracing",
 ]
@@ -203,7 +203,7 @@ dependencies = [
  "console",
  "guppy",
  "itertools 0.12.1",
- "miette",
+ "miette 5.10.0",
  "parse-changelog",
  "pathdiff",
  "semver",
@@ -219,7 +219,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c829b645ea7cf09741466b895747c27918275a4b21e6bd57ccacdc512bc0c7f3"
 dependencies = [
- "miette",
+ "miette 5.10.0",
  "semver",
  "thiserror",
 ]
@@ -372,7 +372,7 @@ dependencies = [
  "insta",
  "itertools 0.12.1",
  "mach_object",
- "miette",
+ "miette 6.0.1",
  "minijinja",
  "newline-converter",
  "semver",
@@ -877,7 +877,7 @@ dependencies = [
  "axoasset",
  "backon",
  "camino",
- "miette",
+ "miette 5.10.0",
  "reqwest",
  "schemars",
  "serde",
@@ -1375,7 +1375,7 @@ dependencies = [
  "backtrace",
  "backtrace-ext",
  "is-terminal",
- "miette-derive",
+ "miette-derive 5.10.0",
  "once_cell",
  "owo-colors",
  "supports-color",
@@ -1388,10 +1388,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "miette"
+version = "6.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "337e1043bbc086dac9d9674983bef52ac991ce150e09b5b8e35c5a73dd83f66c"
+dependencies = [
+ "miette-derive 6.0.1",
+ "thiserror",
+ "unicode-width",
+]
+
+[[package]]
 name = "miette-derive"
 version = "5.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49e7bc1560b95a3c4a25d03de42fe76ca718ab92d1a22a55b9b4cf67b3ae635c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.46",
+]
+
+[[package]]
+name = "miette-derive"
+version = "6.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71e622f2a0dd84cbca79bc6c3c33f4fd7dc69faf992216516aacc1d136102800"
 dependencies = [
  "proc-macro2",
  "quote",
