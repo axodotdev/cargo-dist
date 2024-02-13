@@ -643,14 +643,15 @@ Example: `targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-
 
 This is a list of [target platforms][platforms] you want your application(s) to be built for. In principle this can be overridden on a per-package basis but that is not well tested.
 
-In v0.0.5 the only properly supported choices are:
+The supported choices are:
 
 * x64 macOS: "x86_64-apple-darwin"
 * x64 Windows: "x86_64-pc-windows-msvc"
 * x64 Linux: "x86_64-unknown-linux-gnu"
-* arm64 macOS (Apple silicon): "aarch64-apple-darwin" (support added in v0.0.4)
-
-Future versions should hopefully introduce proper support for important targets like "musl linux".
+* arm64 macOS (Apple silicon): "aarch64-apple-darwin"
+* arm64 Linux: "aarch64-unknown-linux-gnu"
+* x64 Linux (musl): x86_64-unknown-linux-musl
+* arm64 Linux (musl): aarch64-unknown-linux-musl
 
 By default all runs of `cargo-dist` will be trying to handle all platforms specified here at once. If you specify `--target=...` on the CLI this will focus the run to only those platforms. As discussed in [concepts][], this cannot be used to specify platforms that are not listed in `metadata.dist`, to ensure different runs agree on the maximum set of platforms.
 
