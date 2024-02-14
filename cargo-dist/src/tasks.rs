@@ -62,6 +62,7 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
+use crate::backend::installer::UpdaterFragment;
 use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
 use crate::{
     backend::{
@@ -1676,6 +1677,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
+        let mut updaters = vec![];
         let mut target_triples = SortedSet::new();
 
         for &variant_idx in &release.variants {
@@ -1748,6 +1750,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
 
             artifacts.push(fragment);
+
+            // Create the "pretend" updaters similar to the above for exezips
+            if self.inner.install_updater {
+                let filename = format!("{}-{}-update", release.app_name, variant.target);
+                updaters.push(UpdaterFragment {
+                    id: filename.to_owned(),
+                    target_triple: variant.target.to_owned(),
+                    binary: filename,
+                })
+            }
         }
 
         if artifacts.is_empty() {
@@ -1769,6 +1781,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_path: release.install_path.clone().into_jinja(),
                 base_url: download_url.to_owned(),
                 artifacts,
+                updaters,
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
@@ -2022,6 +2035,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_path: release.install_path.clone().into_jinja(),
                     base_url: download_url.to_owned(),
                     artifacts,
+                    updaters: vec![],
                     hint,
                     desc,
                     receipt: None,
@@ -2059,6 +2073,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
+        let mut updaters = vec![];
         let mut target_triples = SortedSet::new();
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
@@ -2081,6 +2096,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
             });
+
+            // Create the "pretend" updaters similar to the above for exezips
+            if self.inner.install_updater {
+                let filename = format!("{}-{}-update", release.app_name, variant.target);
+                updaters.push(UpdaterFragment {
+                    id: filename.to_owned(),
+                    target_triple: variant.target.to_owned(),
+                    binary: filename,
+                })
+            }
         }
         if artifacts.is_empty() {
             warn!("skipping powershell installer: not building any supported platforms (use --artifacts=global)");
@@ -2101,6 +2126,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_path: release.install_path.clone().into_jinja(),
                 base_url: download_url.to_owned(),
                 artifacts,
+                updaters,
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
@@ -2324,6 +2350,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_path: release.install_path.clone().into_jinja(),
                     base_url: download_url.to_owned(),
                     artifacts,
+                    updaters: vec![],
                     hint,
                     desc,
                     receipt: None,
