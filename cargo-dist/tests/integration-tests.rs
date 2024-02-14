@@ -72,7 +72,9 @@ fn axolotlsay_custom_formula() -> Result<(), miette::Report> {
 cargo-dist-version = "{dist_version}"
 installers = ["homebrew"]
 tap = "axodotdev/homebrew-packages"
-formula = "AXOLOTLSHOUT"
+# https://rubydoc.brew.sh/Formula.html naming rules for Formulae
+# providing this config will make an AxolotlBrew formula
+formula = "axolotl-brew"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
