@@ -949,6 +949,10 @@ function Install-Binary($install_args) {
       "zip_ext" = ".tar.gz"
     }
   }
+  $platforms["x86_64-pc-windows-msvc"]["updater"] = @{
+    "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc-update"
+    "bin" = "axolotlsay-x86_64-pc-windows-msvc-update"
+  }
 
   $fetched = Download "$ArtifactDownloadUrl" $platforms
   # FIXME: add a flag that lets the user not do this step
@@ -1050,6 +1054,16 @@ function Download($download_url, $platforms) {
     Write-Verbose "  Unpacked $bin_name"
     $bin_paths += "$tmp\$bin_name"
   }
+
+  if ($null -ne $info["updater"]) {
+    $updater_id = $info["updater"]["artifact_name"]
+    $updater_url = "$download_url/$updater_id"
+    $out_name = "$tmp\axolotlsay-update.exe"
+
+    $wc.downloadFile($updater_url, $out_name)
+    $bin_paths += $out_name
+  }
+
   return $bin_paths
 }
 
