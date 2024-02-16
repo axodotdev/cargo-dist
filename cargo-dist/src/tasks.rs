@@ -1421,17 +1421,22 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         checksum_idx
     }
 
-    fn add_updater(&mut self, release_idx: ReleaseIdx, variant_idx: ReleaseVariantIdx) {
+    fn add_updater(&mut self, variant_idx: ReleaseVariantIdx) {
         if !self.local_artifacts_enabled() {
             return;
         }
 
-        let release = self.release(release_idx);
+        let artifact = self.make_updater_for_variant(variant_idx);
+
+        self.add_local_artifact(variant_idx, artifact);
+    }
+
+    fn make_updater_for_variant(&self, variant_idx: ReleaseVariantIdx) -> Artifact {
         let variant = self.variant(variant_idx);
-        let filename = format!("{}-{}-update", release.app_name, variant.target);
+        let filename = format!("{}-update", variant.id);
         let target_path = &self.inner.dist_dir.to_owned().join(&filename);
 
-        let artifact = Artifact {
+        Artifact {
             id: filename.to_owned(),
             target_triples: vec![variant.target.to_owned()],
             file_path: target_path.to_owned(),
@@ -1440,9 +1445,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             kind: ArtifactKind::Updater(UpdaterImpl {}),
             checksum: None,
             is_global: false,
-        };
-
-        self.add_local_artifact(variant_idx, artifact);
+        }
     }
 
     /// Make an executable zip for a variant, but don't yet integrate it into the graph
@@ -1753,12 +1756,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
             // Create the "pretend" updaters similar to the above for exezips
             if self.inner.install_updater {
-                let filename = format!("{}-{}-update", release.app_name, variant.target);
+                let artifact = self.make_updater_for_variant(variant_idx);
                 updaters.push(UpdaterFragment {
-                    id: filename.to_owned(),
+                    id: artifact.id.to_owned(),
                     target_triple: variant.target.to_owned(),
-                    binary: filename,
-                })
+                    binary: artifact.id.to_owned(),
+                });
             }
         }
 
@@ -2099,11 +2102,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
             // Create the "pretend" updaters similar to the above for exezips
             if self.inner.install_updater {
-                let filename = format!("{}-{}-update", release.app_name, variant.target);
+                let artifact = self.make_updater_for_variant(variant_idx);
                 updaters.push(UpdaterFragment {
-                    id: filename.to_owned(),
+                    id: artifact.id.to_owned(),
                     target_triple: variant.target.to_owned(),
-                    binary: filename,
+                    binary: artifact.id.to_owned(),
                 })
             }
         }
@@ -2663,7 +2666,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 let variant = self.add_variant(release, target.clone());
 
                 if self.inner.install_updater {
-                    self.add_updater(release, variant);
+                    self.add_updater(variant);
                 }
             }
             // Add executable zips to the Release
