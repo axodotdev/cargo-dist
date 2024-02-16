@@ -1,3 +1,7 @@
+# Version 0.7.0 (2024-02-16)
+
+* Updates several dependencies, including a breaking change to miette.
+
 # Version 0.6.1 (2024-01-19)
 
 * Adds more platforms and improves their display names
