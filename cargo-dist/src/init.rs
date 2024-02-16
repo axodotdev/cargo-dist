@@ -1065,7 +1065,9 @@ where
 {
     if let Some(val) = val {
         table.insert(key, toml_edit::value(val));
-        table.key_decor_mut(key).unwrap().set_prefix(desc);
+        if let Some(mut key) = table.key_mut(key) {
+            key.leaf_decor_mut().set_prefix(desc)
+        }
     } else {
         table.remove(key);
     }
@@ -1080,7 +1082,9 @@ where
     if let Some(list) = list {
         let items = list.into_iter().map(|i| i.to_string()).collect::<Vec<_>>();
         table.insert(key, toml_edit::Item::Value(items.into_iter().collect()));
-        table.key_decor_mut(key).unwrap().set_prefix(desc);
+        if let Some(mut key) = table.key_mut(key) {
+            key.leaf_decor_mut().set_prefix(desc)
+        }
     } else {
         table.remove(key);
     }
