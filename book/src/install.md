@@ -17,7 +17,7 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/re
 Windows PowerShell:
 
 ```sh
-irm https://github.com/axodotdev/cargo-dist/releases/latest/download/cargo-dist-installer.ps1 | iex
+powershell -c "irm https://github.com/axodotdev/cargo-dist/releases/latest/download/cargo-dist-installer.ps1 | iex"
 ```
 
 ## Build From Source With Cargo

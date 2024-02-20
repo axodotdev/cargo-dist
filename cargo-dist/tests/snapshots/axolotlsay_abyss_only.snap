@@ -2089,7 +2089,7 @@ maybeInstall(true).then(run);
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "irm https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-installer.ps1 | iex",
+      "install_hint": "powershell -c \"irm https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "axolotlsay-installer.sh": {
@@ -2363,7 +2363,7 @@ maybeInstall(true).then(run);
               "x86_64-pc-windows-msvc"
             ],
             "runner": "windows-2019",
-            "install_dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex",
+            "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex\"",
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
           },
           {

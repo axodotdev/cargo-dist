@@ -9,7 +9,7 @@ This kind of installer is ideal for bootstrapping setup on a fairly bare-bones s
 An "installer hint" will be provided that shows how to install via `irm | iex` (the windows equivalent of `curl | sh`), like so:
 
 ```sh
-irm https://github.com/axodotdev/cargo-dist/releases/download/v0.0.5/cargo-dist-v0.0.5-installer.ps1 | iex
+powershell -c "irm https://github.com/axodotdev/cargo-dist/releases/download/v0.0.5/cargo-dist-v0.0.5-installer.ps1 | iex"
 ```
 
 Limitations/Caveats:
@@ -19,7 +19,6 @@ Limitations/Caveats:
 * [Cannot detect situations where musl-based builds are appropriate][issue-musl] (static or dynamic)
 * Relies on the user's installation of `tar` and `Expand-Archive` to unpack the files
 * Relies on the the user's installation of `Net.Webclient` to fetch the files
-* [Won't work if run in cmd instead of powershell][issue-irm-iex]
 * [Will throw out all files except for the binary, so the binary can't rely on assets included in the archive][issue-unpack-all]
 * Cannot run any kind of custom install logic
 

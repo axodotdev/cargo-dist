@@ -56,7 +56,7 @@ fn install_dist_ps1_for_version(version: &Version) -> String {
     // FIXME: it would be nice if these values were somehow using all the machinery
     // to compute these values for packages we build *BUT* it's messy and not that important
     let installer_url = format!("{BASE_DIST_FETCH_URL}/v{version}/{installer_name}");
-    format!("irm  {installer_url} | iex")
+    format!(r#"powershell -c "irm {installer_url} | iex""#)
 }
 
 /// Cute little hack for developing dist itself: if we see a version like "0.0.3-github-config"
