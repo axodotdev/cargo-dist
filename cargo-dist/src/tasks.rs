@@ -1574,16 +1574,26 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Still, we think this is better than not trying at all.)
         const X64_MACOS: &str = "x86_64-apple-darwin";
         const ARM64_MACOS: &str = "aarch64-apple-darwin";
+        const ARM64_GNU: &str = "aarch64-unknown-linux-gnu";
+        const ARM64_MUSL: &str = "aarch64-unknown-linux-musl";
         const X64_GNU: &str = "x86_64-unknown-linux-gnu";
         const X64_MUSL: &str = "x86_64-unknown-linux-musl";
         const X64_MUSL_STATIC: &str = "x86_64-unknown-linux-musl-static";
         const X64_MUSL_DYNAMIC: &str = "x86_64-unknown-linux-musl-dynamic";
+        const ARM64_MUSL_STATIC: &str = "aarch64-unknown-linux-musl-static";
+        const ARM64_MUSL_DYNAMIC: &str = "aarch64-unknown-linux-musl-dynamic";
+
         let mut has_x64_apple = false;
         let mut has_arm_apple = false;
-        let mut has_gnu_linux = false;
-        let mut has_static_musl_linux = false;
-        // Currently always false, someday this build will exist
-        let has_dynamic_musl_linux = false;
+        let mut has_x86_gnu_linux = false;
+        let mut has_arm_gnu_linux = false;
+        let mut has_x86_static_musl_linux = false;
+        let mut has_arm_static_musl_linux = false;
+
+        // Currently always false, someday these builds will exist
+        let has_x86_dynamic_musl_linux = false;
+        let has_arm_dynamic_musl_linux = false;
+
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
@@ -1594,31 +1604,45 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 has_arm_apple = true;
             }
             if target == X64_GNU {
-                has_gnu_linux = true;
+                has_x86_gnu_linux = true;
+            }
+            if target == ARM64_GNU {
+                has_arm_gnu_linux = true;
             }
             if target == X64_MUSL {
-                has_static_musl_linux = true;
+                has_x86_static_musl_linux = true;
+            }
+            if target == ARM64_MUSL {
+                has_arm_static_musl_linux = true;
             }
         }
+
         let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
-        let do_gnu_to_musl_fallback = !has_gnu_linux && has_static_musl_linux;
-        let do_musl_to_musl_fallback = has_static_musl_linux && !has_dynamic_musl_linux;
+        let do_x86_gnu_to_musl_fallback = !has_x86_gnu_linux && has_x86_static_musl_linux;
+        let do_arm_gnu_to_musl_fallback = !has_arm_gnu_linux && has_arm_static_musl_linux;
+        let do_x86_musl_to_musl_fallback = has_x86_static_musl_linux && !has_x86_dynamic_musl_linux;
+        let do_arm_musl_to_musl_fallback = has_arm_static_musl_linux && !has_arm_dynamic_musl_linux;
 
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
         let mut target_triples = SortedSet::new();
+
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
+
             if target.contains("windows") {
                 continue;
             }
+
             // Compute the artifact zip this variant *would* make *if* it were built
             // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
             // way to add artifacts to the graph and then say "ok but don't build it".
             let (artifact, binaries) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
+
             target_triples.insert(target.clone());
+
             let mut fragment = ExecutableZipFragment {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
@@ -1628,28 +1652,47 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
             };
+
             if do_rosetta_fallback && target == X64_MACOS {
                 // Copy the info but respecify it to be arm64 macos
                 let mut arm_fragment = fragment.clone();
                 arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
-                artifacts.push(arm_fragment);
+                artifacts.push(arm_fragment.clone());
             }
+
+            // musl-static is actually kind of a fake triple we've invented
+            // to let us specify which is which; we want to ensure it exists
+            // for the installer to act on
             if target == X64_MUSL {
-                // musl-static is actually kind of a fake triple we've invented
-                // to let us specify which is which; we want to ensure it exists
-                // for the installer to act on
                 fragment.target_triples = vec![X64_MUSL_STATIC.to_owned()];
             }
-            if do_gnu_to_musl_fallback && target == X64_MUSL {
-                // Copy the info but lie that it's actually glibc
+
+            if target == ARM64_MUSL {
+                fragment.target_triples = vec![ARM64_MUSL_STATIC.to_owned()];
+            }
+
+            // Copy the info but lie that it's actually glibc
+            if do_x86_gnu_to_musl_fallback && target == X64_MUSL {
                 let mut musl_fragment = fragment.clone();
                 musl_fragment.target_triples = vec![X64_GNU.to_owned()];
                 artifacts.push(musl_fragment);
             }
-            if do_musl_to_musl_fallback && target == X64_MUSL {
-                // Copy the info but lie that it's actually dynamic musl
+
+            if do_x86_musl_to_musl_fallback && target == X64_MUSL {
                 let mut musl_fragment = fragment.clone();
                 musl_fragment.target_triples = vec![X64_MUSL_DYNAMIC.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
+            if do_arm_gnu_to_musl_fallback && target == ARM64_MUSL {
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![ARM64_GNU.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
+            if do_arm_musl_to_musl_fallback && target == ARM64_MUSL {
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![ARM64_MUSL_DYNAMIC.to_owned()];
                 artifacts.push(musl_fragment);
             }
 
@@ -2063,16 +2106,26 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // See comments above
         const X64_MACOS: &str = "x86_64-apple-darwin";
         const ARM64_MACOS: &str = "aarch64-apple-darwin";
+        const ARM64_GNU: &str = "aarch64-unknown-linux-gnu";
+        const ARM64_MUSL: &str = "aarch64-unknown-linux-musl";
         const X64_GNU: &str = "x86_64-unknown-linux-gnu";
         const X64_MUSL: &str = "x86_64-unknown-linux-musl";
         const X64_MUSL_STATIC: &str = "x86_64-unknown-linux-musl-static";
         const X64_MUSL_DYNAMIC: &str = "x86_64-unknown-linux-musl-dynamic";
+        const ARM64_MUSL_STATIC: &str = "aarch64-unknown-linux-musl-static";
+        const ARM64_MUSL_DYNAMIC: &str = "aarch64-unknown-linux-musl-dynamic";
+
         let mut has_x64_apple = false;
         let mut has_arm_apple = false;
-        let mut has_gnu_linux = false;
-        let mut has_static_musl_linux = false;
-        // Currently always false, someday this build will exist
-        let has_dynamic_musl_linux = false;
+        let mut has_x86_gnu_linux = false;
+        let mut has_arm_gnu_linux = false;
+        let mut has_x86_static_musl_linux = false;
+        let mut has_arm_static_musl_linux = false;
+
+        // Currently always false, someday these builds will exist
+        let has_x86_dynamic_musl_linux = false;
+        let has_arm_dynamic_musl_linux = false;
+
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
@@ -2083,28 +2136,40 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 has_arm_apple = true;
             }
             if target == X64_GNU {
-                has_gnu_linux = true;
+                has_x86_gnu_linux = true;
+            }
+            if target == ARM64_GNU {
+                has_arm_gnu_linux = true;
             }
             if target == X64_MUSL {
-                has_static_musl_linux = true;
+                has_x86_static_musl_linux = true;
+            }
+            if target == ARM64_MUSL {
+                has_arm_static_musl_linux = true;
             }
         }
+
         let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
-        let do_gnu_to_musl_fallback = !has_gnu_linux && has_static_musl_linux;
-        let do_musl_to_musl_fallback = has_static_musl_linux && !has_dynamic_musl_linux;
+        let do_x86_gnu_to_musl_fallback = !has_x86_gnu_linux && has_x86_static_musl_linux;
+        let do_arm_gnu_to_musl_fallback = !has_arm_gnu_linux && has_arm_static_musl_linux;
+        let do_x86_musl_to_musl_fallback = has_x86_static_musl_linux && !has_x86_dynamic_musl_linux;
+        let do_arm_musl_to_musl_fallback = has_arm_static_musl_linux && !has_arm_dynamic_musl_linux;
 
         // Gather up the bundles the installer supports
         let mut artifacts = vec![];
         let mut target_triples = SortedSet::new();
+
         let mut has_sketchy_archives = false;
         for &variant_idx in &release.variants {
             let variant = self.variant(variant_idx);
             let target = &variant.target;
+
             // Compute the artifact zip this variant *would* make *if* it were built
             // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
             // way to add artifacts to the graph and then say "ok but don't build it".
             let (artifact, binaries) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
+
             target_triples.insert(target.clone());
 
             let variant_zip_style = artifact.archive.as_ref().unwrap().zip_style;
@@ -2114,34 +2179,53 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let mut fragment = ExecutableZipFragment {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
-                zip_style: variant_zip_style,
+                zip_style: artifact.archive.as_ref().unwrap().zip_style,
                 binaries: binaries
                     .into_iter()
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
             };
+
             if do_rosetta_fallback && target == X64_MACOS {
                 // Copy the info but respecify it to be arm64 macos
                 let mut arm_fragment = fragment.clone();
                 arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
-                artifacts.push(arm_fragment);
+                artifacts.push(arm_fragment.clone());
             }
+
+            // musl-static is actually kind of a fake triple we've invented
+            // to let us specify which is which; we want to ensure it exists
+            // for the installer to act on
             if target == X64_MUSL {
-                // musl-static is actually kind of a fake triple we've invented
-                // to let us specify which is which; we want to ensure it exists
-                // for the installer to act on
                 fragment.target_triples = vec![X64_MUSL_STATIC.to_owned()];
             }
-            if do_gnu_to_musl_fallback && target == X64_MUSL {
-                // Copy the info but lie that it's actually glibc
+
+            if target == ARM64_MUSL {
+                fragment.target_triples = vec![ARM64_MUSL_STATIC.to_owned()];
+            }
+
+            // Copy the info but lie that it's actually glibc
+            if do_x86_gnu_to_musl_fallback && target == X64_MUSL {
                 let mut musl_fragment = fragment.clone();
                 musl_fragment.target_triples = vec![X64_GNU.to_owned()];
                 artifacts.push(musl_fragment);
             }
-            if do_musl_to_musl_fallback && target == X64_MUSL {
-                // Copy the info but lie that it's actually dynamic musl
+
+            if do_x86_musl_to_musl_fallback && target == X64_MUSL {
                 let mut musl_fragment = fragment.clone();
                 musl_fragment.target_triples = vec![X64_MUSL_DYNAMIC.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
+            if do_arm_gnu_to_musl_fallback && target == ARM64_MUSL {
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![ARM64_GNU.to_owned()];
+                artifacts.push(musl_fragment);
+            }
+
+            if do_arm_musl_to_musl_fallback && target == ARM64_MUSL {
+                let mut musl_fragment = fragment.clone();
+                musl_fragment.target_triples = vec![ARM64_MUSL_DYNAMIC.to_owned()];
                 artifacts.push(musl_fragment);
             }
 
