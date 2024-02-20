@@ -42,7 +42,7 @@ axoproject = { version = "0.7.0", default-features = false, features = ["cargo-p
 gazenot = { version = "0.3.0" }
 
 comfy-table = "7.0.1"
-miette = { version = "7.0.0" }
+miette = { version = "7.1.0" }
 thiserror = "1.0.57"
 tracing = { version = "0.1.36", features = ["log"] }
 serde = { version = "1.0.196", features = ["derive"] }
