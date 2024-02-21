@@ -188,7 +188,7 @@ stdout:
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "irm https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.ps1 | iex",
+      "install_hint": "powershell -c \"irm https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "cargo-dist-installer.sh": {
@@ -444,7 +444,7 @@ stdout:
               "x86_64-pc-windows-msvc"
             ],
             "runner": "windows-2019",
-            "install_dist": "irm  https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex",
+            "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex\"",
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
           },
           {
