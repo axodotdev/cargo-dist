@@ -286,6 +286,7 @@ impl GenerateMode {
 #[derive(Args, Clone, Debug)]
 pub struct GenerateArgs {
     /// Which type of configuration to generate
+    #[clap(long, value_delimiter(','))]
     pub mode: Vec<GenerateMode>,
 
     /// Check if the generated output differs from on-disk config without writing it
