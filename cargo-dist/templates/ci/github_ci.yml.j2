@@ -253,6 +253,7 @@ jobs:
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - name: Install cargo-dist
+        shell: bash
         run: {{{ global_task.install_dist }}}
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts

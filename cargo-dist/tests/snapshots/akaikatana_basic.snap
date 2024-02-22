@@ -1624,6 +1624,7 @@ jobs:
       - name: Install Rust
         run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
       - name: Install cargo-dist
+        shell: bash
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
