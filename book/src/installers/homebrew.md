@@ -11,6 +11,26 @@ tap = "axodotdev/homebrew-formulae"
 publish-jobs = ["homebrew"]
 ```
 
+Since 0.11.0, cargo-dist can, optionally, also customize your Homebrew formula name.
+By default, your formula will be named using the app name (in Rust, this is the crate
+name). If you are overriding the bin name, you may want to make your Homebrew formula
+match- you can do so with config like this:
+
+```toml
+[package]
+name = "myappname"
+version = "0.666.0"
+default-run = "mybinname"
+
+[[bin]]
+name = "mybinname"
+path = "src/main.rs"
+
+tap = "axodotdev/homebrew-formulae"
+publish-jobs = ["homebrew"]
+formula = "mybinname"
+```
+
 In order to write to a tap GitHub repository, cargo-dist needs a [personal access token](https://github.com/settings/tokens/new?scopes=repo) with the `repo` scope exposed as `HOMEBREW_TAP_TOKEN`. For more information on GitHub Actions secrets, [consult this documentation](https://docs.github.com/en/actions/security-guides/encrypted-secrets).
 
 Limitations/Caveats:
