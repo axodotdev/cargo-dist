@@ -209,19 +209,49 @@ impl<'a> TestContext<'a, Tools> {
         // read/analyze installers
         eprintln!("loading results...");
         let app_name = &self.repo.app_name;
-        let ps_installer = Utf8PathBuf::from(format!("target/distrib/{app_name}-installer.ps1"));
-        let sh_installer = Utf8PathBuf::from(format!("target/distrib/{app_name}-installer.sh"));
-        let rb_installer = Utf8PathBuf::from(format!("target/distrib/{app_name}.rb"));
+        let target_dir = Utf8PathBuf::from("target/distrib");
+        let ps_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.ps1"));
+        let sh_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.sh"));
+        let homebrew_installer = Self::load_file_with_extension(target_dir.clone(), ".rb");
         let npm_installer =
-            Utf8PathBuf::from(format!("target/distrib/{app_name}-npm-package.tar.gz"));
+            Utf8PathBuf::from(format!("{target_dir}/{app_name}-npm-package.tar.gz"));
 
         Ok(DistResult {
             test_name: test_name.to_owned(),
             shell_installer_path: sh_installer.exists().then_some(sh_installer),
             powershell_installer_path: ps_installer.exists().then_some(ps_installer),
-            homebrew_installer_path: rb_installer.exists().then_some(rb_installer),
+            homebrew_installer_path: homebrew_installer,
             npm_installer_package_path: npm_installer.exists().then_some(npm_installer),
         })
+    }
+
+    fn load_file_with_extension(dirname: Utf8PathBuf, extension: &str) -> Option<Utf8PathBuf> {
+        let files = Self::load_files_with_extension(dirname, extension);
+        let number_found = files.len();
+        assert!(
+            number_found <= 1,
+            "found {} files with the extension {}, expected 1 or 0",
+            number_found,
+            extension
+        );
+        files.first().cloned()
+    }
+
+    fn load_files_with_extension(dirname: Utf8PathBuf, extension: &str) -> Vec<Utf8PathBuf> {
+        // Collect all dist-manifests and fetch the appropriate Mac ones
+        let mut files = vec![];
+        for file in dirname
+            .read_dir()
+            .expect("loading target dir failed, something has gone very wrong")
+        {
+            let path = file.unwrap().path();
+            if let Some(filename) = path.file_name() {
+                if filename.to_string_lossy().ends_with(extension) {
+                    files.push(Utf8PathBuf::from_path_buf(path).unwrap())
+                }
+            }
+        }
+        files
     }
 
     pub fn patch_cargo_toml(&self, new_toml: String) -> Result<()> {
