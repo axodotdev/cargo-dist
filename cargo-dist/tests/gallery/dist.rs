@@ -212,7 +212,7 @@ impl<'a> TestContext<'a, Tools> {
         let target_dir = Utf8PathBuf::from("target/distrib");
         let ps_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.ps1"));
         let sh_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.sh"));
-        let homebrew_installer = Self::load_file_with_extension(target_dir.clone(), ".rb");
+        let homebrew_installer = Self::load_file_with_suffix(target_dir.clone(), ".rb");
         let npm_installer =
             Utf8PathBuf::from(format!("{target_dir}/{app_name}-npm-package.tar.gz"));
 
@@ -225,19 +225,19 @@ impl<'a> TestContext<'a, Tools> {
         })
     }
 
-    fn load_file_with_extension(dirname: Utf8PathBuf, extension: &str) -> Option<Utf8PathBuf> {
-        let files = Self::load_files_with_extension(dirname, extension);
+    fn load_file_with_suffix(dirname: Utf8PathBuf, suffix: &str) -> Option<Utf8PathBuf> {
+        let files = Self::load_files_with_suffix(dirname, suffix);
         let number_found = files.len();
         assert!(
             number_found <= 1,
-            "found {} files with the extension {}, expected 1 or 0",
+            "found {} files with the suffix {}, expected 1 or 0",
             number_found,
-            extension
+            suffix
         );
         files.first().cloned()
     }
 
-    fn load_files_with_extension(dirname: Utf8PathBuf, extension: &str) -> Vec<Utf8PathBuf> {
+    fn load_files_with_suffix(dirname: Utf8PathBuf, suffix: &str) -> Vec<Utf8PathBuf> {
         // Collect all dist-manifests and fetch the appropriate Mac ones
         let mut files = vec![];
         for file in dirname
@@ -246,7 +246,7 @@ impl<'a> TestContext<'a, Tools> {
         {
             let path = file.unwrap().path();
             if let Some(filename) = path.file_name() {
-                if filename.to_string_lossy().ends_with(extension) {
+                if filename.to_string_lossy().ends_with(suffix) {
                     files.push(Utf8PathBuf::from_path_buf(path).unwrap())
                 }
             }
