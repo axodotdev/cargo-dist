@@ -54,7 +54,7 @@ pub struct Cli {
     ///
     /// If left unspecified we will use the values in [workspace.metadata.dist],
     /// except for `cargo dist init` which will select some "good defaults" for you.
-    #[clap(long, short)]
+    #[clap(long, short, value_delimiter(','))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub target: Vec<String>,
 
@@ -62,7 +62,7 @@ pub struct Cli {
     ///
     /// If left unspecified we will use the values in [workspace.metadata.dist].
     ///  `cargo dist init` will persist the values you pass to that location.
-    #[clap(long, short)]
+    #[clap(long, short, value_delimiter(','))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub installer: Vec<InstallerStyle>,
 
@@ -70,7 +70,7 @@ pub struct Cli {
     ///
     /// If left unspecified we will use the value in [workspace.metadata.dist].
     /// `cargo dist init` will persist the values you pass to that location.
-    #[clap(long, short)]
+    #[clap(long, short, value_delimiter(','))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub ci: Vec<CiStyle>,
 
@@ -203,7 +203,7 @@ pub struct BuildArgs {
     /// What extra information to print, if anything. Currently supported:
     ///
     /// * linkage: prints information on dynamic libraries used by build artifacts
-    #[clap(long, short)]
+    #[clap(long, short, value_delimiter(','))]
     pub print: Vec<String>,
 }
 
@@ -286,6 +286,7 @@ impl GenerateMode {
 #[derive(Args, Clone, Debug)]
 pub struct GenerateArgs {
     /// Which type of configuration to generate
+    #[clap(long, value_delimiter(','))]
     pub mode: Vec<GenerateMode>,
 
     /// Check if the generated output differs from on-disk config without writing it
@@ -393,7 +394,7 @@ pub struct ManifestSchemaArgs {
 #[derive(Args, Clone, Debug)]
 pub struct HostArgs {
     /// The hosting steps to perform
-    #[clap(long)]
+    #[clap(long, value_delimiter(','))]
     pub steps: Vec<HostStyle>,
 }
 

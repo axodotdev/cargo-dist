@@ -184,18 +184,17 @@ Generate one or more pieces of configuration
 ### Usage
 
 ```text
-cargo dist generate [OPTIONS] [MODE]...
+cargo dist generate [OPTIONS]
 ```
 
-### Arguments
-\[MODE]...  
+### Options
+#### `--mode <MODE>`
 Which type of configuration to generate
 
 Possible values:
 - ci:  Generate CI scripts for orchestrating cargo-dist
 - msi: Generate .wxs tempaltes for msi installers
 
-### Options
 #### `--check`
 Check if the generated output differs from on-disk config without writing it
 
@@ -351,4 +350,3 @@ cargo dist help [COMMAND]
 
 
 stderr:
-
