@@ -345,6 +345,17 @@ For instance for packages that are a library and a CLI binary, some developers p
 If you use this you *probably* want to set it on `[package.metadata.dist]` and
 not `[workspace.metadata.dist]`. See ["inferring precise-builds"](#inferring-precise-builds) for details.
 
+### formula
+
+> since 0.11.0
+
+Example: `formula = "axolotlbrew"`
+
+Specifies a string to override the default Homebrew formula name (the app name). This works
+well specifically for folks who are customizing their bin name and would like the Homebrew
+formula to match the bin name as opposed to the app name (which, in Rust, is the crate name).
+
+You must set this on `[package.metadata.dist]` and not `[workspace.metadata.dist]`.
 
 ### github-custom-runners
 

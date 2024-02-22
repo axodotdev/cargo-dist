@@ -601,6 +601,8 @@ pub struct Release {
     pub install_path: InstallPathStrategy,
     /// GitHub repository to push the Homebrew formula to, if built
     pub tap: Option<String>,
+    /// Customize the name of the Homebrew formula
+    pub formula: Option<String>,
     /// Packages to install from a system package manager
     pub system_dependencies: SystemDependencies,
 }
@@ -736,6 +738,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             installers: _,
             // Only the final value merged into a package_config matters
             tap: _,
+            // Only the final value merged into a package_config matters
+            formula: _,
             // Only the final value merged into a package_config matters
             system_dependencies: _,
             // Only the final value merged into a package_config matters
@@ -1027,6 +1031,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .clone()
             .unwrap_or(InstallPathStrategy::CargoHome);
         let tap = package_config.tap.clone();
+        let formula = package_config.formula.clone();
 
         let windows_archive = package_config.windows_archive.unwrap_or(ZipStyle::Zip);
         let unix_archive = package_config
@@ -1085,6 +1090,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             npm_scope,
             install_path,
             tap,
+            formula,
             system_dependencies,
         });
         idx
@@ -1733,21 +1739,25 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         }
         let release = self.release(to_release);
-        let release_id = &release.id;
+        let formula = if let Some(formula) = &release.formula {
+            formula
+        } else {
+            &release.id
+        };
         let Some(download_url) = self
             .manifest
-            .release_by_name(&release.app_name)
+            .release_by_name(&release.id)
             .and_then(|r| r.artifact_download_url())
         else {
             warn!("skipping Homebrew formula: couldn't compute a URL to download artifacts from");
             return;
         };
 
-        let artifact_name = format!("{release_id}.rb");
+        let artifact_name = format!("{formula}.rb");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
 
         // If tap is specified, include that in the `brew install` message
-        let mut install_target = release.app_name.clone();
+        let mut install_target = formula.clone();
         if let Some(tap) = &self.inner.tap {
             install_target = format!("{tap}/{install_target}").to_owned();
         }
@@ -1928,8 +1938,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("The Homebrew publish job is enabled but no tap was specified\n  consider setting the tap field in Cargo.toml");
         }
 
-        let formula_name = to_class_case(&app_name);
-
         let dependencies: Vec<String> = release
             .system_dependencies
             .homebrew
@@ -1956,7 +1964,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 x86_64_linux,
                 x86_64_linux_sha256: None,
                 name: app_name,
-                formula_class: formula_name,
+                formula_class: to_class_case(formula),
                 desc: app_desc,
                 license: app_license,
                 homepage: app_homepage_url,
