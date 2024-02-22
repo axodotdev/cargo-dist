@@ -1938,8 +1938,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("The Homebrew publish job is enabled but no tap was specified\n  consider setting the tap field in Cargo.toml");
         }
 
-        let formula_name = to_class_case(&app_name);
-
         let dependencies: Vec<String> = release
             .system_dependencies
             .homebrew
@@ -1966,7 +1964,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 x86_64_linux,
                 x86_64_linux_sha256: None,
                 name: app_name,
-                formula_class: formula_name,
+                formula_class: to_class_case(formula),
                 desc: app_desc,
                 license: app_license,
                 homepage: app_homepage_url,
