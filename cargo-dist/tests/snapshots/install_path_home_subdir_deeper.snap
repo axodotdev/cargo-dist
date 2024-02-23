@@ -783,35 +783,36 @@ download_binary_and_run_installer "$@" || exit 1
 ================ formula.rb ================
 class Axolotlsay < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
+  homepage "https://github.com/axodotdev/axolotlsay"
   version "0.2.1"
-  on_macos do
-    on_arm do
+  if OS.mac? do
+    if Hardware::CPU.arm? do
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
     end
-    on_intel do
+    if Hardware::CPU.intel? do
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
     end
   end
-  on_linux do
-    on_intel do
+  if OS.linux? do
+    if Hardware::CPU.intelif Hardware::CPU.intel?
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
     end
   end
   license "MIT OR Apache-2.0"
 
   def install
-    on_macos do
-      on_arm do
+    if OS.mac? do
+      if Hardware::CPU.arm? do
         bin.install "axolotlsay"
       end
     end
-    on_macos do
-      on_intel do
+    if OS.mac? do
+      if Hardware::CPU.intel? do
         bin.install "axolotlsay"
       end
     end
-    on_linux do
-      on_intel do
+    if OS.linux? do
+      if Hardware::CPU.intel? do
         bin.install "axolotlsay"
       end
     end
@@ -822,7 +823,7 @@ class Axolotlsay < Formula
 
     # Install any leftover files in pkgshare; these are probably config or
     # sample files.
-    pkgshare.install *leftover_contents unless leftover_contents.empty?
+    pkgshare.install *(leftover_contents) unless leftover_contents.empty?
   end
 end
 
@@ -1426,5 +1427,3 @@ try {
   },
   "linkage": []
 }
-
-

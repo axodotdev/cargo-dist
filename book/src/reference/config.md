@@ -29,6 +29,17 @@ This is required by [MSI installers](../installers/msi.md), as they need a "manu
 
 This is the list of binaries a package defines. Because we consider an "App" to be "A Cargo Package", this field lets you nest multiple binaries under a single "App" or just rename the main binary.
 
+### description
+
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-description-field)
+
+This is used by [Homebrew installers](../installers/homebrew.md), as they need a formula desc.
+
+### homepage
+
+> This is a builtin Cargo config, [see the upstream docs](https://doc.rust-lang.org/cargo/reference/manifest.html#the-homepage-field)
+
+This is used by [Homebrew installers](../installers/homebrew.md), as they need a formula homepage. If not specified, the formula homepage will fall back to the [repository](#repository) url.
 
 ### license-file
 

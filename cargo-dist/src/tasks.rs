@@ -1926,9 +1926,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let release = self.release(to_release);
         let app_name = release.app_name.clone();
-        let app_desc = release.app_desc.clone();
+        let app_desc = if release.app_desc.is_none() {
+            warn!("The Homebrew publish job is enabled but no description was specified\n  consider adding `description = ` to package in Cargo.toml");
+            Some(format!("The {} application", release.app_name))
+        } else {
+            release.app_desc.clone()
+        };
         let app_license = release.app_license.clone();
-        let app_homepage_url = release.app_homepage_url.clone();
+        let app_homepage_url = if release.app_homepage_url.is_none() {
+            warn!("The Homebrew publish job is enabled but no homepage was specified\n  consider adding `homepage = ` to package in Cargo.toml");
+            release.app_repository_url.clone()
+        } else {
+            release.app_homepage_url.clone()
+        };
         let tap = release.tap.clone();
 
         if tap.is_some() && !self.inner.publish_jobs.contains(&PublishStyle::Homebrew) {

@@ -6,6 +6,7 @@ use axoproject::{AutoIncludes, PackageIdx, PackageInfo, WorkspaceInfo};
 use serde_json::json;
 
 pub const REPO_URL: &str = "https://github.com/axodotdev/axolotlsay";
+pub const REPO_DESC: &str = "💬 a CLI for learning to distribute CLIs in rust";
 
 pub const BIN_AXO_NAME: &str = "axolotlsay";
 pub const BIN_AXO_VER: &str = "1.0.0";
@@ -58,7 +59,7 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
         version: Some(axoproject::Version::Cargo(ver.parse().unwrap())),
         manifest_path: Default::default(),
         package_root: Default::default(),
-        description: None,
+        description: Some(REPO_DESC.to_owned()),
         authors: vec![],
         license: None,
         publish: true,
