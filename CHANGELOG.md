@@ -17,6 +17,8 @@ The name of your homebrew formula can now be overriden with `formula = "my-cool-
 
 * @mistydemeo [enabled pipefail in more places in cargo-dist's CI](https://github.com/axodotdev/cargo-dist/pull/619)
 
+* @mistydemeo [fixed arm64 musl detection for homebrew and shell installers](https://github.com/axodotdev/cargo-dist/pull/799)
+
 
 # Version 0.10.0 (2024-02-09)
 
