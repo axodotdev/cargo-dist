@@ -2634,16 +2634,19 @@ jobs:
           pattern: artifacts-*
           path: Formula/
           merge-multiple: true
+      # This is extra complex because you can make your Formula name not match your app name
+      # so we need to find releases with a *.rb file, and publish with that filename.
       - name: Commit formula files
         run: |
           git config --global user.name "${GITHUB_USER}"
           git config --global user.email "${GITHUB_EMAIL}"
 
-          for release in $(echo "$PLAN" | jq --compact-output '.releases[]'); do
-            name=$(echo "$release" | jq .app_name --raw-output)
+          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith(".rb")] | any)'); do
+            filename=$(echo "$release" | jq '.artifacts[] | select(endswith(".rb"))' --raw-output)
+            name=$(echo "$filename" | sed "s/\.rb$//")
             version=$(echo "$release" | jq .app_version --raw-output)
 
-            git add Formula/${name}.rb
+            git add "Formula/${filename}"
             git commit -m "${name} ${version}"
           done
           git push
@@ -2913,5 +2916,3 @@ jobs:
     </Product>
 
 </Wix>
-
-
