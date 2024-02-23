@@ -1,6 +1,26 @@
 # Unreleased
 
-Nothing Yet!
+This release is a few minor improvements, and a new config for homebrew installers.
+
+## Features
+
+The name of your homebrew formula can now be overridden with `formula = "my-cool-formula"`.
+
+* [docs](opensource.axo.dev/cargo-dist/book/reference/config.html#formula)
+* impl
+    * @ashleygwilliams [initial impl](https://github.com/axodotdev/cargo-dist/pull/791)
+    * @gankra [add support to brew publish job](https://github.com/axodotdev/cargo-dist/pull/816)
+
+## Fixes
+
+* @gankra [powershell `iem | iex` exprs are now more robust and can be run from cmd](https://github.com/axodotdev/cargo-dist/pull/808). Only downside is they're more verbose.
+
+* @saraviera [All multi-value cli flags can now be passed as `--arg x y` or `--arg=x,y`](https://github.com/axodotdev/cargo-dist/pull/744). To make this work, a minor breaking change was made to the `cargo dist generate` plumbing command: you must now pass `--mode ci` instead of `ci`. This likely affects no one.
+
+* @mistydemeo [enabled pipefail in more places in cargo-dist's CI](https://github.com/axodotdev/cargo-dist/pull/619)
+
+* @mistydemeo [fixed arm64 musl detection for homebrew and shell installers](https://github.com/axodotdev/cargo-dist/pull/799)
+
 
 
 # Version 0.11.0 (2024-02-23)
