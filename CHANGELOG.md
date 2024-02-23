@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.11.1 (2024-02-23)
+
 This release is a few minor improvements, and a new config for homebrew installers.
 
 ## Features
