@@ -7,15 +7,15 @@ class AxolotlBrew < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
   homepage "https://github.com/axodotdev/axolotlsay"
   version "0.2.1"
-  if OS.mac? do
-    if Hardware::CPU.arm? do
+  if OS.mac?
+    if Hardware::CPU.arm?
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
     end
-    if Hardware::CPU.intel? do
+    if Hardware::CPU.intel?
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
     end
   end
-  if OS.linux? do
+  if OS.linux?
     if Hardware::CPU.intelif Hardware::CPU.intel?
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
     end
@@ -23,18 +23,18 @@ class AxolotlBrew < Formula
   license "MIT OR Apache-2.0"
 
   def install
-    if OS.mac? do
-      if Hardware::CPU.arm? do
+    if OS.mac?
+      if Hardware::CPU.arm?
         bin.install "axolotlsay"
       end
     end
-    if OS.mac? do
-      if Hardware::CPU.intel? do
+    if OS.mac?
+      if Hardware::CPU.intel?
         bin.install "axolotlsay"
       end
     end
-    if OS.linux? do
-      if Hardware::CPU.intel? do
+    if OS.linux?
+      if Hardware::CPU.intel?
         bin.install "axolotlsay"
       end
     end
@@ -45,7 +45,7 @@ class AxolotlBrew < Formula
 
     # Install any leftover files in pkgshare; these are probably config or
     # sample files.
-    pkgshare.install *(leftover_contents) unless leftover_contents.empty?
+    pkgshare.install(*leftover_contents) unless leftover_contents.empty?
   end
 end
 

@@ -8,7 +8,7 @@ class {{ formula_class }} < Formula
   version "{{ inner.app_version }}"
   {#- #}
   {%- if arm64_macos.id or x86_64_macos.id %}
-  if OS.mac? do
+  if OS.mac?
     {#- If arm64/x86_64 builds are the same, skip the Hardware::CPU.type if statement #}
     {%- if arm64_macos.id == x86_64_macos.id %}
     url "{{ inner.base_url }}/{{ arm64_macos.id }}"
@@ -17,7 +17,7 @@ class {{ formula_class }} < Formula
     {%- endif %}
     {%- else %}
     {%- if arm64_macos.id %}
-    if Hardware::CPU.arm? do
+    if Hardware::CPU.arm?
       url "{{ inner.base_url }}/{{ arm64_macos.id }}"
       {%- if arm64_macos_sha256 %}
       sha256 "{{ arm64_macos_sha256 }}"
@@ -25,7 +25,7 @@ class {{ formula_class }} < Formula
     end
     {%- endif %}
     {%- if x86_64_macos.id %}
-    if Hardware::CPU.intel? do
+    if Hardware::CPU.intel?
       url "{{ inner.base_url }}/{{ x86_64_macos.id }}"
       {%- if x86_64_macos_sha256 %}
       sha256 "{{ x86_64_macos_sha256 }}"
@@ -37,9 +37,9 @@ class {{ formula_class }} < Formula
   {%- endif %}
   {#- #}
   {%- if arm64_linux.id or x86_64_linux.id %}
-  if OS.linux? do
+  if OS.linux?
     {%- if arm64_linux.id %}
-    if Hardware::CPU.arm? do
+    if Hardware::CPU.arm?
       url "{{ inner.base_url }}/{{ arm64_linux.id }}"
       {%- if arm64_linux %}
       sha256 "{{ arm64_linux_sha256 }}"
@@ -68,29 +68,29 @@ class {{ formula_class }} < Formula
 
   def install
     {%- if arm64_macos.binaries %}
-    if OS.mac? do
-      if Hardware::CPU.arm? do
+    if OS.mac?
+      if Hardware::CPU.arm?
         bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       end
     end
     {%- endif %}
     {%- if x86_64_macos.binaries %}
-    if OS.mac? do
-      if Hardware::CPU.intel? do
+    if OS.mac?
+      if Hardware::CPU.intel?
         bin.install {% for binary in x86_64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       end
     end
     {%- endif %}
     {%- if arm64_linux.binaries %}
-    if OS.linux? do
-      if Hardware::CPU.arm? do
+    if OS.linux?
+      if Hardware::CPU.arm?
         bin.install {% for binary in arm64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       end
     end
     {%- endif %}
     {%- if x86_64_linux.binaries %}
-    if OS.linux? do
-      if Hardware::CPU.intel? do
+    if OS.linux?
+      if Hardware::CPU.intel?
         bin.install {% for binary in x86_64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       end
     end
@@ -102,6 +102,6 @@ class {{ formula_class }} < Formula
 
     # Install any leftover files in pkgshare; these are probably config or
     # sample files.
-    pkgshare.install *(leftover_contents) unless leftover_contents.empty?
+    pkgshare.install(*leftover_contents) unless leftover_contents.empty?
   end
 end
