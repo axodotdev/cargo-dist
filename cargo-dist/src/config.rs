@@ -513,9 +513,6 @@ impl DistMetadata {
         if tag_namespace.is_some() {
             warn!("package.metadata.dist.tag-namespace is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        if install_updater.is_some() {
-            warn!("package.metadata.dist.install-updater is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
-        }
 
         // Merge non-global settings
         if installers.is_none() {
@@ -568,6 +565,9 @@ impl DistMetadata {
         }
         if github_custom_runners.is_none() {
             *github_custom_runners = workspace_config.github_custom_runners.clone();
+        }
+        if install_updater.is_none() {
+            *install_updater = workspace_config.install_updater;
         }
 
         // This was historically implemented as extend, but I'm not convinced the
