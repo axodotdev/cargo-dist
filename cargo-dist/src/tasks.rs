@@ -1428,6 +1428,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let artifact = self.make_updater_for_variant(variant_idx);
 
+        // This adds an updater per variant (eg one per app per target).
+        // In the future this could possibly be deduplicated to just one per
+        // target, but this is fine for now.
         self.add_local_artifact(variant_idx, artifact);
     }
 
