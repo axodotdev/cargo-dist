@@ -167,11 +167,9 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> Result<()
 
     // Install to a temporary path before moving it to the destination
     cmd.arg("install")
+        .arg("axoupdater-cli")
         .arg("--root")
         .arg(tmpdir.path())
-        .arg("--git")
-        .arg("https://github.com/axodotdev/axoupdater")
-        .arg("--all-features")
         .arg("--bin")
         .arg("axoupdater");
 
