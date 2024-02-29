@@ -47,7 +47,7 @@ class {{ formula_class }} < Formula
     end
     {%- endif %}
     {%- if x86_64_linux.id %}
-    if Hardware::CPU.intelif Hardware::CPU.intel?
+    if Hardware::CPU.intel?
       url "{{ inner.base_url }}/{{ x86_64_linux.id }}"
       {%- if x86_64_linux_sha256 %}
       sha256 "{{ x86_64_linux_sha256 }}"
@@ -68,31 +68,23 @@ class {{ formula_class }} < Formula
 
   def install
     {%- if arm64_macos.binaries %}
-    if OS.mac?
-      if Hardware::CPU.arm?
-        bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      end
+    if OS.mac? && Hardware::CPU.arm?
+      bin.install {% for binary in arm64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
     end
     {%- endif %}
     {%- if x86_64_macos.binaries %}
-    if OS.mac?
-      if Hardware::CPU.intel?
-        bin.install {% for binary in x86_64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      end
+    if OS.mac? && Hardware::CPU.intel?
+      bin.install {% for binary in x86_64_macos.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
     end
     {%- endif %}
     {%- if arm64_linux.binaries %}
-    if OS.linux?
-      if Hardware::CPU.arm?
-        bin.install {% for binary in arm64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      end
+    if OS.linux? && Hardware::CPU.arm?
+      bin.install {% for binary in arm64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
     end
     {%- endif %}
     {%- if x86_64_linux.binaries %}
-    if OS.linux?
-      if Hardware::CPU.intel?
-        bin.install {% for binary in x86_64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      end
+    if OS.linux? && Hardware::CPU.intel?
+      bin.install {% for binary in x86_64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
     end
     {%- endif %}
 

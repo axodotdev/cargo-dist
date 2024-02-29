@@ -815,27 +815,21 @@ class AkaikatanaRepack < Formula
     end
   end
   if OS.linux?
-    if Hardware::CPU.intelif Hardware::CPU.intel?
+    if Hardware::CPU.intel?
       url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz"
     end
   end
   license "GPL-2.0-or-later"
 
   def install
-    if OS.mac?
-      if Hardware::CPU.arm?
-        bin.install "akextract", "akmetadata", "akrepack"
-      end
+    if OS.mac? && Hardware::CPU.arm?
+      bin.install "akextract", "akmetadata", "akrepack"
     end
-    if OS.mac?
-      if Hardware::CPU.intel?
-        bin.install "akextract", "akmetadata", "akrepack"
-      end
+    if OS.mac? && Hardware::CPU.intel?
+      bin.install "akextract", "akmetadata", "akrepack"
     end
-    if OS.linux?
-      if Hardware::CPU.intel?
-        bin.install "akextract", "akmetadata", "akrepack"
-      end
+    if OS.linux? && Hardware::CPU.intel?
+      bin.install "akextract", "akmetadata", "akrepack"
     end
 
     # Homebrew will automatically install these, so we don't need to do that
