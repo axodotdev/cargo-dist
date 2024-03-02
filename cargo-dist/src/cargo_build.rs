@@ -91,6 +91,19 @@ impl<'a> DistGraphBuilder<'a> {
                 }
             }
 
+            if target == "aarch64-pc-windows-msvc"
+                && self.inner.tools.cargo.host_target != "aarch64-pc-windows-msvc"
+            {
+                if let Some(rustup) = self.inner.tools.rustup.clone() {
+                    builds.push(BuildStep::Rustup(RustupStep {
+                        rustup,
+                        target: target.clone(),
+                    }));
+                } else {
+                    warn!("You're trying to cross-compile to Windows ARM64, but I can't find rustup to ensure you have the rust toolchains for it!")
+                }
+            }
+
             if self.inner.precise_builds {
                 // `(target, package, features)` uniquely identifies a build we need to do,
                 // so group all the binaries under those buckets and add a build for each one
