@@ -280,6 +280,21 @@ pub enum DistError {
         /// the name of the missing tool
         tool: String,
     },
+
+    /// octocrab failed when checking axoupdater releases
+    #[error("Failed to check the latest release of axoupdater")]
+    #[diagnostic(help(
+        "Is your internet connection working? If not, this may be a bug; please file an issue!"
+    ))]
+    AxoupdaterReleaseCheckFailed {},
+
+    /// Failed to determine how to uncompress something
+    #[error("Failed to determine compression format")]
+    #[diagnostic(help("File extension of unrecognized file was {extension}"))]
+    UnrecognizedCompression {
+        /// The file extension of the unrecognized file
+        extension: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

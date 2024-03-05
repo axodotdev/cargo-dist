@@ -73,6 +73,13 @@ function Install-Binary($install_args) {
   {%- endfor %}
   }
 
+  {%- for updater in updaters %}
+  $platforms["{{ updater.target_triple }}"]["updater"] = @{
+    "artifact_name" = "{{ updater.id }}"
+    "bin" = "{{ updater.binary }}"
+  }
+  {%- endfor %}
+
   $fetched = Download "$ArtifactDownloadUrl" $platforms
   # FIXME: add a flag that lets the user not do this step
   Invoke-Installer $fetched "$install_args"
@@ -173,6 +180,16 @@ function Download($download_url, $platforms) {
     Write-Verbose "  Unpacked $bin_name"
     $bin_paths += "$tmp\$bin_name"
   }
+
+  if ($null -ne $info["updater"]) {
+    $updater_id = $info["updater"]["artifact_name"]
+    $updater_url = "$download_url/$updater_id"
+    $out_name = "$tmp\{{ app_name}}-update.exe"
+
+    $wc.downloadFile($updater_url, $out_name)
+    $bin_paths += $out_name
+  }
+
   return $bin_paths
 }
 

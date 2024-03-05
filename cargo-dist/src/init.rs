@@ -264,6 +264,7 @@ fn get_new_dist_metadata(
             extra_artifacts: None,
             github_custom_runners: None,
             tag_namespace: None,
+            install_updater: None,
         }
     };
 
@@ -741,6 +742,26 @@ fn get_new_dist_metadata(
         }
     }
 
+    if orig_meta.install_updater.is_none()
+        && meta
+            .installers
+            .as_deref()
+            .unwrap_or_default()
+            .iter()
+            .any(|installer| {
+                installer == &InstallerStyle::Shell || installer == &InstallerStyle::Powershell
+            })
+    {
+        let prompt = r#"Would you like to include an updater program with your binaries?"#;
+        let res = Confirm::with_theme(&theme)
+            .with_prompt(prompt)
+            .default(false)
+            .interact()?;
+        eprintln!();
+
+        meta.install_updater = Some(res);
+    }
+
     Ok(meta)
 }
 
@@ -798,6 +819,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         tag_namespace,
         extra_artifacts: _,
         github_custom_runners: _,
+        install_updater,
     } = &meta;
 
     apply_optional_value(
@@ -1052,6 +1074,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "tag-namespace",
         "# A prefix git tags must include for cargo-dist to care about them\n",
         tag_namespace.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "install-updater",
+        "# Whether to install an updater program\n",
+        *install_updater,
     );
 
     // Finalize the table

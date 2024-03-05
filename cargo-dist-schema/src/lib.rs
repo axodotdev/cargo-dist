@@ -310,6 +310,9 @@ pub enum ArtifactKind {
     /// Some form of extra artifact produced by a sidecar build
     #[serde(rename = "extra-artifact")]
     ExtraArtifact,
+    /// An updater executable
+    #[serde(rename = "updater")]
+    Updater,
     /// Unknown to this version of cargo-dist-schema
     ///
     /// This is a fallback for forward/backward-compat

@@ -333,6 +333,10 @@ pub struct DistMetadata {
     /// cargo-dist can co-exist with other release workflows in complex workspaces
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tag_namespace: Option<String>,
+
+    /// Whether to install an updater program alongside the software
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_updater: Option<bool>,
 }
 
 impl DistMetadata {
@@ -380,6 +384,7 @@ impl DistMetadata {
             extra_artifacts: _,
             github_custom_runners: _,
             tag_namespace: _,
+            install_updater: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -436,6 +441,7 @@ impl DistMetadata {
             extra_artifacts,
             github_custom_runners,
             tag_namespace,
+            install_updater,
         } = self;
 
         // Check for global settings on local packages
@@ -559,6 +565,9 @@ impl DistMetadata {
         }
         if github_custom_runners.is_none() {
             *github_custom_runners = workspace_config.github_custom_runners.clone();
+        }
+        if install_updater.is_none() {
+            *install_updater = workspace_config.install_updater;
         }
 
         // This was historically implemented as extend, but I'm not convinced the

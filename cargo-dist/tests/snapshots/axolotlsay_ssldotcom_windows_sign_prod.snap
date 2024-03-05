@@ -160,6 +160,14 @@ download_binary_and_run_installer() {
             ;;
     esac
 
+    case "$_arch" in 
+        *)
+            # No updater for this, or maybe any, arch
+            _updater_name=""
+            _updater_bin=""
+            ;;
+    esac
+
     # Replace the placeholder binaries with the calculated array from above
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_BINS"'/"$_bins_js_array"/)"
 
@@ -185,6 +193,25 @@ download_binary_and_run_installer() {
       say "that $APP_NAME's release process is not working. When in doubt"
       say "please feel free to open an issue!"
       exit 1
+    fi
+
+    # ...and then the updater, if it exists
+    if [ -n "$_updater_name" ]; then
+        local _updater_url="$ARTIFACT_DOWNLOAD_URL/$_updater_name"
+        # This renames the artifact while doing the download, removing the
+        # target triple and leaving just the appname-update format
+        local _updater_file="$_dir/$APP_NAME-update"
+
+        if ! downloader "$_updater_url" "$_updater_file"; then
+          say "failed to download $_updater_url"
+          say "this may be a standard network error, but it may also indicate"
+          say "that $APP_NAME's release process is not working. When in doubt"
+          say "please feel free to open an issue!"
+          exit 1
+        fi
+
+        # Add the updater to the list of binaries to install
+        _bins="$_bins $APP_NAME-update"
     fi
 
     # unpack the archive
@@ -965,6 +992,16 @@ function Download($download_url, $platforms) {
     Write-Verbose "  Unpacked $bin_name"
     $bin_paths += "$tmp\$bin_name"
   }
+
+  if ($null -ne $info["updater"]) {
+    $updater_id = $info["updater"]["artifact_name"]
+    $updater_url = "$download_url/$updater_id"
+    $out_name = "$tmp\axolotlsay-update.exe"
+
+    $wc.downloadFile($updater_url, $out_name)
+    $bin_paths += $out_name
+  }
+
   return $bin_paths
 }
 
