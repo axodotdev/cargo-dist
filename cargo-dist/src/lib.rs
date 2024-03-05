@@ -12,13 +12,13 @@
 
 use std::io::Write;
 
-use axoasset::LocalAsset;
+use axoasset::{LocalAsset, RemoteAsset};
 use axoprocess::Cmd;
 use backend::{
     ci::CiInfo,
     installer::{self, msi::MsiInstallerInfo, InstallerImpl},
 };
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use cargo_build::{build_cargo_target, rustup_toolchain};
 use cargo_dist_schema::DistManifest;
 use config::{
@@ -156,6 +156,30 @@ fn run_build_step(
 
 /// Fetches an installer executable and installs it in the expected target path.
 pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> Result<()> {
+    let release = tokio::runtime::Handle::current()
+        .block_on(
+            octocrab::instance()
+                .repos("axodotdev", "axoupdater")
+                .releases()
+                .get_latest(),
+        )
+        .map_err(|_| DistError::AxoupdaterReleaseCheckFailed {})?;
+
+    let appropriate_updater = release.assets.iter().find(|asset| {
+        asset
+            .name
+            .starts_with(&format!("axoupdater-cli-{}", updater.target_triple))
+    });
+    match appropriate_updater {
+        Some(asset) => {
+            fetch_updater_from_binary(dist_graph, updater, asset.browser_download_url.as_ref())
+        }
+        None => fetch_updater_from_source(dist_graph, updater),
+    }
+}
+
+/// Builds an installer executable from source and installs it in the expected target path.
+pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) -> Result<()> {
     let tmpdir = TempDir::new().into_diagnostic()?;
 
     // Update this to work from releases, and to fetch prebuilt binaries,
@@ -182,6 +206,45 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> Result<()
     }
     std::fs::copy(source, dist_graph.target_dir.join(&updater.target_filename))
         .into_diagnostic()?;
+
+    Ok(())
+}
+
+/// Fetches an installer executable from a preexisting binary and installs it in the expected target path.
+fn fetch_updater_from_binary(
+    dist_graph: &DistGraph,
+    updater: &UpdaterStep,
+    asset_url: &str,
+) -> Result<()> {
+    let tmpdir = TempDir::new().into_diagnostic()?;
+    let zipball_target = Utf8PathBuf::from_path_buf(tmpdir.path().join("archive")).unwrap();
+
+    let handle = tokio::runtime::Handle::current();
+    let asset = handle.block_on(RemoteAsset::load_bytes(asset_url))?;
+    std::fs::write(&zipball_target, asset).into_diagnostic()?;
+    let suffix = if updater.target_triple.contains("windows") {
+        ".exe"
+    } else {
+        ""
+    };
+    let requested_filename = format!("axoupdater{suffix}");
+
+    let bytes = if asset_url.ends_with(".tar.xz") {
+        LocalAsset::untar_xz_file(&zipball_target, &requested_filename)?
+    } else if asset_url.ends_with(".tar.gz") {
+        LocalAsset::untar_gz_file(&zipball_target, &requested_filename)?
+    } else if asset_url.ends_with(".zip") {
+        LocalAsset::unzip_file(&zipball_target, &requested_filename)?
+    } else {
+        let extension = Utf8PathBuf::from(asset_url)
+            .extension()
+            .unwrap_or("unable to determine")
+            .to_owned();
+        return Err(DistError::UnrecognizedCompression { extension }).into_diagnostic();
+    };
+
+    let target = dist_graph.target_dir.join(&updater.target_filename);
+    std::fs::write(target, bytes).into_diagnostic()?;
 
     Ok(())
 }
