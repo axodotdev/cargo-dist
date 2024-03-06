@@ -843,9 +843,9 @@ checksum = "caff54706df99d2a78a5a4e3455ff45448d81ef1bb63c22cd14052ca0e993a3f"
 
 [[package]]
 name = "parse-changelog"
-version = "0.6.4"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c13b55711970287dd19a1c982f70f499008c2b9a7386c174506f3388b46bd3d"
+checksum = "237929abf4444ddd517e8ce3ecce365736e25a5b597105f414942fcd6065ad7a"
 dependencies = [
  "anyhow",
  "indexmap 2.2.2",
