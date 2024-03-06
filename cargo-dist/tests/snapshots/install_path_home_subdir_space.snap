@@ -78,7 +78,6 @@ download_binary_and_run_installer() {
     need_cmd mkdir
     need_cmd rm
     need_cmd tar
-    need_cmd which
     need_cmd grep
     need_cmd cat
 
@@ -1463,5 +1462,3 @@ try {
   },
   "linkage": []
 }
-
-

@@ -78,7 +78,6 @@ download_binary_and_run_installer() {
     need_cmd mkdir
     need_cmd rm
     need_cmd tar
-    need_cmd which
     need_cmd grep
     need_cmd cat
 
@@ -2282,5 +2281,3 @@ jobs:
           body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
           prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
-
-
