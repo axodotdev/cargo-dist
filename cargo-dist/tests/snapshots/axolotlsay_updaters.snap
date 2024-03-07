@@ -335,6 +335,17 @@ install() {
     else
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
+
+    # ...ignoring all of the above, if the user asked us to completely override
+    # those choices and use a specified directory, then pick that now
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        _install_dir_expr="$_install_dir"
+        _env_script_path_expr="$_env_script_path"
+    fi
+
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
 
@@ -1080,6 +1091,12 @@ function Invoke-Installer($bin_paths) {
   }
 
   $dest_dir = Join-Path $root "bin"
+
+  # ...ignoring all of the above, if the user asked us to completely override
+  # those choices and use a specified directory, then pick that now
+  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+    $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+  }
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_CARGO_HOME', $dest_dir.replace("\", "\\"))
