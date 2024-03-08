@@ -43,7 +43,7 @@ gazenot = { version = "0.3.0" }
 octocrab = "0.34.3"
 
 comfy-table = "7.0.1"
-miette = { version = "7.0.0" }
+miette = { version = "7.2.0" }
 thiserror = "1.0.57"
 tracing = { version = "0.1.36", features = ["log"] }
 serde = { version = "1.0.197", features = ["derive"] }
