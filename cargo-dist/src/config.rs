@@ -624,6 +624,19 @@ pub enum ArtifactMode {
     Lies,
 }
 
+impl std::fmt::Display for ArtifactMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            ArtifactMode::Local => "local",
+            ArtifactMode::Global => "global",
+            ArtifactMode::Host => "host",
+            ArtifactMode::All => "all",
+            ArtifactMode::Lies => "lies",
+        };
+        string.fmt(f)
+    }
+}
+
 /// The style of CI we should generate
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "kebab-case")]

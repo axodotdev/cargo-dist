@@ -4,6 +4,7 @@ use std::{env, process::ExitStatus};
 
 use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_dist_schema::DistManifest;
 
 use crate::{
     build::{package_id_string, BuildExpectations},
@@ -127,8 +128,12 @@ fn run_build(
     Ok(command.status()?)
 }
 
-/// Build a generic target
-pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -> DistResult<()> {
+/// Build a generic targets
+pub fn build_generic_target(
+    dist_graph: &DistGraph,
+    manifest: &mut DistManifest,
+    target: &GenericBuildStep,
+) -> DistResult<()> {
     eprintln!(
         "building generic target ({} via {})",
         target.target_triple,
@@ -156,7 +161,7 @@ pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -
     }
 
     // Check and process the binaries
-    expected.process_bins(dist_graph)?;
+    expected.process_bins(dist_graph, manifest)?;
 
     Ok(())
 }

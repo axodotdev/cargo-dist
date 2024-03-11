@@ -3,6 +3,7 @@
 use std::env;
 
 use axoprocess::Cmd;
+use cargo_dist_schema::DistManifest;
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
 
@@ -133,7 +134,11 @@ impl<'a> DistGraphBuilder<'a> {
 }
 
 /// Build a cargo target
-pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> DistResult<()> {
+pub fn build_cargo_target(
+    dist_graph: &DistGraph,
+    manifest: &mut DistManifest,
+    target: &CargoBuildStep,
+) -> DistResult<()> {
     eprint!(
         "building cargo target ({}/{}",
         target.target_triple, target.profile
@@ -222,7 +227,7 @@ pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Di
     }
 
     // Process all the resulting binaries
-    expected.process_bins(dist_graph)?;
+    expected.process_bins(dist_graph, manifest)?;
 
     Ok(())
 }

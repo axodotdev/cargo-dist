@@ -2,12 +2,12 @@
 
 use axoproject::PackageId;
 use camino::Utf8PathBuf;
+use cargo_dist_schema::{AssetInfo, DistManifest};
 use tracing::info;
 
 use crate::{
-    copy_file,
-    linkage::{determine_linkage, Linkage},
-    Binary, BinaryIdx, DistError, DistGraph, DistResult, FastMap, TargetTriple,
+    copy_file, linkage::determine_linkage, Binary, BinaryIdx, DistError, DistGraph, DistResult,
+    SortedMap, TargetTriple,
 };
 
 pub mod cargo;
@@ -16,14 +16,14 @@ pub mod generic;
 /// Output expectations for builds, and computed facts (all packages)
 pub struct BuildExpectations {
     /// Expectations grouped by package
-    pub packages: FastMap<String, BinaryExpectations>,
+    pub packages: SortedMap<String, BinaryExpectations>,
 }
 
 /// Output expectations for builds, and computed facts (one package)
 #[derive(Default)]
 pub struct BinaryExpectations {
     /// Expected binaries
-    pub binaries: FastMap<String, ExpectedBinary>,
+    pub binaries: SortedMap<String, ExpectedBinary>,
 }
 
 /// Binaries we expect
@@ -38,16 +38,12 @@ pub struct ExpectedBinary {
     ///
     /// Initially this is empty, but should be Some by the end of the build from calls to found_bin
     pub sym_paths: Vec<Utf8PathBuf>,
-    /// linkage for the binary
-    ///
-    /// Initially this is None, but can be Some by the end of process_bins
-    pub linkage: Option<Linkage>,
 }
 
 impl BuildExpectations {
     /// Create a new BuildExpectations
     pub fn new(dist: &DistGraph, expected_binaries: &[BinaryIdx]) -> Self {
-        let mut packages = FastMap::<String, BinaryExpectations>::new();
+        let mut packages = SortedMap::<String, BinaryExpectations>::new();
         for &binary_idx in expected_binaries {
             let binary = &dist.binary(binary_idx);
 
@@ -61,7 +57,6 @@ impl BuildExpectations {
                     idx: binary_idx,
                     src_path: None,
                     sym_paths: vec![],
-                    linkage: None,
                 },
             );
         }
@@ -122,7 +117,11 @@ impl BuildExpectations {
     ///
     /// * code signing / hashing
     /// * stripping
-    pub fn process_bins(&mut self, dist: &DistGraph) -> DistResult<()> {
+    pub fn process_bins(
+        &mut self,
+        dist: &DistGraph,
+        manifest: &mut DistManifest,
+    ) -> DistResult<()> {
         let mut missing = vec![];
         for (pkg_id, pkg) in self.packages.iter_mut() {
             for (bin_name, result_bin) in pkg.binaries.iter_mut() {
@@ -138,7 +137,7 @@ impl BuildExpectations {
                 let bin = dist.binary(result_bin.idx);
 
                 // compute linkage for the binary
-                compute_linkage(result_bin, &bin.target)?;
+                compute_linkage(dist, manifest, result_bin, &bin.target)?;
 
                 // copy files to their final homes
                 copy_assets(result_bin, bin)?;
@@ -156,13 +155,27 @@ impl BuildExpectations {
 }
 
 // Compute the linkage info for this binary
-fn compute_linkage(src: &mut ExpectedBinary, target: &TargetTriple) -> DistResult<()> {
+fn compute_linkage(
+    dist: &DistGraph,
+    manifest: &mut DistManifest,
+    src: &mut ExpectedBinary,
+    target: &TargetTriple,
+) -> DistResult<()> {
     let src_path = src
         .src_path
         .as_ref()
         .expect("bin src_path should have been checked by caller");
-    let linkage = determine_linkage(src_path, target)?;
-    src.linkage = Some(linkage);
+    let linkage = determine_linkage(src_path, target)?.to_schema();
+    let bin = dist.binary(src.idx);
+    manifest.assets.insert(
+        bin.id.clone(),
+        AssetInfo {
+            id: bin.id.clone(),
+            name: bin.name.clone(),
+            system: dist.system_id.clone(),
+            linkage: Some(linkage),
+        },
+    );
     Ok(())
 }
 

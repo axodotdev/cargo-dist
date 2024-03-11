@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Hosting};
+use tracing::warn;
 
 use crate::{
     backend::{
@@ -30,20 +31,26 @@ pub fn load_and_merge_manifests(
             dist_version: _,
             // one value N machines
             system_info: _,
-            artifacts: _,
-            releases,
-            publish_prereleases,
             announcement_tag,
-            announcement_tag_is_implicit,
-            announcement_is_prerelease,
-            announcement_title,
-            announcement_changelog,
-            announcement_github_body,
+            announcement_tag_is_implicit: _,
+            announcement_is_prerelease: _,
+            announcement_title: _,
+            announcement_changelog: _,
+            announcement_github_body: _,
+            publish_prereleases: _,
+            artifacts,
+            releases,
             systems,
             assets,
             ci,
             linkage,
         } = manifest;
+
+        // Discard clearly unrelated manifests
+        if output.announcement_tag != announcement_tag {
+            warn!("found old manifest for the tag {announcement_tag:?}, ignoring it");
+            continue;
+        }
 
         // Merge every release
         for release in releases {
@@ -63,28 +70,18 @@ pub fn load_and_merge_manifests(
             // in artifacts from other machines (`cargo dist plan` should know them all for now).
         }
 
-        if let Some(val) = announcement_tag {
-            output.announcement_tag = Some(val);
-            // Didn't wrap these in an option, so use announcement_tag as a proxy
-            output.announcement_is_prerelease = announcement_is_prerelease;
-            output.announcement_tag_is_implicit = announcement_tag_is_implicit;
-            output.publish_prereleases = publish_prereleases;
+        for (artifact_id, artifact) in artifacts {
+            // TODO: merge these
         }
-        if let Some(val) = announcement_title {
-            output.announcement_title = Some(val);
-        }
-        if let Some(val) = announcement_changelog {
-            output.announcement_changelog = Some(val);
-        }
-        if let Some(val) = announcement_github_body {
-            output.announcement_github_body = Some(val);
-        }
+
         if let Some(val) = ci {
             // Don't bother doing an inner merge here, all or nothing
             output.ci = Some(val);
         };
 
-        // Just merge all the linkage
+        // Just merge all the system-specific info
+        output.systems.extend(systems);
+        output.assets.extend(assets);
         output.linkage.extend(linkage);
     }
 
