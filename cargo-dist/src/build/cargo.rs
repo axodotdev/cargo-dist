@@ -3,16 +3,15 @@
 use std::env;
 
 use axoprocess::Cmd;
-use camino::Utf8PathBuf;
-use miette::{miette, Context, IntoDiagnostic};
-use tracing::{info, warn};
+use miette::{Context, IntoDiagnostic};
+use tracing::warn;
 
+use crate::build::BuildExpectations;
 use crate::env::{calculate_ldflags, fetch_brew_env, parse_env, select_brew_env};
-use crate::{
-    copy_file, CargoBuildStep, CargoTargetFeatureList, CargoTargetPackages, DistGraph, FastMap,
-    RustupStep, SortedMap,
-};
 use crate::{errors::*, BinaryIdx, BuildStep, DistGraphBuilder, TargetTriple, PROFILE_DIST};
+use crate::{
+    CargoBuildStep, CargoTargetFeatureList, CargoTargetPackages, DistGraph, RustupStep, SortedMap,
+};
 
 impl<'a> DistGraphBuilder<'a> {
     pub(crate) fn compute_cargo_builds(&mut self) -> Vec<BuildStep> {
@@ -134,7 +133,7 @@ impl<'a> DistGraphBuilder<'a> {
 }
 
 /// Build a cargo target
-pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Result<()> {
+pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> DistResult<()> {
     eprint!(
         "building cargo target ({}/{}",
         target.target_triple, target.profile
@@ -194,45 +193,7 @@ pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Re
     command.envs(desired_extra_env);
     let mut task = command.spawn()?;
 
-    // Create entries for all the binaries we expect to find, and the paths they should
-    // be copied to (according to the copy_exe_to subscribers list).
-    //
-    // Structure is:
-    //
-    // package-id (key)
-    //    binary-name (key)
-    //       subscribers (list)
-    //          src-path (initially blank, must be filled in by rustc)
-    //          dest-path (where to copy the file to)
-    let mut expected_exes =
-        FastMap::<String, FastMap<String, Vec<(Utf8PathBuf, Utf8PathBuf)>>>::new();
-    let mut expected_symbols =
-        FastMap::<String, FastMap<String, Vec<(Utf8PathBuf, Utf8PathBuf)>>>::new();
-    for &binary_idx in &target.expected_binaries {
-        let binary = &dist_graph.binary(binary_idx);
-        let package_id = binary
-            .pkg_id
-            .clone()
-            .expect("pkg_id is mandatory for cargo builds")
-            .to_string();
-        let exe_name = binary.name.clone();
-        for exe_dest in &binary.copy_exe_to {
-            expected_exes
-                .entry(package_id.clone())
-                .or_default()
-                .entry(exe_name.clone())
-                .or_default()
-                .push((Utf8PathBuf::new(), exe_dest.clone()));
-        }
-        for sym_dest in &binary.copy_symbols_to {
-            expected_symbols
-                .entry(package_id.clone())
-                .or_default()
-                .entry(exe_name.clone())
-                .or_default()
-                .push((Utf8PathBuf::new(), sym_dest.clone()));
-        }
-    }
+    let mut expected = BuildExpectations::new(dist_graph, &target.expected_binaries);
 
     // Collect up the compiler messages to find out where binaries ended up
     let reader = std::io::BufReader::new(task.stdout.take().unwrap());
@@ -248,41 +209,11 @@ pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Re
         };
         match message {
             cargo_metadata::Message::CompilerArtifact(artifact) => {
-                // Hey we got an executable, is it one we wanted?
-                if let Some(new_exe) = artifact.executable {
-                    info!("got a new exe: {}", new_exe);
-                    let package_id = artifact.package_id.to_string();
-                    let exe_name = new_exe.file_stem().unwrap();
-
-                    // If we expected some symbols, pull them out of the paths of this executable
-                    let expected_sym = expected_symbols
-                        .get_mut(&package_id)
-                        .and_then(|m| m.get_mut(exe_name));
-                    if let Some(expected) = expected_sym {
-                        for (src_sym_path, _) in expected {
-                            for path in &artifact.filenames {
-                                // FIXME: unhardcode this when we add support for other symbol kinds!
-                                let is_symbols =
-                                    path.extension().map(|e| e == "pdb").unwrap_or(false);
-                                if is_symbols {
-                                    // These are symbols we expected! Save the path.
-                                    *src_sym_path = path.to_owned();
-                                }
-                            }
-                        }
-                    }
-
-                    // Get the exe path
-                    let expected_exe = expected_exes
-                        .get_mut(&package_id)
-                        .and_then(|m| m.get_mut(exe_name));
-                    if let Some(expected) = expected_exe {
-                        for (src_bin_path, _) in expected {
-                            // This is an exe we expected! Save the path.
-                            *src_bin_path = new_exe.clone();
-                        }
-                    }
-                }
+                let Some(new_exe) = artifact.executable else {
+                    continue;
+                };
+                // Hey we got an executable, record that fact
+                expected.found_bin(artifact.package_id.to_string(), new_exe, artifact.filenames);
             }
             _ => {
                 // Nothing else interesting?
@@ -290,35 +221,8 @@ pub fn build_cargo_target(dist_graph: &DistGraph, target: &CargoBuildStep) -> Re
         }
     }
 
-    // Check that we got everything we expected, and normalize to ArtifactIdx => Artifact Path
-    for (package_id, exes) in expected_exes {
-        for (exe_name, to_copy) in &exes {
-            for (src_path, dest_path) in to_copy {
-                if src_path.as_str().is_empty() {
-                    return Err(miette!(
-                        "failed to find bin {} ({}) -- did the cargo build above have errors?",
-                        exe_name,
-                        package_id
-                    ));
-                }
-                copy_file(src_path, dest_path)?;
-            }
-        }
-    }
-    for (package_id, symbols) in expected_symbols {
-        for (exe, to_copy) in &symbols {
-            for (src_path, dest_path) in to_copy {
-                if src_path.as_str().is_empty() {
-                    return Err(miette!(
-                        "failed to find symbols for bin {} ({}) -- did the cargo build above have errors?",
-                        exe,
-                        package_id
-                    ));
-                }
-                copy_file(src_path, dest_path)?;
-            }
-        }
-    }
+    // Process all the resulting binaries
+    expected.process_bins(dist_graph)?;
 
     Ok(())
 }

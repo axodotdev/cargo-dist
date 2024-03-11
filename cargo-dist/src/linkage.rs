@@ -443,7 +443,8 @@ fn do_pe(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
     }
 }
 
-fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage> {
+/// Get the linkage for a single binary
+pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage> {
     let libraries = match target {
         // Can be run on any OS
         "i686-apple-darwin" | "x86_64-apple-darwin" | "aarch64-apple-darwin" => do_otool(path)?,

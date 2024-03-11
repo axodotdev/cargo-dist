@@ -18,14 +18,14 @@ use backend::{
     ci::CiInfo,
     installer::{self, msi::MsiInstallerInfo, InstallerImpl},
 };
-use camino::{Utf8Path, Utf8PathBuf};
 use build::cargo::{build_cargo_target, rustup_toolchain};
+use build::generic::{build_generic_target, run_extra_artifacts_build};
+use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::DistManifest;
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
 use console::Term;
-use build::generic::{build_generic_target, run_extra_artifacts_build};
 use semver::Version;
 use temp_dir::TempDir;
 use tracing::info;
@@ -112,45 +112,42 @@ fn run_build_step(
     manifest: &DistManifest,
 ) -> Result<()> {
     match target {
-        BuildStep::Generic(target) => build_generic_target(dist_graph, target),
-        BuildStep::Cargo(target) => build_cargo_target(dist_graph, target),
-        BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd),
+        BuildStep::Generic(target) => build_generic_target(dist_graph, target)?,
+        BuildStep::Cargo(target) =>  build_cargo_target(dist_graph, target)?,
+        BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd)?,
         BuildStep::CopyFile(CopyStep {
             src_path,
             dest_path,
-        }) => copy_file(src_path, dest_path),
+        }) => copy_file(src_path, dest_path)?,
         BuildStep::CopyDir(CopyStep {
             src_path,
             dest_path,
-        }) => copy_dir(src_path, dest_path),
+        }) => copy_dir(src_path, dest_path)?,
         BuildStep::CopyFileOrDir(CopyStep {
             src_path,
             dest_path,
-        }) => copy_file_or_dir(src_path, dest_path),
+        }) => copy_file_or_dir(src_path, dest_path)?,
         BuildStep::Zip(ZipDirStep {
             src_path,
             dest_path,
             zip_style,
             with_root,
-        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref()),
-        BuildStep::GenerateInstaller(installer) => {
-            generate_installer(dist_graph, installer, manifest)
-        }
+        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref())?,
+        BuildStep::GenerateInstaller(installer) => generate_installer(dist_graph, installer, manifest)?,
         BuildStep::Checksum(ChecksumImpl {
             checksum,
             src_path,
             dest_path,
-        }) => Ok(generate_and_write_checksum(checksum, src_path, dest_path)?),
+        }) => generate_and_write_checksum(checksum, src_path, dest_path)?,
         BuildStep::GenerateSourceTarball(SourceTarballStep {
             committish,
             prefix,
             target,
-        }) => Ok(generate_source_tarball(
-            dist_graph, committish, prefix, target,
-        )?),
-        BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target),
-        BuildStep::Updater(updater) => fetch_updater(dist_graph, updater),
-    }
+        }) => generate_source_tarball(dist_graph, committish, prefix, target)?,
+        BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target)?,
+        BuildStep::Updater(updater) => fetch_updater(dist_graph, updater)?,
+    };
+    Ok(())
 }
 
 /// Fetches an installer executable and installs it in the expected target path.
@@ -252,40 +249,40 @@ fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifes
     match target {
         // These two are the meat: don't actually run these at all, just
         // fake them out
-        BuildStep::Generic(target) => build_fake_generic_artifacts(dist_graph, target),
-        BuildStep::Cargo(target) => build_fake_cargo_artifacts(dist_graph, target),
+        BuildStep::Generic(target) => build_fake_generic_artifacts(dist_graph, target)?,
+        BuildStep::Cargo(target) => build_fake_cargo_artifacts(dist_graph, target)?,
         // Never run rustup
-        BuildStep::Rustup(_) => Ok(()),
+        BuildStep::Rustup(_) => { },
         // Copying files is fairly safe
         BuildStep::CopyFile(CopyStep {
             src_path,
             dest_path,
-        }) => copy_file(src_path, dest_path),
+        }) => copy_file(src_path, dest_path)?,
         BuildStep::CopyDir(CopyStep {
             src_path,
             dest_path,
-        }) => copy_dir(src_path, dest_path),
+        }) => copy_dir(src_path, dest_path)?,
         BuildStep::CopyFileOrDir(CopyStep {
             src_path,
             dest_path,
-        }) => copy_file_or_dir(src_path, dest_path),
+        }) => copy_file_or_dir(src_path, dest_path)?,
         // The remainder of these are mostly safe to run as fake steps
         BuildStep::Zip(ZipDirStep {
             src_path,
             dest_path,
             zip_style,
             with_root,
-        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref()),
+        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref())?,
         BuildStep::GenerateInstaller(installer) => match installer {
             // MSI, unlike other installers, isn't safe to generate on any platform
-            InstallerImpl::Msi(msi) => generate_fake_msi(dist_graph, msi, manifest),
-            _ => generate_installer(dist_graph, installer, manifest),
+            InstallerImpl::Msi(msi) => generate_fake_msi(dist_graph, msi, manifest)?,
+            _ => generate_installer(dist_graph, installer, manifest)?,
         },
         BuildStep::Checksum(ChecksumImpl {
             checksum,
             src_path,
             dest_path,
-        }) => Ok(generate_and_write_checksum(checksum, src_path, dest_path)?),
+        }) => generate_and_write_checksum(checksum, src_path, dest_path)?,
         // Except source tarballs, which are definitely not okay
         // We mock these because it requires:
         // 1. git to be installed;
@@ -297,13 +294,14 @@ fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifes
             committish,
             prefix,
             target,
-        }) => Ok(generate_fake_source_tarball(
+        }) => generate_fake_source_tarball(
             dist_graph, committish, prefix, target,
-        )?),
+        )?,
         // Or extra artifacts, which may involve real builds
-        BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target),
+        BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target)?,
         BuildStep::Updater(_) => todo!(),
     }
+    Ok(())
 }
 
 fn build_fake_cargo_artifacts(dist: &DistGraph, target: &CargoBuildStep) -> Result<()> {
@@ -470,17 +468,17 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
     LocalAsset::copy_named(src_path, dest_path)?;
     Ok(())
 }
 
-pub(crate) fn copy_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+pub(crate) fn copy_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
     LocalAsset::copy_dir_named(src_path, dest_path)?;
     Ok(())
 }
 
-pub(crate) fn copy_file_or_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+pub(crate) fn copy_file_or_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
     if src_path.is_dir() {
         copy_dir(src_path, dest_path)
     } else {
