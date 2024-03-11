@@ -3,15 +3,14 @@
 use std::{env, process::ExitStatus};
 
 use axoprocess::Cmd;
-use camino::Utf8Path;
-use miette::miette;
+use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{
+    build::{package_id_string, BuildExpectations},
     copy_file,
     env::{calculate_cflags, calculate_ldflags, fetch_brew_env, parse_env, select_brew_env},
-    errors::Result,
-    BinaryIdx, BuildStep, DistGraph, DistGraphBuilder, ExtraBuildStep, GenericBuildStep, SortedMap,
-    TargetTriple,
+    BinaryIdx, BuildStep, DistError, DistGraph, DistGraphBuilder, DistResult, ExtraBuildStep,
+    GenericBuildStep, SortedMap, TargetTriple,
 };
 
 impl<'a> DistGraphBuilder<'a> {
@@ -73,7 +72,7 @@ fn run_build(
     dist_graph: &DistGraph,
     command_string: &[String],
     target: Option<&str>,
-) -> Result<ExitStatus> {
+) -> DistResult<ExitStatus> {
     let mut command_string = command_string.to_owned();
 
     let mut desired_extra_env = vec![];
@@ -129,7 +128,7 @@ fn run_build(
 }
 
 /// Build a generic target
-pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -> Result<()> {
+pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -> DistResult<()> {
     eprintln!(
         "building generic target ({} via {})",
         target.target_triple,
@@ -143,31 +142,31 @@ pub fn build_generic_target(dist_graph: &DistGraph, target: &GenericBuildStep) -
     )?;
 
     if !result.success() {
-        println!("Build exited non-zero: {}", result);
+        eprintln!("Build exited non-zero: {}", result);
     }
 
-    // Check that we got everything we expected, and normalize to ArtifactIdx => Artifact Path
+    let mut expected = BuildExpectations::new(dist_graph, &target.expected_binaries);
+
+    // Since generic builds provide no feedback, blindly assume we got what
+    // we expected, BuildExpectations will check for us
     for binary_idx in &target.expected_binaries {
         let binary = dist_graph.binary(*binary_idx);
-        let binary_path = Utf8Path::new(&binary.file_name);
-        if binary_path.exists() {
-            for dest in &binary.copy_exe_to {
-                copy_file(binary_path, dest)?;
-            }
-        } else {
-            return Err(miette!(
-                "failed to find bin {} -- did the build above have errors?",
-                binary_path
-            ));
-        }
+        let src_path = Utf8PathBuf::from(&binary.file_name);
+        expected.found_bin(package_id_string(binary.pkg_id.as_ref()), src_path, vec![]);
     }
+
+    // Check and process the binaries
+    expected.process_bins(dist_graph)?;
 
     Ok(())
 }
 
 /// Similar to the above, but with slightly different signatures since
 /// it's not based around axoproject-identified binaries
-pub fn run_extra_artifacts_build(dist_graph: &DistGraph, target: &ExtraBuildStep) -> Result<()> {
+pub fn run_extra_artifacts_build(
+    dist_graph: &DistGraph,
+    target: &ExtraBuildStep,
+) -> DistResult<()> {
     eprintln!(
         "building extra artifacts target (via {})",
         target.build_command.join(" ")
@@ -177,7 +176,7 @@ pub fn run_extra_artifacts_build(dist_graph: &DistGraph, target: &ExtraBuildStep
     let dest = dist_graph.dist_dir.to_owned();
 
     if !result.success() {
-        println!("Build exited non-zero: {}", result);
+        eprintln!("Build exited non-zero: {}", result);
     }
 
     // Check that we got everything we expected, and copy into the distribution path
@@ -186,10 +185,10 @@ pub fn run_extra_artifacts_build(dist_graph: &DistGraph, target: &ExtraBuildStep
         if binary_path.exists() {
             copy_file(binary_path, &dest.join(artifact))?;
         } else {
-            return Err(miette!(
-                "failed to find bin {} -- did the build above have errors?",
-                binary_path
-            ));
+            return Err(DistError::MissingBinaries {
+                pkg_name: "extra build".to_owned(),
+                bin_name: artifact.clone(),
+            });
         }
     }
 
