@@ -19,13 +19,13 @@ use backend::{
     installer::{self, msi::MsiInstallerInfo, InstallerImpl},
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_build::{build_cargo_target, rustup_toolchain};
+use build::cargo::{build_cargo_target, rustup_toolchain};
 use cargo_dist_schema::DistManifest;
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
 use console::Term;
-use generic_build::{build_generic_target, run_extra_artifacts_build};
+use build::generic::{build_generic_target, run_extra_artifacts_build};
 use semver::Version;
 use temp_dir::TempDir;
 use tracing::info;
@@ -37,11 +37,10 @@ pub use tasks::*;
 
 pub mod announce;
 pub mod backend;
-pub mod cargo_build;
+pub mod build;
 pub mod config;
 pub mod env;
 pub mod errors;
-pub mod generic_build;
 pub mod host;
 mod init;
 pub mod linkage;
