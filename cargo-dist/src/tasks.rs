@@ -53,7 +53,7 @@ use std::collections::HashMap;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{DistManifest, SystemId, SystemInfo};
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use serde::Serialize;
@@ -137,6 +137,12 @@ pub struct BinaryIdx(pub usize);
 /// It also allows us to report what *should* happen without actually doing it.
 #[derive(Debug)]
 pub struct DistGraph {
+    /// Unique id for the system we're building on.
+    ///
+    /// Since the whole premise of cargo-dist is to invoke it once on each machine, and no
+    /// two machines have any reason to have the exact same CLI args for cargo-dist, we
+    /// just use a mangled form of the CLI arguments here.
+    pub system_id: SystemId,
     /// Whether it looks like `cargo dist init` has been run
     pub is_init: bool,
 
@@ -703,6 +709,7 @@ pub(crate) struct DistGraphBuilder<'pkg_graph> {
 
 impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     pub(crate) fn new(
+        system_id: SystemId,
         tools: Tools,
         workspace: &'pkg_graph WorkspaceInfo,
         artifact_mode: ArtifactMode,
@@ -958,8 +965,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let hosting = crate::host::select_hosting(workspace, hosting.clone(), ci.as_deref());
 
+        let system = SystemInfo {
+            id: system_id.clone(),
+            cargo_version_line,
+            artifacts: vec![],
+            assets: vec![],
+        };
+        let systems = SortedMap::from_iter([(system_id.clone(), system)]);
+
         Ok(Self {
             inner: DistGraph {
+                system_id,
                 is_init: desired_cargo_dist_version.is_some(),
                 target_dir,
                 workspace_dir,
@@ -1015,7 +1031,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 announcement_github_body: None,
                 releases: vec![],
                 artifacts: Default::default(),
-                systems: Default::default(),
+                systems,
                 assets: Default::default(),
                 publish_prereleases,
                 ci: None,
@@ -1131,8 +1147,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             ..
         } = self.release_mut(to_release);
         let static_assets = static_assets.clone();
-        let id = format!("{release_id}-{target}");
-        info!("added variant {id}");
+        let variant_id = format!("{release_id}-{target}");
+        info!("added variant {variant_id}");
 
         variants.push(idx);
         targets.push(target.clone());
@@ -1142,20 +1158,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         for (pkg_idx, binary_name) in bins.clone() {
             let package = self.workspace.package(pkg_idx);
             let package_metadata = self.package_metadata(pkg_idx);
-            let version = package
-                .version
-                .as_ref()
-                .expect("Package version is mandatory!")
-                .semver();
             let pkg_id = package.cargo_package_id.clone();
             // For now we just use the name of the package as its package_spec.
             // I'm not sure if there are situations where this is ambiguous when
             // referring to a package in your workspace that you want to build an app for.
             // If they do exist, that's deeply cursed and I want a user to tell me about it.
             let pkg_spec = package.name.clone();
-            let id = format!("{binary_name}-v{version}-{target}");
+            // FIXME: make this more of a GUID to allow variants to share binaries?
+            let bin_id = format!("{variant_id}-{binary_name}");
 
-            let idx = if let Some(&idx) = self.binaries_by_id.get(&id) {
+            let idx = if let Some(&idx) = self.binaries_by_id.get(&bin_id) {
                 // If we already are building this binary we don't need to do it again!
                 idx
             } else {
@@ -1176,10 +1188,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
                 let file_name = format!("{binary_name}{platform_exe_ext}");
 
-                info!("added binary {id}");
+                info!("added binary {bin_id}");
                 let idx = BinaryIdx(self.inner.binaries.len());
                 let binary = Binary {
-                    id,
+                    id: bin_id.clone(),
                     pkg_id,
                     pkg_spec,
                     pkg_idx,
@@ -1192,6 +1204,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     features,
                 };
                 self.inner.binaries.push(binary);
+                self.binaries_by_id.insert(bin_id, idx);
                 idx
             };
 
@@ -1200,7 +1213,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         self.inner.variants.push(ReleaseVariant {
             target,
-            id,
+            id: variant_id,
             local_artifacts: vec![],
             binaries,
             static_assets,
@@ -2807,7 +2820,9 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
     let workspace = crate::config::get_project()?;
+    let system_id = format!("{}:{}", cfg.artifact_mode, cfg.targets.join(","));
     let mut graph = DistGraphBuilder::new(
+        system_id,
         tools,
         &workspace,
         cfg.artifact_mode,

@@ -78,11 +78,12 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
         if dist.local_builds_are_lies {
             build_fake(&dist, step, &manifest)?;
         } else {
-            run_build_step(&dist, step, &manifest)?;
+            run_build_step(&dist, step, &mut manifest)?;
         }
     }
 
-    // Compute linkage data now that we're done all builds
+    // Compute linkage data now that we've done all builds
+    // TODO(#848): delete this line to remove the old linkage system
     linkage::add_linkage_to_manifest(cfg, &dist, &mut manifest)?;
 
     // Next the global steps
@@ -90,7 +91,7 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
         if dist.local_builds_are_lies {
             build_fake(&dist, step, &manifest)?;
         } else {
-            run_build_step(&dist, step, &manifest)?;
+            run_build_step(&dist, step, &mut manifest)?;
         }
     }
 
@@ -109,11 +110,11 @@ pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
 fn run_build_step(
     dist_graph: &DistGraph,
     target: &BuildStep,
-    manifest: &DistManifest,
+    manifest: &mut DistManifest,
 ) -> Result<()> {
     match target {
-        BuildStep::Generic(target) => build_generic_target(dist_graph, target)?,
-        BuildStep::Cargo(target) =>  build_cargo_target(dist_graph, target)?,
+        BuildStep::Generic(target) => build_generic_target(dist_graph, manifest, target)?,
+        BuildStep::Cargo(target) => build_cargo_target(dist_graph, manifest, target)?,
         BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd)?,
         BuildStep::CopyFile(CopyStep {
             src_path,
@@ -133,7 +134,9 @@ fn run_build_step(
             zip_style,
             with_root,
         }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref())?,
-        BuildStep::GenerateInstaller(installer) => generate_installer(dist_graph, installer, manifest)?,
+        BuildStep::GenerateInstaller(installer) => {
+            generate_installer(dist_graph, installer, manifest)?
+        }
         BuildStep::Checksum(ChecksumImpl {
             checksum,
             src_path,
@@ -252,7 +255,7 @@ fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifes
         BuildStep::Generic(target) => build_fake_generic_artifacts(dist_graph, target)?,
         BuildStep::Cargo(target) => build_fake_cargo_artifacts(dist_graph, target)?,
         // Never run rustup
-        BuildStep::Rustup(_) => { },
+        BuildStep::Rustup(_) => {}
         // Copying files is fairly safe
         BuildStep::CopyFile(CopyStep {
             src_path,
@@ -294,9 +297,7 @@ fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifes
             committish,
             prefix,
             target,
-        }) => generate_fake_source_tarball(
-            dist_graph, committish, prefix, target,
-        )?,
+        }) => generate_fake_source_tarball(dist_graph, committish, prefix, target)?,
         // Or extra artifacts, which may involve real builds
         BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target)?,
         BuildStep::Updater(_) => todo!(),

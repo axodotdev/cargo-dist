@@ -192,7 +192,8 @@ impl Linkage {
         s.to_owned()
     }
 
-    fn to_schema(&self) -> cargo_dist_schema::Linkage {
+    /// Construct a cargo_dist_schema::Linkage from a Linkage
+    pub fn to_schema(&self) -> cargo_dist_schema::Linkage {
         cargo_dist_schema::Linkage {
             binary: self.binary.clone(),
             target: self.target.clone(),
