@@ -1006,7 +1006,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
-                system_info: Some(cargo_dist_schema::SystemInfo { cargo_version_line }),
+                system_info: None,
                 announcement_tag: None,
                 announcement_is_prerelease: false,
                 announcement_tag_is_implicit,
@@ -1015,6 +1015,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 announcement_github_body: None,
                 releases: vec![],
                 artifacts: Default::default(),
+                systems: Default::default(),
+                assets: Default::default(),
                 publish_prereleases,
                 ci: None,
                 linkage: vec![],

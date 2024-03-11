@@ -26,6 +26,10 @@ pub type LocalPath = String;
 pub type RelPath = String;
 /// The unique ID of an Artifact
 pub type ArtifactId = String;
+/// The unique ID of a System
+pub type SystemId = String;
+/// The unique ID of an Asset
+pub type AssetId = String;
 
 /// A report of the releases and artifacts that cargo-dist generated
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -59,6 +63,8 @@ pub struct DistManifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announcement_github_body: Option<String>,
     /// Info about the toolchain used to build this announcement
+    ///
+    /// DEPRECATED: never appears anymore
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system_info: Option<SystemInfo>,
@@ -70,6 +76,14 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub artifacts: BTreeMap<ArtifactId, Artifact>,
+    /// The systems that artifacts were built on
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub systems: BTreeMap<SystemId, SystemInfo>,
+    /// The assets contained within artifacts (binaries)
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub assets: BTreeMap<AssetId, AssetInfo>,
     /// Whether to publish prereleases to package managers
     #[serde(default)]
     pub publish_prereleases: bool,
@@ -77,8 +91,23 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<CiInfo>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     /// Data about dynamic linkage in the built libraries
     pub linkage: Vec<Linkage>,
+}
+
+/// Info about an Asset (binary)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct AssetInfo {
+    /// unique id of the Asset
+    pub id: AssetId,
+    /// filename of the Asset
+    pub name: String,
+    /// the system it was built on
+    pub system: SystemId,
+    /// the linkage of this Asset
+    pub linkage: Option<Linkage>,
 }
 
 /// CI backend info
@@ -166,24 +195,17 @@ impl std::fmt::Display for PrRunMode {
     }
 }
 
-/// Info about the system/toolchain used to build this announcement.
-///
-/// Note that this is info from the machine that generated this file,
-/// which *ideally* should be similar to the machines that built all the artifacts, but
-/// we can't guarantee that.
-///
-/// dist-manifest.json is by default generated at the start of the build process,
-/// and typically on a linux machine because that's usually the fastest/cheapest
-/// part of CI infra.
+/// Info about a system used to build this announcement.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SystemInfo {
+    /// The unique id of the System
+    pub id: SystemId,
     /// The version of Cargo used (first line of cargo -vV)
-    ///
-    /// Note that this is the version used on the machine that generated this file,
-    /// which presumably should be the same version used on all the machines that
-    /// built all the artifacts, but maybe not! It's more likely to be correct
-    /// if rust-toolchain.toml is used with a specific pinned version.
     pub cargo_version_line: Option<String>,
+    /// The Artifacts built by this system
+    pub artifacts: Vec<ArtifactId>,
+    /// The Assets built by this system
+    pub assets: Vec<AssetId>,
 }
 
 /// A Release of an Application
@@ -249,6 +271,10 @@ pub struct Artifact {
 /// An asset contained in an artifact (executable, license, etc.)
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Asset {
+    /// A unique opaque id for an Asset
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
     /// The high-level name of the asset
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -387,6 +413,8 @@ impl DistManifest {
             system_info: None,
             releases,
             artifacts,
+            systems: Default::default(),
+            assets: Default::default(),
             publish_prereleases: false,
             ci: None,
             linkage: vec![],
