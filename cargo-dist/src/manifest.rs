@@ -39,6 +39,8 @@ pub fn load_and_merge_manifests(
             announcement_title,
             announcement_changelog,
             announcement_github_body,
+            systems,
+            assets,
             ci,
             linkage,
         } = manifest;
@@ -172,6 +174,7 @@ fn manifest_artifact(
             let binary = &dist.binary(binary_idx);
             let symbols_artifact = binary.symbols_artifact.map(|a| dist.artifact(a).id.clone());
             Asset {
+                id: None,
                 name: Some(binary.name.clone()),
                 // Always copied to the root... for now
                 path: Some(exe_path.file_name().unwrap().to_owned()),
@@ -194,6 +197,7 @@ fn manifest_artifact(
                         StaticAssetKind::Other => AssetKind::Unknown,
                     };
                     Asset {
+                        id: None,
                         name: Some(asset.file_name().unwrap().to_owned()),
                         path: Some(asset.file_name().unwrap().to_owned()),
                         kind,
@@ -221,6 +225,7 @@ fn manifest_artifact(
                     }
                     TemplateEntry::File(file) => {
                         static_assets.push(Asset {
+                            id: None,
                             name: Some(file.name.clone()),
                             path: Some(file.path_from_ancestor(root_dir).to_string()),
                             kind: AssetKind::Unknown,
