@@ -62,11 +62,9 @@ impl<'a> DistGraphBuilder<'a> {
                 rustflags.push_str(" -Ctarget-feature=+crt-static -Clink-self-contained=yes");
             }
 
-            // If we're trying to cross-compile on macOS, ensure the rustup toolchain
+            // If we're trying to cross-compile, ensure the rustup toolchain
             // is setup!
-            if target.ends_with("apple-darwin")
-                && self.inner.tools.cargo.host_target.ends_with("apple-darwin")
-                && target != self.inner.tools.cargo.host_target
+            if target != self.inner.tools.cargo.host_target
             {
                 if let Some(rustup) = self.inner.tools.rustup.clone() {
                     builds.push(BuildStep::Rustup(RustupStep {
@@ -74,20 +72,7 @@ impl<'a> DistGraphBuilder<'a> {
                         target: target.clone(),
                     }));
                 } else {
-                    warn!("You're trying to cross-compile on macOS, but I can't find rustup to ensure you have the rust toolchains for it!")
-                }
-            }
-
-            if target.ends_with("linux-musl")
-                && self.inner.tools.cargo.host_target.ends_with("linux-gnu")
-            {
-                if let Some(rustup) = self.inner.tools.rustup.clone() {
-                    builds.push(BuildStep::Rustup(RustupStep {
-                        rustup,
-                        target: target.clone(),
-                    }));
-                } else {
-                    warn!("You're trying to cross-compile for musl from glibc, but I can't find rustup to ensure you have the rust toolchains for it!")
+                    warn!("You're trying to cross-compile, but I can't find rustup to ensure you have the rust toolchains for it!")
                 }
             }
 
