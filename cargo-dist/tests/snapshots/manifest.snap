@@ -11,9 +11,6 @@ stdout:
   "announcement_title": "CENSORED"
   "announcement_changelog": "CENSORED"
   "announcement_github_body": "CENSORED"
-  "system_info": {
-    "cargo_version_line": "CENSORED"
-  },
   "releases": [
     {
       "app_name": "cargo-dist",
@@ -84,6 +81,7 @@ stdout:
           "kind": "readme"
         },
         {
+          "id": "cargo-dist-aarch64-apple-darwin-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -126,6 +124,7 @@ stdout:
           "kind": "readme"
         },
         {
+          "id": "cargo-dist-aarch64-unknown-linux-gnu-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -168,6 +167,7 @@ stdout:
           "kind": "readme"
         },
         {
+          "id": "cargo-dist-aarch64-unknown-linux-musl-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -233,6 +233,7 @@ stdout:
           "kind": "readme"
         },
         {
+          "id": "cargo-dist-x86_64-apple-darwin-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -275,6 +276,7 @@ stdout:
           "kind": "readme"
         },
         {
+          "id": "cargo-dist-x86_64-pc-windows-msvc-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist.exe",
           "kind": "executable"
@@ -317,6 +319,7 @@ stdout:
           "kind": "readme"
         },
         {
+          "id": "cargo-dist-x86_64-unknown-linux-gnu-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -359,6 +362,7 @@ stdout:
           "kind": "readme"
         },
         {
+          "id": "cargo-dist-x86_64-unknown-linux-musl-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -399,6 +403,12 @@ stdout:
     "source.tar.gz.sha256": {
       "name": "source.tar.gz.sha256",
       "kind": "checksum"
+    }
+  },
+  "systems": {
+    "lies:": {
+      "id": "lies:",
+      "cargo_version_line": "CENSORED"
     }
   },
   "publish_prereleases": false,
@@ -476,5 +486,3 @@ stderr:
 INFO: You've enabled Axo Releases, which is currently in Closed Beta.
 If you haven't yet signed up, please join our discord
 (https://discord.gg/ECnWuUUXQk) or message hello@axo.dev to get started!
-
-

@@ -848,9 +848,6 @@ download_binary_and_run_installer "$@" || exit 1
   "announcement_is_prerelease": false,
   "announcement_title": "v0.2.0",
   "announcement_github_body": "## Install akaikatana-repack 0.2.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.sh | sh\n```\n\n## Download akaikatana-repack 0.2.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [akaikatana-repack-aarch64-apple-darwin.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256) |\n| [akaikatana-repack-x86_64-apple-darwin.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256) |\n| [akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n| [akaikatana-repack-x86_64-unknown-linux-musl.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-musl.tar.xz) | x64 MUSL Linux | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-musl.tar.xz.sha256) |\n\n",
-  "system_info": {
-    "cargo_version_line": "CENSORED"
-  },
   "releases": [
     {
       "app_name": "akaikatana-repack",
@@ -894,16 +891,19 @@ download_binary_and_run_installer "$@" || exit 1
           "kind": "readme"
         },
         {
+          "id": "akaikatana-repack-aarch64-apple-darwin-akextract",
           "name": "akextract",
           "path": "akextract",
           "kind": "executable"
         },
         {
+          "id": "akaikatana-repack-aarch64-apple-darwin-akmetadata",
           "name": "akmetadata",
           "path": "akmetadata",
           "kind": "executable"
         },
         {
+          "id": "akaikatana-repack-aarch64-apple-darwin-akrepack",
           "name": "akrepack",
           "path": "akrepack",
           "kind": "executable"
@@ -948,16 +948,19 @@ download_binary_and_run_installer "$@" || exit 1
           "kind": "readme"
         },
         {
+          "id": "akaikatana-repack-x86_64-apple-darwin-akextract",
           "name": "akextract",
           "path": "akextract",
           "kind": "executable"
         },
         {
+          "id": "akaikatana-repack-x86_64-apple-darwin-akmetadata",
           "name": "akmetadata",
           "path": "akmetadata",
           "kind": "executable"
         },
         {
+          "id": "akaikatana-repack-x86_64-apple-darwin-akrepack",
           "name": "akrepack",
           "path": "akrepack",
           "kind": "executable"
@@ -990,16 +993,19 @@ download_binary_and_run_installer "$@" || exit 1
           "kind": "readme"
         },
         {
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akextract",
           "name": "akextract",
           "path": "akextract",
           "kind": "executable"
         },
         {
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akmetadata",
           "name": "akmetadata",
           "path": "akmetadata",
           "kind": "executable"
         },
         {
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akrepack",
           "name": "akrepack",
           "path": "akrepack",
           "kind": "executable"
@@ -1032,16 +1038,19 @@ download_binary_and_run_installer "$@" || exit 1
           "kind": "readme"
         },
         {
+          "id": "akaikatana-repack-x86_64-unknown-linux-musl-akextract",
           "name": "akextract",
           "path": "akextract",
           "kind": "executable"
         },
         {
+          "id": "akaikatana-repack-x86_64-unknown-linux-musl-akmetadata",
           "name": "akmetadata",
           "path": "akmetadata",
           "kind": "executable"
         },
         {
+          "id": "akaikatana-repack-x86_64-unknown-linux-musl-akrepack",
           "name": "akrepack",
           "path": "akrepack",
           "kind": "executable"
@@ -1064,6 +1073,12 @@ download_binary_and_run_installer "$@" || exit 1
     "source.tar.gz.sha256": {
       "name": "source.tar.gz.sha256",
       "kind": "checksum"
+    }
+  },
+  "systems": {
+    "all:": {
+      "id": "all:",
+      "cargo_version_line": "CENSORED"
     }
   },
   "publish_prereleases": false,
@@ -1254,7 +1269,7 @@ jobs:
         run: |
           # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
-          jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
+          jq --raw-output ".upload_files[]" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
@@ -1299,7 +1314,7 @@ jobs:
 
           # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
-          jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
+          jq --raw-output ".upload_files[]" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
@@ -1387,5 +1402,3 @@ jobs:
           body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
           prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
-
-

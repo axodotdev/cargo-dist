@@ -7,9 +7,6 @@ expression: json_schema
   "title": "DistManifest",
   "description": "A report of the releases and artifacts that cargo-dist generated",
   "type": "object",
-  "required": [
-    "linkage"
-  ],
   "properties": {
     "announcement_changelog": {
       "description": "A changelog for the announcement",
@@ -56,6 +53,13 @@ expression: json_schema
         "$ref": "#/definitions/Artifact"
       }
     },
+    "assets": {
+      "description": "The assets contained within artifacts (binaries)",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/AssetInfo"
+      }
+    },
     "ci": {
       "description": "ci backend info",
       "anyOf": [
@@ -76,6 +80,7 @@ expression: json_schema
     },
     "linkage": {
       "description": "Data about dynamic linkage in the built libraries",
+      "default": [],
       "type": "array",
       "items": {
         "$ref": "#/definitions/Linkage"
@@ -94,7 +99,7 @@ expression: json_schema
       }
     },
     "system_info": {
-      "description": "Info about the toolchain used to build this announcement",
+      "description": "Info about the toolchain used to build this announcement\n\nDEPRECATED: never appears anymore",
       "anyOf": [
         {
           "$ref": "#/definitions/SystemInfo"
@@ -103,6 +108,20 @@ expression: json_schema
           "type": "null"
         }
       ]
+    },
+    "systems": {
+      "description": "The systems that artifacts were built on",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/SystemInfo"
+      }
+    },
+    "upload_files": {
+      "description": "Files to upload",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "definitions": {
@@ -411,6 +430,13 @@ expression: json_schema
         }
       ],
       "properties": {
+        "id": {
+          "description": "A unique opaque id for an Asset",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "name": {
           "description": "The high-level name of the asset",
           "type": [
@@ -424,6 +450,40 @@ expression: json_schema
             "string",
             "null"
           ]
+        }
+      }
+    },
+    "AssetInfo": {
+      "description": "Info about an Asset (binary)",
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "system"
+      ],
+      "properties": {
+        "id": {
+          "description": "unique id of the Asset",
+          "type": "string"
+        },
+        "linkage": {
+          "description": "the linkage of this Asset",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Linkage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "description": "filename of the Asset",
+          "type": "string"
+        },
+        "system": {
+          "description": "the system it was built on",
+          "type": "string"
         }
       }
     },
@@ -708,15 +768,22 @@ expression: json_schema
       }
     },
     "SystemInfo": {
-      "description": "Info about the system/toolchain used to build this announcement.\n\nNote that this is info from the machine that generated this file, which *ideally* should be similar to the machines that built all the artifacts, but we can't guarantee that.\n\ndist-manifest.json is by default generated at the start of the build process, and typically on a linux machine because that's usually the fastest/cheapest part of CI infra.",
+      "description": "Info about a system used to build this announcement.",
       "type": "object",
+      "required": [
+        "id"
+      ],
       "properties": {
         "cargo_version_line": {
-          "description": "The version of Cargo used (first line of cargo -vV)\n\nNote that this is the version used on the machine that generated this file, which presumably should be the same version used on all the machines that built all the artifacts, but maybe not! It's more likely to be correct if rust-toolchain.toml is used with a specific pinned version.",
+          "description": "The version of Cargo used (first line of cargo -vV)",
           "type": [
             "string",
             "null"
           ]
+        },
+        "id": {
+          "description": "The unique id of the System",
+          "type": "string"
         }
       }
     }
