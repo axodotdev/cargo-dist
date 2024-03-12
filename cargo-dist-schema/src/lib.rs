@@ -91,9 +91,13 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<CiInfo>,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     /// Data about dynamic linkage in the built libraries
+    #[serde(default)]
+    // FIXME: turn on this skip_serializing_if at some point.
+    // old dist-manifest consumers don't think this field can
+    // be missing, so it's unsafe to stop emitting it, but
+    // we want to deprecate it at some point.
+    // #[serde(skip_serializing_if = "Vec::is_empty")]
     pub linkage: Vec<Linkage>,
     /// Files to upload
     #[serde(default)]
@@ -206,10 +210,6 @@ pub struct SystemInfo {
     pub id: SystemId,
     /// The version of Cargo used (first line of cargo -vV)
     pub cargo_version_line: Option<String>,
-    /// The Artifacts built by this system
-    pub artifacts: Vec<ArtifactId>,
-    /// The Assets built by this system
-    pub assets: Vec<AssetId>,
 }
 
 /// A Release of an Application

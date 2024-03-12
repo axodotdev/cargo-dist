@@ -968,8 +968,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let system = SystemInfo {
             id: system_id.clone(),
             cargo_version_line,
-            artifacts: vec![],
-            assets: vec![],
         };
         let systems = SortedMap::from_iter([(system_id.clone(), system)]);
 
