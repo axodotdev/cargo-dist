@@ -38,6 +38,7 @@ pub fn load_and_merge_manifests(
             announcement_changelog: _,
             announcement_github_body: _,
             publish_prereleases: _,
+            upload_files: _,
             artifacts,
             releases,
             systems,
@@ -65,9 +66,9 @@ pub fn load_and_merge_manifests(
             if let Some(hosting) = github {
                 out_release.hosting.github = Some(hosting);
             }
-            // NOTE: *do not* merge artifact info, it's currently load-bearing for each machine
-            // to only list the artifacts it specifically generates, so we don't want to merge
-            // in artifacts from other machines (`cargo dist plan` should know them all for now).
+            if !release.artifacts.is_empty() {
+                // TODO: merge these? or just always use our own?
+            }
         }
 
         for (artifact_id, artifact) in artifacts {
@@ -136,6 +137,10 @@ pub(crate) fn add_releases_to_manifest(
             let id = &dist.artifact(artifact_idx).id;
             all_artifacts.insert(id.clone(), manifest_artifact(cfg, dist, artifact_idx));
             artifacts.push(id.clone());
+            if !cfg.no_local_paths {
+                let artifact = dist.artifact(artifact_idx);
+                manifest.upload_files.push(artifact.file_path.to_string());
+            }
         }
         for &variant_idx in &release.variants {
             let variant = dist.variant(variant_idx);
@@ -143,6 +148,10 @@ pub(crate) fn add_releases_to_manifest(
                 let id = &dist.artifact(artifact_idx).id;
                 all_artifacts.insert(id.clone(), manifest_artifact(cfg, dist, artifact_idx));
                 artifacts.push(id.clone());
+                if !cfg.no_local_paths {
+                    let artifact = dist.artifact(artifact_idx);
+                    manifest.upload_files.push(artifact.file_path.to_string());
+                }
             }
         }
 
