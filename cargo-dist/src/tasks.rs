@@ -1036,6 +1036,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 publish_prereleases,
                 ci: None,
                 linkage: vec![],
+                upload_files: vec![],
             },
             package_metadata,
             workspace_metadata,

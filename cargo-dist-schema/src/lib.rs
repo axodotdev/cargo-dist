@@ -95,6 +95,10 @@ pub struct DistManifest {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     /// Data about dynamic linkage in the built libraries
     pub linkage: Vec<Linkage>,
+    /// Files to upload
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub upload_files: Vec<String>,
 }
 
 /// Info about an Asset (binary)
@@ -418,6 +422,7 @@ impl DistManifest {
             publish_prereleases: false,
             ci: None,
             linkage: vec![],
+            upload_files: vec![],
         }
     }
 
