@@ -11,9 +11,6 @@ stdout:
   "announcement_title": "CENSORED"
   "announcement_changelog": "CENSORED"
   "announcement_github_body": "CENSORED"
-  "system_info": {
-    "cargo_version_line": "CENSORED"
-  },
   "releases": [
     {
       "app_name": "cargo-dist-schema",
@@ -33,6 +30,12 @@ stdout:
       }
     }
   ],
+  "systems": {
+    "all:": {
+      "id": "all:",
+      "cargo_version_line": "CENSORED"
+    }
+  },
   "publish_prereleases": false,
   "ci": {
     "github": {
@@ -47,5 +50,3 @@ stderr:
 INFO: You've enabled Axo Releases, which is currently in Closed Beta.
 If you haven't yet signed up, please join our discord
 (https://discord.gg/ECnWuUUXQk) or message hello@axo.dev to get started!
-
-

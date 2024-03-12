@@ -1245,9 +1245,6 @@ try {
   "announcement_title": "Version 0.2.1",
   "announcement_changelog": "```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
   "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.1\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axolotlsay\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
-  "system_info": {
-    "cargo_version_line": "CENSORED"
-  },
   "releases": [
     {
       "app_name": "axolotlsay",
@@ -1303,6 +1300,7 @@ try {
           "kind": "readme"
         },
         {
+          "id": "axolotlsay-aarch64-apple-darwin-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -1365,6 +1363,7 @@ try {
           "kind": "readme"
         },
         {
+          "id": "axolotlsay-x86_64-apple-darwin-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -1407,6 +1406,7 @@ try {
           "kind": "readme"
         },
         {
+          "id": "axolotlsay-x86_64-pc-windows-msvc-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay.exe",
           "kind": "executable"
@@ -1449,6 +1449,7 @@ try {
           "kind": "readme"
         },
         {
+          "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -1482,6 +1483,12 @@ try {
     "source.tar.gz.sha256": {
       "name": "source.tar.gz.sha256",
       "kind": "checksum"
+    }
+  },
+  "systems": {
+    "all:": {
+      "id": "all:",
+      "cargo_version_line": "CENSORED"
     }
   },
   "publish_prereleases": false,
