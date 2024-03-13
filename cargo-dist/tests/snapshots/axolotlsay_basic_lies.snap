@@ -835,14 +835,17 @@ class Axolotlsay < Formula
   on_macos do
     on_arm do
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
+      sha256 "CENSORED"
     end
     on_intel do
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
+      sha256 "CENSORED"
     end
   end
   on_linux do
     on_intel do
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "CENSORED"
     end
   end
   license "MIT OR Apache-2.0"
@@ -2105,7 +2108,10 @@ maybeInstall(true).then(run);
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256"
+      "checksum": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
+      "checksums": {
+        "sha256": "CENSORED"
+      }
     },
     "axolotlsay-aarch64-apple-darwin.tar.gz.sha256": {
       "name": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
@@ -2196,7 +2202,10 @@ maybeInstall(true).then(run);
         }
       ],
       "install_hint": "npm install axolotlsay@0.2.1",
-      "description": "Install prebuilt binaries into your npm project"
+      "description": "Install prebuilt binaries into your npm project",
+      "checksums": {
+        "sha256": "CENSORED"
+      }
     },
     "axolotlsay-x86_64-apple-darwin.tar.gz": {
       "name": "axolotlsay-x86_64-apple-darwin.tar.gz",
@@ -2232,7 +2241,10 @@ maybeInstall(true).then(run);
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256"
+      "checksum": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+      "checksums": {
+        "sha256": "CENSORED"
+      }
     },
     "axolotlsay-x86_64-apple-darwin.tar.gz.sha256": {
       "name": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
@@ -2256,7 +2268,10 @@ maybeInstall(true).then(run);
         }
       ],
       "description": "install via msi",
-      "checksum": "axolotlsay-x86_64-pc-windows-msvc.msi.sha256"
+      "checksum": "axolotlsay-x86_64-pc-windows-msvc.msi.sha256",
+      "checksums": {
+        "sha256": "CENSORED"
+      }
     },
     "axolotlsay-x86_64-pc-windows-msvc.msi.sha256": {
       "name": "axolotlsay-x86_64-pc-windows-msvc.msi.sha256",
@@ -2299,7 +2314,10 @@ maybeInstall(true).then(run);
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256"
+      "checksum": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
+      "checksums": {
+        "sha256": "CENSORED"
+      }
     },
     "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256": {
       "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
@@ -2342,7 +2360,10 @@ maybeInstall(true).then(run);
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
+      "checksum": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256",
+      "checksums": {
+        "sha256": "CENSORED"
+      }
     },
     "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256": {
       "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256",
@@ -2365,7 +2386,10 @@ maybeInstall(true).then(run);
     "source.tar.gz": {
       "name": "source.tar.gz",
       "kind": "source-tarball",
-      "checksum": "source.tar.gz.sha256"
+      "checksum": "source.tar.gz.sha256",
+      "checksums": {
+        "sha256": "CENSORED"
+      }
     },
     "source.tar.gz.sha256": {
       "name": "source.tar.gz.sha256",
@@ -2373,9 +2397,59 @@ maybeInstall(true).then(run);
     }
   },
   "systems": {
-    "all:": {
-      "id": "all:",
+    "lies:": {
+      "id": "lies:",
       "cargo_version_line": "CENSORED"
+    }
+  },
+  "assets": {
+    "axolotlsay-aarch64-apple-darwin-axolotlsay": {
+      "id": "axolotlsay-aarch64-apple-darwin-axolotlsay",
+      "name": "axolotlsay",
+      "system": "lies:",
+      "linkage": {
+        "other": [
+          {
+            "path": "fakelib"
+          }
+        ]
+      }
+    },
+    "axolotlsay-x86_64-apple-darwin-axolotlsay": {
+      "id": "axolotlsay-x86_64-apple-darwin-axolotlsay",
+      "name": "axolotlsay",
+      "system": "lies:",
+      "linkage": {
+        "other": [
+          {
+            "path": "fakelib"
+          }
+        ]
+      }
+    },
+    "axolotlsay-x86_64-pc-windows-msvc-axolotlsay": {
+      "id": "axolotlsay-x86_64-pc-windows-msvc-axolotlsay",
+      "name": "axolotlsay",
+      "system": "lies:",
+      "linkage": {
+        "other": [
+          {
+            "path": "fakelib"
+          }
+        ]
+      }
+    },
+    "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay": {
+      "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
+      "name": "axolotlsay",
+      "system": "lies:",
+      "linkage": {
+        "other": [
+          {
+            "path": "fakelib"
+          }
+        ]
+      }
     }
   },
   "publish_prereleases": false,
