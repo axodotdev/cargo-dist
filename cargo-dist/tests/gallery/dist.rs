@@ -133,6 +133,14 @@ pub struct Snapshots {
 }
 
 impl<'a> TestContext<'a, Tools> {
+    /// Run `cargo_dist_plan` and `cargo_dist_build_lies`
+    pub fn cargo_dist_build_lies_and_plan(&self, test_name: &str) -> Result<BuildAndPlanResult> {
+        let build = self.cargo_dist_build_lies(test_name)?;
+        let plan = self.cargo_dist_plan(test_name)?;
+
+        Ok(BuildAndPlanResult { build, plan })
+    }
+
     /// Run `cargo_dist_plan` and `cargo_dist_build_global`
     pub fn cargo_dist_build_and_plan(&self, test_name: &str) -> Result<BuildAndPlanResult> {
         let build = self.cargo_dist_build_global(test_name)?;
@@ -170,6 +178,24 @@ impl<'a> TestContext<'a, Tools> {
 
         self.load_dist_results(test_name)
     }
+
+    /// Run 'cargo dist build -alies' and return paths to various files that were generated
+    pub fn cargo_dist_build_lies(&self, test_name: &str) -> Result<DistResult> {
+        // If the cargo-dist target dir exists, delete it to avoid cross-contamination
+        let out_path = Utf8Path::new("target/distrib/");
+        if out_path.exists() {
+            LocalAsset::remove_dir_all(out_path)?;
+        }
+
+        // build installers
+        eprintln!("running cargo dist build -aglobal...");
+        self.tools
+            .cargo_dist
+            .output_checked(|cmd| cmd.arg("dist").arg("build").arg("-alies"))?;
+
+        self.load_dist_results(test_name)
+    }
+
     /// Run 'cargo dist generate' and return paths to various files that were generated
     pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateResult> {
         self.cargo_dist_generate_prefixed(test_name, "")
