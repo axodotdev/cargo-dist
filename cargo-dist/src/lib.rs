@@ -21,7 +21,7 @@ use backend::{
 use build::cargo::{build_cargo_target, rustup_toolchain};
 use build::generic::{build_generic_target, run_extra_artifacts_build};
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{ArtifactId, DistManifest};
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
@@ -76,7 +76,7 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
     // Run all the local build steps first
     for step in &dist.local_build_steps {
         if dist.local_builds_are_lies {
-            build_fake(&dist, step, &manifest)?;
+            build_fake(&dist, step, &mut manifest)?;
         } else {
             run_build_step(&dist, step, &mut manifest)?;
         }
@@ -89,7 +89,7 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
     // Next the global steps
     for step in &dist.global_build_steps {
         if dist.local_builds_are_lies {
-            build_fake(&dist, step, &manifest)?;
+            build_fake(&dist, step, &mut manifest)?;
         } else {
             run_build_step(&dist, step, &mut manifest)?;
         }
@@ -141,7 +141,14 @@ fn run_build_step(
             checksum,
             src_path,
             dest_path,
-        }) => generate_and_write_checksum(checksum, src_path, dest_path)?,
+            for_artifact,
+        }) => generate_and_write_checksum(
+            manifest,
+            checksum,
+            src_path,
+            dest_path.as_deref(),
+            for_artifact.as_ref(),
+        )?,
         BuildStep::GenerateSourceTarball(SourceTarballStep {
             committish,
             prefix,
@@ -248,7 +255,11 @@ fn fetch_updater_from_binary(
     Ok(())
 }
 
-fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifest) -> Result<()> {
+fn build_fake(
+    dist_graph: &DistGraph,
+    target: &BuildStep,
+    manifest: &mut DistManifest,
+) -> Result<()> {
     match target {
         // These two are the meat: don't actually run these at all, just
         // fake them out
@@ -285,7 +296,14 @@ fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifes
             checksum,
             src_path,
             dest_path,
-        }) => generate_and_write_checksum(checksum, src_path, dest_path)?,
+            for_artifact,
+        }) => generate_and_write_checksum(
+            manifest,
+            checksum,
+            src_path,
+            dest_path.as_deref(),
+            for_artifact.as_ref(),
+        )?,
         // Except source tarballs, which are definitely not okay
         // We mock these because it requires:
         // 1. git to be installed;
@@ -350,12 +368,22 @@ fn generate_fake_artifacts(dist: &DistGraph, binaries: &[BinaryIdx]) -> Result<(
 
 /// Generate a checksum for the src_path to dest_path
 fn generate_and_write_checksum(
+    manifest: &mut DistManifest,
     checksum: &ChecksumStyle,
     src_path: &Utf8Path,
-    dest_path: &Utf8Path,
+    dest_path: Option<&Utf8Path>,
+    for_artifact: Option<&ArtifactId>,
 ) -> DistResult<()> {
     let output = generate_checksum(checksum, src_path)?;
-    write_checksum(&output, src_path, dest_path)
+    if let Some(dest_path) = dest_path {
+        write_checksum(&output, src_path, dest_path)?;
+    }
+    if let Some(artifact_id) = for_artifact {
+        if let Some(artifact) = manifest.artifacts.get_mut(artifact_id) {
+            artifact.checksums.insert(checksum.ext().to_owned(), output);
+        }
+    }
+    Ok(())
 }
 
 /// Generate a checksum for the src_path and return it as a string

@@ -145,6 +145,11 @@ fn merge_artifact(output: &mut DistManifest, artifact_id: ArtifactId, artifact: 
         }
         Entry::Occupied(mut out_artifact) => {
             let out_artifact = out_artifact.get_mut();
+
+            // Merge checksums
+            out_artifact.checksums.extend(artifact.checksums);
+
+            // Merge assets
             for asset in artifact.assets {
                 if let Some(out_asset) = out_artifact
                     .assets
@@ -369,6 +374,7 @@ fn add_manifest_artifact(
         assets,
         kind,
         checksum,
+        checksums: Default::default(),
     };
 
     if !cfg.no_local_paths {

@@ -53,7 +53,7 @@ use std::collections::HashMap;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{DistManifest, SystemId, SystemInfo};
+use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use serde::Serialize;
@@ -420,8 +420,10 @@ pub struct ChecksumImpl {
     pub checksum: ChecksumStyle,
     /// of this file
     pub src_path: Utf8PathBuf,
-    /// and write it to here
-    pub dest_path: Utf8PathBuf,
+    /// potentially write it to here
+    pub dest_path: Option<Utf8PathBuf>,
+    /// record it for this artifact in the dist-manifest
+    pub for_artifact: Option<ArtifactId>,
 }
 
 /// Create a source tarball
@@ -1377,6 +1379,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             is_global: true,
         };
 
+        let for_artifact = Some(artifact.id.clone());
         let artifact_idx = self.add_global_artifact(to_release, artifact);
 
         if checksum != ChecksumStyle::False {
@@ -1391,7 +1394,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 kind: ArtifactKind::Checksum(ChecksumImpl {
                     checksum,
                     src_path: target_path,
-                    dest_path: checksum_path,
+                    dest_path: Some(checksum_path),
+                    for_artifact,
                 }),
                 checksum: None,
                 is_global: true,
@@ -1418,7 +1422,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 kind: ArtifactKind::Checksum(ChecksumImpl {
                     checksum,
                     src_path: artifact.file_path.clone(),
-                    dest_path: checksum_path.clone(),
+                    dest_path: Some(checksum_path.clone()),
+                    for_artifact: Some(artifact.id.clone()),
                 }),
 
                 target_triples: artifact.target_triples.clone(),
@@ -2634,6 +2639,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     with_root: archive.with_root.clone(),
                     zip_style: archive.zip_style,
                 }));
+                // and get its sha256 checksum into the metadata
+                build_steps.push(BuildStep::Checksum(ChecksumImpl {
+                    checksum: ChecksumStyle::Sha256,
+                    src_path: artifact.file_path.clone(),
+                    dest_path: None,
+                    for_artifact: Some(artifact.id.clone()),
+                }))
             }
         }
     }
