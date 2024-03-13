@@ -268,10 +268,17 @@ pub struct Artifact {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub description: Option<String>,
-    /// id of an that contains the checksum for this artifact
+    /// id of an Artifact that contains the checksum for this Artifact
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub checksum: Option<String>,
+    /// checksums for this artifact
+    ///
+    /// keys are the name of an algorithm like "sha256" or "sha512"
+    /// values are the actual hex string of the checksum
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub checksums: BTreeMap<String, String>,
 }
 
 /// An asset contained in an artifact (executable, license, etc.)
@@ -515,13 +522,13 @@ impl DistManifest {
 
         for base_asset in &artifact.assets {
             let Some(asset_id) = &base_asset.id else {
-                continue
+                continue;
             };
             let Some(true_asset) = self.assets.get(asset_id) else {
-                continue
+                continue;
             };
             let Some(linkage) = &true_asset.linkage else {
-                continue
+                continue;
             };
             output.extend(linkage);
         }
@@ -624,10 +631,19 @@ pub struct Library {
 impl Linkage {
     /// merge another linkage into this one
     pub fn extend(&mut self, val: &Linkage) {
-        let Linkage { binary: _, target: _, system, homebrew, public_unmanaged, other, frameworks } = val;
+        let Linkage {
+            binary: _,
+            target: _,
+            system,
+            homebrew,
+            public_unmanaged,
+            other,
+            frameworks,
+        } = val;
         self.system.extend(system.iter().cloned());
         self.homebrew.extend(homebrew.iter().cloned());
-        self.public_unmanaged.extend(public_unmanaged.iter().cloned());
+        self.public_unmanaged
+            .extend(public_unmanaged.iter().cloned());
         self.other.extend(other.iter().cloned());
         self.frameworks.extend(frameworks.iter().cloned());
     }

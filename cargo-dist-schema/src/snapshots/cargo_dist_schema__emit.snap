@@ -259,11 +259,18 @@ expression: json_schema
           }
         },
         "checksum": {
-          "description": "id of an that contains the checksum for this artifact",
+          "description": "id of an Artifact that contains the checksum for this Artifact",
           "type": [
             "string",
             "null"
           ]
+        },
+        "checksums": {
+          "description": "checksums for this artifact\n\nkeys are the name of an algorithm like \"sha256\" or \"sha512\" values are the actual hex string of the checksum",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "description": {
           "description": "A brief description of what this artifact is",
@@ -653,58 +660,60 @@ expression: json_schema
     "Linkage": {
       "description": "Information about dynamic libraries used by a binary",
       "type": "object",
-      "required": [
-        "binary",
-        "frameworks",
-        "homebrew",
-        "other",
-        "public_unmanaged",
-        "system",
-        "target"
-      ],
       "properties": {
         "binary": {
           "description": "The filename of the binary",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "frameworks": {
           "description": "Frameworks, only used on macOS",
           "type": "array",
           "items": {
             "$ref": "#/definitions/Library"
-          }
+          },
+          "uniqueItems": true
         },
         "homebrew": {
           "description": "Libraries provided by the Homebrew package manager",
           "type": "array",
           "items": {
             "$ref": "#/definitions/Library"
-          }
+          },
+          "uniqueItems": true
         },
         "other": {
           "description": "Libraries which don't fall into any other categories",
           "type": "array",
           "items": {
             "$ref": "#/definitions/Library"
-          }
+          },
+          "uniqueItems": true
         },
         "public_unmanaged": {
           "description": "Public libraries not provided by the system and not managed by any package manager",
           "type": "array",
           "items": {
             "$ref": "#/definitions/Library"
-          }
+          },
+          "uniqueItems": true
         },
         "system": {
           "description": "Libraries included with the operating system",
           "type": "array",
           "items": {
             "$ref": "#/definitions/Library"
-          }
+          },
+          "uniqueItems": true
         },
         "target": {
           "description": "The target triple for which the binary was built",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
