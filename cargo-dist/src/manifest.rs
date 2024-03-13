@@ -43,6 +43,7 @@ use cargo_dist_schema::{
 use tracing::warn;
 
 use crate::{
+    announce::AnnouncementTag,
     backend::{
         installer::{homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, InstallerImpl},
         templates::{TemplateEntry, TEMPLATE_INSTALLER_NPM},
@@ -53,9 +54,10 @@ use crate::{
 };
 
 /// Load DistManifests into the given dir and merge them into the current one
-pub fn load_and_merge_manifests(
+pub(crate) fn load_and_merge_manifests(
     manifest_dir: &Utf8Path,
     output: &mut DistManifest,
+    announcing: &AnnouncementTag,
 ) -> DistResult<()> {
     // Hey! Update the loop below too if you're adding a field!
 
@@ -84,9 +86,11 @@ pub fn load_and_merge_manifests(
         } = manifest;
 
         // Discard clearly unrelated manifests
-        if output.announcement_tag != announcement_tag {
-            warn!("found old manifest for the tag {announcement_tag:?}, ignoring it");
-            continue;
+        if let Some(tag) = &announcement_tag {
+            if tag != &announcing.tag {
+                warn!("found old manifest for the tag {announcement_tag:?}, ignoring it");
+                continue;
+            }
         }
 
         // Merge every release
