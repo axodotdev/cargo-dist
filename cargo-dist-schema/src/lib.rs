@@ -517,9 +517,11 @@ impl DistManifest {
     ///
     /// This lets you know what system dependencies an entire archive of binaries requires
     pub fn linkage_for_artifact(&self, artifact_id: &ArtifactId) -> Linkage {
-        let artifact = &self.artifacts[artifact_id];
         let mut output = Linkage::default();
 
+        let Some(artifact) = self.artifacts.get(artifact_id) else {
+            return output;
+        };
         for base_asset in &artifact.assets {
             let Some(asset_id) = &base_asset.id else {
                 continue;
