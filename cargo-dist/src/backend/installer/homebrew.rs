@@ -59,19 +59,18 @@ pub(crate) fn write_homebrew_formula(
     let mut info = source_info.clone();
 
     // Fetch any detected dependencies from the linkage data
-    let dependencies = manifest
-        .linkage
-        .iter()
-        .flat_map(|l| l.homebrew.iter().filter_map(|lib| lib.source.clone()));
-
-    // Merge with the manually-specified deps
-    info.dependencies.extend(dependencies);
+    // FIXME: ideally this would be writing to per-target dependencies,
+    // but for now we just shove them all into one big list.
+    use_linkage(manifest, &info.arm64_macos, &mut info.dependencies);
+    use_linkage(manifest, &info.x86_64_macos, &mut info.dependencies);
+    use_linkage(manifest, &info.arm64_linux, &mut info.dependencies);
+    use_linkage(manifest, &info.x86_64_linux, &mut info.dependencies);
 
     // Grab checksums
-    sha256_checksum(manifest, &info.arm64_macos, &mut info.arm64_macos_sha256);
-    sha256_checksum(manifest, &info.x86_64_macos, &mut info.x86_64_macos_sha256);
-    sha256_checksum(manifest, &info.arm64_linux, &mut info.arm64_linux_sha256);
-    sha256_checksum(manifest, &info.x86_64_linux, &mut info.x86_64_linux_sha256);
+    use_sha256_checksum(manifest, &info.arm64_macos, &mut info.arm64_macos_sha256);
+    use_sha256_checksum(manifest, &info.x86_64_macos, &mut info.x86_64_macos_sha256);
+    use_sha256_checksum(manifest, &info.arm64_linux, &mut info.arm64_linux_sha256);
+    use_sha256_checksum(manifest, &info.x86_64_linux, &mut info.x86_64_linux_sha256);
 
     let script = templates.render_file_to_clean_string(TEMPLATE_INSTALLER_RB, &info)?;
     LocalAsset::write_new(&script, &info.inner.dest_path)?;
@@ -79,7 +78,7 @@ pub(crate) fn write_homebrew_formula(
 }
 
 /// Grab the sha256 checksum for this artifact from the manifest
-fn sha256_checksum(
+fn use_sha256_checksum(
     manifest: &DistManifest,
     fragment: &Option<ExecutableZipFragment>,
     checksum: &mut Option<String>,
@@ -91,6 +90,22 @@ fn sha256_checksum(
             .get(&frag.id)
             .and_then(|a| a.checksums.get(checksum_key))
             .cloned()
+    }
+}
+
+// Grab the linkage for this artifact from the manifest
+fn use_linkage(
+    manifest: &DistManifest,
+    fragment: &Option<ExecutableZipFragment>,
+    dependencies: &mut Vec<String>,
+) {
+    if let Some(frag) = fragment {
+        let archive_linkage = manifest.linkage_for_artifact(&frag.id);
+        let homebrew_deps = archive_linkage
+            .homebrew
+            .iter()
+            .filter_map(|lib| lib.source.clone());
+        dependencies.extend(homebrew_deps);
     }
 }
 
