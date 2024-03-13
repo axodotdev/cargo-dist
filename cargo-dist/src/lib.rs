@@ -18,8 +18,11 @@ use backend::{
     ci::CiInfo,
     installer::{self, msi::MsiInstallerInfo, InstallerImpl},
 };
-use build::cargo::{build_cargo_target, rustup_toolchain};
 use build::generic::{build_generic_target, run_extra_artifacts_build};
+use build::{
+    cargo::{build_cargo_target, rustup_toolchain},
+    fake::{build_fake_cargo_target, build_fake_generic_target},
+};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{ArtifactId, DistManifest};
 use config::{
@@ -263,8 +266,8 @@ fn build_fake(
     match target {
         // These two are the meat: don't actually run these at all, just
         // fake them out
-        BuildStep::Generic(target) => build_fake_generic_artifacts(dist_graph, target)?,
-        BuildStep::Cargo(target) => build_fake_cargo_artifacts(dist_graph, target)?,
+        BuildStep::Generic(target) => build_fake_generic_target(dist_graph, manifest, target)?,
+        BuildStep::Cargo(target) => build_fake_cargo_target(dist_graph, manifest, target)?,
         // Never run rustup
         BuildStep::Rustup(_) => {}
         // Copying files is fairly safe
@@ -323,14 +326,6 @@ fn build_fake(
     Ok(())
 }
 
-fn build_fake_cargo_artifacts(dist: &DistGraph, target: &CargoBuildStep) -> Result<()> {
-    generate_fake_artifacts(dist, &target.expected_binaries)
-}
-
-fn build_fake_generic_artifacts(dist: &DistGraph, target: &GenericBuildStep) -> Result<()> {
-    generate_fake_artifacts(dist, &target.expected_binaries)
-}
-
 fn run_fake_extra_artifacts_build(dist: &DistGraph, target: &ExtraBuildStep) -> Result<()> {
     for artifact in &target.expected_artifacts {
         let path = dist.dist_dir.join(artifact);
@@ -346,22 +341,6 @@ fn generate_fake_msi(
     _manifest: &DistManifest,
 ) -> Result<()> {
     LocalAsset::write_new_all("", &msi.file_path)?;
-
-    Ok(())
-}
-
-fn generate_fake_artifacts(dist: &DistGraph, binaries: &[BinaryIdx]) -> Result<()> {
-    for idx in binaries {
-        let binary = dist.binary(*idx);
-
-        for exe_dest in &binary.copy_exe_to {
-            LocalAsset::write_new_all("", exe_dest)?;
-        }
-
-        for sym_dest in &binary.copy_symbols_to {
-            LocalAsset::write_new_all("", sym_dest)?;
-        }
-    }
 
     Ok(())
 }

@@ -11,12 +11,15 @@ use crate::{
 };
 
 pub mod cargo;
+pub mod fake;
 pub mod generic;
 
 /// Output expectations for builds, and computed facts (all packages)
 pub struct BuildExpectations {
     /// Expectations grouped by package
     pub packages: SortedMap<String, BinaryExpectations>,
+    /// Whether this is fake (--artifacts=lies)
+    fake: bool,
 }
 
 /// Output expectations for builds, and computed facts (one package)
@@ -61,7 +64,19 @@ impl BuildExpectations {
             );
         }
 
-        Self { packages }
+        Self {
+            packages,
+            fake: false,
+        }
+    }
+
+    /// Create a new BuildExpectations, but don't sweat things being faked
+    ///
+    /// This is used for --artifacts=lies
+    pub fn new_fake(dist: &DistGraph, expected_binaries: &[BinaryIdx]) -> Self {
+        let mut out = Self::new(dist, expected_binaries);
+        out.fake = true;
+        out
     }
 
     /// Report that a binary was found, which might have been expected
@@ -117,14 +132,10 @@ impl BuildExpectations {
     ///
     /// * code signing / hashing
     /// * stripping
-    pub fn process_bins(
-        &mut self,
-        dist: &DistGraph,
-        manifest: &mut DistManifest,
-    ) -> DistResult<()> {
+    pub fn process_bins(&self, dist: &DistGraph, manifest: &mut DistManifest) -> DistResult<()> {
         let mut missing = vec![];
-        for (pkg_id, pkg) in self.packages.iter_mut() {
-            for (bin_name, result_bin) in pkg.binaries.iter_mut() {
+        for (pkg_id, pkg) in &self.packages {
+            for (bin_name, result_bin) in &pkg.binaries {
                 // If the src_path is missing, everything is bad
                 let Some(src_path) = result_bin.src_path.as_deref() else {
                     missing.push((pkg_id.to_owned(), bin_name.to_owned()));
@@ -137,10 +148,10 @@ impl BuildExpectations {
                 let bin = dist.binary(result_bin.idx);
 
                 // compute linkage for the binary
-                compute_linkage(dist, manifest, result_bin, &bin.target)?;
+                self.compute_linkage(dist, manifest, result_bin, &bin.target)?;
 
                 // copy files to their final homes
-                copy_assets(result_bin, bin)?;
+                self.copy_assets(result_bin, bin)?;
             }
         }
 
@@ -152,52 +163,65 @@ impl BuildExpectations {
 
         Ok(())
     }
-}
 
-// Compute the linkage info for this binary
-fn compute_linkage(
-    dist: &DistGraph,
-    manifest: &mut DistManifest,
-    src: &mut ExpectedBinary,
-    target: &TargetTriple,
-) -> DistResult<()> {
-    let src_path = src
-        .src_path
-        .as_ref()
-        .expect("bin src_path should have been checked by caller");
-    let linkage = determine_linkage(src_path, target)?.to_schema();
-    let bin = dist.binary(src.idx);
-    manifest.assets.insert(
-        bin.id.clone(),
-        AssetInfo {
-            id: bin.id.clone(),
-            name: bin.name.clone(),
-            system: dist.system_id.clone(),
-            linkage: Some(linkage),
-        },
-    );
-    Ok(())
-}
+    // Compute the linkage info for this binary
+    fn compute_linkage(
+        &self,
+        dist: &DistGraph,
+        manifest: &mut DistManifest,
+        src: &ExpectedBinary,
+        target: &TargetTriple,
+    ) -> DistResult<()> {
+        let src_path = src
+            .src_path
+            .as_ref()
+            .expect("bin src_path should have been checked by caller");
 
-// Copy the assets for this binary
-fn copy_assets(src: &ExpectedBinary, dests: &Binary) -> DistResult<()> {
-    // Copy the main binary
-    let src_path = src
-        .src_path
-        .as_deref()
-        .expect("bin src_path should have been checked by caller");
-    for dest_path in &dests.copy_exe_to {
-        copy_file(src_path, dest_path)?;
+        // If we're faking it, don't run the linkage stuff
+        let linkage = if self.fake {
+            // FIXME: fake this more interestingly!
+            let mut linkage = cargo_dist_schema::Linkage::default();
+            linkage.other.insert(cargo_dist_schema::Library {
+                path: "fakelib".to_owned(),
+                source: None,
+            });
+            linkage
+        } else {
+            determine_linkage(src_path, target)?.to_schema()
+        };
+        let bin = dist.binary(src.idx);
+        manifest.assets.insert(
+            bin.id.clone(),
+            AssetInfo {
+                id: bin.id.clone(),
+                name: bin.name.clone(),
+                system: dist.system_id.clone(),
+                linkage: Some(linkage),
+            },
+        );
+        Ok(())
     }
 
-    // Copy the symbols
-    for sym_path in &src.sym_paths {
-        for dest_path in &dests.copy_symbols_to {
-            copy_file(sym_path, dest_path)?;
+    // Copy the assets for this binary
+    fn copy_assets(&self, src: &ExpectedBinary, dests: &Binary) -> DistResult<()> {
+        // Copy the main binary
+        let src_path = src
+            .src_path
+            .as_deref()
+            .expect("bin src_path should have been checked by caller");
+        for dest_path in &dests.copy_exe_to {
+            copy_file(src_path, dest_path)?;
         }
-    }
 
-    Ok(())
+        // Copy the symbols
+        for sym_path in &src.sym_paths {
+            for dest_path in &dests.copy_symbols_to {
+                copy_file(sym_path, dest_path)?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 fn package_id_string(id: Option<&PackageId>) -> String {
