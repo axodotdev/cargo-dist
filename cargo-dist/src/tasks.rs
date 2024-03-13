@@ -2829,11 +2829,6 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
         cfg.announcement_tag.is_none(),
     )?;
 
-    // Immediately check if there's other manifests kicking around that provide info
-    // we don't want to recompute (lets us move towards more of an architecture where
-    // `plan` figures out what to do and subsequent steps Simply Obey).
-    crate::manifest::load_and_merge_manifests(&graph.inner.dist_dir, &mut graph.manifest)?;
-
     // Prefer the CLI (cfg) if it's non-empty, but only select a subset
     // of what the workspace supports if it's non-empty
     let workspace_ci = graph.workspace_metadata.ci.clone().unwrap_or_default();
@@ -2890,6 +2885,15 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
         &graph,
         cfg.announcement_tag.as_deref(),
         cfg.needs_coherent_announcement_tag,
+    )?;
+
+    // Immediately check if there's other manifests kicking around that provide info
+    // we don't want to recompute (lets us move towards more of an architecture where
+    // `plan` figures out what to do and subsequent steps Simply Obey).
+    crate::manifest::load_and_merge_manifests(
+        &graph.inner.dist_dir,
+        &mut graph.manifest,
+        &announcing,
     )?;
 
     // Figure out how artifacts should be hosted
