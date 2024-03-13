@@ -362,10 +362,10 @@ fn do_otool(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
     let mut buf = vec![];
     let size = f.read_to_end(&mut buf).unwrap();
     let mut cur = Cursor::new(&buf[..size]);
-    if let OFile::MachFile {
+    if let Ok(OFile::MachFile {
         header: _,
         commands,
-    } = OFile::parse(&mut cur).unwrap()
+    }) = OFile::parse(&mut cur)
     {
         let commands = commands
             .iter()
