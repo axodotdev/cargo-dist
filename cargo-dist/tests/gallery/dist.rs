@@ -133,10 +133,31 @@ pub struct Snapshots {
 }
 
 impl<'a> TestContext<'a, Tools> {
-    /// Run `cargo_dist_plan` and `cargo_dist_build_lies`
-    pub fn cargo_dist_build_lies_and_plan(&self, test_name: &str) -> Result<BuildAndPlanResult> {
-        let build = self.cargo_dist_build_lies(test_name)?;
-        let plan = self.cargo_dist_plan(test_name)?;
+    /// Run 'cargo dist build -alies --no-local-paths --output-format=json' and return paths to various files that were generated
+    pub fn cargo_dist_build_lies(&self, test_name: &str) -> Result<BuildAndPlanResult> {
+        // If the cargo-dist target dir exists, delete it to avoid cross-contamination
+        let out_path = Utf8Path::new("target/distrib/");
+        if out_path.exists() {
+            LocalAsset::remove_dir_all(out_path)?;
+        }
+
+        // build installers
+        eprintln!("running cargo dist build -aglobal...");
+        let output = self.tools.cargo_dist.output_checked(|cmd| {
+            cmd.arg("dist")
+                .arg("build")
+                .arg("-alies")
+                .arg("--no-local-paths")
+                .arg("--output-format=json")
+        })?;
+
+        let build = self.load_dist_results(test_name)?;
+
+        let raw_json = String::from_utf8(output.stdout).expect("plan wasn't utf8!?");
+        let plan = PlanResult {
+            test_name: test_name.to_owned(),
+            raw_json,
+        };
 
         Ok(BuildAndPlanResult { build, plan })
     }
@@ -175,23 +196,6 @@ impl<'a> TestContext<'a, Tools> {
         self.tools
             .cargo_dist
             .output_checked(|cmd| cmd.arg("dist").arg("build").arg("-aglobal"))?;
-
-        self.load_dist_results(test_name)
-    }
-
-    /// Run 'cargo dist build -alies' and return paths to various files that were generated
-    pub fn cargo_dist_build_lies(&self, test_name: &str) -> Result<DistResult> {
-        // If the cargo-dist target dir exists, delete it to avoid cross-contamination
-        let out_path = Utf8Path::new("target/distrib/");
-        if out_path.exists() {
-            LocalAsset::remove_dir_all(out_path)?;
-        }
-
-        // build installers
-        eprintln!("running cargo dist build -aglobal...");
-        self.tools
-            .cargo_dist
-            .output_checked(|cmd| cmd.arg("dist").arg("build").arg("-alies"))?;
 
         self.load_dist_results(test_name)
     }
@@ -759,6 +763,9 @@ pub fn snapshot_settings_with_gallery_filter() -> insta::Settings {
         r"cargo-dist/releases/download/v\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?/",
         "cargo-dist/releases/download/vSOME_VERSION/",
     );
+    settings.add_filter(r#"sha256 ".*""#, r#"sha256 "CENSORED""#);
+    settings.add_filter(r#""sha256": .*"#, r#""sha256": "CENSORED""#);
+    settings.add_filter(r#""sha512": .*"#, r#""sha512": "CENSORED""#);
     settings.add_filter(r#""version":"[a-zA-Z\.0-9\-]*""#, r#""version":"CENSORED""#);
     settings
 }
@@ -793,6 +800,8 @@ pub fn snapshot_settings_with_dist_manifest_filter() -> insta::Settings {
         r#""cargo_version_line": .*"#,
         r#""cargo_version_line": "CENSORED""#,
     );
+    settings.add_filter(r#""sha256": .*"#, r#""sha256": "CENSORED""#);
+    settings.add_filter(r#""sha512": .*"#, r#""sha512": "CENSORED""#);
 
     settings
 }
