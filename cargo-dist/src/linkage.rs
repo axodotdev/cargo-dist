@@ -195,8 +195,8 @@ impl Linkage {
     /// Construct a cargo_dist_schema::Linkage from a Linkage
     pub fn to_schema(&self) -> cargo_dist_schema::Linkage {
         cargo_dist_schema::Linkage {
-            binary: self.binary.clone(),
-            target: self.target.clone(),
+            binary: None,
+            target: None,
             system: self.system.iter().map(|s| s.to_schema()).collect(),
             homebrew: self.homebrew.iter().map(|s| s.to_schema()).collect(),
             public_unmanaged: self
@@ -212,8 +212,8 @@ impl Linkage {
     /// Constructs a Linkage from a cargo_dist_schema::Linkage
     pub fn from_schema(other: &cargo_dist_schema::Linkage) -> Self {
         Self {
-            binary: other.binary.clone(),
-            target: other.target.clone(),
+            binary: other.binary.clone().unwrap_or_default(),
+            target: other.target.clone().unwrap_or_default(),
             system: other.system.iter().map(Library::from_schema).collect(),
             homebrew: other.homebrew.iter().map(Library::from_schema).collect(),
             public_unmanaged: other

@@ -30,6 +30,8 @@ pub type ArtifactId = String;
 pub type SystemId = String;
 /// The unique ID of an Asset
 pub type AssetId = String;
+/// A sorted set of values
+pub type SortedSet<T> = std::collections::BTreeSet<T>;
 
 /// A report of the releases and artifacts that cargo-dist generated
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -503,6 +505,29 @@ impl DistManifest {
             self.releases.last_mut().unwrap()
         }
     }
+
+    /// Get the merged linkage for an artifact
+    ///
+    /// This lets you know what system dependencies an entire archive of binaries requires
+    pub fn linkage_for_artifact(&self, artifact_id: &ArtifactId) -> Linkage {
+        let artifact = &self.artifacts[artifact_id];
+        let mut output = Linkage::default();
+
+        for base_asset in &artifact.assets {
+            let Some(asset_id) = &base_asset.id else {
+                continue
+            };
+            let Some(true_asset) = self.assets.get(asset_id) else {
+                continue
+            };
+            let Some(linkage) = &true_asset.linkage else {
+                continue
+            };
+            output.extend(linkage);
+        }
+
+        output
+    }
 }
 
 impl Release {
@@ -554,32 +579,58 @@ impl Hosting {
 }
 
 /// Information about dynamic libraries used by a binary
-#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct Linkage {
     /// The filename of the binary
-    pub binary: String,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub binary: Option<String>,
     /// The target triple for which the binary was built
-    pub target: String,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target: Option<String>,
     /// Libraries included with the operating system
-    pub system: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub system: SortedSet<Library>,
     /// Libraries provided by the Homebrew package manager
-    pub homebrew: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub homebrew: SortedSet<Library>,
     /// Public libraries not provided by the system and not managed by any package manager
-    pub public_unmanaged: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub public_unmanaged: SortedSet<Library>,
     /// Libraries which don't fall into any other categories
-    pub other: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub other: SortedSet<Library>,
     /// Frameworks, only used on macOS
-    pub frameworks: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub frameworks: SortedSet<Library>,
 }
 
 /// Represents a dynamic library located somewhere on the system
-#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Library {
     /// The path to the library; on platforms without that information, it will be a basename instead
     pub path: String,
     /// The package from which a library comes, if relevant
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+}
+
+impl Linkage {
+    /// merge another linkage into this one
+    pub fn extend(&mut self, val: &Linkage) {
+        let Linkage { binary: _, target: _, system, homebrew, public_unmanaged, other, frameworks } = val;
+        self.system.extend(system.iter().cloned());
+        self.homebrew.extend(homebrew.iter().cloned());
+        self.public_unmanaged.extend(public_unmanaged.iter().cloned());
+        self.other.extend(other.iter().cloned());
+        self.frameworks.extend(frameworks.iter().cloned());
+    }
 }
 
 /// Helper to read the raw version from serialized json
