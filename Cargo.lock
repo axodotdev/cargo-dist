@@ -181,7 +181,7 @@ checksum = "06c30b1a803211e8a9dc20ea8e496e3f8c83f7be64e208fe922a80381919c76c"
 dependencies = [
  "camino",
  "image",
- "miette 7.0.0",
+ "miette 7.2.0",
  "mime",
  "serde",
  "serde_json",
@@ -201,7 +201,7 @@ dependencies = [
  "camino",
  "flate2",
  "image",
- "miette 7.0.0",
+ "miette 7.2.0",
  "mime",
  "reqwest",
  "serde",
@@ -226,7 +226,7 @@ dependencies = [
  "backtrace",
  "backtrace-ext",
  "console",
- "miette 7.0.0",
+ "miette 7.2.0",
  "serde",
  "serde_json",
  "thiserror",
@@ -240,7 +240,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4de46920588aef95658797996130bacd542436aee090084646521260a74bda7d"
 dependencies = [
- "miette 7.0.0",
+ "miette 7.2.0",
  "thiserror",
  "tracing",
 ]
@@ -257,7 +257,7 @@ dependencies = [
  "console",
  "guppy",
  "itertools 0.12.1",
- "miette 7.0.0",
+ "miette 7.2.0",
  "parse-changelog",
  "pathdiff",
  "semver",
@@ -432,7 +432,7 @@ dependencies = [
  "insta",
  "itertools 0.12.1",
  "mach_object",
- "miette 7.0.0",
+ "miette 7.2.0",
  "minijinja",
  "newline-converter",
  "octocrab",
@@ -990,7 +990,7 @@ dependencies = [
  "axoasset 0.6.2",
  "backon",
  "camino",
- "miette 7.0.0",
+ "miette 7.2.0",
  "reqwest",
  "schemars",
  "serde",
@@ -1625,13 +1625,14 @@ dependencies = [
 
 [[package]]
 name = "miette"
-version = "7.0.0"
+version = "7.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98a72adfa0c7ae88ba0abcbd00047a476616c66b831d628b8ac7f1e9de0cfd67"
+checksum = "4edc8853320c2a0dab800fbda86253c8938f6ea88510dc92c5f1ed20e794afc1"
 dependencies = [
  "backtrace",
  "backtrace-ext",
- "miette-derive 7.0.0",
+ "cfg-if",
+ "miette-derive 7.2.0",
  "owo-colors",
  "supports-color",
  "supports-hyperlinks",
@@ -1655,9 +1656,9 @@ dependencies = [
 
 [[package]]
 name = "miette-derive"
-version = "7.0.0"
+version = "7.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "279def6bf114a34b3cf887489eb440d4dfcf709ab3ce9955e4a6f957ce5cce77"
+checksum = "dcf09caffaac8068c346b6df2a7fc27a177fd20b39421a39ce0a211bde679a6c"
 dependencies = [
  "proc-macro2",
  "quote",
