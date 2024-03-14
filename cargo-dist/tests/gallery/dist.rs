@@ -104,6 +104,8 @@ impl Default for Tools {
 
 pub struct DistResult {
     test_name: String,
+    // Only used in some cfgs
+    trust_hashes: bool,
     shell_installer_path: Option<Utf8PathBuf>,
     homebrew_installer_path: Option<Utf8PathBuf>,
     powershell_installer_path: Option<Utf8PathBuf>,
@@ -151,7 +153,7 @@ impl<'a> TestContext<'a, Tools> {
                 .arg("--output-format=json")
         })?;
 
-        let build = self.load_dist_results(test_name)?;
+        let build = self.load_dist_results(test_name, false)?;
 
         let raw_json = String::from_utf8(output.stdout).expect("plan wasn't utf8!?");
         let plan = PlanResult {
@@ -197,7 +199,7 @@ impl<'a> TestContext<'a, Tools> {
             .cargo_dist
             .output_checked(|cmd| cmd.arg("dist").arg("build").arg("-aglobal"))?;
 
-        self.load_dist_results(test_name)
+        self.load_dist_results(test_name, true)
     }
 
     /// Run 'cargo dist generate' and return paths to various files that were generated
@@ -235,7 +237,7 @@ impl<'a> TestContext<'a, Tools> {
         })
     }
 
-    fn load_dist_results(&self, test_name: &str) -> Result<DistResult> {
+    fn load_dist_results(&self, test_name: &str, trust_hashes: bool) -> Result<DistResult> {
         // read/analyze installers
         eprintln!("loading results...");
         let app_name = &self.repo.app_name;
@@ -248,6 +250,7 @@ impl<'a> TestContext<'a, Tools> {
 
         Ok(DistResult {
             test_name: test_name.to_owned(),
+            trust_hashes,
             shell_installer_path: sh_installer.exists().then_some(sh_installer),
             powershell_installer_path: ps_installer.exists().then_some(ps_installer),
             homebrew_installer_path: homebrew_installer,
@@ -764,6 +767,11 @@ impl DistResult {
     // Runs the installer script in the system's Homebrew installation
     #[allow(unused_variables)]
     pub fn runtest_homebrew_installer(&self, ctx: &TestContext<Tools>) -> Result<()> {
+        // Only do this if we trust hashes (outside cfg so the compiler knows we use this)
+        if !self.trust_hashes {
+            return Ok(());
+        }
+
         // Only do this on macOS, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
         #[cfg(target_os = "macos")]
         if std::env::var(ENV_RUIN_ME)
