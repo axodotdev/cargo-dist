@@ -64,8 +64,7 @@ impl<'a> DistGraphBuilder<'a> {
 
             // If we're trying to cross-compile, ensure the rustup toolchain
             // is setup!
-            if target != self.inner.tools.cargo.host_target
-            {
+            if target != self.inner.tools.cargo.host_target {
                 if let Some(rustup) = self.inner.tools.rustup.clone() {
                     builds.push(BuildStep::Rustup(RustupStep {
                         rustup,
