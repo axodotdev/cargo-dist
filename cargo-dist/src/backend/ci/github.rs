@@ -327,7 +327,17 @@ fn install_dist_for_targets<'a>(
 fn brewfile_from(packages: &[String]) -> String {
     let brewfile_lines: Vec<String> = packages
         .iter()
-        .map(|p| format!(r#"brew "{p}""#).to_owned())
+        .map(|p| {
+            let lower = p.to_ascii_lowercase();
+            // Although `brew install` can take either a formula or a cask,
+            // Brewfiles require you to use the `cask` verb for casks and `brew`
+            // for formulas.
+            if lower.starts_with("homebrew/cask") || lower.starts_with("homebrew/homebrew-cask") {
+                format!(r#"cask "{p}""#).to_owned()
+            } else {
+                format!(r#"brew "{p}""#).to_owned()
+            }
+        })
         .collect();
 
     brewfile_lines.join("\n")
