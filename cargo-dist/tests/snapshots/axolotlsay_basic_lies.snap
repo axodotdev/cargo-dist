@@ -2407,6 +2407,9 @@ maybeInstall(true).then(run);
       "id": "axolotlsay-aarch64-apple-darwin-axolotlsay",
       "name": "axolotlsay",
       "system": "lies:",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ],
       "linkage": {
         "other": [
           {
@@ -2419,6 +2422,9 @@ maybeInstall(true).then(run);
       "id": "axolotlsay-x86_64-apple-darwin-axolotlsay",
       "name": "axolotlsay",
       "system": "lies:",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ],
       "linkage": {
         "other": [
           {
@@ -2431,6 +2437,9 @@ maybeInstall(true).then(run);
       "id": "axolotlsay-x86_64-pc-windows-msvc-axolotlsay",
       "name": "axolotlsay",
       "system": "lies:",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
       "linkage": {
         "other": [
           {
@@ -2443,6 +2452,9 @@ maybeInstall(true).then(run);
       "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
       "name": "axolotlsay",
       "system": "lies:",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ],
       "linkage": {
         "other": [
           {

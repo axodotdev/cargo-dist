@@ -8,7 +8,7 @@ use std::{
 use axoasset::SourceFile;
 use axoprocess::Cmd;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{DistManifest, Library, Linkage};
+use cargo_dist_schema::{AssetInfo, DistManifest, Library, Linkage};
 use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
@@ -28,56 +28,41 @@ pub struct LinkageArgs {
 
 /// Determinage dynamic linkage of built artifacts (impl of `cargo dist linkage`)
 pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
-    let (dist, _manifest) = gather_work(cfg)?;
-
-    let reports: Vec<Linkage> = if let Some(target) = args.from_json.clone() {
+    let manifest = if let Some(target) = args.from_json.clone() {
         let file = SourceFile::load_local(target)?;
         file.deserialize_json()?
     } else {
-        fetch_linkage(cfg.targets.clone(), dist.artifacts, dist.dist_dir)?
+        let (dist, mut manifest) = gather_work(cfg)?;
+        compute_linkage_assuming_local_build(&dist, &mut manifest, cfg)?;
+        manifest
     };
 
     if args.print_output {
-        for report in &reports {
-            eprintln!("{}", report_linkage(report));
-        }
+        eprintln!("{}", LinkageDisplay(&manifest));
     }
     if args.print_json {
-        let j = serde_json::to_string(&reports).unwrap();
-        println!("{}", j);
+        let string = serde_json::to_string_pretty(&manifest).unwrap();
+        println!("{string}");
     }
-
     Ok(())
 }
 
-/// Compute the linkage of local builds and add them to the DistManifest
-pub fn add_linkage_to_manifest(
-    cfg: &Config,
+/// Assuming someone just ran `cargo dist build` on the current machine,
+/// compute the linkage by checking binaries in the temp to-be-zipped dirs.
+fn compute_linkage_assuming_local_build(
     dist: &DistGraph,
     manifest: &mut DistManifest,
-) -> Result<()> {
-    let linkage = fetch_linkage(
-        cfg.targets.clone(),
-        dist.artifacts.clone(),
-        dist.dist_dir.clone(),
-    )?;
-
-    manifest.linkage.extend(linkage);
-    Ok(())
-}
-
-fn fetch_linkage(
-    targets: Vec<String>,
-    artifacts: Vec<Artifact>,
-    dist_dir: Utf8PathBuf,
-) -> DistResult<Vec<Linkage>> {
-    let mut reports = vec![];
+    cfg: &Config,
+) -> DistResult<()> {
+    let targets = &cfg.targets;
+    let artifacts = &dist.artifacts;
+    let dist_dir = &dist.dist_dir;
 
     for target in targets {
         let artifacts: Vec<Artifact> = artifacts
             .clone()
             .into_iter()
-            .filter(|r| r.target_triples.contains(&target))
+            .filter(|r| r.target_triples.contains(target))
             .collect();
 
         if artifacts.is_empty() {
@@ -88,22 +73,55 @@ fn fetch_linkage(
         for artifact in artifacts {
             let path = Utf8PathBuf::from(&dist_dir).join(format!("{}-{target}", artifact.id));
 
-            for (_, binary) in artifact.required_binaries {
-                let bin_path = path.join(binary);
+            for (bin_idx, binary_relpath) in artifact.required_binaries {
+                let bin = dist.binary(bin_idx);
+                let bin_path = path.join(binary_relpath);
                 if !bin_path.exists() {
                     eprintln!("Binary {bin_path} missing; skipping check");
                 } else {
-                    reports.push(determine_linkage(&bin_path, &target)?);
+                    let linkage = determine_linkage(&bin_path, target)?;
+                    manifest.assets.insert(
+                        bin.id.clone(),
+                        AssetInfo {
+                            id: bin.id.clone(),
+                            name: bin.name.clone(),
+                            system: dist.system_id.clone(),
+                            linkage: Some(linkage),
+                            target_triples: vec![target.clone()],
+                        },
+                    );
                 }
             }
         }
     }
 
-    Ok(reports)
+    Ok(())
+}
+
+/// Formatter for a DistManifest that prints the linkage human-readably
+pub struct LinkageDisplay<'a>(pub &'a DistManifest);
+
+impl std::fmt::Display for LinkageDisplay<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for asset in self.0.assets.values() {
+            let Some(linkage) = &asset.linkage else {
+                continue;
+            };
+            let name = &asset.name;
+            let targets = asset.target_triples.join(", ");
+            write!(f, "{name}")?;
+            if !targets.is_empty() {
+                write!(f, " ({targets})")?;
+            }
+            writeln!(f, "\n")?;
+            format_linkage_table(f, linkage)?;
+        }
+        Ok(())
+    }
 }
 
 /// Formatted human-readable output
-pub fn report_linkage(linkage: &Linkage) -> String {
+fn format_linkage_table(f: &mut std::fmt::Formatter<'_>, linkage: &Linkage) -> std::fmt::Result {
     let mut table = Table::new();
     table
         .load_preset(UTF8_FULL)
@@ -163,14 +181,7 @@ pub fn report_linkage(linkage: &Linkage) -> String {
                 .join("\n")
                 .as_str(),
         ]);
-
-    use std::fmt::Write;
-    let mut output = String::new();
-    if let (Some(bin), Some(target)) = (&linkage.binary, &linkage.target) {
-        writeln!(&mut output, "{} ({}):\n", bin, target).unwrap();
-    }
-    write!(&mut output, "{table}").unwrap();
-    output
+    write!(f, "{table}")
 }
 
 /// Create a homebrew library for the given path
@@ -379,8 +390,6 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage
     };
 
     let mut linkage = Linkage {
-        binary: Some(path.file_name().unwrap().to_owned()),
-        target: Some(target.to_owned()),
         system: Default::default(),
         homebrew: Default::default(),
         public_unmanaged: Default::default(),

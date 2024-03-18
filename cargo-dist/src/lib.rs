@@ -85,10 +85,6 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
         }
     }
 
-    // Compute linkage data now that we've done all builds
-    // TODO(#848): delete this line to remove the old linkage system
-    linkage::add_linkage_to_manifest(cfg, &dist, &mut manifest)?;
-
     // Next the global steps
     for step in &dist.global_build_steps {
         if dist.local_builds_are_lies {

@@ -197,6 +197,7 @@ impl BuildExpectations {
                 name: bin.name.clone(),
                 system: dist.system_id.clone(),
                 linkage: Some(linkage),
+                target_triples: vec![target.clone()],
             },
         );
         Ok(())

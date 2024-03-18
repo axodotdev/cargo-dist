@@ -116,6 +116,12 @@ pub struct AssetInfo {
     pub name: String,
     /// the system it was built on
     pub system: SystemId,
+    /// rust-style target triples the Asset natively supports
+    ///
+    /// * length 0: not a meaningful question, maybe some static file
+    /// * length 1: typical of binaries
+    /// * length 2+: some kind of universal binary
+    pub target_triples: Vec<String>,
     /// the linkage of this Asset
     pub linkage: Option<Linkage>,
 }
@@ -590,14 +596,6 @@ impl Hosting {
 /// Information about dynamic libraries used by a binary
 #[derive(Clone, Default, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct Linkage {
-    /// The filename of the binary
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub binary: Option<String>,
-    /// The target triple for which the binary was built
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub target: Option<String>,
     /// Libraries included with the operating system
     #[serde(default)]
     #[serde(skip_serializing_if = "SortedSet::is_empty")]
@@ -634,8 +632,6 @@ impl Linkage {
     /// merge another linkage into this one
     pub fn extend(&mut self, val: &Linkage) {
         let Linkage {
-            binary: _,
-            target: _,
             system,
             homebrew,
             public_unmanaged,
