@@ -206,9 +206,6 @@ function Invoke-Installer($bin_paths) {
   }
 
   $dest_dir = Join-Path $root "bin"
-
-  # The replace call here ensures proper escaping is inlined into the receipt
-  $receipt = $receipt.Replace('AXO_CARGO_HOME', $dest_dir.replace("\", "\\"))
 {% elif install_path.kind == "HomeSubdir" %}
   # Install to this subdir of the user's home dir
   $dest_dir = if (($base_dir = $HOME)) {
@@ -226,6 +223,15 @@ function Invoke-Installer($bin_paths) {
 {% else %}
   {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {% endif %}
+  # ...ignoring all of the above, if the user asked us to completely override
+  # those choices and use a specified directory, then pick that now
+  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+    $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+  }
+
+  # The replace call here ensures proper escaping is inlined into the receipt
+  $receipt = $receipt.Replace('AXO_CARGO_HOME', $dest_dir.replace("\", "\\"))
+
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
   Write-Information "Installing to $dest_dir"
   # Just copy the binaries from the temp location to the install dir

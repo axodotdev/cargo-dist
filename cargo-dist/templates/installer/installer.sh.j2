@@ -317,8 +317,6 @@ install() {
     else
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
-    # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
 {% elif install_path.kind == "HomeSubdir" %}
     # Install to this subdir of the user's home dir
     # In this case we want to be late-bound, as $HOME is reliable/nice.
@@ -344,6 +342,19 @@ install() {
 {% else %}
     {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {% endif %}
+    # ...ignoring all of the above, if the user asked us to completely override
+    # those choices and use a specified directory, then pick that now
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        _install_dir_expr="$_install_dir"
+        _env_script_path_expr="$_env_script_path"
+    fi
+
+    # Replace the temporary cargo home with the calculated one
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
+
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
 
