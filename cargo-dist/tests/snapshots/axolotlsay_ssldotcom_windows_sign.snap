@@ -1040,7 +1040,12 @@ function Invoke-Installer($bin_paths) {
 
   # Write the install receipt
   $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue
-  Out-File -FilePath $receipt_home/axolotlsay-receipt.json -InputObject $receipt -Encoding utf8
+  # Trying to get Powershell 5.1 (not 6+, which is fake and lies) to write utf8 is a crime
+  # because "Out-File -Encoding utf8" actually still means utf8BOM, so we need to pull out
+  # .NET's APIs which actually do what you tell them (also apparently utf8NoBOM is the
+  # default in newer .NETs but I'd rather not rely on that at this point).
+  $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+  [IO.File]::WriteAllLines("$receipt_home/axolotlsay-receipt.json", "$receipt", $Utf8NoBomEncoding)
 
   Write-Information "Everything's installed!"
   if (-not $NoModifyPath) {
@@ -2014,5 +2019,3 @@ jobs:
     </Product>
 
 </Wix>
-
-
