@@ -8,11 +8,10 @@ use std::{
 use axoasset::SourceFile;
 use axoprocess::Cmd;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{DistManifest, Library, Linkage};
 use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
-use serde::{Deserialize, Serialize};
 
 use crate::{config::Config, errors::*, gather_work, Artifact, DistGraph};
 
@@ -40,7 +39,7 @@ pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
 
     if args.print_output {
         for report in &reports {
-            eprintln!("{}", report.report());
+            eprintln!("{}", report_linkage(report));
         }
     }
     if args.print_json {
@@ -63,9 +62,7 @@ pub fn add_linkage_to_manifest(
         dist.dist_dir.clone(),
     )?;
 
-    manifest
-        .linkage
-        .extend(linkage.iter().map(|l| l.to_schema()));
+    manifest.linkage.extend(linkage);
     Ok(())
 }
 
@@ -105,253 +102,163 @@ fn fetch_linkage(
     Ok(reports)
 }
 
-/// Information about dynamic libraries used by a binary
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Linkage {
-    /// The filename of the binary
-    pub binary: String,
-    /// The target triple for which the binary was built
-    pub target: String,
-    /// Libraries included with the operating system
-    pub system: Vec<Library>,
-    /// Libraries provided by the Homebrew package manager
-    pub homebrew: Vec<Library>,
-    /// Public libraries not provided by the system and not managed by any package manager
-    pub public_unmanaged: Vec<Library>,
-    /// Libraries which don't fall into any other categories
-    pub other: Vec<Library>,
-    /// Frameworks, only used on macOS
-    pub frameworks: Vec<Library>,
-}
-
-impl Linkage {
-    /// Formatted human-readable output
-    pub fn report(&self) -> String {
-        let mut table = Table::new();
-        table
-            .load_preset(UTF8_FULL)
-            .set_header(vec!["Category", "Libraries"])
-            .add_row(vec![
-                "System",
-                self.system
-                    .clone()
-                    .into_iter()
-                    .map(|l| l.to_string_pretty())
-                    .collect::<Vec<String>>()
-                    .join("\n")
-                    .as_str(),
-            ])
-            .add_row(vec![
-                "Homebrew",
-                self.homebrew
-                    .clone()
-                    .into_iter()
-                    .map(|l| l.to_string_pretty())
-                    .collect::<Vec<String>>()
-                    .join("\n")
-                    .as_str(),
-            ])
-            .add_row(vec![
-                "Public (unmanaged)",
-                self.public_unmanaged
-                    .clone()
-                    .into_iter()
-                    .map(|l| l.path)
-                    .collect::<Vec<String>>()
-                    .join("\n")
-                    .as_str(),
-            ])
-            .add_row(vec![
-                "Frameworks",
-                self.frameworks
-                    .clone()
-                    .into_iter()
-                    .map(|l| l.path)
-                    .collect::<Vec<String>>()
-                    .join("\n")
-                    .as_str(),
-            ])
-            .add_row(vec![
-                "Other",
-                self.other
-                    .clone()
-                    .into_iter()
-                    .map(|l| l.to_string_pretty())
-                    .collect::<Vec<String>>()
-                    .join("\n")
-                    .as_str(),
-            ]);
-
-        let s = format!(
-            r#"{} ({}):
-
-{table}"#,
-            self.binary, self.target,
-        );
-
-        s.to_owned()
-    }
-
-    /// Construct a cargo_dist_schema::Linkage from a Linkage
-    pub fn to_schema(&self) -> cargo_dist_schema::Linkage {
-        cargo_dist_schema::Linkage {
-            binary: None,
-            target: None,
-            system: self.system.iter().map(|s| s.to_schema()).collect(),
-            homebrew: self.homebrew.iter().map(|s| s.to_schema()).collect(),
-            public_unmanaged: self
+/// Formatted human-readable output
+pub fn report_linkage(linkage: &Linkage) -> String {
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .set_header(vec!["Category", "Libraries"])
+        .add_row(vec![
+            "System",
+            linkage
+                .system
+                .clone()
+                .into_iter()
+                .map(|l| l.to_string())
+                .collect::<Vec<String>>()
+                .join("\n")
+                .as_str(),
+        ])
+        .add_row(vec![
+            "Homebrew",
+            linkage
+                .homebrew
+                .clone()
+                .into_iter()
+                .map(|l| l.to_string())
+                .collect::<Vec<String>>()
+                .join("\n")
+                .as_str(),
+        ])
+        .add_row(vec![
+            "Public (unmanaged)",
+            linkage
                 .public_unmanaged
-                .iter()
-                .map(|s| s.to_schema())
-                .collect(),
-            other: self.other.iter().map(|s| s.to_schema()).collect(),
-            frameworks: self.frameworks.iter().map(|s| s.to_schema()).collect(),
-        }
-    }
+                .clone()
+                .into_iter()
+                .map(|l| l.path)
+                .collect::<Vec<String>>()
+                .join("\n")
+                .as_str(),
+        ])
+        .add_row(vec![
+            "Frameworks",
+            linkage
+                .frameworks
+                .clone()
+                .into_iter()
+                .map(|l| l.path)
+                .collect::<Vec<String>>()
+                .join("\n")
+                .as_str(),
+        ])
+        .add_row(vec![
+            "Other",
+            linkage
+                .other
+                .clone()
+                .into_iter()
+                .map(|l| l.to_string())
+                .collect::<Vec<String>>()
+                .join("\n")
+                .as_str(),
+        ]);
 
-    /// Constructs a Linkage from a cargo_dist_schema::Linkage
-    pub fn from_schema(other: &cargo_dist_schema::Linkage) -> Self {
-        Self {
-            binary: other.binary.clone().unwrap_or_default(),
-            target: other.target.clone().unwrap_or_default(),
-            system: other.system.iter().map(Library::from_schema).collect(),
-            homebrew: other.homebrew.iter().map(Library::from_schema).collect(),
-            public_unmanaged: other
-                .public_unmanaged
-                .iter()
-                .map(Library::from_schema)
-                .collect(),
-            other: other.other.iter().map(Library::from_schema).collect(),
-            frameworks: other.frameworks.iter().map(Library::from_schema).collect(),
-        }
+    use std::fmt::Write;
+    let mut output = String::new();
+    if let (Some(bin), Some(target)) = (&linkage.binary, &linkage.target) {
+        writeln!(&mut output, "{} ({}):\n", bin, target).unwrap();
     }
+    write!(&mut output, "{table}").unwrap();
+    output
 }
 
-/// Represents a dynamic library located somewhere on the system
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Library {
-    /// The path to the library; on platforms without that information, it will be a basename instead
-    pub path: String,
-    /// The package from which a library comes, if relevant
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub source: Option<String>,
-}
+/// Create a homebrew library for the given path
+pub fn library_from_homebrew(library: String) -> Library {
+    // Doesn't currently support Homebrew installations in
+    // non-default locations
+    let brew_prefix = if library.starts_with("/opt/homebrew/opt/") {
+        Some("/opt/homebrew/opt/")
+    } else if library.starts_with("/usr/local/opt/") {
+        Some("/usr/local/opt/")
+    } else {
+        None
+    };
 
-impl Library {
-    fn new(library: String) -> Self {
-        Self {
+    if let Some(prefix) = brew_prefix {
+        let cloned = library.clone();
+        let stripped = cloned.strip_prefix(prefix).unwrap();
+        let mut package = stripped.split('/').next().unwrap().to_owned();
+
+        // The path alone isn't enough to determine the tap the formula
+        // came from. If the install receipt exists, we can use it to
+        // get the name of the source tap.
+        let receipt = Utf8PathBuf::from(&prefix)
+            .join(&package)
+            .join("INSTALL_RECEIPT.json");
+
+        // If the receipt doesn't exist or can't be loaded, that's not an
+        // error; we can fall back to the package basename we parsed out
+        // of the path.
+        if receipt.exists() {
+            let _ = SourceFile::load_local(&receipt)
+                .and_then(|file| file.deserialize_json())
+                .map(|parsed: serde_json::Value| {
+                    if let Some(tap) = parsed["source"]["tap"].as_str() {
+                        if tap != "homebrew/core" {
+                            package = format!("{tap}/{package}");
+                        }
+                    }
+                });
+        }
+
+        Library {
+            path: library,
+            source: Some(package.to_owned()),
+        }
+    } else {
+        Library {
             path: library,
             source: None,
         }
     }
+}
 
-    fn to_schema(&self) -> cargo_dist_schema::Library {
-        cargo_dist_schema::Library {
-            path: self.path.clone(),
-            source: self.source.clone(),
-        }
+/// Create an apt library for the given path
+pub fn library_from_apt(library: String) -> DistResult<Library> {
+    // We can't get this information on other OSs
+    if std::env::consts::OS != "linux" {
+        return Ok(Library {
+            path: library,
+            source: None,
+        });
     }
 
-    fn from_schema(other: &cargo_dist_schema::Library) -> Self {
-        Self {
-            path: other.path.clone(),
-            source: other.source.clone(),
-        }
-    }
+    let process = Cmd::new("dpkg", "get linkage info from dpkg")
+        .arg("--search")
+        .arg(&library)
+        .output();
+    match process {
+        Ok(output) => {
+            let output = String::from_utf8(output.stdout)?;
 
-    fn from_homebrew(library: String) -> Self {
-        // Doesn't currently support Homebrew installations in
-        // non-default locations
-        let brew_prefix = if library.starts_with("/opt/homebrew/opt/") {
-            Some("/opt/homebrew/opt/")
-        } else if library.starts_with("/usr/local/opt/") {
-            Some("/usr/local/opt/")
-        } else {
-            None
-        };
+            let package = output.split(':').next().unwrap();
+            let source = if package.is_empty() {
+                None
+            } else {
+                Some(package.to_owned())
+            };
 
-        if let Some(prefix) = brew_prefix {
-            let cloned = library.clone();
-            let stripped = cloned.strip_prefix(prefix).unwrap();
-            let mut package = stripped.split('/').nth(0).unwrap().to_owned();
-
-            // The path alone isn't enough to determine the tap the formula
-            // came from. If the install receipt exists, we can use it to
-            // get the name of the source tap.
-            let receipt = Utf8PathBuf::from(&prefix)
-                .join(&package)
-                .join("INSTALL_RECEIPT.json");
-
-            // If the receipt doesn't exist or can't be loaded, that's not an
-            // error; we can fall back to the package basename we parsed out
-            // of the path.
-            if receipt.exists() {
-                let _ = SourceFile::load_local(&receipt)
-                    .and_then(|file| file.deserialize_json())
-                    .map(|parsed: serde_json::Value| {
-                        if let Some(tap) = parsed["source"]["tap"].as_str() {
-                            if tap != "homebrew/core" {
-                                package = format!("{tap}/{package}");
-                            }
-                        }
-                    });
-            }
-
-            Self {
+            Ok(Library {
                 path: library,
-                source: Some(package.to_owned()),
-            }
-        } else {
-            Self {
-                path: library,
-                source: None,
-            }
+                source,
+            })
         }
-    }
-
-    fn maybe_apt(library: String) -> DistResult<Self> {
-        // We can't get this information on other OSs
-        if std::env::consts::OS != "linux" {
-            return Ok(Self {
-                path: library,
-                source: None,
-            });
-        }
-
-        let process = Cmd::new("dpkg", "get linkage info from dpkg")
-            .arg("--search")
-            .arg(&library)
-            .output();
-        match process {
-            Ok(output) => {
-                let output = String::from_utf8(output.stdout)?;
-
-                let package = output.split(':').nth(0).unwrap();
-                let source = if package.is_empty() {
-                    None
-                } else {
-                    Some(package.to_owned())
-                };
-
-                Ok(Self {
-                    path: library,
-                    source,
-                })
-            }
-            // Couldn't find a package for this file
-            Err(_) => Ok(Self {
-                path: library,
-                source: None,
-            }),
-        }
-    }
-
-    fn to_string_pretty(&self) -> String {
-        if let Some(package) = &self.source {
-            format!("{} ({package})", self.path).to_owned()
-        } else {
-            self.path.clone()
-        }
+        // Couldn't find a package for this file
+        Err(_) => Ok(Library {
+            path: library,
+            source: None,
+        }),
     }
 }
 
@@ -472,35 +379,37 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage
     };
 
     let mut linkage = Linkage {
-        binary: path.file_name().unwrap().to_owned(),
-        target: target.to_owned(),
-        system: vec![],
-        homebrew: vec![],
-        public_unmanaged: vec![],
-        frameworks: vec![],
-        other: vec![],
+        binary: Some(path.file_name().unwrap().to_owned()),
+        target: Some(target.to_owned()),
+        system: Default::default(),
+        homebrew: Default::default(),
+        public_unmanaged: Default::default(),
+        frameworks: Default::default(),
+        other: Default::default(),
     };
     for library in libraries {
         if library.starts_with("/opt/homebrew") {
             linkage
                 .homebrew
-                .push(Library::from_homebrew(library.clone()));
+                .insert(library_from_homebrew(library.clone()));
         } else if library.starts_with("/usr/lib") || library.starts_with("/lib") {
-            linkage.system.push(Library::maybe_apt(library.clone())?);
+            linkage.system.insert(library_from_apt(library.clone())?);
         } else if library.starts_with("/System/Library/Frameworks")
             || library.starts_with("/Library/Frameworks")
         {
-            linkage.frameworks.push(Library::new(library.clone()));
+            linkage.frameworks.insert(Library::new(library.clone()));
         } else if library.starts_with("/usr/local") {
             if std::fs::canonicalize(&library)?.starts_with("/usr/local/Cellar") {
                 linkage
                     .homebrew
-                    .push(Library::from_homebrew(library.clone()));
+                    .insert(library_from_homebrew(library.clone()));
             } else {
-                linkage.public_unmanaged.push(Library::new(library.clone()));
+                linkage
+                    .public_unmanaged
+                    .insert(Library::new(library.clone()));
             }
         } else {
-            linkage.other.push(Library::maybe_apt(library.clone())?);
+            linkage.other.insert(library_from_apt(library.clone())?);
         }
     }
 

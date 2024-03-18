@@ -651,6 +651,23 @@ impl Linkage {
     }
 }
 
+impl Library {
+    /// Make a new Library with the given path and no source
+    pub fn new(path: String) -> Self {
+        Self { path, source: None }
+    }
+}
+
+impl std::fmt::Display for Library {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(package) = &self.source {
+            write!(f, "{} ({package})", self.path)
+        } else {
+            write!(f, "{}", self.path)
+        }
+    }
+}
+
 /// Helper to read the raw version from serialized json
 fn dist_version(input: &str) -> Option<Version> {
     #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

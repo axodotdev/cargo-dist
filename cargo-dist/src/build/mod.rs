@@ -187,7 +187,7 @@ impl BuildExpectations {
             });
             linkage
         } else {
-            determine_linkage(src_path, target)?.to_schema()
+            determine_linkage(src_path, target)?
         };
         let bin = dist.binary(src.idx);
         manifest.assets.insert(

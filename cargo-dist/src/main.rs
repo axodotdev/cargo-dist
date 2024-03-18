@@ -7,7 +7,7 @@ use std::io::Write;
 use axoasset::LocalAsset;
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
-use cargo_dist::{linkage::Linkage, *};
+use cargo_dist::*;
 use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{
@@ -184,7 +184,7 @@ fn print_json(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Erro
 
 fn print_human_linkage(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Error> {
     for linkage in &report.linkage {
-        writeln!(out, "{}", Linkage::from_schema(linkage).report())?;
+        writeln!(out, "{}", linkage::report_linkage(linkage))?;
     }
 
     Ok(())
