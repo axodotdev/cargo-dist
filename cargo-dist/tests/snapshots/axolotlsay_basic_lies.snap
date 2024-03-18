@@ -78,7 +78,6 @@ download_binary_and_run_installer() {
     need_cmd mkdir
     need_cmd rm
     need_cmd tar
-    need_cmd which
     need_cmd grep
     need_cmd cat
 
@@ -323,6 +322,17 @@ install() {
     else
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
+
+    # ...ignoring all of the above, if the user asked us to completely override
+    # those choices and use a specified directory, then pick that now
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        _install_dir_expr="$_install_dir"
+        _env_script_path_expr="$_env_script_path"
+    fi
+
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
 
@@ -1068,6 +1078,12 @@ function Invoke-Installer($bin_paths) {
 
   $dest_dir = Join-Path $root "bin"
 
+  # ...ignoring all of the above, if the user asked us to completely override
+  # those choices and use a specified directory, then pick that now
+  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+    $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+  }
+
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_CARGO_HOME', $dest_dir.replace("\", "\\"))
 
@@ -1089,7 +1105,12 @@ function Invoke-Installer($bin_paths) {
 
   # Write the install receipt
   $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue
-  Out-File -FilePath $receipt_home/axolotlsay-receipt.json -InputObject $receipt -Encoding utf8
+  # Trying to get Powershell 5.1 (not 6+, which is fake and lies) to write utf8 is a crime
+  # because "Out-File -Encoding utf8" actually still means utf8BOM, so we need to pull out
+  # .NET's APIs which actually do what you tell them (also apparently utf8NoBOM is the
+  # default in newer .NETs but I'd rather not rely on that at this point).
+  $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+  [IO.File]::WriteAllLines("$receipt_home/axolotlsay-receipt.json", "$receipt", $Utf8NoBomEncoding)
 
   Write-Information "Everything's installed!"
   if (-not $NoModifyPath) {

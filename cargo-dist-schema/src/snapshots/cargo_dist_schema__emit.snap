@@ -466,7 +466,8 @@ expression: json_schema
       "required": [
         "id",
         "name",
-        "system"
+        "system",
+        "target_triples"
       ],
       "properties": {
         "id": {
@@ -491,6 +492,13 @@ expression: json_schema
         "system": {
           "description": "the system it was built on",
           "type": "string"
+        },
+        "target_triples": {
+          "description": "rust-style target triples the Asset natively supports\n\n* length 0: not a meaningful question, maybe some static file * length 1: typical of binaries * length 2+: some kind of universal binary",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -661,13 +669,6 @@ expression: json_schema
       "description": "Information about dynamic libraries used by a binary",
       "type": "object",
       "properties": {
-        "binary": {
-          "description": "The filename of the binary",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "frameworks": {
           "description": "Frameworks, only used on macOS",
           "type": "array",
@@ -707,13 +708,6 @@ expression: json_schema
             "$ref": "#/definitions/Library"
           },
           "uniqueItems": true
-        },
-        "target": {
-          "description": "The target triple for which the binary was built",
-          "type": [
-            "string",
-            "null"
-          ]
         }
       }
     },
