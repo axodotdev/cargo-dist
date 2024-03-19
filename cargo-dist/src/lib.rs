@@ -633,6 +633,7 @@ pub fn check_integrity(cfg: &Config) -> Result<()> {
         ci: vec![],
         installers: vec![],
         announcement_tag: None,
+        root_cmd: "check".to_owned(),
     };
     let (dist, _manifest) = tasks::gather_work(&check_config)?;
 

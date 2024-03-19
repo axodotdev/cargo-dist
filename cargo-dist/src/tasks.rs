@@ -2831,7 +2831,12 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
     let workspace = crate::config::get_project()?;
-    let system_id = format!("{}:{}", cfg.artifact_mode, cfg.targets.join(","));
+    let system_id = format!(
+        "{}:{}:{}",
+        cfg.root_cmd,
+        cfg.artifact_mode,
+        cfg.targets.join(",")
+    );
     let mut graph = DistGraphBuilder::new(
         system_id,
         tools,

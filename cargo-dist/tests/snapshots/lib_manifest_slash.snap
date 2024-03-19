@@ -31,8 +31,8 @@ stdout:
     }
   ],
   "systems": {
-    "all:": {
-      "id": "all:",
+    "plan:all:": {
+      "id": "plan:all:",
       "cargo_version_line": "CENSORED"
     }
   },

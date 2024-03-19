@@ -2418,8 +2418,8 @@ maybeInstall(true).then(run);
     }
   },
   "systems": {
-    "lies:": {
-      "id": "lies:",
+    "build:lies:": {
+      "id": "build:lies:",
       "cargo_version_line": "CENSORED"
     }
   },
@@ -2427,7 +2427,7 @@ maybeInstall(true).then(run);
     "axolotlsay-aarch64-apple-darwin-axolotlsay": {
       "id": "axolotlsay-aarch64-apple-darwin-axolotlsay",
       "name": "axolotlsay",
-      "system": "lies:",
+      "system": "build:lies:",
       "target_triples": [
         "aarch64-apple-darwin"
       ],
@@ -2442,7 +2442,7 @@ maybeInstall(true).then(run);
     "axolotlsay-x86_64-apple-darwin-axolotlsay": {
       "id": "axolotlsay-x86_64-apple-darwin-axolotlsay",
       "name": "axolotlsay",
-      "system": "lies:",
+      "system": "build:lies:",
       "target_triples": [
         "x86_64-apple-darwin"
       ],
@@ -2457,7 +2457,7 @@ maybeInstall(true).then(run);
     "axolotlsay-x86_64-pc-windows-msvc-axolotlsay": {
       "id": "axolotlsay-x86_64-pc-windows-msvc-axolotlsay",
       "name": "axolotlsay",
-      "system": "lies:",
+      "system": "build:lies:",
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ],
@@ -2472,7 +2472,7 @@ maybeInstall(true).then(run);
     "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay": {
       "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
       "name": "axolotlsay",
-      "system": "lies:",
+      "system": "build:lies:",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ],

@@ -607,6 +607,8 @@ pub struct Config {
     pub installers: Vec<InstallerStyle>,
     /// The (git) tag to use for this Announcement.
     pub announcement_tag: Option<String>,
+    /// What command was being invoked here, used for SystemIds
+    pub root_cmd: String,
 }
 
 /// How we should select the artifacts to build
@@ -1063,6 +1065,19 @@ pub enum HostStyle {
     Release,
     /// Announce artifacts
     Announce,
+}
+
+impl std::fmt::Display for HostStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            HostStyle::Check => "check",
+            HostStyle::Create => "create",
+            HostStyle::Upload => "upload",
+            HostStyle::Release => "release",
+            HostStyle::Announce => "announce",
+        };
+        string.fmt(f)
+    }
 }
 
 /// Packages to install before build from the system package manager

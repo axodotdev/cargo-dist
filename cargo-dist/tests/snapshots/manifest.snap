@@ -406,8 +406,8 @@ stdout:
     }
   },
   "systems": {
-    "lies:": {
-      "id": "lies:",
+    "plan:lies:": {
+      "id": "plan:lies:",
       "cargo_version_line": "CENSORED"
     }
   },

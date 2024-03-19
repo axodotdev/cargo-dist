@@ -83,12 +83,22 @@ impl BuildExpectations {
     ///
     /// This subroutine is responsible for sorting out whether we care about the binary,
     /// and if the maybe_symbols are in fact symbols we care about.
+    ///
+    /// NOTE: it is correct/expected to hand this a bunch of random paths to things
+    /// that vaguely might be what we want, assuming it knows how to pick the right ones out.
     pub fn found_bin(
         &mut self,
         pkg_id: String,
         src_path: Utf8PathBuf,
         maybe_symbols: Vec<Utf8PathBuf>,
     ) {
+        // NOTE: its expected for these early returns to trigger. It's this functions
+        // jobs to sort through build outputs and grab the ones we actually care about.
+        //
+        // For instance if you build a cargo workspace (something we prefer for stability
+        // of feature resolution), this can produce a bunch of binaries for examples or
+        // packages you don't care about, which cargo/rustc will happily report back to us,
+        // and we need to be aware enough to throw those irrelevant results out.
         info!("got a new binary: {}", src_path);
 
         // lookup the package
