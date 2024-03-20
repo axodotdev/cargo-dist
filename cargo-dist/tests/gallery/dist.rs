@@ -604,8 +604,7 @@ impl DistResult {
                 );
             }
             // check the install receipts
-            // FIXME: temporarily disabled for the feature being broken
-            // self.check_install_receipt(ctx, &bin_dir, &receipt_file, ".exe");
+            self.check_install_receipt(ctx, &bin_dir, &receipt_file, ".exe");
             eprintln!("installer.ps1 worked!");
         }
         Ok(())
