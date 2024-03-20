@@ -904,7 +904,7 @@ function Install-Binary($install_args) {
 
   $fetched = Download "$ArtifactDownloadUrl" $platforms
   # FIXME: add a flag that lets the user not do this step
-  Invoke-Installer $fetched "$install_args"
+  Invoke-Installer -bin_paths $fetched -platforms $platforms "$install_args"
 }
 
 function Get-TargetTriple() {
@@ -1015,7 +1015,7 @@ function Download($download_url, $platforms) {
   return $bin_paths
 }
 
-function Invoke-Installer($bin_paths) {
+function Invoke-Installer($bin_paths, $platforms) {
 
   # first try CARGO_HOME, then fallback to HOME
   # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
@@ -1050,6 +1050,19 @@ function Invoke-Installer($bin_paths) {
 
   # Replaces the placeholder binary entry with the actual list of binaries
   $arch = Get-TargetTriple
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # X64 is well-supported, including in emulation on ARM64
+    Write-Verbose "$arch is not available, falling back to X64"
+    $arch = "x86_64-pc-windows-msvc"
+  }
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # should not be possible, as currently we always produce X64 binaries.
+    $platforms_json = ConvertTo-Json $platforms
+    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
+  }
+
   $info = $platforms[$arch]
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
