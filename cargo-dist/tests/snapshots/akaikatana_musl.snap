@@ -28,7 +28,7 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_CARGO_HOME","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/akaikatana-repack"
@@ -346,7 +346,7 @@ install() {
     fi
 
     # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"

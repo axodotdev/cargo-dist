@@ -3018,7 +3018,7 @@ pub struct Provider {
 #[derive(Clone, Debug, Serialize)]
 pub struct InstallReceipt {
     /// The location on disk where this app was installed
-    pub install_prefix: Utf8PathBuf,
+    pub install_prefix: String,
     /// A list of all binaries installed by this app
     pub binaries: Vec<String>,
     /// Information about where to request information on new releases
@@ -3043,19 +3043,9 @@ impl InstallReceipt {
             ReleaseSourceType::GitHub
         };
 
-        let install_prefix = match &release.install_path {
-            // The actual value of $CARGO_HOME isn't known until inside the
-            // install script, so we write out a temporary value that the
-            // install script will replace with the real one later.
-            InstallPathStrategy::CargoHome => "AXO_CARGO_HOME".to_owned(),
-            InstallPathStrategy::HomeSubdir { subdir } => format!("$HOME/{}", subdir),
-            InstallPathStrategy::EnvSubdir { env_key, subdir } => {
-                format!("${}/{}", env_key, subdir)
-            }
-        };
-
         Some(InstallReceipt {
-            install_prefix: Utf8PathBuf::from(install_prefix),
+            // These first two are placeholder values which the installer will update
+            install_prefix: "AXO_INSTALL_PREFIX".to_owned(),
             binaries: vec!["CARGO_DIST_BINS".to_owned()],
             version: release.version.to_string(),
             source: ReleaseSource {
