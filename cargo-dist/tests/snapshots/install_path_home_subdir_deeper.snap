@@ -1042,9 +1042,7 @@ function Download($download_url, $platforms) {
   return $bin_paths
 }
 
-function Invoke-Installer {
-Param($bin_paths)
-Param($platforms)
+function Invoke-Installer($bin_paths, $platforms) {
 
   # Install to this subdir of the user's home dir
   $dest_dir = if (($base_dir = $HOME)) {

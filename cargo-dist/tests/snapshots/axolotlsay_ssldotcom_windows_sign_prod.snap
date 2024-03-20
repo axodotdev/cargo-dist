@@ -1015,9 +1015,7 @@ function Download($download_url, $platforms) {
   return $bin_paths
 }
 
-function Invoke-Installer {
-Param($bin_paths)
-Param($platforms)
+function Invoke-Installer($bin_paths, $platforms) {
 
   # first try CARGO_HOME, then fallback to HOME
   # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
