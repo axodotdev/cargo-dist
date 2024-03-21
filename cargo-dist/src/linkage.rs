@@ -224,6 +224,40 @@ impl Linkage {
             frameworks: other.frameworks.iter().map(Library::from_schema).collect(),
         }
     }
+
+    /// Returns a flat list of packages that come from the specific package manager
+    pub fn packages_from(&self, package_manager: PackageManager) -> Vec<String> {
+        let mut packages = vec![];
+        packages.extend(
+            self.system
+                .iter()
+                .filter(|l| l.package_manager == Some(package_manager))
+                .filter_map(|l| l.source.clone()),
+        );
+        packages.extend(
+            self.homebrew
+                .iter()
+                .filter(|l| l.package_manager == Some(package_manager))
+                .filter_map(|l| l.source.clone()),
+        );
+        packages.extend(
+            self.other
+                .iter()
+                .filter(|l| l.package_manager == Some(package_manager))
+                .filter_map(|l| l.source.clone()),
+        );
+
+        packages
+    }
+}
+
+/// Represents the package manager a library was installed by
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
+pub enum PackageManager {
+    /// Homebrew (usually for Mac)
+    Homebrew,
+    /// Apt (Debian, Ubuntu, etc)
+    Apt,
 }
 
 /// Represents a dynamic library located somewhere on the system
@@ -234,6 +268,8 @@ pub struct Library {
     /// The package from which a library comes, if relevant
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+    /// Which package manager provided this library
+    pub package_manager: Option<PackageManager>,
 }
 
 impl Library {
@@ -241,20 +277,41 @@ impl Library {
         Self {
             path: library,
             source: None,
+            package_manager: None,
         }
     }
 
     fn to_schema(&self) -> cargo_dist_schema::Library {
+        let package_manager = if let Some(pm) = &self.package_manager {
+            match pm {
+                PackageManager::Apt => Some(cargo_dist_schema::PackageManager::Apt),
+                PackageManager::Homebrew => Some(cargo_dist_schema::PackageManager::Homebrew),
+            }
+        } else {
+            None
+        };
+
         cargo_dist_schema::Library {
             path: self.path.clone(),
             source: self.source.clone(),
+            package_manager,
         }
     }
 
     fn from_schema(other: &cargo_dist_schema::Library) -> Self {
+        let package_manager = if let Some(pm) = &other.package_manager {
+            match pm {
+                cargo_dist_schema::PackageManager::Apt => Some(PackageManager::Apt),
+                cargo_dist_schema::PackageManager::Homebrew => Some(PackageManager::Homebrew),
+            }
+        } else {
+            None
+        };
+
         Self {
             path: other.path.clone(),
             source: other.source.clone(),
+            package_manager,
         }
     }
 
@@ -299,11 +356,13 @@ impl Library {
             Self {
                 path: library,
                 source: Some(package.to_owned()),
+                package_manager: Some(PackageManager::Homebrew),
             }
         } else {
             Self {
                 path: library,
                 source: None,
+                package_manager: None,
             }
         }
     }
@@ -314,6 +373,7 @@ impl Library {
             return Ok(Self {
                 path: library,
                 source: None,
+                package_manager: None,
             });
         }
 
@@ -331,16 +391,23 @@ impl Library {
                 } else {
                     Some(package.to_owned())
                 };
+                let package_manager = if source.is_some() {
+                    Some(PackageManager::Apt)
+                } else {
+                    None
+                };
 
                 Ok(Self {
                     path: library,
                     source,
+                    package_manager,
                 })
             }
             // Couldn't find a package for this file
             Err(_) => Ok(Self {
                 path: library,
                 source: None,
+                package_manager: None,
             }),
         }
     }

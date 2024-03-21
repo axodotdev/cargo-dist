@@ -11,6 +11,7 @@ use crate::{
     errors::DistResult,
     generate_checksum,
     installer::ExecutableZipFragment,
+    linkage::{Linkage, PackageManager},
     tasks::DistGraph,
 };
 
@@ -63,7 +64,7 @@ pub(crate) fn write_homebrew_formula(
     let dependencies = manifest
         .linkage
         .iter()
-        .flat_map(|l| l.homebrew.iter().filter_map(|lib| lib.source.clone()));
+        .flat_map(|l| Linkage::from_schema(l).packages_from(PackageManager::Homebrew));
 
     // Merge with the manually-specified deps
     info.dependencies.extend(dependencies);

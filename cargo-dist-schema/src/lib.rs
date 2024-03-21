@@ -539,6 +539,15 @@ pub struct Linkage {
     pub frameworks: Vec<Library>,
 }
 
+/// Represents the package manager a library was installed by
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+pub enum PackageManager {
+    /// Homebrew (usually for Mac)
+    Homebrew,
+    /// Apt (Debian, Ubuntu, etc)
+    Apt,
+}
+
 /// Represents a dynamic library located somewhere on the system
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct Library {
@@ -547,6 +556,8 @@ pub struct Library {
     /// The package from which a library comes, if relevant
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+    /// Which package manager provided this library
+    pub package_manager: Option<PackageManager>,
 }
 
 /// Helper to read the raw version from serialized json
