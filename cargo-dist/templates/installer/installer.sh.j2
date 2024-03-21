@@ -353,7 +353,7 @@ install() {
     fi
 
     # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_CARGO_HOME,$_install_dir,")
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
