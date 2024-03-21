@@ -3,6 +3,50 @@
 Nothing Yet!
 
 
+# Version 0.12.0 (2024-03-21)
+
+This release introduces an experimental new feature: an updater which allows your users to install new releases without having to go download a new installer themselves. It also includes a few other bugfixes and improvements.
+
+## Features
+
+### cargo-dist updater
+
+The new cargo-dist updater, [axoupdater](https://github.com/axodotdev/axoupdater), provides a way for your users to easily upgrade your software without needing to check your website for new versions. If you enable the new `install-updater = true` option in cargo-dist, users who install your software via the shell or PowerShell installers will receive a standalone updater program alongside your program itself. Running this program will check for updates and, if necessary, install the new version for them. In addition, axoupdater provides a Rust library with all of its functionality exposed so that you can choose to integrate the updater functionality into your own program directly.
+
+For more information, see the [cargo-dist documentation](https://opensource.axo.dev/cargo-dist/book/installers/updater.html) or consult the axoupdater repository and [documentation](http://docs.rs/axoupdater/latest/axoupdater/).
+
+### Homebrew cask dependencies
+
+Homebrew cask dependencies can now be installed.
+
+* impl @mistydemeo [feat: support cask deps for Homebrew](https://github.com/axodotdev/cargo-dist/pull/855)
+
+### PowerShell installer tests
+
+We now run PowerShell installers end to end in cargo-dist's own tests.
+
+* impl @Gankra [chore: add ruin_me powershell tests](https://github.com/axodotdev/cargo-dist/pull/862)
+
+### Invoke `rustup target add` for additional forms of cross-compiling
+
+We now run `rustup target add` unconditionally when cross-compiling; before, this was limited to macOS or for musl Linux. This is primarily useful for targeting Windows ARM, but may be useful for other cross-compilation targets in the future.
+
+* impl @AustinWise [feat: always rustup target add in cross](https://github.com/axodotdev/cargo-dist/pull/846)
+
+### Allow overriding install path in shell and PowerShell installers
+
+Although some installer configuration allows setting the installation path, there was previously no way to force the installer to install to a location of the user's choosing. We've added a feature to do so via the new `CARGO_DIST_FORCE_INSTALL_DIR` environment variable.
+
+This is primarily intended for cargo-dist's internal use, and is used by the updater to ensure that new releases are installed in the same location as the previous version; other users may find it useful.
+
+* impl @mistydemeo [feat: allow overriding install path](https://github.com/axodotdev/cargo-dist/pull/837)
+
+## Fixes
+
+* @mistydemeo [fix install path in install receipts in certain circumstances](https://github.com/axodotdev/cargo-dist/pull/863)
+* @Gankra [fix: for reals reals utf8 for reals FOR REALS](https://github.com/axodotdev/cargo-dist/pull/852)
+* @kbattocchi [feat: enable fallback to x64 in Invoke-Installer](https://github.com/axodotdev/cargo-dist/pull/835)
+
 # Version 0.11.1 (2024-02-23)
 
 This release is a few minor improvements, and a new config for homebrew installers.
