@@ -369,7 +369,7 @@ impl DistResult {
         Ok(())
     }
 
-    #[allow(dead_code)]
+    #[cfg(any(target_family = "unix", target_family = "windows"))]
     fn check_install_receipt(
         &self,
         ctx: &TestContext<Tools>,
@@ -436,7 +436,7 @@ impl DistResult {
         ctx: &TestContext<Tools>,
         expected_bin_dir: &str,
     ) -> Result<()> {
-        // Only do this on unix, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
+        // Only do this on windows, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
         #[cfg(target_family = "windows")]
         if std::env::var(ENV_RUIN_ME)
             .map(|s| !s.is_empty())
@@ -604,8 +604,7 @@ impl DistResult {
                 );
             }
             // check the install receipts
-            // FIXME: temporarily disabled for the feature being broken
-            // self.check_install_receipt(ctx, &bin_dir, &receipt_file, ".exe");
+            self.check_install_receipt(ctx, &bin_dir, &receipt_file, ".exe");
             eprintln!("installer.ps1 worked!");
         }
         Ok(())
