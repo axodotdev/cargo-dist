@@ -459,6 +459,21 @@ Future Improvements:
 
 (Please file an issue if you have other requirements!)
 
+### install-updater
+
+> since 0.12.0
+
+Example: `install-updater = true`
+
+Defaults to false.
+
+NOTE: this feature is currently experimental.
+
+Determines whether to install a standalone updater program alongside your program. This program will be named `yourpackage-update`, and can be run by the user to automatically check for newer versions and install them without needing to visit your website. This updater will only be installed for users who use the shell or Powershell installers; users who received your package from a package manager, such as Homebrew or npm, will need to use the same package manager to perform upgrades.
+
+This updater is the commandline tool contained in the open source [axoupdater] package.
+
+For more information, see the [updater] documentation.
 
 ### local-artifacts-jobs
 
@@ -734,3 +749,5 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [platforms]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [scope]: https://docs.npmjs.com/cli/v9/using-npm/scope
 [crt-static]: https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md#future-work
+[axoupdater]: https://github.com/axodotdev/axoupdater
+[updater]: ../installers/updater.md
