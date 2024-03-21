@@ -4,6 +4,7 @@
 //! without needing to actually run platform-specific builds
 
 use axoasset::LocalAsset;
+use camino::Utf8PathBuf;
 use cargo_dist_schema::DistManifest;
 
 use crate::{BinaryIdx, CargoBuildStep, DistGraph, DistResult, GenericBuildStep};
@@ -39,13 +40,9 @@ fn build_fake_binaries(
     binaries: &[BinaryIdx],
 ) -> DistResult<()> {
     // Shove these in a temp dir inside the dist dir, where it's safe for us to do whatever
-    let tempdir = dist.dist_dir.join("_fake_tmp");
-    // Clear out old files (files we need get copied out by the time this function returns)
-    if tempdir.exists() {
-        LocalAsset::remove_dir_all(&tempdir)?;
-    }
-    LocalAsset::create_dir_all(&tempdir)?;
-
+    let tmp = temp_dir::TempDir::new()?;
+    let tempdir =
+        Utf8PathBuf::from_path_buf(tmp.path().to_owned()).expect("temp_dir made non-utf8 path!?");
     let mut expectations = BuildExpectations::new_fake(dist, binaries);
 
     for idx in binaries {
