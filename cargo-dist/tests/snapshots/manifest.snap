@@ -429,7 +429,7 @@ stdout:
             "runner": "buildjet-8vcpu-ubuntu-2204-arm",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-unknown-linux-musl",
-            "packages_install": "sudo apt-get install musl-tools"
+            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools"
           },
           {
             "targets": [
@@ -462,7 +462,7 @@ stdout:
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
-            "packages_install": "sudo apt-get install musl-tools"
+            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools"
           }
         ]
       },
@@ -476,5 +476,3 @@ stderr:
 INFO: You've enabled Axo Releases, which is currently in Closed Beta.
 If you haven't yet signed up, please join our discord
 (https://discord.gg/ECnWuUUXQk) or message hello@axo.dev to get started!
-
-

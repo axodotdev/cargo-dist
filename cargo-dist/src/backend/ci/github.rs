@@ -409,7 +409,9 @@ fn package_install_for_targets(
                 }
 
                 let apts = packages.join(" ");
-                return Some(format!("sudo apt-get install {apts}").to_owned());
+                return Some(
+                    format!("sudo apt-get update && sudo apt-get install {apts}").to_owned(),
+                );
             }
             "i686-pc-windows-msvc" | "x86_64-pc-windows-msvc" | "aarch64-pc-windows-msvc" => {
                 let commands: Vec<String> = packages
