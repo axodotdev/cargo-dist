@@ -1112,7 +1112,7 @@ download_binary_and_run_installer "$@" || exit 1
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
-            "packages_install": "sudo apt-get install musl-tools"
+            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools"
           }
         ]
       },
