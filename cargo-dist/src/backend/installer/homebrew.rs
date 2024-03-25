@@ -1,15 +1,14 @@
 //! Code for generating installer.sh
 
 use axoasset::LocalAsset;
-use camino::Utf8PathBuf;
 use cargo_dist_schema::DistManifest;
 use serde::Serialize;
 
 use super::InstallerInfo;
 use crate::{
     backend::templates::{Templates, TEMPLATE_INSTALLER_RB},
+    config::ChecksumStyle,
     errors::DistResult,
-    generate_checksum,
     installer::ExecutableZipFragment,
     tasks::DistGraph,
 };
@@ -53,57 +52,61 @@ pub struct HomebrewInstallerInfo {
 
 pub(crate) fn write_homebrew_formula(
     templates: &Templates,
-    graph: &DistGraph,
+    _graph: &DistGraph,
     source_info: &HomebrewInstallerInfo,
     manifest: &DistManifest,
 ) -> DistResult<()> {
     let mut info = source_info.clone();
 
     // Fetch any detected dependencies from the linkage data
-    let dependencies = manifest
-        .linkage
-        .iter()
-        .flat_map(|l| l.homebrew.iter().filter_map(|lib| lib.source.clone()));
+    // FIXME: ideally this would be writing to per-target dependencies,
+    // but for now we just shove them all into one big list.
+    use_linkage(manifest, &info.arm64_macos, &mut info.dependencies);
+    use_linkage(manifest, &info.x86_64_macos, &mut info.dependencies);
+    use_linkage(manifest, &info.arm64_linux, &mut info.dependencies);
+    use_linkage(manifest, &info.x86_64_linux, &mut info.dependencies);
 
-    // Merge with the manually-specified deps
-    info.dependencies.extend(dependencies);
-
-    // Generate sha256 as late as possible; the artifacts might not exist
-    // earlier to do that.
-    if let Some(arm64_ref) = &info.arm64_macos {
-        let path = Utf8PathBuf::from(&graph.dist_dir).join(&arm64_ref.id);
-        if path.exists() {
-            let sha256 = generate_checksum(&crate::config::ChecksumStyle::Sha256, &path)?;
-            info.arm64_macos_sha256 = Some(sha256);
-        }
-    }
-    if let Some(x86_64_ref) = &info.x86_64_macos {
-        let path = Utf8PathBuf::from(&graph.dist_dir).join(&x86_64_ref.id);
-        if path.exists() {
-            let sha256 = generate_checksum(&crate::config::ChecksumStyle::Sha256, &path)?;
-            info.x86_64_macos_sha256 = Some(sha256);
-        }
-    }
-
-    // Linuxbrew
-    if let Some(arm64_ref) = &info.arm64_linux {
-        let path = Utf8PathBuf::from(&graph.dist_dir).join(&arm64_ref.id);
-        if path.exists() {
-            let sha256 = generate_checksum(&crate::config::ChecksumStyle::Sha256, &path)?;
-            info.arm64_linux_sha256 = Some(sha256);
-        }
-    }
-    if let Some(x86_64_ref) = &info.x86_64_linux {
-        let path = Utf8PathBuf::from(&graph.dist_dir).join(&x86_64_ref.id);
-        if path.exists() {
-            let sha256 = generate_checksum(&crate::config::ChecksumStyle::Sha256, &path)?;
-            info.x86_64_linux_sha256 = Some(sha256);
-        }
-    }
+    // Grab checksums
+    use_sha256_checksum(manifest, &info.arm64_macos, &mut info.arm64_macos_sha256);
+    use_sha256_checksum(manifest, &info.x86_64_macos, &mut info.x86_64_macos_sha256);
+    use_sha256_checksum(manifest, &info.arm64_linux, &mut info.arm64_linux_sha256);
+    use_sha256_checksum(manifest, &info.x86_64_linux, &mut info.x86_64_linux_sha256);
 
     let script = templates.render_file_to_clean_string(TEMPLATE_INSTALLER_RB, &info)?;
     LocalAsset::write_new(&script, &info.inner.dest_path)?;
     Ok(())
+}
+
+/// Grab the sha256 checksum for this artifact from the manifest
+fn use_sha256_checksum(
+    manifest: &DistManifest,
+    fragment: &Option<ExecutableZipFragment>,
+    checksum: &mut Option<String>,
+) {
+    let checksum_key = ChecksumStyle::Sha256.ext();
+    if let Some(frag) = &fragment {
+        *checksum = manifest
+            .artifacts
+            .get(&frag.id)
+            .and_then(|a| a.checksums.get(checksum_key))
+            .cloned()
+    }
+}
+
+// Grab the linkage for this artifact from the manifest
+fn use_linkage(
+    manifest: &DistManifest,
+    fragment: &Option<ExecutableZipFragment>,
+    dependencies: &mut Vec<String>,
+) {
+    if let Some(frag) = fragment {
+        let archive_linkage = manifest.linkage_for_artifact(&frag.id);
+        let homebrew_deps = archive_linkage
+            .homebrew
+            .iter()
+            .filter_map(|lib| lib.source.clone());
+        dependencies.extend(homebrew_deps);
+    }
 }
 
 /// Converts the provided app name into a Ruby class-compatible

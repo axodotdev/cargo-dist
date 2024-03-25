@@ -26,6 +26,12 @@ pub type LocalPath = String;
 pub type RelPath = String;
 /// The unique ID of an Artifact
 pub type ArtifactId = String;
+/// The unique ID of a System
+pub type SystemId = String;
+/// The unique ID of an Asset
+pub type AssetId = String;
+/// A sorted set of values
+pub type SortedSet<T> = std::collections::BTreeSet<T>;
 
 /// A report of the releases and artifacts that cargo-dist generated
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -59,6 +65,8 @@ pub struct DistManifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announcement_github_body: Option<String>,
     /// Info about the toolchain used to build this announcement
+    ///
+    /// DEPRECATED: never appears anymore
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system_info: Option<SystemInfo>,
@@ -70,6 +78,14 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub artifacts: BTreeMap<ArtifactId, Artifact>,
+    /// The systems that artifacts were built on
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub systems: BTreeMap<SystemId, SystemInfo>,
+    /// The assets contained within artifacts (binaries)
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub assets: BTreeMap<AssetId, AssetInfo>,
     /// Whether to publish prereleases to package managers
     #[serde(default)]
     pub publish_prereleases: bool,
@@ -78,7 +94,36 @@ pub struct DistManifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<CiInfo>,
     /// Data about dynamic linkage in the built libraries
+    #[serde(default)]
+    // FIXME: turn on this skip_serializing_if at some point.
+    // old dist-manifest consumers don't think this field can
+    // be missing, so it's unsafe to stop emitting it, but
+    // we want to deprecate it at some point.
+    // #[serde(skip_serializing_if = "Vec::is_empty")]
     pub linkage: Vec<Linkage>,
+    /// Files to upload
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub upload_files: Vec<String>,
+}
+
+/// Info about an Asset (binary)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct AssetInfo {
+    /// unique id of the Asset
+    pub id: AssetId,
+    /// filename of the Asset
+    pub name: String,
+    /// the system it was built on
+    pub system: SystemId,
+    /// rust-style target triples the Asset natively supports
+    ///
+    /// * length 0: not a meaningful question, maybe some static file
+    /// * length 1: typical of binaries
+    /// * length 2+: some kind of universal binary
+    pub target_triples: Vec<String>,
+    /// the linkage of this Asset
+    pub linkage: Option<Linkage>,
 }
 
 /// CI backend info
@@ -166,23 +211,12 @@ impl std::fmt::Display for PrRunMode {
     }
 }
 
-/// Info about the system/toolchain used to build this announcement.
-///
-/// Note that this is info from the machine that generated this file,
-/// which *ideally* should be similar to the machines that built all the artifacts, but
-/// we can't guarantee that.
-///
-/// dist-manifest.json is by default generated at the start of the build process,
-/// and typically on a linux machine because that's usually the fastest/cheapest
-/// part of CI infra.
+/// Info about a system used to build this announcement.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SystemInfo {
+    /// The unique id of the System
+    pub id: SystemId,
     /// The version of Cargo used (first line of cargo -vV)
-    ///
-    /// Note that this is the version used on the machine that generated this file,
-    /// which presumably should be the same version used on all the machines that
-    /// built all the artifacts, but maybe not! It's more likely to be correct
-    /// if rust-toolchain.toml is used with a specific pinned version.
     pub cargo_version_line: Option<String>,
 }
 
@@ -240,15 +274,26 @@ pub struct Artifact {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub description: Option<String>,
-    /// id of an that contains the checksum for this artifact
+    /// id of an Artifact that contains the checksum for this Artifact
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub checksum: Option<String>,
+    /// checksums for this artifact
+    ///
+    /// keys are the name of an algorithm like "sha256" or "sha512"
+    /// values are the actual hex string of the checksum
+    #[serde(default)]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub checksums: BTreeMap<String, String>,
 }
 
 /// An asset contained in an artifact (executable, license, etc.)
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Asset {
+    /// A unique opaque id for an Asset
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
     /// The high-level name of the asset
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -387,9 +432,12 @@ impl DistManifest {
             system_info: None,
             releases,
             artifacts,
+            systems: Default::default(),
+            assets: Default::default(),
             publish_prereleases: false,
             ci: None,
             linkage: vec![],
+            upload_files: vec![],
         }
     }
 
@@ -470,6 +518,31 @@ impl DistManifest {
             self.releases.last_mut().unwrap()
         }
     }
+
+    /// Get the merged linkage for an artifact
+    ///
+    /// This lets you know what system dependencies an entire archive of binaries requires
+    pub fn linkage_for_artifact(&self, artifact_id: &ArtifactId) -> Linkage {
+        let mut output = Linkage::default();
+
+        let Some(artifact) = self.artifacts.get(artifact_id) else {
+            return output;
+        };
+        for base_asset in &artifact.assets {
+            let Some(asset_id) = &base_asset.id else {
+                continue;
+            };
+            let Some(true_asset) = self.assets.get(asset_id) else {
+                continue;
+            };
+            let Some(linkage) = &true_asset.linkage else {
+                continue;
+            };
+            output.extend(linkage);
+        }
+
+        output
+    }
 }
 
 impl Release {
@@ -521,32 +594,74 @@ impl Hosting {
 }
 
 /// Information about dynamic libraries used by a binary
-#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct Linkage {
-    /// The filename of the binary
-    pub binary: String,
-    /// The target triple for which the binary was built
-    pub target: String,
     /// Libraries included with the operating system
-    pub system: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub system: SortedSet<Library>,
     /// Libraries provided by the Homebrew package manager
-    pub homebrew: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub homebrew: SortedSet<Library>,
     /// Public libraries not provided by the system and not managed by any package manager
-    pub public_unmanaged: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub public_unmanaged: SortedSet<Library>,
     /// Libraries which don't fall into any other categories
-    pub other: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub other: SortedSet<Library>,
     /// Frameworks, only used on macOS
-    pub frameworks: Vec<Library>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "SortedSet::is_empty")]
+    pub frameworks: SortedSet<Library>,
 }
 
 /// Represents a dynamic library located somewhere on the system
-#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Library {
     /// The path to the library; on platforms without that information, it will be a basename instead
     pub path: String,
     /// The package from which a library comes, if relevant
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+}
+
+impl Linkage {
+    /// merge another linkage into this one
+    pub fn extend(&mut self, val: &Linkage) {
+        let Linkage {
+            system,
+            homebrew,
+            public_unmanaged,
+            other,
+            frameworks,
+        } = val;
+        self.system.extend(system.iter().cloned());
+        self.homebrew.extend(homebrew.iter().cloned());
+        self.public_unmanaged
+            .extend(public_unmanaged.iter().cloned());
+        self.other.extend(other.iter().cloned());
+        self.frameworks.extend(frameworks.iter().cloned());
+    }
+}
+
+impl Library {
+    /// Make a new Library with the given path and no source
+    pub fn new(path: String) -> Self {
+        Self { path, source: None }
+    }
+}
+
+impl std::fmt::Display for Library {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(package) = &self.source {
+            write!(f, "{} ({package})", self.path)
+        } else {
+            write!(f, "{}", self.path)
+        }
+    }
 }
 
 /// Helper to read the raw version from serialized json

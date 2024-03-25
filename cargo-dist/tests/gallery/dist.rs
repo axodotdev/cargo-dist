@@ -104,6 +104,8 @@ impl Default for Tools {
 
 pub struct DistResult {
     test_name: String,
+    // Only used in some cfgs
+    trust_hashes: bool,
     shell_installer_path: Option<Utf8PathBuf>,
     homebrew_installer_path: Option<Utf8PathBuf>,
     powershell_installer_path: Option<Utf8PathBuf>,
@@ -133,6 +135,35 @@ pub struct Snapshots {
 }
 
 impl<'a> TestContext<'a, Tools> {
+    /// Run 'cargo dist build -alies --no-local-paths --output-format=json' and return paths to various files that were generated
+    pub fn cargo_dist_build_lies(&self, test_name: &str) -> Result<BuildAndPlanResult> {
+        // If the cargo-dist target dir exists, delete it to avoid cross-contamination
+        let out_path = Utf8Path::new("target/distrib/");
+        if out_path.exists() {
+            LocalAsset::remove_dir_all(out_path)?;
+        }
+
+        // build installers
+        eprintln!("running cargo dist build -aglobal...");
+        let output = self.tools.cargo_dist.output_checked(|cmd| {
+            cmd.arg("dist")
+                .arg("build")
+                .arg("-alies")
+                .arg("--no-local-paths")
+                .arg("--output-format=json")
+        })?;
+
+        let build = self.load_dist_results(test_name, false)?;
+
+        let raw_json = String::from_utf8(output.stdout).expect("plan wasn't utf8!?");
+        let plan = PlanResult {
+            test_name: test_name.to_owned(),
+            raw_json,
+        };
+
+        Ok(BuildAndPlanResult { build, plan })
+    }
+
     /// Run `cargo_dist_plan` and `cargo_dist_build_global`
     pub fn cargo_dist_build_and_plan(&self, test_name: &str) -> Result<BuildAndPlanResult> {
         let build = self.cargo_dist_build_global(test_name)?;
@@ -168,8 +199,9 @@ impl<'a> TestContext<'a, Tools> {
             .cargo_dist
             .output_checked(|cmd| cmd.arg("dist").arg("build").arg("-aglobal"))?;
 
-        self.load_dist_results(test_name)
+        self.load_dist_results(test_name, true)
     }
+
     /// Run 'cargo dist generate' and return paths to various files that were generated
     pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateResult> {
         self.cargo_dist_generate_prefixed(test_name, "")
@@ -205,7 +237,7 @@ impl<'a> TestContext<'a, Tools> {
         })
     }
 
-    fn load_dist_results(&self, test_name: &str) -> Result<DistResult> {
+    fn load_dist_results(&self, test_name: &str, trust_hashes: bool) -> Result<DistResult> {
         // read/analyze installers
         eprintln!("loading results...");
         let app_name = &self.repo.app_name;
@@ -218,6 +250,7 @@ impl<'a> TestContext<'a, Tools> {
 
         Ok(DistResult {
             test_name: test_name.to_owned(),
+            trust_hashes,
             shell_installer_path: sh_installer.exists().then_some(sh_installer),
             powershell_installer_path: ps_installer.exists().then_some(ps_installer),
             homebrew_installer_path: homebrew_installer,
@@ -734,6 +767,11 @@ impl DistResult {
     // Runs the installer script in the system's Homebrew installation
     #[allow(unused_variables)]
     pub fn runtest_homebrew_installer(&self, ctx: &TestContext<Tools>) -> Result<()> {
+        // Only do this if we trust hashes (outside cfg so the compiler knows we use this)
+        if !self.trust_hashes {
+            return Ok(());
+        }
+
         // Only do this on macOS, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
         #[cfg(target_os = "macos")]
         if std::env::var(ENV_RUIN_ME)
@@ -934,6 +972,9 @@ pub fn snapshot_settings_with_gallery_filter() -> insta::Settings {
         r"cargo-dist/releases/download/v\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?/",
         "cargo-dist/releases/download/vSOME_VERSION/",
     );
+    settings.add_filter(r#"sha256 ".*""#, r#"sha256 "CENSORED""#);
+    settings.add_filter(r#""sha256": .*"#, r#""sha256": "CENSORED""#);
+    settings.add_filter(r#""sha512": .*"#, r#""sha512": "CENSORED""#);
     settings.add_filter(r#""version":"[a-zA-Z\.0-9\-]*""#, r#""version":"CENSORED""#);
     settings
 }
@@ -968,6 +1009,8 @@ pub fn snapshot_settings_with_dist_manifest_filter() -> insta::Settings {
         r#""cargo_version_line": .*"#,
         r#""cargo_version_line": "CENSORED""#,
     );
+    settings.add_filter(r#""sha256": .*"#, r#""sha256": "CENSORED""#);
+    settings.add_filter(r#""sha512": .*"#, r#""sha512": "CENSORED""#);
 
     settings
 }

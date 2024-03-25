@@ -18,14 +18,17 @@ use backend::{
     ci::CiInfo,
     installer::{self, msi::MsiInstallerInfo, InstallerImpl},
 };
+use build::generic::{build_generic_target, run_extra_artifacts_build};
+use build::{
+    cargo::{build_cargo_target, rustup_toolchain},
+    fake::{build_fake_cargo_target, build_fake_generic_target},
+};
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_build::{build_cargo_target, rustup_toolchain};
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{ArtifactId, DistManifest};
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
 use console::Term;
-use generic_build::{build_generic_target, run_extra_artifacts_build};
 use semver::Version;
 use temp_dir::TempDir;
 use tracing::info;
@@ -37,11 +40,10 @@ pub use tasks::*;
 
 pub mod announce;
 pub mod backend;
-pub mod cargo_build;
+pub mod build;
 pub mod config;
 pub mod env;
 pub mod errors;
-pub mod generic_build;
 pub mod host;
 mod init;
 pub mod linkage;
@@ -77,21 +79,18 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
     // Run all the local build steps first
     for step in &dist.local_build_steps {
         if dist.local_builds_are_lies {
-            build_fake(&dist, step, &manifest)?;
+            build_fake(&dist, step, &mut manifest)?;
         } else {
-            run_build_step(&dist, step, &manifest)?;
+            run_build_step(&dist, step, &mut manifest)?;
         }
     }
-
-    // Compute linkage data now that we're done all builds
-    linkage::add_linkage_to_manifest(cfg, &dist, &mut manifest)?;
 
     // Next the global steps
     for step in &dist.global_build_steps {
         if dist.local_builds_are_lies {
-            build_fake(&dist, step, &manifest)?;
+            build_fake(&dist, step, &mut manifest)?;
         } else {
-            run_build_step(&dist, step, &manifest)?;
+            run_build_step(&dist, step, &mut manifest)?;
         }
     }
 
@@ -110,48 +109,54 @@ pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
 fn run_build_step(
     dist_graph: &DistGraph,
     target: &BuildStep,
-    manifest: &DistManifest,
+    manifest: &mut DistManifest,
 ) -> Result<()> {
     match target {
-        BuildStep::Generic(target) => build_generic_target(dist_graph, target),
-        BuildStep::Cargo(target) => build_cargo_target(dist_graph, target),
-        BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd),
+        BuildStep::Generic(target) => build_generic_target(dist_graph, manifest, target)?,
+        BuildStep::Cargo(target) => build_cargo_target(dist_graph, manifest, target)?,
+        BuildStep::Rustup(cmd) => rustup_toolchain(dist_graph, cmd)?,
         BuildStep::CopyFile(CopyStep {
             src_path,
             dest_path,
-        }) => copy_file(src_path, dest_path),
+        }) => copy_file(src_path, dest_path)?,
         BuildStep::CopyDir(CopyStep {
             src_path,
             dest_path,
-        }) => copy_dir(src_path, dest_path),
+        }) => copy_dir(src_path, dest_path)?,
         BuildStep::CopyFileOrDir(CopyStep {
             src_path,
             dest_path,
-        }) => copy_file_or_dir(src_path, dest_path),
+        }) => copy_file_or_dir(src_path, dest_path)?,
         BuildStep::Zip(ZipDirStep {
             src_path,
             dest_path,
             zip_style,
             with_root,
-        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref()),
+        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref())?,
         BuildStep::GenerateInstaller(installer) => {
-            generate_installer(dist_graph, installer, manifest)
+            generate_installer(dist_graph, installer, manifest)?
         }
         BuildStep::Checksum(ChecksumImpl {
             checksum,
             src_path,
             dest_path,
-        }) => Ok(generate_and_write_checksum(checksum, src_path, dest_path)?),
+            for_artifact,
+        }) => generate_and_write_checksum(
+            manifest,
+            checksum,
+            src_path,
+            dest_path.as_deref(),
+            for_artifact.as_ref(),
+        )?,
         BuildStep::GenerateSourceTarball(SourceTarballStep {
             committish,
             prefix,
             target,
-        }) => Ok(generate_source_tarball(
-            dist_graph, committish, prefix, target,
-        )?),
-        BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target),
-        BuildStep::Updater(updater) => fetch_updater(dist_graph, updater),
-    }
+        }) => generate_source_tarball(dist_graph, committish, prefix, target)?,
+        BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target)?,
+        BuildStep::Updater(updater) => fetch_updater(dist_graph, updater)?,
+    };
+    Ok(())
 }
 
 /// Fetches an installer executable and installs it in the expected target path.
@@ -249,44 +254,55 @@ fn fetch_updater_from_binary(
     Ok(())
 }
 
-fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifest) -> Result<()> {
+fn build_fake(
+    dist_graph: &DistGraph,
+    target: &BuildStep,
+    manifest: &mut DistManifest,
+) -> Result<()> {
     match target {
         // These two are the meat: don't actually run these at all, just
         // fake them out
-        BuildStep::Generic(target) => build_fake_generic_artifacts(dist_graph, target),
-        BuildStep::Cargo(target) => build_fake_cargo_artifacts(dist_graph, target),
+        BuildStep::Generic(target) => build_fake_generic_target(dist_graph, manifest, target)?,
+        BuildStep::Cargo(target) => build_fake_cargo_target(dist_graph, manifest, target)?,
         // Never run rustup
-        BuildStep::Rustup(_) => Ok(()),
+        BuildStep::Rustup(_) => {}
         // Copying files is fairly safe
         BuildStep::CopyFile(CopyStep {
             src_path,
             dest_path,
-        }) => copy_file(src_path, dest_path),
+        }) => copy_file(src_path, dest_path)?,
         BuildStep::CopyDir(CopyStep {
             src_path,
             dest_path,
-        }) => copy_dir(src_path, dest_path),
+        }) => copy_dir(src_path, dest_path)?,
         BuildStep::CopyFileOrDir(CopyStep {
             src_path,
             dest_path,
-        }) => copy_file_or_dir(src_path, dest_path),
+        }) => copy_file_or_dir(src_path, dest_path)?,
         // The remainder of these are mostly safe to run as fake steps
         BuildStep::Zip(ZipDirStep {
             src_path,
             dest_path,
             zip_style,
             with_root,
-        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref()),
+        }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref())?,
         BuildStep::GenerateInstaller(installer) => match installer {
             // MSI, unlike other installers, isn't safe to generate on any platform
-            InstallerImpl::Msi(msi) => generate_fake_msi(dist_graph, msi, manifest),
-            _ => generate_installer(dist_graph, installer, manifest),
+            InstallerImpl::Msi(msi) => generate_fake_msi(dist_graph, msi, manifest)?,
+            _ => generate_installer(dist_graph, installer, manifest)?,
         },
         BuildStep::Checksum(ChecksumImpl {
             checksum,
             src_path,
             dest_path,
-        }) => Ok(generate_and_write_checksum(checksum, src_path, dest_path)?),
+            for_artifact,
+        }) => generate_and_write_checksum(
+            manifest,
+            checksum,
+            src_path,
+            dest_path.as_deref(),
+            for_artifact.as_ref(),
+        )?,
         // Except source tarballs, which are definitely not okay
         // We mock these because it requires:
         // 1. git to be installed;
@@ -298,21 +314,12 @@ fn build_fake(dist_graph: &DistGraph, target: &BuildStep, manifest: &DistManifes
             committish,
             prefix,
             target,
-        }) => Ok(generate_fake_source_tarball(
-            dist_graph, committish, prefix, target,
-        )?),
+        }) => generate_fake_source_tarball(dist_graph, committish, prefix, target)?,
         // Or extra artifacts, which may involve real builds
-        BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target),
+        BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target)?,
         BuildStep::Updater(_) => todo!(),
     }
-}
-
-fn build_fake_cargo_artifacts(dist: &DistGraph, target: &CargoBuildStep) -> Result<()> {
-    generate_fake_artifacts(dist, &target.expected_binaries)
-}
-
-fn build_fake_generic_artifacts(dist: &DistGraph, target: &GenericBuildStep) -> Result<()> {
-    generate_fake_artifacts(dist, &target.expected_binaries)
+    Ok(())
 }
 
 fn run_fake_extra_artifacts_build(dist: &DistGraph, target: &ExtraBuildStep) -> Result<()> {
@@ -334,30 +341,24 @@ fn generate_fake_msi(
     Ok(())
 }
 
-fn generate_fake_artifacts(dist: &DistGraph, binaries: &[BinaryIdx]) -> Result<()> {
-    for idx in binaries {
-        let binary = dist.binary(*idx);
-
-        for exe_dest in &binary.copy_exe_to {
-            LocalAsset::write_new_all("", exe_dest)?;
-        }
-
-        for sym_dest in &binary.copy_symbols_to {
-            LocalAsset::write_new_all("", sym_dest)?;
-        }
-    }
-
-    Ok(())
-}
-
 /// Generate a checksum for the src_path to dest_path
 fn generate_and_write_checksum(
+    manifest: &mut DistManifest,
     checksum: &ChecksumStyle,
     src_path: &Utf8Path,
-    dest_path: &Utf8Path,
+    dest_path: Option<&Utf8Path>,
+    for_artifact: Option<&ArtifactId>,
 ) -> DistResult<()> {
     let output = generate_checksum(checksum, src_path)?;
-    write_checksum(&output, src_path, dest_path)
+    if let Some(dest_path) = dest_path {
+        write_checksum(&output, src_path, dest_path)?;
+    }
+    if let Some(artifact_id) = for_artifact {
+        if let Some(artifact) = manifest.artifacts.get_mut(artifact_id) {
+            artifact.checksums.insert(checksum.ext().to_owned(), output);
+        }
+    }
+    Ok(())
 }
 
 /// Generate a checksum for the src_path and return it as a string
@@ -471,17 +472,17 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
     LocalAsset::copy_named(src_path, dest_path)?;
     Ok(())
 }
 
-pub(crate) fn copy_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+pub(crate) fn copy_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
     LocalAsset::copy_dir_named(src_path, dest_path)?;
     Ok(())
 }
 
-pub(crate) fn copy_file_or_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> Result<()> {
+pub(crate) fn copy_file_or_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
     if src_path.is_dir() {
         copy_dir(src_path, dest_path)
     } else {
@@ -632,6 +633,7 @@ pub fn check_integrity(cfg: &Config) -> Result<()> {
         ci: vec![],
         installers: vec![],
         announcement_tag: None,
+        root_cmd: "check".to_owned(),
     };
     let (dist, _manifest) = tasks::gather_work(&check_config)?;
 

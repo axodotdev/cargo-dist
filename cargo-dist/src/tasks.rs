@@ -53,7 +53,7 @@ use std::collections::HashMap;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
 use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use serde::Serialize;
@@ -137,6 +137,12 @@ pub struct BinaryIdx(pub usize);
 /// It also allows us to report what *should* happen without actually doing it.
 #[derive(Debug)]
 pub struct DistGraph {
+    /// Unique id for the system we're building on.
+    ///
+    /// Since the whole premise of cargo-dist is to invoke it once on each machine, and no
+    /// two machines have any reason to have the exact same CLI args for cargo-dist, we
+    /// just use a mangled form of the CLI arguments here.
+    pub system_id: SystemId,
     /// Whether it looks like `cargo dist init` has been run
     pub is_init: bool,
 
@@ -414,8 +420,10 @@ pub struct ChecksumImpl {
     pub checksum: ChecksumStyle,
     /// of this file
     pub src_path: Utf8PathBuf,
-    /// and write it to here
-    pub dest_path: Utf8PathBuf,
+    /// potentially write it to here
+    pub dest_path: Option<Utf8PathBuf>,
+    /// record it for this artifact in the dist-manifest
+    pub for_artifact: Option<ArtifactId>,
 }
 
 /// Create a source tarball
@@ -703,6 +711,7 @@ pub(crate) struct DistGraphBuilder<'pkg_graph> {
 
 impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     pub(crate) fn new(
+        system_id: SystemId,
         tools: Tools,
         workspace: &'pkg_graph WorkspaceInfo,
         artifact_mode: ArtifactMode,
@@ -958,8 +967,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let hosting = crate::host::select_hosting(workspace, hosting.clone(), ci.as_deref());
 
+        let system = SystemInfo {
+            id: system_id.clone(),
+            cargo_version_line,
+        };
+        let systems = SortedMap::from_iter([(system_id.clone(), system)]);
+
         Ok(Self {
             inner: DistGraph {
+                system_id,
                 is_init: desired_cargo_dist_version.is_some(),
                 target_dir,
                 workspace_dir,
@@ -1006,7 +1022,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
-                system_info: Some(cargo_dist_schema::SystemInfo { cargo_version_line }),
+                system_info: None,
                 announcement_tag: None,
                 announcement_is_prerelease: false,
                 announcement_tag_is_implicit,
@@ -1015,9 +1031,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 announcement_github_body: None,
                 releases: vec![],
                 artifacts: Default::default(),
+                systems,
+                assets: Default::default(),
                 publish_prereleases,
                 ci: None,
                 linkage: vec![],
+                upload_files: vec![],
             },
             package_metadata,
             workspace_metadata,
@@ -1129,8 +1148,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             ..
         } = self.release_mut(to_release);
         let static_assets = static_assets.clone();
-        let id = format!("{release_id}-{target}");
-        info!("added variant {id}");
+        let variant_id = format!("{release_id}-{target}");
+        info!("added variant {variant_id}");
 
         variants.push(idx);
         targets.push(target.clone());
@@ -1140,20 +1159,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         for (pkg_idx, binary_name) in bins.clone() {
             let package = self.workspace.package(pkg_idx);
             let package_metadata = self.package_metadata(pkg_idx);
-            let version = package
-                .version
-                .as_ref()
-                .expect("Package version is mandatory!")
-                .semver();
             let pkg_id = package.cargo_package_id.clone();
             // For now we just use the name of the package as its package_spec.
             // I'm not sure if there are situations where this is ambiguous when
             // referring to a package in your workspace that you want to build an app for.
             // If they do exist, that's deeply cursed and I want a user to tell me about it.
             let pkg_spec = package.name.clone();
-            let id = format!("{binary_name}-v{version}-{target}");
+            // FIXME: make this more of a GUID to allow variants to share binaries?
+            let bin_id = format!("{variant_id}-{binary_name}");
 
-            let idx = if let Some(&idx) = self.binaries_by_id.get(&id) {
+            let idx = if let Some(&idx) = self.binaries_by_id.get(&bin_id) {
                 // If we already are building this binary we don't need to do it again!
                 idx
             } else {
@@ -1174,10 +1189,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
                 let file_name = format!("{binary_name}{platform_exe_ext}");
 
-                info!("added binary {id}");
+                info!("added binary {bin_id}");
                 let idx = BinaryIdx(self.inner.binaries.len());
                 let binary = Binary {
-                    id,
+                    id: bin_id.clone(),
                     pkg_id,
                     pkg_spec,
                     pkg_idx,
@@ -1190,6 +1205,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     features,
                 };
                 self.inner.binaries.push(binary);
+                self.binaries_by_id.insert(bin_id, idx);
                 idx
             };
 
@@ -1198,7 +1214,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         self.inner.variants.push(ReleaseVariant {
             target,
-            id,
+            id: variant_id,
             local_artifacts: vec![],
             binaries,
             static_assets,
@@ -1363,6 +1379,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             is_global: true,
         };
 
+        let for_artifact = Some(artifact.id.clone());
         let artifact_idx = self.add_global_artifact(to_release, artifact);
 
         if checksum != ChecksumStyle::False {
@@ -1377,7 +1394,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 kind: ArtifactKind::Checksum(ChecksumImpl {
                     checksum,
                     src_path: target_path,
-                    dest_path: checksum_path,
+                    dest_path: Some(checksum_path),
+                    for_artifact,
                 }),
                 checksum: None,
                 is_global: true,
@@ -1404,7 +1422,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 kind: ArtifactKind::Checksum(ChecksumImpl {
                     checksum,
                     src_path: artifact.file_path.clone(),
-                    dest_path: checksum_path.clone(),
+                    dest_path: Some(checksum_path.clone()),
+                    for_artifact: Some(artifact.id.clone()),
                 }),
 
                 target_triples: artifact.target_triples.clone(),
@@ -2630,6 +2649,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     with_root: archive.with_root.clone(),
                     zip_style: archive.zip_style,
                 }));
+                // and get its sha256 checksum into the metadata
+                build_steps.push(BuildStep::Checksum(ChecksumImpl {
+                    checksum: ChecksumStyle::Sha256,
+                    src_path: artifact.file_path.clone(),
+                    dest_path: None,
+                    for_artifact: Some(artifact.id.clone()),
+                }))
             }
         }
     }
@@ -2815,18 +2841,20 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
     let workspace = crate::config::get_project()?;
+    let system_id = format!(
+        "{}:{}:{}",
+        cfg.root_cmd,
+        cfg.artifact_mode,
+        cfg.targets.join(",")
+    );
     let mut graph = DistGraphBuilder::new(
+        system_id,
         tools,
         &workspace,
         cfg.artifact_mode,
         cfg.allow_all_dirty,
         cfg.announcement_tag.is_none(),
     )?;
-
-    // Immediately check if there's other manifests kicking around that provide info
-    // we don't want to recompute (lets us move towards more of an architecture where
-    // `plan` figures out what to do and subsequent steps Simply Obey).
-    crate::manifest::load_and_merge_manifests(&graph.inner.dist_dir, &mut graph.manifest)?;
 
     // Prefer the CLI (cfg) if it's non-empty, but only select a subset
     // of what the workspace supports if it's non-empty
@@ -2884,6 +2912,15 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
         &graph,
         cfg.announcement_tag.as_deref(),
         cfg.needs_coherent_announcement_tag,
+    )?;
+
+    // Immediately check if there's other manifests kicking around that provide info
+    // we don't want to recompute (lets us move towards more of an architecture where
+    // `plan` figures out what to do and subsequent steps Simply Obey).
+    crate::manifest::load_and_merge_manifests(
+        &graph.inner.dist_dir,
+        &mut graph.manifest,
+        &announcing,
     )?;
 
     // Figure out how artifacts should be hosted

@@ -295,6 +295,16 @@ pub enum DistError {
         /// The file extension of the unrecognized file
         extension: String,
     },
+
+    /// Binaries were missing
+    #[error("failed to find bin {bin_name} for {pkg_name}")]
+    #[diagnostic(help("did the above build fail?"))]
+    MissingBinaries {
+        /// Name of package
+        pkg_name: String,
+        /// Name of binary
+        bin_name: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

@@ -1,24 +1,63 @@
 //! Utilities for managing DistManifests
+//!
+//! dist-manifest.json serves 3 purposes:
+//!
+//! * providing a preview of what the build will produce before doing it
+//! * providing final information for a build
+//! * being a communication protocol between build machines
+//!
+//! The flow of data into the manifest is as follows (see gather_work):
+//!
+//! 1. Create DistGraphBuilder with a nearly default/empty manifest.
+//!    This is a baseline value that will be iteratively refined.
+//!
+//! 2. Find dist-manifest files in the dist dir, import and merge them.
+//!    This typically is importing manifests from other machines, such
+//!    as the 'plan' machine which allocated a hosting bucket or
+//!    the 'build-*' machines which computed system info and linkage.
+//!
+//! 3. Compute Hosting (if not covered by 2), potentially allocating a
+//!    hosting bucket that we'll be uploading final results to. This needs
+//!    to be known early because the resulting URLs need to be baked into
+//!    installers.
+//!
+//! 3. Build the DistGraph, representing the things the current machine
+//!    is supposed to build. Update the dist-manifest.json with those
+//!    entries (Releases and Artifacts).
+//!
+//! 4. Compute Announcement info, potentially populating things like
+//!    changelogs and titles.
+//!
+//! 5. Compute CI Info, potentially populating things like github ci matrices.
+//!
+//! 6. Build binaries, adding information about each built binary to Assets.
+//!
+//! 7. Build installers, using information in the manifest from steps 2, 3, and 4.
 
-use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{Asset, AssetKind, DistManifest, ExecutableAsset, Hosting};
+use cargo_dist_schema::{
+    Artifact, ArtifactId, Asset, AssetKind, DistManifest, ExecutableAsset, Hosting,
+};
+use tracing::warn;
 
 use crate::{
+    announce::AnnouncementTag,
     backend::{
         installer::{homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, InstallerImpl},
         templates::{TemplateEntry, TEMPLATE_INSTALLER_NPM},
     },
     config::Config,
     errors::DistResult,
-    ArtifactIdx, ArtifactKind, DistGraph, StaticAssetKind,
+    ArtifactIdx, ArtifactKind, DistGraph, Release, StaticAssetKind,
 };
 
 /// Load DistManifests into the given dir and merge them into the current one
-pub fn load_and_merge_manifests(
+pub(crate) fn load_and_merge_manifests(
     manifest_dir: &Utf8Path,
     output: &mut DistManifest,
+    announcing: &AnnouncementTag,
 ) -> DistResult<()> {
     // Hey! Update the loop below too if you're adding a field!
 
@@ -30,18 +69,29 @@ pub fn load_and_merge_manifests(
             dist_version: _,
             // one value N machines
             system_info: _,
-            artifacts: _,
-            releases,
-            publish_prereleases,
             announcement_tag,
-            announcement_tag_is_implicit,
-            announcement_is_prerelease,
-            announcement_title,
-            announcement_changelog,
-            announcement_github_body,
+            announcement_tag_is_implicit: _,
+            announcement_is_prerelease: _,
+            announcement_title: _,
+            announcement_changelog: _,
+            announcement_github_body: _,
+            publish_prereleases: _,
+            upload_files: _,
+            artifacts,
+            releases,
+            systems,
+            assets,
             ci,
             linkage,
         } = manifest;
+
+        // Discard clearly unrelated manifests
+        if let Some(tag) = &announcement_tag {
+            if tag != &announcing.tag {
+                warn!("found old manifest for the tag {announcement_tag:?}, ignoring it");
+                continue;
+            }
+        }
 
         // Merge every release
         for release in releases {
@@ -56,37 +106,71 @@ pub fn load_and_merge_manifests(
             if let Some(hosting) = github {
                 out_release.hosting.github = Some(hosting);
             }
-            // NOTE: *do not* merge artifact info, it's currently load-bearing for each machine
-            // to only list the artifacts it specifically generates, so we don't want to merge
-            // in artifacts from other machines (`cargo dist plan` should know them all for now).
+            // If the input has a list of artifacts for this release, merge them
+            for artifact in release.artifacts {
+                if !out_release.artifacts.contains(&artifact) {
+                    out_release.artifacts.push(artifact);
+                }
+            }
         }
 
-        if let Some(val) = announcement_tag {
-            output.announcement_tag = Some(val);
-            // Didn't wrap these in an option, so use announcement_tag as a proxy
-            output.announcement_is_prerelease = announcement_is_prerelease;
-            output.announcement_tag_is_implicit = announcement_tag_is_implicit;
-            output.publish_prereleases = publish_prereleases;
+        for (artifact_id, artifact) in artifacts {
+            merge_artifact(output, artifact_id, artifact);
         }
-        if let Some(val) = announcement_title {
-            output.announcement_title = Some(val);
-        }
-        if let Some(val) = announcement_changelog {
-            output.announcement_changelog = Some(val);
-        }
-        if let Some(val) = announcement_github_body {
-            output.announcement_github_body = Some(val);
-        }
+
         if let Some(val) = ci {
             // Don't bother doing an inner merge here, all or nothing
             output.ci = Some(val);
         };
 
-        // Just merge all the linkage
+        // Just merge all the system-specific info
+        if systems.keys().any(|k| output.systems.contains_key(k)) {
+            // for now i'm making this only a warning, since the data loss would
+            // be relatively minor, and crashing someone's release process because
+            // we might grab the wrong toolchain info is a bit too rude.
+            warn!("!!! duplicate system keys, platforms may get conflated !!!");
+        }
+        output.systems.extend(systems);
+        output.assets.extend(assets);
         output.linkage.extend(linkage);
     }
 
     Ok(())
+}
+
+/// Merge the artifact entries at a more granular level.
+///
+/// At a fundamental level here we're trying to populate artifact[].assets[].id
+/// if another machine set it (indicating they actually built that asset), while
+/// still allowing for other manifests to contain these same artifacts entries
+/// without any conflict.
+fn merge_artifact(output: &mut DistManifest, artifact_id: ArtifactId, artifact: Artifact) {
+    match output.artifacts.entry(artifact_id) {
+        Entry::Vacant(out_artifact) => {
+            out_artifact.insert(artifact);
+        }
+        Entry::Occupied(mut out_artifact) => {
+            let out_artifact = out_artifact.get_mut();
+
+            // Merge checksums
+            out_artifact.checksums.extend(artifact.checksums);
+
+            // Merge assets
+            for asset in artifact.assets {
+                if let Some(out_asset) = out_artifact
+                    .assets
+                    .iter_mut()
+                    .find(|a| a.path == asset.path)
+                {
+                    if let Some(id) = asset.id {
+                        out_asset.id = Some(id);
+                    }
+                } else {
+                    out_artifact.assets.push(asset);
+                }
+            }
+        }
+    }
 }
 
 /// Load manifests from the current dir
@@ -129,39 +213,29 @@ pub(crate) fn add_releases_to_manifest(
     dist: &DistGraph,
     manifest: &mut DistManifest,
 ) -> DistResult<()> {
-    let mut all_artifacts = BTreeMap::<String, cargo_dist_schema::Artifact>::new();
     for release in &dist.releases {
         // Gather up all the local and global artifacts
-        let mut artifacts = vec![];
         for &artifact_idx in &release.global_artifacts {
-            let id = &dist.artifact(artifact_idx).id;
-            all_artifacts.insert(id.clone(), manifest_artifact(cfg, dist, artifact_idx));
-            artifacts.push(id.clone());
+            add_manifest_artifact(cfg, dist, manifest, release, artifact_idx);
         }
         for &variant_idx in &release.variants {
             let variant = dist.variant(variant_idx);
             for &artifact_idx in &variant.local_artifacts {
-                let id = &dist.artifact(artifact_idx).id;
-                all_artifacts.insert(id.clone(), manifest_artifact(cfg, dist, artifact_idx));
-                artifacts.push(id.clone());
+                add_manifest_artifact(cfg, dist, manifest, release, artifact_idx);
             }
         }
-
-        // Add the artifacts to this release
-        manifest
-            .ensure_release(release.app_name.clone(), release.version.to_string())
-            .artifacts = artifacts;
     }
-    manifest.artifacts = all_artifacts;
 
     Ok(())
 }
 
-fn manifest_artifact(
+fn add_manifest_artifact(
     cfg: &Config,
     dist: &DistGraph,
+    manifest: &mut DistManifest,
+    release: &Release,
     artifact_idx: ArtifactIdx,
-) -> cargo_dist_schema::Artifact {
+) {
     let artifact = dist.artifact(artifact_idx);
     let mut assets = vec![];
 
@@ -172,6 +246,7 @@ fn manifest_artifact(
             let binary = &dist.binary(binary_idx);
             let symbols_artifact = binary.symbols_artifact.map(|a| dist.artifact(a).id.clone());
             Asset {
+                id: Some(binary.id.clone()),
                 name: Some(binary.name.clone()),
                 // Always copied to the root... for now
                 path: Some(exe_path.file_name().unwrap().to_owned()),
@@ -194,6 +269,7 @@ fn manifest_artifact(
                         StaticAssetKind::Other => AssetKind::Unknown,
                     };
                     Asset {
+                        id: None,
                         name: Some(asset.file_name().unwrap().to_owned()),
                         path: Some(asset.file_name().unwrap().to_owned()),
                         kind,
@@ -221,6 +297,7 @@ fn manifest_artifact(
                     }
                     TemplateEntry::File(file) => {
                         static_assets.push(Asset {
+                            id: None,
                             name: Some(file.name.clone()),
                             path: Some(file.path_from_ancestor(root_dir).to_string()),
                             kind: AssetKind::Unknown,
@@ -290,7 +367,7 @@ fn manifest_artifact(
 
     let checksum = artifact.checksum.map(|idx| dist.artifact(idx).id.clone());
 
-    cargo_dist_schema::Artifact {
+    let out_artifact = cargo_dist_schema::Artifact {
         name: Some(artifact.id.clone()),
         path: if cfg.no_local_paths {
             None
@@ -303,5 +380,18 @@ fn manifest_artifact(
         assets,
         kind,
         checksum,
+        checksums: Default::default(),
+    };
+
+    if !cfg.no_local_paths {
+        manifest.upload_files.push(artifact.file_path.to_string());
+    }
+    merge_artifact(manifest, artifact.id.clone(), out_artifact);
+
+    // If the input has a list of artifacts for this release, merge them
+    let out_release =
+        manifest.ensure_release(release.app_name.clone(), release.version.to_string());
+    if !out_release.artifacts.contains(&artifact.id) {
+        out_release.artifacts.push(artifact.id.clone());
     }
 }
