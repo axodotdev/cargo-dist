@@ -409,7 +409,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist"
-version = "0.12.0-prerelease.4"
+version = "0.12.0"
 dependencies = [
  "axoasset 0.8.0",
  "axocli",
@@ -451,7 +451,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist-schema"
-version = "0.12.0-prerelease.4"
+version = "0.12.0"
 dependencies = [
  "camino",
  "gazenot",
@@ -1679,9 +1679,9 @@ checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
 name = "minijinja"
-version = "1.0.14"
+version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe5b00f90b3542f74bb9aaaccd2627920c16367787de103883461365580e5481"
+checksum = "57be929672ea2de446d39b3626c1cd1e55bd1db40f90ebee28d242a3d6baa65f"
 dependencies = [
  "aho-corasick",
  "memo-map",
@@ -2770,9 +2770,9 @@ dependencies = [
 
 [[package]]
 name = "temp-dir"
-version = "0.1.12"
+version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd16aa9ffe15fe021c6ee3766772132c6e98dfa395a167e16864f61a9cfb71d6"
+checksum = "1f227968ec00f0e5322f9b8173c7a0cbcff6181a0a5b28e9892491c286277231"
 
 [[package]]
 name = "tempfile"
