@@ -7,11 +7,21 @@ This provides a [Homebrew](https://brew.sh) formula which allows users to `brew 
 cargo-dist can, optionally, publish your formula to a tap repository for you on every release. To enable this, add a `tap` field to your `Cargo.toml` pointing to a GitHub repository that you control and add `homebrew` to the `publish-jobs` field. The repository name must start with `homebrew-`. For example:
 
 ```toml
+[workspace.metadata.dist]
 tap = "axodotdev/homebrew-formulae"
 publish-jobs = ["homebrew"]
 ```
 
-Since 0.11.0, cargo-dist can, optionally, also customize your Homebrew formula name.
+Next make sure that `description` and `homepage` are set in your Cargo.toml. These
+fields are optional but make for better formula definitions.
+
+```toml
+[package]
+description = "my crate on tap"
+homepage = "https://github.com/axodotdev/myappname"
+```
+
+Finally, since 0.11.0, cargo-dist can, optionally, also customize your Homebrew formula name.
 By default, your formula will be named using the app name (in Rust, this is the crate
 name). If you are overriding the bin name, you may want to make your Homebrew formula
 match- you can do so with config like this:
@@ -19,15 +29,35 @@ match- you can do so with config like this:
 ```toml
 [package]
 name = "myappname"
-version = "0.666.0"
 default-run = "mybinname"
 
 [[bin]]
 name = "mybinname"
 path = "src/main.rs"
 
-tap = "axodotdev/homebrew-formulae"
+[workspace.metadata.dist]
+formula = "mybinname"
+```
+
+Bringing it all together, a Cargo.toml that can publish Homebrew taps looks like this:
+
+```toml
+[package]
+name = "myappname"
+version = "0.666.0"
+description = "my crate on tap"
+default-run = "mybinname"
+homepage = "https://github.com/axodotdev/myappname"
+
+[[bin]]
+name = "mybinname"
+path = "src/main.rs"
+
+[workspace.metadata.dist]
+installers = ["homebrew"]
 publish-jobs = ["homebrew"]
+tap = "axodotdev/homebrew-formulae"
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
 formula = "mybinname"
 ```
 

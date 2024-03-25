@@ -21,7 +21,7 @@ const STATIC_CARGO_DIST_BIN: &str = env!("CARGO_BIN_EXE_cargo-dist");
 const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
 static TOOLS: Mutex<Option<Tools>> = Mutex::new(None);
 
-/// axolotlsay 0.1.0 is a nice simple project with shell+powershell+npm installers in its release
+/// axolotlsay 0.1.0 is a nice simple project with shell+powershell+npm+homebrew+msi installers in its release
 pub static AXOLOTLSAY: TestContextLock<Tools> = TestContextLock::new(
     &TOOLS,
     &Repo {

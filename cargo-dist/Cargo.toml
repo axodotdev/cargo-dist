@@ -5,6 +5,7 @@ version = "0.12.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
+homepage = "https://opensource.axo.dev/cargo-dist/"
 readme = "../README.md"
 exclude = [
   "book/*",
