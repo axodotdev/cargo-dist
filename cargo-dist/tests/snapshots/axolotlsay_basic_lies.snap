@@ -841,19 +841,20 @@ download_binary_and_run_installer "$@" || exit 1
 ================ formula.rb ================
 class Axolotlsay < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
+  homepage "https://github.com/axodotdev/axolotlsay"
   version "0.2.1"
-  on_macos do
-    on_arm do
+  if OS.mac?
+    if Hardware::CPU.arm?
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
       sha256 "CENSORED"
     end
-    on_intel do
+    if Hardware::CPU.intel?
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
       sha256 "CENSORED"
     end
   end
-  on_linux do
-    on_intel do
+  if OS.linux?
+    if Hardware::CPU.intel?
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
       sha256 "CENSORED"
     end
@@ -861,20 +862,14 @@ class Axolotlsay < Formula
   license "MIT OR Apache-2.0"
 
   def install
-    on_macos do
-      on_arm do
-        bin.install "axolotlsay"
-      end
+    if OS.mac? && Hardware::CPU.arm?
+      bin.install "axolotlsay"
     end
-    on_macos do
-      on_intel do
-        bin.install "axolotlsay"
-      end
+    if OS.mac? && Hardware::CPU.intel?
+      bin.install "axolotlsay"
     end
-    on_linux do
-      on_intel do
-        bin.install "axolotlsay"
-      end
+    if OS.linux? && Hardware::CPU.intel?
+      bin.install "axolotlsay"
     end
 
     # Homebrew will automatically install these, so we don't need to do that
@@ -883,7 +878,7 @@ class Axolotlsay < Formula
 
     # Install any leftover files in pkgshare; these are probably config or
     # sample files.
-    pkgshare.install *leftover_contents unless leftover_contents.empty?
+    pkgshare.install(*leftover_contents) unless leftover_contents.empty?
   end
 end
 
