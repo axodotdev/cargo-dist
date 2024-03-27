@@ -66,7 +66,7 @@ tokio = { version = "1.36.0", features = ["full"] }
 temp-dir = "0.1.13"
 
 [dev-dependencies]
-insta = { version = "1.36.1", features = ["filters"] }
+insta = { version = "1.37.0", features = ["filters"] }
 tar = "0.4.38"
 flate2 = "1.0.24"
 
