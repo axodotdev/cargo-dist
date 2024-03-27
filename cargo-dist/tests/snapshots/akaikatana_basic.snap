@@ -1539,7 +1539,7 @@ try {
 }
 
 ================ release.yml ================
-# Copyright 2022-2023, axodotdev
+# Copyright 2022-2024, axodotdev
 # SPDX-License-Identifier: MIT or Apache-2.0
 #
 # CI that:
