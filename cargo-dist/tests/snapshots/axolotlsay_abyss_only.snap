@@ -2489,7 +2489,7 @@ permissions:
 # packages versioned/released in lockstep).
 #
 # If you push multiple tags at once, separate instances of this workflow will
-# spin up, creating an independent announcement for each one. However Github
+# spin up, creating an independent announcement for each one. However, GitHub
 # will hard limit this to 3 tags per commit, as it will assume more tags is a
 # mistake.
 #
