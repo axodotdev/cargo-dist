@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.12.0-prerelease.2</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release pre-release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.12.0-prerelease.2
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Mar 12 2024 at 19:33 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release introduces an experimental new feature: an updater which allows your users to install new releases without having to go download a new installer themselves. It also includes a few other bugfixes and improvements.</p>
+<h2>Features</h2>
+<h3>cargo-dist updater</h3>
+<p>The new cargo-dist updater, <a href="https://github.com/axodotdev/axoupdater" rel="noopener noreferrer">axoupdater</a>, provides a way for your users to easily upgrade your software without needing to check your website for new versions. If you enable the new <code>install-updater = true</code> option in cargo-dist, users who install your software via the shell or PowerShell installers will receive a standalone updater program alongside your program itself. Running this program will check for updates and, if necessary, install the new version for them. In addition, axoupdater provides a Rust library with all of its functionality exposed so that you can choose to integrate the updater functionality into your own program directly.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html" rel="noopener noreferrer">cargo-dist documentation</a> or consult the axoupdater repository and <a href="http://docs.rs/axoupdater/latest/axoupdater/" rel="noopener noreferrer">documentation</a>.</p>
+<h3>Homebrew cask dependencies</h3>
+<p>Homebrew cask dependencies can now be installed.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/855" rel="noopener noreferrer">feat: support cask deps for Homebrew</a></li>
+</ul>
+<h3>PowerShell installer tests</h3>
+<p>We now run PowerShell installers end to end in cargo-dist's own tests.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/862" rel="noopener noreferrer">chore: add ruin_me powershell tests</a></li>
+</ul>
+<h3>Invoke <code>rustup target add</code> for additional forms of cross-compiling</h3>
+<p>We now run <code>rustup target add</code> unconditionally when cross-compiling; before, this was limited to macOS or for musl Linux. This is primarily useful for targeting Windows ARM, but may be useful for other cross-compilation targets in the future.</p>
+<ul>
+<li>impl @AustinWise <a href="https://github.com/axodotdev/cargo-dist/pull/846" rel="noopener noreferrer">feat: always rustup target add in cross</a></li>
+</ul>
+<h3>Allow overriding install path in shell and PowerShell installers</h3>
+<p>Although some installer configuration allows setting the installation path, there was previously no way to force the installer to install to a location of the user's choosing. We've added a feature to do so via the new <code>CARGO_DIST_FORCE_INSTALL_DIR</code> environment variable.</p>
+<p>This is primarily intended for cargo-dist's internal use, and is used by the updater to ensure that new releases are installed in the same location as the previous version; other users may find it useful.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/837" rel="noopener noreferrer">feat: allow overriding install path</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/863" rel="noopener noreferrer">fix install path in install receipts in certain circumstances</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/852" rel="noopener noreferrer">fix: for reals reals utf8 for reals FOR REALS</a></li>
+<li>@kbattocchi <a href="https://github.com/axodotdev/cargo-dist/pull/835" rel="noopener noreferrer">feat: enable fallback to x64 in Invoke-Installer</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>

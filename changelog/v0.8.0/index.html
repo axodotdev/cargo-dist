@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.8.0 (2024-01-19)</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.8.0
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jan 19 2024 at 18:58 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release is a mix of quality-of-life changes and fixes.</p>
+<p><code>dispatch-releases = true</code> adds a new experimental mode where releases are triggered with workflow-dispatch instead of tag-push.</p>
+<p><code>build-local-artifacts = false</code> disables the builtin CI jobs that would build your binaries and archives (and MSI installers). This allows a Sufficiently Motivated user to use custom <code>build-local-jobs</code> to completely replace cargo-dist's binary building with something like maturin.</p>
+<h2>Features</h2>
+<h3>dispatch-releases</h3>
+<p><code>dispatch-releases = true</code> adds a new experimental mode where releases are triggered with workflow-dispatch instead of tag-push (relying on creating a github release implicitly tagging).</p>
+<p>Enabling this disables tag-push releases, but keeps pr checks enabled.</p>
+<p>By default the workflow dispatch form will have "dry-run" populated as the tag, which is taken to have the same meaning as <code>pr-run-mode = upload</code>: run the plan and build steps, but not the publish or announce ones. Currently hosting is also disabled, but future versions may add some forms of hosting in this mode.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/717" rel="noopener noreferrer">impl</a></li>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases" rel="noopener noreferrer">docs</a></li>
+</ul>
+<h3>build-local-artifacts</h3>
+<p><code>build-local-artifacts = false</code> disables the builtin CI jobs that would build your binaries and archives (and MSI installers). This allows a Sufficiently Motivated user to use custom <code>build-local-jobs</code> to completely replace cargo-dist's binary building with something like maturin.</p>
+<p>The requirements are simply that you need your custom actions to:</p>
+<ul>
+<li>build archives (tarballs/zips) and checksums that the local CI was expected to produce</li>
+<li>use the github upload-artifacts action to upload all of those to an artifact named <code>artifacts</code></li>
+</ul>
+<p>You can get a listing of the exact artifact names to use and their expected contents with:</p>
+<pre style="background-color:#263238;"><span style="color:#eeffff;">cargo dist manifest --artifacts=local --no-local-paths
+</span></pre>
+
+<p>(<code>[checksum]</code> entries are separate artifacts and not actually stored in the archives.)</p>
+<p>Also note that for legacy reasons a tarball is expected to have all the contents nested under a root dir with the same name as the tarball (sans extension), while zips are expected to have all the files directly in the root (installers pass <code>--strip-components=1</code> to tar when extracting).</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/717" rel="noopener noreferrer">impl</a></li>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#build-local-artifacts" rel="noopener noreferrer">docs</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>better platform printing
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/728" rel="noopener noreferrer">more pleasant fallback for unknown platforms</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/axoproject/pull/82" rel="noopener noreferrer">more known platforms, better display names</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/732" rel="noopener noreferrer">better sort</a></li>
+</ul>
+</li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/717" rel="noopener noreferrer">add proper pr-run-mode guards to custom build jobs</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/722" rel="noopener noreferrer">elevate privileges for custom publish jobs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/727" rel="noopener noreferrer">tighten minimum glibc requirements in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/725" rel="noopener noreferrer">add announcement_tag_is_implicit as a --dry-run signal to dist-manifest</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/730" rel="noopener noreferrer">don't print warnings in some tests, making them run more reliable in some setups</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>
