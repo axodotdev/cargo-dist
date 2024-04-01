@@ -1,4 +1,4 @@
-# Copyright 2022-2023, axodotdev
+# Copyright 2022-2024, axodotdev
 # SPDX-License-Identifier: MIT or Apache-2.0
 #
 # CI that:
@@ -7,9 +7,9 @@
 # * builds artifacts with cargo-dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
 # * on success, uploads the artifacts to Axo Releases and makes an Announcement
-# * on success, uploads the artifacts to a Github Release
+# * on success, uploads the artifacts to a GitHub Release
 #
-# Note that the Github Release will be created with a generated
+# Note that the GitHub Release will be created with a generated
 # title/body based on your changelogs.
 
 name: Release
@@ -32,7 +32,7 @@ permissions:
 # packages versioned/released in lockstep).
 #
 # If you push multiple tags at once, separate instances of this workflow will
-# spin up, creating an independent announcement for each one. However Github
+# spin up, creating an independent announcement for each one. However, GitHub
 # will hard limit this to 3 tags per commit, as it will assume more tags is a
 # mistake.
 #
@@ -64,7 +64,7 @@ jobs:
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.11.0-prerelease.1/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.13.0-prerelease.1/cargo-dist-installer.sh | sh"
       # sure would be cool if github gave us proper conditionals...
       # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
       # functionality based on whether this is a pull_request, and whether it's from a fork.
@@ -137,7 +137,7 @@ jobs:
         run: |
           # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
-          jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
+          jq --raw-output ".upload_files[]" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
@@ -164,7 +164,7 @@ jobs:
           submodules: recursive
       - name: Install cargo-dist
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.11.0-prerelease.1/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.13.0-prerelease.1/cargo-dist-installer.sh | sh"
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
@@ -180,7 +180,7 @@ jobs:
 
           # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
-          jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
+          jq --raw-output ".upload_files[]" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
@@ -219,7 +219,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.11.0-prerelease.1/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.13.0-prerelease.1/cargo-dist-installer.sh | sh"
       # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
         uses: actions/download-artifact@v4
@@ -228,7 +228,7 @@ jobs:
           path: target/distrib/
           merge-multiple: true
       # Upload files to Axo Releases and create the Releases
-      # This is a harmless no-op for Github Releases, hosting for that happens in "announce"
+      # This is a harmless no-op for GitHub Releases, hosting for that happens in "announce"
       - id: host
         shell: bash
         run: |
@@ -266,16 +266,19 @@ jobs:
           pattern: artifacts-*
           path: Formula/
           merge-multiple: true
+      # This is extra complex because you can make your Formula name not match your app name
+      # so we need to find releases with a *.rb file, and publish with that filename.
       - name: Commit formula files
         run: |
           git config --global user.name "${GITHUB_USER}"
           git config --global user.email "${GITHUB_EMAIL}"
 
-          for release in $(echo "$PLAN" | jq --compact-output '.releases[]'); do
-            name=$(echo "$release" | jq .app_name --raw-output)
+          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith(".rb")] | any)'); do
+            filename=$(echo "$release" | jq '.artifacts[] | select(endswith(".rb"))' --raw-output)
+            name=$(echo "$filename" | sed "s/\.rb$//")
             version=$(echo "$release" | jq .app_version --raw-output)
 
-            git add Formula/${name}.rb
+            git add "Formula/${filename}"
             git commit -m "${name} ${version}"
           done
           git push
@@ -295,7 +298,7 @@ jobs:
       packages: write
 
   # Create an Announcement for all the Axo Releases, updating the "latest" release
-  # Create a Github Release while uploading all files to it
+  # Create a GitHub Release while uploading all files to it
   announce:
     needs:
       - plan
@@ -315,7 +318,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.11.0-prerelease.1/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.13.0-prerelease.1/cargo-dist-installer.sh | sh"
       - name: Fetch Axo Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -325,7 +328,7 @@ jobs:
       - name: Announce Axo Releases
         run: |
           cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
-      - name: "Download Github Artifacts"
+      - name: "Download GitHub Artifacts"
         uses: actions/download-artifact@v4
         with:
           pattern: artifacts-*
@@ -335,7 +338,7 @@ jobs:
         run: |
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
-      - name: Create Github Release
+      - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ needs.plan.outputs.tag }}
