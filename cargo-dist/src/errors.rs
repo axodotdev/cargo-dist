@@ -44,7 +44,7 @@ pub enum DistError {
 
     #[cfg(cli)]
     #[error(transparent)]
-    AxopupdaterError(#[from] axoupdater::AxoupdateError),
+    AxoupdaterError(#[from] axoupdater::AxoupdateError),
 
     /// A problem with a jinja template, which is always a cargo-dist bug
     #[error("Failed to render template")]
