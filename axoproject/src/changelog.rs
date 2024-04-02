@@ -113,9 +113,7 @@ fn try_extract_changelog_normalized(
     // title looks something like '<prefix><version><freeform>'
     // `prefix` could be 'v' or 'Version ' for example
     let raw_title = release_notes.title_no_link();
-    let Some((prefix, freeform)) = raw_title.split_once(&stable_version_string) else {
-        return None;
-    };
+    let (prefix, freeform) = raw_title.split_once(&stable_version_string)?;
 
     // insert prerelease suffix into the title
     let title = format!("{}{}{}", prefix, version, freeform);
