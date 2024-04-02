@@ -560,7 +560,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
                 }
             }
 
-            let mut cmd = Cmd::new(new_path, "cargo-dist init");
+            let mut cmd = Cmd::new(new_path, "cargo dist init");
             cmd.arg("dist").arg("init");
             cmd.run()?;
 
