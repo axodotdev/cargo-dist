@@ -340,8 +340,8 @@ cargo dist update [OPTIONS]
 ```
 
 ### Options
-#### `--run-init`
-Run `cargo dist init` after performing an upgrade
+#### `--skip-init`
+Skip running `cargo dist init` after performing an upgrade
 
 #### `-h, --help`
 Print help (see a summary with '-h')

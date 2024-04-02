@@ -545,7 +545,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
 
         // At this point, we've either updated or bailed out;
         // we can proceed with the init if the user would like us to.
-        if args.run_init {
+        if !args.skip_init {
             let mut new_path = result.install_prefix.join("bin").join("cargo-dist");
 
             // Install prefix could be a flat prefix with no "bin";

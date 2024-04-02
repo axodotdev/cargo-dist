@@ -330,10 +330,10 @@ pub struct HelpMarkdownArgs {}
 
 #[derive(Args, Clone, Debug)]
 pub struct UpdateArgs {
-    /// Run `cargo dist init` after performing an upgrade
+    /// Skip running `cargo dist init` after performing an upgrade
     #[clap(long)]
-    #[clap(default_value_t = true)]
-    pub run_init: bool,
+    #[clap(default_value_t = false)]
+    pub skip_init: bool,
 }
 
 /// A style of CI to generate
