@@ -42,6 +42,10 @@ pub enum DistError {
     #[error(transparent)]
     FromUtf8Error(#[from] std::string::FromUtf8Error),
 
+    #[cfg(cli)]
+    #[error(transparent)]
+    AxopupdaterError(#[from] axoupdater::AxoupdateError),
+
     /// A problem with a jinja template, which is always a cargo-dist bug
     #[error("Failed to render template")]
     #[diagnostic(help("this is a bug in cargo-dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new"))]

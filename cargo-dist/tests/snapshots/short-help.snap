@@ -16,6 +16,7 @@ Commands:
   manifest  Generate the final build manifest without running any builds
   plan      Get a plan of what to build (and check project status)
   host      Host artifacts
+  update    Performs a self-update, if a new version is available
   help      Print this message or the help of the given subcommand(s)
 
 Options:
@@ -33,4 +34,3 @@ GLOBAL OPTIONS:
       --allow-dirty                    Allow generated files like CI scripts to be out of date
 
 stderr:
-

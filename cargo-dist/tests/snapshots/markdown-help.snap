@@ -26,6 +26,7 @@ cargo dist <COMMAND>
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [host](#cargo-dist-host): Host artifacts
+* [update](#cargo-dist-update): Performs a self-update, if a new version is available
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
 
 ### Options
@@ -329,6 +330,23 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
+## cargo dist update
+Performs a self-update, if a new version is available
+
+### Usage
+
+```text
+cargo dist update [OPTIONS]
+```
+
+### Options
+#### `-h, --help`
+Print help (see a summary with '-h')
+
+### GLOBAL OPTIONS
+This subcommand accepts all the [global options](#global-options)
+
+<br><br><br>
 ## cargo dist help
 Print this message or the help of the given subcommand(s)
 
@@ -346,6 +364,7 @@ cargo dist help [COMMAND]
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [host](#cargo-dist-host): Host artifacts
+* [update](#cargo-dist-update): Performs a self-update, if a new version is available
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
 
 

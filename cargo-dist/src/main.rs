@@ -5,6 +5,7 @@
 use std::io::Write;
 
 use axoasset::LocalAsset;
+use axoupdater::AxoUpdater;
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
 use cargo_dist::{linkage::LinkageDisplay, *};
@@ -50,6 +51,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::ManifestSchema(args) => cmd_manifest_schema(config, args),
         Commands::Build(args) => cmd_build(config, args),
         Commands::Host(args) => cmd_host(config, args),
+        Commands::Update(args) => runtime.block_on(cmd_update(config, args)),
     }
 }
 
@@ -514,5 +516,21 @@ fn cmd_manifest_schema(
     } else {
         println!("{json_schema}");
     }
+    Ok(())
+}
+
+async fn cmd_update(_config: &Cli, _args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
+    let mut updater = AxoUpdater::new_for("cargo-dist");
+    updater.load_receipt()?;
+    if let Some(result) = updater.run().await? {
+        println!(
+            "Update performed: {} => {}",
+            env!("CARGO_PKG_VERSION"),
+            result.new_version
+        );
+    } else {
+        println!("No update necessary; up to date");
+    }
+
     Ok(())
 }
