@@ -1,6 +1,48 @@
 # Unreleased
 
-Nothing Yet!
+This is mostly a bugfix release, but due to some changes to the dist-manifest format
+we've opted to make it a major release.
+
+## Breaking Change
+
+* @gankra [manifest reform](https://github.com/axodotdev/cargo-dist/pull/848)
+
+This release makes a several changes to the dist-manifest format which ideally shouldn't
+be breaking in the strictest sense of the word, but are breaking in spirit. No one is expected
+to be effected, as the metadata in question is so niche that not even axo's own tooling
+was making a use of it.
+
+The upshot of this breakage is that we now properly collect and merge unambiguous per-platform and
+per-binary metadata from build machines, which is groundwork for significantly improved installers
+and tooling.
+
+Changes include:
+
+* there is now a top-level `systems` map in the manifest
+    * contains gathered information about each system cargo-dist ran on to build your release
+    * this effectively deprecates the `system_info` value, which was already optional and not terribly useful
+* there is now a top-level `assets` map in the manifest
+    * contains gathered information about each binary cargo-dist built
+    * refers to the `systems{}` that the binary was built on
+    * contains linkage info
+* the top-level `linkage` array has been deprecated in favour of the same entries being nested in `assets`, and is now always empty
+    * in future versions it may be removed, but the schema didn't mark this field as optional so it can't yet be removed
+* `artifacts{}.assets[].id` now can optionally refer to an entry in `assets`
+    * this allows you to precisely get the dependencies (linkage) for each binary in an archive, or for the whole archive (by merging them)
+    * in the future it will also be used to get things like libc version requirements
+* `artifacts{}.checksums{}` has been added
+    * contains the actual checksum value(s)
+    * the existing `artifacts{}.checksum` only refers to a checksum *file*, as previously the manifest could not be updated with "computed" info
+    * this being a map allows artifacts to have multiple checksums, which is useful since lots of things hard require sha256
+
+## Fixes
+
+* @mistydemeo [run apt-get update before installing system deps](https://github.com/axodotdev/cargo-dist/pull/877)
+* @ucodery [make formula files pass brew lint](https://github.com/axodotdev/cargo-dist/pull/818)
+* @tshepang [fix copyright year](https://github.com/axodotdev/cargo-dist/pull/883)
+* @mistydemeo [further update copyright year](https://github.com/axodotdev/cargo-dist/pull/884)
+* @tisokun [properly spell GitHub in CI yml](https://github.com/axodotdev/cargo-dist/pull/886)
+* @gankra [use mv instead of cp in installer.sh](https://github.com/axodotdev/cargo-dist/pull/894)
 
 
 # Version 0.12.0 (2024-03-21)
