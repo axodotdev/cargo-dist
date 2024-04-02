@@ -521,7 +521,14 @@ fn cmd_manifest_schema(
 
 async fn cmd_update(_config: &Cli, _args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
     let mut updater = AxoUpdater::new_for("cargo-dist");
-    updater.load_receipt()?;
+    // Do we want to treat this as an error?
+    // Or do we want to sniff if this was a Homebrew installation?
+    if updater.load_receipt().is_err() {
+        println!("Unable to load install receipt to check for updates.");
+        println!("If you installed this via `brew`, please `brew upgrade cargo-dist`!");
+        return Ok(());
+    }
+
     if let Some(result) = updater.run().await? {
         println!(
             "Update performed: {} => {}",
