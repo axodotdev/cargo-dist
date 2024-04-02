@@ -194,9 +194,9 @@ dependencies = [
 
 [[package]]
 name = "axoasset"
-version = "0.8.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a046dd9d257d88bf3ec48ba001fb9434956efef0814fbc594d39d25494d9f80"
+checksum = "5e05853b0d9abfab8e7532cad0d07ec396dd95c1a81926b49ab3cfa121a9d8d6"
 dependencies = [
  "camino",
  "flate2",
@@ -411,7 +411,7 @@ dependencies = [
 name = "cargo-dist"
 version = "0.12.0"
 dependencies = [
- "axoasset 0.8.0",
+ "axoasset 0.9.1",
  "axocli",
  "axoprocess",
  "axoproject",
