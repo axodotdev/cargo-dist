@@ -329,7 +329,12 @@ pub struct LinkageArgs {
 pub struct HelpMarkdownArgs {}
 
 #[derive(Args, Clone, Debug)]
-pub struct UpdateArgs {}
+pub struct UpdateArgs {
+    /// Run `cargo dist init` after performing an upgrade
+    #[clap(long)]
+    #[clap(default_value_t = true)]
+    pub run_init: bool,
+}
 
 /// A style of CI to generate
 #[derive(ValueEnum, Clone, Copy, Debug)]

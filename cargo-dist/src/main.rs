@@ -5,6 +5,7 @@
 use std::io::Write;
 
 use axoasset::LocalAsset;
+use axoprocess::Cmd;
 use axoupdater::AxoUpdater;
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
@@ -519,7 +520,7 @@ fn cmd_manifest_schema(
     Ok(())
 }
 
-async fn cmd_update(_config: &Cli, _args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
+async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
     let mut updater = AxoUpdater::new_for("cargo-dist");
     // Do we want to treat this as an error?
     // Or do we want to sniff if this was a Homebrew installation?
@@ -541,8 +542,33 @@ async fn cmd_update(_config: &Cli, _args: &cli::UpdateArgs) -> Result<(), miette
             env!("CARGO_PKG_VERSION"),
             result.new_version
         );
+
+        // At this point, we've either updated or bailed out;
+        // we can proceed with the init if the user would like us to.
+        if args.run_init {
+            let mut new_path = result.install_prefix.join("bin").join("cargo-dist");
+
+            // Install prefix could be a flat prefix with no "bin";
+            // try that next
+            if !new_path.exists() {
+                new_path = result.install_prefix.join("cargo-dist");
+                // Well crap, nothing got installed in the path
+                // we wanted it to go. Error out instead of
+                // proceeding.
+                if !new_path.exists() {
+                    return Err(errors::DistError::UpdateFailed {}).into_diagnostic();
+                }
+            }
+
+            let mut cmd = Cmd::new(new_path, "cargo-dist init");
+            cmd.arg("dist").arg("init");
+            cmd.run()?;
+
+            return Ok(());
+        }
     } else {
         println!("No update necessary; up to date");
+        return Ok(());
     }
 
     Ok(())
