@@ -54,6 +54,17 @@ pub static AXOASSET: TestContextLock<Tools> = TestContextLock::new(
         bins: &[],
     },
 );
+/// self-testing cargo-dist
+pub static DIST: TestContextLock<Tools> = TestContextLock::new(
+    &TOOLS,
+    &Repo {
+        repo_owner: "axodotdev",
+        repo_name: "cargo-dist",
+        commit_sha: "main",
+        app_name: "cargo-dist",
+        bins: &["cargo-dist"],
+    },
+);
 
 pub struct Tools {
     pub git: CommandInfo,
