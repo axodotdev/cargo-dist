@@ -22,18 +22,25 @@ stdout:
         "cargo-dist-installer.sh",
         "cargo-dist-installer.ps1",
         "cargo-dist.rb",
+        "cargo-dist-aarch64-apple-darwin-update",
         "cargo-dist-aarch64-apple-darwin.tar.xz",
         "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
+        "cargo-dist-aarch64-unknown-linux-gnu-update",
         "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
         "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256",
+        "cargo-dist-aarch64-unknown-linux-musl-update",
         "cargo-dist-aarch64-unknown-linux-musl.tar.xz",
         "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256",
+        "cargo-dist-x86_64-apple-darwin-update",
         "cargo-dist-x86_64-apple-darwin.tar.xz",
         "cargo-dist-x86_64-apple-darwin.tar.xz.sha256",
+        "cargo-dist-x86_64-pc-windows-msvc-update",
         "cargo-dist-x86_64-pc-windows-msvc.zip",
         "cargo-dist-x86_64-pc-windows-msvc.zip.sha256",
+        "cargo-dist-x86_64-unknown-linux-gnu-update",
         "cargo-dist-x86_64-unknown-linux-gnu.tar.xz",
         "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256",
+        "cargo-dist-x86_64-unknown-linux-musl-update",
         "cargo-dist-x86_64-unknown-linux-musl.tar.xz",
         "cargo-dist-x86_64-unknown-linux-musl.tar.xz.sha256"
       ],
@@ -53,6 +60,13 @@ stdout:
     }
   ],
   "artifacts": {
+    "cargo-dist-aarch64-apple-darwin-update": {
+      "name": "cargo-dist-aarch64-apple-darwin-update",
+      "kind": "updater",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ]
+    },
     "cargo-dist-aarch64-apple-darwin.tar.xz": {
       "name": "cargo-dist-aarch64-apple-darwin.tar.xz",
       "kind": "executable-zip",
@@ -96,6 +110,13 @@ stdout:
         "aarch64-apple-darwin"
       ]
     },
+    "cargo-dist-aarch64-unknown-linux-gnu-update": {
+      "name": "cargo-dist-aarch64-unknown-linux-gnu-update",
+      "kind": "updater",
+      "target_triples": [
+        "aarch64-unknown-linux-gnu"
+      ]
+    },
     "cargo-dist-aarch64-unknown-linux-gnu.tar.xz": {
       "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
       "kind": "executable-zip",
@@ -137,6 +158,13 @@ stdout:
       "kind": "checksum",
       "target_triples": [
         "aarch64-unknown-linux-gnu"
+      ]
+    },
+    "cargo-dist-aarch64-unknown-linux-musl-update": {
+      "name": "cargo-dist-aarch64-unknown-linux-musl-update",
+      "kind": "updater",
+      "target_triples": [
+        "aarch64-unknown-linux-musl"
       ]
     },
     "cargo-dist-aarch64-unknown-linux-musl.tar.xz": {
@@ -205,6 +233,13 @@ stdout:
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
+    "cargo-dist-x86_64-apple-darwin-update": {
+      "name": "cargo-dist-x86_64-apple-darwin-update",
+      "kind": "updater",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ]
+    },
     "cargo-dist-x86_64-apple-darwin.tar.xz": {
       "name": "cargo-dist-x86_64-apple-darwin.tar.xz",
       "kind": "executable-zip",
@@ -246,6 +281,13 @@ stdout:
       "kind": "checksum",
       "target_triples": [
         "x86_64-apple-darwin"
+      ]
+    },
+    "cargo-dist-x86_64-pc-windows-msvc-update": {
+      "name": "cargo-dist-x86_64-pc-windows-msvc-update",
+      "kind": "updater",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
       ]
     },
     "cargo-dist-x86_64-pc-windows-msvc.zip": {
@@ -291,6 +333,13 @@ stdout:
         "x86_64-pc-windows-msvc"
       ]
     },
+    "cargo-dist-x86_64-unknown-linux-gnu-update": {
+      "name": "cargo-dist-x86_64-unknown-linux-gnu-update",
+      "kind": "updater",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ]
+    },
     "cargo-dist-x86_64-unknown-linux-gnu.tar.xz": {
       "name": "cargo-dist-x86_64-unknown-linux-gnu.tar.xz",
       "kind": "executable-zip",
@@ -332,6 +381,13 @@ stdout:
       "kind": "checksum",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
+      ]
+    },
+    "cargo-dist-x86_64-unknown-linux-musl-update": {
+      "name": "cargo-dist-x86_64-unknown-linux-musl-update",
+      "kind": "updater",
+      "target_triples": [
+        "x86_64-unknown-linux-musl"
       ]
     },
     "cargo-dist-x86_64-unknown-linux-musl.tar.xz": {
