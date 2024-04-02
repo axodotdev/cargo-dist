@@ -17,22 +17,15 @@ exclude = [
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[[bin]]
-name = "axoproject"
-required-features = ["cli"]
-
 [features]
-default = ["cli", "generic-projects", "cargo-projects", "npm-projects"]
-cli = ["axocli"]
+default = ["generic-projects", "cargo-projects", "npm-projects"]
 generic-projects = ["semver"]
 cargo-projects = ["guppy", "semver"]
 npm-projects = ["oro-common", "oro-package-spec", "node-semver"]
 
 [dependencies]
 axoasset = { version = "0.9.0", default-features = false, features = ["json-serde", "toml-edit", "toml-serde"] }
-axocli = { version = "0.2.0", optional = true }
 camino = { version = "1.1.4", default-features = true, features = ["serde1"] }
-console = "0.15.8"
 miette = "7.2.0"
 guppy = { version = "0.17.5", optional = true }
 tracing = "0.1.40"
@@ -42,7 +35,6 @@ semver = { version = "1.0.22", optional = true, default-features = true, feature
 node-semver = { version = "2.1.0", optional = true }
 oro-package-spec = { version = "0.3.34", optional = true }
 thiserror = "1.0.58"
-clap = { version = "4.5.3", features = ["derive"] }
 pathdiff = { version = "0.2.1", features = ["camino"] }
 itertools = "0.12.1"
 url = "2.5.0"
@@ -52,14 +44,3 @@ parse-changelog = "0.6.5"
 [profile.dist]
 inherits = "release"
 lto = "thin"
-
-# Config for 'cargo dist'
-[workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.1.0"
-# CI backends to support (see 'cargo dist generate-ci')
-ci = ["github"]
-# The installers to generate for each app
-installers = ["shell", "powershell"]
-# Target platforms to build apps for (Rust target-triple syntax)
-targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]

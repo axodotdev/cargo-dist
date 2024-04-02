@@ -11,10 +11,7 @@ fn test_self_detect() {
 
     let package = &project.package_info[0];
     assert_eq!(package.name, "axoproject");
-    assert_eq!(package.binaries.len(), 1);
-
-    let binary = &package.binaries[0];
-    assert_eq!(binary, "axoproject");
+    assert_eq!(package.binaries.len(), 0);
 }
 
 #[cfg(feature = "cargo-projects")]
