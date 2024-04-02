@@ -529,6 +529,12 @@ async fn cmd_update(_config: &Cli, _args: &cli::UpdateArgs) -> Result<(), miette
         return Ok(());
     }
 
+    if !updater.check_receipt_is_for_this_executable()? {
+        println!("This installation of cargo-dist wasn't installed via a method that `cargo dist update` supports.");
+        println!("Please upgrade manually.");
+        return Ok(());
+    }
+
     if let Some(result) = updater.run().await? {
         println!(
             "Update performed: {} => {}",
