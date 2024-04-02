@@ -36,7 +36,7 @@ axocli = { version = "0.2.0", optional = true }
 axotag = "0.1.0"
 cargo-dist-schema = { version = "=0.12.0", path = "../cargo-dist-schema" }
 
-axoasset = { version = "0.8.0", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
+axoasset = { version = "0.9.1", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
 axoprocess = { version = "0.2.0" }
 axoproject = { version = "0.7.0", default-features = false, features = ["cargo-projects", "generic-projects"] }
 gazenot = { version = "0.3.0" }
