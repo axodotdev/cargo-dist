@@ -525,19 +525,19 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     // Do we want to treat this as an error?
     // Or do we want to sniff if this was a Homebrew installation?
     if updater.load_receipt().is_err() {
-        println!("Unable to load install receipt to check for updates.");
-        println!("If you installed this via `brew`, please `brew upgrade cargo-dist`!");
+        eprintln!("Unable to load install receipt to check for updates.");
+        eprintln!("If you installed this via `brew`, please `brew upgrade cargo-dist`!");
         return Ok(());
     }
 
     if !updater.check_receipt_is_for_this_executable()? {
-        println!("This installation of cargo-dist wasn't installed via a method that `cargo dist update` supports.");
-        println!("Please upgrade manually.");
+        eprintln!("This installation of cargo-dist wasn't installed via a method that `cargo dist update` supports.");
+        eprintln!("Please upgrade manually.");
         return Ok(());
     }
 
     if let Some(result) = updater.run().await? {
-        println!(
+        eprintln!(
             "Update performed: {} => {}",
             env!("CARGO_PKG_VERSION"),
             result.new_version
@@ -567,7 +567,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
             return Ok(());
         }
     } else {
-        println!("No update necessary; up to date");
+        eprintln!("No update necessary; up to date");
         return Ok(());
     }
 
