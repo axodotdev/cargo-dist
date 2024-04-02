@@ -356,7 +356,7 @@ install() {
     local _bins="$2"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
-        ensure cp "$_bin" "$_install_dir"
+        ensure mv "$_bin" "$_install_dir"
         # unzip seems to need this chmod
         ensure chmod +x "$_install_dir/$_bin_name"
         say "  $_bin_name"
