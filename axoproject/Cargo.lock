@@ -38,9 +38,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "axoasset"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dce2f189800bafe8322ef3a4d361ee7373bfc2f8fe052afda404230166dc45f"
+checksum = "5e05853b0d9abfab8e7532cad0d07ec396dd95c1a81926b49ab3cfa121a9d8d6"
 dependencies = [
  "camino",
  "image",
