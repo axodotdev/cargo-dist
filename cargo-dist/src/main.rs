@@ -520,7 +520,34 @@ fn cmd_manifest_schema(
     Ok(())
 }
 
+fn this_cargo_dist_provided_by_brew() -> bool {
+    if cfg!(target_family = "windows") {
+        return false;
+    }
+
+    if let Ok(path) = std::env::current_exe() {
+        // The cargo-dist being a symlink that points to a copy that
+        // lives in Homebrew's "Cellar", *or* that file directly,
+        // suggests that this file is from Homebrew.
+        let realpath;
+        if let Ok(resolved) = path.read_link() {
+            realpath = resolved;
+        } else {
+            realpath = path;
+        }
+        realpath.starts_with("/usr/local/Cellar") || realpath.starts_with("/opt/homebrew/Cellar")
+    } else {
+        false
+    }
+}
+
 async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
+    if this_cargo_dist_provided_by_brew() {
+        eprintln!("Your copy of `cargo-dist` seems to have been installed via Homebrew.");
+        eprintln!("Please run `brew upgrade cargo-dist` to update this copy.");
+        return Ok(());
+    }
+
     let mut updater = AxoUpdater::new_for("cargo-dist");
     // Do we want to treat this as an error?
     // Or do we want to sniff if this was a Homebrew installation?
