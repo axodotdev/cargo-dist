@@ -447,6 +447,7 @@ dependencies = [
  "flate2",
  "gazenot",
  "goblin",
+ "homedir",
  "include_dir",
  "insta",
  "itertools 0.12.1",
