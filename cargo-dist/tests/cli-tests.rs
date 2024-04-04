@@ -247,6 +247,9 @@ fn test_self_update() {
         let output = Command::new(dist_path)
             .arg("dist")
             .arg("update")
+            // init includes interactive components, so we
+            // can't safely run it within a noninteractive test
+            .arg("--skip-init")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
