@@ -244,6 +244,12 @@ fn test_self_update() {
         )
         .unwrap();
 
+        // Ensure we delete any previous copy that may exist
+        // at this path before we copy in our version.
+        if dist_path.exists() {
+            std::fs::remove_file(dist_path).unwrap();
+        }
+
         // Install to the home directory
         std::fs::copy(BIN, dist_path).unwrap();
 
