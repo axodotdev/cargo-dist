@@ -249,6 +249,7 @@ fn test_self_update() {
         if dist_path.exists() {
             std::fs::remove_file(dist_path).unwrap();
         }
+        assert!(!dist_path.exists());
 
         // Install to the home directory
         std::fs::copy(BIN, dist_path).unwrap();
