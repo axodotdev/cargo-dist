@@ -3,6 +3,11 @@
 Nothing Yet!
 
 
+# Version 0.12.2 (2024-04-04)
+
+This is a minor release which regenerates the shell installer using the fix from 0.12.1. It fixes an issue which would cause the cargo-dist shell installer to fail if cargo-dist itself is running at the time the installer tries to write the new copy.
+
+
 # Version 0.12.1 (2024-04-04)
 
 This is a minor bugfix release.
