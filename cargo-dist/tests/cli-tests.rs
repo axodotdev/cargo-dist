@@ -1,4 +1,7 @@
-use std::process::{Command, Output, Stdio};
+use std::{
+    env::consts::EXE_SUFFIX,
+    process::{Command, Output, Stdio},
+};
 
 static BIN: &str = env!("CARGO_BIN_EXE_cargo-dist");
 const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
@@ -224,7 +227,7 @@ fn test_self_update() {
                 .join("bin"),
         )
         .unwrap();
-        let dist_path = &dist_home.join("cargo-dist");
+        let dist_path = &dist_home.join(format!("cargo-dist{}", EXE_SUFFIX));
 
         #[cfg(target_family = "unix")]
         let config_path = Utf8PathBuf::from_path_buf(
