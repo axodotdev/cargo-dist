@@ -212,8 +212,6 @@ fn write_receipt(version: &str, prefix: &Utf8PathBuf, config_path: &Utf8PathBuf)
 #[test]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
-    // Also keep it to Mac/Linux until I remember how Windows paths work
-    #[cfg(target_family = "unix")]
     if std::env::var(ENV_RUIN_ME)
         .map(|s| !s.is_empty())
         .unwrap_or(false)
@@ -227,11 +225,21 @@ fn test_self_update() {
         )
         .unwrap();
         let dist_path = &dist_home.join("cargo-dist");
+
+        #[cfg(target_family = "unix")]
         let config_path = Utf8PathBuf::from_path_buf(
             homedir::get_my_home()
                 .unwrap()
                 .unwrap()
                 .join(".config")
+                .join("cargo-dist"),
+        )
+        .unwrap();
+        #[cfg(target_family = "windows")]
+        let config_path = Utf8PathBuf::from_path_buf(
+            std::env::var("LOCALAPPDATA")
+                .map(std::path::PathBuf::from)
+                .unwrap()
                 .join("cargo-dist"),
         )
         .unwrap();
