@@ -3,6 +3,21 @@
 Nothing Yet!
 
 
+# Version 0.12.2 (2024-04-04)
+
+This is a minor release which regenerates the shell installer using the fix from 0.12.1. It fixes an issue which would cause the cargo-dist shell installer to fail if cargo-dist itself is running at the time the installer tries to write the new copy.
+
+
+# Version 0.12.1 (2024-04-04)
+
+This is a minor bugfix release.
+
+## Fixes
+
+* @mistydemeo [fix recursive ZIP generation on Windows](https://github.com/axodotdev/cargo-dist/pull/895)
+* @Gankra [fix overwriting actively-running binary in shell installer](https://github.com/axodotdev/cargo-dist/pull/894)
+
+
 # Version 0.12.0 (2024-03-21)
 
 This release introduces an experimental new feature: an updater which allows your users to install new releases without having to go download a new installer themselves. It also includes a few other bugfixes and improvements.
