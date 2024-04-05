@@ -79,7 +79,7 @@ All of these fields and their definitions are identical to the ones defined by [
 * `license-files`: An array containing a list of one or more license files within the source code.
 
 [cargo-toml]: https://doc.rust-lang.org/cargo/reference/manifest.html
-[quickstart]: /book/way-too-quickstart.html
+[quickstart]: ./way-too-quickstart.md
 [spdx]: https://spdx.org/licenses
 [target-triple]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [toml]: https://en.wikipedia.org/wiki/TOML
