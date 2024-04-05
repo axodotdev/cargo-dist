@@ -570,23 +570,25 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
             result.new_version
         );
 
+        // Check that the binary was actually created
+        let bin_name = format!("cargo-dist{}", std::env::consts::EXE_SUFFIX);
+        let mut new_path = result.install_prefix.join("bin").join(&bin_name);
+
+        // Install prefix could be a flat prefix with no "bin";
+        // try that next
+        if !new_path.exists() {
+            new_path = result.install_prefix.join(&bin_name);
+            // Well crap, nothing got installed in the path
+            // we wanted it to go. Error out instead of
+            // proceeding.
+            if !new_path.exists() {
+                return Err(errors::DistError::UpdateFailed {}).into_diagnostic();
+            }
+        }
+
         // At this point, we've either updated or bailed out;
         // we can proceed with the init if the user would like us to.
         if !args.skip_init {
-            let mut new_path = result.install_prefix.join("bin").join("cargo-dist");
-
-            // Install prefix could be a flat prefix with no "bin";
-            // try that next
-            if !new_path.exists() {
-                new_path = result.install_prefix.join("cargo-dist");
-                // Well crap, nothing got installed in the path
-                // we wanted it to go. Error out instead of
-                // proceeding.
-                if !new_path.exists() {
-                    return Err(errors::DistError::UpdateFailed {}).into_diagnostic();
-                }
-            }
-
             let mut cmd = Cmd::new(new_path, "cargo dist init");
             cmd.arg("dist").arg("init");
             cmd.run()?;
