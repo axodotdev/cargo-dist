@@ -174,6 +174,10 @@ pub enum Commands {
     /// Host artifacts
     #[clap(disable_version_flag = true)]
     Host(HostArgs),
+
+    /// Performs a self-update, if a new version is available
+    #[clap(disable_version_flag = true)]
+    Update(UpdateArgs),
 }
 
 #[derive(Args, Clone, Debug)]
@@ -323,6 +327,14 @@ pub struct LinkageArgs {
 
 #[derive(Args, Clone, Debug)]
 pub struct HelpMarkdownArgs {}
+
+#[derive(Args, Clone, Debug)]
+pub struct UpdateArgs {
+    /// Skip running `cargo dist init` after performing an upgrade
+    #[clap(long)]
+    #[clap(default_value_t = false)]
+    pub skip_init: bool,
+}
 
 /// A style of CI to generate
 #[derive(ValueEnum, Clone, Copy, Debug)]

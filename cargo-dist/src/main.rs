@@ -5,6 +5,8 @@
 use std::io::Write;
 
 use axoasset::LocalAsset;
+use axoprocess::Cmd;
+use axoupdater::AxoUpdater;
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
 use cargo_dist::{linkage::LinkageDisplay, *};
@@ -50,6 +52,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::ManifestSchema(args) => cmd_manifest_schema(config, args),
         Commands::Build(args) => cmd_build(config, args),
         Commands::Host(args) => cmd_host(config, args),
+        Commands::Update(args) => runtime.block_on(cmd_update(config, args)),
     }
 }
 
@@ -514,5 +517,89 @@ fn cmd_manifest_schema(
     } else {
         println!("{json_schema}");
     }
+    Ok(())
+}
+
+fn this_cargo_dist_provided_by_brew() -> bool {
+    if cfg!(target_family = "windows") {
+        return false;
+    }
+
+    if let Ok(path) = std::env::current_exe() {
+        // The cargo-dist being a symlink that points to a copy that
+        // lives in Homebrew's "Cellar", *or* that file directly,
+        // suggests that this file is from Homebrew.
+        let realpath;
+        if let Ok(resolved) = path.read_link() {
+            realpath = resolved;
+        } else {
+            realpath = path;
+        }
+        realpath.starts_with("/usr/local/Cellar") || realpath.starts_with("/opt/homebrew/Cellar")
+    } else {
+        false
+    }
+}
+
+async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
+    if this_cargo_dist_provided_by_brew() {
+        eprintln!("Your copy of `cargo-dist` seems to have been installed via Homebrew.");
+        eprintln!("Please run `brew upgrade cargo-dist` to update this copy.");
+        return Ok(());
+    }
+
+    let mut updater = AxoUpdater::new_for("cargo-dist");
+    // Do we want to treat this as an error?
+    // Or do we want to sniff if this was a Homebrew installation?
+    if updater.load_receipt().is_err() {
+        eprintln!("Unable to load install receipt to check for updates.");
+        eprintln!("If you installed this via `brew`, please `brew upgrade cargo-dist`!");
+        return Ok(());
+    }
+
+    if !updater.check_receipt_is_for_this_executable()? {
+        eprintln!("This installation of cargo-dist wasn't installed via a method that `cargo dist update` supports.");
+        eprintln!("Please update manually.");
+        return Ok(());
+    }
+
+    if let Some(result) = updater.run().await? {
+        eprintln!(
+            "Update performed: {} => {}",
+            env!("CARGO_PKG_VERSION"),
+            result.new_version
+        );
+
+        // At this point, we've either updated or bailed out;
+        // we can proceed with the init if the user would like us to.
+        if !args.skip_init {
+            let mut new_path = result.install_prefix.join("bin").join("cargo-dist");
+
+            // Install prefix could be a flat prefix with no "bin";
+            // try that next
+            if !new_path.exists() {
+                new_path = result.install_prefix.join("cargo-dist");
+                // Well crap, nothing got installed in the path
+                // we wanted it to go. Error out instead of
+                // proceeding.
+                if !new_path.exists() {
+                    return Err(errors::DistError::UpdateFailed {}).into_diagnostic();
+                }
+            }
+
+            let mut cmd = Cmd::new(new_path, "cargo dist init");
+            cmd.arg("dist").arg("init");
+            cmd.run()?;
+
+            return Ok(());
+        }
+    } else {
+        eprintln!(
+            "No update necessary; {} is up to date.",
+            env!("CARGO_PKG_VERSION")
+        );
+        return Ok(());
+    }
+
     Ok(())
 }

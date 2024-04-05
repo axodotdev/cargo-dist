@@ -1,9 +1,15 @@
-use std::process::{Command, Output, Stdio};
+use std::{
+    env::consts::EXE_SUFFIX,
+    process::{Command, Output, Stdio},
+};
 
 static BIN: &str = env!("CARGO_BIN_EXE_cargo-dist");
+const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
 
 #[allow(dead_code)]
 mod gallery;
+use axoasset::LocalAsset;
+use camino::Utf8PathBuf;
 use gallery::*;
 
 fn format_outputs(output: &Output) -> String {
@@ -190,4 +196,90 @@ fn test_markdown_help() {
         insta::assert_snapshot!("markdown-help", format_outputs(&output));
     });
     assert!(output.status.success(), "{}", output.status);
+}
+
+static RECEIPT_TEMPLATE: &str = r#"{"binaries":["cargo-dist"],"install_prefix":"INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"0.10.0-prerelease.1"},"source":{"app_name":"cargo-dist","name":"cargo-dist","owner":"axodotdev","release_type":"github"},"version":"VERSION"}"#;
+
+fn install_receipt(version: &str, prefix: &Utf8PathBuf) -> String {
+    RECEIPT_TEMPLATE
+        .replace("INSTALL_PREFIX", &prefix.to_string().replace('\\', "\\\\"))
+        .replace("VERSION", version)
+}
+
+fn write_receipt(version: &str, prefix: &Utf8PathBuf, config_path: &Utf8PathBuf) {
+    let contents = install_receipt(version, prefix);
+    let receipt_name = config_path.join("cargo-dist-receipt.json");
+    LocalAsset::write_new_all(&contents, receipt_name).unwrap();
+}
+
+#[test]
+fn test_self_update() {
+    // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
+    if std::env::var(ENV_RUIN_ME)
+        .map(|s| !s.is_empty())
+        .unwrap_or(false)
+    {
+        let dist_home = Utf8PathBuf::from_path_buf(
+            homedir::get_my_home()
+                .unwrap()
+                .unwrap()
+                .join(".cargo")
+                .join("bin"),
+        )
+        .unwrap();
+        let dist_path = &dist_home.join(format!("cargo-dist{}", EXE_SUFFIX));
+
+        #[cfg(target_family = "unix")]
+        let config_path = Utf8PathBuf::from_path_buf(
+            homedir::get_my_home()
+                .unwrap()
+                .unwrap()
+                .join(".config")
+                .join("cargo-dist"),
+        )
+        .unwrap();
+        #[cfg(target_family = "windows")]
+        let config_path = Utf8PathBuf::from_path_buf(
+            std::env::var("LOCALAPPDATA")
+                .map(std::path::PathBuf::from)
+                .unwrap()
+                .join("cargo-dist"),
+        )
+        .unwrap();
+
+        // Ensure we delete any previous copy that may exist
+        // at this path before we copy in our version.
+        if dist_path.exists() {
+            std::fs::remove_file(dist_path).unwrap();
+        }
+        assert!(!dist_path.exists());
+
+        // Install to the home directory
+        std::fs::copy(BIN, dist_path).unwrap();
+
+        // Create a fake install receipt
+        // We lie about being a very old version so we always
+        // consider upgrading to something.
+        write_receipt("0.5.0", &dist_home, &config_path);
+
+        let output = Command::new(dist_path)
+            .arg("dist")
+            .arg("update")
+            // init includes interactive components, so we
+            // can't safely run it within a noninteractive test
+            .arg("--skip-init")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .unwrap();
+
+        let out_str = String::from_utf8_lossy(&output.stdout);
+        let err_str = String::from_utf8_lossy(&output.stderr);
+
+        assert!(
+            output.status.success(),
+            "status code: {}, stdout: {out_str}; stderr: {err_str}",
+            output.status
+        );
+    }
 }

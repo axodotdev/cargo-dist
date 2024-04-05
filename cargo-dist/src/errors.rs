@@ -305,6 +305,11 @@ pub enum DistError {
         /// Name of binary
         bin_name: String,
     },
+
+    /// Error during `cargo dist update`
+    #[error("`cargo dist update` failed; the new version isn't in the place we expected")]
+    #[diagnostic(help("This is probably not your fault, please file an issue!"))]
+    UpdateFailed {},
 }
 
 impl From<minijinja::Error> for DistError {
