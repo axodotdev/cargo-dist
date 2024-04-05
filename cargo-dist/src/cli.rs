@@ -334,6 +334,8 @@ pub struct UpdateArgs {
     #[clap(long)]
     #[clap(default_value_t = false)]
     pub skip_init: bool,
+    #[clap(long)]
+    pub version: Option<String>,
 }
 
 /// A style of CI to generate
