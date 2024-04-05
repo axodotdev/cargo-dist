@@ -559,7 +559,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
 
     if !updater.check_receipt_is_for_this_executable()? {
         eprintln!("This installation of cargo-dist wasn't installed via a method that `cargo dist update` supports.");
-        eprintln!("Please upgrade manually.");
+        eprintln!("Please update manually.");
         return Ok(());
     }
 
@@ -594,7 +594,10 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
             return Ok(());
         }
     } else {
-        eprintln!("No update necessary; up to date");
+        eprintln!(
+            "No update necessary; {} is up to date.",
+            env!("CARGO_PKG_VERSION")
+        );
         return Ok(());
     }
 
