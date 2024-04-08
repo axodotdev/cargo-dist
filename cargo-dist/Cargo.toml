@@ -32,7 +32,7 @@ serde_json = { version = "1.0.115", optional = true }
 console = { version = "0.15.8", optional = true }
 clap-cargo = { version = "0.14.0", optional = true }
 axocli = { version = "0.2.0", optional = true }
-axoupdater = { version = "0.3.6", optional = true, git = "https://github.com/axodotdev/axoupdater/", branch="main" }
+axoupdater = { version = "0.4.0", optional = true }
 
 # Features used by the cli and library
 axotag = "0.2.0"
