@@ -131,8 +131,8 @@ fn check_dist_package(
 
     // If we're announcing a package, reject every other package
     match &announcing.release {
-        ReleaseType::Package(id) => {
-            if pkg_id != PackageIdx(*id) {
+        ReleaseType::Package { idx, version: _ } => {
+            if pkg_id != PackageIdx(*idx) {
                 return Some(format!("didn't match tag {}", announcing.tag));
             }
         }
@@ -231,7 +231,7 @@ pub(crate) fn select_tag(
     let mut version = None;
     let mut package = None;
     match &announcing.release {
-        ReleaseType::Package(id) => package = Some(PackageIdx(*id)),
+        ReleaseType::Package { idx, version: _ } => package = Some(PackageIdx(*idx)),
         ReleaseType::Version(ver) => version = Some(ver.clone()),
         ReleaseType::None => {}
     }
@@ -295,7 +295,7 @@ fn select_packages(
     // If no binaries were selected but we are trying to specifically release One Package,
     // add that package as a release still, on the assumption it's a Library
     if rust_releases.is_empty() {
-        if let ReleaseType::Package(idx) = announcing.release {
+        if let ReleaseType::Package { idx, version: _ } = announcing.release {
             rust_releases.push((PackageIdx(idx), vec![]));
         }
     }
