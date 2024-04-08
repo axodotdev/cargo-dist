@@ -52,7 +52,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::ManifestSchema(args) => cmd_manifest_schema(config, args),
         Commands::Build(args) => cmd_build(config, args),
         Commands::Host(args) => cmd_host(config, args),
-        Commands::Update(args) => runtime.block_on(cmd_update(config, args)),
+        Commands::Selfupdate(args) => runtime.block_on(cmd_update(config, args)),
     }
 }
 

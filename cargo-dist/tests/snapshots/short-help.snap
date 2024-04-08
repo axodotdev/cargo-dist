@@ -9,15 +9,15 @@ Usage: cargo dist [OPTIONS]
        cargo dist <COMMAND>
 
 Commands:
-  build     Build artifacts
-  init      Setup or update cargo-dist
-  generate  Generate one or more pieces of configuration
-  linkage   Report on the dynamic libraries used by the built artifacts
-  manifest  Generate the final build manifest without running any builds
-  plan      Get a plan of what to build (and check project status)
-  host      Host artifacts
-  update    Performs a self-update, if a new version is available
-  help      Print this message or the help of the given subcommand(s)
+  build       Build artifacts
+  init        Setup or update cargo-dist
+  generate    Generate one or more pieces of configuration
+  linkage     Report on the dynamic libraries used by the built artifacts
+  manifest    Generate the final build manifest without running any builds
+  plan        Get a plan of what to build (and check project status)
+  host        Host artifacts
+  selfupdate  Performs a self-update, if a new version is available, and then 'init'
+  help        Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help (see more with '--help')

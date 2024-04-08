@@ -175,9 +175,9 @@ pub enum Commands {
     #[clap(disable_version_flag = true)]
     Host(HostArgs),
 
-    /// Performs a self-update, if a new version is available
+    /// Performs a self-update, if a new version is available, and then 'init'
     #[clap(disable_version_flag = true)]
-    Update(UpdateArgs),
+    Selfupdate(UpdateArgs),
 }
 
 #[derive(Args, Clone, Debug)]
