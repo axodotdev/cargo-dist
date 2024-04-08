@@ -1,7 +1,28 @@
 # Unreleased
 
-This is mostly a bugfix release, but due to some changes to the dist-manifest format
-we've opted to make it a major release.
+This releases introduces a 'selfupdate' command, using cargo-dist's new updater support.
+
+It also includes several bugfixes and a technically-breaking-change to the dist-manifest feature.
+
+
+## Features
+
+A new `cargo dist selfupdate` command has been added which updates cargo dist to the latest
+version and runs `cargo dist init` using that new version. As a result, this should in
+be a go-to replacement for most uses of `cargo dist init`.
+
+This is based on the new experimental [axoupdater library](https://github.com/axodotdev/axoupdater/).
+Essentially it just checks GitHub Releases or axo Releases for anything newer, and fetches and
+runs the appropriate shell/powershell installer.
+
+This library is the same one used for the updater feature of cargo-dist, which has cargo-dist
+provide a standalone separate updater binary. The benefit of us using the library directly is
+that we get a more unified design at the cost of needing to actually change the interface of
+our application -- something the separate binary avoids.
+
+* @mistydemeo [initial implementation](https://github.com/axodotdev/cargo-dist/pull/899)
+* @gankra [finalize implementation](https://github.com/axodotdev/cargo-dist/pull/906)
+
 
 ## Breaking Change
 
@@ -43,7 +64,7 @@ Changes include:
 * @mistydemeo [further update copyright year](https://github.com/axodotdev/cargo-dist/pull/884)
 * @tisokun [properly spell GitHub in CI yml](https://github.com/axodotdev/cargo-dist/pull/886)
 * @gankra [use mv instead of cp in installer.sh](https://github.com/axodotdev/cargo-dist/pull/894)
-
+* @nokazn [fix broken link in docs](https://github.com/axodotdev/cargo-dist/pull/900)
 
 # Version 0.12.2 (2024-04-04)
 
