@@ -286,7 +286,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     };
     let args = cargo_dist::InitArgs {
         yes: args.yes,
-        no_generate: args.no_generate,
+        no_generate: args.skip_generate,
         with_json_config: args.with_json_config.clone(),
         host: args.hosting.iter().map(|host| host.to_lib()).collect(),
     };
@@ -611,6 +611,19 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
         if !args.skip_init {
             let mut cmd = Cmd::new(new_path, "cargo dist init");
             cmd.arg("dist").arg("init");
+            // Forward shared arguments as necessary
+            if args.yes {
+                cmd.arg("--yes");
+            }
+            if args.skip_generate {
+                cmd.arg("--skip-generate");
+            }
+            if let Some(path) = &args.with_json_config {
+                cmd.arg(format!("--with-json-config={path}"));
+            }
+            for host in &args.hosting {
+                cmd.arg(format!("--hosting={host}"));
+            }
             cmd.run()?;
 
             return Ok(());
