@@ -560,10 +560,14 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     // If there's a specific version needed, random-access query it by tag,
     // because we always use the same tag format and this is fastest while
     // axoupdater needs to look over all releases to find the one.
-    if let Some(version) = &args.version {
-        let tag = format!("v{version}");
-        updater.configure_version_specifier(axoupdater::UpdateRequest::SpecificTag(tag));
-    }
+    let specifier = if let Some(version) = &args.version {
+        axoupdater::UpdateRequest::SpecificTag(format!("v{version}"))
+    } else if args.prerelease {
+        axoupdater::UpdateRequest::LatestMaybePrerelease
+    } else {
+        axoupdater::UpdateRequest::Latest
+    };
+    updater.configure_version_specifier(specifier);
 
     // Do we want to treat this as an error?
     // Or do we want to sniff if this was a Homebrew installation?

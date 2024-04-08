@@ -340,6 +340,12 @@ cargo dist update [OPTIONS]
 ```
 
 ### Options
+#### `--version <VERSION>`
+Upgrade to a specific version, instead of "latest"
+
+#### `--prerelease`
+Allow upgrading to prereleases when picking "latest"
+
 #### `--skip-init`
 Skip running `cargo dist init` after performing an upgrade
 

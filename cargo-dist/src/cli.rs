@@ -330,12 +330,15 @@ pub struct HelpMarkdownArgs {}
 
 #[derive(Args, Clone, Debug)]
 pub struct UpdateArgs {
-    /// Skip running `cargo dist init` after performing an upgrade
-    #[clap(long)]
-    #[clap(default_value_t = false)]
-    pub skip_init: bool,
+    /// Upgrade to a specific version, instead of "latest"
     #[clap(long)]
     pub version: Option<String>,
+    /// Allow upgrading to prereleases when picking "latest"
+    #[clap(long)]
+    pub prerelease: bool,
+    /// Skip running `cargo dist init` after performing an upgrade
+    #[clap(long)]
+    pub skip_init: bool,
 }
 
 /// A style of CI to generate

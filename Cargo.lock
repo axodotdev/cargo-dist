@@ -279,13 +279,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "axotag"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d888fac0b73e64cbdf36a743fc5a25af5ae955c357535cb420b389bf1e1a6c54"
+dependencies = [
+ "miette 7.2.0",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
 name = "axoupdater"
 version = "0.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01f40156112045abb1409e115d684306b9ff005399fd10ce2caf33bd800742b4"
+source = "git+https://github.com/axodotdev/axoupdater/?branch=verhandle#37ee7ae2fd49b5900911399f46d67d9f175f3e51"
 dependencies = [
  "axoasset 0.9.1",
  "axoprocess",
+ "axotag 0.2.0",
  "camino",
  "gazenot",
  "homedir",
@@ -433,7 +444,7 @@ dependencies = [
  "axocli",
  "axoprocess",
  "axoproject",
- "axotag",
+ "axotag 0.1.0",
  "axoupdater",
  "camino",
  "cargo-dist-schema",
