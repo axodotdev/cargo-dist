@@ -10,7 +10,7 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
 
-use crate::errors::Result;
+use crate::ProjectError;
 use crate::{
     errors::{DistError, DistResult},
     TargetTriple, METADATA_DIST,
@@ -1282,7 +1282,7 @@ pub(crate) fn parse_metadata_table(
 }
 
 /// Get the general info about the project (via axo-project)
-pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
+pub fn get_project() -> std::result::Result<axoproject::WorkspaceInfo, ProjectError> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
     let workspaces = axoproject::get_workspaces(&start_dir, None);
@@ -1311,15 +1311,14 @@ pub fn get_project() -> Result<axoproject::WorkspaceInfo> {
                 manifest_path: _,
                 cause,
             } => {
-                return Err(Report::new(cause)
-                    .wrap_err("We encountered an issue trying to read your workspace"))
+                return Err(ProjectError::ProjectBroken { cause });
             }
             // Ignore the missing case; iterate through to the next project type
             WorkspaceSearch::Missing(e) => missing.push(e),
         }
     }
 
-    Err(Report::new(DistError::ProjectMissing { sources: missing }))
+    Err(ProjectError::ProjectMissing { sources: missing })
 }
 
 /// Load a Cargo.toml into toml-edit form

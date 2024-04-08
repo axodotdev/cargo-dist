@@ -542,6 +542,13 @@ fn this_cargo_dist_provided_by_brew() -> bool {
 }
 
 async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
+    // If the user is asking us to run init, but it doesn't look like we can, error
+    // out immediately to avoid the user getting confused and thinking the update didn't work!
+    if !args.skip_init {
+        config::get_project()
+            .map_err(|cause| cargo_dist::errors::DistError::UpdateNotInWorkspace { cause })?;
+    }
+
     if this_cargo_dist_provided_by_brew() {
         eprintln!("Your copy of `cargo-dist` seems to have been installed via Homebrew.");
         eprintln!("Please run `brew upgrade cargo-dist` to update this copy.");
