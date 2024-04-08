@@ -269,11 +269,11 @@ dependencies = [
 
 [[package]]
 name = "axotag"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c829b645ea7cf09741466b895747c27918275a4b21e6bd57ccacdc512bc0c7f3"
+checksum = "d888fac0b73e64cbdf36a743fc5a25af5ae955c357535cb420b389bf1e1a6c54"
 dependencies = [
- "miette 5.10.0",
+ "miette 7.2.0",
  "semver",
  "thiserror",
 ]
