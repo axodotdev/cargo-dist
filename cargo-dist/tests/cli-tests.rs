@@ -1,5 +1,5 @@
 use std::{
-    env::consts::EXE_SUFFIX,
+    path::PathBuf,
     process::{Command, Output, Stdio},
 };
 
@@ -8,8 +8,7 @@ const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
 
 #[allow(dead_code)]
 mod gallery;
-use axoasset::LocalAsset;
-use camino::Utf8PathBuf;
+use axoupdater::{test::helpers::RuntestArgs, ReleaseSourceType};
 use gallery::*;
 
 fn format_outputs(output: &Output) -> String {
@@ -198,20 +197,6 @@ fn test_markdown_help() {
     assert!(output.status.success(), "{}", output.status);
 }
 
-static RECEIPT_TEMPLATE: &str = r#"{"binaries":["cargo-dist"],"install_prefix":"INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"0.10.0-prerelease.1"},"source":{"app_name":"cargo-dist","name":"cargo-dist","owner":"axodotdev","release_type":"github"},"version":"VERSION"}"#;
-
-fn install_receipt(version: &str, prefix: &Utf8PathBuf) -> String {
-    RECEIPT_TEMPLATE
-        .replace("INSTALL_PREFIX", &prefix.to_string().replace('\\', "\\\\"))
-        .replace("VERSION", version)
-}
-
-fn write_receipt(version: &str, prefix: &Utf8PathBuf, config_path: &Utf8PathBuf) {
-    let contents = install_receipt(version, prefix);
-    let receipt_name = config_path.join("cargo-dist-receipt.json");
-    LocalAsset::write_new_all(&contents, receipt_name).unwrap();
-}
-
 #[test]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
@@ -219,67 +204,44 @@ fn test_self_update() {
         .map(|s| !s.is_empty())
         .unwrap_or(false)
     {
-        let dist_home = Utf8PathBuf::from_path_buf(
-            homedir::get_my_home()
-                .unwrap()
-                .unwrap()
-                .join(".cargo")
-                .join("bin"),
-        )
-        .unwrap();
-        let dist_path = &dist_home.join(format!("cargo-dist{}", EXE_SUFFIX));
+        let mut args = RuntestArgs {
+            app_name: "cargo-dist".to_owned(),
+            package: "cargo-dist".to_owned(),
+            owner: "axodotdev".to_owned(),
+            bin: PathBuf::from(BIN),
+            binaries: vec!["cargo-dist".to_owned()],
+            args: vec![
+                "dist".to_owned(),
+                "update".to_owned(),
+                // init includes interactive components, so we
+                // can't safely run it within a noninteractive test
+                "--skip-init".to_owned(),
+            ],
+            release_type: ReleaseSourceType::GitHub,
+        };
 
-        #[cfg(target_family = "unix")]
-        let config_path = Utf8PathBuf::from_path_buf(
-            homedir::get_my_home()
-                .unwrap()
-                .unwrap()
-                .join(".config")
-                .join("cargo-dist"),
-        )
-        .unwrap();
-        #[cfg(target_family = "windows")]
-        let config_path = Utf8PathBuf::from_path_buf(
-            std::env::var("LOCALAPPDATA")
-                .map(std::path::PathBuf::from)
-                .unwrap()
-                .join("cargo-dist"),
-        )
-        .unwrap();
+        // First run with GitHub
+        let installed_bin = axoupdater::test::helpers::perform_runtest(&args);
+        assert!(installed_bin.exists());
+        let status = Command::new(&installed_bin)
+            .arg("--version")
+            .status()
+            .expect("binary didn't exist or --version returned nonzero");
+        assert!(status.success());
 
-        // Ensure we delete any previous copy that may exist
-        // at this path before we copy in our version.
-        if dist_path.exists() {
-            std::fs::remove_file(dist_path).unwrap();
-        }
-        assert!(!dist_path.exists());
+        // Remove the installed binary before running the next test
+        std::fs::remove_file(installed_bin).unwrap();
 
-        // Install to the home directory
-        std::fs::copy(BIN, dist_path).unwrap();
-
-        // Create a fake install receipt
-        // We lie about being a very old version so we always
-        // consider upgrading to something.
-        write_receipt("0.5.0", &dist_home, &config_path);
-
-        let output = Command::new(dist_path)
-            .arg("dist")
-            .arg("selfupdate")
-            // init includes interactive components, so we
-            // can't safely run it within a noninteractive test
-            .arg("--skip-init")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .output()
-            .unwrap();
-
-        let out_str = String::from_utf8_lossy(&output.stdout);
-        let err_str = String::from_utf8_lossy(&output.stderr);
-
-        assert!(
-            output.status.success(),
-            "status code: {}, stdout: {out_str}; stderr: {err_str}",
-            output.status
-        );
+        // Then rerun with Axo; this is in one function because
+        // they touch the same global files and can't happen
+        // in parallel.
+        args.release_type = ReleaseSourceType::Axo;
+        let installed_bin = axoupdater::test::helpers::perform_runtest(&args);
+        assert!(installed_bin.exists());
+        let status = Command::new(&installed_bin)
+            .arg("--version")
+            .status()
+            .expect("binary didn't exist or --version returned nonzero");
+        assert!(status.success());
     }
 }
