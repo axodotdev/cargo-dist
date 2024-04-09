@@ -309,7 +309,7 @@ pub enum DistError {
     UpdateFailed {},
 
     /// Trying to run cargo dist update in a random dir
-    #[error("`cargo dist update` needs to be run in a project")]
+    #[error("`cargo dist selfupdate` needs to be run in a project")]
     #[diagnostic(help(
         "If you just want to update cargo-dist and not your project, pass --skip-init"
     ))]
