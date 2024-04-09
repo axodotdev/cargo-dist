@@ -204,7 +204,7 @@ fn test_self_update() {
         .map(|s| !s.is_empty())
         .unwrap_or(false)
     {
-        let args = RuntestArgs {
+        let mut args = RuntestArgs {
             app_name: "cargo-dist".to_owned(),
             package: "cargo-dist".to_owned(),
             owner: "axodotdev".to_owned(),
@@ -220,6 +220,28 @@ fn test_self_update() {
             release_type: ReleaseSourceType::GitHub,
         };
 
-        axoupdater::test::helpers::perform_runtest(&args);
+        // First run with GitHub
+        let installed_bin = axoupdater::test::helpers::perform_runtest(&args);
+        assert!(installed_bin.exists());
+        let status = Command::new(&installed_bin)
+            .arg("--version")
+            .status()
+            .expect("binary didn't exist or --version returned nonzero");
+        assert!(status.success());
+
+        // Remove the installed binary before running the next test
+        std::fs::remove_file(installed_bin).unwrap();
+
+        // Then rerun with Axo; this is in one function because
+        // they touch the same global files and can't happen
+        // in parallel.
+        args.release_type = ReleaseSourceType::Axo;
+        let installed_bin = axoupdater::test::helpers::perform_runtest(&args);
+        assert!(installed_bin.exists());
+        let status = Command::new(&installed_bin)
+            .arg("--version")
+            .status()
+            .expect("binary didn't exist or --version returned nonzero");
+        assert!(status.success());
     }
 }
