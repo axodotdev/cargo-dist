@@ -55,7 +55,7 @@ semver = "1.0.22"
 newline-converter = "0.3.0"
 dialoguer = "0.11.0"
 sha2 = "0.10.6"
-minijinja = { version = "1.0.16", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
+minijinja = { version = "1.0.17", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.3"
 itertools = "0.12.1"
 cargo-wix = "0.3.8"
