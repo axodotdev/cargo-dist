@@ -329,8 +329,10 @@ install() {
         _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$_install_dir"
-        _env_script_path_expr="$_env_script_path"
+        # make sure to re-$HOME these paths, so that we don't needlessly
+        # pollute files with duplicate entries
+        _install_dir_expr=$(echo "$_install_dir" | sed "s,$HOME,\$HOME,")
+        _env_script_path_expr=$(echo "$_env_script_path" | sed "s,$HOME,\$HOME,")
     fi
 
     # Replace the temporary cargo home with the calculated one
