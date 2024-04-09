@@ -17,7 +17,7 @@ use cli::{
     PlanArgs,
 };
 use console::Term;
-use miette::IntoDiagnostic;
+use miette::{miette, IntoDiagnostic};
 
 use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs};
 
@@ -541,6 +541,27 @@ fn this_cargo_dist_provided_by_brew() -> bool {
     }
 }
 
+fn perform_init(path: &Utf8PathBuf, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
+    let mut cmd = Cmd::new(path, "cargo dist init");
+    cmd.arg("dist").arg("init");
+    // Forward shared arguments as necessary
+    if args.yes {
+        cmd.arg("--yes");
+    }
+    if args.skip_generate {
+        cmd.arg("--skip-generate");
+    }
+    if let Some(path) = &args.with_json_config {
+        cmd.arg(format!("--with-json-config={path}"));
+    }
+    for host in &args.hosting {
+        cmd.arg(format!("--hosting={host}"));
+    }
+    cmd.run()?;
+
+    Ok(())
+}
+
 async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
     // If the user is asking us to run init, but it doesn't look like we can, error
     // out immediately to avoid the user getting confused and thinking the update didn't work!
@@ -609,22 +630,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
         // At this point, we've either updated or bailed out;
         // we can proceed with the init if the user would like us to.
         if !args.skip_init {
-            let mut cmd = Cmd::new(new_path, "cargo dist init");
-            cmd.arg("dist").arg("init");
-            // Forward shared arguments as necessary
-            if args.yes {
-                cmd.arg("--yes");
-            }
-            if args.skip_generate {
-                cmd.arg("--skip-generate");
-            }
-            if let Some(path) = &args.with_json_config {
-                cmd.arg(format!("--with-json-config={path}"));
-            }
-            for host in &args.hosting {
-                cmd.arg(format!("--hosting={host}"));
-            }
-            cmd.run()?;
+            perform_init(&new_path, args)?;
 
             return Ok(());
         }
@@ -633,6 +639,15 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
             "No update necessary; {} is up to date.",
             env!("CARGO_PKG_VERSION")
         );
+    }
+
+    // We didn't update, but we can still check if an init
+    // is appropriate.
+    if !args.skip_init {
+        let my_path = Utf8PathBuf::from_path_buf(std::env::current_exe().into_diagnostic()?)
+            .map_err(|_| miette!("Unable to decode the path to cargo-dist itself"))?;
+        perform_init(&my_path, args)?;
+
         return Ok(());
     }
 
