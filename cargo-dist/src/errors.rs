@@ -38,6 +38,11 @@ pub enum DistError {
     #[diagnostic(transparent)]
     Gazenot(#[from] gazenot::error::GazenotError),
 
+    /// random gazenot error
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    Project(#[from] ProjectError),
+
     /// random string error
     #[error(transparent)]
     FromUtf8Error(#[from] std::string::FromUtf8Error),
@@ -260,14 +265,6 @@ pub enum DistError {
     #[error(transparent)]
     AxotagError(#[from] axotag::errors::TagError),
 
-    /// No workspace found from axoproject
-    #[error("No workspace found; either your project doesn't have a Cargo.toml/dist.toml, or we couldn't read it")]
-    ProjectMissing {
-        /// axoproject's error for the unidentified project
-        #[related]
-        sources: Vec<AxoprojectError>,
-    },
-
     /// An error running `git archive`
     #[error("We failed to generate a source tarball for your project")]
     #[diagnostic(help("This is probably not your fault, please file an issue!"))]
@@ -310,6 +307,37 @@ pub enum DistError {
     #[error("`cargo dist update` failed; the new version isn't in the place we expected")]
     #[diagnostic(help("This is probably not your fault, please file an issue!"))]
     UpdateFailed {},
+
+    /// Trying to run cargo dist update in a random dir
+    #[error("`cargo dist selfupdate` needs to be run in a project")]
+    #[diagnostic(help(
+        "If you just want to update cargo-dist and not your project, pass --skip-init"
+    ))]
+    UpdateNotInWorkspace {
+        /// The report about the missing workspace
+        #[diagnostic_source]
+        cause: ProjectError,
+    },
+}
+
+/// Errors related to finding the project
+#[derive(Debug, Error, Diagnostic)]
+pub enum ProjectError {
+    /// No workspace found from axoproject
+    #[error("No workspace found; either your project doesn't have a Cargo.toml/dist.toml, or we couldn't read it")]
+    ProjectMissing {
+        /// axoproject's error for the unidentified project
+        #[related]
+        sources: Vec<AxoprojectError>,
+    },
+
+    /// Found a workspace but it was malformed
+    #[error("We encountered an issue trying to read your workspace")]
+    ProjectBroken {
+        /// The cause
+        #[source]
+        cause: axoproject::errors::AxoprojectError,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

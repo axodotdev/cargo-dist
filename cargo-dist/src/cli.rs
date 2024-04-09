@@ -175,9 +175,9 @@ pub enum Commands {
     #[clap(disable_version_flag = true)]
     Host(HostArgs),
 
-    /// Performs a self-update, if a new version is available
+    /// Performs a self-update, if a new version is available, and then 'init'
     #[clap(disable_version_flag = true)]
-    Update(UpdateArgs),
+    Selfupdate(UpdateArgs),
 }
 
 #[derive(Args, Clone, Debug)]
@@ -239,6 +239,10 @@ impl ArtifactMode {
     }
 }
 
+// !!!!!!!!!!!!
+// HEY HEY YOU
+// !!!!!!!!!!!!
+// IF YOU ADD NEW FIELDS TO THIS MIRROR THEM TO UpdateArgs!!!
 #[derive(Args, Clone, Debug)]
 pub struct InitArgs {
     /// Automatically accept all recommended/default values
@@ -247,9 +251,9 @@ pub struct InitArgs {
     /// during the interactive prompts.
     #[clap(long, short)]
     pub yes: bool,
-    /// Don't automatically invoke 'cargo dist generate' at the end
-    #[clap(long, alias = "no-generate-ci")]
-    pub no_generate: bool,
+    /// Skip running 'cargo dist generate' at the end
+    #[clap(long, alias = "no-generate-ci", alias = "no-generate")]
+    pub skip_generate: bool,
     /// A path to a json file containing values to set in workspace.metadata.dist
     /// and package.metadata.dist, for building tools that edit these configs.
     ///
@@ -328,12 +332,46 @@ pub struct LinkageArgs {
 #[derive(Args, Clone, Debug)]
 pub struct HelpMarkdownArgs {}
 
+// !!!!!!!!!!!!
+// HEY HEY YOU
+// !!!!!!!!!!!!
+// IF YOU ADD NEW FIELDS TO THIS CONSIDER MIRRORING THEM TO InitArgs!!!
 #[derive(Args, Clone, Debug)]
 pub struct UpdateArgs {
-    /// Skip running `cargo dist init` after performing an upgrade
+    /// Upgrade to a specific version, instead of "latest"
     #[clap(long)]
-    #[clap(default_value_t = false)]
+    pub version: Option<String>,
+    /// Allow upgrading to prereleases when picking "latest"
+    #[clap(long)]
+    pub prerelease: bool,
+    /// Automatically accept all recommended/default values
+    ///
+    /// This is equivalent to just mashing ENTER over and over
+    /// during the interactive prompts.
+    #[clap(long, short)]
+    pub yes: bool,
+    /// Skip running 'cargo dist init' after performing an upgrade
+    #[clap(long)]
     pub skip_init: bool,
+    /// Skip running 'cargo dist generate' at the end
+    #[clap(long, alias = "no-generate-ci", alias = "no-generate")]
+    pub skip_generate: bool,
+    /// A path to a json file containing values to set in workspace.metadata.dist
+    /// and package.metadata.dist, for building tools that edit these configs.
+    ///
+    /// This is the same toml => json format that `cargo metadata` produces
+    /// when reporting `workspace.metadata.dist`. There is some additional
+    /// hierarchy for specifying which values go to which packages, but this
+    /// is currently intentionally undocumented to give us some flexibility to change it.
+    #[clap(long)]
+    pub with_json_config: Option<Utf8PathBuf>,
+    /// releases hosting backends we want to support
+    ///
+    /// If left unspecified we will use the value in [workspace.metadata.dist].
+    /// (If no such value exists we will use the one "native" to your CI provider)
+    /// `cargo dist init` will persist the values you pass to that location.
+    #[clap(long, value_delimiter(','))]
+    pub hosting: Vec<HostingStyle>,
 }
 
 /// A style of CI to generate
@@ -455,4 +493,14 @@ pub enum HostingStyle {
     Github,
     /// Host on Axo Releases ("Abyss")
     Axodotdev,
+}
+
+impl std::fmt::Display for HostingStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            HostingStyle::Github => "github",
+            HostingStyle::Axodotdev => "axodotdev",
+        };
+        string.fmt(f)
+    }
 }

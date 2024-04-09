@@ -17,7 +17,7 @@ use cli::{
     PlanArgs,
 };
 use console::Term;
-use miette::IntoDiagnostic;
+use miette::{miette, IntoDiagnostic};
 
 use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs};
 
@@ -52,7 +52,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::ManifestSchema(args) => cmd_manifest_schema(config, args),
         Commands::Build(args) => cmd_build(config, args),
         Commands::Host(args) => cmd_host(config, args),
-        Commands::Update(args) => runtime.block_on(cmd_update(config, args)),
+        Commands::Selfupdate(args) => runtime.block_on(cmd_update(config, args)),
     }
 }
 
@@ -286,7 +286,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     };
     let args = cargo_dist::InitArgs {
         yes: args.yes,
-        no_generate: args.no_generate,
+        no_generate: args.skip_generate,
         with_json_config: args.with_json_config.clone(),
         host: args.hosting.iter().map(|host| host.to_lib()).collect(),
     };
@@ -541,7 +541,35 @@ fn this_cargo_dist_provided_by_brew() -> bool {
     }
 }
 
+fn perform_init(path: &Utf8PathBuf, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
+    let mut cmd = Cmd::new(path, "cargo dist init");
+    cmd.arg("dist").arg("init");
+    // Forward shared arguments as necessary
+    if args.yes {
+        cmd.arg("--yes");
+    }
+    if args.skip_generate {
+        cmd.arg("--skip-generate");
+    }
+    if let Some(path) = &args.with_json_config {
+        cmd.arg(format!("--with-json-config={path}"));
+    }
+    for host in &args.hosting {
+        cmd.arg(format!("--hosting={host}"));
+    }
+    cmd.run()?;
+
+    Ok(())
+}
+
 async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
+    // If the user is asking us to run init, but it doesn't look like we can, error
+    // out immediately to avoid the user getting confused and thinking the update didn't work!
+    if !args.skip_init {
+        config::get_project()
+            .map_err(|cause| cargo_dist::errors::DistError::UpdateNotInWorkspace { cause })?;
+    }
+
     if this_cargo_dist_provided_by_brew() {
         eprintln!("Your copy of `cargo-dist` seems to have been installed via Homebrew.");
         eprintln!("Please run `brew upgrade cargo-dist` to update this copy.");
@@ -549,6 +577,19 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     }
 
     let mut updater = AxoUpdater::new_for("cargo-dist");
+
+    // If there's a specific version needed, random-access query it by tag,
+    // because we always use the same tag format and this is fastest while
+    // axoupdater needs to look over all releases to find the one.
+    let specifier = if let Some(version) = &args.version {
+        axoupdater::UpdateRequest::SpecificTag(format!("v{version}"))
+    } else if args.prerelease {
+        axoupdater::UpdateRequest::LatestMaybePrerelease
+    } else {
+        axoupdater::UpdateRequest::Latest
+    };
+    updater.configure_version_specifier(specifier);
+
     // Do we want to treat this as an error?
     // Or do we want to sniff if this was a Homebrew installation?
     if updater.load_receipt().is_err() {
@@ -570,26 +611,26 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
             result.new_version
         );
 
+        // Check that the binary was actually created
+        let bin_name = format!("cargo-dist{}", std::env::consts::EXE_SUFFIX);
+        let mut new_path = result.install_prefix.join("bin").join(&bin_name);
+
+        // Install prefix could be a flat prefix with no "bin";
+        // try that next
+        if !new_path.exists() {
+            new_path = result.install_prefix.join(&bin_name);
+            // Well crap, nothing got installed in the path
+            // we wanted it to go. Error out instead of
+            // proceeding.
+            if !new_path.exists() {
+                return Err(errors::DistError::UpdateFailed {}).into_diagnostic();
+            }
+        }
+
         // At this point, we've either updated or bailed out;
         // we can proceed with the init if the user would like us to.
         if !args.skip_init {
-            let mut new_path = result.install_prefix.join("bin").join("cargo-dist");
-
-            // Install prefix could be a flat prefix with no "bin";
-            // try that next
-            if !new_path.exists() {
-                new_path = result.install_prefix.join("cargo-dist");
-                // Well crap, nothing got installed in the path
-                // we wanted it to go. Error out instead of
-                // proceeding.
-                if !new_path.exists() {
-                    return Err(errors::DistError::UpdateFailed {}).into_diagnostic();
-                }
-            }
-
-            let mut cmd = Cmd::new(new_path, "cargo dist init");
-            cmd.arg("dist").arg("init");
-            cmd.run()?;
+            perform_init(&new_path, args)?;
 
             return Ok(());
         }
@@ -598,6 +639,15 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
             "No update necessary; {} is up to date.",
             env!("CARGO_PKG_VERSION")
         );
+    }
+
+    // We didn't update, but we can still check if an init
+    // is appropriate.
+    if !args.skip_init {
+        let my_path = Utf8PathBuf::from_path_buf(std::env::current_exe().into_diagnostic()?)
+            .map_err(|_| miette!("Unable to decode the path to cargo-dist itself"))?;
+        perform_init(&my_path, args)?;
+
         return Ok(());
     }
 
