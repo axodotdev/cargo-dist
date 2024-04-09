@@ -212,7 +212,7 @@ fn test_self_update() {
             binaries: vec!["cargo-dist".to_owned()],
             args: vec![
                 "dist".to_owned(),
-                "update".to_owned(),
+                "selfupdate".to_owned(),
                 // init includes interactive components, so we
                 // can't safely run it within a noninteractive test
                 "--skip-init".to_owned(),
