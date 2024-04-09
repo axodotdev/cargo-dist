@@ -280,12 +280,13 @@ dependencies = [
 
 [[package]]
 name = "axoupdater"
-version = "0.3.5"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af1b0e2e0db3801ead3402564783c751048c823a7e38ea24a57f7306d6a4aa85"
+checksum = "c7306cf5b4c3e7037d27ed5e9f7dc1b24d9941c77601e1e24c7d87839df6d8a2"
 dependencies = [
  "axoasset 0.9.1",
  "axoprocess",
+ "axotag",
  "camino",
  "gazenot",
  "homedir",
