@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.13.0 (2024-04-09)
+
 This releases introduces a 'selfupdate' command, using cargo-dist's new updater support.
 
 It also includes several bugfixes and a technically-breaking-change to the dist-manifest feature.
