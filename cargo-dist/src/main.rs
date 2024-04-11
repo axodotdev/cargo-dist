@@ -590,6 +590,15 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     };
     updater.configure_version_specifier(specifier);
 
+    // This uses debug assertions because we want to avoid this
+    // being compiled into the release build; this is purely for
+    // testing.
+    #[cfg(debug_assertions)]
+    if let Ok(installer_path) = std::env::var("CARGO_DIST_USE_INSTALLER_AT_PATH") {
+        let path = Utf8PathBuf::from(installer_path);
+        updater.configure_installer_path(path);
+    }
+
     // Do we want to treat this as an error?
     // Or do we want to sniff if this was a Homebrew installation?
     if updater.load_receipt().is_err() {
