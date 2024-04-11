@@ -82,6 +82,8 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
       - uses: swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}
       # Run the tests/doctests (default features)
       - run: cargo test --workspace
         env:
