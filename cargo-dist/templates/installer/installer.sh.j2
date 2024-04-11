@@ -293,6 +293,14 @@ install() {
         _install_home="$CARGO_HOME"
         _install_dir="$CARGO_HOME/bin"
         _env_script_path="$CARGO_HOME/env"
+
+        # If we need to override the above
+        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ] && [ "${CARGO_DIST_FORCE_INSTALL_DIR}" != "$CARGO_HOME" ]; then
+            _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
+            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        fi
+
         # If CARGO_HOME was set but it ended up being the default $HOME-based path,
         # then keep things late-bound. Otherwise bake the value for safety.
         # This is what rustup does, and accurately reproducing it is useful.
@@ -314,6 +322,17 @@ install() {
         _env_script_path="$HOME/.cargo/env"
         _install_dir_expr='$HOME/.cargo/bin'
         _env_script_path_expr='$HOME/.cargo/env'
+
+        # If we need to override the above
+        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ] && [ "${CARGO_DIST_FORCE_INSTALL_DIR}" != "$HOME/.cargo" ]; then
+            _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
+            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+            # For these two, if the new value contains $HOME, make
+            # sure to `sed` the $HOME expression back into the expr
+            _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/bin" | sed "s,$HOME,\$HOME,")"
+            _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
+        fi
     else
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
@@ -325,6 +344,15 @@ install() {
         _env_script_path="$HOME/{{ install_path.subdir }}/env"
         _install_dir_expr='$HOME/{{ install_path.subdir }}'
         _env_script_path_expr='$HOME/{{ install_path.subdir }}/env'
+
+        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+            # For these two, if the new value contains $HOME, make
+            # sure to `sed` the $HOME expression back into the expr
+            _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR" | sed "s,$HOME,\$HOME,")"
+            _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
+        fi
     else
         err "could not find your HOME dir to install binaries to"
     fi
@@ -336,21 +364,20 @@ install() {
         _env_script_path="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}/env"
         _install_dir_expr="$_install_dir"
         _env_script_path_expr="$_env_script_path"
+
+        # Override if necessary
+        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+            _install_dir_expr="$_install_dir"
+            _env_script_path_expr="$_env_script_path"
+        fi
     else
         err "could not find your {{ install_path.env_key }} dir to install binaries to"
     fi
 {% else %}
     {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {% endif %}
-    # ...ignoring all of the above, if the user asked us to completely override
-    # those choices and use a specified directory, then pick that now
-    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
-        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$_install_dir"
-        _env_script_path_expr="$_env_script_path"
-    fi
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
