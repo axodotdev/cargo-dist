@@ -300,19 +300,19 @@ install() {
         _env_script_path="$HOME/My Axolotlsay Documents/bin/env"
         _install_dir_expr='$HOME/My Axolotlsay Documents/bin'
         _env_script_path_expr='$HOME/My Axolotlsay Documents/bin/env'
+
+        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+            # For these two, if the new value contains $HOME, make
+            # sure to `sed` the $HOME expression back into the expr
+            _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR" | sed "s,$HOME,\$HOME,")"
+            _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
+        fi
     else
         err "could not find your HOME dir to install binaries to"
     fi
 
-    # ...ignoring all of the above, if the user asked us to completely override
-    # those choices and use a specified directory, then pick that now
-    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
-        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$_install_dir"
-        _env_script_path_expr="$_env_script_path"
-    fi
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
