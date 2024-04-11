@@ -290,13 +290,11 @@ install() {
 {% if install_path.kind == "CargoHome" %}
     # first try CARGO_HOME, then fallback to HOME
     if [ -n "${CARGO_HOME:-}" ]; then
-        _install_home="$CARGO_HOME"
         _install_dir="$CARGO_HOME/bin"
         _env_script_path="$CARGO_HOME/env"
 
         # If we need to override the above
         if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ] && [ "${CARGO_DIST_FORCE_INSTALL_DIR}" != "$CARGO_HOME" ]; then
-            _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
             _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
             _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         fi
@@ -317,7 +315,6 @@ install() {
             _env_script_path_expr="$_env_script_path"
         fi
     elif [ -n "${HOME:-}" ]; then
-        _install_home="$HOME/.cargo"
         _install_dir="$HOME/.cargo/bin"
         _env_script_path="$HOME/.cargo/env"
         _install_dir_expr='$HOME/.cargo/bin'
@@ -325,7 +322,6 @@ install() {
 
         # If we need to override the above
         if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ] && [ "${CARGO_DIST_FORCE_INSTALL_DIR}" != "$HOME/.cargo" ]; then
-            _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
             _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
             _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
             # For these two, if the new value contains $HOME, make
