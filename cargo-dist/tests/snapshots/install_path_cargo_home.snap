@@ -467,6 +467,8 @@ add_install_dir_to_path() {
             # (This will also create the rcfile if it doesn't exist)
             if [ -f "$_env_script_path" ]; then
                 say_verbose "adding $_robust_line to $_target"
+                # prepend an extra newline in case the user's file is missing a trailing one
+                ensure echo "" >> "$_target"
                 ensure echo "$_robust_line" >> "$_target"
                 return 1
             fi
