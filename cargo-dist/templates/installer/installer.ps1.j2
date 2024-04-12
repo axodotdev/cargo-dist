@@ -206,12 +206,22 @@ function Invoke-Installer($bin_paths, $platforms) {
   }
 
   $dest_dir = Join-Path $root "bin"
+
+  # If we need to override the above
+  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+    $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+  }
 {% elif install_path.kind == "HomeSubdir" %}
   # Install to this subdir of the user's home dir
   $dest_dir = if (($base_dir = $HOME)) {
     Join-Path $base_dir "{{ install_path.subdir }}"
   } else {
     throw "ERROR: could not find your HOME dir to install binaries to"
+  }
+
+  # If we need to override the above
+  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+    $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }
 {% elif install_path.kind == "EnvSubdir" %}
   # Install to this subdir of the user's {{ install_path.env_key }} dir
@@ -220,14 +230,14 @@ function Invoke-Installer($bin_paths, $platforms) {
   } else {
     throw "ERROR: could not find your {{ install_path.env_key }} dir to install binaries to"
   }
+
+  # If we need to override the above
+  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+    $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+  }
 {% else %}
   {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {% endif %}
-  # ...ignoring all of the above, if the user asked us to completely override
-  # those choices and use a specified directory, then pick that now
-  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-    $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
-  }
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $dest_dir.replace("\", "\\"))
