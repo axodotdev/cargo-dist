@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.13.1 (2024-04-12)
+
 This is a release that adds some improvements to the logic for updating PATH and rcfiles in installers.
 
 ## Fixes
