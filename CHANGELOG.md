@@ -1,6 +1,13 @@
 # Unreleased
 
-Nothing Yet!
+This is a release that adds some improvements to the logic for updating PATH and rcfiles in installers.
+
+## Fixes
+
+* @gankra [don't corrupt rcfiles that are missing a trailing newline](https://github.com/axodotdev/cargo-dist/pull/917)
+* @mistydemeo [when invoking shell installer from updater, append /bin and use HOME vars more precisely](https://github.com/axodotdev/cargo-dist/pull/928)
+* @mistydemeo [as above, but for powershell](https://github.com/axodotdev/cargo-dist/pull/929)
+* @mistydemeo [use target-specific keys to fix swatinem rust cache](https://github.com/axodotdev/cargo-dist/pull/927/)
 
 
 # Version 0.13.0 (2024-04-09)
