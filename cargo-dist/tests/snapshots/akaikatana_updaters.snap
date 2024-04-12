@@ -1094,11 +1094,11 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   $dest_dir = Join-Path $root "bin"
 
-  # ...ignoring all of the above, if the user asked us to completely override
-  # those choices and use a specified directory, then pick that now
+  # If we need to override the above
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
   }
+
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $dest_dir.replace("\", "\\"))
