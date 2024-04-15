@@ -24,7 +24,7 @@ cargo-projects = ["guppy", "semver"]
 npm-projects = ["oro-common", "oro-package-spec", "node-semver"]
 
 [dependencies]
-axoasset = { version = "0.9.1", default-features = false, features = ["json-serde", "toml-edit", "toml-serde"] }
+axoasset = { version = ">= 0.7.0, < 0.10.0", default-features = false, features = ["json-serde", "toml-edit", "toml-serde"] }
 camino = { version = "1.1.4", default-features = true, features = ["serde1"] }
 miette = "7.2.0"
 guppy = { version = "0.17.5", optional = true }
