@@ -1,3 +1,7 @@
+# Version 0.7.1 (2024-04-16)
+
+* Updates several dependencies, including a relaxed axoasset range. Also removes the proof-of-concept axoasset binary.
+
 # Version 0.7.0 (2024-02-16)
 
 * Updates several dependencies, including a breaking change to miette.
