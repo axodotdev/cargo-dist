@@ -157,51 +157,14 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "axoasset"
-version = "0.6.2"
+version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9959bd1b21d20e8634d0ba48621a5a988deda99bbe2a383645fc006a9feb757"
-dependencies = [
- "camino",
- "image",
- "miette 5.10.0",
- "mime",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror",
- "url",
- "walkdir",
-]
-
-[[package]]
-name = "axoasset"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06c30b1a803211e8a9dc20ea8e496e3f8c83f7be64e208fe922a80381919c76c"
-dependencies = [
- "camino",
- "image",
- "miette 7.2.0",
- "mime",
- "serde",
- "serde_json",
- "thiserror",
- "toml",
- "toml_edit 0.22.5",
- "url",
- "walkdir",
-]
-
-[[package]]
-name = "axoasset"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e05853b0d9abfab8e7532cad0d07ec396dd95c1a81926b49ab3cfa121a9d8d6"
+checksum = "6d492e2a60fbacf2154ee58fd4bc3dd7385a5febf10fef6145924fd3117cd920"
 dependencies = [
  "camino",
  "flate2",
  "image",
- "miette 7.2.0",
+ "miette",
  "mime",
  "reqwest",
  "serde",
@@ -226,7 +189,7 @@ dependencies = [
  "backtrace",
  "backtrace-ext",
  "console",
- "miette 7.2.0",
+ "miette",
  "serde",
  "serde_json",
  "thiserror",
@@ -240,24 +203,22 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4de46920588aef95658797996130bacd542436aee090084646521260a74bda7d"
 dependencies = [
- "miette 7.2.0",
+ "miette",
  "thiserror",
  "tracing",
 ]
 
 [[package]]
 name = "axoproject"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "436cdd713df7b642068f5d125efaaf0f1126931ada242f77c1e6410f8ad94408"
+checksum = "d1a159bdbe9423891114563e07bd5158ba964dfc75c08015e757844972127850"
 dependencies = [
- "axoasset 0.7.0",
+ "axoasset",
  "camino",
- "clap",
- "console",
  "guppy",
  "itertools 0.12.1",
- "miette 7.2.0",
+ "miette",
  "parse-changelog",
  "pathdiff",
  "semver",
@@ -273,24 +234,24 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d888fac0b73e64cbdf36a743fc5a25af5ae955c357535cb420b389bf1e1a6c54"
 dependencies = [
- "miette 7.2.0",
+ "miette",
  "semver",
  "thiserror",
 ]
 
 [[package]]
 name = "axoupdater"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04daf26062f90764242d0e144ad52d1952cb0d02ef7ce3ffbb9127b4f1340f36"
+checksum = "639ef3c97d1bebfb42f94739036fbe3e10ef0056d2f8d5ea288bf4ad5f73a5e6"
 dependencies = [
- "axoasset 0.9.1",
+ "axoasset",
  "axoprocess",
  "axotag",
  "camino",
  "gazenot",
  "homedir",
- "miette 7.2.0",
+ "miette",
  "reqwest",
  "serde",
  "temp-dir",
@@ -430,7 +391,7 @@ dependencies = [
 name = "cargo-dist"
 version = "0.13.1"
 dependencies = [
- "axoasset 0.9.1",
+ "axoasset",
  "axocli",
  "axoprocess",
  "axoproject",
@@ -453,7 +414,7 @@ dependencies = [
  "insta",
  "itertools 0.12.1",
  "mach_object",
- "miette 7.2.0",
+ "miette",
  "minijinja",
  "newline-converter",
  "octocrab",
@@ -632,12 +593,6 @@ name = "clap_lex"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98cc8fbded0c607b7ba9dd60cd98df59af97e84d24e49c8557331cfc26d301ce"
-
-[[package]]
-name = "color_quant"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
 
 [[package]]
 name = "colorchoice"
@@ -1004,14 +959,14 @@ dependencies = [
 
 [[package]]
 name = "gazenot"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4af0b211d3e04212573ab261d6f5b83146f85ff0788ea199921447b15b50281"
+checksum = "d48f72c27df37233564f3050f767b1b77fff511143c7428a64b929f279b7a558"
 dependencies = [
- "axoasset 0.6.2",
+ "axoasset",
  "backon",
  "camino",
- "miette 7.2.0",
+ "miette",
  "reqwest",
  "schemars",
  "serde",
@@ -1385,14 +1340,12 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.24.7"
+version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f3dfdbdd72063086ff443e297b61695500514b1e41095b6fb9a5ab48a70a711"
+checksum = "fd54d660e773627692c524beaad361aca785a4f9f5730ce91f42aabe5bce3d11"
 dependencies = [
  "bytemuck",
  "byteorder",
- "color_quant",
- "num-rational",
  "num-traits",
 ]
 
@@ -1662,18 +1615,6 @@ dependencies = [
 
 [[package]]
 name = "miette"
-version = "5.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59bb584eaeeab6bd0226ccf3509a69d7936d148cf3d036ad350abe35e8c6856e"
-dependencies = [
- "miette-derive 5.10.0",
- "once_cell",
- "thiserror",
- "unicode-width",
-]
-
-[[package]]
-name = "miette"
 version = "7.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4edc8853320c2a0dab800fbda86253c8938f6ea88510dc92c5f1ed20e794afc1"
@@ -1681,7 +1622,7 @@ dependencies = [
  "backtrace",
  "backtrace-ext",
  "cfg-if",
- "miette-derive 7.2.0",
+ "miette-derive",
  "owo-colors",
  "supports-color",
  "supports-hyperlinks",
@@ -1690,17 +1631,6 @@ dependencies = [
  "textwrap",
  "thiserror",
  "unicode-width",
-]
-
-[[package]]
-name = "miette-derive"
-version = "5.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49e7bc1560b95a3c4a25d03de42fe76ca718ab92d1a22a55b9b4cf67b3ae635c"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.49",
 ]
 
 [[package]]
@@ -1823,17 +1753,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-rational"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0638a1c9d0a3c0914158145bc76cff373a75a627e6ecbfb71cbe6f453a5a19b0"
-dependencies = [
- "autocfg",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1949,15 +1868,14 @@ dependencies = [
 
 [[package]]
 name = "parse-changelog"
-version = "0.6.4"
+version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c13b55711970287dd19a1c982f70f499008c2b9a7386c174506f3388b46bd3d"
+checksum = "a57cb55d1ebeee252a416a55e95eaca8d666bee32dcd2313f26380eb0abe375b"
 dependencies = [
  "anyhow",
  "indexmap 2.2.3",
  "lexopt",
  "memchr",
- "once_cell",
  "regex",
  "serde",
  "serde_derive",
