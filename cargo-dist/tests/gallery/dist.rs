@@ -679,6 +679,23 @@ impl DistResult {
             }
             std::fs::create_dir_all(&tempdir).unwrap();
 
+            let expected_bin_dir = Utf8PathBuf::from(expected_bin_dir);
+            let bin_dir = tempdir.join(&expected_bin_dir);
+            // Test generating fake old binaries within the older
+            // flat directory structure, allowing us to simulate
+            // performing a migration
+            if !expected_bin_dir
+                .components()
+                .any(|d| d.as_str() == ".cargo")
+            {
+                let root = bin_dir.parent().unwrap();
+                std::fs::create_dir_all(root).unwrap();
+                for bin_name in ctx.repo.bins {
+                    let old_path = root.join(bin_name);
+                    std::fs::File::create(old_path).unwrap();
+                }
+            }
+
             // Run the installer script with:
             //
             // HOME="{tempdir}"            (for install-path=~/... and install-path=CARGO_HOME)
@@ -700,8 +717,6 @@ impl DistResult {
                 tempdir.join(".zshrc"),
             ];
             let receipt_file = tempdir.join(format!(".config/{app_name}/{app_name}-receipt.json"));
-            let expected_bin_dir = Utf8PathBuf::from(expected_bin_dir);
-            let bin_dir = tempdir.join(expected_bin_dir);
             let env_dir = bin_dir.parent().unwrap();
             let env_script = env_dir.join("env");
 
