@@ -246,9 +246,41 @@ download_binary_and_run_installer() {
     return "$_retval"
 }
 
+# Provides a way to migrate from an old "flat" layout to the new
+# FHS-style organized layout.
+migrate_install_dir() {
+    local _old_root="$1"
+    local _new_root="$2"
+    local _bins="$3"
+
+    ensure mkdir -p "$_new_root"
+    # Check for a previous installation that's in the root
+    # instead of the root plus /bin; this may be left over
+    # from before we migrated to always use FHS-style layouts.
+    for _bin_name in $_bins; do
+        local _old_path="$_old_root/$_bin_name"
+        local _new_path="$_new_root/$_bin_name"
+        # We move this into the new path expecting them
+        # to be overwritten later. Doing that, instead of
+        # just deleting them now, guards against the
+        # possibility that the install fails: if that were
+        # to happen, we'd have deleted them without
+        # producing new copies, leaving the user without
+        # any binaries left at all.
+        if [ -f "$_old_path" ]; then
+            ensure mv "$_old_path" "$_new_path"
+            say_verbose "Migrated $_old_path to $_new_path"
+        fi
+    done
+}
+
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
 # shellcheck disable=SC2016
 install() {
+    # Assign parameters immediately, before doing anything else
+    local _src_dir="$1"
+    local _bins="$2"
+
     # This code needs to both compute certain paths for itself to write to, and
     # also write them to shell/rc files so that they can look them up to e.g.
     # add them to PATH. This requires an active distinction between paths
@@ -296,19 +328,24 @@ install() {
     # Install to this subdir of the user's home dir
     # In this case we want to be late-bound, as $HOME is reliable/nice.
     if [ -n "${HOME:-}" ]; then
-        _install_dir="$HOME/.axolotlsay"
+        _install_root="$HOME/.axolotlsay"
+        _install_dir="$HOME/.axolotlsay/bin"
         _env_script_path="$HOME/.axolotlsay/env"
-        _install_dir_expr='$HOME/.axolotlsay'
+        _install_dir_expr='$HOME/.axolotlsay/bin'
         _env_script_path_expr='$HOME/.axolotlsay/env'
 
         if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+            _install_root="$CARGO_DIST_FORCE_INSTALL_DIR"
+            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
             _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
             # For these two, if the new value contains $HOME, make
             # sure to `sed` the $HOME expression back into the expr
             _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR" | sed "s,$HOME,\$HOME,")"
             _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
         fi
+
+        # Migrate from the old flat directory path to the new location
+        migrate_install_dir "$_install_root" "$_install_dir" "$_bins"
     else
         err "could not find your HOME dir to install binaries to"
     fi
@@ -321,8 +358,6 @@ install() {
     ensure mkdir -p "$_install_dir"
 
     # copy all the binaries to the install dir
-    local _src_dir="$1"
-    local _bins="$2"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
         ensure mv "$_bin" "$_install_dir"

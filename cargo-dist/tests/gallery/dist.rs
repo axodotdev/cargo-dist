@@ -701,15 +701,8 @@ impl DistResult {
             ];
             let receipt_file = tempdir.join(format!(".config/{app_name}/{app_name}-receipt.json"));
             let expected_bin_dir = Utf8PathBuf::from(expected_bin_dir);
-            let bin_dir = tempdir.join(&expected_bin_dir);
-            let env_dir = if expected_bin_dir
-                .components()
-                .any(|d| d.as_str() == ".cargo")
-            {
-                bin_dir.parent().unwrap()
-            } else {
-                &bin_dir
-            };
+            let bin_dir = tempdir.join(expected_bin_dir);
+            let env_dir = bin_dir.parent().unwrap();
             let env_script = env_dir.join("env");
 
             assert!(bin_dir.exists(), "bin dir wasn't created");
