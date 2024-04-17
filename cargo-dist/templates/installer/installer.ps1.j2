@@ -120,6 +120,18 @@ function Get-TargetTriple() {
   }
 }
 
+# Provides a way to migrate from an old "flat" layout to the new
+# FHS-style organized layout.
+function MigrateInstallDir($old_root, $new_root, $bin_paths) {
+  foreach ($bin_name in $bin_paths) {
+    $bin_path = "$old_root\$bin_name"
+      if (Test-Path -Path "$bin_path") {
+        Copy-Item "$bin_path" -Destination "$new_root"
+        Write-Verbose "Migrated $bin_path to $new_root\$bin_name"
+      }
+  }
+}
+
 function Download($download_url, $platforms) {
   $arch = Get-TargetTriple
 
@@ -213,7 +225,7 @@ function Invoke-Installer($bin_paths, $platforms) {
   }
 {% elif install_path.kind == "HomeSubdir" %}
   # Install to this subdir of the user's home dir
-  $dest_dir = if (($base_dir = $HOME)) {
+  $root = if (($base_dir = $HOME)) {
     Join-Path $base_dir "{{ install_path.subdir }}"
   } else {
     throw "ERROR: could not find your HOME dir to install binaries to"
@@ -221,11 +233,15 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   # If we need to override the above
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-    $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    $root = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }
+
+  $dest_dir = Join-Path $root "bin"
+
+  MigrateInstallDir -old_root $root -new_root $dest_dir -bin_paths $bin_paths
 {% elif install_path.kind == "EnvSubdir" %}
   # Install to this subdir of the user's {{ install_path.env_key }} dir
-  $dest_dir = if (($base_dir = $env:{{ install_path.env_key }})) {
+  $root = if (($base_dir = $env:{{ install_path.env_key }})) {
     Join-Path $base_dir "{{ install_path.subdir }}"
   } else {
     throw "ERROR: could not find your {{ install_path.env_key }} dir to install binaries to"
@@ -233,8 +249,12 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   # If we need to override the above
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-    $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    $root = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }
+
+  $dest_dir = Join-Path $root "bin"
+
+  MigrateInstallDir -old_root $root -new_root $dest_dir -bin_paths $bin_paths
 {% else %}
   {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {% endif %}

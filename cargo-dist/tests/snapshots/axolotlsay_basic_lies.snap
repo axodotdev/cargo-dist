@@ -1031,6 +1031,18 @@ function Get-TargetTriple() {
   }
 }
 
+# Provides a way to migrate from an old "flat" layout to the new
+# FHS-style organized layout.
+function MigrateInstallDir($old_root, $new_root, $bin_paths) {
+  foreach ($bin_name in $bin_paths) {
+    $bin_path = "$old_root\$bin_name"
+      if (Test-Path -Path "$bin_path") {
+        Copy-Item "$bin_path" -Destination "$new_root"
+        Write-Verbose "Migrated $bin_path to $new_root\$bin_name"
+      }
+  }
+}
+
 function Download($download_url, $platforms) {
   $arch = Get-TargetTriple
 

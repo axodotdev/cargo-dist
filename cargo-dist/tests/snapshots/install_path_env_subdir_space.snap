@@ -1007,6 +1007,18 @@ function Get-TargetTriple() {
   }
 }
 
+# Provides a way to migrate from an old "flat" layout to the new
+# FHS-style organized layout.
+function MigrateInstallDir($old_root, $new_root, $bin_paths) {
+  foreach ($bin_name in $bin_paths) {
+    $bin_path = "$old_root\$bin_name"
+      if (Test-Path -Path "$bin_path") {
+        Copy-Item "$bin_path" -Destination "$new_root"
+        Write-Verbose "Migrated $bin_path to $new_root\$bin_name"
+      }
+  }
+}
+
 function Download($download_url, $platforms) {
   $arch = Get-TargetTriple
 
@@ -1083,7 +1095,7 @@ function Download($download_url, $platforms) {
 function Invoke-Installer($bin_paths, $platforms) {
 
   # Install to this subdir of the user's MY_ENV_VAR dir
-  $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
+  $root = if (($base_dir = $env:MY_ENV_VAR)) {
     Join-Path $base_dir "My Axolotlsay Documents"
   } else {
     throw "ERROR: could not find your MY_ENV_VAR dir to install binaries to"
@@ -1091,8 +1103,12 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   # If we need to override the above
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-    $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    $root = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }
+
+  $dest_dir = Join-Path $root "bin"
+
+  MigrateInstallDir -old_root $root -new_root $dest_dir -bin_paths $bin_paths
 
 
   # The replace call here ensures proper escaping is inlined into the receipt
