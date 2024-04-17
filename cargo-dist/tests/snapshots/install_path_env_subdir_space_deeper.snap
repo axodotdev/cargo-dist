@@ -565,6 +565,13 @@ get_architecture() {
         fi
     fi
 
+    if [ "$_ostype" = Darwin ] && [ "$_cputype" = x86_64 ]; then
+        # Rosetta on aarch64
+        if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" = "1" ]; then
+            _cputype=aarch64
+        fi
+    fi
+
     if [ "$_ostype" = SunOS ]; then
         # Both Solaris and illumos presently announce as "SunOS" in "uname -s"
         # so use "uname -o" to disambiguate.  We use the full path to the
