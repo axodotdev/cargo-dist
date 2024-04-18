@@ -1382,14 +1382,14 @@ pub fn get_project() -> std::result::Result<axoproject::WorkspaceInfo, ProjectEr
 }
 
 /// Load a Cargo.toml into toml-edit form
-pub fn load_cargo_toml(manifest_path: &Utf8Path) -> DistResult<toml_edit::Document> {
+pub fn load_cargo_toml(manifest_path: &Utf8Path) -> DistResult<toml_edit::DocumentMut> {
     let src = axoasset::SourceFile::load_local(manifest_path)?;
     let toml = src.deserialize_toml_edit()?;
     Ok(toml)
 }
 
 /// Save a Cargo.toml from toml-edit form
-pub fn save_cargo_toml(manifest_path: &Utf8Path, toml: toml_edit::Document) -> DistResult<()> {
+pub fn save_cargo_toml(manifest_path: &Utf8Path, toml: toml_edit::DocumentMut) -> DistResult<()> {
     let toml_text = toml.to_string();
     axoasset::LocalAsset::write_new(&toml_text, manifest_path)?;
     Ok(())
@@ -1397,7 +1397,7 @@ pub fn save_cargo_toml(manifest_path: &Utf8Path, toml: toml_edit::Document) -> D
 
 /// Get the `[workspace.metadata]` or `[package.metadata]` (based on `is_workspace`)
 pub fn get_toml_metadata(
-    toml: &mut toml_edit::Document,
+    toml: &mut toml_edit::DocumentMut,
     is_workspace: bool,
 ) -> &mut toml_edit::Item {
     // Walk down/prepare the components...

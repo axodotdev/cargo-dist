@@ -136,7 +136,10 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     Ok(())
 }
 
-fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) -> DistResult<bool> {
+fn init_dist_profile(
+    _cfg: &Config,
+    workspace_toml: &mut toml_edit::DocumentMut,
+) -> DistResult<bool> {
     let profiles = workspace_toml["profile"].or_insert(toml_edit::table());
     if let Some(t) = profiles.as_table_mut() {
         t.set_implicit(true)
@@ -761,7 +764,7 @@ fn get_new_dist_metadata(
 
 /// Update a workspace toml-edit document with the current DistMetadata value
 pub(crate) fn apply_dist_to_workspace_toml(
-    workspace_toml: &mut toml_edit::Document,
+    workspace_toml: &mut toml_edit::DocumentMut,
     workspace_kind: WorkspaceKind,
     meta: &DistMetadata,
 ) {

@@ -176,7 +176,7 @@ fn diff_render(render: Option<RenderOutput>) -> DistResult<()> {
 ///
 /// This ensures that regenerating the installer produces a stable result.
 /// Returns whether modifications were made (and should be written to disk)
-fn update_wix_metadata(package_toml: &mut toml_edit::Document) -> bool {
+fn update_wix_metadata(package_toml: &mut toml_edit::DocumentMut) -> bool {
     let metadata = config::get_toml_metadata(package_toml, false);
 
     // Get the subtable
