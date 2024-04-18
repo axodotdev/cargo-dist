@@ -957,11 +957,11 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         *create_release,
     );
 
-    apply_optional_value(
+    apply_string_list(
         table,
         "install-path",
         "# Path that installers should place binaries in\n",
-        install_path.as_ref().map(|p| p.to_string()),
+        install_path.as_ref(),
     );
 
     apply_string_list(

@@ -34,6 +34,40 @@ RECEIPT_HOME="${HOME}/.config/{{ app_name }}"
 BUILDER_GLIBC_MAJOR="2"
 BUILDER_GLIBC_SERIES="31"
 
+# We assign this right at the top of the file as a global
+# because a number of different things will try to read it.
+INSTALL_PATH_STRATEGY=""
+INSTALL_PATH_ENV_KEY=""
+INSTALL_PATH_SUBDIR=""
+INSTALL_PATH_HINT=""
+
+{% for install_path in install_paths %}
+if [ -z "$INSTALL_PATH_STRATEGY" ]; then
+{% if install_path.kind == "CargoHome" %}
+    # This strategy can't fail; always assign it
+    INSTALL_PATH_STRATEGY="CargoHome"
+    INSTALL_PATH_HINT="\$CARGO_HOME/bin (\$HOME/.cargo/bin)"
+{% elif install_path.kind == "HomeSubdir" %}
+    # We skip this if we can't determine the value of $HOME
+    if [ -n "${HOME:-}" ]; then
+        INSTALL_PATH_STRATEGY="HomeSubdir"
+        INSTALL_PATH_SUBDIR="{{ install_path.subdir }}"
+        INSTALL_PATH_HINT="\$HOME/$INSTALL_PATH_SUBDIR"
+    fi
+{% elif install_path.kind == "EnvSubdir" %}
+    # We skip this if the environment variable isn't set
+    if [ -n "{{ "${" }}{{ install_path.env_key }}:-}" ]; then
+        INSTALL_PATH_STRATEGY="EnvSubdir"
+        INSTALL_PATH_ENV_KEY="${{ install_path.env_key }}"
+        INSTALL_PATH_SUBDIR="{{ install_path.subdir }}"
+        INSTALL_PATH_HINT="\$$INSTALL_PATH_ENV_KEY/$INSTALL_PATH_SUBDIR"
+    fi
+{% else %}
+    {{ error("unimplemented install_path format: " ~ install_path.kind) }}
+{% endif %}
+fi
+{% endfor %}
+
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
     cat <<EOF
@@ -43,15 +77,8 @@ The installer for {{ app_name }} {{ app_version }}
 
 This script detects what platform you're on and fetches an appropriate archive from
 {{ base_url }}
-then unpacks the binaries and installs them to {% if install_path.kind == "CargoHome" -%}
-    \$CARGO_HOME/bin (\$HOME/.cargo/bin)
-{%- elif install_path.kind == "HomeSubdir" -%}
-    \$HOME/{{ install_path.subdir }}
-{%- elif install_path.kind == "EnvSubdir" -%}
-    \${{ install_path.env_key }}/{{ install_path.subdir }}
-{%- else -%}
-    {{ error("unimplemented install_path format: " ~ install_path.kind) }}
-{%- endif %}
+then unpacks the binaries and installs them to
+$INSTALL_PATH_HINT
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -287,7 +314,7 @@ install() {
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
 
-{% if install_path.kind == "CargoHome" %}
+if [ "$INSTALL_PATH_STRATEGY" = "CargoHome" ]; then
     # first try CARGO_HOME, then fallback to HOME
     if [ -n "${CARGO_HOME:-}" ]; then
         _install_dir="$CARGO_HOME/bin"
@@ -332,48 +359,41 @@ install() {
     else
         err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
-{% elif install_path.kind == "HomeSubdir" %}
+elif [ "$INSTALL_PATH_STRATEGY" = "HomeSubdir" ]; then
     # Install to this subdir of the user's home dir
-    # In this case we want to be late-bound, as $HOME is reliable/nice.
-    if [ -n "${HOME:-}" ]; then
-        _install_dir="$HOME/{{ install_path.subdir }}"
-        _env_script_path="$HOME/{{ install_path.subdir }}/env"
-        _install_dir_expr='$HOME/{{ install_path.subdir }}'
-        _env_script_path_expr='$HOME/{{ install_path.subdir }}/env'
+    _install_dir="$HOME/$INSTALL_PATH_SUBDIR"
+    _env_script_path="$HOME/$INSTALL_PATH_SUBDIR/env"
+    _install_dir_expr="\$HOME/$INSTALL_PATH_SUBDIR"
+    _env_script_path_expr="\$HOME/$INSTALL_PATH_SUBDIR/env"
 
-        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-            # For these two, if the new value contains $HOME, make
-            # sure to `sed` the $HOME expression back into the expr
-            _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR" | sed "s,$HOME,\$HOME,")"
-            _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
-        fi
-    else
-        err "could not find your HOME dir to install binaries to"
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        # For these two, if the new value contains $HOME, make
+        # sure to `sed` the $HOME expression back into the expr
+        _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR" | sed "s,$HOME,\$HOME,")"
+        _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
     fi
-{% elif install_path.kind == "EnvSubdir" %}
-    # Install to this subdir of the user's {{ install_path.env_key }} dir.
-    # In this case we want to be early-bound, as the env-var can't be trusted longterm.
-    if [ -n "{{ "${" }}{{ install_path.env_key }}:-}" ]; then
-        _install_dir="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}"
-        _env_script_path="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}/env"
+elif [ "$INSTALL_PATH_STRATEGY" = "EnvSubdir" ]; then
+    # Install to this subdir of the user's $INSTALL_PATH_ENV_KEY dir.
+    if [ -n "$INSTALL_PATH_SUBDIR" ]; then
+        _install_dir="$INSTALL_PATH_ENV_KEY/$INSTALL_PATH_SUBDIR"
+        _env_script_path="$INSTALL_PATH_ENV_KEY/$INSTALL_PATH_SUBDIR/env"
+    else
+        _install_dir="$INSTALL_PATH_ENV_KEY"
+        _env_script_path="$INSTALL_PATH_ENV_KEY/env"
+    fi
+    _install_dir_expr="$_install_dir"
+    _env_script_path_expr="$_env_script_path"
+
+    # Override if necessary
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         _install_dir_expr="$_install_dir"
         _env_script_path_expr="$_env_script_path"
-
-        # Override if necessary
-        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-            _install_dir_expr="$_install_dir"
-            _env_script_path_expr="$_env_script_path"
-        fi
-    else
-        err "could not find your {{ install_path.env_key }} dir to install binaries to"
     fi
-{% else %}
-    {{ error("unimplemented install_path format: " ~ install_path.kind) }}
-{% endif %}
+fi
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")

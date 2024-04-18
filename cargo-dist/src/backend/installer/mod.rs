@@ -56,7 +56,7 @@ pub struct InstallerInfo {
     /// Hint for how to run the installer
     pub hint: String,
     /// Where to install binaries
-    pub install_path: JinjaInstallPathStrategy,
+    pub install_paths: Vec<JinjaInstallPathStrategy>,
     /// Install receipt to write, if any
     pub receipt: Option<InstallReceipt>,
 }

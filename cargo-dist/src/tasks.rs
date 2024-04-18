@@ -626,7 +626,7 @@ pub struct Release {
     /// Static assets that should be included in bundles like archives
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
     /// Strategy for selecting paths to install to
-    pub install_path: InstallPathStrategy,
+    pub install_path: Vec<InstallPathStrategy>,
     /// GitHub repository to push the Homebrew formula to, if built
     pub tap: Option<String>,
     /// Customize the name of the Homebrew formula
@@ -1070,7 +1070,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let install_path = package_config
             .install_path
             .clone()
-            .unwrap_or(InstallPathStrategy::CargoHome);
+            .unwrap_or(vec![InstallPathStrategy::CargoHome]);
         let tap = package_config.tap.clone();
         let formula = package_config.formula.clone();
 
@@ -1803,7 +1803,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
-                install_path: release.install_path.clone().into_jinja(),
+                install_paths: release
+                    .install_path
+                    .iter()
+                    .map(|p| p.clone().into_jinja())
+                    .collect(),
                 base_url: download_url.to_owned(),
                 artifacts,
                 updaters,
@@ -2067,7 +2071,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),
                     app_version: release.version.to_string(),
-                    install_path: release.install_path.clone().into_jinja(),
+                    install_paths: release
+                        .install_path
+                        .iter()
+                        .map(|p| p.clone().into_jinja())
+                        .collect(),
                     base_url: download_url.to_owned(),
                     artifacts,
                     updaters: vec![],
@@ -2158,7 +2166,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
-                install_path: release.install_path.clone().into_jinja(),
+                install_paths: release
+                    .install_path
+                    .iter()
+                    .map(|p| p.clone().into_jinja())
+                    .collect(),
                 base_url: download_url.to_owned(),
                 artifacts,
                 updaters,
@@ -2382,7 +2394,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),
                     app_version: release.version.to_string(),
-                    install_path: release.install_path.clone().into_jinja(),
+                    install_paths: release
+                        .install_path
+                        .iter()
+                        .map(|p| p.clone().into_jinja())
+                        .collect(),
                     base_url: download_url.to_owned(),
                     artifacts,
                     updaters: vec![],

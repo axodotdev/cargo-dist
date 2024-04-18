@@ -238,7 +238,7 @@ pub struct DistMetadata {
     /// All of these error out if the required env-vars aren't set. In the future this may
     /// allow for the input to be an array of options to try in sequence.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub install_path: Option<InstallPathStrategy>,
+    pub install_path: Option<Vec<InstallPathStrategy>>,
     /// A list of features to enable when building a package with cargo-dist
     ///
     /// (defaults to none)

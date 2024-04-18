@@ -39,6 +39,26 @@ RECEIPT_HOME="${HOME}/.config/axolotlsay"
 BUILDER_GLIBC_MAJOR="2"
 BUILDER_GLIBC_SERIES="31"
 
+# We assign this right at the top of the file as a global
+# because a number of different things will try to read it.
+INSTALL_PATH_STRATEGY=""
+INSTALL_PATH_ENV_KEY=""
+INSTALL_PATH_SUBDIR=""
+INSTALL_PATH_HINT=""
+
+
+if [ -z "$INSTALL_PATH_STRATEGY" ]; then
+
+    # We skip this if we can't determine the value of $HOME
+    if [ -n "${HOME:-}" ]; then
+        INSTALL_PATH_STRATEGY="HomeSubdir"
+        INSTALL_PATH_SUBDIR="My Axolotlsay Documents/bin"
+        INSTALL_PATH_HINT="\$HOME/$INSTALL_PATH_SUBDIR"
+    fi
+
+fi
+
+
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
     cat <<EOF
@@ -48,7 +68,8 @@ The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
-then unpacks the binaries and installs them to \$HOME/My Axolotlsay Documents/bin
+then unpacks the binaries and installs them to
+$INSTALL_PATH_HINT
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -292,27 +313,86 @@ install() {
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
 
+if [ "$INSTALL_PATH_STRATEGY" = "CargoHome" ]; then
+    # first try CARGO_HOME, then fallback to HOME
+    if [ -n "${CARGO_HOME:-}" ]; then
+        _install_dir="$CARGO_HOME/bin"
+        _env_script_path="$CARGO_HOME/env"
 
-    # Install to this subdir of the user's home dir
-    # In this case we want to be late-bound, as $HOME is reliable/nice.
-    if [ -n "${HOME:-}" ]; then
-        _install_dir="$HOME/My Axolotlsay Documents/bin"
-        _env_script_path="$HOME/My Axolotlsay Documents/bin/env"
-        _install_dir_expr='$HOME/My Axolotlsay Documents/bin'
-        _env_script_path_expr='$HOME/My Axolotlsay Documents/bin/env'
+        # If we need to override the above
+        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ] && [ "${CARGO_DIST_FORCE_INSTALL_DIR}" != "$CARGO_HOME" ]; then
+            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        fi
 
-        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        # If CARGO_HOME was set but it ended up being the default $HOME-based path,
+        # then keep things late-bound. Otherwise bake the value for safety.
+        # This is what rustup does, and accurately reproducing it is useful.
+        if [ -n "${HOME:-}" ]; then
+            if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
+                _install_dir_expr='$HOME/.cargo/bin'
+                _env_script_path_expr='$HOME/.cargo/env'
+            else
+                _install_dir_expr="$_install_dir"
+                _env_script_path_expr="$_env_script_path"
+            fi
+        else
+            _install_dir_expr="$_install_dir"
+            _env_script_path_expr="$_env_script_path"
+        fi
+    elif [ -n "${HOME:-}" ]; then
+        _install_dir="$HOME/.cargo/bin"
+        _env_script_path="$HOME/.cargo/env"
+        _install_dir_expr='$HOME/.cargo/bin'
+        _env_script_path_expr='$HOME/.cargo/env'
+
+        # If we need to override the above
+        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ] && [ "${CARGO_DIST_FORCE_INSTALL_DIR}" != "$HOME/.cargo" ]; then
+            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
             _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
             # For these two, if the new value contains $HOME, make
             # sure to `sed` the $HOME expression back into the expr
-            _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR" | sed "s,$HOME,\$HOME,")"
+            _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/bin" | sed "s,$HOME,\$HOME,")"
             _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
         fi
     else
-        err "could not find your HOME dir to install binaries to"
+        err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
+elif [ "$INSTALL_PATH_STRATEGY" = "HomeSubdir" ]; then
+    # Install to this subdir of the user's home dir
+    _install_dir="$HOME/$INSTALL_PATH_SUBDIR"
+    _env_script_path="$HOME/$INSTALL_PATH_SUBDIR/env"
+    _install_dir_expr="\$HOME/$INSTALL_PATH_SUBDIR"
+    _env_script_path_expr="\$HOME/$INSTALL_PATH_SUBDIR/env"
 
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        # For these two, if the new value contains $HOME, make
+        # sure to `sed` the $HOME expression back into the expr
+        _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR" | sed "s,$HOME,\$HOME,")"
+        _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
+    fi
+elif [ "$INSTALL_PATH_STRATEGY" = "EnvSubdir" ]; then
+    # Install to this subdir of the user's $INSTALL_PATH_ENV_KEY dir.
+    if [ -n "$INSTALL_PATH_SUBDIR" ]; then
+        _install_dir="$INSTALL_PATH_ENV_KEY/$INSTALL_PATH_SUBDIR"
+        _env_script_path="$INSTALL_PATH_ENV_KEY/$INSTALL_PATH_SUBDIR/env"
+    else
+        _install_dir="$INSTALL_PATH_ENV_KEY"
+        _env_script_path="$INSTALL_PATH_ENV_KEY/env"
+    fi
+    _install_dir_expr="$_install_dir"
+    _env_script_path_expr="$_env_script_path"
+
+    # Override if necessary
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        _install_dir_expr="$_install_dir"
+        _env_script_path_expr="$_env_script_path"
+    fi
+fi
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
@@ -884,7 +964,9 @@ The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
-then unpacks the binaries and installs them to $HOME\My Axolotlsay Documents/bin
+then unpacks the binaries and installs them to
+$HOME\My Axolotlsay Documents/bin
+
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -910,6 +992,20 @@ param (
 
 $app_name = 'axolotlsay'
 $app_version = '0.2.1'
+
+$install_path = $null
+
+if (-Not $install_path) {
+
+  # We skip this if we can't determine the value of $HOME
+  if ($HOME) {
+    $install_path = @{
+      "strategy" = "HomeSubdir"
+      "subdir" = "My Axolotlsay Documents/bin"
+    }
+  }
+}
+
 
 $receipt = @"
 {"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
@@ -1047,19 +1143,48 @@ function Download($download_url, $platforms) {
 }
 
 function Invoke-Installer($bin_paths, $platforms) {
+  if ($install_path.strategy -eq "CargoHome") {
+    # first try CARGO_HOME, then fallback to HOME
+    # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
+    $root = if (($base_dir = $env:CARGO_HOME)) {
+      $base_dir
+    } elseif (($base_dir = $HOME)) {
+      Join-Path $base_dir ".cargo"
+    } else {
+      throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
+    }
 
-  # Install to this subdir of the user's home dir
-  $dest_dir = if (($base_dir = $HOME)) {
-    Join-Path $base_dir "My Axolotlsay Documents/bin"
-  } else {
-    throw "ERROR: could not find your HOME dir to install binaries to"
+    $dest_dir = Join-Path $root "bin"
+
+    # If we need to override the above
+    if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+      $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+    }
+  } elseif ($install_path.strategy -eq "HomeSubdir") {
+    # Install to this subdir of the user's home dir
+    $dest_dir = if (($base_dir = $HOME)) {
+      Join-Path $base_dir $install_path.subdir
+    } else {
+      throw "ERROR: could not find your HOME dir to install binaries to"
+    }
+
+    # If we need to override the above
+    if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+      $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    }
+  } elseif ($install_path.strategy -eq "EnvSubdir") {
+    # Install to this subdir of the user's $install_path.env_key dir
+    $dest_dir = if (($base_dir = [Environment]::GetEnvironmentVariable($install_path.env_key))) {
+      Join-Path $base_dir $install_path.subdir
+    } else {
+      throw "ERROR: could not find your $install_path.env_key dir to install binaries to"
+    }
+
+    # If we need to override the above
+    if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+      $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    }
   }
-
-  # If we need to override the above
-  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-    $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
-  }
-
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $dest_dir.replace("\", "\\"))
