@@ -1211,6 +1211,87 @@ windows-archive = ".tar.gz"
 }
 
 #[test]
+fn install_path_fallback_no_env_var_set() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+allow-dirty = ["ci"]
+install-path = ["$NO_SUCH_ENV_VAR/My Nonexistent Documents", "$MY_ENV_VAR/My Axolotlsay Documents"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+
+"#
+        ))?;
+
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
+        results.check_all(ctx, ".axolotlsay/My Axolotlsay Documents/")?.snap();
+
+        Ok(())
+    })
+}
+
+#[test]
+fn install_path_fallback_to_cargo_home() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+allow-dirty = ["ci"]
+install-path = ["$NO_SUCH_ENV_VAR/My Nonexistent Documents", "CARGO_HOME"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+
+"#
+        ))?;
+
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
+        results.check_all(ctx, ".cargo/bin/")?.snap();
+
+        Ok(())
+    })
+}
+
+#[test]
+fn install_path_no_fallback_taken() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+allow-dirty = ["ci"]
+install-path = ["~/.axolotlsay/", "$MY_ENV_VAR/My Axolotlsay Documents/bin"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+
+"#
+        ))?;
+
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
+        results.check_all(ctx, ".axolotlsay/")?.snap();
+
+        Ok(())
+    })
+}
+
+#[test]
 #[should_panic(expected = r#"install-path = "~/" is missing a subdirectory"#)]
 fn install_path_invalid() {
     let test_name = _function_name!();
