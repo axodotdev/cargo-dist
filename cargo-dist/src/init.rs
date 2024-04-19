@@ -77,14 +77,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     };
 
     if let Some(meta) = &multi_meta.workspace {
-        let metadata = if workspace.kind == WorkspaceKind::Rust {
-            // Write to metadata table
-            config::get_toml_metadata(&mut workspace_toml, true)
-        } else {
-            // Write to document root
-            workspace_toml.as_item_mut()
-        };
-        apply_dist_to_metadata(metadata, meta);
+        apply_dist_to_workspace_toml(&mut workspace_toml, workspace.kind, meta);
     }
 
     eprintln!();
@@ -765,6 +758,22 @@ fn get_new_dist_metadata(
     Ok(meta)
 }
 
+/// Update a workspace toml-edit document with the current DistMetadata value
+pub(crate) fn apply_dist_to_workspace_toml(
+    workspace_toml: &mut toml_edit::Document,
+    workspace_kind: WorkspaceKind,
+    meta: &DistMetadata,
+) {
+    let metadata = if workspace_kind == WorkspaceKind::Rust {
+        // Write to metadata table
+        config::get_toml_metadata(workspace_toml, true)
+    } else {
+        // Write to document root
+        workspace_toml.as_item_mut()
+    };
+    apply_dist_to_metadata(metadata, meta);
+}
+
 /// Ensure [*.metadata.dist] has the given values
 fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     let dist_metadata = &mut metadata[METADATA_DIST];
@@ -836,7 +845,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         rust_toolchain_version.as_deref(),
     );
 
-    apply_string_list(table, "ci", "# CI backends to support\n", ci.as_ref());
+    apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
 
     apply_string_list(
         table,
@@ -957,7 +966,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         *create_release,
     );
 
-    apply_string_list(
+    apply_string_or_list(
         table,
         "install-path",
         "# Path that installers should place binaries in\n",
@@ -1062,7 +1071,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         ssldotcom_windows_sign.as_ref().map(|p| p.to_string()),
     );
 
-    apply_string_list(
+    apply_string_or_list(
         table,
         "hosting",
         "# Where to host releases\n",
@@ -1119,9 +1128,31 @@ where
 {
     if let Some(list) = list {
         let items = list.into_iter().map(|i| i.to_string()).collect::<Vec<_>>();
-        table.insert(key, toml_edit::Item::Value(items.into_iter().collect()));
+        let array: toml_edit::Array = items.into_iter().collect();
+        // FIXME: Break the array up into multiple lines with pretty formatting
+        // if the list is "too long". Alternatively, more precisely toml-edit
+        // the existing value so that we can preserve the user's formatting and comments.
+        table.insert(key, toml_edit::Item::Value(toml_edit::Value::Array(array)));
         if let Some(mut key) = table.key_mut(key) {
             key.leaf_decor_mut().set_prefix(desc)
+        }
+    } else {
+        table.remove(key);
+    }
+}
+
+/// Same as [`apply_string_list`][] but when the list can be shorthanded as a string
+fn apply_string_or_list<I>(table: &mut toml_edit::Table, key: &str, desc: &str, list: Option<I>)
+where
+    I: IntoIterator,
+    I::Item: std::fmt::Display,
+{
+    if let Some(list) = list {
+        let items = list.into_iter().map(|i| i.to_string()).collect::<Vec<_>>();
+        if items.len() == 1 {
+            apply_optional_value(table, key, desc, items.into_iter().next())
+        } else {
+            apply_string_list(table, key, desc, Some(items))
         }
     } else {
         table.remove(key);

@@ -221,11 +221,23 @@ pub enum DistError {
         /// The missing keys
         keys: &'static [&'static str],
     },
-    /// unrecognized style
-    #[error("{style} is not a recognized value")]
+    /// unrecognized job style
+    #[error("{style} is not a recognized job value")]
     #[diagnostic(help("Jobs that do not come with cargo-dist should be prefixed with ./"))]
-    UnrecognizedStyle {
-        /// Name of the msi
+    UnrecognizedJobStyle {
+        /// value provided
+        style: String,
+    },
+    /// unrecognized hosting style
+    #[error("{style} is not a recognized release host")]
+    UnrecognizedHostingStyle {
+        /// value provided
+        style: String,
+    },
+    /// unrecognized ci style
+    #[error("{style} is not a recognized ci provider")]
+    UnrecognizedCiStyle {
+        /// value provided
         style: String,
     },
     /// Linkage report can't be run for this combination of OS and target

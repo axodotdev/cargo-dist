@@ -20,7 +20,10 @@ pub fn diff_files(existing_file: &Utf8Path, new_file_contents: &str) -> DistResu
     } else {
         SourceFile::new(existing_file.as_str(), String::new())
     };
+    diff_source(existing, new_file_contents)
+}
 
+pub(crate) fn diff_source(existing: SourceFile, new_file_contents: &str) -> DistResult<()> {
     // Normalize away newline differences, those aren't worth failing things over
     let a = dos2unix(existing.contents());
     let b = dos2unix(new_file_contents);
@@ -36,7 +39,7 @@ pub fn diff_files(existing_file: &Utf8Path, new_file_contents: &str) -> DistResu
         .timeout(Duration::from_millis(10))
         .diff_lines(&a, &b)
         .unified_diff()
-        .header(existing_file.as_str(), existing_file.as_str())
+        .header(existing.origin_path(), existing.origin_path())
         .to_string();
 
     if !diff.is_empty() {
