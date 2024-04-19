@@ -61,6 +61,7 @@ pub struct DistMetadata {
     /// When running `generate` this list will be used if it's Some, otherwise all known
     /// CI backends will be used.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, with = "opt_string_or_vec")]
     pub ci: Option<Vec<CiStyle>>,
 
     /// Which actions to run on pull requests.
@@ -238,7 +239,8 @@ pub struct DistMetadata {
     /// All of these error out if the required env-vars aren't set. In the future this may
     /// allow for the input to be an array of options to try in sequence.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub install_path: Option<InstallPathStrategy>,
+    #[serde(default, with = "opt_string_or_vec")]
+    pub install_path: Option<Vec<InstallPathStrategy>>,
     /// A list of features to enable when building a package with cargo-dist
     ///
     /// (defaults to none)
@@ -319,6 +321,7 @@ pub struct DistMetadata {
 
     /// Hosting provider
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, with = "opt_string_or_vec")]
     pub hosting: Option<Vec<HostingStyle>>,
 
     /// Any extra artifacts and their buildscripts
@@ -664,6 +667,21 @@ impl std::fmt::Display for CiStyle {
     }
 }
 
+impl std::str::FromStr for CiStyle {
+    type Err = DistError;
+    fn from_str(val: &str) -> DistResult<Self> {
+        let res = match val {
+            "github" => CiStyle::Github,
+            s => {
+                return Err(DistError::UnrecognizedCiStyle {
+                    style: s.to_string(),
+                })
+            }
+        };
+        Ok(res)
+    }
+}
+
 /// The style of Installer we should generate
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -713,6 +731,22 @@ impl std::fmt::Display for HostingStyle {
     }
 }
 
+impl std::str::FromStr for HostingStyle {
+    type Err = DistError;
+    fn from_str(val: &str) -> DistResult<Self> {
+        let res = match val {
+            "github" => HostingStyle::Github,
+            "axodotdev" => HostingStyle::Axodotdev,
+            s => {
+                return Err(DistError::UnrecognizedHostingStyle {
+                    style: s.to_string(),
+                })
+            }
+        };
+        Ok(res)
+    }
+}
+
 /// The publish jobs we should run
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -731,7 +765,7 @@ impl std::str::FromStr for PublishStyle {
         } else if s == "homebrew" {
             Ok(Self::Homebrew)
         } else {
-            Err(DistError::UnrecognizedStyle {
+            Err(DistError::UnrecognizedJobStyle {
                 style: s.to_owned(),
             })
         }
@@ -773,7 +807,7 @@ impl std::str::FromStr for JobStyle {
         if let Some(slug) = s.strip_prefix("./") {
             Ok(Self::User(slug.to_owned()))
         } else {
-            Err(DistError::UnrecognizedStyle {
+            Err(DistError::UnrecognizedJobStyle {
                 style: s.to_owned(),
             })
         }
@@ -1259,11 +1293,15 @@ pub(crate) fn parse_metadata_table_or_manifest(
         WorkspaceKind::Rust => parse_metadata_table(manifest_path, metadata_table),
         // Generic dist.toml
         WorkspaceKind::Generic => {
-            let config: GenericConfig =
-                SourceFile::load_local(manifest_path)?.deserialize_toml()?;
-            Ok(config.dist)
+            let src = SourceFile::load_local(manifest_path)?;
+            parse_generic_config(src)
         }
     }
+}
+
+pub(crate) fn parse_generic_config(src: SourceFile) -> DistResult<DistMetadata> {
+    let config: GenericConfig = src.deserialize_toml()?;
+    Ok(config.dist)
 }
 
 pub(crate) fn parse_metadata_table(
@@ -1352,4 +1390,97 @@ pub fn get_toml_metadata(
     }
 
     metadata
+}
+
+/// This module implements support for serializing and deserializing
+/// `Option<Vec<T>>> where T: Display + FromStr`
+/// when we want both of these syntaxes to be valid:
+///
+/// * install-path = "~/.mycompany"
+/// * install-path = ["$MY_COMPANY", "~/.mycompany"]
+///
+/// Notable corners of roundtripping:
+///
+/// * `["one_elem"]`` will be force-rewritten as `"one_elem"` (totally equivalent and prettier)
+/// * `[]` will be preserved as `[]` (it's semantically distinct from None when cascading config)
+///
+/// This is a variation on a documented serde enum for "string or struct":
+/// https://serde.rs/string-or-struct.html
+mod opt_string_or_vec {
+    use super::*;
+    use serde::de::Error;
+
+    pub fn serialize<S, T>(v: &Option<Vec<T>>, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: std::fmt::Display,
+    {
+        // If none, do none
+        let Some(vec) = v else {
+            return s.serialize_none();
+        };
+        // If one item, make it a string
+        if vec.len() == 1 {
+            s.serialize_str(&vec[0].to_string())
+        // If many items (or zero), make it a list
+        } else {
+            let string_vec = Vec::from_iter(vec.iter().map(ToString::to_string));
+            string_vec.serialize(s)
+        }
+    }
+
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<Vec<T>>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: std::str::FromStr,
+        T::Err: std::fmt::Display,
+    {
+        struct StringOrVec<T>(std::marker::PhantomData<T>);
+
+        impl<'de, T> serde::de::Visitor<'de> for StringOrVec<T>
+        where
+            T: std::str::FromStr,
+            T::Err: std::fmt::Display,
+        {
+            type Value = Option<Vec<T>>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("string or list of strings")
+            }
+
+            // if none, return none
+            fn visit_none<E>(self) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(None)
+            }
+
+            // if string, parse it and make a single-element list
+            fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Some(vec![s
+                    .parse()
+                    .map_err(|e| E::custom(format!("{e}")))?]))
+            }
+
+            // if a sequence, parse the whole thing
+            fn visit_seq<S>(self, seq: S) -> Result<Self::Value, S::Error>
+            where
+                S: serde::de::SeqAccess<'de>,
+            {
+                let vec: Vec<String> =
+                    Deserialize::deserialize(serde::de::value::SeqAccessDeserializer::new(seq))?;
+                let parsed: Result<Vec<T>, S::Error> = vec
+                    .iter()
+                    .map(|s| s.parse::<T>().map_err(|e| S::Error::custom(format!("{e}"))))
+                    .collect();
+                Ok(Some(parsed?))
+            }
+        }
+
+        deserializer.deserialize_any(StringOrVec::<T>(std::marker::PhantomData))
+    }
 }

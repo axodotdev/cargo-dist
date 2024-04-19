@@ -1070,6 +1070,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let install_path = package_config
             .install_path
             .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .next()
             .unwrap_or(InstallPathStrategy::CargoHome);
         let tap = package_config.tap.clone();
         let formula = package_config.formula.clone();
