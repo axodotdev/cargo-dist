@@ -1,6 +1,13 @@
 # Unreleased
 
-Nothing Yet!
+This minor release adds some more resilience to release.yml by explicitly enabling windows
+longpath support, in case your repository (or submodules) contain extremely long filenames or paths.
+
+It also adds some missing dependency constraints for custom local and global build jobs.
+
+## Fixes
+
+* @gankra [improvements to release.yml](https://github.com/axodotdev/cargo-dist/pull/951)
 
 
 # Version 0.13.2 (2024-04-16)
