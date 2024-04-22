@@ -330,6 +330,11 @@ pub enum DistError {
         #[diagnostic_source]
         cause: ProjectError,
     },
+
+    /// Trying to include CargoHome with other install paths
+    #[error("Incompatible install paths configured in Cargo.toml")]
+    #[diagnostic(help("The CargoHome `install-path` configuration can't be combined with other install path strategies."))]
+    IncompatibleInstallPathConfiguration,
 }
 
 /// Errors related to finding the project

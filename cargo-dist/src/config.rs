@@ -396,6 +396,17 @@ impl DistMetadata {
         }
     }
 
+    /// Determines whether the configured install paths are compatible with each other
+    pub fn validate_install_paths(&self) -> DistResult<()> {
+        if let Some(paths) = &self.install_path {
+            if paths.len() > 1 && paths.contains(&InstallPathStrategy::CargoHome) {
+                return Err(DistError::IncompatibleInstallPathConfiguration {});
+            }
+        }
+
+        Ok(())
+    }
+
     /// Merge a workspace config into a package config (self)
     pub fn merge_workspace_config(
         &mut self,
@@ -903,7 +914,7 @@ impl<'de> Deserialize<'de> for ZipStyle {
 const CARGO_HOME_INSTALL_PATH: &str = "CARGO_HOME";
 
 /// Strategy for install binaries
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum InstallPathStrategy {
     /// install to $CARGO_HOME, falling back to ~/.cargo/
     CargoHome,

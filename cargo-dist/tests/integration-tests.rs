@@ -1238,7 +1238,8 @@ windows-archive = ".tar.gz"
 }
 
 #[test]
-fn install_path_fallback_to_cargo_home() -> Result<(), miette::Report> {
+#[should_panic(expected = r#"Incompatible install paths configured in Cargo.toml"#)]
+fn install_path_fallback_to_cargo_home() {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
@@ -1256,12 +1257,10 @@ windows-archive = ".tar.gz"
 
 "#
         ))?;
-
-        let results = ctx.cargo_dist_build_and_plan(test_name)?;
-        results.check_all(ctx, ".cargo/bin/")?.snap();
+        ctx.cargo_dist_build_and_plan(test_name).unwrap();
 
         Ok(())
-    })
+    }).unwrap();
 }
 
 #[test]

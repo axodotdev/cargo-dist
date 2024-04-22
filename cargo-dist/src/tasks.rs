@@ -834,6 +834,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             )?;
             package_config.make_relative_to(&package.package_root);
             package_config.merge_workspace_config(&workspace_metadata, &package.manifest_path);
+            package_config.validate_install_paths()?;
 
             // Only do workspace builds if all the packages agree with the workspace feature settings
             if &package_config.features != features
