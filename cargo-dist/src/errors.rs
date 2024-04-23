@@ -315,12 +315,12 @@ pub enum DistError {
         bin_name: String,
     },
 
-    /// Error during `cargo dist update`
-    #[error("`cargo dist update` failed; the new version isn't in the place we expected")]
+    /// Error during `cargo dist selfupdate`
+    #[error("`cargo dist selfupdate` failed; the new version isn't in the place we expected")]
     #[diagnostic(help("This is probably not your fault, please file an issue!"))]
     UpdateFailed {},
 
-    /// Trying to run cargo dist update in a random dir
+    /// Trying to run cargo dist selfupdate in a random dir
     #[error("`cargo dist selfupdate` needs to be run in a project")]
     #[diagnostic(help(
         "If you just want to update cargo-dist and not your project, pass --skip-init"
