@@ -50,9 +50,7 @@ This script detects what platform you're on and fetches an appropriate archive f
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
 then unpacks the binaries and installs them to
 
-
-    \$CARGO_HOME/bin (\$HOME/.cargo/bin)
-
+    \$CARGO_HOME/bin (or \$HOME/.cargo/bin)
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -285,6 +283,9 @@ install() {
     #
     # This distinction is handled by "double-quotes" (early) vs 'single-quotes' (late).
     #
+    # However if we detect that "$SOME_VAR/..." is a subdir of $HOME, we try to rewrite
+    # it to be '$HOME/...' to get the best of both worlds.
+    #
     # This script has a few different variants, the most complex one being the
     # CARGO_HOME version which attempts to install things to Cargo's bin dir,
     # potentially setting up a minimal version if the user hasn't ever installed Cargo.
@@ -311,43 +312,33 @@ install() {
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
-    # If we're *not* overriding, go ahead with the more complex
-    # path evaluation logic
-    else
-        if [ -z "${_install_dir:-}" ]; then
-            # first try CARGO_HOME, then fallback to HOME
-            if [ -n "${CARGO_HOME:-}" ]; then
-                _install_dir="$CARGO_HOME/bin"
-                _env_script_path="$CARGO_HOME/env"
-
-                # If CARGO_HOME was set but it ended up being the default $HOME-based path,
-                # then keep things late-bound. Otherwise bake the value for safety.
-                # This is what rustup does, and accurately reproducing it is useful.
-                if [ -n "${HOME:-}" ]; then
-                    if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
-                        _install_dir_expr='$HOME/.cargo/bin'
-                        _env_script_path_expr='$HOME/.cargo/env'
-                    else
-                        _install_dir_expr="$_install_dir"
-                        _env_script_path_expr="$_env_script_path"
-                    fi
-                else
-                    _install_dir_expr="$_install_dir"
-                    _env_script_path_expr="$_env_script_path"
+    fi
+    if [ -z "${_install_dir:-}" ]; then
+        # first try $CARGO_HOME, then fallback to $HOME/.cargo
+        if [ -n "${CARGO_HOME:-}" ]; then
+            _install_dir="$CARGO_HOME/bin"
+            _env_script_path="$CARGO_HOME/env"
+            # Initially make this early-bound to erase the potentially-temporary env-var
+            _install_dir_expr="$_install_dir"
+            _env_script_path_expr="$_env_script_path"
+            # If CARGO_HOME was set but it ended up being the default $HOME-based path,
+            # then keep things late-bound. Otherwise bake the value for safety.
+            # This is what rustup does, and accurately reproducing it is useful.
+            if [ -n "${HOME:-}" ]; then
+                if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
+                    _install_dir_expr='$HOME/.cargo/bin'
+                    _env_script_path_expr='$HOME/.cargo/env'
                 fi
-            elif [ -n "${HOME:-}" ]; then
-                _install_dir="$HOME/.cargo/bin"
-                _env_script_path="$HOME/.cargo/env"
-                _install_dir_expr='$HOME/.cargo/bin'
-                _env_script_path_expr='$HOME/.cargo/env'
-            else
-                err "could not find your CARGO_HOME or HOME dir to install binaries to"
             fi
+        elif [ -n "${HOME:-}" ]; then
+            _install_dir="$HOME/.cargo/bin"
+            _env_script_path="$HOME/.cargo/env"
+            _install_dir_expr='$HOME/.cargo/bin'
+            _env_script_path_expr='$HOME/.cargo/env'
         fi
     fi
 
@@ -929,8 +920,8 @@ The installer for axolotlsay 0.2.1
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
 then unpacks the binaries and installs them to
-$env:CARGO_HOME\bin ($HOME\.cargo\bin)
 
+    $env:CARGO_HOME/bin (or $HOME/.cargo/bin)
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -1099,20 +1090,19 @@ function Invoke-Installer($bin_paths, $platforms) {
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
 
     $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
-  } else {
+  }
   if (-Not $dest_dir) {
-      # first try CARGO_HOME, then fallback to HOME
-      # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
-      $root = if (($base_dir = $env:CARGO_HOME)) {
-        $base_dir
-      } elseif (($base_dir = $HOME)) {
-        Join-Path $base_dir ".cargo"
-      } else {
-        throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
-      }
-
-      $dest_dir = Join-Path $root "bin"
+    # first try $env:CARGO_HOME, then fallback to $HOME
+    # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
+    $root = if (($base_dir = $env:CARGO_HOME)) {
+      $base_dir
+    } elseif (($base_dir = $HOME)) {
+      Join-Path $base_dir ".cargo"
+    } else {
+      throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
     }
+
+    $dest_dir = Join-Path $root "bin"
   }
 
   # Looks like all of the above assignments failed

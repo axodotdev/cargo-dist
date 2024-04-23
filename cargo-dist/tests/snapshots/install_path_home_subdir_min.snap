@@ -50,9 +50,7 @@ This script detects what platform you're on and fetches an appropriate archive f
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
 then unpacks the binaries and installs them to
 
-
     \$HOME/.axolotlsay
-
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -285,6 +283,9 @@ install() {
     #
     # This distinction is handled by "double-quotes" (early) vs 'single-quotes' (late).
     #
+    # However if we detect that "$SOME_VAR/..." is a subdir of $HOME, we try to rewrite
+    # it to be '$HOME/...' to get the best of both worlds.
+    #
     # This script has a few different variants, the most complex one being the
     # CARGO_HOME version which attempts to install things to Cargo's bin dir,
     # potentially setting up a minimal version if the user hasn't ever installed Cargo.
@@ -313,23 +314,16 @@ install() {
     if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        # For these two, if the new value contains $HOME, make
-        # sure to `sed` the $HOME expression back into the expr
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
-        
-    # If we're *not* overriding, go ahead with the more complex
-    # path evaluation logic
-    else
-        if [ -z "${_install_dir:-}" ]; then
-            # We skip this if we can't determine the value of $HOME
-            if [ -n "${HOME:-}" ]; then
-                # Install to this subdir of the user's home dir
-                _install_dir="$HOME/.axolotlsay"
-                _env_script_path="$HOME/.axolotlsay/env"
-                _install_dir_expr='$HOME/.axolotlsay'
-                _env_script_path_expr='$HOME/.axolotlsay/env'
-            fi
+    fi
+    if [ -z "${_install_dir:-}" ]; then
+        # Install to $HOME/.axolotlsay
+        if [ -n "${HOME:-}" ]; then
+            _install_dir="$HOME/.axolotlsay"
+            _env_script_path="$HOME/.axolotlsay/env"
+            _install_dir_expr='$HOME/.axolotlsay'
+            _env_script_path_expr='$HOME/.axolotlsay/env'
         fi
     fi
 
@@ -908,8 +902,8 @@ The installer for axolotlsay 0.2.1
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
 then unpacks the binaries and installs them to
-$HOME\.axolotlsay
 
+    $HOME/.axolotlsay
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -1077,12 +1071,11 @@ function Invoke-Installer($bin_paths, $platforms) {
   # if we're overriding it.
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
 $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
-  } else {
+  }
   if (-Not $dest_dir) {
-      # Install to this subdir of the user's home dir
-      $dest_dir = if (($base_dir = $HOME)) {
-        Join-Path $base_dir ".axolotlsay"
-      }
+    # Install to $HOME/.axolotlsay
+    $dest_dir = if (($base_dir = $HOME)) {
+      Join-Path $base_dir ".axolotlsay"
     }
   }
 

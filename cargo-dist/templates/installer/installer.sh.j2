@@ -43,15 +43,15 @@ The installer for {{ app_name }} {{ app_version }}
 
 This script detects what platform you're on and fetches an appropriate archive from
 {{ base_url }}
-then unpacks the binaries and installs them to{% if install_paths|length > 1 %} one of the following locations{% endif %}
+then unpacks the binaries and installs them to{% if install_paths|length > 1 %} the first of the following locations{% endif %}
 {% for install_path in install_paths %}
-{% if install_path.kind == "CargoHome" %}
-    \$CARGO_HOME/bin (\$HOME/.cargo/bin)
-{% elif install_path.kind == "HomeSubdir" %}
+{%- if install_path.kind == "CargoHome" %}
+    \$CARGO_HOME/bin (or \$HOME/.cargo/bin)
+{%- elif install_path.kind == "HomeSubdir" %}
     \$HOME/{{ install_path.subdir }}
-{% elif install_path.kind == "EnvSubdir" %}
-    \${{ install_path.env_key }}/{{ install_path.subdir }}
-{%- else -%}
+{%- elif install_path.kind == "EnvSubdir" %}
+    \${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}
+{%- else %}
     {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {%- endif %}
 {%- endfor %}
@@ -279,6 +279,9 @@ install() {
     #
     # This distinction is handled by "double-quotes" (early) vs 'single-quotes' (late).
     #
+    # However if we detect that "$SOME_VAR/..." is a subdir of $HOME, we try to rewrite
+    # it to be '$HOME/...' to get the best of both worlds.
+    #
     # This script has a few different variants, the most complex one being the
     # CARGO_HOME version which attempts to install things to Cargo's bin dir,
     # potentially setting up a minimal version if the user hasn't ever installed Cargo.
@@ -305,77 +308,65 @@ install() {
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        {% if install_paths| selectattr("kind", "equalto", "CargoHome") %}
+    {%- if install_paths | selectattr("kind", "equalto", "CargoHome") %}
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
-        {%- else -%}
+    {%- else %}
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        # For these two, if the new value contains $HOME, make
-        # sure to `sed` the $HOME expression back into the expr
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
-        {% endif %}
-    # If we're *not* overriding, go ahead with the more complex
-    # path evaluation logic
-    else
-    {%- for install_path in install_paths %}
-        if [ -z "${_install_dir:-}" ]; then
-    {%- if install_path.kind == "CargoHome" %}
-            # first try CARGO_HOME, then fallback to HOME
-            if [ -n "${CARGO_HOME:-}" ]; then
-                _install_dir="$CARGO_HOME/bin"
-                _env_script_path="$CARGO_HOME/env"
-
-                # If CARGO_HOME was set but it ended up being the default $HOME-based path,
-                # then keep things late-bound. Otherwise bake the value for safety.
-                # This is what rustup does, and accurately reproducing it is useful.
-                if [ -n "${HOME:-}" ]; then
-                    if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
-                        _install_dir_expr='$HOME/.cargo/bin'
-                        _env_script_path_expr='$HOME/.cargo/env'
-                    else
-                        _install_dir_expr="$_install_dir"
-                        _env_script_path_expr="$_env_script_path"
-                    fi
-                else
-                    _install_dir_expr="$_install_dir"
-                    _env_script_path_expr="$_env_script_path"
-                fi
-            elif [ -n "${HOME:-}" ]; then
-                _install_dir="$HOME/.cargo/bin"
-                _env_script_path="$HOME/.cargo/env"
-                _install_dir_expr='$HOME/.cargo/bin'
-                _env_script_path_expr='$HOME/.cargo/env'
-            else
-                err "could not find your CARGO_HOME or HOME dir to install binaries to"
-            fi
-    {%- elif install_path.kind == "HomeSubdir" %}
-            # We skip this if we can't determine the value of $HOME
-            if [ -n "${HOME:-}" ]; then
-                # Install to this subdir of the user's home dir
-                _install_dir="$HOME/{{ install_path.subdir }}"
-                _env_script_path="$HOME/{{ install_path.subdir }}/env"
-                _install_dir_expr='$HOME/{{ install_path.subdir }}'
-                _env_script_path_expr='$HOME/{{ install_path.subdir }}/env'
-            fi
-    {%- elif install_path.kind == "EnvSubdir" %}
-            # We skip this if the environment variable isn't set
-            if [ -n "{{ "${" }}{{ install_path.env_key }}:-}" ]; then
-                # Install to this subdir of the user's $INSTALL_PATH_ENV_KEY dir.
-                _install_dir="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}"
-                _env_script_path="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}/env"
-                _install_dir_expr="$_install_dir"
-                _env_script_path_expr="$_env_script_path"
-            fi
-    {%- else %}
-            {{ error("unimplemented install_path format: " ~ install_path.kind) }}
     {%- endif %}
-        fi
-    {%- endfor %}
     fi
+
+    {%- for install_path in install_paths %}
+    if [ -z "${_install_dir:-}" ]; then
+    {%- if install_path.kind == "CargoHome" %}
+        # first try $CARGO_HOME, then fallback to $HOME/.cargo
+        if [ -n "${CARGO_HOME:-}" ]; then
+            _install_dir="$CARGO_HOME/bin"
+            _env_script_path="$CARGO_HOME/env"
+            # Initially make this early-bound to erase the potentially-temporary env-var
+            _install_dir_expr="$_install_dir"
+            _env_script_path_expr="$_env_script_path"
+            # If CARGO_HOME was set but it ended up being the default $HOME-based path,
+            # then keep things late-bound. Otherwise bake the value for safety.
+            # This is what rustup does, and accurately reproducing it is useful.
+            if [ -n "${HOME:-}" ]; then
+                if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
+                    _install_dir_expr='$HOME/.cargo/bin'
+                    _env_script_path_expr='$HOME/.cargo/env'
+                fi
+            fi
+        elif [ -n "${HOME:-}" ]; then
+            _install_dir="$HOME/.cargo/bin"
+            _env_script_path="$HOME/.cargo/env"
+            _install_dir_expr='$HOME/.cargo/bin'
+            _env_script_path_expr='$HOME/.cargo/env'
+        fi
+    {%- elif install_path.kind == "HomeSubdir" %}
+        # Install to $HOME/{{ install_path.subdir }}
+        if [ -n "${HOME:-}" ]; then
+            _install_dir="$HOME/{{ install_path.subdir }}"
+            _env_script_path="$HOME/{{ install_path.subdir }}/env"
+            _install_dir_expr='$HOME/{{ install_path.subdir }}'
+            _env_script_path_expr='$HOME/{{ install_path.subdir }}/env'
+        fi
+    {%- elif install_path.kind == "EnvSubdir" %}
+        # Install to ${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}
+        if [ -n "{{ "${" }}{{ install_path.env_key }}:-}" ]; then
+            _install_dir="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}"
+            _env_script_path="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}/env"
+            _install_dir_expr="$(replace_home "$_install_dir")"
+            _env_script_path_expr="$(replace_home "$_env_script_path")"
+        fi
+    {%- else %}
+        {{ error("unimplemented install_path format: " ~ install_path.kind) }}
+    {%- endif %}
+    fi
+    {%- endfor %}
 
     if [ -z "$_install_dir_expr" ]; then
         err "could not find a valid path to install to!"
