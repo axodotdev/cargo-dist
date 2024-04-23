@@ -250,6 +250,18 @@ download_binary_and_run_installer() {
     return "$_retval"
 }
 
+# Replaces $HOME with the variable name for display to the user,
+# only if $HOME is defined.
+replace_home() {
+    local _str="$1"
+
+    if [ -n "${HOME:-}" ]; then
+        echo "$_str" | sed "s,$HOME,\$HOME,"
+    else
+        echo "$_str"
+    fi
+}
+
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
 # shellcheck disable=SC2016
 install() {
@@ -302,8 +314,8 @@ install() {
         
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/bin" | sed "s,$HOME,\$HOME,")"
-        _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
+        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
+        _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
     # If we're *not* overriding, go ahead with the more complex
     # path evaluation logic
     else
