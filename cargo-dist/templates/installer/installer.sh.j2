@@ -372,6 +372,12 @@ install() {
         err "could not find a valid path to install to!"
     fi
 
+    # Identical to the sh version, just with a .fish file extension
+    # We place it down here to wait until it's been assigned in every
+    # path.
+    _fish_env_script_path="${_env_script_path}.fish"
+    _fish_env_script_path_expr="${_env_script_path_expr}.fish"
+
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
 
@@ -392,18 +398,24 @@ install() {
     say "everything's installed!"
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
-        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile" "sh"
         exit1=$?
-        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc" "sh"
         exit2=$?
-        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv" "sh"
         exit3=$?
+        # This path may not exist by default
+        ensure mkdir -p "$HOME/.config/fish/conf.d"
+        exit4=$?
+        add_install_dir_to_path "$_install_dir_expr" "$_fish_env_script_path" "$_fish_env_script_path_expr" ".config/fish/conf.d/$APP_NAME.env.fish" "fish"
+        exit5=$?
 
-        if [ "${exit1:-0}" = 1 ] || [ "${exit2:-0}" = 1 ] || [ "${exit3:-0}" = 1 ]; then
+        if [ "${exit1:-0}" = 1 ] || [ "${exit2:-0}" = 1 ] || [ "${exit3:-0}" = 1 ] || [ "${exit4:-0}" = 1 ] || [ "${exit5:-0}" = 1 ]; then
             say ""
             say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
             say ""
-            say "    source $_env_script_path_expr"
+            say "    source $_env_script_path_expr (sh, bash, zsh)"
+            say "    source $_fish_env_script_path_expr (fish)"
         fi
     fi
 }
@@ -442,6 +454,7 @@ add_install_dir_to_path() {
     local _env_script_path="$2"
     local _env_script_path_expr="$3"
     local _rcfiles="$4"
+    local _shell="$5"
 
     if [ -n "${HOME:-}" ]; then
         local _target
@@ -480,7 +493,11 @@ add_install_dir_to_path() {
         # Add the env script if it doesn't already exist
         if [ ! -f "$_env_script_path" ]; then
             say_verbose "creating $_env_script_path"
-            write_env_script "$_install_dir_expr" "$_env_script_path"
+            if [ "$_shell" = "sh" ]; then
+                write_env_script_sh "$_install_dir_expr" "$_env_script_path"
+            else
+                write_env_script_fish "$_install_dir_expr" "$_env_script_path"
+            fi
         else
             say_verbose "$_env_script_path already exists"
         fi
@@ -499,10 +516,21 @@ add_install_dir_to_path() {
             # If the script now exists, add the line to source it to the rcfile
             # (This will also create the rcfile if it doesn't exist)
             if [ -f "$_env_script_path" ]; then
-                say_verbose "adding $_robust_line to $_target"
+                local _line
+                # Fish has deprecated `.` as an alias for `source` and
+                # it will be removed in a later version.
+                # https://fishshell.com/docs/current/cmds/source.html
+                # By contrast, `.` is the traditional syntax in sh and
+                # `source` isn't always supported in all circumstances.
+                if [ "$_shell" = "fish" ]; then
+                    _line="$_pretty_line"
+                else
+                    _line="$_robust_line"
+                fi
+                say_verbose "adding $_line to $_target"
                 # prepend an extra newline in case the user's file is missing a trailing one
                 ensure echo "" >> "$_target"
-                ensure echo "$_robust_line" >> "$_target"
+                ensure echo "$_line" >> "$_target"
                 return 1
             fi
         else
@@ -511,7 +539,7 @@ add_install_dir_to_path() {
     fi
 }
 
-write_env_script() {
+write_env_script_sh() {
     # write this env script to the given path (this cat/EOF stuff is a "heredoc" string)
     local _install_dir_expr="$1"
     local _env_script_path="$2"
@@ -527,6 +555,18 @@ case ":\${PATH}:" in
         export PATH="$_install_dir_expr:\$PATH"
         ;;
 esac
+EOF
+}
+
+write_env_script_fish() {
+    # write this env script to the given path (this cat/EOF stuff is a "heredoc" string)
+    local _install_dir_expr="$1"
+    local _env_script_path="$2"
+    ensure cat <<EOF > "$_env_script_path"
+if not contains "$_install_dir_expr" \$PATH
+    # Prepending path in case a system-installed binary needs to be overridden
+    set -x PATH "$_install_dir_expr" \$PATH
+end
 EOF
 }
 
