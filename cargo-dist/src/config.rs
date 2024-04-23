@@ -278,6 +278,12 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global_artifacts_jobs: Option<Vec<JobStyle>>,
 
+    /// Whether to generate and dist a tarball containing your app's source code
+    ///
+    /// (defaults to true)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_tarball: Option<bool>,
+
     /// Host jobs to run in CI
     ///
     /// The core build job is always run, but this allows additional hooks
@@ -374,6 +380,7 @@ impl DistMetadata {
             plan_jobs: _,
             local_artifacts_jobs: _,
             global_artifacts_jobs: _,
+            source_tarball: _,
             host_jobs: _,
             publish_jobs: _,
             post_announce_jobs: _,
@@ -442,6 +449,7 @@ impl DistMetadata {
             plan_jobs,
             local_artifacts_jobs,
             global_artifacts_jobs,
+            source_tarball,
             host_jobs,
             publish_jobs,
             post_announce_jobs,
@@ -514,6 +522,9 @@ impl DistMetadata {
         }
         if global_artifacts_jobs.is_some() {
             warn!("package.metadata.dist.global-artifacts-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if source_tarball.is_some() {
+            warn!("package.metadata.dist.source-tarball is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if host_jobs.is_some() {
             warn!("package.metadata.dist.host-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

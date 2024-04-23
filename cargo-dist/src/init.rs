@@ -244,6 +244,7 @@ fn get_new_dist_metadata(
             plan_jobs: None,
             local_artifacts_jobs: None,
             global_artifacts_jobs: None,
+            source_tarball: None,
             host_jobs: None,
             publish_jobs: None,
             post_announce_jobs: None,
@@ -815,6 +816,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         plan_jobs,
         local_artifacts_jobs,
         global_artifacts_jobs,
+        source_tarball,
         host_jobs,
         publish_jobs,
         post_announce_jobs,
@@ -1013,6 +1015,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "global-artifacts-jobs",
         "# Global artifacts jobs to run in CI\n",
         global_artifacts_jobs.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "source-tarball",
+        "# Generate and dist a source tarball\n",
+        *source_tarball,
     );
 
     apply_string_list(
