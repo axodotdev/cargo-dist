@@ -48,7 +48,9 @@ The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
-then unpacks the binaries and installs them to \$MY_ENV_VAR/My Axolotlsay Documents/bin
+then unpacks the binaries and installs them to
+
+    \$MY_ENV_VAR/My Axolotlsay Documents/bin
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -246,6 +248,18 @@ download_binary_and_run_installer() {
     return "$_retval"
 }
 
+# Replaces $HOME with the variable name for display to the user,
+# only if $HOME is defined.
+replace_home() {
+    local _str="$1"
+
+    if [ -n "${HOME:-}" ]; then
+        echo "$_str" | sed "s,$HOME,\$HOME,"
+    else
+        echo "$_str"
+    fi
+}
+
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
 # shellcheck disable=SC2016
 install() {
@@ -268,6 +282,9 @@ install() {
     # existence with early-bounding.
     #
     # This distinction is handled by "double-quotes" (early) vs 'single-quotes' (late).
+    #
+    # However if we detect that "$SOME_VAR/..." is a subdir of $HOME, we try to rewrite
+    # it to be '$HOME/...' to get the best of both worlds.
     #
     # This script has a few different variants, the most complex one being the
     # CARGO_HOME version which attempts to install things to Cargo's bin dir,
@@ -292,26 +309,27 @@ install() {
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
 
-
-    # Install to this subdir of the user's MY_ENV_VAR dir.
-    # In this case we want to be early-bound, as the env-var can't be trusted longterm.
-    if [ -n "${MY_ENV_VAR:-}" ]; then
-        _install_dir="$MY_ENV_VAR/My Axolotlsay Documents/bin"
-        _env_script_path="$MY_ENV_VAR/My Axolotlsay Documents/bin/env"
-        _install_dir_expr="$_install_dir"
-        _env_script_path_expr="$_env_script_path"
-
-        # Override if necessary
-        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-            _install_dir_expr="$_install_dir"
-            _env_script_path_expr="$_env_script_path"
+    # Before actually consulting the configured install strategy, see
+    # if we're overriding it.
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR")"
+        _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
+    fi
+    if [ -z "${_install_dir:-}" ]; then
+        # Install to $MY_ENV_VAR/My Axolotlsay Documents/bin
+        if [ -n "${MY_ENV_VAR:-}" ]; then
+            _install_dir="$MY_ENV_VAR/My Axolotlsay Documents/bin"
+            _env_script_path="$MY_ENV_VAR/My Axolotlsay Documents/bin/env"
+            _install_dir_expr="$(replace_home "$_install_dir")"
+            _env_script_path_expr="$(replace_home "$_env_script_path")"
         fi
-    else
-        err "could not find your MY_ENV_VAR dir to install binaries to"
     fi
 
+    if [ -z "$_install_dir_expr" ]; then
+        err "could not find a valid path to install to!"
+    fi
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
@@ -883,7 +901,9 @@ The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
-then unpacks the binaries and installs them to $env:MY_ENV_VAR\My Axolotlsay Documents/bin
+then unpacks the binaries and installs them to
+
+    $env:MY_ENV_VAR/My Axolotlsay Documents/bin
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -1046,19 +1066,23 @@ function Download($download_url, $platforms) {
 }
 
 function Invoke-Installer($bin_paths, $platforms) {
-
-  # Install to this subdir of the user's MY_ENV_VAR dir
-  $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
-    Join-Path $base_dir "My Axolotlsay Documents/bin"
-  } else {
-    throw "ERROR: could not find your MY_ENV_VAR dir to install binaries to"
-  }
-
-  # If we need to override the above
+  $dest_dir = $null
+  # Before actually consulting the configured install strategy, see
+  # if we're overriding it.
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-    $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+$dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+  }
+  if (-Not $dest_dir) {
+    # Install to $env:MY_ENV_VAR/My Axolotlsay Documents/bin
+    $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
+      Join-Path $base_dir "My Axolotlsay Documents/bin"
+    }
   }
 
+  # Looks like all of the above assignments failed
+  if (-Not $dest_dir) {
+    throw "ERROR: could not find a valid path to install to; please check the installation instructions"
+  }
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $dest_dir.replace("\", "\\"))

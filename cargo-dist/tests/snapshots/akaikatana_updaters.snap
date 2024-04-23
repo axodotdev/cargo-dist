@@ -48,7 +48,9 @@ The installer for akaikatana-repack 0.2.0
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0
-then unpacks the binaries and installs them to \$CARGO_HOME/bin (\$HOME/.cargo/bin)
+then unpacks the binaries and installs them to
+
+    \$CARGO_HOME/bin (or \$HOME/.cargo/bin)
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -258,6 +260,18 @@ download_binary_and_run_installer() {
     return "$_retval"
 }
 
+# Replaces $HOME with the variable name for display to the user,
+# only if $HOME is defined.
+replace_home() {
+    local _str="$1"
+
+    if [ -n "${HOME:-}" ]; then
+        echo "$_str" | sed "s,$HOME,\$HOME,"
+    else
+        echo "$_str"
+    fi
+}
+
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
 # shellcheck disable=SC2016
 install() {
@@ -280,6 +294,9 @@ install() {
     # existence with early-bounding.
     #
     # This distinction is handled by "double-quotes" (early) vs 'single-quotes' (late).
+    #
+    # However if we detect that "$SOME_VAR/..." is a subdir of $HOME, we try to rewrite
+    # it to be '$HOME/...' to get the best of both worlds.
     #
     # This script has a few different variants, the most complex one being the
     # CARGO_HOME version which attempts to install things to Cargo's bin dir,
@@ -304,52 +321,42 @@ install() {
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
 
-
-    # first try CARGO_HOME, then fallback to HOME
-    if [ -n "${CARGO_HOME:-}" ]; then
-        _install_dir="$CARGO_HOME/bin"
-        _env_script_path="$CARGO_HOME/env"
-
-        # If we need to override the above
-        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ] && [ "${CARGO_DIST_FORCE_INSTALL_DIR}" != "$CARGO_HOME" ]; then
-            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
-            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        fi
-
-        # If CARGO_HOME was set but it ended up being the default $HOME-based path,
-        # then keep things late-bound. Otherwise bake the value for safety.
-        # This is what rustup does, and accurately reproducing it is useful.
-        if [ -n "${HOME:-}" ]; then
-            if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
-                _install_dir_expr='$HOME/.cargo/bin'
-                _env_script_path_expr='$HOME/.cargo/env'
-            else
-                _install_dir_expr="$_install_dir"
-                _env_script_path_expr="$_env_script_path"
-            fi
-        else
+    # Before actually consulting the configured install strategy, see
+    # if we're overriding it.
+    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
+        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
+        _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
+    fi
+    if [ -z "${_install_dir:-}" ]; then
+        # first try $CARGO_HOME, then fallback to $HOME/.cargo
+        if [ -n "${CARGO_HOME:-}" ]; then
+            _install_dir="$CARGO_HOME/bin"
+            _env_script_path="$CARGO_HOME/env"
+            # Initially make this early-bound to erase the potentially-temporary env-var
             _install_dir_expr="$_install_dir"
             _env_script_path_expr="$_env_script_path"
+            # If CARGO_HOME was set but it ended up being the default $HOME-based path,
+            # then keep things late-bound. Otherwise bake the value for safety.
+            # This is what rustup does, and accurately reproducing it is useful.
+            if [ -n "${HOME:-}" ]; then
+                if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
+                    _install_dir_expr='$HOME/.cargo/bin'
+                    _env_script_path_expr='$HOME/.cargo/env'
+                fi
+            fi
+        elif [ -n "${HOME:-}" ]; then
+            _install_dir="$HOME/.cargo/bin"
+            _env_script_path="$HOME/.cargo/env"
+            _install_dir_expr='$HOME/.cargo/bin'
+            _env_script_path_expr='$HOME/.cargo/env'
         fi
-    elif [ -n "${HOME:-}" ]; then
-        _install_dir="$HOME/.cargo/bin"
-        _env_script_path="$HOME/.cargo/env"
-        _install_dir_expr='$HOME/.cargo/bin'
-        _env_script_path_expr='$HOME/.cargo/env'
-
-        # If we need to override the above
-        if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ] && [ "${CARGO_DIST_FORCE_INSTALL_DIR}" != "$HOME/.cargo" ]; then
-            _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
-            _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-            # For these two, if the new value contains $HOME, make
-            # sure to `sed` the $HOME expression back into the expr
-            _install_dir_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/bin" | sed "s,$HOME,\$HOME,")"
-            _env_script_path_expr="$(echo "$CARGO_DIST_FORCE_INSTALL_DIR/env" | sed "s,$HOME,\$HOME,")"
-        fi
-    else
-        err "could not find your CARGO_HOME or HOME dir to install binaries to"
     fi
 
+    if [ -z "$_install_dir_expr" ]; then
+        err "could not find a valid path to install to!"
+    fi
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
@@ -921,7 +928,9 @@ The installer for akaikatana-repack 0.2.0
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0
-then unpacks the binaries and installs them to $env:CARGO_HOME\bin ($HOME\.cargo\bin)
+then unpacks the binaries and installs them to
+
+    $env:CARGO_HOME/bin (or $HOME/.cargo/bin)
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -1088,24 +1097,31 @@ function Download($download_url, $platforms) {
 }
 
 function Invoke-Installer($bin_paths, $platforms) {
-
-  # first try CARGO_HOME, then fallback to HOME
-  # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
-  $root = if (($base_dir = $env:CARGO_HOME)) {
-    $base_dir
-  } elseif (($base_dir = $HOME)) {
-    Join-Path $base_dir ".cargo"
-  } else {
-    throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
-  }
-
-  $dest_dir = Join-Path $root "bin"
-
-  # If we need to override the above
+  $dest_dir = $null
+  # Before actually consulting the configured install strategy, see
+  # if we're overriding it.
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+
     $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
   }
+  if (-Not $dest_dir) {
+    # first try $env:CARGO_HOME, then fallback to $HOME
+    # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
+    $root = if (($base_dir = $env:CARGO_HOME)) {
+      $base_dir
+    } elseif (($base_dir = $HOME)) {
+      Join-Path $base_dir ".cargo"
+    } else {
+      throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
+    }
 
+    $dest_dir = Join-Path $root "bin"
+  }
+
+  # Looks like all of the above assignments failed
+  if (-Not $dest_dir) {
+    throw "ERROR: could not find a valid path to install to; please check the installation instructions"
+  }
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $dest_dir.replace("\", "\\"))

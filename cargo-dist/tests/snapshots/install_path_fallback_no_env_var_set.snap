@@ -48,8 +48,9 @@ The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
-then unpacks the binaries and installs them to
+then unpacks the binaries and installs them to the first of the following locations
 
+    \$NO_SUCH_ENV_VAR/My Nonexistent Documents
     \$MY_ENV_VAR/My Axolotlsay Documents
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
@@ -316,6 +317,15 @@ install() {
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
+    fi
+    if [ -z "${_install_dir:-}" ]; then
+        # Install to $NO_SUCH_ENV_VAR/My Nonexistent Documents
+        if [ -n "${NO_SUCH_ENV_VAR:-}" ]; then
+            _install_dir="$NO_SUCH_ENV_VAR/My Nonexistent Documents"
+            _env_script_path="$NO_SUCH_ENV_VAR/My Nonexistent Documents/env"
+            _install_dir_expr="$(replace_home "$_install_dir")"
+            _env_script_path_expr="$(replace_home "$_env_script_path")"
+        fi
     fi
     if [ -z "${_install_dir:-}" ]; then
         # Install to $MY_ENV_VAR/My Axolotlsay Documents
@@ -901,8 +911,9 @@ The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
-then unpacks the binaries and installs them to
+then unpacks the binaries and installs them to the first of the following locations
 
+    $env:NO_SUCH_ENV_VAR/My Nonexistent Documents
     $env:MY_ENV_VAR/My Axolotlsay Documents
 
 It will then add that dir to PATH by editing your Environment.Path registry key
@@ -1071,6 +1082,12 @@ function Invoke-Installer($bin_paths, $platforms) {
   # if we're overriding it.
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
 $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+  }
+  if (-Not $dest_dir) {
+    # Install to $env:NO_SUCH_ENV_VAR/My Nonexistent Documents
+    $dest_dir = if (($base_dir = $env:NO_SUCH_ENV_VAR)) {
+      Join-Path $base_dir "My Nonexistent Documents"
+    }
   }
   if (-Not $dest_dir) {
     # Install to $env:MY_ENV_VAR/My Axolotlsay Documents

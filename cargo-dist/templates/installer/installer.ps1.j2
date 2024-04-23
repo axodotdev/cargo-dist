@@ -12,15 +12,18 @@ The installer for {{ app_name }} {{ app_version }}
 
 This script detects what platform you're on and fetches an appropriate archive from
 {{ base_url }}
-then unpacks the binaries and installs them to {% if install_path.kind == "CargoHome" -%}
-    $env:CARGO_HOME\bin ($HOME\.cargo\bin)
-{%- elif install_path.kind == "HomeSubdir" -%}
-    $HOME\{{ install_path.subdir }}
-{%- elif install_path.kind == "EnvSubdir" -%}
-    $env:{{ install_path.env_key }}\{{ install_path.subdir }}
-{%- else -%}
+then unpacks the binaries and installs them to{% if install_paths|length > 1 %} the first of the following locations{% endif %}
+{% for install_path in install_paths %}
+{%- if install_path.kind == "CargoHome" %}
+    $env:CARGO_HOME/bin (or $HOME/.cargo/bin)
+{%- elif install_path.kind == "HomeSubdir" %}
+    $HOME/{{ install_path.subdir }}
+{%- elif install_path.kind == "EnvSubdir" %}
+    $env:{{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}
+{%- else %}
     {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {%- endif %}
+{%- endfor %}
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -194,50 +197,50 @@ function Download($download_url, $platforms) {
 }
 
 function Invoke-Installer($bin_paths, $platforms) {
-{% if install_path.kind == "CargoHome" %}
-  # first try CARGO_HOME, then fallback to HOME
-  # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
-  $root = if (($base_dir = $env:CARGO_HOME)) {
-    $base_dir
-  } elseif (($base_dir = $HOME)) {
-    Join-Path $base_dir ".cargo"
-  } else {
-    throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
-  }
-
-  $dest_dir = Join-Path $root "bin"
-
-  # If we need to override the above
+  $dest_dir = $null
+  # Before actually consulting the configured install strategy, see
+  # if we're overriding it.
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+{% if install_paths| selectattr("kind", "equalto", "CargoHome") %}
     $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
-  }
-{% elif install_path.kind == "HomeSubdir" %}
-  # Install to this subdir of the user's home dir
-  $dest_dir = if (($base_dir = $HOME)) {
-    Join-Path $base_dir "{{ install_path.subdir }}"
-  } else {
-    throw "ERROR: could not find your HOME dir to install binaries to"
-  }
-
-  # If we need to override the above
-  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+{%- else -%}
     $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+{%- endif %}
   }
-{% elif install_path.kind == "EnvSubdir" %}
-  # Install to this subdir of the user's {{ install_path.env_key }} dir
-  $dest_dir = if (($base_dir = $env:{{ install_path.env_key }})) {
-    Join-Path $base_dir "{{ install_path.subdir }}"
-  } else {
-    throw "ERROR: could not find your {{ install_path.env_key }} dir to install binaries to"
-  }
+{%- for install_path in install_paths %}
+  if (-Not $dest_dir) {
+{%- if install_path.kind == "CargoHome" %}
+    # first try $env:CARGO_HOME, then fallback to $HOME
+    # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
+    $root = if (($base_dir = $env:CARGO_HOME)) {
+      $base_dir
+    } elseif (($base_dir = $HOME)) {
+      Join-Path $base_dir ".cargo"
+    } else {
+      throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
+    }
 
-  # If we need to override the above
-  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-    $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    $dest_dir = Join-Path $root "bin"
+{%- elif install_path.kind == "HomeSubdir" %}
+    # Install to $HOME/{{ install_path.subdir }}
+    $dest_dir = if (($base_dir = $HOME)) {
+      Join-Path $base_dir "{{ install_path.subdir }}"
+    }
+{%- elif install_path.kind == "EnvSubdir" %}
+    # Install to $env:{{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}
+    $dest_dir = if (($base_dir = $env:{{ install_path.env_key }})) {
+      Join-Path $base_dir "{{ install_path.subdir }}"
+    }
+{%- else %}
+    {{ error("unimplemented install_path format: " ~ install_path.kind) }}
+{%- endif %}
   }
-{% else %}
-  {{ error("unimplemented install_path format: " ~ install_path.kind) }}
-{% endif %}
+{%- endfor %}
+
+  # Looks like all of the above assignments failed
+  if (-Not $dest_dir) {
+    throw "ERROR: could not find a valid path to install to; please check the installation instructions"
+  }
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $dest_dir.replace("\", "\\"))
