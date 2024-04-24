@@ -790,6 +790,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Only the final value merged into a package_config matters
             global_artifacts_jobs: _,
             // Only the final value merged into a package_config matters
+            source_tarball: _,
+            // Only the final value merged into a package_config matters
             host_jobs: _,
             // Only the final value merged into a package_config matters
             publish_jobs: _,
@@ -1288,6 +1290,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
     fn add_source_tarball(&mut self, _tag: &str, to_release: ReleaseIdx) {
         if !self.global_artifacts_enabled() {
+            return;
+        }
+
+        if !self.workspace_metadata.source_tarball.unwrap_or(true) {
             return;
         }
 
@@ -2728,7 +2734,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Add executable zips to the Release
             self.add_executable_zip(release);
 
-            // Always add the source tarball
+            // Add the source tarball if appropriate
             self.add_source_tarball(&announcing.tag, release);
 
             // Add any extra artifacts defined in the config
