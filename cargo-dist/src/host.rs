@@ -4,7 +4,7 @@ use crate::{
     announce::{announcement_axodotdev, announcement_github, AnnouncementTag},
     check_integrity,
     config::{CiStyle, Config, HostArgs, HostStyle, HostingStyle},
-    errors::{DistResult, Result},
+    errors::DistResult,
     gather_work,
     manifest::save_manifest,
     DistGraph, DistGraphBuilder, HostingInfo,
@@ -14,7 +14,7 @@ use cargo_dist_schema::{DistManifest, Hosting};
 use gazenot::{AnnouncementKey, Gazenot};
 
 /// Do hosting
-pub fn do_host(cfg: &Config, host_args: HostArgs) -> Result<DistManifest> {
+pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
     check_integrity(cfg)?;
 
     // the "create hosting" step is kinda intertwined with details of gather_work,
@@ -71,7 +71,7 @@ impl<'a> DistGraphBuilder<'a> {
         &mut self,
         cfg: &Config,
         announcing: &AnnouncementTag,
-    ) -> Result<()> {
+    ) -> DistResult<()> {
         // If we don't think we can host things, don't bother
         let Some(hosting) = &self.inner.hosting else {
             return Ok(());

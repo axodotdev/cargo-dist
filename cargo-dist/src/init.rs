@@ -12,7 +12,7 @@ use crate::{
         PublishStyle, ZipStyle,
     },
     do_generate,
-    errors::{DistError, DistResult, Result},
+    errors::{DistError, DistResult},
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
@@ -44,7 +44,7 @@ struct MultiDistMetadata {
 }
 
 /// Run 'cargo dist init'
-pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
+pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let workspace = config::get_project()?;
 
     // Load in the workspace toml to edit and write back
@@ -136,7 +136,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> Result<()> {
     Ok(())
 }
 
-fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) -> Result<bool> {
+fn init_dist_profile(_cfg: &Config, workspace_toml: &mut toml_edit::Document) -> DistResult<bool> {
     let profiles = workspace_toml["profile"].or_insert(toml_edit::table());
     if let Some(t) = profiles.as_table_mut() {
         t.set_implicit(true)

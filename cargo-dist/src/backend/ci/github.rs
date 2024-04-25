@@ -202,7 +202,7 @@ impl GithubCiInfo {
     }
 
     /// Write release.yml to disk
-    pub fn write_to_disk(&self, dist: &DistGraph) -> Result<(), miette::Report> {
+    pub fn write_to_disk(&self, dist: &DistGraph) -> DistResult<()> {
         let ci_file = self.github_ci_path(dist);
         let rendered = self.generate_github_ci(dist)?;
 

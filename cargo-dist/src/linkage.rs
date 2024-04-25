@@ -27,7 +27,7 @@ pub struct LinkageArgs {
 }
 
 /// Determinage dynamic linkage of built artifacts (impl of `cargo dist linkage`)
-pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> Result<()> {
+pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> DistResult<()> {
     let manifest = if let Some(target) = args.from_json.clone() {
         let file = SourceFile::load_local(target)?;
         file.deserialize_json()?
