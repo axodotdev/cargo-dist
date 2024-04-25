@@ -3156,6 +3156,8 @@ pub struct InstallReceipt {
     pub version: String,
     /// The software which installed this receipt
     pub provider: Provider,
+    /// A list of aliases binaries were installed under
+    pub aliases: BTreeMap<String, Vec<String>>,
 }
 
 impl InstallReceipt {
@@ -3187,6 +3189,7 @@ impl InstallReceipt {
                 source: ProviderSource::CargoDist,
                 version: env!("CARGO_PKG_VERSION").to_owned(),
             },
+            aliases: BTreeMap::default(),
         })
     }
 }

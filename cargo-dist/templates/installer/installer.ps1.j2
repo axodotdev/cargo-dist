@@ -79,6 +79,7 @@ function Install-Binary($install_args) {
       {%- endfor %}
       {%- endfor %}
       }
+      "aliases_json" = '{{ aliases[artifact.target_triples[0]] | tojson }}'
     }
   {%- endfor %}
   }
@@ -289,6 +290,8 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
+  # Also replace the aliases with the arch-specific one
+  $receipt = $receipt.Replace('"aliases":{}', -join('"aliases":',  $info['aliases_json']))
 
   # Write the install receipt
   $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue

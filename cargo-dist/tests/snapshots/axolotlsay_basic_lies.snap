@@ -28,7 +28,7 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"aliases":{},"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/axolotlsay"
@@ -260,6 +260,22 @@ replace_home() {
     fi
 }
 
+json_aliases() {
+    local _arch="$1"
+
+    case "$_arch" in 
+    "aarch64-apple-darwin")
+        echo '{}'
+        ;;
+    "x86_64-apple-darwin")
+        echo '{}'
+        ;;
+    "x86_64-unknown-linux-gnu")
+        echo '{}'
+        ;;
+    esac
+}
+
 aliases_for_binary() {
     local _bin="$1"
     local _arch="$2"
@@ -383,6 +399,8 @@ install() {
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
+    # Also replace the aliases with the arch-specific one
+    RECEIPT=$(echo "$RECEIPT" | sed "s'\"aliases\":{}'\"aliases\":$(json_aliases "$_arch")'")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
@@ -1041,7 +1059,7 @@ $app_name = 'axolotlsay'
 $app_version = '0.2.1'
 
 $receipt = @"
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"aliases":{},"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 "@
 $receipt_home = "${env:LOCALAPPDATA}\axolotlsay"
 
@@ -1061,6 +1079,7 @@ function Install-Binary($install_args) {
       "zip_ext" = ".tar.gz"
       "aliases" = @{
       }
+      "aliases_json" = '{}'
     }
   }
 
@@ -1244,6 +1263,8 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
+  # Also replace the aliases with the arch-specific one
+  $receipt = $receipt.Replace('"aliases":{}', -join('"aliases":',  $info['aliases_json']))
 
   # Write the install receipt
   $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue
