@@ -217,7 +217,7 @@ pub fn build_cargo_target(
 }
 
 /// Build a cargo target
-pub fn rustup_toolchain(_dist_graph: &DistGraph, cmd: &RustupStep) -> Result<()> {
+pub fn rustup_toolchain(_dist_graph: &DistGraph, cmd: &RustupStep) -> DistResult<()> {
     eprintln!("running rustup to ensure you have {} installed", cmd.target);
     Cmd::new(&cmd.rustup.cmd, "install rustup toolchain")
         .arg("target")

@@ -7,7 +7,7 @@ use serde::Serialize;
 use super::InstallerInfo;
 use crate::{
     backend::templates::{Templates, TEMPLATE_INSTALLER_NPM},
-    errors::Result,
+    errors::DistResult,
 };
 
 /// Info about an npm installer
@@ -37,7 +37,7 @@ pub struct NpmInstallerInfo {
     pub inner: InstallerInfo,
 }
 
-pub(crate) fn write_npm_project(templates: &Templates, info: &NpmInstallerInfo) -> Result<()> {
+pub(crate) fn write_npm_project(templates: &Templates, info: &NpmInstallerInfo) -> DistResult<()> {
     let zip_dir = &info.package_dir;
     let results = templates.render_dir_to_clean_strings(TEMPLATE_INSTALLER_NPM, info)?;
     for (relpath, rendered) in results {
