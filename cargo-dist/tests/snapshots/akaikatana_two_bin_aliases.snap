@@ -21,17 +21,17 @@ fi
 
 set -u
 
-APP_NAME="axolotlsay"
-APP_VERSION="0.2.1"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1}"
+APP_NAME="akaikatana-repack"
+APP_VERSION="0.2.0"
+ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
-RECEIPT_HOME="${HOME}/.config/axolotlsay"
+RECEIPT_HOME="${HOME}/.config/akaikatana-repack"
 
 # glibc provided by our Ubuntu 20.04 runners;
 # in the future, we should actually record which glibc was on the runner,
@@ -42,20 +42,20 @@ BUILDER_GLIBC_SERIES="31"
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
     cat <<EOF
-axolotlsay-installer.sh
+akaikatana-repack-installer.sh
 
-The installer for axolotlsay 0.2.1
+The installer for akaikatana-repack 0.2.0
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
+https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0
 then unpacks the binaries and installs them to
 
-    \$MY_ENV_VAR/My Axolotlsay Documents/bin
+    \$CARGO_HOME/bin (or \$HOME/.cargo/bin)
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
 USAGE:
-    axolotlsay-installer.sh [OPTIONS]
+    akaikatana-repack-installer.sh [OPTIONS]
 
 OPTIONS:
     -v, --verbose
@@ -139,22 +139,22 @@ download_binary_and_run_installer() {
     # Lookup what to download/unpack based on platform
     case "$_arch" in 
         "aarch64-apple-darwin")
-            _artifact_name="axolotlsay-aarch64-apple-darwin.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
-            _bins_js_array='"axolotlsay"'
+            _artifact_name="akaikatana-repack-aarch64-apple-darwin.tar.xz"
+            _zip_ext=".tar.xz"
+            _bins="akextract akmetadata akrepack"
+            _bins_js_array='"akextract","akmetadata","akrepack"'
             ;;
         "x86_64-apple-darwin")
-            _artifact_name="axolotlsay-x86_64-apple-darwin.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
-            _bins_js_array='"axolotlsay"'
+            _artifact_name="akaikatana-repack-x86_64-apple-darwin.tar.xz"
+            _zip_ext=".tar.xz"
+            _bins="akextract akmetadata akrepack"
+            _bins_js_array='"akextract","akmetadata","akrepack"'
             ;;
         "x86_64-unknown-linux-gnu")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
-            _bins_js_array='"axolotlsay"'
+            _artifact_name="akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz"
+            _zip_ext=".tar.xz"
+            _bins="akextract akmetadata akrepack"
+            _bins_js_array='"akextract","akmetadata","akrepack"'
             ;;
         *)
             err "there isn't a package for $_arch"
@@ -267,6 +267,12 @@ aliases_for_binary() {
     case "$_arch" in 
     "aarch64-apple-darwin")
         case "$_bin" in
+            "akextract")
+                echo "akextract-link"
+            ;;
+            "akmetadata")
+                echo "akmetadata-link"
+            ;;
         *)
             echo ""
             ;;
@@ -274,6 +280,12 @@ aliases_for_binary() {
         ;;
     "x86_64-apple-darwin")
         case "$_bin" in
+            "akextract")
+                echo "akextract-link"
+            ;;
+            "akmetadata")
+                echo "akmetadata-link"
+            ;;
         *)
             echo ""
             ;;
@@ -281,6 +293,12 @@ aliases_for_binary() {
         ;;
     "x86_64-unknown-linux-gnu")
         case "$_bin" in
+            "akextract")
+                echo "akextract-link"
+            ;;
+            "akmetadata")
+                echo "akmetadata-link"
+            ;;
         *)
             echo ""
             ;;
@@ -341,18 +359,33 @@ install() {
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR")"
+        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
     fi
     if [ -z "${_install_dir:-}" ]; then
-        # Install to $MY_ENV_VAR/My Axolotlsay Documents/bin
-        if [ -n "${MY_ENV_VAR:-}" ]; then
-            _install_dir="$MY_ENV_VAR/My Axolotlsay Documents/bin"
-            _env_script_path="$MY_ENV_VAR/My Axolotlsay Documents/bin/env"
-            _install_dir_expr="$(replace_home "$_install_dir")"
-            _env_script_path_expr="$(replace_home "$_env_script_path")"
+        # first try $CARGO_HOME, then fallback to $HOME/.cargo
+        if [ -n "${CARGO_HOME:-}" ]; then
+            _install_dir="$CARGO_HOME/bin"
+            _env_script_path="$CARGO_HOME/env"
+            # Initially make this early-bound to erase the potentially-temporary env-var
+            _install_dir_expr="$_install_dir"
+            _env_script_path_expr="$_env_script_path"
+            # If CARGO_HOME was set but it ended up being the default $HOME-based path,
+            # then keep things late-bound. Otherwise bake the value for safety.
+            # This is what rustup does, and accurately reproducing it is useful.
+            if [ -n "${HOME:-}" ]; then
+                if [ "$HOME/.cargo/bin" = "$_install_dir" ]; then
+                    _install_dir_expr='$HOME/.cargo/bin'
+                    _env_script_path_expr='$HOME/.cargo/env'
+                fi
+            fi
+        elif [ -n "${HOME:-}" ]; then
+            _install_dir="$HOME/.cargo/bin"
+            _env_script_path="$HOME/.cargo/env"
+            _install_dir_expr='$HOME/.cargo/bin'
+            _env_script_path_expr='$HOME/.cargo/env'
         fi
     fi
 
@@ -919,26 +952,26 @@ downloader() {
 download_binary_and_run_installer "$@" || exit 1
 
 ================ formula.rb ================
-class Axolotlsay < Formula
-  desc "💬 a CLI for learning to distribute CLIs in rust"
-  homepage "https://github.com/axodotdev/axolotlsay"
-  version "0.2.1"
+class AkaikatanaRepack < Formula
+  desc "The akaikatana-repack application"
+  homepage "https://github.com/mistydemeo/akaikatana-repack"
+  version "0.2.0"
   if OS.mac?
     if Hardware::CPU.arm?
-      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz"
+      url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz"
+      url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz"
     end
   end
   if OS.linux?
     if Hardware::CPU.intel?
-      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
+      url "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz"
     end
   end
-  license "MIT OR Apache-2.0"
+  license "GPL-2.0-or-later"
 
-  ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-unknown-linux-gnu": {}}
+  ALIASES = {"aarch64-apple-darwin": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}, "x86_64-apple-darwin": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}, "x86_64-unknown-linux-gnu": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}}
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -957,13 +990,13 @@ class Axolotlsay < Formula
 
   def install
     if OS.mac? && Hardware::CPU.arm?
-      bin.install "axolotlsay"
+      bin.install "akextract", "akmetadata", "akrepack"
     end
     if OS.mac? && Hardware::CPU.intel?
-      bin.install "axolotlsay"
+      bin.install "akextract", "akmetadata", "akrepack"
     end
     if OS.linux? && Hardware::CPU.intel?
-      bin.install "axolotlsay"
+      bin.install "akextract", "akmetadata", "akrepack"
     end
 
     install_aliases!
@@ -987,15 +1020,15 @@ end
 <#
 .SYNOPSIS
 
-The installer for axolotlsay 0.2.1
+The installer for akaikatana-repack 0.2.0
 
 .DESCRIPTION
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
+https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0
 then unpacks the binaries and installs them to
 
-    $env:MY_ENV_VAR/My Axolotlsay Documents/bin
+    $env:CARGO_HOME/bin (or $HOME/.cargo/bin)
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -1012,20 +1045,20 @@ Print help
 
 param (
     [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
-    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1',
+    [string]$ArtifactDownloadUrl = 'https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0',
     [Parameter(HelpMessage = "Don't add the install directory to PATH")]
     [switch]$NoModifyPath,
     [Parameter(HelpMessage = "Print Help")]
     [switch]$Help
 )
 
-$app_name = 'axolotlsay'
-$app_version = '0.2.1'
+$app_name = 'akaikatana-repack'
+$app_version = '0.2.0'
 
 $receipt = @"
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
 "@
-$receipt_home = "${env:LOCALAPPDATA}\axolotlsay"
+$receipt_home = "${env:LOCALAPPDATA}\akaikatana-repack"
 
 function Install-Binary($install_args) {
   if ($Help) {
@@ -1038,10 +1071,12 @@ function Install-Binary($install_args) {
   # Platform info injected by cargo-dist
   $platforms = @{
     "x86_64-pc-windows-msvc" = @{
-      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
-      "bins" = "axolotlsay.exe"
-      "zip_ext" = ".tar.gz"
+      "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc.zip"
+      "bins" = "akextract.exe", "akmetadata.exe", "akrepack.exe"
+      "zip_ext" = ".zip"
       "aliases" = @{
+        "akextract.exe" = "akextract-link.exe"
+        "akmetadata.exe" = "akmetadata-link.exe"
       }
     }
   }
@@ -1150,7 +1185,7 @@ function Download($download_url, $platforms) {
   if ($null -ne $info["updater"]) {
     $updater_id = $info["updater"]["artifact_name"]
     $updater_url = "$download_url/$updater_id"
-    $out_name = "$tmp\axolotlsay-update.exe"
+    $out_name = "$tmp\akaikatana-repack-update.exe"
 
     $wc.downloadFile($updater_url, $out_name)
     $bin_paths += $out_name
@@ -1181,13 +1216,21 @@ function Invoke-Installer($bin_paths, $platforms) {
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-$dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+
+    $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
   }
   if (-Not $dest_dir) {
-    # Install to $env:MY_ENV_VAR/My Axolotlsay Documents/bin
-    $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
-      Join-Path $base_dir "My Axolotlsay Documents/bin"
+    # first try $env:CARGO_HOME, then fallback to $HOME
+    # (for whatever reason $HOME is not a normal env var and doesn't need the $env: prefix)
+    $root = if (($base_dir = $env:CARGO_HOME)) {
+      $base_dir
+    } elseif (($base_dir = $HOME)) {
+      Join-Path $base_dir ".cargo"
+    } else {
+      throw "ERROR: could not find your HOME dir or CARGO_HOME to install binaries to"
     }
+
+    $dest_dir = Join-Path $root "bin"
   }
 
   # Looks like all of the above assignments failed
@@ -1226,7 +1269,7 @@ $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
   # .NET's APIs which actually do what you tell them (also apparently utf8NoBOM is the
   # default in newer .NETs but I'd rather not rely on that at this point).
   $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
-  [IO.File]::WriteAllLines("$receipt_home/axolotlsay-receipt.json", "$receipt", $Utf8NoBomEncoding)
+  [IO.File]::WriteAllLines("$receipt_home/akaikatana-repack-receipt.json", "$receipt", $Utf8NoBomEncoding)
 
   Write-Information "Everything's installed!"
   if (-not $NoModifyPath) {
@@ -1345,59 +1388,48 @@ try {
 ================ dist-manifest.json ================
 {
   "dist_version": "CENSORED",
-  "announcement_tag": "v0.2.1",
+  "announcement_tag": "v0.2.0",
   "announcement_tag_is_implicit": true,
   "announcement_is_prerelease": false,
-  "announcement_title": "Version 0.2.1",
-  "announcement_changelog": "```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +--------------------------------------+\n         | now with linux static musl binary!!! |\n         +--------------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.1\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axolotlsay\n```\n\n## Download axolotlsay 0.2.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
+  "announcement_title": "v0.2.0",
+  "announcement_github_body": "## Install akaikatana-repack 0.2.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -c \"irm https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install mistydemeo/homebrew-formulae/akaikatana-repack\n```\n\n## Download akaikatana-repack 0.2.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [akaikatana-repack-aarch64-apple-darwin.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256) |\n| [akaikatana-repack-x86_64-apple-darwin.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256) |\n| [akaikatana-repack-x86_64-pc-windows-msvc.zip](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256) |\n| [akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
   "releases": [
     {
-      "app_name": "axolotlsay",
-      "app_version": "0.2.1",
+      "app_name": "akaikatana-repack",
+      "app_version": "0.2.0",
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",
-        "axolotlsay-installer.sh",
-        "axolotlsay-installer.ps1",
-        "axolotlsay.rb",
-        "axolotlsay-aarch64-apple-darwin.tar.gz",
-        "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
-        "axolotlsay-x86_64-apple-darwin.tar.gz",
-        "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
-        "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
-        "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
-        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
-        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
+        "akaikatana-repack-installer.sh",
+        "akaikatana-repack-installer.ps1",
+        "akaikatana-repack.rb",
+        "akaikatana-repack-aarch64-apple-darwin.tar.xz",
+        "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256",
+        "akaikatana-repack-x86_64-apple-darwin.tar.xz",
+        "akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256",
+        "akaikatana-repack-x86_64-pc-windows-msvc.zip",
+        "akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256",
+        "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz",
+        "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256"
       ],
       "hosting": {
         "github": {
-          "artifact_download_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1"
+          "artifact_download_url": "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
         }
       }
     }
   ],
   "artifacts": {
-    "axolotlsay-aarch64-apple-darwin.tar.gz": {
-      "name": "axolotlsay-aarch64-apple-darwin.tar.gz",
+    "akaikatana-repack-aarch64-apple-darwin.tar.xz": {
+      "name": "akaikatana-repack-aarch64-apple-darwin.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "aarch64-apple-darwin"
       ],
       "assets": [
         {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
+          "name": "LICENSE",
+          "path": "LICENSE",
           "kind": "license"
         },
         {
@@ -1406,61 +1438,63 @@ try {
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-aarch64-apple-darwin-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay",
+          "id": "akaikatana-repack-aarch64-apple-darwin-akextract",
+          "name": "akextract",
+          "path": "akextract",
+          "kind": "executable"
+        },
+        {
+          "id": "akaikatana-repack-aarch64-apple-darwin-akmetadata",
+          "name": "akmetadata",
+          "path": "akmetadata",
+          "kind": "executable"
+        },
+        {
+          "id": "akaikatana-repack-aarch64-apple-darwin-akrepack",
+          "name": "akrepack",
+          "path": "akrepack",
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256"
+      "checksum": "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256"
     },
-    "axolotlsay-aarch64-apple-darwin.tar.gz.sha256": {
-      "name": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
+    "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256": {
+      "name": "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "aarch64-apple-darwin"
       ]
     },
-    "axolotlsay-installer.ps1": {
-      "name": "axolotlsay-installer.ps1",
+    "akaikatana-repack-installer.ps1": {
+      "name": "akaikatana-repack-installer.ps1",
       "kind": "installer",
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex\"",
+      "install_hint": "powershell -c \"irm https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
-    "axolotlsay-installer.sh": {
-      "name": "axolotlsay-installer.sh",
+    "akaikatana-repack-installer.sh": {
+      "name": "akaikatana-repack-installer.sh",
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu"
       ],
-      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh",
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
-    "axolotlsay-x86_64-apple-darwin.tar.gz": {
-      "name": "axolotlsay-x86_64-apple-darwin.tar.gz",
+    "akaikatana-repack-x86_64-apple-darwin.tar.xz": {
+      "name": "akaikatana-repack-x86_64-apple-darwin.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-apple-darwin"
       ],
       "assets": [
         {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
+          "name": "LICENSE",
+          "path": "LICENSE",
           "kind": "license"
         },
         {
@@ -1469,41 +1503,43 @@ try {
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-apple-darwin-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay",
+          "id": "akaikatana-repack-x86_64-apple-darwin-akextract",
+          "name": "akextract",
+          "path": "akextract",
+          "kind": "executable"
+        },
+        {
+          "id": "akaikatana-repack-x86_64-apple-darwin-akmetadata",
+          "name": "akmetadata",
+          "path": "akmetadata",
+          "kind": "executable"
+        },
+        {
+          "id": "akaikatana-repack-x86_64-apple-darwin-akrepack",
+          "name": "akrepack",
+          "path": "akrepack",
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256"
+      "checksum": "akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256"
     },
-    "axolotlsay-x86_64-apple-darwin.tar.gz.sha256": {
-      "name": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+    "akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256": {
+      "name": "akaikatana-repack-x86_64-apple-darwin.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "x86_64-apple-darwin"
       ]
     },
-    "axolotlsay-x86_64-pc-windows-msvc.tar.gz": {
-      "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+    "akaikatana-repack-x86_64-pc-windows-msvc.zip": {
+      "name": "akaikatana-repack-x86_64-pc-windows-msvc.zip",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ],
       "assets": [
         {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
+          "name": "LICENSE",
+          "path": "LICENSE",
           "kind": "license"
         },
         {
@@ -1512,41 +1548,43 @@ try {
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-pc-windows-msvc-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay.exe",
+          "id": "akaikatana-repack-x86_64-pc-windows-msvc-akextract",
+          "name": "akextract",
+          "path": "akextract.exe",
+          "kind": "executable"
+        },
+        {
+          "id": "akaikatana-repack-x86_64-pc-windows-msvc-akmetadata",
+          "name": "akmetadata",
+          "path": "akmetadata.exe",
+          "kind": "executable"
+        },
+        {
+          "id": "akaikatana-repack-x86_64-pc-windows-msvc-akrepack",
+          "name": "akrepack",
+          "path": "akrepack.exe",
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256"
+      "checksum": "akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256"
     },
-    "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256": {
-      "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
+    "akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256": {
+      "name": "akaikatana-repack-x86_64-pc-windows-msvc.zip.sha256",
       "kind": "checksum",
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ]
     },
-    "axolotlsay-x86_64-unknown-linux-gnu.tar.gz": {
-      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
+    "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz": {
+      "name": "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ],
       "assets": [
         {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
+          "name": "LICENSE",
+          "path": "LICENSE",
           "kind": "license"
         },
         {
@@ -1555,30 +1593,42 @@ try {
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay",
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akextract",
+          "name": "akextract",
+          "path": "akextract",
+          "kind": "executable"
+        },
+        {
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akmetadata",
+          "name": "akmetadata",
+          "path": "akmetadata",
+          "kind": "executable"
+        },
+        {
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akrepack",
+          "name": "akrepack",
+          "path": "akrepack",
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
+      "checksum": "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256"
     },
-    "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256": {
-      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256",
+    "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ]
     },
-    "axolotlsay.rb": {
-      "name": "axolotlsay.rb",
+    "akaikatana-repack.rb": {
+      "name": "akaikatana-repack.rb",
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu"
       ],
-      "install_hint": "brew install axolotlsay",
+      "install_hint": "brew install mistydemeo/homebrew-formulae/akaikatana-repack",
       "description": "Install prebuilt binaries via Homebrew"
     },
     "source.tar.gz": {
@@ -1641,3 +1691,325 @@ try {
   },
   "linkage": []
 }
+
+================ release.yml ================
+# Copyright 2022-2024, axodotdev
+# SPDX-License-Identifier: MIT or Apache-2.0
+#
+# CI that:
+#
+# * checks for a Git Tag that looks like a release
+# * builds artifacts with cargo-dist (archives, installers, hashes)
+# * uploads those artifacts to temporary workflow zip
+# * on success, uploads the artifacts to a GitHub Release
+#
+# Note that the GitHub Release will be created with a generated
+# title/body based on your changelogs.
+
+name: Release
+
+permissions:
+  contents: write
+
+# This task will run whenever you push a git tag that looks like a version
+# like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
+# Various formats will be parsed into a VERSION and an optional PACKAGE_NAME, where
+# PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
+# must be a Cargo-style SemVer Version (must have at least major.minor.patch).
+#
+# If PACKAGE_NAME is specified, then the announcement will be for that
+# package (erroring out if it doesn't have the given version or isn't cargo-dist-able).
+#
+# If PACKAGE_NAME isn't specified, then the announcement will be for all
+# (cargo-dist-able) packages in the workspace with that version (this mode is
+# intended for workspaces with only one dist-able package, or with all dist-able
+# packages versioned/released in lockstep).
+#
+# If you push multiple tags at once, separate instances of this workflow will
+# spin up, creating an independent announcement for each one. However, GitHub
+# will hard limit this to 3 tags per commit, as it will assume more tags is a
+# mistake.
+#
+# If there's a prerelease-style suffix to the version, then the release(s)
+# will be marked as a prerelease.
+on:
+  push:
+    tags:
+      - '**[0-9]+.[0-9]+.[0-9]+*'
+  pull_request:
+
+jobs:
+  # Run 'cargo dist plan' (or host) to determine what tasks we need to do
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      val: ${{ steps.plan.outputs.manifest }}
+      tag: ${{ !github.event.pull_request && github.ref_name || '' }}
+      tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
+      publishing: ${{ !github.event.pull_request }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Rust
+        run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
+      - name: Install cargo-dist
+        # we specify bash to get pipefail; it guards against the `curl` command
+        # failing. otherwise `sh` won't catch that `curl` returned non-0
+        shell: bash
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      # sure would be cool if github gave us proper conditionals...
+      # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
+      # functionality based on whether this is a pull_request, and whether it's from a fork.
+      # (PRs run on the *source* but secrets are usually on the *target* -- that's *good*
+      # but also really annoying to build CI around when it needs secrets to work right.)
+      - id: plan
+        run: |
+          cargo dist ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)) || 'plan' }} --output-format=json > plan-dist-manifest.json
+          echo "cargo dist ran successfully"
+          cat plan-dist-manifest.json
+          echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
+      - name: "Upload dist-manifest.json"
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-plan-dist-manifest
+          path: plan-dist-manifest.json
+
+  # Build and packages all the platform-specific things
+  build-local-artifacts:
+    name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
+    # Let the initial task tell us to not run (currently very blunt)
+    needs:
+      - plan
+    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
+    strategy:
+      fail-fast: false
+      # Target platforms/runners are computed by cargo-dist in create-release.
+      # Each member of the matrix has the following arguments:
+      #
+      # - runner: the github runner
+      # - dist-args: cli flags to pass to cargo dist
+      # - install-dist: expression to run to install cargo-dist on the runner
+      #
+      # Typically there will be:
+      # - 1 "global" task that builds universal installers
+      # - N "local" tasks that build each platform's binaries and platform-specific installers
+      matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix }}
+    runs-on: ${{ matrix.runner }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
+    steps:
+      - name: enable windows longpaths
+        run: |
+          git config --global core.longpaths true
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Rust
+        run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
+      - uses: swatinem/rust-cache@v2
+        with:
+          key: ${{ join(matrix.targets, '-') }}
+      - name: Install cargo-dist
+        run: ${{ matrix.install_dist }}
+      # Get the dist-manifest
+      - name: Fetch local artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: target/distrib/
+          merge-multiple: true
+      - name: Install dependencies
+        run: |
+          ${{ matrix.packages_install }}
+      - name: Build artifacts
+        run: |
+          # Actually do builds and make zips and whatnot
+          cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          echo "cargo dist ran successfully"
+      - id: cargo-dist
+        name: Post-build
+        # We force bash here just because github makes it really hard to get values up
+        # to "real" actions without writing to env-vars, and writing to env-vars has
+        # inconsistent syntax between shell and powershell.
+        shell: bash
+        run: |
+          # Parse out what we just built and upload it to scratch storage
+          echo "paths<<EOF" >> "$GITHUB_OUTPUT"
+          jq --raw-output ".upload_files[]" dist-manifest.json >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          cp dist-manifest.json "$BUILD_MANIFEST_NAME"
+      - name: "Upload artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-build-local-${{ join(matrix.targets, '_') }}
+          path: |
+            ${{ steps.cargo-dist.outputs.paths }}
+            ${{ env.BUILD_MANIFEST_NAME }}
+
+  # Build and package all the platform-agnostic(ish) things
+  build-global-artifacts:
+    needs:
+      - plan
+      - build-local-artifacts
+    runs-on: "ubuntu-20.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Rust
+        run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
+      - name: Install cargo-dist
+        shell: bash
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      # Get all the local artifacts for the global tasks to use (for e.g. checksums)
+      - name: Fetch local artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: target/distrib/
+          merge-multiple: true
+      - id: cargo-dist
+        shell: bash
+        run: |
+          cargo dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json "--artifacts=global" > dist-manifest.json
+          echo "cargo dist ran successfully"
+
+          # Parse out what we just built and upload it to scratch storage
+          echo "paths<<EOF" >> "$GITHUB_OUTPUT"
+          jq --raw-output ".upload_files[]" dist-manifest.json >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          cp dist-manifest.json "$BUILD_MANIFEST_NAME"
+      - name: "Upload artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-build-global
+          path: |
+            ${{ steps.cargo-dist.outputs.paths }}
+            ${{ env.BUILD_MANIFEST_NAME }}
+  # Determines if we should publish/announce
+  host:
+    needs:
+      - plan
+      - build-local-artifacts
+      - build-global-artifacts
+    # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
+    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: "ubuntu-20.04"
+    outputs:
+      val: ${{ steps.host.outputs.manifest }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Rust
+        run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
+      - name: Install cargo-dist
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+      # Fetch artifacts from scratch-storage
+      - name: Fetch artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: target/distrib/
+          merge-multiple: true
+      # This is a harmless no-op for GitHub Releases, hosting for that happens in "announce"
+      - id: host
+        shell: bash
+        run: |
+          cargo dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --output-format=json > dist-manifest.json
+          echo "artifacts uploaded and released successfully"
+          cat dist-manifest.json
+          echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
+      - name: "Upload dist-manifest.json"
+        uses: actions/upload-artifact@v4
+        with:
+          # Overwrite the previous copy
+          name: artifacts-dist-manifest
+          path: dist-manifest.json
+
+  publish-homebrew-formula:
+    needs:
+      - plan
+      - host
+    runs-on: "ubuntu-20.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PLAN: ${{ needs.plan.outputs.val }}
+      GITHUB_USER: "axo bot"
+      GITHUB_EMAIL: "admin+bot@axo.dev"
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: "mistydemeo/homebrew-formulae"
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      # So we have access to the formula
+      - name: Fetch homebrew formulae
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: Formula/
+          merge-multiple: true
+      # This is extra complex because you can make your Formula name not match your app name
+      # so we need to find releases with a *.rb file, and publish with that filename.
+      - name: Commit formula files
+        run: |
+          git config --global user.name "${GITHUB_USER}"
+          git config --global user.email "${GITHUB_EMAIL}"
+
+          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith(".rb")] | any)'); do
+            filename=$(echo "$release" | jq '.artifacts[] | select(endswith(".rb"))' --raw-output)
+            name=$(echo "$filename" | sed "s/\.rb$//")
+            version=$(echo "$release" | jq .app_version --raw-output)
+
+            git add "Formula/${filename}"
+            git commit -m "${name} ${version}"
+          done
+          git push
+
+  # Create a GitHub Release while uploading all files to it
+  announce:
+    needs:
+      - plan
+      - host
+      - publish-homebrew-formula
+    # use "always() && ..." to allow us to wait for all publish jobs while
+    # still allowing individual publish jobs to skip themselves (for prereleases).
+    # "host" however must run to completion, no skipping allowed!
+    if: ${{ always() && needs.host.result == 'success' && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') }}
+    runs-on: "ubuntu-20.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: "Download GitHub Artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: artifacts
+          merge-multiple: true
+      - name: Cleanup
+        run: |
+          # Remove the granular manifests
+          rm -f artifacts/*-dist-manifest.json
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.plan.outputs.tag }}
+          name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
+          body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
+          prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
+          artifacts: "artifacts/*"

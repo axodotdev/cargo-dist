@@ -257,6 +257,7 @@ fn get_new_dist_metadata(
             hosting: None,
             extra_artifacts: None,
             github_custom_runners: None,
+            aliases: None,
             tag_namespace: None,
             install_updater: None,
         }
@@ -830,6 +831,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         tag_namespace,
         extra_artifacts: _,
         github_custom_runners: _,
+        aliases: _,
         install_updater,
     } = &meta;
 

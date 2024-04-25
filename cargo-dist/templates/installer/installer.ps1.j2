@@ -72,6 +72,13 @@ function Install-Binary($install_args) {
         "{{ bin }}"{{ ", " if not loop.last else "" }}
       {%- endfor %}
       "zip_ext" = "{{ artifact.zip_style }}"
+      "aliases" = @{
+      {%- for source, dests in aliases[artifact.target_triples[0]] | items %}
+        "{{ source }}" = {% for dest in dests -%}
+          "{{ dest }}"{{ ", " if not loop.last else "" }}
+      {%- endfor %}
+      {%- endfor %}
+      }
     }
   {%- endfor %}
   }
@@ -197,6 +204,23 @@ function Download($download_url, $platforms) {
 }
 
 function Invoke-Installer($bin_paths, $platforms) {
+  # Replaces the placeholder binary entry with the actual list of binaries
+  $arch = Get-TargetTriple
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # X64 is well-supported, including in emulation on ARM64
+    Write-Verbose "$arch is not available, falling back to X64"
+    $arch = "x86_64-pc-windows-msvc"
+  }
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # should not be possible, as currently we always produce X64 binaries.
+    $platforms_json = ConvertTo-Json $platforms
+    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
+  }
+
+  $info = $platforms[$arch]
+
   $dest_dir = $null
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
@@ -253,24 +277,16 @@ function Invoke-Installer($bin_paths, $platforms) {
     Copy-Item "$bin_path" -Destination "$dest_dir"
     Remove-Item "$bin_path" -Recurse -Force
     Write-Information "  $installed_file"
+
+    if (($dests = $info["aliases"][$installed_file])) {
+      $source = Join-Path "$dest_dir" "$installed_file"
+      foreach ($dest_name in $dests) {
+          $dest = Join-Path $dest_dir $dest_name
+          $null = New-Item -ItemType HardLink -Target "$source" -Path "$dest" -Force
+      }
+    }
   }
 
-  # Replaces the placeholder binary entry with the actual list of binaries
-  $arch = Get-TargetTriple
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not available, falling back to X64"
-    $arch = "x86_64-pc-windows-msvc"
-  }
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # should not be possible, as currently we always produce X64 binaries.
-    $platforms_json = ConvertTo-Json $platforms
-    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
-  }
-
-  $info = $platforms[$arch]
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
 

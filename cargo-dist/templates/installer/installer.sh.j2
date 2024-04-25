@@ -225,7 +225,7 @@ download_binary_and_run_installer() {
             ;;
     esac
 
-    install "$_dir" "$_bins" "$@"
+    install "$_dir" "$_bins" "$_arch" "$@"
     local _retval=$?
     if [ "$_retval" != 0 ]; then
         return "$_retval"
@@ -254,6 +254,26 @@ replace_home() {
     else
         echo "$_str"
     fi
+}
+
+aliases_for_binary() {
+    local _bin="$1"
+    local _arch="$2"
+
+    case "$_arch" in {% for artifact in artifacts %}
+    "{{ artifact.target_triples[0] }}")
+        case "$_bin" in
+        {%- for source, dests in aliases[artifact.target_triples[0]] | items %}
+            "{{ source }}")
+                echo "{{ dests | join(" ") }}"
+            ;;
+        {%- endfor %}
+        *)
+            echo ""
+            ;;
+        esac
+        ;;{% endfor %}
+    esac
 }
 
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
@@ -387,11 +407,15 @@ install() {
     # copy all the binaries to the install dir
     local _src_dir="$1"
     local _bins="$2"
+    local _arch="$3"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
         ensure mv "$_bin" "$_install_dir"
         # unzip seems to need this chmod
         ensure chmod +x "$_install_dir/$_bin_name"
+        for _dest in $(aliases_for_binary "$_bin_name" "$_arch"); do
+            ln -s "$_install_dir/$_bin_name" "$_install_dir/$_dest"
+        done
         say "  $_bin_name"
     done
 
