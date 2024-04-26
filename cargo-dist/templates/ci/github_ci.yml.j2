@@ -471,49 +471,7 @@ jobs:
 
 {{%- if 'homebrew' in publish_jobs and tap %}}
 
-  publish-homebrew-formula:
-    needs:
-      - plan
-      - host
-    {{%- for job in host_jobs %}}
-      - custom-{{{ job|safe }}}
-    {{%- endfor %}}
-    runs-on: {{{ global_task.runner }}}
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PLAN: ${{ needs.plan.outputs.val }}
-      GITHUB_USER: "axo bot"
-      GITHUB_EMAIL: "admin+bot@axo.dev"
-    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: {{{ tap }}}
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-      # So we have access to the formula
-      - name: Fetch local artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: artifacts-*
-          path: Formula/
-          merge-multiple: true
-      # This is extra complex because you can make your Formula name not match your app name
-      # so we need to find releases with a *.rb file, and publish with that filename.
-      - name: Commit formula files
-        run: |
-          git config --global user.name "${GITHUB_USER}"
-          git config --global user.email "${GITHUB_EMAIL}"
-
-          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith(".rb")] | any)'); do
-            filename=$(echo "$release" | jq '.artifacts[] | select(endswith(".rb"))' --raw-output)
-            name=$(echo "$filename" | sed "s/\.rb$//")
-            version=$(echo "$release" | jq .app_version --raw-output)
-
-            git add "Formula/${filename}"
-            git commit -m "${name} ${version}"
-          done
-          git push
-
+{{% include 'ci/partials/publish_homebrew.yml' %}}
 {{%- endif %}}
 
 {{%- for job in user_publish_jobs %}}
