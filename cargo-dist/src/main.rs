@@ -290,7 +290,8 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         with_json_config: args.with_json_config.clone(),
         host: args.hosting.iter().map(|host| host.to_lib()).collect(),
     };
-    do_init(&config, &args)
+    do_init(&config, &args)?;
+    Ok(())
 }
 
 fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
@@ -310,7 +311,8 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
         check: args.check,
         modes: args.mode.iter().map(|m| m.to_lib()).collect(),
     };
-    do_generate(&config, &args)
+    do_generate(&config, &args)?;
+    Ok(())
 }
 
 fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
@@ -334,7 +336,8 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
     if !args.print_output && !args.print_json {
         options.print_output = true;
     }
-    cargo_dist::linkage::do_linkage(&config, &options)
+    cargo_dist::linkage::do_linkage(&config, &options)?;
+    Ok(())
 }
 
 fn cmd_generate_ci(cli: &Cli, args: &GenerateCiArgs) -> Result<(), miette::Report> {

@@ -54,7 +54,6 @@ use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
-use miette::{miette, Context, IntoDiagnostic};
 use semver::Version;
 use serde::Serialize;
 use tracing::{info, warn};
@@ -78,7 +77,7 @@ use crate::{
         self, ArtifactMode, ChecksumStyle, CiStyle, CompressionImpl, Config, DistMetadata,
         HostingStyle, InstallPathStrategy, InstallerStyle, PublishStyle, ZipStyle,
     },
-    errors::{DistError, DistResult, Result},
+    errors::{DistError, DistResult},
 };
 
 /// Key in workspace.metadata or package.metadata for our config
@@ -2860,7 +2859,7 @@ impl DistGraph {
 }
 
 /// Precompute all the work this invocation will need to do
-pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
+pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
     let workspace = crate::config::get_project()?;
@@ -2917,7 +2916,9 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
             bypass_package_target_prefs = true;
             &host_target_triple
         } else if all_target_triples.is_empty() {
-            return Err(miette!("You specified --artifacts, disabling host mode, but specified no targets to build!"));
+            return Err(DistError::CliMissingTargets {
+                host_target: graph.inner.tools.cargo.host_target.clone(),
+            });
         } else {
             info!("using all target-triples");
             // Otherwise assume the user wants all targets (desirable for --artifacts=global)
@@ -2965,19 +2966,17 @@ pub fn gather_work(cfg: &Config) -> Result<(DistGraph, DistManifest)> {
 }
 
 /// Get the path/command to invoke Cargo
-pub fn cargo() -> Result<String> {
+pub fn cargo() -> DistResult<String> {
     let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_owned());
     Ok(cargo)
 }
 
 /// Get the host target triple from cargo
-pub fn get_host_target(cargo: String) -> Result<CargoInfo> {
+pub fn get_host_target(cargo: String) -> DistResult<CargoInfo> {
     let mut command = Cmd::new(&cargo, "get your Rust toolchain's version");
     command.arg("-vV");
     let output = command.output()?;
-    let output = String::from_utf8(output.stdout)
-        .into_diagnostic()
-        .wrap_err("'cargo -vV' wasn't utf8? Really?")?;
+    let output = String::from_utf8(output.stdout).map_err(|_| DistError::FailedCargoVersion)?;
     let mut lines = output.lines();
     let version_line = lines.next().map(|s| s.to_owned());
     for line in lines {
@@ -2990,9 +2989,7 @@ pub fn get_host_target(cargo: String) -> Result<CargoInfo> {
             });
         }
     }
-    Err(miette!(
-        "'cargo -vV' failed to report its host target? Really?"
-    ))
+    Err(DistError::FailedCargoVersion)
 }
 
 fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
@@ -3019,7 +3016,7 @@ fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
     }
 }
 
-fn tool_info() -> Result<Tools> {
+fn tool_info() -> DistResult<Tools> {
     let cargo_cmd = cargo()?;
     let cargo = get_host_target(cargo_cmd)?;
     Ok(Tools {
