@@ -11,7 +11,9 @@ use tracing::warn;
 
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
-    config::{DependencyKind, HostingStyle, ProductionMode, SystemDependencies},
+    config::{
+        DependencyKind, HostingStyle, JinjaGithubRepoPair, ProductionMode, SystemDependencies,
+    },
     errors::DistResult,
     DistGraph, SortedMap, SortedSet, TargetTriple,
 };
@@ -58,6 +60,8 @@ pub struct GithubCiInfo {
     pub post_announce_jobs: Vec<String>,
     /// whether to create the release or assume an existing one
     pub create_release: bool,
+    /// whether to prefix release.yml and the tag pattern
+    pub github_releases_repo: Option<JinjaGithubRepoPair>,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// what hosting provider we're using
@@ -82,6 +86,7 @@ impl GithubCiInfo {
         let build_local_artifacts = dist.build_local_artifacts;
         let dispatch_releases = dist.dispatch_releases;
         let create_release = dist.create_release;
+        let github_releases_repo = dist.github_releases_repo.clone().map(|r| r.into_jinja());
         let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
         let tag_namespace = dist.tag_namespace.clone();
         let mut dependencies = SystemDependencies::default();
@@ -175,6 +180,7 @@ impl GithubCiInfo {
             pr_run_mode,
             global_task,
             create_release,
+            github_releases_repo,
             ssldotcom_windows_sign,
             hosting_providers,
         }

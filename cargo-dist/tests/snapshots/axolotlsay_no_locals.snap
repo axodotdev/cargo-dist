@@ -461,6 +461,9 @@ jobs:
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
+          owner: "custom-owner"
+          repo: "cool-repo"
+          token: ${{ secrets.GITHUB_RELEASES_TOKEN }}
           tag: ${{ needs.plan.outputs.tag }}
           name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
           body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}

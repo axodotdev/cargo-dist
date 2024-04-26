@@ -228,6 +228,8 @@ pub struct DistGraph {
     pub tag_namespace: Option<String>,
     /// Whether to install updaters alongside with binaries
     pub install_updater: bool,
+    /// Publish GitHub Releases to this other repo
+    pub github_releases_repo: Option<config::GithubRepoPair>,
 }
 
 /// Info about artifacts should be hosted
@@ -801,6 +803,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             default_features,
             all_features,
             create_release,
+            github_releases_repo,
             pr_run_mode: _,
             allow_dirty,
             msvc_crt_static,
@@ -824,6 +827,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
         let tag_namespace = tag_namespace.clone();
+        let github_releases_repo = github_releases_repo.clone();
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -988,6 +992,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 build_local_artifacts,
                 dispatch_releases,
                 create_release,
+                github_releases_repo,
                 ssldotcom_windows_sign,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
