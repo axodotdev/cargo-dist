@@ -474,6 +474,11 @@ jobs:
 {{% include 'ci/partials/publish_homebrew.yml' %}}
 {{%- endif %}}
 
+{{%- if 'npm' in publish_jobs %}}
+
+{{% include 'ci/partials/publish_npm.yml' %}}
+{{%- endif %}}
+
 {{%- for job in user_publish_jobs %}}
 
   custom-{{{ job|safe }}}:

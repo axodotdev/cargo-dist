@@ -775,6 +775,8 @@ impl std::str::FromStr for HostingStyle {
 pub enum PublishStyle {
     /// Publish a Homebrew formula to a tap repository
     Homebrew,
+    /// Publish an npm pkg to the global npm registry
+    Npm,
     /// User-supplied value
     User(String),
 }
@@ -786,6 +788,8 @@ impl std::str::FromStr for PublishStyle {
             Ok(Self::User(slug.to_owned()))
         } else if s == "homebrew" {
             Ok(Self::Homebrew)
+        } else if s == "npm" {
+            Ok(Self::Npm)
         } else {
             Err(DistError::UnrecognizedJobStyle {
                 style: s.to_owned(),
@@ -810,6 +814,7 @@ impl std::fmt::Display for PublishStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             PublishStyle::Homebrew => write!(f, "homebrew"),
+            PublishStyle::Npm => write!(f, "npm"),
             PublishStyle::User(s) => write!(f, "./{s}"),
         }
     }
