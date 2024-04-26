@@ -36,6 +36,8 @@ pub struct GithubCiInfo {
     pub build_local_artifacts: bool,
     /// Whether to make CI get dispatched manually instead of by tag
     pub dispatch_releases: bool,
+    /// Trigger releases on pushes to this branch instead of ci
+    pub release_branch: Option<String>,
     /// Matrix for upload-local-artifacts
     pub artifacts_matrix: cargo_dist_schema::GithubMatrix,
     /// What kind of job to run on pull request
@@ -85,6 +87,7 @@ impl GithubCiInfo {
         let fail_fast = dist.fail_fast;
         let build_local_artifacts = dist.build_local_artifacts;
         let dispatch_releases = dist.dispatch_releases;
+        let release_branch = dist.release_branch.clone();
         let create_release = dist.create_release;
         let github_releases_repo = dist.github_releases_repo.clone().map(|r| r.into_jinja());
         let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
@@ -168,6 +171,7 @@ impl GithubCiInfo {
             fail_fast,
             build_local_artifacts,
             dispatch_releases,
+            release_branch,
             tap,
             plan_jobs,
             local_artifacts_jobs,
