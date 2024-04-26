@@ -69,7 +69,7 @@ temp-dir = "0.1.13"
 homedir = "0.2.1"
 insta = { version = "1.38.0", features = ["filters"] }
 tar = "0.4.38"
-flate2 = "1.0.24"
+flate2 = "1.0.29"
 
 [package.metadata.dist]
 features = ["fear_no_msrv"]
