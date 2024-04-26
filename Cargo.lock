@@ -389,7 +389,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist"
-version = "0.14.0-prerelease.1"
+version = "0.14.0-prerelease.2"
 dependencies = [
  "axoasset",
  "axocli",
