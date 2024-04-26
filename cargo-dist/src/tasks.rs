@@ -205,6 +205,8 @@ pub struct DistGraph {
     pub dispatch_releases: bool,
     /// Whether to create a github release or edit an existing draft
     pub create_release: bool,
+    /// Trigger releases with pushes to this branch, instead of tags
+    pub release_branch: Option<String>,
     /// \[unstable\] if Some, sign binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// The desired cargo-dist version for handling this project
@@ -790,6 +792,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             fail_fast,
             build_local_artifacts,
             dispatch_releases,
+            release_branch,
             ssldotcom_windows_sign,
             tag_namespace,
             // Partially Processed elsewhere
@@ -870,6 +873,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let create_release = create_release.unwrap_or(true);
         let build_local_artifacts = build_local_artifacts.unwrap_or(true);
         let dispatch_releases = dispatch_releases.unwrap_or(false);
+        let release_branch = release_branch.clone();
         let msvc_crt_static = msvc_crt_static.unwrap_or(true);
         let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
@@ -1038,6 +1042,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 merge_tasks,
                 build_local_artifacts,
                 dispatch_releases,
+                release_branch,
                 create_release,
                 github_releases_repo,
                 ssldotcom_windows_sign,

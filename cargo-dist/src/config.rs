@@ -233,6 +233,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dispatch_releases: Option<bool>,
 
+    /// Instead of triggering releases on tags, trigger on pushing to a specific branch
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub release_branch: Option<String>,
+
     /// The strategy to use for selecting a path to install things at:
     ///
     /// * `CARGO_HOME`: (default) install as if cargo did
@@ -388,6 +392,7 @@ impl DistMetadata {
             merge_tasks: _,
             build_local_artifacts: _,
             dispatch_releases: _,
+            release_branch: _,
             install_path: _,
             features: _,
             default_features: _,
@@ -460,6 +465,7 @@ impl DistMetadata {
             fail_fast,
             build_local_artifacts,
             dispatch_releases,
+            release_branch,
             install_path,
             features,
             default_features,
@@ -510,6 +516,9 @@ impl DistMetadata {
         }
         if dispatch_releases.is_some() {
             warn!("package.metadata.dist.dispatch-releases is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if release_branch.is_some() {
+            warn!("package.metadata.dist.release-branch is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if create_release.is_some() {
             warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

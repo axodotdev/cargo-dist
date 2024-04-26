@@ -241,6 +241,7 @@ fn get_new_dist_metadata(
             fail_fast: None,
             build_local_artifacts: None,
             dispatch_releases: None,
+            release_branch: None,
             install_path: None,
             features: None,
             default_features: None,
@@ -816,6 +817,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         fail_fast,
         build_local_artifacts,
         dispatch_releases,
+        release_branch,
         install_path,
         features,
         all_features,
@@ -975,6 +977,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "dispatch-releases",
         "# Whether CI should trigger releases with dispatches instead of tag pushes\n",
         *dispatch_releases,
+    );
+
+    apply_optional_value(
+        table,
+        "release-branch",
+        "# Trigger releases on pushes to this branch instead of tag pushes\n",
+        release_branch.as_ref(),
     );
 
     apply_optional_value(
