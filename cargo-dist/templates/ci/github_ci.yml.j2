@@ -515,6 +515,9 @@ jobs:
     {{%- if 'homebrew' in publish_jobs and tap %}}
       - publish-homebrew-formula
     {{%- endif %}}
+    {{%- if 'npm' in publish_jobs %}}
+      - publish-npm
+    {{%- endif %}}
     {{%- for job in user_publish_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
@@ -526,6 +529,7 @@ jobs:
     # "host" however must run to completion, no skipping allowed!
     if: ${{ always() && needs.host.result == 'success'
     {{%- if 'homebrew' in publish_jobs and tap %}} && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') {{%- endif %}}
+    {{%- if 'npm' in publish_jobs %}} && (needs.publish-npm.result == 'skipped' || needs.publish-npm.result == 'success') {{%- endif %}}
     {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
     {{{- " }}" | safe }}}
     runs-on: {{{ global_task.runner }}}
