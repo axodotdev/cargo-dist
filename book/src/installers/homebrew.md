@@ -2,13 +2,42 @@
 
 > since 0.2.0
 
-This provides a [Homebrew](https://brew.sh) formula which allows users to `brew install` your package. Since it installs to a location on the user's `PATH`, it provides a simple and convenient installation method for users who already have Homebrew available. When published to a [tap](https://docs.brew.sh/Taps) (package repository), this gives your users an easy way to both install your package and to keep it up to date using `brew update` and `brew upgrade`. It fetches the same prebuilt macOS binaries as the shell installer.
+cargo-dist can automatically build and publish [Homebrew](https://brew.sh) formulae (packages) for your application. Users can install your application with an expression like `brew install axodotdev/tap/axolotlsay` and automatically get updates whenever they update their Homebrew packages.
 
-cargo-dist can, optionally, publish your formula to a tap repository for you on every release. To enable this, add a `tap` field to your `Cargo.toml` pointing to a GitHub repository that you control and add `homebrew` to the `publish-jobs` field. The repository name must start with `homebrew-`. For example:
+The homebrew package will [fetch](../reference/artifact-url.md) your prebuilt [archives](../artifacts/archives.md), and install the contents in the traditional homebrew directory structure.
+
+*Building* a formula is pretty straight-forward, but publishing it requires you to create a your own [Homebrew tap](https://docs.brew.sh/Taps) (package repository), because [the core Homebrew tap](https://github.com/Homebrew/homebrew-core) does not accept prebuilt binaries from third parties. This sounds hard, but surprisingly it's not: you need to make a repository named "homebrew-tap" under your GitHub org or user, and get a GitHub API token to push to it. cargo-dist will manage the contents of the repo for you.
+
+
+## Quickstart
+
+To setup your homebrew installer you need to create a custom tap and enable the installer. This is broken up into parts because a project administrator may need to be involved in part 1, while part 2 can be done by anyone.
+
+
+### Part 1: Creating A Custom Homebrew Tap
+
+1. Create a GitHub repository called "homebrew-tap" (`axodotdev/homebrew-tap`)
+2. Create a GitHub [personal access token](https://github.com/settings/tokens/new?scopes=repo) with the `repo` scope
+3. Add the token as a [GitHub Secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets) called `HOMEBREW_TAP_TOKEN` to the repository you want to publish **from** (`axodotdev/axolotlsay`)
+
+We recommend initializing the repository with a README, but otherwise the directory structure will be managed by cargo-dist, and many separate repos can publish to the same tap without issue.
+
+A Homebrew Tap is just a GitHub repository that starts with `homebrew-`. Many homebrew features allow that prefix to be elided, so the package `axolotlsay` published in `axodotdev/homebrew-tap`, can be installed as `axodotdev/tap/axolotlsay`. Your users don't need to "register" anything to use it, custom taps are just that builtin to Homebrew.
+
+
+### Part 2: Enabling The Homebrew Installer
+
+1. run `cargo dist init` on your project
+2. when prompted to pick installers, enable "homebrew"
+3. this should trigger a prompt for your tap (`axodotdev/homebrew-tap`)
+
+...that's it! Assuming you already setup your custom tap, as described in the previous section. If this worked, your config should now contain the following entries:
 
 ```toml
 [workspace.metadata.dist]
-tap = "axodotdev/homebrew-formulae"
+# "..." indicates other installers you may have selected
+installers = ["...", "homebrew", "..."]
+tap = "axodotdev/homebrew-tap"
 publish-jobs = ["homebrew"]
 ```
 
@@ -17,56 +46,49 @@ fields are optional but make for better formula definitions.
 
 ```toml
 [package]
-description = "my crate on tap"
-homepage = "https://github.com/axodotdev/myappname"
+description = "a CLI for learning to distribute CLIs in rust"
+homepage = "https://github.com/axodotdev/axolotlsay"
 ```
 
-Finally, since 0.11.0, cargo-dist can, optionally, also customize your Homebrew formula name.
+## Renaming Formulae
+
+> since 0.11.0
+
 By default, your formula will be named using the app name (in Rust, this is the crate
 name). If you are overriding the bin name, you may want to make your Homebrew formula
-match- you can do so with config like this:
+match [with the `formula` setting](../reference/config.md#formula):
 
 ```toml
 [package]
-name = "myappname"
-default-run = "mybinname"
+name = "legacyname"
 
 [[bin]]
-name = "mybinname"
+name = "coolname"
 path = "src/main.rs"
 
-[workspace.metadata.dist]
-formula = "mybinname"
+[package.metadata.dist]
+formula = "coolname"
 ```
 
-Bringing it all together, a Cargo.toml that can publish Homebrew taps looks like this:
 
-```toml
-[package]
-name = "myappname"
-version = "0.666.0"
-description = "my crate on tap"
-default-run = "mybinname"
-homepage = "https://github.com/axodotdev/myappname"
+## Linuxbrew
 
-[[bin]]
-name = "mybinname"
-path = "src/main.rs"
+> since 0.6.0
 
-[workspace.metadata.dist]
-installers = ["homebrew"]
-publish-jobs = ["homebrew"]
-tap = "axodotdev/homebrew-formulae"
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
-formula = "mybinname"
-```
+The formulae cargo-dist builds automatically support Linux and macOS, as long as you release your application for the relevant targets.
 
-In order to write to a tap GitHub repository, cargo-dist needs a [personal access token](https://github.com/settings/tokens/new?scopes=repo) with the `repo` scope exposed as `HOMEBREW_TAP_TOKEN`. For more information on GitHub Actions secrets, [consult this documentation](https://docs.github.com/en/actions/security-guides/encrypted-secrets).
 
-Limitations/Caveats:
+## Limitations / Caveats
+
+### There Is Only One Version
+
+**Homebrew fundamentally does not support the notion of a package having multiple published versions.** There is *only* the latest version. **If you publish a new version of a package, it will always replace the current one.** This is why [the `publish-prereleases` setting is disabled by default](../reference/config.md#publish-prereleases): otherwise publishing 2.0.0-prerelease.1 would completely obliterate 1.0.0, which presumably you'd prefer users installing.
+
+Unfortunately if you have any kind of non-linear version history (such as doing a patch release for 1.0 after already releasing 2.0), the published Homebrew package will randomly contain whichever one you released last. The releases are just git commits though, so you can manually revert a release if you want.
+
+### Unsupported Formats
 
 * Does not support creating a formula which builds from source
-* Does not support Linuxbrew (Homebrew on Linux)
 * Does not support [Cask][issue-cask] for more convenient GUI app installation
 
 

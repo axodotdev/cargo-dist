@@ -166,6 +166,9 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
     steps:
+      - name: enable windows longpaths
+        run: |
+          git config --global core.longpaths true
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -174,6 +177,8 @@ jobs:
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - uses: swatinem/rust-cache@v2
+        with:
+          key: ${{ join(matrix.targets, '-') }}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest
@@ -381,6 +386,9 @@ jobs:
     {{%- if build_local_artifacts %}}
       - build-local-artifacts
     {{%- endif %}}
+    {{%- for job in local_artifacts_jobs %}}
+      - custom-{{{ job|safe }}}
+    {{%- endfor %}}
       - build-global-artifacts
     {{%- if ssldotcom_windows_sign %}}
       - sign-windows-artifacts
@@ -390,7 +398,9 @@ jobs:
     {{%- endfor %}}
     # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
     if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success')
+    {{%- for job in global_artifacts_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
     {{%- if build_local_artifacts %}} && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') {{%- endif %}}
+    {{%- for job in local_artifacts_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
     {{{- " }}" | safe }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

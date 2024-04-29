@@ -390,10 +390,15 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
     steps:
+      - name: enable windows longpaths
+        run: |
+          git config --global core.longpaths true
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: swatinem/rust-cache@v2
+        with:
+          key: ${{ join(matrix.targets, '-') }}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest

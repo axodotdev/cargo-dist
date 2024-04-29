@@ -3,6 +3,125 @@
 Nothing Yet!
 
 
+# Version 0.13.3 (2024-04-22)
+
+This minor release adds some more resilience to release.yml by explicitly enabling windows
+longpath support, in case your repository (or submodules) contain extremely long filenames or paths.
+
+It also adds some missing dependency constraints for custom local and global build jobs.
+
+## Fixes
+
+* @gankra [improvements to release.yml](https://github.com/axodotdev/cargo-dist/pull/951)
+
+
+# Version 0.13.2 (2024-04-16)
+
+This minor release updates several dependencies and contains one improvement to the shell installer.
+
+## Fixes
+
+* @mistydemeo [update to axoasset which should fix remaining issues with recursive ZIP files on Windows](https://github.com/axodotdev/cargo-dist/pull/939) ([#873])
+* @mistydemeo [install the correct architecture binary on macOS when run from a shell inside Rosetta](https://github.com/axodotdev/cargo-dist/pull/941)
+
+[#873]: https://github.com/axodotdev/cargo-dist/issues/873
+
+
+# Version 0.13.1 (2024-04-12)
+
+This is a release that adds some improvements to the logic for updating PATH and rcfiles in installers.
+
+## Fixes
+
+* @gankra [don't corrupt rcfiles that are missing a trailing newline](https://github.com/axodotdev/cargo-dist/pull/917)
+* @mistydemeo [when invoking shell installer from updater, append /bin and use HOME vars more precisely](https://github.com/axodotdev/cargo-dist/pull/928)
+* @mistydemeo [as above, but for powershell](https://github.com/axodotdev/cargo-dist/pull/929)
+* @mistydemeo [use target-specific keys to fix swatinem rust cache](https://github.com/axodotdev/cargo-dist/pull/927/)
+
+
+# Version 0.13.0 (2024-04-09)
+
+This releases introduces a 'selfupdate' command, using cargo-dist's new updater support.
+
+It also includes several bugfixes and a technically-breaking-change to the dist-manifest feature.
+
+
+## Features
+
+A new `cargo dist selfupdate` command has been added which updates cargo dist to the latest
+version and runs `cargo dist init` using that new version. As a result, this should in
+be a go-to replacement for most uses of `cargo dist init`.
+
+This is based on the new experimental [axoupdater library](https://github.com/axodotdev/axoupdater/).
+Essentially it just checks GitHub Releases or axo Releases for anything newer, and fetches and
+runs the appropriate shell/powershell installer.
+
+This library is the same one used for the updater feature of cargo-dist, which has cargo-dist
+provide a standalone separate updater binary. The benefit of us using the library directly is
+that we get a more unified design at the cost of needing to actually change the interface of
+our application -- something the separate binary avoids.
+
+* @mistydemeo [initial implementation](https://github.com/axodotdev/cargo-dist/pull/899)
+* @gankra [finalize implementation](https://github.com/axodotdev/cargo-dist/pull/906)
+
+
+## Breaking Change
+
+* @gankra [manifest reform](https://github.com/axodotdev/cargo-dist/pull/848)
+
+This release makes a several changes to the dist-manifest format which ideally shouldn't
+be breaking in the strictest sense of the word, but are breaking in spirit. No one is expected
+to be effected, as the metadata in question is so niche that not even axo's own tooling
+was making a use of it.
+
+The upshot of this breakage is that we now properly collect and merge unambiguous per-platform and
+per-binary metadata from build machines, which is groundwork for significantly improved installers
+and tooling.
+
+Changes include:
+
+* there is now a top-level `systems` map in the manifest
+    * contains gathered information about each system cargo-dist ran on to build your release
+    * this effectively deprecates the `system_info` value, which was already optional and not terribly useful
+* there is now a top-level `assets` map in the manifest
+    * contains gathered information about each binary cargo-dist built
+    * refers to the `systems{}` that the binary was built on
+    * contains linkage info
+* the top-level `linkage` array has been deprecated in favour of the same entries being nested in `assets`, and is now always empty
+    * in future versions it may be removed, but the schema didn't mark this field as optional so it can't yet be removed
+* `artifacts{}.assets[].id` now can optionally refer to an entry in `assets`
+    * this allows you to precisely get the dependencies (linkage) for each binary in an archive, or for the whole archive (by merging them)
+    * in the future it will also be used to get things like libc version requirements
+* `artifacts{}.checksums{}` has been added
+    * contains the actual checksum value(s)
+    * the existing `artifacts{}.checksum` only refers to a checksum *file*, as previously the manifest could not be updated with "computed" info
+    * this being a map allows artifacts to have multiple checksums, which is useful since lots of things hard require sha256
+
+## Fixes
+
+* @mistydemeo [run apt-get update before installing system deps](https://github.com/axodotdev/cargo-dist/pull/877)
+* @ucodery [make formula files pass brew lint](https://github.com/axodotdev/cargo-dist/pull/818)
+* @tshepang [fix copyright year](https://github.com/axodotdev/cargo-dist/pull/883)
+* @mistydemeo [further update copyright year](https://github.com/axodotdev/cargo-dist/pull/884)
+* @tisokun [properly spell GitHub in CI yml](https://github.com/axodotdev/cargo-dist/pull/886)
+* @gankra [use mv instead of cp in installer.sh](https://github.com/axodotdev/cargo-dist/pull/894)
+* @nokazn [fix broken link in docs](https://github.com/axodotdev/cargo-dist/pull/900)
+
+# Version 0.12.2 (2024-04-04)
+
+This is a minor release which regenerates the shell installer using the fix from 0.12.1. It fixes an issue which would cause the cargo-dist shell installer to fail if cargo-dist itself is running at the time the installer tries to write the new copy.
+
+
+# Version 0.12.1 (2024-04-04)
+
+This is a minor bugfix release.
+
+## Fixes
+
+* @mistydemeo [fix recursive ZIP generation on Windows](https://github.com/axodotdev/cargo-dist/pull/895)
+* @Gankra [fix overwriting actively-running binary in shell installer](https://github.com/axodotdev/cargo-dist/pull/894)
+
+
 # Version 0.12.0 (2024-03-21)
 
 This release introduces an experimental new feature: an updater which allows your users to install new releases without having to go download a new installer themselves. It also includes a few other bugfixes and improvements.

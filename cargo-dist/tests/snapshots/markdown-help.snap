@@ -26,6 +26,7 @@ cargo dist <COMMAND>
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [host](#cargo-dist-host): Host artifacts
+* [selfupdate](#cargo-dist-selfupdate): Performs a self-update, if a new version is available, and then 'init'
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
 
 ### Options
@@ -154,8 +155,8 @@ Automatically accept all recommended/default values
 
 This is equivalent to just mashing ENTER over and over during the interactive prompts.
 
-#### `--no-generate`
-Don't automatically invoke 'cargo dist generate' at the end
+#### `--skip-generate`
+Skip running 'cargo dist generate' at the end
 
 #### `--with-json-config <WITH_JSON_CONFIG>`
 A path to a json file containing values to set in workspace.metadata.dist and package.metadata.dist, for building tools that edit these configs.
@@ -329,6 +330,54 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
+## cargo dist selfupdate
+Performs a self-update, if a new version is available, and then 'init'
+
+### Usage
+
+```text
+cargo dist selfupdate [OPTIONS]
+```
+
+### Options
+#### `--version <VERSION>`
+Upgrade to a specific version, instead of "latest"
+
+#### `--prerelease`
+Allow upgrading to prereleases when picking "latest"
+
+#### `-y, --yes`
+Automatically accept all recommended/default values
+
+This is equivalent to just mashing ENTER over and over during the interactive prompts.
+
+#### `--skip-init`
+Skip running 'cargo dist init' after performing an upgrade
+
+#### `--skip-generate`
+Skip running 'cargo dist generate' at the end
+
+#### `--with-json-config <WITH_JSON_CONFIG>`
+A path to a json file containing values to set in workspace.metadata.dist and package.metadata.dist, for building tools that edit these configs.
+
+This is the same toml => json format that `cargo metadata` produces when reporting `workspace.metadata.dist`. There is some additional hierarchy for specifying which values go to which packages, but this is currently intentionally undocumented to give us some flexibility to change it.
+
+#### `--hosting <HOSTING>`
+releases hosting backends we want to support
+
+If left unspecified we will use the value in [workspace.metadata.dist]. (If no such value exists we will use the one "native" to your CI provider) `cargo dist init` will persist the values you pass to that location.
+
+Possible values:
+- github:    Host on Github Releases
+- axodotdev: Host on Axo Releases ("Abyss")
+
+#### `-h, --help`
+Print help (see a summary with '-h')
+
+### GLOBAL OPTIONS
+This subcommand accepts all the [global options](#global-options)
+
+<br><br><br>
 ## cargo dist help
 Print this message or the help of the given subcommand(s)
 
@@ -346,6 +395,7 @@ cargo dist help [COMMAND]
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [host](#cargo-dist-host): Host artifacts
+* [selfupdate](#cargo-dist-selfupdate): Performs a self-update, if a new version is available, and then 'init'
 * [help](#cargo-dist-help): Print this message or the help of the given subcommand(s)
 
 

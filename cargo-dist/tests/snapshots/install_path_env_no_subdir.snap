@@ -48,7 +48,9 @@ The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
-then unpacks the binaries and installs them to \$MY_ENV_VAR/
+then unpacks the binaries and installs them to
+
+    \$MY_ENV_VAR
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -246,6 +248,18 @@ download_binary_and_run_installer() {
     return "$_retval"
 }
 
+# Replaces $HOME with the variable name for display to the user,
+# only if $HOME is defined.
+replace_home() {
+    local _str="$1"
+
+    if [ -n "${HOME:-}" ]; then
+        echo "$_str" | sed "s,$HOME,\$HOME,"
+    else
+        echo "$_str"
+    fi
+}
+
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
 # shellcheck disable=SC2016
 install() {
@@ -268,6 +282,9 @@ install() {
     # existence with early-bounding.
     #
     # This distinction is handled by "double-quotes" (early) vs 'single-quotes' (late).
+    #
+    # However if we detect that "$SOME_VAR/..." is a subdir of $HOME, we try to rewrite
+    # it to be '$HOME/...' to get the best of both worlds.
     #
     # This script has a few different variants, the most complex one being the
     # CARGO_HOME version which attempts to install things to Cargo's bin dir,
@@ -292,27 +309,33 @@ install() {
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
 
-
-    # Install to this subdir of the user's MY_ENV_VAR dir.
-    # In this case we want to be early-bound, as the env-var can't be trusted longterm.
-    if [ -n "${MY_ENV_VAR:-}" ]; then
-        _install_dir="$MY_ENV_VAR"
-        _env_script_path="$MY_ENV_VAR/env"
-        _install_dir_expr="$_install_dir"
-        _env_script_path_expr="$_env_script_path"
-    else
-        err "could not find your MY_ENV_VAR dir to install binaries to"
-    fi
-
-    # ...ignoring all of the above, if the user asked us to completely override
-    # those choices and use a specified directory, then pick that now
+    # Before actually consulting the configured install strategy, see
+    # if we're overriding it.
     if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        _install_home="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$_install_dir"
-        _env_script_path_expr="$_env_script_path"
+        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR")"
+        _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
     fi
+    if [ -z "${_install_dir:-}" ]; then
+        # Install to $MY_ENV_VAR
+        if [ -n "${MY_ENV_VAR:-}" ]; then
+            _install_dir="$MY_ENV_VAR"
+            _env_script_path="$MY_ENV_VAR/env"
+            _install_dir_expr="$(replace_home "$_install_dir")"
+            _env_script_path_expr="$(replace_home "$_env_script_path")"
+        fi
+    fi
+
+    if [ -z "$_install_dir_expr" ]; then
+        err "could not find a valid path to install to!"
+    fi
+
+    # Identical to the sh version, just with a .fish file extension
+    # We place it down here to wait until it's been assigned in every
+    # path.
+    _fish_env_script_path="${_env_script_path}.fish"
+    _fish_env_script_path_expr="${_env_script_path_expr}.fish"
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
@@ -325,7 +348,7 @@ install() {
     local _bins="$2"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
-        ensure cp "$_bin" "$_install_dir"
+        ensure mv "$_bin" "$_install_dir"
         # unzip seems to need this chmod
         ensure chmod +x "$_install_dir/$_bin_name"
         say "  $_bin_name"
@@ -334,18 +357,24 @@ install() {
     say "everything's installed!"
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
-        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile" "sh"
         exit1=$?
-        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc" "sh"
         exit2=$?
-        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv"
+        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv" "sh"
         exit3=$?
+        # This path may not exist by default
+        ensure mkdir -p "$HOME/.config/fish/conf.d"
+        exit4=$?
+        add_install_dir_to_path "$_install_dir_expr" "$_fish_env_script_path" "$_fish_env_script_path_expr" ".config/fish/conf.d/$APP_NAME.env.fish" "fish"
+        exit5=$?
 
-        if [ "${exit1:-0}" = 1 ] || [ "${exit2:-0}" = 1 ] || [ "${exit3:-0}" = 1 ]; then
+        if [ "${exit1:-0}" = 1 ] || [ "${exit2:-0}" = 1 ] || [ "${exit3:-0}" = 1 ] || [ "${exit4:-0}" = 1 ] || [ "${exit5:-0}" = 1 ]; then
             say ""
             say "To add $_install_dir_expr to your PATH, either restart your shell or run:"
             say ""
-            say "    source $_env_script_path_expr"
+            say "    source $_env_script_path_expr (sh, bash, zsh)"
+            say "    source $_fish_env_script_path_expr (fish)"
         fi
     fi
 }
@@ -384,6 +413,7 @@ add_install_dir_to_path() {
     local _env_script_path="$2"
     local _env_script_path_expr="$3"
     local _rcfiles="$4"
+    local _shell="$5"
 
     if [ -n "${HOME:-}" ]; then
         local _target
@@ -422,7 +452,11 @@ add_install_dir_to_path() {
         # Add the env script if it doesn't already exist
         if [ ! -f "$_env_script_path" ]; then
             say_verbose "creating $_env_script_path"
-            write_env_script "$_install_dir_expr" "$_env_script_path"
+            if [ "$_shell" = "sh" ]; then
+                write_env_script_sh "$_install_dir_expr" "$_env_script_path"
+            else
+                write_env_script_fish "$_install_dir_expr" "$_env_script_path"
+            fi
         else
             say_verbose "$_env_script_path already exists"
         fi
@@ -441,8 +475,21 @@ add_install_dir_to_path() {
             # If the script now exists, add the line to source it to the rcfile
             # (This will also create the rcfile if it doesn't exist)
             if [ -f "$_env_script_path" ]; then
-                say_verbose "adding $_robust_line to $_target"
-                ensure echo "$_robust_line" >> "$_target"
+                local _line
+                # Fish has deprecated `.` as an alias for `source` and
+                # it will be removed in a later version.
+                # https://fishshell.com/docs/current/cmds/source.html
+                # By contrast, `.` is the traditional syntax in sh and
+                # `source` isn't always supported in all circumstances.
+                if [ "$_shell" = "fish" ]; then
+                    _line="$_pretty_line"
+                else
+                    _line="$_robust_line"
+                fi
+                say_verbose "adding $_line to $_target"
+                # prepend an extra newline in case the user's file is missing a trailing one
+                ensure echo "" >> "$_target"
+                ensure echo "$_line" >> "$_target"
                 return 1
             fi
         else
@@ -451,7 +498,7 @@ add_install_dir_to_path() {
     fi
 }
 
-write_env_script() {
+write_env_script_sh() {
     # write this env script to the given path (this cat/EOF stuff is a "heredoc" string)
     local _install_dir_expr="$1"
     local _env_script_path="$2"
@@ -467,6 +514,18 @@ case ":\${PATH}:" in
         export PATH="$_install_dir_expr:\$PATH"
         ;;
 esac
+EOF
+}
+
+write_env_script_fish() {
+    # write this env script to the given path (this cat/EOF stuff is a "heredoc" string)
+    local _install_dir_expr="$1"
+    local _env_script_path="$2"
+    ensure cat <<EOF > "$_env_script_path"
+if not contains "$_install_dir_expr" \$PATH
+    # Prepending path in case a system-installed binary needs to be overridden
+    set -x PATH "$_install_dir_expr" \$PATH
+end
 EOF
 }
 
@@ -561,6 +620,13 @@ get_architecture() {
         # Darwin `uname -m` lies
         if sysctl hw.optional.x86_64 | grep -q ': 1'; then
             _cputype=x86_64
+        fi
+    fi
+
+    if [ "$_ostype" = Darwin ] && [ "$_cputype" = x86_64 ]; then
+        # Rosetta on aarch64
+        if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" = "1" ]; then
+            _cputype=aarch64
         fi
     fi
 
@@ -875,7 +941,9 @@ The installer for axolotlsay 0.2.1
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1
-then unpacks the binaries and installs them to $env:MY_ENV_VAR\
+then unpacks the binaries and installs them to
+
+    $env:MY_ENV_VAR
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
@@ -1038,18 +1106,22 @@ function Download($download_url, $platforms) {
 }
 
 function Invoke-Installer($bin_paths, $platforms) {
-
-  # Install to this subdir of the user's MY_ENV_VAR dir
-  $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
-    Join-Path $base_dir ""
-  } else {
-    throw "ERROR: could not find your MY_ENV_VAR dir to install binaries to"
+  $dest_dir = $null
+  # Before actually consulting the configured install strategy, see
+  # if we're overriding it.
+  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+$dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+  }
+  if (-Not $dest_dir) {
+    # Install to $env:MY_ENV_VAR
+    $dest_dir = if (($base_dir = $env:MY_ENV_VAR)) {
+      Join-Path $base_dir ""
+    }
   }
 
-  # ...ignoring all of the above, if the user asked us to completely override
-  # those choices and use a specified directory, then pick that now
-  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-    $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+  # Looks like all of the above assignments failed
+  if (-Not $dest_dir) {
+    throw "ERROR: could not find a valid path to install to; please check the installation instructions"
   }
 
   # The replace call here ensures proper escaping is inlined into the receipt

@@ -35,7 +35,6 @@ use tracing::info;
 
 use errors::*;
 pub use init::{do_init, InitArgs};
-use miette::{miette, IntoDiagnostic};
 pub use tasks::*;
 
 pub mod announce;
@@ -53,7 +52,7 @@ pub mod tasks;
 mod tests;
 
 /// cargo dist build -- actually build binaries and installers!
-pub fn do_build(cfg: &Config) -> Result<DistManifest> {
+pub fn do_build(cfg: &Config) -> DistResult<DistManifest> {
     check_integrity(cfg)?;
 
     let (dist, mut manifest) = tasks::gather_work(cfg)?;
@@ -98,7 +97,7 @@ pub fn do_build(cfg: &Config) -> Result<DistManifest> {
 }
 
 /// Just generate the manifest produced by `cargo dist build` without building
-pub fn do_manifest(cfg: &Config) -> Result<DistManifest> {
+pub fn do_manifest(cfg: &Config) -> DistResult<DistManifest> {
     check_integrity(cfg)?;
     let (_dist, manifest) = gather_work(cfg)?;
 
@@ -110,7 +109,7 @@ fn run_build_step(
     dist_graph: &DistGraph,
     target: &BuildStep,
     manifest: &mut DistManifest,
-) -> Result<()> {
+) -> DistResult<()> {
     match target {
         BuildStep::Generic(target) => build_generic_target(dist_graph, manifest, target)?,
         BuildStep::Cargo(target) => build_cargo_target(dist_graph, manifest, target)?,
@@ -160,7 +159,7 @@ fn run_build_step(
 }
 
 /// Fetches an installer executable and installs it in the expected target path.
-pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> Result<()> {
+pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
     let release = tokio::runtime::Handle::current()
         .block_on(
             octocrab::instance()
@@ -184,8 +183,8 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> Result<()
 }
 
 /// Builds an installer executable from source and installs it in the expected target path.
-pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) -> Result<()> {
-    let tmpdir = TempDir::new().into_diagnostic()?;
+pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
+    let (_tmp_dir, tmp_root) = create_tmp()?;
 
     // Update this to work from releases, and to fetch prebuilt binaries,
     // once this has been released at least once.
@@ -198,21 +197,27 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
     cmd.arg("install")
         .arg("axoupdater-cli")
         .arg("--root")
-        .arg(tmpdir.path())
+        .arg(&tmp_root)
         .arg("--bin")
         .arg("axoupdater");
 
     cmd.run()?;
 
     // OK, now we have a binary in the tempdir
-    let mut source = tmpdir.path().join("bin").join("axoupdater");
+    let mut source = tmp_root.join("bin").join("axoupdater");
     if updater.target_triple.contains("windows") {
         source.set_extension("exe");
     }
-    std::fs::copy(source, dist_graph.target_dir.join(&updater.target_filename))
-        .into_diagnostic()?;
+    LocalAsset::copy(source, dist_graph.target_dir.join(&updater.target_filename))?;
 
     Ok(())
+}
+
+fn create_tmp() -> DistResult<(TempDir, Utf8PathBuf)> {
+    let tmp_dir = TempDir::new()?;
+    let tmp_root =
+        Utf8PathBuf::from_path_buf(tmp_dir.path().to_owned()).expect("tempdir isn't utf8!?");
+    Ok((tmp_dir, tmp_root))
 }
 
 /// Fetches an installer executable from a preexisting binary and installs it in the expected target path.
@@ -220,13 +225,13 @@ fn fetch_updater_from_binary(
     dist_graph: &DistGraph,
     updater: &UpdaterStep,
     asset_url: &str,
-) -> Result<()> {
-    let tmpdir = TempDir::new().into_diagnostic()?;
-    let zipball_target = Utf8PathBuf::from_path_buf(tmpdir.path().join("archive")).unwrap();
+) -> DistResult<()> {
+    let (_tmp_dir, tmp_root) = create_tmp()?;
+    let zipball_target = tmp_root.join("archive");
 
     let handle = tokio::runtime::Handle::current();
     let asset = handle.block_on(RemoteAsset::load_bytes(asset_url))?;
-    std::fs::write(&zipball_target, asset).into_diagnostic()?;
+    std::fs::write(&zipball_target, asset)?;
     let suffix = if updater.target_triple.contains("windows") {
         ".exe"
     } else {
@@ -245,11 +250,11 @@ fn fetch_updater_from_binary(
             .extension()
             .unwrap_or("unable to determine")
             .to_owned();
-        return Err(DistError::UnrecognizedCompression { extension }).into_diagnostic();
+        return Err(DistError::UnrecognizedCompression { extension });
     };
 
     let target = dist_graph.target_dir.join(&updater.target_filename);
-    std::fs::write(target, bytes).into_diagnostic()?;
+    std::fs::write(target, bytes)?;
 
     Ok(())
 }
@@ -258,7 +263,7 @@ fn build_fake(
     dist_graph: &DistGraph,
     target: &BuildStep,
     manifest: &mut DistManifest,
-) -> Result<()> {
+) -> DistResult<()> {
     match target {
         // These two are the meat: don't actually run these at all, just
         // fake them out
@@ -322,7 +327,7 @@ fn build_fake(
     Ok(())
 }
 
-fn run_fake_extra_artifacts_build(dist: &DistGraph, target: &ExtraBuildStep) -> Result<()> {
+fn run_fake_extra_artifacts_build(dist: &DistGraph, target: &ExtraBuildStep) -> DistResult<()> {
     for artifact in &target.expected_artifacts {
         let path = dist.dist_dir.join(artifact);
         LocalAsset::write_new_all("", &path)?;
@@ -335,7 +340,7 @@ fn generate_fake_msi(
     _dist: &DistGraph,
     msi: &MsiInstallerInfo,
     _manifest: &DistManifest,
-) -> Result<()> {
+) -> DistResult<()> {
     LocalAsset::write_new_all("", &msi.file_path)?;
 
     Ok(())
@@ -451,7 +456,7 @@ fn write_checksum(checksum: &str, src_path: &Utf8Path, dest_path: &Utf8Path) -> 
 }
 
 /// Initialize the dir for an artifact (and delete the old artifact file).
-fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> Result<()> {
+fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> DistResult<()> {
     // Delete any existing bundle
     if artifact.file_path.exists() {
         LocalAsset::remove_file(&artifact.file_path)?;
@@ -495,7 +500,7 @@ fn zip_dir(
     dest_path: &Utf8Path,
     zip_style: &ZipStyle,
     with_root: Option<&Utf8Path>,
-) -> Result<()> {
+) -> DistResult<()> {
     match zip_style {
         ZipStyle::Zip => LocalAsset::zip_dir(src_path, dest_path, with_root)?,
         ZipStyle::Tar(CompressionImpl::Gzip) => {
@@ -523,7 +528,7 @@ pub struct GenerateArgs {
     pub modes: Vec<GenerateMode>,
 }
 
-fn do_generate_preflight_checks(dist: &DistGraph) -> Result<()> {
+fn do_generate_preflight_checks(dist: &DistGraph) -> DistResult<()> {
     // Enforce cargo-dist-version, unless...
     //
     // * It's a magic vX.Y.Z-github-BRANCHNAME version,
@@ -537,20 +542,21 @@ fn do_generate_preflight_checks(dist: &DistGraph) -> Result<()> {
             && !desired_version.pre.starts_with("github-")
             && !matches!(dist.allow_dirty, DirtyMode::AllowAll)
         {
-            return Err(miette!("you're running cargo-dist {}, but 'cargo-dist-version = {}' is set in your Cargo.toml\n\nRerun 'cargo dist init' to update to this version.", current_version, desired_version));
+            return Err(DistError::MismatchedDistVersion {
+                config_version: desired_version.to_string(),
+                running_version: current_version.to_string(),
+            });
         }
     }
     if !dist.is_init {
-        return Err(miette!(
-            "please run 'cargo dist init' before running any other commands!"
-        ));
+        return Err(DistError::NeedsInit);
     }
 
     Ok(())
 }
 
 /// Generate any scripts which are relevant (impl of `cargo dist generate`)
-pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> Result<()> {
+pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> DistResult<()> {
     let (dist, _manifest) = gather_work(cfg)?;
 
     run_generate(&dist, args)?;
@@ -559,7 +565,7 @@ pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> Result<()> {
 }
 
 /// The inner impl of do_generate
-pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
+pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> DistResult<()> {
     do_generate_preflight_checks(dist)?;
 
     // If specific modes are specified, operate *only* on those modes
@@ -618,7 +624,7 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> Result<()> {
 /// Run any necessary integrity checks for "primary" commands like build/plan
 ///
 /// (This is currently equivalent to `cargo dist generate --check`)
-pub fn check_integrity(cfg: &Config) -> Result<()> {
+pub fn check_integrity(cfg: &Config) -> DistResult<()> {
     // We need to avoid overwriting any parts of configuration from CLI here,
     // so construct a clean copy of config to run the check generate
     let check_config = Config {
@@ -646,8 +652,7 @@ If you haven't yet signed up, please join our discord
 (https://discord.gg/ECnWuUUXQk) or message hello@axo.dev to get started!
 ";
 
-            writeln!(out, "{} {}", out.style().yellow().apply_to(info), message)
-                .into_diagnostic()?;
+            writeln!(out, "{} {}", out.style().yellow().apply_to(info), message).unwrap();
         }
     }
 
@@ -665,7 +670,7 @@ fn generate_installer(
     dist: &DistGraph,
     style: &InstallerImpl,
     manifest: &DistManifest,
-) -> Result<()> {
+) -> DistResult<()> {
     match style {
         InstallerImpl::Shell(info) => {
             installer::shell::write_install_sh_script(&dist.templates, info)?

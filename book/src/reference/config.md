@@ -652,6 +652,15 @@ The syntax must be a valid rustup toolchain like "1.60.0" or "stable" (should no
 If you delete the key, generate won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal). Before being deprecated the default was to `rustup update stable`, but this is no longer the case.
 
 
+### source-tarball
+
+> since 0.14.0
+
+Example: `source-tarball = false`
+
+By default, cargo-dist creates and uploads source tarballs from your repository. This setting disables that behaviour. This is especially useful for users who distribute closed-source software to hosts outside their git repos and who would prefer not to distribute source code to their users.
+
+
 ### tag-namespace
 
 > since 0.10.0
