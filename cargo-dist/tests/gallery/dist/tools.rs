@@ -7,6 +7,8 @@ pub struct Tools {
     pub shellcheck: Option<CommandInfo>,
     pub psanalyzer: Option<CommandInfo>,
     pub homebrew: Option<CommandInfo>,
+    pub npm: Option<CommandInfo>,
+    pub tar: Option<CommandInfo>,
 }
 
 impl Tools {
@@ -26,13 +28,17 @@ impl Tools {
         let shellcheck = CommandInfo::new("shellcheck", None);
         let psanalyzer = CommandInfo::new_powershell_command("Invoke-ScriptAnalyzer");
         let homebrew = CommandInfo::new("brew", None);
-
+        let npm = CommandInfo::new("npm", None);
+        let tar = CommandInfo::new("tar", None);
+        assert!(tar.is_some());
         Self {
             git,
             cargo_dist,
             shellcheck,
             psanalyzer,
             homebrew,
+            npm,
+            tar,
         }
     }
 }

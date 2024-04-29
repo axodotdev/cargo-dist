@@ -11,7 +11,8 @@ const error = (msg) => {
 
 const { version } = require("./package.json");
 const name = {{ inner.app_name }};
-const artifact_download_url = {{ inner.base_url }};
+const artifact_download_url =
+  {{ inner.base_url }};
 
 const builder_glibc_major_version = 2;
 const builder_glibc_minor_version = 31;
@@ -19,10 +20,10 @@ const builder_glibc_minor_version = 31;
 const supportedPlatforms = {
   {%- for artifact in inner.artifacts %}
   {{ artifact.target_triples[0] }}: {
-    "artifact_name": {{ artifact.id }},
-    "bins": {{ artifact.binaries }},
-    "zip_ext": {{ artifact.zip_style }}
-  }{% if not loop.last %},{% endif %}
+    artifact_name: {{ artifact.id }},
+    bins: {{ artifact.binaries }},
+    zip_ext: {{ artifact.zip_style }},
+  },
   {%- endfor %}
 };
 
@@ -41,7 +42,7 @@ const getPlatform = () => {
       os_type = "apple-darwin";
       break;
     case "Linux":
-      os_type = "unknown-linux-gnu"
+      os_type = "unknown-linux-gnu";
       break;
   }
 
@@ -56,11 +57,13 @@ const getPlatform = () => {
   }
 
   if (raw_os_type === "Linux") {
-    if (libc.familySync() == 'musl') {
+    if (libc.familySync() == "musl") {
       os_type = "unknown-linux-musl-dynamic";
     } else if (libc.isNonGlibcLinuxSync()) {
-        console.warn("Your libc is neither glibc nor musl; trying static musl binary instead");
-        os_type = "unknown-linux-musl-static";
+      console.warn(
+        "Your libc is neither glibc nor musl; trying static musl binary instead"
+      );
+      os_type = "unknown-linux-musl-static";
     } else {
       let libc_version = libc.versionSync();
       let split_libc_version = libc_version.split(".");
@@ -72,7 +75,9 @@ const getPlatform = () => {
       ) {
         // We can't run the glibc binaries, but we can run the static musl ones
         // if they exist
-        console.warn("Your glibc isn't compatible; trying static musl binary instead");
+        console.warn(
+          "Your glibc isn't compatible; trying static musl binary instead"
+        );
         os_type = "unknown-linux-musl-static";
       }
     }
@@ -85,7 +90,9 @@ const getPlatform = () => {
 
   if (!platform) {
     error(
-      `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(supportedPlatforms).join(",")}`
+      `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(
+        supportedPlatforms
+      ).join(",")}`
     );
   }
 

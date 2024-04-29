@@ -1,5 +1,5 @@
 ---
-source: cargo-dist/tests/gallery/dist.rs
+source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
 ================ installer.sh ================
@@ -1690,32 +1690,33 @@ const error = (msg) => {
 
 const { version } = require("./package.json");
 const name = "axolotlsay";
-const artifact_download_url = "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload";
+const artifact_download_url =
+  "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload";
 
 const builder_glibc_major_version = 2;
 const builder_glibc_minor_version = 31;
 
 const supportedPlatforms = {
   "aarch64-apple-darwin": {
-    "artifact_name": "axolotlsay-aarch64-apple-darwin.tar.gz",
-    "bins": ["axolotlsay"],
-    "zip_ext": ".tar.gz"
+    artifact_name: "axolotlsay-aarch64-apple-darwin.tar.gz",
+    bins: ["axolotlsay"],
+    zip_ext: ".tar.gz",
   },
   "x86_64-apple-darwin": {
-    "artifact_name": "axolotlsay-x86_64-apple-darwin.tar.gz",
-    "bins": ["axolotlsay"],
-    "zip_ext": ".tar.gz"
+    artifact_name: "axolotlsay-x86_64-apple-darwin.tar.gz",
+    bins: ["axolotlsay"],
+    zip_ext: ".tar.gz",
   },
   "x86_64-pc-windows-msvc": {
-    "artifact_name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
-    "bins": ["axolotlsay.exe"],
-    "zip_ext": ".tar.gz"
+    artifact_name: "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+    bins: ["axolotlsay.exe"],
+    zip_ext: ".tar.gz",
   },
   "x86_64-unknown-linux-gnu": {
-    "artifact_name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
-    "bins": ["axolotlsay"],
-    "zip_ext": ".tar.gz"
-  }
+    artifact_name: "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
+    bins: ["axolotlsay"],
+    zip_ext: ".tar.gz",
+  },
 };
 
 const getPlatform = () => {
@@ -1733,7 +1734,7 @@ const getPlatform = () => {
       os_type = "apple-darwin";
       break;
     case "Linux":
-      os_type = "unknown-linux-gnu"
+      os_type = "unknown-linux-gnu";
       break;
   }
 
@@ -1748,11 +1749,13 @@ const getPlatform = () => {
   }
 
   if (raw_os_type === "Linux") {
-    if (libc.familySync() == 'musl') {
+    if (libc.familySync() == "musl") {
       os_type = "unknown-linux-musl-dynamic";
     } else if (libc.isNonGlibcLinuxSync()) {
-        console.warn("Your libc is neither glibc nor musl; trying static musl binary instead");
-        os_type = "unknown-linux-musl-static";
+      console.warn(
+        "Your libc is neither glibc nor musl; trying static musl binary instead"
+      );
+      os_type = "unknown-linux-musl-static";
     } else {
       let libc_version = libc.versionSync();
       let split_libc_version = libc_version.split(".");
@@ -1764,7 +1767,9 @@ const getPlatform = () => {
       ) {
         // We can't run the glibc binaries, but we can run the static musl ones
         // if they exist
-        console.warn("Your glibc isn't compatible; trying static musl binary instead");
+        console.warn(
+          "Your glibc isn't compatible; trying static musl binary instead"
+        );
         os_type = "unknown-linux-musl-static";
       }
     }
@@ -1777,7 +1782,9 @@ const getPlatform = () => {
 
   if (!platform) {
     error(
-      `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(supportedPlatforms).join(",")}`
+      `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(
+        supportedPlatforms
+      ).join(",")}`
     );
   }
 
@@ -1831,8 +1838,8 @@ install(false);
     "": {
       "name": "axolotlsay",
       "version": "0.2.1",
-      "license": "MIT OR Apache-2.0",
       "hasInstallScript": true,
+      "license": "MIT OR Apache-2.0",
       "dependencies": {
         "axios-proxy-builder": "^0.1.1",
         "binary-install": "^1.0.6",
@@ -1840,7 +1847,7 @@ install(false);
         "detect-libc": "^2.0.0"
       },
       "bin": {
-        "rover": "run.js"
+        "axolotlsay": "run.js"
       },
       "devDependencies": {
         "prettier": "2.8.4"

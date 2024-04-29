@@ -11,9 +11,12 @@ use super::repo::{Repo, TestContext, TestContextLock, ToolsImpl};
 pub use snapshot::*;
 pub use tools::*;
 
+// installer-specific testing
 mod homebrew;
+mod npm;
 mod powershell;
 mod shell;
+// utils
 mod snapshot;
 mod tools;
 
@@ -297,7 +300,6 @@ impl DistResult {
 
         // If we have PsScriptAnalyzer, check our powershell script
         self.psanalyzer(ctx)?;
-
         Ok(())
     }
 
@@ -310,6 +312,9 @@ impl DistResult {
 
         // If we can, run the homebrew script in a temp HOME
         self.runtest_homebrew_installer(ctx)?;
+
+        // If we can, run the npm package
+        self.runtest_npm_installer(ctx)?;
 
         Ok(())
     }
