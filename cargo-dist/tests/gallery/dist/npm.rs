@@ -76,7 +76,7 @@ fn run_installed_package(
     package_name: &str,
 ) -> Result<()> {
     let version_out = npm.output_checked(|cmd| {
-        cmd.current_dir(&in_project)
+        cmd.current_dir(in_project)
             .arg("exec")
             .arg(package_name)
             .arg("--")
