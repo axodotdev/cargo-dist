@@ -3,6 +3,30 @@
 Nothing Yet!
 
 
+# Version 0.13.3 (2024-04-22)
+
+This minor release adds some more resilience to release.yml by explicitly enabling windows
+longpath support, in case your repository (or submodules) contain extremely long filenames or paths.
+
+It also adds some missing dependency constraints for custom local and global build jobs.
+
+## Fixes
+
+* @gankra [improvements to release.yml](https://github.com/axodotdev/cargo-dist/pull/951)
+
+
+# Version 0.13.2 (2024-04-16)
+
+This minor release updates several dependencies and contains one improvement to the shell installer.
+
+## Fixes
+
+* @mistydemeo [update to axoasset which should fix remaining issues with recursive ZIP files on Windows](https://github.com/axodotdev/cargo-dist/pull/939) ([#873])
+* @mistydemeo [install the correct architecture binary on macOS when run from a shell inside Rosetta](https://github.com/axodotdev/cargo-dist/pull/941)
+
+[#873]: https://github.com/axodotdev/cargo-dist/issues/873
+
+
 # Version 0.13.1 (2024-04-12)
 
 This is a release that adds some improvements to the logic for updating PATH and rcfiles in installers.

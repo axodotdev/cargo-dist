@@ -11,9 +11,7 @@ use camino::Utf8PathBuf;
 use miette::Diagnostic;
 use thiserror::Error;
 
-/// An alias for the common Result type of this crate
-pub type Result<T> = std::result::Result<T, miette::Report>;
-/// An alias for the NEW Result type for this crate (undergoing migration)
+/// An alias for the common Result type for this crate
 pub type DistResult<T> = std::result::Result<T, DistError>;
 
 /// Errors cargo-dist can have
@@ -46,6 +44,22 @@ pub enum DistError {
     /// random string error
     #[error(transparent)]
     FromUtf8Error(#[from] std::string::FromUtf8Error),
+
+    /// random i/o error
+    #[error(transparent)]
+    Goblin(#[from] goblin::error::Error),
+
+    /// random camino conversion error
+    #[error(transparent)]
+    FromPathBufError(#[from] camino::FromPathBufError),
+
+    /// random dialoguer error
+    #[error(transparent)]
+    DialoguerError(#[from] dialoguer::Error),
+
+    /// random axotag error
+    #[error(transparent)]
+    AxotagError(#[from] axotag::errors::TagError),
 
     /// A problem with a jinja template, which is always a cargo-dist bug
     #[error("Failed to render template")]
@@ -221,11 +235,23 @@ pub enum DistError {
         /// The missing keys
         keys: &'static [&'static str],
     },
-    /// unrecognized style
-    #[error("{style} is not a recognized value")]
+    /// unrecognized job style
+    #[error("{style} is not a recognized job value")]
     #[diagnostic(help("Jobs that do not come with cargo-dist should be prefixed with ./"))]
-    UnrecognizedStyle {
-        /// Name of the msi
+    UnrecognizedJobStyle {
+        /// value provided
+        style: String,
+    },
+    /// unrecognized hosting style
+    #[error("{style} is not a recognized release host")]
+    UnrecognizedHostingStyle {
+        /// value provided
+        style: String,
+    },
+    /// unrecognized ci style
+    #[error("{style} is not a recognized ci provider")]
+    UnrecognizedCiStyle {
+        /// value provided
         style: String,
     },
     /// Linkage report can't be run for this combination of OS and target
@@ -240,14 +266,6 @@ pub enum DistError {
     #[error("unable to run linkage report for this type of binary")]
     LinkageCheckUnsupportedBinary {},
 
-    /// random i/o error
-    #[error(transparent)]
-    Goblin(#[from] goblin::error::Error),
-
-    /// random camino conversion error
-    #[error(transparent)]
-    FromPathBufError(#[from] camino::FromPathBufError),
-
     /// Error parsing a string containing an environment variable
     /// in VAR=value syntax
     #[error("Unable to parse environment variable as a key/value pair: {line}")]
@@ -256,14 +274,6 @@ pub enum DistError {
         /// The line of text that couldn't be parsed
         line: String,
     },
-
-    /// random dialoguer error
-    #[error(transparent)]
-    DialoguerError(#[from] dialoguer::Error),
-
-    /// random axotag error
-    #[error(transparent)]
-    AxotagError(#[from] axotag::errors::TagError),
 
     /// An error running `git archive`
     #[error("We failed to generate a source tarball for your project")]
@@ -303,12 +313,12 @@ pub enum DistError {
         bin_name: String,
     },
 
-    /// Error during `cargo dist update`
-    #[error("`cargo dist update` failed; the new version isn't in the place we expected")]
+    /// Error during `cargo dist selfupdate`
+    #[error("`cargo dist selfupdate` failed; the new version isn't in the place we expected")]
     #[diagnostic(help("This is probably not your fault, please file an issue!"))]
     UpdateFailed {},
 
-    /// Trying to run cargo dist update in a random dir
+    /// Trying to run cargo dist selfupdate in a random dir
     #[error("`cargo dist selfupdate` needs to be run in a project")]
     #[diagnostic(help(
         "If you just want to update cargo-dist and not your project, pass --skip-init"
@@ -318,6 +328,37 @@ pub enum DistError {
         #[diagnostic_source]
         cause: ProjectError,
     },
+
+    /// Trying to include CargoHome with other install paths
+    #[error("Incompatible install paths configured in Cargo.toml")]
+    #[diagnostic(help("The CargoHome `install-path` configuration can't be combined with other install path strategies."))]
+    IncompatibleInstallPathConfiguration,
+
+    /// Passed --artifacts but no --target
+    #[error("You specified --artifacts, disabling host mode, but specified no targets to build!")]
+    #[diagnostic(help("try adding --target={host_target}"))]
+    CliMissingTargets {
+        /// Current host target
+        host_target: String,
+    },
+
+    /// Workspace isn't init
+    #[error("please run 'cargo dist init' before running any other commands!")]
+    NeedsInit,
+
+    /// Running different version from config
+    #[error("You're running cargo-dist {running_version}, but 'cargo-dist-version = {config_version}' is set in your Cargo.toml")]
+    #[diagnostic(help("Rerun 'cargo dist init' to update to this version."))]
+    MismatchedDistVersion {
+        /// config version
+        config_version: String,
+        /// running version
+        running_version: String,
+    },
+
+    /// Failed to make sense of 'cargo -vV'
+    #[error("Failed to get get toolchain version from 'cargo -vV'")]
+    FailedCargoVersion,
 }
 
 /// Errors related to finding the project
