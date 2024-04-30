@@ -1,4 +1,4 @@
-const { Binary } = require("./binary-install");
+const { Package } = require("./binary-install");
 const os = require("os");
 const cTable = require("console.table");
 const libc = require("detect-libc");
@@ -11,43 +11,43 @@ const error = (msg) => {
 
 const { version } = require("./package.json");
 const name = {{ inner.app_name }};
-const artifact_download_url =
+const artifactDownloadUrl =
   {{ inner.base_url }};
 
-const builder_glibc_major_version = 2;
-const builder_glibc_minor_version = 31;
+const builderGlibcMajorVersion = 2;
+const builderGlibcMInorVersion = 31;
 
 const supportedPlatforms = {
   {%- for artifact in inner.artifacts %}
-  {{ artifact.target_triples[0] }}: {
-    artifact_name: {{ artifact.id }},
+  {{ artifact.targetTriples[0] }}: {
+    artifactName: {{ artifact.id }},
     bins: {{ artifact.binaries }},
-    zip_ext: {{ artifact.zip_style }},
+    zipExt: {{ artifact.zip_style }},
   },
   {%- endfor %}
 };
 
 const getPlatform = () => {
-  const raw_os_type = os.type();
-  const raw_architecture = os.arch();
+  const rawOsType = os.type();
+  const rawArchitecture = os.arch();
 
   // We want to use rust-style target triples as the canonical key
   // for a platform, so translate the "os" library's concepts into rust ones
-  let os_type = "";
-  switch (raw_os_type) {
+  let osType = "";
+  switch (rawOsType) {
     case "Windows_NT":
-      os_type = "pc-windows-msvc";
+      osType = "pc-windows-msvc";
       break;
     case "Darwin":
-      os_type = "apple-darwin";
+      osType = "apple-darwin";
       break;
     case "Linux":
-      os_type = "unknown-linux-gnu";
+      osType = "unknown-linux-gnu";
       break;
   }
 
   let arch = "";
-  switch (raw_architecture) {
+  switch (rawArchitecture) {
     case "x64":
       arch = "x86_64";
       break;
@@ -56,41 +56,41 @@ const getPlatform = () => {
       break;
   }
 
-  if (raw_os_type === "Linux") {
+  if (rawOsType === "Linux") {
     if (libc.familySync() == "musl") {
-      os_type = "unknown-linux-musl-dynamic";
+      osType = "unknown-linux-musl-dynamic";
     } else if (libc.isNonGlibcLinuxSync()) {
       console.warn(
         "Your libc is neither glibc nor musl; trying static musl binary instead"
       );
-      os_type = "unknown-linux-musl-static";
+      osType = "unknown-linux-musl-static";
     } else {
-      let libc_version = libc.versionSync();
-      let split_libc_version = libc_version.split(".");
-      let libc_major_version = split_libc_version[0];
-      let libc_minor_version = split_libc_version[1];
+      let libcVersion = libc.versionSync();
+      let splitLibcVersion = libcVersion.split(".");
+      let libcMajorVersion = splitLibcVersion[0];
+      let libcMinorVersion = splitLibcVersion[1];
       if (
-        libc_major_version != builder_glibc_major_version ||
-        libc_minor_version < builder_glibc_minor_version
+        libcMajorVersion != builderGlibcMajorVersion ||
+        libcMinorVersion < builderGlibcMInorVersion
       ) {
         // We can't run the glibc binaries, but we can run the static musl ones
         // if they exist
         console.warn(
           "Your glibc isn't compatible; trying static musl binary instead"
         );
-        os_type = "unknown-linux-musl-static";
+        osType = "unknown-linux-musl-static";
       }
     }
   }
 
   // Assume the above succeeded and build a target triple to look things up with.
   // If any of it failed, this lookup will fail and we'll handle it like normal.
-  let target_triple = `${arch}-${os_type}`;
-  let platform = supportedPlatforms[target_triple];
+  let targetTriple = `${arch}-${osType}`;
+  let platform = supportedPlatforms[targetTriple];
 
   if (!platform) {
     error(
-      `Platform with type "${raw_os_type}" and architecture "${raw_architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(
+      `Platform with type "${rawOsType}" and architecture "${rawArchitecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(
         supportedPlatforms
       ).join(",")}`
     );
@@ -99,33 +99,28 @@ const getPlatform = () => {
   return platform;
 };
 
-const getBinary = () => {
+const getPackage = () => {
   const platform = getPlatform();
-  const url = `${artifact_download_url}/${platform.artifact_name}`;
-
-  if (platform.bins.length > 1) {
-    // Not yet supported
-    error("this app has multiple binaries, which isn't yet implemented");
-  }
-  let binary = new Binary(platform.bins[0], url);
+  const url = `${artifactDownloadUrl}/${platform.artifactName}`;
+  let binary = new Package(name, url);
 
   return binary;
 };
 
 const install = (suppressLogs) => {
-  const binary = getBinary();
+  const package = getPackage();
   const proxy = configureProxy(binary.url);
 
-  return binary.install(proxy, suppressLogs);
+  return package.install(proxy, suppressLogs);
 };
 
 const run = () => {
-  const binary = getBinary();
-  binary.run();
+  const package = getPackage();
+  package.run();
 };
 
 module.exports = {
   install,
   run,
-  getBinary,
+  getPackage,
 };

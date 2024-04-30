@@ -11,8 +11,8 @@ const error = (msg) => {
   process.exit(1);
 };
 
-class Binary {
-  constructor(name, url) {
+class Package {
+  constructor(name, url, binaries) {
     let errors = [];
     if (typeof url !== "string") {
       errors.push("url must be a string");
@@ -24,11 +24,16 @@ class Binary {
       }
     }
     if (name && typeof name !== "string") {
-      errors.push("name must be a string");
+      errors.push("package name must be a string");
     }
-
     if (!name) {
-      errors.push("You must specify the name of your binary");
+      errors.push("You must specify the name of your package");
+    }
+    if (binaries && typeof binaries !== "object") {
+      errors.push("binaries must be an string => string map");
+    }
+    if (!binaries) {
+      errors.push("You must specify the binaries in the package");
     }
 
     if (errors.length > 0) {
@@ -38,18 +43,17 @@ class Binary {
         errorMsg += error;
       });
       errorMsg +=
-        '\n\nCorrect usage: new Binary("my-binary", "https://example.com/binary/download.tar.gz", "v1.0.0")';
+        '\n\nCorrect usage: new Package("my-binary", "https://example.com/binary/download.tar.gz", {"my-binary": "my-binary"})';
       error(errorMsg);
     }
     this.url = url;
     this.name = name;
     this.installDirectory = join(__dirname, "node_modules", ".bin");
+    this.binaries = binaries;
 
     if (!existsSync(this.installDirectory)) {
       mkdirSync(this.installDirectory, { recursive: true });
     }
-
-    this.binaryPath = join(this.installDirectory, `${this.name}`);
   }
 
   exists() {
@@ -96,7 +100,7 @@ class Binary {
       });
   }
 
-  run(fetchOptions) {
+  run(binaryName, fetchOptions) {
     const promise = !this.exists()
       ? this.install(fetchOptions, true)
       : Promise.resolve();
@@ -107,7 +111,12 @@ class Binary {
 
         const options = { cwd: process.cwd(), stdio: "inherit" };
 
-        const result = spawnSync(this.binaryPath, args, options);
+        const binRelPath = this.binaries[binaryName];
+        if (!binRelPath) {
+          error(`${binaryName} is not a known binary in ${binaries}`);
+        }
+        const binPath = join(this.installDirectory, binRelPath);
+        const result = spawnSync(binPath, args, options);
 
         if (result.error) {
           error(result.error);
