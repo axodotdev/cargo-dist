@@ -64,7 +64,7 @@ class Package {
     if (this.exists()) {
       if (!suppressLogs) {
         console.error(
-          `${this.name} is already installed, skipping installation.`
+          `${this.name} is already installed, skipping installation.`,
         );
       }
       return Promise.resolve();
@@ -84,7 +84,7 @@ class Package {
       .then((res) => {
         return new Promise((resolve, reject) => {
           const sink = res.data.pipe(
-            tar.x({ strip: 1, C: this.installDirectory })
+            tar.x({ strip: 1, C: this.installDirectory }),
           );
           sink.on("finish", () => resolve());
           sink.on("error", (err) => reject(err));
@@ -113,7 +113,7 @@ class Package {
 
         const binRelPath = this.binaries[binaryName];
         if (!binRelPath) {
-          error(`${binaryName} is not a known binary in ${binaries}`);
+          error(`${binaryName} is not a known binary in ${this.name}`);
         }
         const binPath = join(this.installDirectory, binRelPath);
         const result = spawnSync(binPath, args, options);
@@ -131,4 +131,4 @@ class Package {
   }
 }
 
-module.exports.Binary = Binary;
+module.exports.Package = Package;

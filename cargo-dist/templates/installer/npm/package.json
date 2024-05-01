@@ -1,0 +1,32 @@
+{
+  "name": "axonpminstaller",
+  "version": "0.0.0",
+  "repository": "https://github.com/axodotdev/cargo-dist/",
+  "artifactDownloadUrl": "",
+  "supportedPlatforms": {},
+  "scripts": {
+    "postinstall": "node ./install.js",
+    "fmt": "prettier --write **/*.js",
+    "fmt:check": "prettier --check **/*.js"
+  },
+  "engines": {
+    "node": ">=14",
+    "npm": ">=6"
+  },
+  "volta": {
+    "node": "18.14.1",
+    "npm": "9.5.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "axios-proxy-builder": "^0.1.2",
+    "console.table": "^0.10.0",
+    "detect-libc": "^2.0.3",
+    "rimraf": "^5.0.5",
+    "tar": "^7.0.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}
+

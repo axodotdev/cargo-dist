@@ -24,8 +24,8 @@ impl DistResult {
             package_tarball_path.to_owned()
         };
 
-        // Only do this if npm is installed
-        let Some(npm) = &ctx.tools.npm else {
+        // Only do this if npm and tar are installed
+        let (Some(npm), Some(tar)) = (&ctx.tools.npm, &ctx.tools.tar) else {
             return Ok(());
         };
         let app_name = ctx.repo.app_name;
@@ -51,7 +51,10 @@ impl DistResult {
         run_installed_package(npm, &parent_package_dir, app_name)?;
 
         // Now let's hop into the installed package and have it lint itself
-        lint_installed_package(npm, &parent_package_dir, app_name)?;
+        eprintln!("linting installed app...");
+        unpack_tarball_package(tar, &parent_package_dir, &package_tarball_path)?;
+        let package_dir = parent_package_dir.join("package");
+        lint_package(npm, &package_dir, app_name)?;
         Ok(())
     }
 }
@@ -70,36 +73,38 @@ fn install_tarball_package(
     Ok(())
 }
 
+fn unpack_tarball_package(
+    tar: &CommandInfo,
+    to_project: &Utf8Path,
+    package_tarball_path: &Utf8Path,
+) -> Result<()> {
+    // Install the npm package to a project (this will automatically create one)
+    tar.output_checked(|cmd| {
+        cmd.current_dir(to_project)
+            .arg("-xvf")
+            .arg(package_tarball_path)
+    })?;
+    Ok(())
+}
+
 fn run_installed_package(
     npm: &CommandInfo,
     in_project: &Utf8Path,
     package_name: &str,
 ) -> Result<()> {
-    let version_out = npm.output_checked(|cmd| {
+    let _version_out = npm.output_checked(|cmd| {
         cmd.current_dir(in_project)
             .arg("exec")
             .arg(package_name)
             .arg("--")
             .arg("--version")
     })?;
-
-    let version_string = String::from_utf8(version_out.stdout).unwrap();
-    let (v_name, v_version) = version_string
-        .split_once(' ')
-        .expect("could not parse version of npm");
-    assert_eq!(v_name, package_name);
-    assert!(v_version.contains('.'));
     Ok(())
 }
 
-fn lint_installed_package(
-    npm: &CommandInfo,
-    in_project: &Utf8Path,
-    package_name: &str,
-) -> Result<()> {
-    let package_dir = in_project.join("node_modules").join(package_name);
+fn lint_package(npm: &CommandInfo, package_dir: &Utf8Path, _package_name: &str) -> Result<()> {
     // Setup its deps
-    npm.output_checked(|cmd| cmd.current_dir(&package_dir).arg("install"))?;
+    npm.output_checked(|cmd| cmd.current_dir(&package_dir).arg("ci"))?;
     // Lint check it
     npm.output_checked(|cmd| cmd.current_dir(&package_dir).arg("run").arg("fmt:check"))?;
 

@@ -9,23 +9,14 @@ const error = (msg) => {
   process.exit(1);
 };
 
-const { version } = require("./package.json");
-const name = {{ inner.app_name }};
-const artifactDownloadUrl =
-  {{ inner.base_url }};
+const {
+  name,
+  artifactDownloadUrl,
+  supportedPlatforms,
+} = require("./package.json");
 
 const builderGlibcMajorVersion = 2;
 const builderGlibcMInorVersion = 31;
-
-const supportedPlatforms = {
-  {%- for artifact in inner.artifacts %}
-  {{ artifact.targetTriples[0] }}: {
-    artifactName: {{ artifact.id }},
-    bins: {{ artifact.binaries }},
-    zipExt: {{ artifact.zip_style }},
-  },
-  {%- endfor %}
-};
 
 const getPlatform = () => {
   const rawOsType = os.type();
@@ -61,7 +52,7 @@ const getPlatform = () => {
       osType = "unknown-linux-musl-dynamic";
     } else if (libc.isNonGlibcLinuxSync()) {
       console.warn(
-        "Your libc is neither glibc nor musl; trying static musl binary instead"
+        "Your libc is neither glibc nor musl; trying static musl binary instead",
       );
       osType = "unknown-linux-musl-static";
     } else {
@@ -76,7 +67,7 @@ const getPlatform = () => {
         // We can't run the glibc binaries, but we can run the static musl ones
         // if they exist
         console.warn(
-          "Your glibc isn't compatible; trying static musl binary instead"
+          "Your glibc isn't compatible; trying static musl binary instead",
         );
         osType = "unknown-linux-musl-static";
       }
@@ -91,8 +82,8 @@ const getPlatform = () => {
   if (!platform) {
     error(
       `Platform with type "${rawOsType}" and architecture "${rawArchitecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(
-        supportedPlatforms
-      ).join(",")}`
+        supportedPlatforms,
+      ).join(",")}`,
     );
   }
 
@@ -102,21 +93,38 @@ const getPlatform = () => {
 const getPackage = () => {
   const platform = getPlatform();
   const url = `${artifactDownloadUrl}/${platform.artifactName}`;
-  let binary = new Package(name, url);
+  let binary = new Package(name, url, platform.bins);
 
   return binary;
 };
 
 const install = (suppressLogs) => {
+  if (!artifactDownloadUrl || artifactDownloadUrl.length === 0) {
+    console.warn("in demo mode, not installing binaries");
+    return;
+  }
   const package = getPackage();
-  const proxy = configureProxy(binary.url);
+  const proxy = configureProxy(package.url);
 
   return package.install(proxy, suppressLogs);
 };
 
-const run = () => {
+const run = (binaryName) => {
   const package = getPackage();
-  package.run();
+  const proxy = configureProxy(package.url);
+
+  // If no binaryName is specified, and there's one that matches the app, use that
+  if (!binaryName && package.binaries[name]) {
+    binaryName = name;
+  }
+
+  // If no binaryName is specified and there's only one binary, use that
+  const binNames = Object.keys(package.binaries);
+  if (!binaryName && binNames.length == 1) {
+    binaryName = binNames[0];
+  }
+
+  package.run(binaryName, proxy);
 };
 
 module.exports = {
