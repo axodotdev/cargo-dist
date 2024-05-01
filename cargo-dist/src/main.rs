@@ -602,6 +602,10 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
         updater.configure_installer_path(path);
     }
 
+    if let Ok(token) = std::env::var("CARGO_DIST_GITHUB_TOKEN") {
+        updater.set_github_token(&token);
+    }
+
     // Do we want to treat this as an error?
     // Or do we want to sniff if this was a Homebrew installation?
     if updater.load_receipt().is_err() {
