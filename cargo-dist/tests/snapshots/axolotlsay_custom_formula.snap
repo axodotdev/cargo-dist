@@ -22,7 +22,7 @@ class AxolotlBrew < Formula
   end
   license "MIT OR Apache-2.0"
 
-  ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-pc-windows-gnu": {}, "x86_64-unknown-linux-gnu": {}}
+  BINARY_ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-pc-windows-gnu": {}, "x86_64-unknown-linux-gnu": {}}
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -31,8 +31,8 @@ class AxolotlBrew < Formula
     "#{cpu}-#{os}"
   end
 
-  def install_aliases!
-    ALIASES[target_triple.to_sym].each do |source, dests|
+  def install_binary_aliases!
+    BINARY_ALIASES[target_triple.to_sym].each do |source, dests|
       dests.each do |dest|
         bin.install_symlink bin/source.to_s => dest
       end
@@ -50,7 +50,7 @@ class AxolotlBrew < Formula
       bin.install "axolotlsay"
     end
 
-    install_aliases!
+    install_binary_aliases!
 
     # Homebrew will automatically install these, so we don't need to do that
     doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]

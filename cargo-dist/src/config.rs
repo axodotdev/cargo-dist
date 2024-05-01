@@ -346,7 +346,7 @@ pub struct DistMetadata {
 
     /// Aliases to install binaries as
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub aliases: Option<BTreeMap<String, Vec<String>>>,
+    pub bin_aliases: Option<BTreeMap<String, Vec<String>>>,
 
     /// a prefix to add to the release.yml and tag pattern so that
     /// cargo-dist can co-exist with other release workflows in complex workspaces
@@ -403,7 +403,7 @@ impl DistMetadata {
             hosting: _,
             extra_artifacts: _,
             github_custom_runners: _,
-            aliases: _,
+            bin_aliases: _,
             tag_namespace: _,
             install_updater: _,
             github_releases_repo: _,
@@ -474,7 +474,7 @@ impl DistMetadata {
             hosting,
             extra_artifacts,
             github_custom_runners,
-            aliases,
+            bin_aliases,
             tag_namespace,
             install_updater,
             github_releases_repo,
@@ -608,8 +608,8 @@ impl DistMetadata {
         if github_custom_runners.is_none() {
             *github_custom_runners = workspace_config.github_custom_runners.clone();
         }
-        if aliases.is_none() {
-            *aliases = workspace_config.aliases.clone();
+        if bin_aliases.is_none() {
+            *bin_aliases = workspace_config.bin_aliases.clone();
         }
         if install_updater.is_none() {
             *install_updater = workspace_config.install_updater;

@@ -60,7 +60,7 @@ pub struct InstallerInfo {
     /// Install receipt to write, if any
     pub receipt: Option<InstallReceipt>,
     /// Aliases to install binaries under
-    pub aliases: BTreeMap<String, BTreeMap<String, Vec<String>>>,
+    pub bin_aliases: BTreeMap<String, BTreeMap<String, Vec<String>>>,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

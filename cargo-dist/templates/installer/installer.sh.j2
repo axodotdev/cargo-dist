@@ -251,12 +251,12 @@ replace_home() {
     fi
 }
 
-json_aliases() {
+json_binary_aliases() {
     local _arch="$1"
 
     case "$_arch" in {% for artifact in artifacts %}
     "{{ artifact.target_triple }}")
-        echo '{{ aliases[artifact.target_triple] | tojson }}'
+        echo '{{ bin_aliases[artifact.target_triple] | tojson }}'
         ;;{% endfor %}
     esac
 }
@@ -268,7 +268,7 @@ aliases_for_binary() {
     case "$_arch" in {% for artifact in artifacts %}
     "{{ artifact.target_triple }}")
         case "$_bin" in
-        {%- for source, dests in aliases[artifact.target_triple] | items %}
+        {%- for source, dests in bin_aliases[artifact.target_triple] | items %}
             "{{ source }}")
                 echo "{{ dests | join(" ") }}"
             ;;
@@ -406,7 +406,7 @@ install() {
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
     # Also replace the aliases with the arch-specific one
-    RECEIPT=$(echo "$RECEIPT" | sed "s'\"aliases\":{}'\"aliases\":$(json_aliases "$_arch")'")
+    RECEIPT=$(echo "$RECEIPT" | sed "s'\"binary_aliases\":{}'\"binary_aliases\":$(json_binary_aliases "$_arch")'")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
