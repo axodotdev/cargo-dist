@@ -143,41 +143,51 @@ download_binary_and_run_installer() {
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-apple-darwin")
             _artifact_name="axolotlsay-x86_64-apple-darwin.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-unknown-linux-gnu")
             _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
+            ;;
+        "x86_64-unknown-linux-musl")
+            _artifact_name="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-unknown-linux-musl-dynamic")
             _artifact_name="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-unknown-linux-musl-static")
             _artifact_name="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         *)
             err "there isn't a package for $_arch"
-            ;;
-    esac
-
-    case "$_arch" in 
-        *)
-            # No updater for this, or maybe any, arch
-            _updater_name=""
-            _updater_bin=""
             ;;
     esac
 
@@ -285,6 +295,9 @@ json_aliases() {
     "x86_64-unknown-linux-gnu")
         echo '{}'
         ;;
+    "x86_64-unknown-linux-musl")
+        echo '{}'
+        ;;
     "x86_64-unknown-linux-musl-dynamic")
         echo '{}'
         ;;
@@ -314,6 +327,13 @@ aliases_for_binary() {
         esac
         ;;
     "x86_64-unknown-linux-gnu")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-unknown-linux-musl")
         case "$_bin" in
         *)
             echo ""
@@ -1308,6 +1328,11 @@ const supportedPlatforms = {
     "bins": ["axolotlsay"],
     "zip_ext": ".tar.gz"
   },
+  "x86_64-unknown-linux-musl": {
+    "artifact_name": "axolotlsay-x86_64-unknown-linux-musl.tar.gz",
+    "bins": ["axolotlsay"],
+    "zip_ext": ".tar.gz"
+  },
   "x86_64-unknown-linux-musl-dynamic": {
     "artifact_name": "axolotlsay-x86_64-unknown-linux-musl.tar.gz",
     "bins": ["axolotlsay"],
@@ -1905,7 +1930,9 @@ maybeInstall(true).then(run);
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl"
+        "x86_64-unknown-linux-musl",
+        "x86_64-unknown-linux-musl-dynamic",
+        "x86_64-unknown-linux-musl-static"
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
@@ -1917,7 +1944,9 @@ maybeInstall(true).then(run);
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl"
+        "x86_64-unknown-linux-musl",
+        "x86_64-unknown-linux-musl-dynamic",
+        "x86_64-unknown-linux-musl-static"
       ],
       "assets": [
         {

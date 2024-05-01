@@ -66,30 +66,29 @@ function Install-Binary($install_args) {
   # Platform info injected by cargo-dist
   $platforms = @{
   {%- for artifact in artifacts %}
-    "{{ artifact.target_triples[0] }}" = @{
+    "{{ artifact.target_triple }}" = @{
       "artifact_name" = "{{ artifact.id }}"
       "bins" = {% for bin in artifact.binaries -%}
         "{{ bin }}"{{ ", " if not loop.last else "" }}
       {%- endfor %}
       "zip_ext" = "{{ artifact.zip_style }}"
       "aliases" = @{
-      {%- for source, dests in aliases[artifact.target_triples[0]] | items %}
+      {%- for source, dests in aliases[artifact.target_triple] | items %}
         "{{ source }}" = {% for dest in dests -%}
           "{{ dest }}"{{ ", " if not loop.last else "" }}
       {%- endfor %}
       {%- endfor %}
       }
-      "aliases_json" = '{{ aliases[artifact.target_triples[0]] | tojson }}'
+      "aliases_json" = '{{ aliases[artifact.target_triple] | tojson }}'
+      {%- if artifact.updater %}
+      "updater" = @{
+        "artifact_name" = "{{ artifact.updater.id }}"
+        "bin" = "{{ artifact.updater.binary }}"
+      }
+      {%- endif%}
     }
   {%- endfor %}
   }
-
-  {%- for updater in updaters %}
-  $platforms["{{ updater.target_triple }}"]["updater"] = @{
-    "artifact_name" = "{{ updater.id }}"
-    "bin" = "{{ updater.binary }}"
-  }
-  {%- endfor %}
 
   $fetched = Download "$ArtifactDownloadUrl" $platforms
   # FIXME: add a flag that lets the user not do this step
@@ -135,13 +134,6 @@ function Download($download_url, $platforms) {
   $arch = Get-TargetTriple
 
   if (-not $platforms.ContainsKey($arch)) {
-    # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not available, falling back to X64"
-    $arch = "x86_64-pc-windows-msvc"
-  }
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # should not be possible, as currently we always produce X64 binaries.
     $platforms_json = ConvertTo-Json $platforms
     throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
   }
@@ -195,7 +187,7 @@ function Download($download_url, $platforms) {
   if ($null -ne $info["updater"]) {
     $updater_id = $info["updater"]["artifact_name"]
     $updater_url = "$download_url/$updater_id"
-    $out_name = "$tmp\{{ app_name}}-update.exe"
+    $out_name = "$tmp\{{ app_name }}-update.exe"
 
     $wc.downloadFile($updater_url, $out_name)
     $bin_paths += $out_name
@@ -207,12 +199,6 @@ function Download($download_url, $platforms) {
 function Invoke-Installer($bin_paths, $platforms) {
   # Replaces the placeholder binary entry with the actual list of binaries
   $arch = Get-TargetTriple
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not available, falling back to X64"
-    $arch = "x86_64-pc-windows-msvc"
-  }
 
   if (-not $platforms.ContainsKey($arch)) {
     # should not be possible, as currently we always produce X64 binaries.

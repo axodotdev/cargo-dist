@@ -51,8 +51,6 @@ pub struct InstallerInfo {
     pub base_url: String,
     /// Artifacts this installer can fetch
     pub artifacts: Vec<ExecutableZipFragment>,
-    /// Updaters associated with this release
-    pub updaters: Vec<UpdaterFragment>,
     /// Description of the installer (a good heading)
     pub desc: String,
     /// Hint for how to run the installer
@@ -70,12 +68,14 @@ pub struct InstallerInfo {
 pub struct ExecutableZipFragment {
     /// The id of the artifact
     pub id: String,
-    /// The targets the artifact supports
-    pub target_triples: Vec<TargetTriple>,
+    /// The target the artifact supports
+    pub target_triple: TargetTriple,
     /// The binaries the artifact contains (name, assumed at root)
     pub binaries: Vec<String>,
     /// The style of zip this is
     pub zip_style: ZipStyle,
+    /// The updater associated with this platform
+    pub updater: Option<UpdaterFragment>,
 }
 
 /// A fake fragment of an Updater artifact for installers
@@ -83,8 +83,6 @@ pub struct ExecutableZipFragment {
 pub struct UpdaterFragment {
     /// The id of the artifact
     pub id: String,
-    /// The target the artifact supports
-    pub target_triple: TargetTriple,
     /// The binary the artifact contains (name, assumed at root)
     pub binary: String,
 }
