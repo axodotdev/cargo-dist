@@ -28,7 +28,7 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
+{"aliases":{},"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/akaikatana-repack"
@@ -241,7 +241,7 @@ download_binary_and_run_installer() {
             ;;
     esac
 
-    install "$_dir" "$_bins" "$@"
+    install "$_dir" "$_bins" "$_arch" "$@"
     local _retval=$?
     if [ "$_retval" != 0 ]; then
         return "$_retval"
@@ -270,6 +270,71 @@ replace_home() {
     else
         echo "$_str"
     fi
+}
+
+json_aliases() {
+    local _arch="$1"
+
+    case "$_arch" in 
+    "aarch64-apple-darwin")
+        echo '{}'
+        ;;
+    "x86_64-apple-darwin")
+        echo '{}'
+        ;;
+    "x86_64-unknown-linux-gnu")
+        echo '{}'
+        ;;
+    "x86_64-unknown-linux-musl-dynamic")
+        echo '{}'
+        ;;
+    "x86_64-unknown-linux-musl-static")
+        echo '{}'
+        ;;
+    esac
+}
+
+aliases_for_binary() {
+    local _bin="$1"
+    local _arch="$2"
+
+    case "$_arch" in 
+    "aarch64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-unknown-linux-gnu")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-unknown-linux-musl-dynamic")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-unknown-linux-musl-static")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    esac
 }
 
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
@@ -366,6 +431,8 @@ install() {
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
+    # Also replace the aliases with the arch-specific one
+    RECEIPT=$(echo "$RECEIPT" | sed "s'\"aliases\":{}'\"aliases\":$(json_aliases "$_arch")'")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
@@ -373,11 +440,15 @@ install() {
     # copy all the binaries to the install dir
     local _src_dir="$1"
     local _bins="$2"
+    local _arch="$3"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
         ensure mv "$_bin" "$_install_dir"
         # unzip seems to need this chmod
         ensure chmod +x "$_install_dir/$_bin_name"
+        for _dest in $(aliases_for_binary "$_bin_name" "$_arch"); do
+            ln -s "$_install_dir/$_bin_name" "$_install_dir/$_dest"
+        done
         say "  $_bin_name"
     done
 

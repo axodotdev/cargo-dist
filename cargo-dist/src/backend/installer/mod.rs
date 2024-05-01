@@ -2,6 +2,8 @@
 //!
 //! In the future this might get split up into submodules.
 
+use std::collections::BTreeMap;
+
 use camino::Utf8PathBuf;
 use serde::Serialize;
 
@@ -59,6 +61,8 @@ pub struct InstallerInfo {
     pub install_paths: Vec<JinjaInstallPathStrategy>,
     /// Install receipt to write, if any
     pub receipt: Option<InstallReceipt>,
+    /// Aliases to install binaries under
+    pub aliases: BTreeMap<String, BTreeMap<String, Vec<String>>>,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

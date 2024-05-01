@@ -162,18 +162,6 @@ download_binary_and_run_installer() {
     esac
 
     case "$_arch" in 
-        "aarch64-apple-darwin")
-            _updater_name="axolotlsay-aarch64-apple-darwin-update"
-            _updater_bin="axolotlsay-aarch64-apple-darwin-update"
-        ;;
-        "x86_64-apple-darwin")
-            _updater_name="axolotlsay-x86_64-apple-darwin-update"
-            _updater_bin="axolotlsay-x86_64-apple-darwin-update"
-        ;;
-        "x86_64-unknown-linux-gnu")
-            _updater_name="axolotlsay-x86_64-unknown-linux-gnu-update"
-            _updater_bin="axolotlsay-x86_64-unknown-linux-gnu-update"
-        ;;
         *)
             # No updater for this, or maybe any, arch
             _updater_name=""
@@ -277,13 +265,13 @@ json_aliases() {
 
     case "$_arch" in 
     "aarch64-apple-darwin")
-        echo '{}'
+        echo '{"axolotlsay":["axolotlsay-link1","axolotlsay-link2"]}'
         ;;
     "x86_64-apple-darwin")
-        echo '{}'
+        echo '{"axolotlsay":["axolotlsay-link1","axolotlsay-link2"]}'
         ;;
     "x86_64-unknown-linux-gnu")
-        echo '{}'
+        echo '{"axolotlsay":["axolotlsay-link1","axolotlsay-link2"]}'
         ;;
     esac
 }
@@ -295,6 +283,9 @@ aliases_for_binary() {
     case "$_arch" in 
     "aarch64-apple-darwin")
         case "$_bin" in
+            "axolotlsay")
+                echo "axolotlsay-link1 axolotlsay-link2"
+            ;;
         *)
             echo ""
             ;;
@@ -302,6 +293,9 @@ aliases_for_binary() {
         ;;
     "x86_64-apple-darwin")
         case "$_bin" in
+            "axolotlsay")
+                echo "axolotlsay-link1 axolotlsay-link2"
+            ;;
         *)
             echo ""
             ;;
@@ -309,6 +303,9 @@ aliases_for_binary() {
         ;;
     "x86_64-unknown-linux-gnu")
         case "$_bin" in
+            "axolotlsay")
+                echo "axolotlsay-link1 axolotlsay-link2"
+            ;;
         *)
             echo ""
             ;;
@@ -983,7 +980,7 @@ class Axolotlsay < Formula
   end
   license "MIT OR Apache-2.0"
 
-  ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-unknown-linux-gnu": {}}
+  ALIASES = {"aarch64-apple-darwin": {"axolotlsay": ["axolotlsay-link1", "axolotlsay-link2"]}, "x86_64-apple-darwin": {"axolotlsay": ["axolotlsay-link1", "axolotlsay-link2"]}, "x86_64-unknown-linux-gnu": {"axolotlsay": ["axolotlsay-link1", "axolotlsay-link2"]}}
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -1087,13 +1084,10 @@ function Install-Binary($install_args) {
       "bins" = "axolotlsay.exe"
       "zip_ext" = ".tar.gz"
       "aliases" = @{
+        "axolotlsay.exe" = "axolotlsay-link1.exe", "axolotlsay-link2.exe"
       }
-      "aliases_json" = '{}'
+      "aliases_json" = '{"axolotlsay.exe":["axolotlsay-link1.exe","axolotlsay-link2.exe"]}'
     }
-  }
-  $platforms["x86_64-pc-windows-msvc"]["updater"] = @{
-    "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc-update"
-    "bin" = "axolotlsay-x86_64-pc-windows-msvc-update"
   }
 
   $fetched = Download "$ArtifactDownloadUrl" $platforms
@@ -2254,18 +2248,14 @@ maybeInstall(true).then(run);
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
         "axolotlsay-npm-package.tar.gz",
-        "axolotlsay-aarch64-apple-darwin-update",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
-        "axolotlsay-x86_64-apple-darwin-update",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
-        "axolotlsay-x86_64-pc-windows-msvc-update",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.msi",
         "axolotlsay-x86_64-pc-windows-msvc.msi.sha256",
-        "axolotlsay-x86_64-unknown-linux-gnu-update",
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
       ],
@@ -2277,13 +2267,6 @@ maybeInstall(true).then(run);
     }
   ],
   "artifacts": {
-    "axolotlsay-aarch64-apple-darwin-update": {
-      "name": "axolotlsay-aarch64-apple-darwin-update",
-      "kind": "updater",
-      "target_triples": [
-        "aarch64-apple-darwin"
-      ]
-    },
     "axolotlsay-aarch64-apple-darwin.tar.gz": {
       "name": "axolotlsay-aarch64-apple-darwin.tar.gz",
       "kind": "executable-zip",
@@ -2411,13 +2394,6 @@ maybeInstall(true).then(run);
       "install_hint": "npm install axolotlsay@0.2.1",
       "description": "Install prebuilt binaries into your npm project"
     },
-    "axolotlsay-x86_64-apple-darwin-update": {
-      "name": "axolotlsay-x86_64-apple-darwin-update",
-      "kind": "updater",
-      "target_triples": [
-        "x86_64-apple-darwin"
-      ]
-    },
     "axolotlsay-x86_64-apple-darwin.tar.gz": {
       "name": "axolotlsay-x86_64-apple-darwin.tar.gz",
       "kind": "executable-zip",
@@ -2459,13 +2435,6 @@ maybeInstall(true).then(run);
       "kind": "checksum",
       "target_triples": [
         "x86_64-apple-darwin"
-      ]
-    },
-    "axolotlsay-x86_64-pc-windows-msvc-update": {
-      "name": "axolotlsay-x86_64-pc-windows-msvc-update",
-      "kind": "updater",
-      "target_triples": [
-        "x86_64-pc-windows-msvc"
       ]
     },
     "axolotlsay-x86_64-pc-windows-msvc.msi": {
@@ -2533,13 +2502,6 @@ maybeInstall(true).then(run);
       "kind": "checksum",
       "target_triples": [
         "x86_64-pc-windows-msvc"
-      ]
-    },
-    "axolotlsay-x86_64-unknown-linux-gnu-update": {
-      "name": "axolotlsay-x86_64-unknown-linux-gnu-update",
-      "kind": "updater",
-      "target_triples": [
-        "x86_64-unknown-linux-gnu"
       ]
     },
     "axolotlsay-x86_64-unknown-linux-gnu.tar.gz": {
