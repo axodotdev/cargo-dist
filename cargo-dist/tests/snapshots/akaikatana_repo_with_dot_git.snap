@@ -1,5 +1,5 @@
 ---
-source: cargo-dist/tests/gallery/dist.rs
+source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
 ================ installer.sh ================

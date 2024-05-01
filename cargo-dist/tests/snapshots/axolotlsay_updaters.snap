@@ -2781,7 +2781,7 @@ install(false);
 #!/usr/bin/env node
 
 const { run, install: maybeInstall } = require("./binary");
-maybeInstall(true).then(run);
+maybeInstall(true).then(() => run("axolotlsay"));
 
 ================ dist-manifest.json ================
 {

@@ -30,6 +30,7 @@ impl DistResult {
         };
         let app_name = ctx.repo.app_name;
         let test_name = &self.test_name;
+        let bins = ctx.repo.bins;
 
         // Create/clobber a temp dir in target
         let repo_dir = &ctx.repo_dir;
@@ -48,7 +49,7 @@ impl DistResult {
 
         // Run the installed app
         eprintln!("npm exec'ing installed app...");
-        run_installed_package(npm, &parent_package_dir, app_name)?;
+        run_installed_package(npm, &parent_package_dir, app_name, bins)?;
 
         // Now let's hop into the installed package and have it lint itself
         eprintln!("linting installed app...");
@@ -91,14 +92,41 @@ fn run_installed_package(
     npm: &CommandInfo,
     in_project: &Utf8Path,
     package_name: &str,
+    bins: &[&str],
 ) -> Result<()> {
-    let _version_out = npm.output_checked(|cmd| {
+    // Explicitly run each binary
+    for bin in bins {
+        let _version_out = npm.output_checked(|cmd| {
+            cmd.current_dir(in_project)
+                .arg("exec")
+                .arg(format!("--package={package_name}"))
+                .arg("-c")
+                .arg(format!("{bin} --version"))
+        })?;
+    }
+
+    // If common npx special cases apply where "just run the package" is unambiguous
+    // then also check that that mode also works fine.
+    if bins.len() == 1 || bins.contains(&package_name) {
+        let _version_out = npm.output_checked(|cmd| {
+            cmd.current_dir(in_project)
+                .arg("exec")
+                .arg(package_name)
+                .arg("--")
+                .arg("--version")
+        })?;
+    }
+
+    // Check that the test harness is actually working by running a nonsense binary
+    let test = npm.output_checked(|cmd| {
         cmd.current_dir(in_project)
             .arg("exec")
-            .arg(package_name)
-            .arg("--")
-            .arg("--version")
-    })?;
+            .arg(format!("--package={package_name}"))
+            .arg("-c")
+            .arg("asdasdadfakebin --version")
+    });
+    assert!(test.is_err());
+
     Ok(())
 }
 
