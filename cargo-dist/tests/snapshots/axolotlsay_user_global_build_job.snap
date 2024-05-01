@@ -2774,7 +2774,7 @@ jobs:
           repository: "axodotdev/homebrew-packages"
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
-      - name: Fetch local artifacts
+      - name: Fetch homebrew formulae
         uses: actions/download-artifact@v4
         with:
           pattern: artifacts-*
