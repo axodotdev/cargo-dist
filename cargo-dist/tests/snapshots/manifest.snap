@@ -395,7 +395,7 @@ stdout:
         "x86_64-unknown-linux-musl-dynamic",
         "x86_64-unknown-linux-musl-static"
       ],
-      "install_hint": "brew install axodotdev/homebrew-tap/cargo-dist",
+      "install_hint": "brew install axodotdev/tap/cargo-dist",
       "description": "Install prebuilt binaries via Homebrew"
     },
     "dist-manifest-schema.json": {
