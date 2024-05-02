@@ -13,7 +13,6 @@ impl CommandInfo {
     pub fn new(name: &str, path: Option<&str>) -> Option<Self> {
         let cmd = path.unwrap_or(name).to_owned();
         let output = Command::new(&cmd).arg("--version").output().ok()?;
-
         Some(CommandInfo {
             name: name.to_owned(),
             cmd,

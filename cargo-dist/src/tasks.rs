@@ -1974,12 +1974,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
-        if release.bins.len() > 1 {
-            warn!("skipping npm installer: packages with multiple binaries are unsupported\n  let us know if you have a use for this, and what should happen!");
-            return;
-        }
-        let bin = release.bins[0].1.clone();
-
         let npm_package_name = if let Some(scope) = &release.npm_scope {
             format!("{scope}/{}", release.app_name)
         } else {
@@ -2044,7 +2038,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 npm_package_homepage_url,
                 npm_package_keywords,
                 package_dir: dir_path,
-                bin,
                 inner: InstallerInfo {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),

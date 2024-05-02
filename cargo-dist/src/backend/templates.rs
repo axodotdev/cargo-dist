@@ -19,6 +19,8 @@ pub const TEMPLATE_INSTALLER_SH: TemplateId = "installer/installer.sh";
 pub const TEMPLATE_INSTALLER_RB: TemplateId = "installer/homebrew.rb";
 /// Template key for the npm installer dir
 pub const TEMPLATE_INSTALLER_NPM: TemplateId = "installer/npm";
+/// Template key for the npm installer dir
+pub const TEMPLATE_INSTALLER_NPM_RUN_JS: TemplateId = "installer/npm/run.js";
 /// Template key for the github ci.yml
 pub const TEMPLATE_CI_GITHUB: TemplateId = "ci/github/release.yml";
 
@@ -28,6 +30,8 @@ type EnvId = &'static str;
 const ENV_MISC: &str = "*";
 /// Environment with tweaked syntax to deal with {{ blah }} showing up in templated yml files
 const ENV_YAML: &str = "yml";
+/// Is not a jinja template
+const ENV_NONE: &str = "none";
 
 /// Main templates struct that gets passed around in the application.
 #[derive(Debug)]
@@ -36,6 +40,8 @@ pub struct Templates {
     ///
     /// Keys are ENV_MISC, ENV_YML
     envs: SortedMap<EnvId, Environment<'static>>,
+    /// non-templated files that should be returned verbatim
+    raw_files: SortedMap<String, String>,
     /// Traversable/searchable structure of the templates dir
     entries: TemplateDir,
 }
@@ -89,6 +95,7 @@ impl Templates {
     pub fn new() -> DistResult<Self> {
         // Initialize the envs
         let mut envs = SortedMap::new();
+        let mut raw_files = SortedMap::new();
         {
             let misc_env = Environment::new();
             envs.insert(ENV_MISC, misc_env);
@@ -131,10 +138,14 @@ impl Templates {
         // are baked into the binary. If this fails at all it should presumably *always* fail, and
         // so these unwraps will only show up when someone's messing with the templates locally
         // during development and presumably wrote some malformed jinja2 markup.
-        Self::load_files(&mut envs, &TEMPLATE_DIR, &mut entries)
+        Self::load_files(&mut envs, &mut raw_files, &TEMPLATE_DIR, &mut entries)
             .expect("failed to load jinja2 templates from binary");
 
-        let templates = Self { envs, entries };
+        let templates = Self {
+            envs,
+            raw_files,
+            entries,
+        };
 
         Ok(templates)
     }
@@ -189,7 +200,29 @@ impl Templates {
         self.render_file_to_clean_string_inner(file, val)
     }
 
+    /// Render a maybe-templated file to a string, cleaning all newlines to be unix-y
     fn render_file_to_clean_string_inner(
+        &self,
+        file: &TemplateFile,
+        val: &impl Serialize,
+    ) -> DistResult<String> {
+        if file.env == ENV_NONE {
+            self.render_raw_file_to_clean_string(file)
+        } else {
+            self.render_templated_file_to_clean_string(file, val)
+        }
+    }
+
+    /// ""Render"" a non-jinja template file to a string, cleaning all newlines to be unix-y
+    /// (it just returns the file verbatime with newlines fixed).
+    fn render_raw_file_to_clean_string(&self, file: &TemplateFile) -> DistResult<String> {
+        let rendered = &self.raw_files[file.path.as_str()];
+        let cleaned = dos2unix(rendered).into_owned();
+        Ok(cleaned)
+    }
+
+    /// Render a jinja template file to a string, cleaning all newlines to be unix-y
+    fn render_templated_file_to_clean_string(
         &self,
         file: &TemplateFile,
         val: &impl Serialize,
@@ -246,36 +279,42 @@ impl Templates {
     /// load + parse templates from the binary (recursive)
     fn load_files(
         envs: &mut SortedMap<EnvId, Environment<'static>>,
+        raw_files: &mut SortedMap<String, String>,
         dir: &'static Dir,
         parent: &mut TemplateDir,
     ) -> DistResult<()> {
         for entry in dir.entries() {
             let path = Utf8Path::from_path(entry.path()).expect("non-utf8 jinja2 template path");
             if let Some(file) = entry.as_file() {
-                if path.extension().unwrap_or_default() != "j2" {
-                    // Skip non-jinja-templates (useful for prototyping)
-                    continue;
-                }
+                let is_jinja = path.extension().unwrap_or_default() == "j2";
                 // Remove the .j2 extension
-                let path = path.with_extension("");
+                let path = if is_jinja {
+                    path.with_extension("")
+                } else {
+                    path.to_owned()
+                };
+
                 let name = path
                     .file_name()
-                    .expect("jinja2 template didn't have a name!?")
+                    .expect("template didn't have a name!?")
                     .to_owned();
-                let contents = file
-                    .contents_utf8()
-                    .expect("non-utf8 jinja2 template")
-                    .to_string();
-                let env = if path.extension().unwrap_or_default() == "yml" {
+                let contents = file.contents_utf8().expect("non-utf8 template").to_string();
+                let env = if !is_jinja {
+                    ENV_NONE
+                } else if path.extension().unwrap_or_default() == "yml" {
                     ENV_YAML
                 } else {
                     ENV_MISC
                 };
 
-                envs.get_mut(env)
-                    .expect("invalid jinja2 env key")
-                    .add_template_owned(path.to_string(), contents)
-                    .expect("failed to add jinja2 template");
+                if is_jinja {
+                    envs.get_mut(env)
+                        .expect("invalid template env key")
+                        .add_template_owned(path.to_string(), contents)
+                        .expect("failed to add template");
+                } else {
+                    raw_files.insert(path.to_string(), contents);
+                }
                 parent.entries.insert(
                     name.clone(),
                     TemplateEntry::File(TemplateFile { name, path, env }),
@@ -291,7 +330,7 @@ impl Templates {
                     path: path.to_owned(),
                     entries: SortedMap::new(),
                 };
-                Self::load_files(envs, dir, &mut new_dir)
+                Self::load_files(envs, raw_files, dir, &mut new_dir)
                     .expect("failed to load jinja2 templates from binary");
                 parent.entries.insert(name, TemplateEntry::Dir(new_dir));
             }
@@ -313,6 +352,9 @@ mod test {
         templates.get_template_file(TEMPLATE_INSTALLER_RB).unwrap();
         templates.get_template_file(TEMPLATE_INSTALLER_PS1).unwrap();
         templates.get_template_dir(TEMPLATE_INSTALLER_NPM).unwrap();
+        templates
+            .get_template_file(TEMPLATE_INSTALLER_NPM_RUN_JS)
+            .unwrap();
 
         templates.get_template_file(TEMPLATE_CI_GITHUB).unwrap();
     }
