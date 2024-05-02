@@ -51,6 +51,9 @@
 use std::collections::{BTreeMap, HashMap};
 
 use axoprocess::Cmd;
+use axoproject::platforms::{
+    TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
+};
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
@@ -61,15 +64,15 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::backend::installer::UpdaterFragment;
 use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
+use crate::platform::PlatformSupport;
 use crate::{
     backend::{
         installer::{
             homebrew::{to_class_case, HomebrewInstallerInfo},
             msi::MsiInstallerInfo,
             npm::NpmInstallerInfo,
-            ExecutableZipFragment, InstallerImpl, InstallerInfo,
+            InstallerImpl, InstallerInfo,
         },
         templates::Templates,
     },
@@ -264,6 +267,8 @@ pub struct DistGraph {
     pub tag_namespace: Option<String>,
     /// Whether to install updaters alongside with binaries
     pub install_updater: bool,
+    /// Publish GitHub Releases to this other repo
+    pub github_releases_repo: Option<config::GithubRepoPair>,
 }
 
 /// Info about artifacts should be hosted
@@ -668,6 +673,9 @@ pub struct Release {
     pub formula: Option<String>,
     /// Packages to install from a system package manager
     pub system_dependencies: SystemDependencies,
+    /// Computed support for platforms, gets iteratively refined over time, so check details
+    /// as late as possible, if you can!
+    pub platform_support: PlatformSupport,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -837,6 +845,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             default_features,
             all_features,
             create_release,
+            github_releases_repo,
             pr_run_mode: _,
             allow_dirty,
             msvc_crt_static,
@@ -861,6 +870,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
         let tag_namespace = tag_namespace.clone();
+        let github_releases_repo = github_releases_repo.clone();
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -1025,6 +1035,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 build_local_artifacts,
                 dispatch_releases,
                 create_release,
+                github_releases_repo,
                 ssldotcom_windows_sign,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
@@ -1145,6 +1156,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .clone()
             .unwrap_or_default();
 
+        let platform_support = PlatformSupport::default();
         let idx = ReleaseIdx(self.inner.releases.len());
         let id = app_name.clone();
         info!("added release {id}");
@@ -1173,6 +1185,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             tap,
             formula,
             system_dependencies,
+            platform_support,
         });
         idx
     }
@@ -1497,7 +1510,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.add_local_artifact(variant_idx, artifact);
     }
 
-    fn make_updater_for_variant(&self, variant_idx: ReleaseVariantIdx) -> Artifact {
+    pub(crate) fn make_updater_for_variant(&self, variant_idx: ReleaseVariantIdx) -> Artifact {
         let variant = self.variant(variant_idx);
         let filename = format!("{}-update", variant.id);
         let target_path = &self.inner.dist_dir.to_owned().join(&filename);
@@ -1517,7 +1530,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     /// Make an executable zip for a variant, but don't yet integrate it into the graph
     ///
     /// This is useful for installers which want to know about *potential* executable zips
-    fn make_executable_zip_for_variant(
+    pub(crate) fn make_executable_zip_for_variant(
         &self,
         release_idx: ReleaseIdx,
         variant_idx: ReleaseVariantIdx,
@@ -1687,163 +1700,26 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let hint = format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
 
-        // If they have an x64 macos build but not an arm64 one, add a fallback entry
-        // to try to install x64 on arm64 and let rosetta2 deal with it.
-        //
-        // (This isn't strictly correct because rosetta2 isn't installed by default
-        // on macos, and the auto-installer only triggers for "real" apps, and not CLIs.
-        // Still, we think this is better than not trying at all.)
-        const X64_MACOS: &str = "x86_64-apple-darwin";
-        const ARM64_MACOS: &str = "aarch64-apple-darwin";
-        const ARM64_GNU: &str = "aarch64-unknown-linux-gnu";
-        const ARM64_MUSL: &str = "aarch64-unknown-linux-musl";
-        const X64_GNU: &str = "x86_64-unknown-linux-gnu";
-        const X64_MUSL: &str = "x86_64-unknown-linux-musl";
-        const X64_MUSL_STATIC: &str = "x86_64-unknown-linux-musl-static";
-        const X64_MUSL_DYNAMIC: &str = "x86_64-unknown-linux-musl-dynamic";
-        const ARM64_MUSL_STATIC: &str = "aarch64-unknown-linux-musl-static";
-        const ARM64_MUSL_DYNAMIC: &str = "aarch64-unknown-linux-musl-dynamic";
-
-        let mut has_x64_apple = false;
-        let mut has_arm_apple = false;
-        let mut has_x86_gnu_linux = false;
-        let mut has_arm_gnu_linux = false;
-        let mut has_x86_static_musl_linux = false;
-        let mut has_arm_static_musl_linux = false;
-
-        // Currently always false, someday these builds will exist
-        let has_x86_dynamic_musl_linux = false;
-        let has_arm_dynamic_musl_linux = false;
-
-        for &variant_idx in &release.variants {
-            let variant = self.variant(variant_idx);
-            let target = &variant.target;
-            if target == X64_MACOS {
-                has_x64_apple = true;
-            }
-            if target == ARM64_MACOS {
-                has_arm_apple = true;
-            }
-            if target == X64_GNU {
-                has_x86_gnu_linux = true;
-            }
-            if target == ARM64_GNU {
-                has_arm_gnu_linux = true;
-            }
-            if target == X64_MUSL {
-                has_x86_static_musl_linux = true;
-            }
-            if target == ARM64_MUSL {
-                has_arm_static_musl_linux = true;
-            }
-        }
-
-        let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
-        let do_x86_gnu_to_musl_fallback = !has_x86_gnu_linux && has_x86_static_musl_linux;
-        let do_arm_gnu_to_musl_fallback = !has_arm_gnu_linux && has_arm_static_musl_linux;
-        let do_x86_musl_to_musl_fallback = has_x86_static_musl_linux && !has_x86_dynamic_musl_linux;
-        let do_arm_musl_to_musl_fallback = has_arm_static_musl_linux && !has_arm_dynamic_musl_linux;
-
-        // Gather up the bundles the installer supports
-        let mut artifacts = vec![];
-        let mut updaters = vec![];
-        let mut target_triples = SortedSet::new();
-
-        for &variant_idx in &release.variants {
-            let variant = self.variant(variant_idx);
-            let target = &variant.target;
-
-            if target.contains("windows") {
-                continue;
-            }
-
-            // Compute the artifact zip this variant *would* make *if* it were built
-            // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
-            // way to add artifacts to the graph and then say "ok but don't build it".
-            let (artifact, binaries) =
-                self.make_executable_zip_for_variant(to_release, variant_idx);
-
-            target_triples.insert(target.clone());
-
-            let mut fragment = ExecutableZipFragment {
-                id: artifact.id,
-                target_triples: artifact.target_triples,
-                zip_style: artifact.archive.as_ref().unwrap().zip_style,
-                binaries: binaries
-                    .into_iter()
-                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
-                    .collect(),
-            };
-
-            if do_rosetta_fallback && target == X64_MACOS {
-                // Copy the info but respecify it to be arm64 macos
-                let mut arm_fragment = fragment.clone();
-                arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
-                artifacts.push(arm_fragment.clone());
-            }
-
-            // musl-static is actually kind of a fake triple we've invented
-            // to let us specify which is which; we want to ensure it exists
-            // for the installer to act on
-            if target == X64_MUSL {
-                fragment.target_triples = vec![X64_MUSL_STATIC.to_owned()];
-            }
-
-            if target == ARM64_MUSL {
-                fragment.target_triples = vec![ARM64_MUSL_STATIC.to_owned()];
-            }
-
-            // Copy the info but lie that it's actually glibc
-            if do_x86_gnu_to_musl_fallback && target == X64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![X64_GNU.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_x86_musl_to_musl_fallback && target == X64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![X64_MUSL_DYNAMIC.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_arm_gnu_to_musl_fallback && target == ARM64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![ARM64_GNU.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_arm_musl_to_musl_fallback && target == ARM64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![ARM64_MUSL_DYNAMIC.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            artifacts.push(fragment);
-
-            // Create the "pretend" updaters similar to the above for exezips
-            if self.inner.install_updater {
-                let artifact = self.make_updater_for_variant(variant_idx);
-                updaters.push(UpdaterFragment {
-                    id: artifact.id.to_owned(),
-                    target_triple: variant.target.to_owned(),
-                    binary: artifact.id.to_owned(),
-                });
-            }
-        }
+        // Get the artifacts
+        let artifacts = release
+            .platform_support
+            .fragments()
+            .into_iter()
+            .filter(|a| !a.target_triple.contains("windows-msvc"))
+            .collect::<Vec<_>>();
+        let target_triples = artifacts
+            .iter()
+            .map(|a| a.target_triple.clone())
+            .collect::<Vec<_>>();
 
         if artifacts.is_empty() {
             warn!("skipping shell installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-
-        let triples: Vec<String> = artifacts
-            .iter()
-            .flat_map(|a| a.target_triples.clone())
-            .collect();
-
+        let aliases = self.inner.aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
-            target_triples: target_triples.into_iter().collect(),
+            target_triples,
             archive: None,
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
@@ -1859,11 +1735,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .collect(),
                 base_url: download_url.to_owned(),
                 artifacts,
-                updaters,
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
-                aliases: self.inner.aliases.for_targets(&triples),
+                aliases,
             })),
             is_global: true,
         };
@@ -1902,160 +1777,33 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let hint = format!("brew install {}", install_target);
         let desc = "Install prebuilt binaries via Homebrew".to_owned();
 
-        // If they have an x64 macOS build but not an arm64 one, add a fallback entry
-        // to try to install x64 on arm64 and let Rosetta 2 deal with it.
-        //
-        // (This isn't strictly correct because Rosetta 2 isn't installed by default
-        // on macOS, and the auto-installer only triggers for "real" apps, and not CLIs.
-        // Still, we think this is better than not trying at all.)
-        const X64_MACOS: &str = "x86_64-apple-darwin";
-        const ARM64_MACOS: &str = "aarch64-apple-darwin";
-        const ARM64_GNU: &str = "aarch64-unknown-linux-gnu";
-        const ARM64_MUSL: &str = "aarch64-unknown-linux-musl";
-        const X64_GNU: &str = "x86_64-unknown-linux-gnu";
-        const X64_MUSL: &str = "x86_64-unknown-linux-musl";
-        const X64_MUSL_STATIC: &str = "x86_64-unknown-linux-musl-static";
-        const X64_MUSL_DYNAMIC: &str = "x86_64-unknown-linux-musl-dynamic";
-        const ARM64_MUSL_STATIC: &str = "aarch64-unknown-linux-musl-static";
-        const ARM64_MUSL_DYNAMIC: &str = "aarch64-unknown-linux-musl-dynamic";
+        let artifacts = release
+            .platform_support
+            .fragments()
+            .into_iter()
+            .filter(|a| !a.target_triple.contains("windows-msvc"))
+            .collect::<Vec<_>>();
+        let target_triples = artifacts
+            .iter()
+            .map(|a| a.target_triple.clone())
+            .collect::<Vec<_>>();
+        let x86_64_macos = artifacts
+            .iter()
+            .find(|a| a.target_triple == TARGET_X64_MAC)
+            .cloned();
+        let arm64_macos = artifacts
+            .iter()
+            .find(|a| a.target_triple == TARGET_ARM64_MAC)
+            .cloned();
+        let x86_64_linux = artifacts
+            .iter()
+            .find(|a| a.target_triple == TARGET_X64_LINUX_GNU)
+            .cloned();
+        let arm64_linux = artifacts
+            .iter()
+            .find(|a| a.target_triple == TARGET_ARM64_LINUX_GNU)
+            .cloned();
 
-        let mut has_x64_apple = false;
-        let mut has_arm_apple = false;
-        let mut has_x86_gnu_linux = false;
-        let mut has_arm_gnu_linux = false;
-        let mut has_x86_static_musl_linux = false;
-        let mut has_arm_static_musl_linux = false;
-
-        // Currently always false, someday these builds will exist
-        let has_x86_dynamic_musl_linux = false;
-        let has_arm_dynamic_musl_linux = false;
-
-        for &variant_idx in &release.variants {
-            let variant = self.variant(variant_idx);
-            let target = &variant.target;
-            if target == X64_MACOS {
-                has_x64_apple = true;
-            }
-            if target == ARM64_MACOS {
-                has_arm_apple = true;
-            }
-            if target == X64_GNU {
-                has_x86_gnu_linux = true;
-            }
-            if target == ARM64_GNU {
-                has_arm_gnu_linux = true;
-            }
-            if target == X64_MUSL {
-                has_x86_static_musl_linux = true;
-            }
-            if target == ARM64_MUSL {
-                has_arm_static_musl_linux = true;
-            }
-        }
-
-        let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
-        let do_x86_gnu_to_musl_fallback = !has_x86_gnu_linux && has_x86_static_musl_linux;
-        let do_arm_gnu_to_musl_fallback = !has_arm_gnu_linux && has_arm_static_musl_linux;
-        let do_x86_musl_to_musl_fallback = has_x86_static_musl_linux && !has_x86_dynamic_musl_linux;
-        let do_arm_musl_to_musl_fallback = has_arm_static_musl_linux && !has_arm_dynamic_musl_linux;
-
-        let mut arm64_macos = None;
-        let mut x86_64_macos = None;
-        let mut arm64_linux = None;
-        let mut x86_64_linux = None;
-
-        // Gather up the bundles the installer supports
-        let mut artifacts = vec![];
-        let mut target_triples = SortedSet::new();
-
-        for &variant_idx in &release.variants {
-            let variant = self.variant(variant_idx);
-            let target = &variant.target;
-
-            if target.contains("windows") {
-                continue;
-            }
-
-            // Compute the artifact zip this variant *would* make *if* it were built
-            // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
-            // way to add artifacts to the graph and then say "ok but don't build it".
-            let (artifact, binaries) =
-                self.make_executable_zip_for_variant(to_release, variant_idx);
-
-            target_triples.insert(target.clone());
-
-            let mut fragment = ExecutableZipFragment {
-                id: artifact.id,
-                target_triples: artifact.target_triples,
-                zip_style: artifact.archive.as_ref().unwrap().zip_style,
-                binaries: binaries
-                    .into_iter()
-                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
-                    .collect(),
-            };
-
-            if target == X64_MACOS {
-                x86_64_macos = Some(fragment.clone());
-            }
-
-            if target == ARM64_MACOS {
-                arm64_macos = Some(fragment.clone());
-            }
-
-            if target == X64_GNU {
-                x86_64_linux = Some(fragment.clone());
-            }
-
-            if target == ARM64_GNU {
-                arm64_linux = Some(fragment.clone());
-            }
-
-            if do_rosetta_fallback && target == X64_MACOS {
-                // Copy the info but respecify it to be arm64 macos
-                let mut arm_fragment = fragment.clone();
-                arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
-                artifacts.push(arm_fragment.clone());
-                arm64_macos = Some(arm_fragment);
-            }
-
-            // musl-static is actually kind of a fake triple we've invented
-            // to let us specify which is which; we want to ensure it exists
-            // for the installer to act on
-            if target == X64_MUSL {
-                fragment.target_triples = vec![X64_MUSL_STATIC.to_owned()];
-            }
-
-            if target == ARM64_MUSL {
-                fragment.target_triples = vec![ARM64_MUSL_STATIC.to_owned()];
-            }
-
-            // Copy the info but lie that it's actually glibc
-            if do_x86_gnu_to_musl_fallback && target == X64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![X64_GNU.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_x86_musl_to_musl_fallback && target == X64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![X64_MUSL_DYNAMIC.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_arm_gnu_to_musl_fallback && target == ARM64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![ARM64_GNU.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_arm_musl_to_musl_fallback && target == ARM64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![ARM64_MUSL_DYNAMIC.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            artifacts.push(fragment);
-        }
         if artifacts.is_empty() {
             warn!("skipping Homebrew installer: not building any supported platforms (use --artifacts=global)");
             return;
@@ -2093,28 +1841,23 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Run))
             .map(|(name, _)| name)
             .collect();
-
-        let triples: Vec<String> = artifacts
-            .iter()
-            .flat_map(|a| a.target_triples.clone())
-            .collect();
-
+        let aliases = self.inner.aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
-            target_triples: target_triples.into_iter().collect(),
+            target_triples,
             archive: None,
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
             checksum: None,
             kind: ArtifactKind::Installer(InstallerImpl::Homebrew(HomebrewInstallerInfo {
-                arm64_macos,
-                arm64_macos_sha256: None,
                 x86_64_macos,
                 x86_64_macos_sha256: None,
-                arm64_linux,
-                arm64_linux_sha256: None,
+                arm64_macos,
+                arm64_macos_sha256: None,
                 x86_64_linux,
                 x86_64_linux_sha256: None,
+                arm64_linux,
+                arm64_linux_sha256: None,
                 name: app_name,
                 formula_class: to_class_case(formula),
                 desc: app_desc,
@@ -2133,11 +1876,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .collect(),
                     base_url: download_url.to_owned(),
                     artifacts,
-                    updaters: vec![],
                     hint,
                     desc,
                     receipt: None,
-                    aliases: self.inner.aliases.for_targets(&triples),
+                    aliases,
                 },
             })),
             is_global: true,
@@ -2171,54 +1913,24 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let desc = "Install prebuilt binaries via powershell script".to_owned();
 
         // Gather up the bundles the installer supports
-        let mut artifacts = vec![];
-        let mut updaters = vec![];
-        let mut target_triples = SortedSet::new();
-        for &variant_idx in &release.variants {
-            let variant = self.variant(variant_idx);
-            let target = &variant.target;
-            if !target.contains("windows") {
-                continue;
-            }
-            // Compute the artifact zip this variant *would* make *if* it were built
-            // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
-            // way to add artifacts to the graph and then say "ok but don't build it".
-            let (artifact, binaries) =
-                self.make_executable_zip_for_variant(to_release, variant_idx);
-            target_triples.insert(target.clone());
-            artifacts.push(ExecutableZipFragment {
-                id: artifact.id,
-                target_triples: artifact.target_triples,
-                zip_style: artifact.archive.as_ref().unwrap().zip_style,
-                binaries: binaries
-                    .into_iter()
-                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
-                    .collect(),
-            });
-
-            // Create the "pretend" updaters similar to the above for exezips
-            if self.inner.install_updater {
-                let artifact = self.make_updater_for_variant(variant_idx);
-                updaters.push(UpdaterFragment {
-                    id: artifact.id.to_owned(),
-                    target_triple: variant.target.to_owned(),
-                    binary: artifact.id.to_owned(),
-                })
-            }
-        }
+        let artifacts = release
+            .platform_support
+            .fragments()
+            .into_iter()
+            .filter(|a| a.target_triple.contains("windows-msvc"))
+            .collect::<Vec<_>>();
+        let target_triples = artifacts
+            .iter()
+            .map(|a| a.target_triple.clone())
+            .collect::<Vec<_>>();
         if artifacts.is_empty() {
             warn!("skipping powershell installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-
-        let triples: Vec<String> = artifacts
-            .iter()
-            .flat_map(|a| a.target_triples.clone())
-            .collect();
-
+        let aliases = self.inner.aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
-            target_triples: target_triples.into_iter().collect(),
+            target_triples,
             file_path: artifact_path.clone(),
             required_binaries: FastMap::new(),
             archive: None,
@@ -2234,11 +1946,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .collect(),
                 base_url: download_url.to_owned(),
                 artifacts,
-                updaters,
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
-                aliases: self.inner.aliases.for_targets(&triples),
+                aliases,
             })),
             is_global: true,
         };
@@ -2285,134 +1996,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let hint = format!("npm install {npm_package_name}@{npm_package_version}");
         let desc = "Install prebuilt binaries into your npm project".to_owned();
 
-        // See comments above
-        const X64_MACOS: &str = "x86_64-apple-darwin";
-        const ARM64_MACOS: &str = "aarch64-apple-darwin";
-        const ARM64_GNU: &str = "aarch64-unknown-linux-gnu";
-        const ARM64_MUSL: &str = "aarch64-unknown-linux-musl";
-        const X64_GNU: &str = "x86_64-unknown-linux-gnu";
-        const X64_MUSL: &str = "x86_64-unknown-linux-musl";
-        const X64_MUSL_STATIC: &str = "x86_64-unknown-linux-musl-static";
-        const X64_MUSL_DYNAMIC: &str = "x86_64-unknown-linux-musl-dynamic";
-        const ARM64_MUSL_STATIC: &str = "aarch64-unknown-linux-musl-static";
-        const ARM64_MUSL_DYNAMIC: &str = "aarch64-unknown-linux-musl-dynamic";
-
-        let mut has_x64_apple = false;
-        let mut has_arm_apple = false;
-        let mut has_x86_gnu_linux = false;
-        let mut has_arm_gnu_linux = false;
-        let mut has_x86_static_musl_linux = false;
-        let mut has_arm_static_musl_linux = false;
-
-        // Currently always false, someday these builds will exist
-        let has_x86_dynamic_musl_linux = false;
-        let has_arm_dynamic_musl_linux = false;
-
-        for &variant_idx in &release.variants {
-            let variant = self.variant(variant_idx);
-            let target = &variant.target;
-            if target == X64_MACOS {
-                has_x64_apple = true;
-            }
-            if target == ARM64_MACOS {
-                has_arm_apple = true;
-            }
-            if target == X64_GNU {
-                has_x86_gnu_linux = true;
-            }
-            if target == ARM64_GNU {
-                has_arm_gnu_linux = true;
-            }
-            if target == X64_MUSL {
-                has_x86_static_musl_linux = true;
-            }
-            if target == ARM64_MUSL {
-                has_arm_static_musl_linux = true;
-            }
-        }
-
-        let do_rosetta_fallback = has_x64_apple && !has_arm_apple;
-        let do_x86_gnu_to_musl_fallback = !has_x86_gnu_linux && has_x86_static_musl_linux;
-        let do_arm_gnu_to_musl_fallback = !has_arm_gnu_linux && has_arm_static_musl_linux;
-        let do_x86_musl_to_musl_fallback = has_x86_static_musl_linux && !has_x86_dynamic_musl_linux;
-        let do_arm_musl_to_musl_fallback = has_arm_static_musl_linux && !has_arm_dynamic_musl_linux;
-
-        // Gather up the bundles the installer supports
-        let mut artifacts = vec![];
-        let mut target_triples = SortedSet::new();
-
-        let mut has_sketchy_archives = false;
-        for &variant_idx in &release.variants {
-            let variant = self.variant(variant_idx);
-            let target = &variant.target;
-
-            // Compute the artifact zip this variant *would* make *if* it were built
-            // FIXME: this is a kind of hacky workaround for the fact that we don't have a good
-            // way to add artifacts to the graph and then say "ok but don't build it".
-            let (artifact, binaries) =
-                self.make_executable_zip_for_variant(to_release, variant_idx);
-
-            target_triples.insert(target.clone());
-
-            let variant_zip_style = artifact.archive.as_ref().unwrap().zip_style;
-            if variant_zip_style != ZipStyle::Tar(CompressionImpl::Gzip) {
-                has_sketchy_archives = true;
-            }
-            let mut fragment = ExecutableZipFragment {
-                id: artifact.id,
-                target_triples: artifact.target_triples,
-                zip_style: artifact.archive.as_ref().unwrap().zip_style,
-                binaries: binaries
-                    .into_iter()
-                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
-                    .collect(),
-            };
-
-            if do_rosetta_fallback && target == X64_MACOS {
-                // Copy the info but respecify it to be arm64 macos
-                let mut arm_fragment = fragment.clone();
-                arm_fragment.target_triples = vec![ARM64_MACOS.to_owned()];
-                artifacts.push(arm_fragment.clone());
-            }
-
-            // musl-static is actually kind of a fake triple we've invented
-            // to let us specify which is which; we want to ensure it exists
-            // for the installer to act on
-            if target == X64_MUSL {
-                fragment.target_triples = vec![X64_MUSL_STATIC.to_owned()];
-            }
-
-            if target == ARM64_MUSL {
-                fragment.target_triples = vec![ARM64_MUSL_STATIC.to_owned()];
-            }
-
-            // Copy the info but lie that it's actually glibc
-            if do_x86_gnu_to_musl_fallback && target == X64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![X64_GNU.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_x86_musl_to_musl_fallback && target == X64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![X64_MUSL_DYNAMIC.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_arm_gnu_to_musl_fallback && target == ARM64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![ARM64_GNU.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            if do_arm_musl_to_musl_fallback && target == ARM64_MUSL {
-                let mut musl_fragment = fragment.clone();
-                musl_fragment.target_triples = vec![ARM64_MUSL_DYNAMIC.to_owned()];
-                artifacts.push(musl_fragment);
-            }
-
-            artifacts.push(fragment);
-        }
+        let artifacts = release.platform_support.fragments();
+        let target_triples = artifacts
+            .iter()
+            .map(|a| a.target_triple.clone())
+            .collect::<Vec<_>>();
+        let has_sketchy_archives = artifacts
+            .iter()
+            .any(|a| a.zip_style != ZipStyle::Tar(CompressionImpl::Gzip));
 
         if has_sketchy_archives {
             warn!("the npm installer currently only knows how to unpack .tar.gz archives\n  consider setting windows-archive and unix-archive to .tar.gz in your config");
@@ -2421,15 +2012,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping npm installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-
-        let triples: Vec<String> = artifacts
-            .iter()
-            .flat_map(|a| a.target_triples.clone())
-            .collect();
-
+        let aliases = self.inner.aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
-            target_triples: target_triples.into_iter().collect(),
+            target_triples,
             archive: Some(Archive {
                 // npm specifically expects the dir inside the tarball to be called "package"
                 with_root: Some("package".into()),
@@ -2461,11 +2047,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .collect(),
                     base_url: download_url.to_owned(),
                     artifacts,
-                    updaters: vec![],
                     hint,
                     desc,
                     receipt: None,
-                    aliases: self.inner.aliases.for_targets(&triples),
+                    aliases,
                 },
             })),
             is_global: true,
@@ -2788,6 +2373,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Add executable zips to the Release
             self.add_executable_zip(release);
 
+            // Get initial platform support for installers to use
+            self.compute_platform_support(release);
+
             // Add the source tarball if appropriate
             self.add_source_tarball(&announcing.tag, release);
 
@@ -2845,6 +2433,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
             self.manifest.ci = Some(cargo_dist_schema::CiInfo { github });
         }
+    }
+
+    fn compute_platform_support(&mut self, release: ReleaseIdx) {
+        let support = PlatformSupport::new(self, release);
+        self.release_mut(release).platform_support = support;
     }
 
     pub(crate) fn workspace(&self) -> &'pkg_graph WorkspaceInfo {

@@ -143,41 +143,35 @@ download_binary_and_run_installer() {
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _updater_name="akaikatana-repack-aarch64-apple-darwin-update"
+            _updater_bin="akaikatana-repack-aarch64-apple-darwin-update"
             ;;
         "x86_64-apple-darwin")
             _artifact_name="akaikatana-repack-x86_64-apple-darwin.tar.xz"
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _updater_name="akaikatana-repack-x86_64-apple-darwin-update"
+            _updater_bin="akaikatana-repack-x86_64-apple-darwin-update"
+            ;;
+        "x86_64-pc-windows-gnu")
+            _artifact_name="akaikatana-repack-x86_64-pc-windows-msvc.zip"
+            _zip_ext=".zip"
+            _bins="akextract.exe akmetadata.exe akrepack.exe"
+            _bins_js_array='"akextract.exe","akmetadata.exe","akrepack.exe"'
+            _updater_name="akaikatana-repack-x86_64-pc-windows-msvc-update"
+            _updater_bin="akaikatana-repack-x86_64-pc-windows-msvc-update"
             ;;
         "x86_64-unknown-linux-gnu")
             _artifact_name="akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz"
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _updater_name="akaikatana-repack-x86_64-unknown-linux-gnu-update"
+            _updater_bin="akaikatana-repack-x86_64-unknown-linux-gnu-update"
             ;;
         *)
             err "there isn't a package for $_arch"
-            ;;
-    esac
-
-    case "$_arch" in 
-        "aarch64-apple-darwin")
-            _updater_name="akaikatana-repack-aarch64-apple-darwin-update"
-            _updater_bin="akaikatana-repack-aarch64-apple-darwin-update"
-        ;;
-        "x86_64-apple-darwin")
-            _updater_name="akaikatana-repack-x86_64-apple-darwin-update"
-            _updater_bin="akaikatana-repack-x86_64-apple-darwin-update"
-        ;;
-        "x86_64-unknown-linux-gnu")
-            _updater_name="akaikatana-repack-x86_64-unknown-linux-gnu-update"
-            _updater_bin="akaikatana-repack-x86_64-unknown-linux-gnu-update"
-        ;;
-        *)
-            # No updater for this, or maybe any, arch
-            _updater_name=""
-            _updater_bin=""
             ;;
     esac
 
@@ -282,6 +276,9 @@ json_aliases() {
     "x86_64-apple-darwin")
         echo '{}'
         ;;
+    "x86_64-pc-windows-gnu")
+        echo '{}'
+        ;;
     "x86_64-unknown-linux-gnu")
         echo '{}'
         ;;
@@ -301,6 +298,13 @@ aliases_for_binary() {
         esac
         ;;
     "x86_64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-pc-windows-gnu")
         case "$_bin" in
         *)
             echo ""
@@ -983,7 +987,7 @@ class AkaikatanaRepack < Formula
   end
   license "GPL-2.0-or-later"
 
-  ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-unknown-linux-gnu": {}}
+  ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-pc-windows-gnu": {}, "x86_64-unknown-linux-gnu": {}}
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -1082,6 +1086,18 @@ function Install-Binary($install_args) {
 
   # Platform info injected by cargo-dist
   $platforms = @{
+    "aarch64-pc-windows-msvc" = @{
+      "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc.zip"
+      "bins" = "akextract.exe", "akmetadata.exe", "akrepack.exe"
+      "zip_ext" = ".zip"
+      "aliases" = @{
+      }
+      "aliases_json" = '{}'
+      "updater" = @{
+        "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc-update"
+        "bin" = "akaikatana-repack-x86_64-pc-windows-msvc-update"
+      }
+    }
     "x86_64-pc-windows-msvc" = @{
       "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc.zip"
       "bins" = "akextract.exe", "akmetadata.exe", "akrepack.exe"
@@ -1089,11 +1105,11 @@ function Install-Binary($install_args) {
       "aliases" = @{
       }
       "aliases_json" = '{}'
+      "updater" = @{
+        "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc-update"
+        "bin" = "akaikatana-repack-x86_64-pc-windows-msvc-update"
+      }
     }
-  }
-  $platforms["x86_64-pc-windows-msvc"]["updater"] = @{
-    "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc-update"
-    "bin" = "akaikatana-repack-x86_64-pc-windows-msvc-update"
   }
 
   $fetched = Download "$ArtifactDownloadUrl" $platforms
@@ -1140,13 +1156,6 @@ function Download($download_url, $platforms) {
   $arch = Get-TargetTriple
 
   if (-not $platforms.ContainsKey($arch)) {
-    # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not available, falling back to X64"
-    $arch = "x86_64-pc-windows-msvc"
-  }
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # should not be possible, as currently we always produce X64 binaries.
     $platforms_json = ConvertTo-Json $platforms
     throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
   }
@@ -1214,13 +1223,6 @@ function Invoke-Installer($bin_paths, $platforms) {
   $arch = Get-TargetTriple
 
   if (-not $platforms.ContainsKey($arch)) {
-    # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not available, falling back to X64"
-    $arch = "x86_64-pc-windows-msvc"
-  }
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # should not be possible, as currently we always produce X64 binaries.
     $platforms_json = ConvertTo-Json $platforms
     throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
   }
@@ -1497,6 +1499,7 @@ try {
       "name": "akaikatana-repack-installer.ps1",
       "kind": "installer",
       "target_triples": [
+        "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-msvc"
       ],
       "install_hint": "powershell -c \"irm https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.ps1 | iex\"",
@@ -1508,6 +1511,7 @@ try {
       "target_triples": [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.sh | sh",
@@ -1675,6 +1679,7 @@ try {
       "target_triples": [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
       ],
       "install_hint": "brew install mistydemeo/homebrew-formulae/akaikatana-repack",

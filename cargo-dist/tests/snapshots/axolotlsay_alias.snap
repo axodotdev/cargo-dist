@@ -143,29 +143,35 @@ download_binary_and_run_installer() {
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-apple-darwin")
             _artifact_name="axolotlsay-x86_64-apple-darwin.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
+            ;;
+        "x86_64-pc-windows-gnu")
+            _artifact_name="axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay.exe"
+            _bins_js_array='"axolotlsay.exe"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-unknown-linux-gnu")
             _artifact_name="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         *)
             err "there isn't a package for $_arch"
-            ;;
-    esac
-
-    case "$_arch" in 
-        *)
-            # No updater for this, or maybe any, arch
-            _updater_name=""
-            _updater_bin=""
             ;;
     esac
 
@@ -270,6 +276,9 @@ json_aliases() {
     "x86_64-apple-darwin")
         echo '{"axolotlsay":["axolotlsay-link"]}'
         ;;
+    "x86_64-pc-windows-gnu")
+        echo '{"axolotlsay.exe":["axolotlsay-link.exe"]}'
+        ;;
     "x86_64-unknown-linux-gnu")
         echo '{"axolotlsay":["axolotlsay-link"]}'
         ;;
@@ -295,6 +304,16 @@ aliases_for_binary() {
         case "$_bin" in
             "axolotlsay")
                 echo "axolotlsay-link"
+            ;;
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-pc-windows-gnu")
+        case "$_bin" in
+            "axolotlsay.exe")
+                echo "axolotlsay-link.exe"
             ;;
         *)
             echo ""
@@ -980,7 +999,7 @@ class Axolotlsay < Formula
   end
   license "MIT OR Apache-2.0"
 
-  ALIASES = {"aarch64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-unknown-linux-gnu": {"axolotlsay": ["axolotlsay-link"]}}
+  ALIASES = {"aarch64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-pc-windows-gnu": {"axolotlsay.exe": ["axolotlsay-link.exe"]}, "x86_64-unknown-linux-gnu": {"axolotlsay": ["axolotlsay-link"]}}
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -1079,6 +1098,15 @@ function Install-Binary($install_args) {
 
   # Platform info injected by cargo-dist
   $platforms = @{
+    "aarch64-pc-windows-msvc" = @{
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+      "bins" = "axolotlsay.exe"
+      "zip_ext" = ".tar.gz"
+      "aliases" = @{
+        "axolotlsay.exe" = "axolotlsay-link.exe"
+      }
+      "aliases_json" = '{"axolotlsay.exe":["axolotlsay-link.exe"]}'
+    }
     "x86_64-pc-windows-msvc" = @{
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = "axolotlsay.exe"
@@ -1134,13 +1162,6 @@ function Download($download_url, $platforms) {
   $arch = Get-TargetTriple
 
   if (-not $platforms.ContainsKey($arch)) {
-    # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not available, falling back to X64"
-    $arch = "x86_64-pc-windows-msvc"
-  }
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # should not be possible, as currently we always produce X64 binaries.
     $platforms_json = ConvertTo-Json $platforms
     throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
   }
@@ -1208,13 +1229,6 @@ function Invoke-Installer($bin_paths, $platforms) {
   $arch = Get-TargetTriple
 
   if (-not $platforms.ContainsKey($arch)) {
-    # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not available, falling back to X64"
-    $arch = "x86_64-pc-windows-msvc"
-  }
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # should not be possible, as currently we always produce X64 binaries.
     $platforms_json = ConvertTo-Json $platforms
     throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
   }
@@ -2745,10 +2759,24 @@ install(false);
       },
       "zipExt": ".tar.gz"
     },
+    "aarch64-pc-windows-msvc": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
     "x86_64-apple-darwin": {
       "artifactName": "axolotlsay-x86_64-apple-darwin.tar.gz",
       "bins": {
         "axolotlsay": "axolotlsay"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "x86_64-pc-windows-gnu": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
       },
       "zipExt": ".tar.gz"
     },
@@ -2865,6 +2893,7 @@ maybeInstall(true).then(() => run("axolotlsay"));
       "name": "axolotlsay-installer.ps1",
       "kind": "installer",
       "target_triples": [
+        "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-msvc"
       ],
       "install_hint": "powershell -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.ps1 | iex\"",
@@ -2876,6 +2905,7 @@ maybeInstall(true).then(() => run("axolotlsay"));
       "target_triples": [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.1/axolotlsay-installer.sh | sh",
@@ -2886,7 +2916,9 @@ maybeInstall(true).then(() => run("axolotlsay"));
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-msvc",
         "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc",
         "x86_64-unknown-linux-gnu"
       ],
@@ -3109,6 +3141,7 @@ maybeInstall(true).then(() => run("axolotlsay"));
       "target_triples": [
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
       ],
       "install_hint": "brew install axodotdev/homebrew-packages/axolotlsay",

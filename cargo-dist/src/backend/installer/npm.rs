@@ -186,9 +186,8 @@ fn mangle_package_json(
 fn platforms(info: &NpmInstallerInfo) -> PlatformSummary {
     let mut output = PlatformSummary::default();
     for archive in &info.inner.artifacts {
-        let target = archive.target_triples[0].clone();
+        let target = archive.target_triple.clone();
 
-        // FIXME: input actual aliases
         let mut bins = SortedMap::new();
         for bin in &archive.binaries {
             // Add the binary
