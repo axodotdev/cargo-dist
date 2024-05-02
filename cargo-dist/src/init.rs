@@ -231,6 +231,7 @@ fn get_new_dist_metadata(
             windows_archive: None,
             unix_archive: None,
             npm_scope: None,
+            npm_package: None,
             checksum: None,
             precise_builds: None,
             merge_tasks: None,
@@ -805,6 +806,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         windows_archive,
         unix_archive,
         npm_scope,
+        npm_package,
         checksum,
         precise_builds,
         merge_tasks,
@@ -914,6 +916,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "unix-archive",
         "# The archive format to use for non-windows builds (defaults .tar.xz)\n",
         unix_archive.map(|a| a.ext()),
+    );
+
+    apply_optional_value(
+        table,
+        "npm-package",
+        "# The npm package should have this name\n",
+        npm_package.as_deref(),
     );
 
     apply_optional_value(
