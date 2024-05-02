@@ -41,7 +41,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -77,7 +77,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -149,7 +149,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 hosting = ["axodotdev", "github"]
 
 [package.metadata.wix]
@@ -185,7 +185,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 hosting = ["axodotdev"]
 
 [package.metadata.wix]
@@ -426,7 +426,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 create-release = false
 
 "#
@@ -528,7 +528,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 "#
         ))?;
 
@@ -560,7 +560,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 "#
         ))?;
 
@@ -592,7 +592,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 "#
         ))?;
 
@@ -624,7 +624,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 "#
         ))?;
 
@@ -655,7 +655,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 "#
         ))?;
 
@@ -685,7 +685,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "aarch64-app
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 
 "#
         ))?;
@@ -716,7 +716,7 @@ targets = ["x86_64-unknown-linux-musl", "aarch64-apple-darwin", "x86_64-apple-da
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 
 "#
         ))?;
@@ -780,7 +780,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 install-updater = true
 
 [package.metadata.wix]
@@ -819,7 +819,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 
 [workspace.metadata.dist.dependencies.homebrew]
 "homebrew/cask/macfuse" = "*"
@@ -855,7 +855,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -894,7 +894,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -933,7 +933,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -1573,7 +1573,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-scope = "@axodotdev"
+npm-scope ="@axodotdev"
 source-tarball = false
 
 [package.metadata.wix]
