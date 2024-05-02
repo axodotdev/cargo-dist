@@ -28,7 +28,7 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"aliases":{},"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/akaikatana-repack"
@@ -266,7 +266,7 @@ replace_home() {
     fi
 }
 
-json_aliases() {
+json_binary_aliases() {
     local _arch="$1"
 
     case "$_arch" in 
@@ -440,7 +440,7 @@ install() {
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
     # Also replace the aliases with the arch-specific one
-    RECEIPT=$(echo "$RECEIPT" | sed "s'\"aliases\":{}'\"aliases\":$(json_aliases "$_arch")'")
+    RECEIPT=$(echo "$RECEIPT" | sed "s'\"binary_aliases\":{}'\"binary_aliases\":$(json_binary_aliases "$_arch")'")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
@@ -1011,7 +1011,7 @@ class AkaikatanaRepack < Formula
   end
   license "GPL-2.0-or-later"
 
-  ALIASES = {"aarch64-apple-darwin": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}, "x86_64-apple-darwin": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}, "x86_64-pc-windows-gnu": {"akextract.exe": ["akextract-link.exe"], "akmetadata.exe": ["akmetadata-link.exe"]}, "x86_64-unknown-linux-gnu": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}}
+  BINARY_ALIASES = {"aarch64-apple-darwin": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}, "x86_64-apple-darwin": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}, "x86_64-pc-windows-gnu": {"akextract.exe": ["akextract-link.exe"], "akmetadata.exe": ["akmetadata-link.exe"]}, "x86_64-unknown-linux-gnu": {"akextract": ["akextract-link"], "akmetadata": ["akmetadata-link"]}}
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -1020,8 +1020,8 @@ class AkaikatanaRepack < Formula
     "#{cpu}-#{os}"
   end
 
-  def install_aliases!
-    ALIASES[target_triple.to_sym].each do |source, dests|
+  def install_binary_aliases!
+    BINARY_ALIASES[target_triple.to_sym].each do |source, dests|
       dests.each do |dest|
         bin.install_symlink bin/source.to_s => dest
       end
@@ -1039,7 +1039,7 @@ class AkaikatanaRepack < Formula
       bin.install "akextract", "akmetadata", "akrepack"
     end
 
-    install_aliases!
+    install_binary_aliases!
 
     # Homebrew will automatically install these, so we don't need to do that
     doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
@@ -1096,7 +1096,7 @@ $app_name = 'akaikatana-repack'
 $app_version = '0.2.0'
 
 $receipt = @"
-{"aliases":{},"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
 "@
 $receipt_home = "${env:LOCALAPPDATA}\akaikatana-repack"
 
@@ -1299,7 +1299,7 @@ function Invoke-Installer($bin_paths, $platforms) {
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
   # Also replace the aliases with the arch-specific one
-  $receipt = $receipt.Replace('"aliases":{}', -join('"aliases":',  $info['aliases_json']))
+  $receipt = $receipt.Replace('"binary_aliases":{}', -join('"binary_aliases":',  $info['aliases_json']))
 
   # Write the install receipt
   $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue

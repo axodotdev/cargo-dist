@@ -73,13 +73,13 @@ function Install-Binary($install_args) {
       {%- endfor %}
       "zip_ext" = "{{ artifact.zip_style }}"
       "aliases" = @{
-      {%- for source, dests in aliases[artifact.target_triple] | items %}
+      {%- for source, dests in bin_aliases[artifact.target_triple] | items %}
         "{{ source }}" = {% for dest in dests -%}
           "{{ dest }}"{{ ", " if not loop.last else "" }}
       {%- endfor %}
       {%- endfor %}
       }
-      "aliases_json" = '{{ aliases[artifact.target_triple] | tojson }}'
+      "aliases_json" = '{{ bin_aliases[artifact.target_triple] | tojson }}'
       {%- if artifact.updater %}
       "updater" = @{
         "artifact_name" = "{{ artifact.updater.id }}"
@@ -276,7 +276,7 @@ function Invoke-Installer($bin_paths, $platforms) {
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
   # Also replace the aliases with the arch-specific one
-  $receipt = $receipt.Replace('"aliases":{}', -join('"aliases":',  $info['aliases_json']))
+  $receipt = $receipt.Replace('"binary_aliases":{}', -join('"binary_aliases":',  $info['aliases_json']))
 
   # Write the install receipt
   $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue

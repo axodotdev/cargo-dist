@@ -860,7 +860,7 @@ scope = "@axodotdev"
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
-[workspace.metadata.dist.aliases]
+[workspace.metadata.dist.bin-aliases]
 axolotlsay = ["axolotlsay-link"]
 
 "#
@@ -899,7 +899,7 @@ scope = "@axodotdev"
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
-[workspace.metadata.dist.aliases]
+[workspace.metadata.dist.bin-aliases]
 axolotlsay = ["axolotlsay-link1", "axolotlsay-link2"]
 
 "#
@@ -938,7 +938,7 @@ scope = "@axodotdev"
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
-[workspace.metadata.dist.aliases]
+[workspace.metadata.dist.bin-aliases]
 nosuchbin = ["axolotlsay-link1", "axolotlsay-link2"]
 
 "#
@@ -1129,7 +1129,7 @@ tap = "mistydemeo/homebrew-formulae"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 
-[workspace.metadata.dist.aliases]
+[workspace.metadata.dist.bin-aliases]
 akextract = ["akextract-link"]
 
 "#
@@ -1163,7 +1163,7 @@ tap = "mistydemeo/homebrew-formulae"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 
-[workspace.metadata.dist.aliases]
+[workspace.metadata.dist.bin-aliases]
 akextract = ["akextract-link"]
 akmetadata = ["akmetadata-link"]
 
