@@ -162,14 +162,6 @@ download_binary_and_run_installer() {
             _updater_name=""
             _updater_bin=""
             ;;
-        "x86_64-unknown-linux-musl")
-            _artifact_name="akaikatana-repack-x86_64-unknown-linux-musl.tar.xz"
-            _zip_ext=".tar.xz"
-            _bins="akextract akmetadata akrepack"
-            _bins_js_array='"akextract","akmetadata","akrepack"'
-            _updater_name=""
-            _updater_bin=""
-            ;;
         "x86_64-unknown-linux-musl-dynamic")
             _artifact_name="akaikatana-repack-x86_64-unknown-linux-musl.tar.xz"
             _zip_ext=".tar.xz"
@@ -295,9 +287,6 @@ json_aliases() {
     "x86_64-unknown-linux-gnu")
         echo '{}'
         ;;
-    "x86_64-unknown-linux-musl")
-        echo '{}'
-        ;;
     "x86_64-unknown-linux-musl-dynamic")
         echo '{}'
         ;;
@@ -327,13 +316,6 @@ aliases_for_binary() {
         esac
         ;;
     "x86_64-unknown-linux-gnu")
-        case "$_bin" in
-        *)
-            echo ""
-            ;;
-        esac
-        ;;
-    "x86_64-unknown-linux-musl")
         case "$_bin" in
         *)
             echo ""
@@ -1088,7 +1070,6 @@ download_binary_and_run_installer "$@" || exit 1
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl",
         "x86_64-unknown-linux-musl-dynamic",
         "x86_64-unknown-linux-musl-static"
       ],

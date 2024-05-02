@@ -1229,7 +1229,6 @@ function Invoke-Installer($bin_paths, $platforms) {
   $arch = Get-TargetTriple
 
   if (-not $platforms.ContainsKey($arch)) {
-    # should not be possible, as currently we always produce X64 binaries.
     $platforms_json = ConvertTo-Json $platforms
     throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
   }

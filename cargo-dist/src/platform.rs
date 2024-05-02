@@ -1,8 +1,6 @@
-#![allow(missing_docs)]
-
+//! Logic for computing how different platforms are supported by a project's archives.
 use axoproject::platforms::{
-    TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_MAC,
-    TARGET_X86_WINDOWS,
+    TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
 };
 use cargo_dist_schema::ArtifactId;
 
@@ -22,17 +20,17 @@ use crate::{
 /// for any archive claiming to provide a static libc linux build, we can mark this
 /// archive as providing support for any linux distro (for that architecture)
 ///
-/// Currently rust takes "linux-musl" to mean "statically linked musl"a
+/// Currently rust takes "linux-musl" to mean "statically linked musl", but
 /// in the future it will mean "dynamically linked musl":
 ///
 /// https://github.com/rust-lang/compiler-team/issues/422
 ///
-/// We prefer "musl-static" and "musl-dynamic" aliases to disambiguate this situation,
-/// but support bare musl with the current semantics:
+/// To avoid this ambiguity, we prefer "musl-static" and "musl-dynamic" aliases to
+/// disambiguate this situation. This module immediately rename "musl" to "musl-static",
+/// so in the following listings we don't need to deal with bare "musl".
 ///
-/// FIXME: when rustc makes the change, move "linux-musl" from STATIC_LIBCS to REPLACEABLE_LIBCS!
-/// (this may involve detecting the current rust toolchain).
-const LINUX_STATIC_LIBCS: &[&str] = &["linux-musl-static", "linux-musl"];
+/// Also note that known bonus ABI suffixes like "eabihf" are also already dealt with.
+const LINUX_STATIC_LIBCS: &[&str] = &["linux-musl-static"];
 /// Dynamically linked linux libcs that static libcs can replace
 const LINUX_STATIC_REPLACEABLE_LIBCS: &[&str] = &["linux-gnu", "linux-musl-dynamic"];
 /// A fake TargetTriple for apple's universal2 format (staples x64 and arm64 together)
@@ -56,50 +54,101 @@ pub enum SupportQuality {
     Emulated,
     /// The layers of emulation are out of control.
     Hellmulated,
+    /// STOP
+    HighwayToHellmulated,
 }
 
+/// A condition that an installer should ideally check before using this an archive
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RuntimeCondition {
-    MinGlibcVersion { major: u64, series: u64 },
-    MinMuslVersion { major: u64, series: u64 },
+    /// The system glibc must be at least this version
+    MinGlibcVersion {
+        /// Major version
+        major: u64,
+        /// Series (minor) version
+        series: u64,
+    },
+    /// The system musl libc must be at least this version
+    MinMuslVersion {
+        /// Major version
+        major: u64,
+        /// Series (minor) version
+        series: u64,
+    },
+    /// The system must have Rosetta2 installed
     Rosetta2,
 }
 
+/// Computed platform support details for a Release
 #[derive(Debug, Clone, Default)]
 pub struct PlatformSupport {
+    /// The prebuilt archives for the Release
     pub archives: Vec<FetchableArchive>,
+    /// The updaters for the Release
     pub updaters: Vec<FetchableUpdater>,
+    /// Which options are available for the given target-triples.
+    ///
+    /// The list of PlatformEntries is pre-sorted in descending quality, so the first
+    /// is the best and should be used if possible (but maybe there's troublesome RuntimeConditions).
     pub platforms: SortedMap<TargetTriple, Vec<PlatformEntry>>,
 }
 
+/// An archive of the prebuilt binaries for an app that can be fetched
 #[derive(Debug, Clone)]
 pub struct FetchableArchive {
+    /// The unique id (and filename) of the archive
     pub id: ArtifactId,
+    /// Runtime conditions that are native to this archive
+    ///
+    /// (You can largely ignore these in favour of the runtime_conditions in PlatformEntry)
     pub native_runtime_conditions: Vec<RuntimeCondition>,
+    /// What target triples does this archive natively support
     pub target_triples: Vec<TargetTriple>,
+    /// The sha256sum of the archive
     pub sha256sum: Option<String>,
+    /// The binaries in the archive (may include .exe, assumed to be in root)
     pub binaries: Vec<String>,
+    /// The kind of compression the archive has
     pub zip_style: ZipStyle,
+    /// The updater you should also fetch if you install this archive
     pub updater: Option<FetchableUpdaterIdx>,
 }
 
+/// An updater for an app that can be fetched
 #[derive(Debug, Clone)]
 pub struct FetchableUpdater {
+    /// The unique id (and filename) of the updater
     pub id: ArtifactId,
+    /// The binary name of the updater
     pub binary: String,
 }
 
+/// An index into [`PlatformSupport::archives`][]
 pub type FetchableArchiveIdx = usize;
+/// An index into [`PlatformSupport::updaters`][]
 pub type FetchableUpdaterIdx = usize;
 
+/// An entry describing how well an archive supports a platform
 #[derive(Debug, Clone)]
 pub struct PlatformEntry {
+    /// The quality of the support (prefer more "native" support over "emulated"/"fallback")
     pub quality: SupportQuality,
+    /// Conditions the system being installed to must satisfy for the install to work.
+    /// Ideally installers should check these before using this archive, and fall back to
+    /// "worse" ones if the conditions aren't met.
+    ///
+    /// For instance if you have a linux-gnu build but the system glibc is too old to run it,
+    /// you will want to skip it in favour of a more portable musl-static build.
     pub runtime_conditions: Vec<RuntimeCondition>,
+    /// The archive
     pub archive_idx: FetchableArchiveIdx,
 }
 
 impl PlatformSupport {
+    /// Compute the PlatformSupport for a Release
+    ///
+    /// The later this information is computed, the richer it will be.
+    /// For instance if this is (re)computed after builds, it will contain shasums.
     pub(crate) fn new(dist: &DistGraphBuilder, release_idx: ReleaseIdx) -> PlatformSupport {
         let mut platforms = SortedMap::<TargetTriple, Vec<PlatformEntry>>::new();
         let release = dist.release(release_idx);
@@ -199,12 +248,37 @@ impl PlatformSupport {
     }
 }
 
+/// Given an archive, compute all the platforms it technically supports,
+/// and to what level of quality.
+///
+/// It's fine to be very generous and repetitive here as long as SupportQuality
+/// is honest and can be used to sort the options. Any "this is dubious" solutions
+/// will be buried by more native/legit ones if they're available.
 fn supports(
     archive_idx: FetchableArchiveIdx,
     archive: &FetchableArchive,
 ) -> Vec<(TargetTriple, PlatformEntry)> {
     let mut res = Vec::new();
     for target in &archive.target_triples {
+        // For the following linux checks we want to pull off any "eabihf" suffix while
+        // comparing/parsing libc types.
+        let (degunked_target, abigunk) = if let Some(inner_target) = target.strip_suffix("eabihf") {
+            (inner_target, "eabihf")
+        } else {
+            (target.as_str(), "")
+        };
+
+        // If this is the ambiguous-soon-to-be-changed "musl" target, rename it to musl-static,
+        // which is its current behaviour.
+        let (target, degunked_target) = if let Some(system) = degunked_target.strip_suffix("musl") {
+            (
+                format!("{system}musl-static{abigunk}"),
+                format!("{degunked_target}-static"),
+            )
+        } else {
+            (target.to_owned(), degunked_target.to_owned())
+        };
+
         // First, add the target itself as a HostNative entry
         res.push((
             target.clone(),
@@ -215,12 +289,6 @@ fn supports(
             },
         ));
 
-        // For the following linux checks we want to pull of any "eabihf" suffix while comparing
-        let (degunked_target, abigunk) = if let Some(real_target) = target.strip_suffix("eabihf") {
-            (real_target, "eabihf")
-        } else {
-            (target.as_str(), "")
-        };
         // If this is a static linux libc, say it can support any linux at ImperfectNative quality
         for &static_libc in LINUX_STATIC_LIBCS {
             let Some(system) = degunked_target.strip_suffix(static_libc) else {
@@ -237,18 +305,6 @@ fn supports(
                 ));
             }
             break;
-        }
-
-        // Add the musl-static alias
-        if let Some(system) = degunked_target.strip_suffix("musl") {
-            res.push((
-                format!("{system}musl-static{abigunk}"),
-                PlatformEntry {
-                    quality: SupportQuality::ImperfectNative,
-                    runtime_conditions: archive.native_runtime_conditions.clone(),
-                    archive_idx,
-                },
-            ));
         }
 
         // universal2 macos binaries are totally native for both arches, but bulkier than
@@ -272,22 +328,13 @@ fn supports(
             ));
         }
 
-        // x86_32 macos binaries ran fine on x86_64, but it's Imperfect compared to actual x86_64 binaries
-        // ...UP UNTIL macOS Catalina (macOS 10.15, October 2019)!
-        //
-        // FIXME: add some condition for "check the macos version" if we care about this!
-        if target == TARGET_X86_MAC {
-            res.push((
-                TARGET_X64_MAC.to_owned(),
-                PlatformEntry {
-                    quality: SupportQuality::ImperfectNative,
-                    runtime_conditions: archive.native_runtime_conditions.clone(),
-                    archive_idx,
-                },
-            ));
-        }
+        // FIXME?: technically we could add "run 32-bit intel macos on 64-bit intel"
+        // BUT this is unlikely to succeed as you increasingly need an EOL macOS,
+        // as support was dropped in macOS Catalina (macOS 10.15, October 2019).
+        // So this is unlikely to be helpful and DEFINITELY shouldn't be suggested
+        // unless all installers enforce the check for OS version.
 
-        // If this is x64 macos, say it can support arm64 macos using Rosetta2
+        // If this is x64 macos, say it can run on arm64 macos using Rosetta2
         // Note that Rosetta2 is not *actually* installed by default on Apple Silicon,
         // and the auto-installer for it only applies to GUI apps, not CLI apps, so ideally
         // any installer that uses this fallback should check if Rosetta2 is installed!
@@ -321,14 +368,17 @@ fn supports(
         }
 
         // Windows' equivalent to Rosetta2 (CHPE) is in fact installed-by-default so no need to detect!
-        //
-        // FIXME: ideally if both 32-bit and 64-bit binaries exist, the 64-bit should presumably be preferred?
-        // do we want a "SupportQuality::Hellmulated" for i686-on-arm64?
         if target == TARGET_X64_WINDOWS || target == TARGET_X86_WINDOWS {
+            // prefer x64 over x86 if we have the option
+            let quality = if target == TARGET_X86_WINDOWS {
+                SupportQuality::Hellmulated
+            } else {
+                SupportQuality::Emulated
+            };
             res.push((
                 TARGET_ARM64_WINDOWS.to_owned(),
                 PlatformEntry {
-                    quality: SupportQuality::Emulated,
+                    quality,
                     runtime_conditions: archive.native_runtime_conditions.clone(),
                     archive_idx,
                 },
@@ -336,6 +386,12 @@ fn supports(
         }
 
         // windows-msvc binaries should always be acceptable on windows-gnu (mingw)
+        //
+        // FIXME: in theory x64-pc-windows-msvc and i686-pc-windows-msvc can run on
+        // aarch64-pc-windows-gnu, as a hybrid of this rules and the CHPE rule above.
+        // I don't want to think about computing the transitive closure of platform
+        // support and how to do all the tie breaking ("HighwayToHellmulated"?), so
+        // for now all 5 arm64 mingw users can be a little sad.
         if let Some(system) = target.strip_suffix("windows-msvc") {
             res.push((
                 format!("{system}windows-gnu"),
