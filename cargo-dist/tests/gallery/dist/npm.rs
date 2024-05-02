@@ -99,7 +99,7 @@ fn run_installed_package(
         let _version_out = npm.output_checked(|cmd| {
             cmd.current_dir(in_project)
                 .arg("exec")
-                .arg(format!("--package={package_name}"))
+                .arg(format!("--package=@axodotdev/{package_name}"))
                 .arg("-c")
                 .arg(format!("{bin} --version"))
         })?;
@@ -111,7 +111,7 @@ fn run_installed_package(
         let _version_out = npm.output_checked(|cmd| {
             cmd.current_dir(in_project)
                 .arg("exec")
-                .arg(package_name)
+                .arg(format!("@axodotdev/{package_name}"))
                 .arg("--")
                 .arg("--version")
         })?;
@@ -121,7 +121,7 @@ fn run_installed_package(
     let test = npm.output_checked(|cmd| {
         cmd.current_dir(in_project)
             .arg("exec")
-            .arg(format!("--package={package_name}"))
+            .arg(format!("--package=@axodotdev/{package_name}"))
             .arg("-c")
             .arg("asdasdadfakebin --version")
     });
