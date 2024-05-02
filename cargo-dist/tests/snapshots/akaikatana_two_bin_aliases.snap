@@ -1,5 +1,5 @@
 ---
-source: cargo-dist/tests/gallery/dist.rs
+source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
 ================ installer.sh ================
@@ -455,7 +455,7 @@ install() {
         # unzip seems to need this chmod
         ensure chmod +x "$_install_dir/$_bin_name"
         for _dest in $(aliases_for_binary "$_bin_name" "$_arch"); do
-            ln -s "$_install_dir/$_bin_name" "$_install_dir/$_dest"
+            ln -sf "$_install_dir/$_bin_name" "$_install_dir/$_dest"
         done
         say "  $_bin_name"
     done
