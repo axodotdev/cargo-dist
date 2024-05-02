@@ -538,6 +538,17 @@ This config exists as a blunt way to return to the default Rust behaviour of dyn
 [See this issue for details and discussion][issue-msvc-crt-static].
 
 
+### npm-package
+
+> since 0.14.0
+
+Example: `npm-package = "mycoolapp"`
+
+Specifies that an [npm installer][] should be published under the given name, as opposed to the name of the app (cargo package) they are defined by.
+
+This does not set the [scope][] the package is published under, for that see [npm-scope](#npm-scope).
+
+
 ### npm-scope
 
 > since 0.0.6

@@ -147,6 +147,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unix_archive: Option<ZipStyle>,
 
+    /// Replace the app's name with this value for the npm package's name
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub npm_package: Option<String>,
+
     /// A scope to prefix npm packages with (@ should be included).
     ///
     /// This is required if you're using an npm installer.
@@ -376,6 +380,7 @@ impl DistMetadata {
             auto_includes: _,
             windows_archive: _,
             unix_archive: _,
+            npm_package: _,
             npm_scope: _,
             checksum: _,
             precise_builds: _,
@@ -447,6 +452,7 @@ impl DistMetadata {
             auto_includes,
             windows_archive,
             unix_archive,
+            npm_package,
             npm_scope,
             checksum,
             precise_builds,
@@ -574,6 +580,9 @@ impl DistMetadata {
         }
         if unix_archive.is_none() {
             *unix_archive = workspace_config.unix_archive;
+        }
+        if npm_package.is_none() {
+            *npm_package = workspace_config.npm_package.clone();
         }
         if npm_scope.is_none() {
             *npm_scope = workspace_config.npm_scope.clone();

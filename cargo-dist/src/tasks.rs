@@ -661,6 +661,8 @@ pub struct Release {
     pub unix_archive: ZipStyle,
     /// Style of checksum to produce
     pub checksum: ChecksumStyle,
+    /// Customize the name of the npm package
+    pub npm_package: Option<String>,
     /// The @scope to include in NPM packages
     pub npm_scope: Option<String>,
     /// Static assets that should be included in bundles like archives
@@ -820,6 +822,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             unix_archive: _,
             // Only the final value merged into a package_config matters
             include: _,
+            // Only the final value merged into a package_config matters
+            npm_package: _,
             // Only the final value merged into a package_config matters
             npm_scope: _,
             // Only the final value merged into a package_config matters
@@ -1119,6 +1123,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_repository_url = package_info.repository_url.clone();
         let app_homepage_url = package_info.homepage_url.clone();
         let app_keywords = package_info.keywords.clone();
+        let npm_package = package_config.npm_package.clone();
         let npm_scope = package_config.npm_scope.clone();
         let install_path = package_config
             .install_path
@@ -1182,6 +1187,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             unix_archive,
             static_assets,
             checksum,
+            npm_package,
             npm_scope,
             install_path,
             tap,
@@ -1974,10 +1980,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
-        let npm_package_name = if let Some(scope) = &release.npm_scope {
-            format!("{scope}/{}", release.app_name)
+        let app_name = if let Some(name) = &release.npm_package {
+            name.clone()
         } else {
             release.app_name.clone()
+        };
+        let npm_package_name = if let Some(scope) = &release.npm_scope {
+            format!("{scope}/{}", app_name)
+        } else {
+            app_name.clone()
         };
         let npm_package_version = release.version.to_string();
         let npm_package_desc = release.app_desc.clone();
@@ -2040,7 +2051,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 package_dir: dir_path,
                 inner: InstallerInfo {
                     dest_path: artifact_path,
-                    app_name: release.app_name.clone(),
+                    app_name,
                     app_version: release.version.to_string(),
                     install_paths: release
                         .install_path
