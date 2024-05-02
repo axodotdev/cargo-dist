@@ -28,7 +28,7 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"aliases":{},"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/axolotlsay"
@@ -229,7 +229,7 @@ download_binary_and_run_installer() {
             ;;
     esac
 
-    install "$_dir" "$_bins" "$@"
+    install "$_dir" "$_bins" "$_arch" "$@"
     local _retval=$?
     if [ "$_retval" != 0 ]; then
         return "$_retval"
@@ -258,6 +258,51 @@ replace_home() {
     else
         echo "$_str"
     fi
+}
+
+json_aliases() {
+    local _arch="$1"
+
+    case "$_arch" in 
+    "aarch64-apple-darwin")
+        echo '{}'
+        ;;
+    "x86_64-apple-darwin")
+        echo '{}'
+        ;;
+    "x86_64-unknown-linux-gnu")
+        echo '{}'
+        ;;
+    esac
+}
+
+aliases_for_binary() {
+    local _bin="$1"
+    local _arch="$2"
+
+    case "$_arch" in 
+    "aarch64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-unknown-linux-gnu")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    esac
 }
 
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
@@ -354,6 +399,8 @@ install() {
 
     # Replace the temporary cargo home with the calculated one
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
+    # Also replace the aliases with the arch-specific one
+    RECEIPT=$(echo "$RECEIPT" | sed "s'\"aliases\":{}'\"aliases\":$(json_aliases "$_arch")'")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
@@ -361,11 +408,15 @@ install() {
     # copy all the binaries to the install dir
     local _src_dir="$1"
     local _bins="$2"
+    local _arch="$3"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
         ensure mv "$_bin" "$_install_dir"
         # unzip seems to need this chmod
         ensure chmod +x "$_install_dir/$_bin_name"
+        for _dest in $(aliases_for_binary "$_bin_name" "$_arch"); do
+            ln -s "$_install_dir/$_bin_name" "$_install_dir/$_dest"
+        done
         say "  $_bin_name"
     done
 
@@ -920,6 +971,23 @@ class Axolotlsay < Formula
   end
   license "MIT OR Apache-2.0"
 
+  ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-unknown-linux-gnu": {}}
+
+  def target_triple
+    cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
+    os = OS.mac? ? "apple-darwin" : "unknown-linux-gnu"
+
+    "#{cpu}-#{os}"
+  end
+
+  def install_aliases!
+    ALIASES[target_triple.to_sym].each do |source, dests|
+      dests.each do |dest|
+        bin.install_symlink bin/source.to_s => dest
+      end
+    end
+  end
+
   def install
     if OS.mac? && Hardware::CPU.arm?
       bin.install "axolotlsay"
@@ -930,6 +998,8 @@ class Axolotlsay < Formula
     if OS.linux? && Hardware::CPU.intel?
       bin.install "axolotlsay"
     end
+
+    install_aliases!
 
     # Homebrew will automatically install these, so we don't need to do that
     doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
@@ -986,7 +1056,7 @@ $app_name = 'axolotlsay'
 $app_version = '0.2.1'
 
 $receipt = @"
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"aliases":{},"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 "@
 $receipt_home = "${env:LOCALAPPDATA}\axolotlsay"
 
@@ -1004,6 +1074,9 @@ function Install-Binary($install_args) {
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = "axolotlsay.exe"
       "zip_ext" = ".tar.gz"
+      "aliases" = @{
+      }
+      "aliases_json" = '{}'
     }
   }
 
@@ -1121,6 +1194,23 @@ function Download($download_url, $platforms) {
 }
 
 function Invoke-Installer($bin_paths, $platforms) {
+  # Replaces the placeholder binary entry with the actual list of binaries
+  $arch = Get-TargetTriple
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # X64 is well-supported, including in emulation on ARM64
+    Write-Verbose "$arch is not available, falling back to X64"
+    $arch = "x86_64-pc-windows-msvc"
+  }
+
+  if (-not $platforms.ContainsKey($arch)) {
+    # should not be possible, as currently we always produce X64 binaries.
+    $platforms_json = ConvertTo-Json $platforms
+    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
+  }
+
+  $info = $platforms[$arch]
+
   $dest_dir = $null
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
@@ -1158,26 +1248,20 @@ function Invoke-Installer($bin_paths, $platforms) {
     Copy-Item "$bin_path" -Destination "$dest_dir"
     Remove-Item "$bin_path" -Recurse -Force
     Write-Information "  $installed_file"
+
+    if (($dests = $info["aliases"][$installed_file])) {
+      $source = Join-Path "$dest_dir" "$installed_file"
+      foreach ($dest_name in $dests) {
+          $dest = Join-Path $dest_dir $dest_name
+          $null = New-Item -ItemType HardLink -Target "$source" -Path "$dest" -Force
+      }
+    }
   }
 
-  # Replaces the placeholder binary entry with the actual list of binaries
-  $arch = Get-TargetTriple
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # X64 is well-supported, including in emulation on ARM64
-    Write-Verbose "$arch is not available, falling back to X64"
-    $arch = "x86_64-pc-windows-msvc"
-  }
-
-  if (-not $platforms.ContainsKey($arch)) {
-    # should not be possible, as currently we always produce X64 binaries.
-    $platforms_json = ConvertTo-Json $platforms
-    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
-  }
-
-  $info = $platforms[$arch]
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
+  # Also replace the aliases with the arch-specific one
+  $receipt = $receipt.Replace('"aliases":{}', -join('"aliases":',  $info['aliases_json']))
 
   # Write the install receipt
   $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue
@@ -2769,7 +2853,7 @@ jobs:
           repository: "axodotdev/homebrew-packages"
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
-      - name: Fetch local artifacts
+      - name: Fetch homebrew formulae
         uses: actions/download-artifact@v4
         with:
           pattern: artifacts-*

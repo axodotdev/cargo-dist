@@ -48,7 +48,7 @@
 //! Also note that the BuildSteps for installers are basically monolithic "build that installer"
 //! steps to give them the freedom to do whatever they need to do.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
@@ -128,6 +128,40 @@ pub struct ReleaseIdx(pub usize);
 /// A unique id for a [`Binary`][]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct BinaryIdx(pub usize);
+
+/// A convenience wrapper around a map of aliases
+#[derive(Debug)]
+pub struct Aliases(BTreeMap<String, Vec<String>>);
+
+impl Aliases {
+    /// Returns a formatted copy of the map, with file extensions added
+    /// if necessary.
+    pub fn for_target(&self, target: &str) -> BTreeMap<String, Vec<String>> {
+        if target.contains("windows") {
+            BTreeMap::from_iter(self.0.iter().map(|(k, v)| {
+                (
+                    format!("{k}.exe"),
+                    v.iter().map(|name| format!("{name}.exe")).collect(),
+                )
+            }))
+        } else {
+            self.0.clone()
+        }
+    }
+
+    /// Returns a map of aliases for each target triple, with
+    /// executable extensions added if necessary.
+    pub fn for_targets(
+        &self,
+        targets: &[String],
+    ) -> BTreeMap<String, BTreeMap<String, Vec<String>>> {
+        BTreeMap::from_iter(
+            targets
+                .iter()
+                .map(|target| (target.to_owned(), self.for_target(target))),
+        )
+    }
+}
 
 /// The graph of all work that cargo-dist needs to do on this invocation.
 ///
@@ -222,12 +256,16 @@ pub struct DistGraph {
     pub extra_artifacts: Vec<ExtraArtifact>,
     /// Custom GitHub runners, mapped by triple target
     pub github_custom_runners: HashMap<String, String>,
+    /// Aliases to publish binaries under, mapped source to target (ln style)
+    pub aliases: Aliases,
     /// LIES ALL LIES
     pub local_builds_are_lies: bool,
     /// Prefix git tags must include to be picked up (also renames release.yml)
     pub tag_namespace: Option<String>,
     /// Whether to install updaters alongside with binaries
     pub install_updater: bool,
+    /// Publish GitHub Releases to this other repo
+    pub github_releases_repo: Option<config::GithubRepoPair>,
 }
 
 /// Info about artifacts should be hosted
@@ -801,12 +839,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             default_features,
             all_features,
             create_release,
+            github_releases_repo,
             pr_run_mode: _,
             allow_dirty,
             msvc_crt_static,
             hosting,
             extra_artifacts,
             github_custom_runners: _,
+            aliases: _,
             install_updater,
         } = &workspace_metadata;
 
@@ -824,6 +864,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
         let tag_namespace = tag_namespace.clone();
+        let github_releases_repo = github_releases_repo.clone();
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -988,6 +1029,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 build_local_artifacts,
                 dispatch_releases,
                 create_release,
+                github_releases_repo,
                 ssldotcom_windows_sign,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
@@ -1020,6 +1062,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .github_custom_runners
                     .clone()
                     .unwrap_or_default(),
+                aliases: Aliases(workspace_metadata.aliases.clone().unwrap_or_default()),
                 install_updater: install_updater.unwrap_or_default(),
             },
             manifest: DistManifest {
@@ -1798,6 +1841,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
+        let triples: Vec<String> = artifacts
+            .iter()
+            .flat_map(|a| a.target_triples.clone())
+            .collect();
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
@@ -1820,6 +1868,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
+                aliases: self.inner.aliases.for_targets(&triples),
             })),
             is_global: true,
         };
@@ -2050,6 +2099,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .map(|(name, _)| name)
             .collect();
 
+        let triples: Vec<String> = artifacts
+            .iter()
+            .flat_map(|a| a.target_triples.clone())
+            .collect();
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
@@ -2088,6 +2142,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     hint,
                     desc,
                     receipt: None,
+                    aliases: self.inner.aliases.for_targets(&triples),
                 },
             })),
             is_global: true,
@@ -2161,6 +2216,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
+        let triples: Vec<String> = artifacts
+            .iter()
+            .flat_map(|a| a.target_triples.clone())
+            .collect();
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
@@ -2183,6 +2243,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
+                aliases: self.inner.aliases.for_targets(&triples),
             })),
             is_global: true,
         };
@@ -2372,6 +2433,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
+        let triples: Vec<String> = artifacts
+            .iter()
+            .flat_map(|a| a.target_triples.clone())
+            .collect();
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples: target_triples.into_iter().collect(),
@@ -2411,6 +2477,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     hint,
                     desc,
                     receipt: None,
+                    aliases: self.inner.aliases.for_targets(&triples),
                 },
             })),
             is_global: true,
@@ -3094,6 +3161,8 @@ pub struct InstallReceipt {
     pub version: String,
     /// The software which installed this receipt
     pub provider: Provider,
+    /// A list of aliases binaries were installed under
+    pub aliases: BTreeMap<String, Vec<String>>,
 }
 
 impl InstallReceipt {
@@ -3125,6 +3194,7 @@ impl InstallReceipt {
                 source: ProviderSource::CargoDist,
                 version: env!("CARGO_PKG_VERSION").to_owned(),
             },
+            aliases: BTreeMap::default(),
         })
     }
 }

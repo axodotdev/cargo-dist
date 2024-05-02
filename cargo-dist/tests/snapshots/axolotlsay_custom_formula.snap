@@ -22,6 +22,23 @@ class AxolotlBrew < Formula
   end
   license "MIT OR Apache-2.0"
 
+  ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-unknown-linux-gnu": {}}
+
+  def target_triple
+    cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
+    os = OS.mac? ? "apple-darwin" : "unknown-linux-gnu"
+
+    "#{cpu}-#{os}"
+  end
+
+  def install_aliases!
+    ALIASES[target_triple.to_sym].each do |source, dests|
+      dests.each do |dest|
+        bin.install_symlink bin/source.to_s => dest
+      end
+    end
+  end
+
   def install
     if OS.mac? && Hardware::CPU.arm?
       bin.install "axolotlsay"
@@ -32,6 +49,8 @@ class AxolotlBrew < Formula
     if OS.linux? && Hardware::CPU.intel?
       bin.install "axolotlsay"
     end
+
+    install_aliases!
 
     # Homebrew will automatically install these, so we don't need to do that
     doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
@@ -576,7 +595,7 @@ jobs:
           repository: "axodotdev/homebrew-packages"
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
-      - name: Fetch local artifacts
+      - name: Fetch homebrew formulae
         uses: actions/download-artifact@v4
         with:
           pattern: artifacts-*

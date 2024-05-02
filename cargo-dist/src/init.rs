@@ -250,6 +250,7 @@ fn get_new_dist_metadata(
             post_announce_jobs: None,
             publish_prereleases: None,
             create_release: None,
+            github_releases_repo: None,
             pr_run_mode: None,
             allow_dirty: None,
             ssldotcom_windows_sign: None,
@@ -257,6 +258,7 @@ fn get_new_dist_metadata(
             hosting: None,
             extra_artifacts: None,
             github_custom_runners: None,
+            aliases: None,
             tag_namespace: None,
             install_updater: None,
         }
@@ -822,6 +824,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         post_announce_jobs,
         publish_prereleases,
         create_release,
+        github_releases_repo,
         pr_run_mode,
         allow_dirty,
         ssldotcom_windows_sign,
@@ -830,6 +833,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         tag_namespace,
         extra_artifacts: _,
         github_custom_runners: _,
+        aliases: _,
         install_updater,
     } = &meta;
 
@@ -966,6 +970,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "create-release",
         "# Whether cargo-dist should create a Github Release or use an existing draft\n",
         *create_release,
+    );
+
+    apply_optional_value(
+        table,
+        "github-releases-repo",
+        "# Publish GitHub Releases to this repo instead\n",
+        github_releases_repo.as_ref().map(|a| a.to_string()),
     );
 
     apply_string_or_list(

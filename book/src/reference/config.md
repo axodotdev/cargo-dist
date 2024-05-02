@@ -383,6 +383,19 @@ aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
 Allows specifying which runner to use for a target. The keys within this table are target triples in the same format as the ["targets"](#targets) setting. Any targets not specified in this table will use the defaults.
 
 
+### github-releases-repo
+
+> since 0.14.0
+
+Example: `github-releases-repo = "mycoolowner/myrepo"`
+
+Allows specifying a different repo to publish GitHub Releases to than the current one. This can be used to publish to a public repo from a private one.
+
+You need to also need to create a [GitHub Personal Access Token with the "repo" scope](https://github.com/settings/tokens/new?scopes=repo) that can access the target repo, and need to add it as a GitHub SECRET called `GITHUB_RELEASES_TOKEN` **in the repo the workflow will run on**.
+
+i.e. if you're running the publish workflow in `myorg/private` and want to publish to `myorg/public`, the token needs *access* to `myorg/public`, but should be added as a SECRET to `myorg/private`.
+
+
 ### global-artifacts-jobs
 
 > since 0.7.0

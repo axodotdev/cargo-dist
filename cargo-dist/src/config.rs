@@ -321,6 +321,12 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub create_release: Option<bool>,
 
+    /// Publish GitHub Releases to this repo instead of the current one
+    ///
+    /// The user must also set GITHUB_RELEASES_TOKEN in their SECRETS
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_releases_repo: Option<GithubRepoPair>,
+
     /// \[unstable\] Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
@@ -337,6 +343,10 @@ pub struct DistMetadata {
     /// Custom GitHub runners, mapped by triple target
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_custom_runners: Option<HashMap<String, String>>,
+
+    /// Aliases to install binaries as
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aliases: Option<BTreeMap<String, Vec<String>>>,
 
     /// a prefix to add to the release.yml and tag pattern so that
     /// cargo-dist can co-exist with other release workflows in complex workspaces
@@ -393,8 +403,10 @@ impl DistMetadata {
             hosting: _,
             extra_artifacts: _,
             github_custom_runners: _,
+            aliases: _,
             tag_namespace: _,
             install_updater: _,
+            github_releases_repo: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -462,8 +474,10 @@ impl DistMetadata {
             hosting,
             extra_artifacts,
             github_custom_runners,
+            aliases,
             tag_namespace,
             install_updater,
+            github_releases_repo,
         } = self;
 
         // Check for global settings on local packages
@@ -493,6 +507,9 @@ impl DistMetadata {
         }
         if create_release.is_some() {
             warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_releases_repo.is_some() {
+            warn!("package.metadata.dist.github-releases-repo is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         // Arguably should be package-local for things like msi installers, but doesn't make sense for CI,
         // so let's not support that yet for its complexity!
@@ -590,6 +607,9 @@ impl DistMetadata {
         }
         if github_custom_runners.is_none() {
             *github_custom_runners = workspace_config.github_custom_runners.clone();
+        }
+        if aliases.is_none() {
+            *aliases = workspace_config.aliases.clone();
         }
         if install_updater.is_none() {
             *install_updater = workspace_config.install_updater;
@@ -775,6 +795,8 @@ impl std::str::FromStr for HostingStyle {
 pub enum PublishStyle {
     /// Publish a Homebrew formula to a tap repository
     Homebrew,
+    /// Publish an npm pkg to the global npm registry
+    Npm,
     /// User-supplied value
     User(String),
 }
@@ -786,6 +808,8 @@ impl std::str::FromStr for PublishStyle {
             Ok(Self::User(slug.to_owned()))
         } else if s == "homebrew" {
             Ok(Self::Homebrew)
+        } else if s == "npm" {
+            Ok(Self::Npm)
         } else {
             Err(DistError::UnrecognizedJobStyle {
                 style: s.to_owned(),
@@ -810,6 +834,7 @@ impl std::fmt::Display for PublishStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             PublishStyle::Homebrew => write!(f, "homebrew"),
+            PublishStyle::Npm => write!(f, "npm"),
             PublishStyle::User(s) => write!(f, "./{s}"),
         }
     }
@@ -1012,6 +1037,76 @@ impl<'de> serde::Deserialize<'de> for InstallPathStrategy {
         let path = String::deserialize(deserializer)?;
         path.parse().map_err(|e| D::Error::custom(format!("{e}")))
     }
+}
+
+/// A GitHub repo like 'axodotdev/axolotlsay'
+#[derive(Debug, Clone, PartialEq)]
+pub struct GithubRepoPair {
+    /// owner (axodotdev)
+    pub owner: String,
+    /// repo (axolotlsay)
+    pub repo: String,
+}
+
+impl std::str::FromStr for GithubRepoPair {
+    type Err = DistError;
+    fn from_str(pair: &str) -> DistResult<Self> {
+        let Some((owner, repo)) = pair.split_once('/') else {
+            return Err(DistError::GithubRepoPairParse {
+                pair: pair.to_owned(),
+            });
+        };
+        Ok(GithubRepoPair {
+            owner: owner.to_owned(),
+            repo: repo.to_owned(),
+        })
+    }
+}
+
+impl std::fmt::Display for GithubRepoPair {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}/{}", self.owner, self.repo)
+    }
+}
+
+impl serde::Serialize for GithubRepoPair {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for GithubRepoPair {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let path = String::deserialize(deserializer)?;
+        path.parse().map_err(|e| D::Error::custom(format!("{e}")))
+    }
+}
+
+impl GithubRepoPair {
+    /// Convert this into a jinja-friendly form
+    pub fn into_jinja(self) -> JinjaGithubRepoPair {
+        JinjaGithubRepoPair {
+            owner: self.owner,
+            repo: self.repo,
+        }
+    }
+}
+
+/// Jinja-friendly version of [`GithubRepoPair`][]
+#[derive(Debug, Clone, Serialize)]
+pub struct JinjaGithubRepoPair {
+    /// owner
+    pub owner: String,
+    /// repo
+    pub repo: String,
 }
 
 /// Strategy for install binaries (replica to have different Serialize for jinja)

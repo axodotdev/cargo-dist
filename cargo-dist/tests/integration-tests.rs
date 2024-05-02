@@ -36,7 +36,7 @@ fn axolotlsay_basic() -> Result<(), miette::Report> {
 cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew", "npm", "msi"]
 tap = "axodotdev/homebrew-packages"
-publish-jobs = ["homebrew"]
+publish-jobs = ["homebrew", "npm"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 unix-archive = ".tar.gz"
@@ -332,6 +332,7 @@ installers = []
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 build-local-artifacts = false
+github-releases-repo = "custom-owner/cool-repo"
 "#
         ))?;
 
@@ -839,6 +840,123 @@ libcue = "2.3.0"
 }
 
 #[test]
+fn axolotlsay_alias() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+tap = "axodotdev/homebrew-packages"
+publish-jobs = ["homebrew"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+scope = "@axodotdev"
+
+[package.metadata.wix]
+upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
+path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[workspace.metadata.dist.aliases]
+axolotlsay = ["axolotlsay-link"]
+
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
+fn axolotlsay_several_aliases() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+tap = "axodotdev/homebrew-packages"
+publish-jobs = ["homebrew"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+scope = "@axodotdev"
+
+[package.metadata.wix]
+upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
+path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[workspace.metadata.dist.aliases]
+axolotlsay = ["axolotlsay-link1", "axolotlsay-link2"]
+
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
+fn axolotlsay_alias_ignores_missing_bins() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+tap = "axodotdev/homebrew-packages"
+publish-jobs = ["homebrew"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+scope = "@axodotdev"
+
+[package.metadata.wix]
+upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
+path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[workspace.metadata.dist.aliases]
+nosuchbin = ["axolotlsay-link1", "axolotlsay-link2"]
+
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
 fn akaikatana_basic() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AKAIKATANA_REPACK.run_test(|ctx| {
@@ -989,6 +1107,76 @@ install-updater = true
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         // Ruin won't work because we don't have a release with actual updaters yet
         let main_snap = main_result.check_all_no_ruin(ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
+fn akaikatana_one_alias_among_many_binaries() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AKAIKATANA_REPACK.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+rust-toolchain-version = "1.67.1"
+ci = ["github"]
+installers = ["shell", "powershell", "homebrew"]
+tap = "mistydemeo/homebrew-formulae"
+publish-jobs = ["homebrew"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+
+[workspace.metadata.dist.aliases]
+akextract = ["akextract-link"]
+
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
+fn akaikatana_two_bin_aliases() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AKAIKATANA_REPACK.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+rust-toolchain-version = "1.67.1"
+ci = ["github"]
+installers = ["shell", "powershell", "homebrew"]
+tap = "mistydemeo/homebrew-formulae"
+publish-jobs = ["homebrew"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+
+[workspace.metadata.dist.aliases]
+akextract = ["akextract-link"]
+akmetadata = ["akmetadata-link"]
+
+
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(ctx, ".cargo/bin/")?;
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())

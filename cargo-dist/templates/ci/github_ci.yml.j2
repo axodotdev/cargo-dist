@@ -471,49 +471,12 @@ jobs:
 
 {{%- if 'homebrew' in publish_jobs and tap %}}
 
-  publish-homebrew-formula:
-    needs:
-      - plan
-      - host
-    {{%- for job in host_jobs %}}
-      - custom-{{{ job|safe }}}
-    {{%- endfor %}}
-    runs-on: {{{ global_task.runner }}}
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PLAN: ${{ needs.plan.outputs.val }}
-      GITHUB_USER: "axo bot"
-      GITHUB_EMAIL: "admin+bot@axo.dev"
-    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: {{{ tap }}}
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-      # So we have access to the formula
-      - name: Fetch local artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: artifacts-*
-          path: Formula/
-          merge-multiple: true
-      # This is extra complex because you can make your Formula name not match your app name
-      # so we need to find releases with a *.rb file, and publish with that filename.
-      - name: Commit formula files
-        run: |
-          git config --global user.name "${GITHUB_USER}"
-          git config --global user.email "${GITHUB_EMAIL}"
+{{% include 'ci/partials/publish_homebrew.yml' %}}
+{{%- endif %}}
 
-          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith(".rb")] | any)'); do
-            filename=$(echo "$release" | jq '.artifacts[] | select(endswith(".rb"))' --raw-output)
-            name=$(echo "$filename" | sed "s/\.rb$//")
-            version=$(echo "$release" | jq .app_version --raw-output)
+{{%- if 'npm' in publish_jobs %}}
 
-            git add "Formula/${filename}"
-            git commit -m "${name} ${version}"
-          done
-          git push
-
+{{% include 'ci/partials/publish_npm.yml' %}}
 {{%- endif %}}
 
 {{%- for job in user_publish_jobs %}}
@@ -552,6 +515,9 @@ jobs:
     {{%- if 'homebrew' in publish_jobs and tap %}}
       - publish-homebrew-formula
     {{%- endif %}}
+    {{%- if 'npm' in publish_jobs %}}
+      - publish-npm
+    {{%- endif %}}
     {{%- for job in user_publish_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
@@ -563,6 +529,7 @@ jobs:
     # "host" however must run to completion, no skipping allowed!
     if: ${{ always() && needs.host.result == 'success'
     {{%- if 'homebrew' in publish_jobs and tap %}} && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') {{%- endif %}}
+    {{%- if 'npm' in publish_jobs %}} && (needs.publish-npm.result == 'skipped' || needs.publish-npm.result == 'success') {{%- endif %}}
     {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
     {{{- " }}" | safe }}}
     runs-on: {{{ global_task.runner }}}
@@ -606,6 +573,11 @@ jobs:
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
+        {{%- if github_releases_repo %}}
+          owner: {{{ github_releases_repo.owner }}}
+          repo: {{{ github_releases_repo.repo }}}
+          token: ${{ secrets.GITHUB_RELEASES_TOKEN }}
+        {{%- endif %}}
           tag: ${{ needs.plan.outputs.tag }}
         {{%- if create_release %}}
           name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
