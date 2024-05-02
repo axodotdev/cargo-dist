@@ -186,6 +186,7 @@ stdout:
       "name": "cargo-dist-installer.ps1",
       "kind": "installer",
       "target_triples": [
+        "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-msvc"
       ],
       "install_hint": "powershell -c \"irm https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.ps1 | iex\"",
@@ -197,10 +198,13 @@ stdout:
       "target_triples": [
         "aarch64-apple-darwin",
         "aarch64-unknown-linux-gnu",
-        "aarch64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl-dynamic",
+        "aarch64-unknown-linux-musl-static",
         "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl"
+        "x86_64-unknown-linux-musl-dynamic",
+        "x86_64-unknown-linux-musl-static"
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
@@ -383,10 +387,13 @@ stdout:
       "target_triples": [
         "aarch64-apple-darwin",
         "aarch64-unknown-linux-gnu",
-        "aarch64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl-dynamic",
+        "aarch64-unknown-linux-musl-static",
         "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl"
+        "x86_64-unknown-linux-musl-dynamic",
+        "x86_64-unknown-linux-musl-static"
       ],
       "install_hint": "brew install axodotdev/homebrew-tap/cargo-dist",
       "description": "Install prebuilt binaries via Homebrew"

@@ -143,41 +143,43 @@ download_binary_and_run_installer() {
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-apple-darwin")
             _artifact_name="akaikatana-repack-x86_64-apple-darwin.tar.xz"
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-unknown-linux-gnu")
             _artifact_name="akaikatana-repack-x86_64-unknown-linux-gnu.tar.xz"
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-unknown-linux-musl-dynamic")
             _artifact_name="akaikatana-repack-x86_64-unknown-linux-musl.tar.xz"
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         "x86_64-unknown-linux-musl-static")
             _artifact_name="akaikatana-repack-x86_64-unknown-linux-musl.tar.xz"
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _updater_name=""
+            _updater_bin=""
             ;;
         *)
             err "there isn't a package for $_arch"
-            ;;
-    esac
-
-    case "$_arch" in 
-        *)
-            # No updater for this, or maybe any, arch
-            _updater_name=""
-            _updater_bin=""
             ;;
     esac
 
@@ -1068,7 +1070,8 @@ download_binary_and_run_installer "$@" || exit 1
         "aarch64-apple-darwin",
         "x86_64-apple-darwin",
         "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl"
+        "x86_64-unknown-linux-musl-dynamic",
+        "x86_64-unknown-linux-musl-static"
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
