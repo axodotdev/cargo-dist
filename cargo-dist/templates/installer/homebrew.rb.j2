@@ -66,7 +66,7 @@ class {{ formula_class }} < Formula
   {%- endfor %}
   {%- endif %}
 
-  ALIASES = {{ inner.aliases }}
+  BINARY_ALIASES = {{ inner.bin_aliases }}
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -75,8 +75,8 @@ class {{ formula_class }} < Formula
     "#{cpu}-#{os}"
   end
 
-  def install_aliases!
-    ALIASES[target_triple.to_sym].each do |source, dests|
+  def install_binary_aliases!
+    BINARY_ALIASES[target_triple.to_sym].each do |source, dests|
       dests.each do |dest|
         bin.install_symlink bin/source.to_s => dest
       end
@@ -104,7 +104,7 @@ class {{ formula_class }} < Formula
       bin.install {% for binary in x86_64_linux.binaries %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
     end
 {% endif %}
-    install_aliases!
+    install_binary_aliases!
 
     # Homebrew will automatically install these, so we don't need to do that
     doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]

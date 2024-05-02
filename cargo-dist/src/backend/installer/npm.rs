@@ -199,7 +199,7 @@ fn platforms(info: &NpmInstallerInfo) -> PlatformSummary {
             // (Aliases need to be statically declared in npm, so this code is essentially
             // taking the union of all aliases across all platforms, which in the current
             // impl will get the same result as doing things more precisely).
-            let Some(alias_map) = info.inner.aliases.get(&target) else {
+            let Some(alias_map) = info.inner.bin_aliases.get(&target) else {
                 continue;
             };
             let Some(aliases) = alias_map.get(bin) else {

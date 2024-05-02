@@ -132,11 +132,11 @@ pub struct ReleaseIdx(pub usize);
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct BinaryIdx(pub usize);
 
-/// A convenience wrapper around a map of aliases
+/// A convenience wrapper around a map of binary aliases
 #[derive(Debug)]
-pub struct Aliases(BTreeMap<String, Vec<String>>);
+pub struct BinaryAliases(BTreeMap<String, Vec<String>>);
 
-impl Aliases {
+impl BinaryAliases {
     /// Returns a formatted copy of the map, with file extensions added
     /// if necessary.
     pub fn for_target(&self, target: &str) -> BTreeMap<String, Vec<String>> {
@@ -152,7 +152,7 @@ impl Aliases {
         }
     }
 
-    /// Returns a map of aliases for each target triple, with
+    /// Returns a map of binary aliases for each target triple, with
     /// executable extensions added if necessary.
     pub fn for_targets(
         &self,
@@ -260,7 +260,7 @@ pub struct DistGraph {
     /// Custom GitHub runners, mapped by triple target
     pub github_custom_runners: HashMap<String, String>,
     /// Aliases to publish binaries under, mapped source to target (ln style)
-    pub aliases: Aliases,
+    pub bin_aliases: BinaryAliases,
     /// LIES ALL LIES
     pub local_builds_are_lies: bool,
     /// Prefix git tags must include to be picked up (also renames release.yml)
@@ -852,7 +852,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             hosting,
             extra_artifacts,
             github_custom_runners: _,
-            aliases: _,
+            bin_aliases: _,
             install_updater,
         } = &workspace_metadata;
 
@@ -1068,7 +1068,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .github_custom_runners
                     .clone()
                     .unwrap_or_default(),
-                aliases: Aliases(workspace_metadata.aliases.clone().unwrap_or_default()),
+                bin_aliases: BinaryAliases(
+                    workspace_metadata.bin_aliases.clone().unwrap_or_default(),
+                ),
                 install_updater: install_updater.unwrap_or_default(),
             },
             manifest: DistManifest {
@@ -1716,7 +1718,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping shell installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-        let aliases = self.inner.aliases.for_targets(&target_triples);
+        let bin_aliases = self.inner.bin_aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -1738,7 +1740,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
-                aliases,
+                bin_aliases,
             })),
             is_global: true,
         };
@@ -1841,7 +1843,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Run))
             .map(|(name, _)| name)
             .collect();
-        let aliases = self.inner.aliases.for_targets(&target_triples);
+        let bin_aliases = self.inner.bin_aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -1879,7 +1881,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     hint,
                     desc,
                     receipt: None,
-                    aliases,
+                    bin_aliases,
                 },
             })),
             is_global: true,
@@ -1927,7 +1929,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping powershell installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-        let aliases = self.inner.aliases.for_targets(&target_triples);
+        let bin_aliases = self.inner.bin_aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -1949,7 +1951,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
-                aliases,
+                bin_aliases,
             })),
             is_global: true,
         };
@@ -2012,7 +2014,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping npm installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-        let aliases = self.inner.aliases.for_targets(&target_triples);
+        let bin_aliases = self.inner.bin_aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -2050,7 +2052,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     hint,
                     desc,
                     receipt: None,
-                    aliases,
+                    bin_aliases,
                 },
             })),
             is_global: true,
@@ -2743,7 +2745,7 @@ pub struct InstallReceipt {
     /// The software which installed this receipt
     pub provider: Provider,
     /// A list of aliases binaries were installed under
-    pub aliases: BTreeMap<String, Vec<String>>,
+    pub binary_aliases: BTreeMap<String, Vec<String>>,
 }
 
 impl InstallReceipt {
@@ -2775,7 +2777,7 @@ impl InstallReceipt {
                 source: ProviderSource::CargoDist,
                 version: env!("CARGO_PKG_VERSION").to_owned(),
             },
-            aliases: BTreeMap::default(),
+            binary_aliases: BTreeMap::default(),
         })
     }
 }
