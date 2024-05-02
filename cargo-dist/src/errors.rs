@@ -359,6 +359,14 @@ pub enum DistError {
     /// Failed to make sense of 'cargo -vV'
     #[error("Failed to get get toolchain version from 'cargo -vV'")]
     FailedCargoVersion,
+
+    /// Failed to parse Github repo pair
+    #[error("Failed to parse github repo: {pair}")]
+    #[diagnostic(help("should be 'owner/repo' format"))]
+    GithubRepoPairParse {
+        /// The input
+        pair: String,
+    },
 }
 
 /// Errors related to finding the project

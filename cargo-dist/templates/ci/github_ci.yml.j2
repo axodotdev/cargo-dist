@@ -573,6 +573,11 @@ jobs:
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
+        {{%- if github_releases_repo %}}
+          owner: {{{ github_releases_repo.owner }}}
+          repo: {{{ github_releases_repo.repo }}}
+          token: ${{ secrets.GITHUB_RELEASES_TOKEN }}
+        {{%- endif %}}
           tag: ${{ needs.plan.outputs.tag }}
         {{%- if create_release %}}
           name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
