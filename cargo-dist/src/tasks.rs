@@ -1779,6 +1779,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // If tap is specified, include that in the `brew install` message
         let mut install_target = formula.clone();
         if let Some(tap) = &self.inner.tap {
+            // So that, for example, axodotdev/homebrew-tap becomes axodotdev/tap
+            let tap = tap.replace("/homebrew-", "/");
             install_target = format!("{tap}/{install_target}").to_owned();
         }
 
