@@ -20,6 +20,18 @@ env:
   RUSTFLAGS: -Dwarnings
 
 jobs:
+  # Test and fmt the npm pkg
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: npm fmt
+        working-directory: cargo-dist/templates/installer/npm
+        run: npm ci && npm run fmt:check
+
   # Check that rustfmt is a no-op
   fmt:
     runs-on: ubuntu-latest
