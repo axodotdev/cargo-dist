@@ -213,7 +213,8 @@ impl Templates {
         }
     }
 
-    /// Render a non-jinja template file to a string, cleaning all newlines to be unix-y
+    /// ""Render"" a non-jinja template file to a string, cleaning all newlines to be unix-y
+    /// (it just returns the file verbatime with newlines fixed).
     fn render_raw_file_to_clean_string(&self, file: &TemplateFile) -> DistResult<String> {
         let rendered = &self.raw_files[file.path.as_str()];
         let cleaned = dos2unix(rendered).into_owned();

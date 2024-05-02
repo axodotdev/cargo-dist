@@ -119,6 +119,7 @@ fn mangle_package_lock(
     package_lock["name"] = info.npm_package_name.clone().into();
     package_lock["version"] = info.npm_package_version.clone().into();
     // info for inner root package
+    // Yes, this is genuinely keyed by the empty string in the actual npm-shrinkwrap.json format.
     let root_package = &mut package_lock["packages"][""];
     root_package["name"] = info.npm_package_name.clone().into();
     root_package["version"] = info.npm_package_version.clone().into();
@@ -173,6 +174,10 @@ fn mangle_package_json(
     }
     // installer-specific fields
     package_json["bin"] = platforms.bins_json();
+    // These two fields are "non-standard" in the package.json format, but the
+    // installer expects to find them when it reads its own package.json (with `require`).
+    // It's fairly normal to add random stuff to a package.json like this,
+    // as it's a format that's infamously ill-defined with minimal validation.
     package_json["artifactDownloadUrl"] = info.inner.base_url.clone().into();
     package_json["supportedPlatforms"] = platforms.platform_support_json();
 
