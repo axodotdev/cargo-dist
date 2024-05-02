@@ -186,25 +186,40 @@ fn mangle_package_json(
 fn platforms(info: &NpmInstallerInfo) -> PlatformSummary {
     let mut output = PlatformSummary::default();
     for archive in &info.inner.artifacts {
+        let target = archive.target_triples[0].clone();
+
         // FIXME: input actual aliases
-        let aliases = SortedMap::new();
         let mut bins = SortedMap::new();
         for bin in &archive.binaries {
+            // Add the binary
             let raw_name = bin.strip_suffix(".exe").unwrap_or(bin);
             bins.insert(raw_name.to_owned(), bin.to_owned());
             output.bins.insert(raw_name.to_owned());
+
+            // Add any aliases for this binary
+            // (Aliases need to be statically declared in npm, so this code is essentially
+            // taking the union of all aliases across all platforms, which in the current
+            // impl will get the same result as doing things more precisely).
+            let Some(alias_map) = info.inner.aliases.get(&target) else {
+                continue;
+            };
+            let Some(aliases) = alias_map.get(bin) else {
+                continue;
+            };
+            for alias in aliases {
+                let raw_alias_name = alias.strip_suffix(".exe").unwrap_or(alias);
+                output
+                    .aliases
+                    .insert(raw_alias_name.to_owned(), raw_name.to_owned());
+            }
         }
-        for (alias, bin) in aliases {
-            output.aliases.insert(alias, bin);
-        }
+
         let platform = PackageJsonPlatform {
             artifact_name: archive.id.clone(),
             bins,
             zip_ext: archive.zip_style.ext().to_owned(),
         };
-        output
-            .platforms
-            .insert(archive.target_triples[0].clone(), platform);
+        output.platforms.insert(target, platform);
     }
     output
 }
