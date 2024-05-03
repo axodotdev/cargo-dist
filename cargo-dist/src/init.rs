@@ -262,6 +262,7 @@ fn get_new_dist_metadata(
             pr_run_mode: None,
             allow_dirty: None,
             ssldotcom_windows_sign: None,
+            github_attestations: None,
             msvc_crt_static: None,
             hosting: None,
             extra_artifacts: None,
@@ -843,6 +844,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         pr_run_mode,
         allow_dirty,
         ssldotcom_windows_sign,
+        github_attestations,
         msvc_crt_static,
         hosting,
         tag_namespace,
@@ -1143,6 +1145,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "ssldotcom-windows-sign",
         "",
         ssldotcom_windows_sign.as_ref().map(|p| p.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "github-attestations",
+        "# Whether to enable GitHub Attestations",
+        *github_attestations,
     );
 
     apply_string_or_list(
