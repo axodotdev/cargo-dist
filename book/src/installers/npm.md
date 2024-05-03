@@ -2,9 +2,12 @@
 
 > since 0.0.6
 
-This provides a tarball containing an npm package (npm-package.tar.gz) which when installed into an npm project: detects the current platform, fetches the best possible [archive][] from your [artifact URL][artifact-url], and copies the binary into your node_modules. This can be used to install the binaries like any other npm package, or to run them with `npx`.
+cargo-dist can automatically build and publish [npm](https://www.npmjs.com/) packages for your applications. Users can install your application with an expression like `npm install -g @axodotdev/axolotlsay`, or immediately run it with `npx @axodotdev/axolotlsay`.
 
-This kind of installer is ideal for making a native Rust tool available to JS devs.
+The npm package will [fetch][artifact-url] your prebuilt [archives](../artifacts/archives.md) and install your binaries to node_modules, exposing them as commands ("bins") of the package.
+If the package [unambiguously has one true command](https://docs.npmjs.com/cli/v7/commands/npx#description), then the package can be run without specifying one.
+
+Note that this is *not* (yet) a feature for publishing an npm package in your workspace. The package described here is generated as part of your release process.
 
 An "installer hint" will be provided that shows how to install via `npm` like so:
 
@@ -12,59 +15,74 @@ An "installer hint" will be provided that shows how to install via `npm` like so
 npm install @axodotdev/cargodisttest@0.2.0
 ```
 
-**cargo-dist does not publish the package for you, you need to do that manually once the tarball is built.** Conveniently, npm supports publishing from a url-to-a-tarball directly, and since 0.0.7 we make our tarballs look like "proper" npm package tarballs, so you can just do this:
+## Quickstart
 
-```sh
-npm publish URL_TO_TARBALL
+To setup your npm installer you need to create an npm access token and enable the installer. This is broken up into parts because a project administrator may need to be involved in part 1, while part 2 can be done by anyone.
+
+
+### Part 1: Creating an npm account and optional scope and authenticating GitHub Actions
+
+1. Create an account on [npmjs.com](https://www.npmjs.com/signup).
+1. (Optionally) If you would like to publish a "scoped" package (aka `@mycorp/pkg`) you'll need to [create an npm organization](https://www.npmjs.com/org/create).
+1. (Optionally) If you'd like, you can also update your current user to an org so you can publish packages like `@myuser/pkg`.
+2. Go to your npm account settings and create a granular access token:
+
+    - Expiration: The default is 30 days. You can pick what works for you and your team. (NOTE: If you really want a token that does not expire you can use a Classic Token but we expect that option to eventually be fully deprecated in the near future.)
+    - Packages and scopes: Read and write
+        - Select packages: All packages (NOTE: because the package does not yet exist, you must pick this. However, you can (and probably should!) update this to scope the token to a single package after publish. This is sadly a limitation of the npm token system.)
+    - Organizations: No access
+
+3. Add the token as a [GitHub Actions Secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets) called `NPM_TOKEN` to the repository your are publishing from.
+
+
+### Part 2: Enabling The npm Installer
+
+1. run `cargo dist init` on your project
+2. when prompted to pick installers, enable "npm"
+3. this should trigger a prompt for your optional scope (`@axodotdev`)
+
+...that's it! If this worked, your config should now contain the following entries:
+
+```toml
+[workspace.metadata.dist]
+# "..." indicates other installers you may have selected
+installers = ["...", "npm", "..."]
+# if you did not provide a scope, this won't be present
+npm-scope = "@axodotdev"
+publish-jobs = ["npm"]
 ```
 
-You can find the URL to the tarball at the bottom of the Github Release, inside the collapsible "assets" dropdown (*-npm-package.tar.gz). The format of the url is:
+Next make sure that `description` and `homepage` are set in your Cargo.toml. These
+fields are optional but make for better npm packages.
 
-```text
-<repo>/releases/download/<tag>/<app-name>-npm-package.tar.gz
+```toml
+[package]
+description = "a CLI for learning to distribute CLIs in rust"
+homepage = "https://github.com/axodotdev/axolotlsay"
 ```
 
-Example:
+## Renaming npm packages
 
-https://github.com/axodotdev/oranda/releases/download/v0.0.3/oranda-npm-package.tar.gz
+> since 0.14.0
 
-If you're cutting a stable release (not-prerelease), you can use the "latest" URL format:
+By default the name of the npm package will be the name of the package that defines it (your Cargo package). If for whatever reason you don't want that to be the case, then you can change it with the [npm-package setting](../reference/config.md#npm-package).
 
-https://github.com/axodotdev/oranda/releases/latest/download/oranda-npm-package.tar.gz
+So with these settings:
 
-In the future we may [introduce more streamlined CI-based publishing workflows][issue-npm-ci].
+```toml
+[package]
+name = "axolotlsay"
 
-[You can set the @scope the package is published under with the npm-scope cargo-dist config][config-npm-scope].
+[package.metadata.dist]
+npm-scope = "@axodotdev"
+npm-package = "cli"
+```
 
-We will otherwise do our best to faithfully translate [any standard Cargo.toml values you set][cargo-manifest] to an equivalent in the npm package.json format (name, version, authors, description, homepage, repository, keywords, categories...).
-
-The package will also include an npm-shrinkwrap.json file for the npm packages the installer uses, this is the same as package-lock.json but "really for reals I want this to be respected even if it's installed into another project". Note that [cargo install similarly disrespects Cargo.lock unless you pass --locked][install-locked].
-
-
+You'll end up publish the binaries in "axolotlsay" to an npm package called "@axodotdev/cli".
 
 
 ## Limitations and Caveats
 
-* Requires a well-defined [artifact URL][artifact-url]
-* [Cannot detect situations where musl-based builds are appropriate][issue-musl] (static or dynamic)
-* [Relies on nodejs's builtin gzip support to unpack the files, which only works with .tar.gz][issue-unpacking]
-* Cannot run any kind of custom install logic
+The current implementation can only [unpack `.tar.gz` archives][issue-unpacking]. As a result, `cargo dist init` will prompt you to change [windows-archive][config-windows-archive] and [unix-archive][config-unix-archive] to ".tar.gz" if you enable the npm installer, erroring if you decline.
 
-As a result of the `.tar.gz` limitation, `cargo dist init` will prompt you to change [windows-archive][config-windows-archive] and [unix-archive][config-unix-archive] to ".tar.gz" if you enable the npm installer, erroring if you decline.
-
-
-
-
-[issue-npm-ci]: https://github.com/axodotdev/cargo-dist/issues/245
-[issue-musl]: https://github.com/axodotdev/cargo-dist/issues/75
 [issue-unpacking]: https://github.com/axodotdev/cargo-dist/issues/226
-
-[config-windows-archive]: ../reference/config.md#windows-archive
-[config-unix-archive]: ../reference/config.md#unix-archive
-[config-npm-scope]: ../reference/config.md#npm-scope
-
-[archive]: ../artifacts/archives.md
-[artifact-url]: ../reference/artifact-url.md
-
-[cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
-[install-locked]: https://doc.rust-lang.org/cargo/commands/
