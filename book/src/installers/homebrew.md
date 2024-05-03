@@ -71,6 +71,13 @@ formula = "coolname"
 ```
 
 
+## Adding Binary Aliases
+
+> since 0.14.0
+
+If you want to install symlinked aliases for your binaries, you can do so with the [bin-aliases setting](../reference/config.md#bin-aliases).
+
+
 ## Linuxbrew
 
 > since 0.6.0

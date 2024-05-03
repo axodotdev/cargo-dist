@@ -81,7 +81,7 @@ Running `cargo-dist init` for your tool will update your GitHub Actions configur
 
 ## Custom runners
 
-(since 0.6.0)
+> since 0.6.0
 
 By default, cargo-dist uses the following runners:
 
@@ -105,11 +105,19 @@ In addition to adding support for new targets, some users may find it useful to 
 aarch64-apple-darwin = "macos-14"
 ```
 
+## Publish GitHub Release To Another Repository
+
+> since 0.14.0
+
+You can change which repository a GitHub Release gets published to with the [github-releases-repo setting][config-github-releases-repo].
+
+
 [config-dependencies]: ../reference/config.md#dependencies
 [config-plan]: ../reference/config.md#plan-jobs
 [config-build-local]: ../reference/config.md#build-local-artifacts-jobs
 [config-build-global]: ../reference/config.md#build-global-artifacts-jobs
 [config-github-custom-runners]: ../reference/config.md#github-custom-runners
+[config-github-releases-repo]: ../reference/config.md#github-releases-repo
 [config-host-jobs]: ../reference/config.md#host-jobs
 [config-publish-jobs]: ../reference/config.md#publish-jobs
 [config-post-announce]: ../reference/config.md#post-announce-jobs
