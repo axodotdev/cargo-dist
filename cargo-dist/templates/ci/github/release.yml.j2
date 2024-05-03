@@ -26,6 +26,10 @@ name: Release
 
 permissions:
   contents: write
+  {{%- if github_attestations %}}
+  id-token: write
+  attestations: write
+  {{%- endif %}}
 
 {{%- if release_branch %}}
 
@@ -224,6 +228,12 @@ jobs:
           # Actually do builds and make zips and whatnot
           cargo dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "cargo dist ran successfully"
+      {{%- if github_attestations %}}
+      - name: Attest
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "target/distrib/*${{ join(matrix.targets, ', ') }}*"
+      {{%- endif %}}
       - id: cargo-dist
         name: Post-build
         # We force bash here just because github makes it really hard to get values up
