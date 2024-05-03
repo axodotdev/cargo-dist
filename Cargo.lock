@@ -241,9 +241,9 @@ dependencies = [
 
 [[package]]
 name = "axoupdater"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88381a1fce59b27e7539869ead01226f69ada31218974e1bf0d79c43b91e1867"
+checksum = "aa409472ff4f15f57ed338dc73f9586b3ee244c65ddbaa1f4f9bdbb26c9bd4f6"
 dependencies = [
  "axoasset",
  "axoprocess",
