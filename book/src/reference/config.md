@@ -132,6 +132,27 @@ Example: `auto-includes = false`
 Allows you to specify whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [archives][]. Defaults to true.
 
 
+### `[bin-aliases]`
+
+> since 0.14.0
+
+Example:
+
+```toml
+[package.metadata.dist.bin-aliases]
+"myrealbin" = ["somealias", "otheralias"]
+"myotherbin" = "alias"
+```
+
+The `[bin-aliases]` setting lets you specify aliases that should be introduced for your binaries by your installers. These aliases aren't included in your archives, and are only created by the installers themselves. The way the alias is created is installer-specific, and may change in the future. Currently:
+
+* shell: symlink
+* powershell: hardlink
+* npm: extra "bins" pointing at the same command
+* homebrew: bin.install_symlink
+* msi: not currently supported
+
+
 ### build-local-artifacts
 
 > since 0.8.0
@@ -465,7 +486,12 @@ See "repository" for some discussion on the "Artifact Download URL".
 
 > since 0.1.0
 
-Example: `install-path = "~/.my-app/"`
+Examples:
+
+```toml
+install-path = "~/.my-app/"
+install-path = ["$MY_APP_HOME/bin", "~/.my-app/bin"]
+```
 
 The strategy that script installers ([shell][shell-installer], [powershell][powershell-installer]) should use for selecting a path to install things at, with 3 possible syntaxes:
 
@@ -477,15 +503,21 @@ The strategy that script installers ([shell][shell-installer], [powershell][powe
 
 > NOTE: `$HOME/some/subdir` is technically valid syntax but it won't behave the way you want on Windows, because `$HOME` isn't a proper environment variable. Let us handle those details for you and just use `~/subdir/`.
 
-All of these error out if none of the required env-vars are set to a non-empty value.
+All of these error out if none of the required env-vars are set to a non-empty value. Since 0.14.0 you can provide an array of options to try if all the previous ones fail. Such an "install-path cascade" would typically be used to provide an environment variable for changing the install dir, with a more hardcoded home subdir as a fallback:
+
+```toml
+install-path = ["$MY_APP_HOME/bin", "~/.my-app/bin"]
+```
+
+It hasn't yet been tested whether this is appropriate to pair with things like `$XDG_BIN_HOME`, but we'd sure like it to be.
 
 We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. `~/My cargo-dist Documents/bin/` works), but we won't be surprised if things misbehave on Interesting Inputs.
 
 Future Improvements:
 
-* In the future [we may expand this setting to allow you to pass an array of options that are tried in sequence until one succeeds](https://github.com/axodotdev/cargo-dist/issues/286).
 * In the future [we may support XDG dirs](https://github.com/axodotdev/cargo-dist/issues/287)
 * In the future [we may support %windows dirs%](https://github.com/axodotdev/cargo-dist/issues/288)
+* For historical reasons `CARGO_HOME` [uses a slightly different install dir structure from the others](https://github.com/axodotdev/cargo-dist/issues/934), and so for safety cannot be paired with the others strategies in an install-path cascade.
 
 (Please file an issue if you have other requirements!)
 
@@ -651,9 +683,13 @@ This setting determines to what extent we run your Release CI on pull-requests:
 
 > since 0.2.0
 
-Example: `publish-jobs = ["homebrew"]`
+Example: `publish-jobs = ["homebrew", "npm", "./my-custom-job"]`
 
-This setting determines which publish jobs to run. It includes one builtin job (`homebrew`) and, since 0.3.0, the ability to specify custom jobs.
+This setting determines which publish jobs to run. It accepts 3 kinds of value:
+
+* ["homebrew", for builtin homebrew publishes](../installers/homebrew.md) (since 0.2.0)
+* ["npm", for builtin npm publishes](../installers/npm.md) (since 0.14.0)
+* ["./my-custom-job" for custom jobs](../ci/customizing.md#custom-jobs) (since 0.3.0)
 
 
 ### publish-prereleases

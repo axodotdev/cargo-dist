@@ -3,6 +3,106 @@
 Nothing Yet!
 
 
+# Version 0.14.0 (2024-05-06)
+
+This is a BIG release for installers, with every installer getting big bugfixes and reworks.
+
+* shell installers:
+    * support cascading install-path rules like "install to $MY_APP_HOME, or ~/.my-app if that's not set"
+    * can install aliases for your binaries (symlink on unix, hardlink on windows)
+    * properly setup PATH for fish shell
+    * have more robust platform-support fallbacks
+* npm installers:
+    * can be automatically published to npm
+    * support multiple binaries
+    * can install aliases for your binaries (additional bin commands on the package)
+    * can have a different name from their parent cargo package
+    * have more robust platform-support fallbacks
+    * [have all new docs](https://opensource.axo.dev/cargo-dist/book/installers/npm.html)
+* homebrew installers
+    * can install aliases for your binaries (builtin homebrew aliases)
+    * have more idiomatic install-hints
+    * [have all new docs](https://opensource.axo.dev/cargo-dist/book/installers/homebrew.html)
+
+
+## Features
+
+
+### npm installer rewrite
+
+The npm installer has been rewritten to remove almost every limitation it has.
+
+Notably, you can now have multiple binaries in an npm package without any issue. You can even make aliases for commands with the new [bin-aliases setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#bin-aliases).
+
+Although for the best user experience, ensuring your package [unambiguously has one true command](https://docs.npmjs.com/cli/v7/commands/npx#description) is ideal. To help with this, the [npm-package setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#npm-package) was added, allowing you to rename your npm package (which is one of the disambiguators for the primary command of an npm package).
+
+You can also now automatically [publish your npm packages](https://opensource.axo.dev/cargo-dist/book/installers/npm.html#quickstart) by [setting `publish-jobs = ["npm"]`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#publish-jobs)!
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/installers/npm.html)
+* impl
+    * @gankra [rewrite npm installer](https://github.com/axodotdev/cargo-dist/pull/974)
+    * @gankra [add npm-package config](https://github.com/axodotdev/cargo-dist/pull/988)
+    * @ashleygwilliams [add builtin npm publish](https://github.com/axodotdev/cargo-dist/pull/966)
+    * @ashleygwilliams [rewrite npm installer docs](https://github.com/axodotdev/cargo-dist/pull/985)
+
+
+### install-path cascades
+
+The [install-path setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-paths) that's used by the shell and powershell installers can now be an array of options to try in sequence. This is mostly useful for checking if special environment variables are set before falling back to some hardcoded subdir of $HOME.
+
+For instance, if you set:
+
+```toml
+install-dir = ["$MY_APP_HOME/bin", "~/.my-app/bin"]
+```
+
+Then your shell and powershell installers will first check if `$MY_APP_HOME` is defined and install to `$MY_APP_HOME/bin` if it is. If it's not defined then it will use the more hardcoded `$HOME/.my-app/bin`.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-paths)
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/947)
+
+
+### binary aliases
+
+The shell, powershell, npm, and homebrew installers all now support aliases for binaries with the new [bin-aliases setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#bin-aliases). These are not included in your downloadable archives, and are setup in an installer-specific way:
+
+* shell: symlinks
+* powershell: hardlinks
+* npm: extra "bin" entries pointing at the same command
+* homebrew: bin.install_symlink
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#bin-aliases)
+* impl
+    * @mistydemeo [add binary aliases](https://github.com/axodotdev/cargo-dist/pull/964)
+    * @mistydemeo [adjust feature name](https://github.com/axodotdev/cargo-dist/pull/986)
+    * @mistydemeo [force symlinks to overwrite](https://github.com/axodotdev/cargo-dist/pull/997)
+
+
+### publish github releases to other repo
+
+If you need to publish your GitHub Releases to a different repo than the one you run your release workflow on, you can use the new [github-releases-repo setting](github-releases-repo) to specify this.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo)
+* @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/967)
+
+
+### disable alternative source tarballs
+
+You can now disable the backup source tarballs uploaded by cargo-dist with the new [source-tarball setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#source-tarball).
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#source-tarball)
+* @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/959)
+
+
+## Fixes
+
+* @gankra [rewrite homebrew installer docs](https://github.com/axodotdev/cargo-dist/pull/954)
+* @mistydemeo [use more idiomatic homebrew install expressions](https://github.com/axodotdev/cargo-dist/pull/1000)
+* @mistydemeo [fix references to selfupdate command](https://github.com/axodotdev/cargo-dist/pull/957)
+* @gankra [unify installer platform-compatibility code](https://github.com/axodotdev/cargo-dist/pull/984)
+* @mistydemeo [implement fish support in installer](https://github.com/axodotdev/cargo-dist/pull/958)
+
+
 # Version 0.13.3 (2024-04-22)
 
 This minor release adds some more resilience to release.yml by explicitly enabling windows
