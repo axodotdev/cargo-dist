@@ -18,6 +18,7 @@
   - [archives](./artifacts/archives.md)
   - [checksums](./artifacts/checksums.md)
   - [symbols](./artifacts/symbols.md)
+  - [GitHub Attestations](./artifacts/github-attestations.md)
 - [CI](./ci/index.md)
   - [github](./ci/github.md)
   - [Customizing](./ci/customizing.md)
