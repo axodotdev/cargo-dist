@@ -327,7 +327,7 @@ pub struct DistMetadata {
 
     /// Publish GitHub Releases to this repo instead of the current one
     ///
-    /// The user must also set GITHUB_RELEASES_TOKEN in their SECRETS
+    /// The user must also set GH_RELEASES_TOKEN in their SECRETS
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_releases_repo: Option<GithubRepoPair>,
 

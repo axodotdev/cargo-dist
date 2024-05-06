@@ -1,5 +1,5 @@
 ---
-source: cargo-dist/tests/gallery/dist.rs
+source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
 ================ dist-manifest.json ================
@@ -463,7 +463,7 @@ jobs:
         with:
           owner: "custom-owner"
           repo: "cool-repo"
-          token: ${{ secrets.GITHUB_RELEASES_TOKEN }}
+          token: ${{ secrets.GH_RELEASES_TOKEN }}
           tag: ${{ needs.plan.outputs.tag }}
           name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
           body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}

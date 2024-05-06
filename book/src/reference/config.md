@@ -387,13 +387,19 @@ Allows specifying which runner to use for a target. The keys within this table a
 
 > since 0.14.0
 
-Example: `github-releases-repo = "mycoolowner/myrepo"`
+Example: `github-releases-repo = "myorg/public"`
 
-Allows specifying a different repo to publish GitHub Releases to than the current one. This can be used to publish to a public repo from a private one.
+Allows specifying a different repo to publish GitHub Releases to than the current one. This can be used to publish to a public repo from a private one. Let's assume you want to publish to `myorg/public` from `myorg/private`. Then in your config in `myorg/private`, you'd set `github-releases-repo = "myorg/public"`.
 
-You need to also need to create a [GitHub Personal Access Token with the "repo" scope](https://github.com/settings/tokens/new?scopes=repo) that can access the target repo, and need to add it as a GitHub SECRET called `GITHUB_RELEASES_TOKEN` **in the repo the workflow will run on**.
+To ensure the workflow has permission to do this, you need to create a [GitHub Personal Access Token with the "repo" scope](https://github.com/settings/tokens/new?scopes=repo) that can access `myorg/public`. This must be added as a GitHub SECRET called `GH_RELEASES_TOKEN` on `myorg/private`.
 
-i.e. if you're running the publish workflow in `myorg/private` and want to publish to `myorg/public`, the token needs *access* to `myorg/public`, but should be added as a SECRET to `myorg/private`.
+GitHub Releases isn't really designed for this, so there's a few strange things that will happen here:
+
+* GitHub Releases always requires a commit to be tagged, and in this case the tag would be on `myorg/public` even though the workflow is running on `myorg/private`, which (presumably) has unrelated commits. Currently **we will tag the latest commit on the [default branch](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-branches#about-the-default-branch) of `myorg/public`**. If you're using [the dispatch-releases flow](#dispatch-releases), no tag will be created on `myorg/private`.
+
+* GitHub Releases will provide a source tarball pointing at the tagged commit on `myorg/public`, but that's (presumably) not the source that your release was actually built from. This cannot be disabled, but it's also essentially harmless. However **cargo-dist uploads its own source tarball and that *WILL* contain the source of the private repo**. If you don't want this, use [the `source-tarball = false` setting](#source-tarball).
+
+In the future we'll introduce some mechanism for identifying a git submodule where the commit on `myorg/public` should be sourced from, as we expect that to be a common usecase for these kinds of remote releases.
 
 
 ### global-artifacts-jobs
