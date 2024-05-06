@@ -1114,6 +1114,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ci: None,
                 linkage: vec![],
                 upload_files: vec![],
+                github_attestations,
             },
             package_metadata,
             workspace_metadata,

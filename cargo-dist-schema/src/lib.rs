@@ -108,6 +108,8 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub upload_files: Vec<String>,
+    #[serde(default)]
+    pub github_attestations: bool,
 }
 
 /// Info about an Asset (binary)

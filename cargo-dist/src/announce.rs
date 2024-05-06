@@ -787,6 +787,18 @@ pub fn announcement_github(manifest: &mut DistManifest) {
             }
             writeln!(&mut gh_body).unwrap();
         }
+
+        if !other_artifacts.is_empty() && manifest.github_attestations {
+            writeln!(&mut gh_body, "## Verifying GitHub Artifact Attestations\n",).unwrap();
+            writeln!(&mut gh_body, "The artifacts in this release have attestations generated with GitHub Artifact Attestations. These can be verified by using the [GitHub CLI](https://cli.github.com/manual/gh_attestation_verify):").unwrap();
+            // TODO: How do we get the repo owner (org) and repo names to probide them in this example?
+            writeln!(
+                &mut gh_body,
+                "```gh attestation verify <file-path of downloaded artifact> --owener {} --repo {}```",
+                "", ""
+            )
+            // TODO: Add an example of offline verification where the attestation bundles are pre-downloaded by the user.
+        }
     }
 
     if announcing_github {
