@@ -84,6 +84,7 @@ pub(crate) fn load_and_merge_manifests(
             assets,
             ci,
             linkage,
+            github_attestations: _,
         } = manifest;
 
         // Discard clearly unrelated manifests
