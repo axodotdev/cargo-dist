@@ -576,7 +576,7 @@ jobs:
         {{%- if github_releases_repo %}}
           owner: {{{ github_releases_repo.owner }}}
           repo: {{{ github_releases_repo.repo }}}
-          token: ${{ secrets.GITHUB_RELEASES_TOKEN }}
+          token: ${{ secrets.GH_RELEASES_TOKEN }}
         {{%- endif %}}
           tag: ${{ needs.plan.outputs.tag }}
         {{%- if create_release %}}
