@@ -30,7 +30,7 @@ miette = "7.2.0"
 guppy = { version = "0.17.5", optional = true }
 tracing = "0.1.40"
 oro-common = { version = "0.3.34", optional = true }
-serde = "1.0.197"
+serde = "1.0.200"
 semver = { version = "1.0.23", optional = true, default-features = true, features = ["serde"] }
 node-semver = { version = "2.1.0", optional = true }
 oro-package-spec = { version = "0.3.34", optional = true }
