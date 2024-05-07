@@ -545,16 +545,16 @@ fn find_auto_includes_inner(dir: &Utf8Path) -> std::result::Result<AutoIncludes,
 /// This naturally cascades results.
 pub fn merge_auto_includes(info: &mut PackageInfo, auto_includes: &AutoIncludes) {
     if info.readme_file.is_none() {
-        info.readme_file = auto_includes.readme.clone();
+        info.readme_file.clone_from(&auto_includes.readme);
     }
     if info.changelog_file.is_none() {
-        info.changelog_file = auto_includes.changelog.clone();
+        info.changelog_file.clone_from(&auto_includes.changelog);
     }
     // Note that even though we allow for multiple licenses, it's supremely wonky
     // to source them from multiple locations, so if any source provides a license
     // we will ignore all the other ones.
     if info.license_files.is_empty() {
-        info.license_files = auto_includes.licenses.clone();
+        info.license_files.clone_from(&auto_includes.licenses);
     }
 }
 
