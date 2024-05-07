@@ -38,7 +38,7 @@ thiserror = "1.0.58"
 pathdiff = { version = "0.2.1", features = ["camino"] }
 itertools = "0.12.1"
 url = "2.5.0"
-parse-changelog = "0.6.5"
+parse-changelog = "0.6.8"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
