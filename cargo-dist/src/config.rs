@@ -564,10 +564,10 @@ impl DistMetadata {
 
         // Merge non-global settings
         if installers.is_none() {
-            *installers = workspace_config.installers.clone();
+            installers.clone_from(&workspace_config.installers);
         }
         if targets.is_none() {
-            *targets = workspace_config.targets.clone();
+            targets.clone_from(&workspace_config.targets);
         }
         if dist.is_none() {
             *dist = workspace_config.dist;
@@ -582,19 +582,19 @@ impl DistMetadata {
             *unix_archive = workspace_config.unix_archive;
         }
         if npm_package.is_none() {
-            *npm_package = workspace_config.npm_package.clone();
+            npm_package.clone_from(&workspace_config.npm_package);
         }
         if npm_scope.is_none() {
-            *npm_scope = workspace_config.npm_scope.clone();
+            npm_scope.clone_from(&workspace_config.npm_scope);
         }
         if checksum.is_none() {
             *checksum = workspace_config.checksum;
         }
         if install_path.is_none() {
-            *install_path = workspace_config.install_path.clone();
+            install_path.clone_from(&workspace_config.install_path);
         }
         if features.is_none() {
-            *features = workspace_config.features.clone();
+            features.clone_from(&workspace_config.features);
         }
         if default_features.is_none() {
             *default_features = workspace_config.default_features;
@@ -603,22 +603,22 @@ impl DistMetadata {
             *all_features = workspace_config.all_features;
         }
         if tap.is_none() {
-            *tap = workspace_config.tap.clone();
+            tap.clone_from(&workspace_config.tap);
         }
         if formula.is_none() {
-            *formula = workspace_config.formula.clone();
+            formula.clone_from(&workspace_config.formula);
         }
         if system_dependencies.is_none() {
-            *system_dependencies = workspace_config.system_dependencies.clone();
+            system_dependencies.clone_from(&workspace_config.system_dependencies);
         }
         if extra_artifacts.is_none() {
-            *extra_artifacts = workspace_config.extra_artifacts.clone();
+            extra_artifacts.clone_from(&workspace_config.extra_artifacts);
         }
         if github_custom_runners.is_none() {
-            *github_custom_runners = workspace_config.github_custom_runners.clone();
+            github_custom_runners.clone_from(&workspace_config.github_custom_runners);
         }
         if bin_aliases.is_none() {
-            *bin_aliases = workspace_config.bin_aliases.clone();
+            bin_aliases.clone_from(&workspace_config.bin_aliases);
         }
         if install_updater.is_none() {
             *install_updater = workspace_config.install_updater;
@@ -631,7 +631,7 @@ impl DistMetadata {
                 include.extend(workspace_include.iter().cloned());
             }
         } else {
-            *include = workspace_config.include.clone();
+            include.clone_from(&workspace_config.include);
         }
     }
 }

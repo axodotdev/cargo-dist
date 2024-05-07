@@ -1777,12 +1777,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
 
         // If tap is specified, include that in the `brew install` message
-        let mut install_target = formula.clone();
-        if let Some(tap) = &self.inner.tap {
+        let install_target = if let Some(tap) = &self.inner.tap {
             // So that, for example, axodotdev/homebrew-tap becomes axodotdev/tap
             let tap = tap.replace("/homebrew-", "/");
-            install_target = format!("{tap}/{install_target}").to_owned();
-        }
+            format!("{tap}/{formula}")
+        } else {
+            formula.clone()
+        };
 
         let hint = format!("brew install {}", install_target);
         let desc = "Install prebuilt binaries via Homebrew".to_owned();

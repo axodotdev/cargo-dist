@@ -222,7 +222,7 @@ pub(crate) fn select_tag(
             // like `init` or `generate` which just wants us to hand it everything
             // and doesn't care about coherent announcements. So use a fake tag
             // and hand it the fully unconstrained list of rust_releases.
-            announcing.tag = "v1.0.0-FAKEVER".to_owned();
+            "v1.0.0-FAKEVER".clone_into(&mut announcing.tag);
             announcing.prerelease = true;
             announcing.release = ReleaseType::Version("1.0.0-FAKEVER".parse().unwrap());
         }
