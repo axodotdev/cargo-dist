@@ -22,9 +22,6 @@ Commands:
   help        Print this message or the help of the given subcommand(s)
 
 Options:
-      --force-tag
-          Force package versions to match the tag
-
   -h, --help
           Print help (see a summary with '-h')
 
@@ -92,6 +89,9 @@ GLOBAL OPTIONS:
           If you do not specify this tag we will attempt to infer it by trying to Announce/Release every app in the workspace, succeeding only if they all have the same version. The tag selected will be "v{VERSION}".
           
           In the future we may try to make this look at the current git tags or something?
+
+      --force-tag
+          Force package versions to match the tag
 
       --allow-dirty
           Allow generated files like CI scripts to be out of date

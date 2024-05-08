@@ -20,9 +20,8 @@ Commands:
   help        Print this message or the help of the given subcommand(s)
 
 Options:
-      --force-tag  Force package versions to match the tag
-  -h, --help       Print help (see more with '--help')
-  -V, --version    Print version
+  -h, --help     Print help (see more with '--help')
+  -V, --version  Print version
 
 GLOBAL OPTIONS:
   -v, --verbose <VERBOSE>              How verbose logging should be (log level) [default: warn] [possible values: off, error, warn, info, debug, trace]
@@ -32,6 +31,7 @@ GLOBAL OPTIONS:
   -i, --installer <INSTALLER>          Installers we want to build [possible values: shell, powershell, npm, homebrew, msi]
   -c, --ci <CI>                        CI we want to support [possible values: github]
       --tag <TAG>                      The (git) tag to use for the Announcement that each invocation of cargo-dist is performing
+      --force-tag                      Force package versions to match the tag
       --allow-dirty                    Allow generated files like CI scripts to be out of date
 
 stderr:
