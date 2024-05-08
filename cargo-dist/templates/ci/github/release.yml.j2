@@ -72,6 +72,11 @@ on:
   push:
     branches:
       - {{{ release_branch }}}
+
+# don't let multiple instances of this run at the same time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
   {{%- else %}}
   push:
     tags:
@@ -127,7 +132,7 @@ jobs:
         run: |
           cargo dist
           {{%- if dispatch_releases %}} ${{ (inputs.tag && inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag))
-          {{%- elif release_branch %}} ${{ (!github.event.pull_request && 'host --steps=create')
+          {{%- elif release_branch %}} ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp')
           {{%- else %}} ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name))
           {{%- endif %}}
           {{%- if "axodotdev" in hosting_providers %}} || (env.AXO_RELEASES_TOKEN && 'host --steps=check') {{%- endif %}}
@@ -608,13 +613,6 @@ jobs:
         {{%- endif %}}
           prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
           artifacts: "artifacts/*"
-    {{%- elif workflow_dispatch or release_branch %}}
-      # TODO: if github releases are disabled AND we're using a non-tag-first workflow,
-      # then we're responsible for creating and pushing the tag!
-      - name: "tag commit"
-        run: |
-          git tag ${{ needs.plan.outputs.tag }}
-          git push origin tag ${{ needs.plan.outputs.tag }}
     {{%- endif %}}
 
 {{%- for job in post_announce_jobs %}}

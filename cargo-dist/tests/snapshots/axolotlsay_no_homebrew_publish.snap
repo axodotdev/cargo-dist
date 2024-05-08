@@ -3202,6 +3202,10 @@ on:
   push:
     branches:
       - "production"
+
+# don't let multiple instances of this run at the same time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
   pull_request:
 
 jobs:
@@ -3232,7 +3236,7 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist ${{ (!github.event.pull_request && 'host --steps=create') || (env.AXO_RELEASES_TOKEN && 'host --steps=check') || 'plan' }} --output-format=json > plan-dist-manifest.json
+          cargo dist ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp') || (env.AXO_RELEASES_TOKEN && 'host --steps=check') || 'plan' }} --output-format=json > plan-dist-manifest.json
           echo "cargo dist ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -3437,9 +3441,3 @@ jobs:
       - name: Announce Axo Releases
         run: |
           cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
-      # TODO: if github releases are disabled AND we're using a non-tag-first workflow,
-      # then we're responsible for creating and pushing the tag!
-      - name: "tag commit"
-        run: |
-          git tag ${{ needs.plan.outputs.tag }}
-          git push origin tag ${{ needs.plan.outputs.tag }}
