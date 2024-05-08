@@ -2748,7 +2748,7 @@ install(false);
   "homepage": "https://github.com/axodotdev/axolotlsay",
   "license": "MIT OR Apache-2.0",
   "name": "@axodotdev/axolotlsay",
-  "repository": "https://github.com/axodotdev/axolotlsay",
+  "repository": "https://github.com/axodotdev/axolotlsay.git",
   "scripts": {
     "fmt": "prettier --write **/*.js",
     "fmt:check": "prettier --check **/*.js",

@@ -38,7 +38,7 @@ pub static AXOLOTLSAY: TestContextLock<Tools> = TestContextLock::new(
     &Repo {
         repo_owner: "axodotdev",
         repo_name: "axolotlsay",
-        commit_sha: "e2a060a5200478616ac461dd5571c1444f3fd076",
+        commit_sha: "470fef1c2e1aecc35b1c8a704960d558906c58ff",
         app_name: "axolotlsay",
         bins: &["axolotlsay"],
     },
