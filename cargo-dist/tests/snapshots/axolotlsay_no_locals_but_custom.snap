@@ -292,6 +292,10 @@ on:
   push:
     branches:
       - "production"
+
+# don't let multiple instances of this run at the same time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
   pull_request:
 
 jobs:
@@ -321,7 +325,7 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist ${{ (!github.event.pull_request && 'host --steps=create') || 'plan' }} --output-format=json > plan-dist-manifest.json
+          cargo dist ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp') || 'plan' }} --output-format=json > plan-dist-manifest.json
           echo "cargo dist ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"

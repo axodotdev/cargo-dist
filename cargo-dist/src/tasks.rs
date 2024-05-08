@@ -749,7 +749,7 @@ pub enum CargoTargetPackages {
 pub(crate) struct DistGraphBuilder<'pkg_graph> {
     pub(crate) inner: DistGraph,
     pub(crate) manifest: DistManifest,
-    pub(crate) workspace: &'pkg_graph WorkspaceInfo,
+    pub(crate) workspace: &'pkg_graph mut WorkspaceInfo,
     artifact_mode: ArtifactMode,
     binaries_by_id: FastMap<String, BinaryIdx>,
     workspace_metadata: DistMetadata,
@@ -760,7 +760,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     pub(crate) fn new(
         system_id: SystemId,
         tools: Tools,
-        workspace: &'pkg_graph WorkspaceInfo,
+        workspace: &'pkg_graph mut WorkspaceInfo,
         artifact_mode: ArtifactMode,
         allow_all_dirty: bool,
         announcement_tag_is_implicit: bool,
@@ -2461,7 +2461,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.release_mut(release).platform_support = support;
     }
 
-    pub(crate) fn workspace(&self) -> &'pkg_graph WorkspaceInfo {
+    pub(crate) fn workspace(&self) -> &WorkspaceInfo {
         self.workspace
     }
     pub(crate) fn binary(&self, idx: BinaryIdx) -> &Binary {
@@ -2531,7 +2531,7 @@ impl DistGraph {
 pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
-    let workspace = crate::config::get_project()?;
+    let mut workspace = crate::config::get_project()?;
     let system_id = format!(
         "{}:{}:{}",
         cfg.root_cmd,
@@ -2541,7 +2541,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     let mut graph = DistGraphBuilder::new(
         system_id,
         tools,
-        &workspace,
+        &mut workspace,
         cfg.artifact_mode,
         cfg.allow_all_dirty,
         cfg.announcement_tag.is_none(),
@@ -2602,7 +2602,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
 
     // Figure out what packages we're announcing
     let announcing = announce::select_tag(
-        &graph,
+        &mut graph,
         cfg.announcement_tag.as_deref(),
         cfg.needs_coherent_announcement_tag,
     )?;
