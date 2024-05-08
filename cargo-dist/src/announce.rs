@@ -399,7 +399,7 @@ fn ensure_tag(
                 //
                 // Note that we (currently) intentionally don't use overwrite_package_versions,
                 // as this mode is intended to be for things like integrity checks
-                announcing.tag = "v1.0.0-FAKEVER".to_owned();
+                "v1.0.0-FAKEVER".clone_into(&mut announcing.tag);
                 announcing.prerelease = true;
                 announcing.release = ReleaseType::Version("1.0.0-FAKEVER".parse().unwrap());
             }
