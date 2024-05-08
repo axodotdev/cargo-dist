@@ -3191,14 +3191,14 @@ permissions:
 
 # This task will run whenever you push to "production"
 on:
+  pull_request:
   push:
     branches:
       - "production"
 
-# don't let multiple instances of this run at the same time
+# don't let multiple instances of this run at the same time on the release branch
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  pull_request:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
 
 jobs:
   # Run 'cargo dist plan' (or host) to determine what tasks we need to do
@@ -3228,12 +3228,12 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          cargo dist ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp') || (env.AXO_RELEASES_TOKEN && 'host --steps=check') || 'plan' }} --output-format=json > plan-dist-manifest.json
+          cargo dist ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp --force-tag') || (env.AXO_RELEASES_TOKEN && 'host --steps=check') || 'plan' }} --output-format=json > plan-dist-manifest.json
           echo "cargo dist ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
-          echo "tag=TODO" >> "$GITHUB_OUTPUT"
-          echo "tag-flag=TODO" >> "$GITHUB_OUTPUT"
+          echo "tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "tag-flag=--tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json) --force-tag" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
         uses: actions/upload-artifact@v4
         with:

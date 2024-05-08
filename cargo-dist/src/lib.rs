@@ -12,6 +12,7 @@
 
 use std::io::Write;
 
+use announce::{TagMode, TagSettings};
 use axoasset::{LocalAsset, RemoteAsset};
 use axoprocess::Cmd;
 use backend::{
@@ -630,7 +631,10 @@ pub fn check_integrity(cfg: &Config) -> DistResult<()> {
     // so construct a clean copy of config to run the check generate
     let check_config = Config {
         // check the whole system is in a good state
-        needs_coherent_announcement_tag: false,
+        tag_settings: TagSettings {
+            needs_coherence: false,
+            tag: TagMode::Infer,
+        },
         // don't do side-effecting networking
         create_hosting: false,
         artifact_mode: ArtifactMode::All,
@@ -639,7 +643,6 @@ pub fn check_integrity(cfg: &Config) -> DistResult<()> {
         targets: vec![],
         ci: vec![],
         installers: vec![],
-        announcement_tag: None,
         root_cmd: "check".to_owned(),
     };
     let (dist, _manifest) = tasks::gather_work(&check_config)?;

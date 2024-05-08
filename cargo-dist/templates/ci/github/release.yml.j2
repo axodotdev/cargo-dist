@@ -60,6 +60,9 @@ permissions:
 # will be marked as a prerelease.
 {{%- endif %}}
 on:
+  {{%- if pr_run_mode != "skip" %}}
+  pull_request:
+  {{%- endif %}}
   {{%- if dispatch_releases %}}
   workflow_dispatch:
     inputs:
@@ -73,17 +76,13 @@ on:
     branches:
       - {{{ release_branch }}}
 
-# don't let multiple instances of this run at the same time
+# don't let multiple instances of this run at the same time on the release branch
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   {{%- else %}}
   push:
     tags:
       - '{{%- if tag_namespace %}}{{{ tag_namespace | safe }}}{{%- endif %}}**[0-9]+.[0-9]+.[0-9]+*'
-  {{%- endif %}}
-  {{%- if pr_run_mode != "skip" %}}
-  pull_request:
   {{%- endif %}}
 
 jobs:
@@ -132,7 +131,7 @@ jobs:
         run: |
           cargo dist
           {{%- if dispatch_releases %}} ${{ (inputs.tag && inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag))
-          {{%- elif release_branch %}} ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp')
+          {{%- elif release_branch %}} ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp --force-tag')
           {{%- else %}} ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name))
           {{%- endif %}}
           {{%- if "axodotdev" in hosting_providers %}} || (env.AXO_RELEASES_TOKEN && 'host --steps=check') {{%- endif %}}
@@ -141,8 +140,8 @@ jobs:
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
           {{%- if release_branch %}}
-          echo "tag=TODO" >> "$GITHUB_OUTPUT"
-          echo "tag-flag=TODO" >> "$GITHUB_OUTPUT"
+          echo "tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "tag-flag=--tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json) --force-tag" >> "$GITHUB_OUTPUT"
           {{%- endif %}}
       - name: "Upload dist-manifest.json"
         uses: actions/upload-artifact@v4

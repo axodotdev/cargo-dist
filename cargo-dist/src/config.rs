@@ -10,6 +10,7 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
 
+use crate::announce::TagSettings;
 use crate::ProjectError;
 use crate::{
     errors::{DistError, DistResult},
@@ -648,10 +649,8 @@ impl DistMetadata {
 /// Global config for commands
 #[derive(Debug, Clone)]
 pub struct Config {
-    /// Whether we need to compute an announcement tag or if we can fudge it
-    ///
-    /// Commands like generate and init don't need announcements, but want to run gather_work
-    pub needs_coherent_announcement_tag: bool,
+    /// Settings for the announcement tag
+    pub tag_settings: TagSettings,
     /// Whether to actually try to side-effectfully create a hosting directory on a server
     ///
     /// this is used for compute_hosting
@@ -668,8 +667,6 @@ pub struct Config {
     pub ci: Vec<CiStyle>,
     /// Installers we want to generate
     pub installers: Vec<InstallerStyle>,
-    /// The (git) tag to use for this Announcement.
-    pub announcement_tag: Option<String>,
     /// What command was being invoked here, used for SystemIds
     pub root_cmd: String,
 }

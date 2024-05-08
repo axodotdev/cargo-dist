@@ -61,7 +61,7 @@ use semver::Version;
 use serde::Serialize;
 use tracing::{info, warn};
 
-use crate::announce::{self, AnnouncementTag};
+use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
@@ -2544,7 +2544,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
         &mut workspace,
         cfg.artifact_mode,
         cfg.allow_all_dirty,
-        cfg.announcement_tag.is_none(),
+        matches!(cfg.tag_settings.tag, TagMode::Infer),
     )?;
 
     // Prefer the CLI (cfg) if it's non-empty, but only select a subset
@@ -2601,11 +2601,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     info!("selected triples: {:?}", triples);
 
     // Figure out what packages we're announcing
-    let announcing = announce::select_tag(
-        &mut graph,
-        cfg.announcement_tag.as_deref(),
-        cfg.needs_coherent_announcement_tag,
-    )?;
+    let announcing = announce::select_tag(&mut graph, &cfg.tag_settings)?;
 
     // Immediately check if there's other manifests kicking around that provide info
     // we don't want to recompute (lets us move towards more of an architecture where

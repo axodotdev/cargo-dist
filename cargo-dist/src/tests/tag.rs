@@ -7,7 +7,7 @@
 use super::mock::*;
 use semver::Version;
 
-use crate::announce::select_tag;
+use crate::announce::{select_tag, TagMode, TagSettings};
 use crate::{config::ArtifactMode, DistGraphBuilder};
 
 #[test]
@@ -27,7 +27,11 @@ fn parse_one() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -52,7 +56,11 @@ fn parse_one_v() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -77,7 +85,11 @@ fn parse_one_package_v() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -102,7 +114,11 @@ fn parse_one_package() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -127,7 +143,11 @@ fn parse_one_v_alpha() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -152,7 +172,11 @@ fn parse_one_package_v_alpha() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -177,7 +201,11 @@ fn parse_one_prefix_slashv() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -202,7 +230,11 @@ fn parse_one_prefix_slash() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -227,7 +259,11 @@ fn parse_one_prefix_slash_package_v() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -252,7 +288,11 @@ fn parse_one_prefix_slash_package_slashv() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -277,7 +317,11 @@ fn parse_one_package_slashv() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -302,7 +346,11 @@ fn parse_one_prefix_slash_package_slash() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -327,7 +375,11 @@ fn parse_one_prefix_many_slash_package_slash() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -352,7 +404,11 @@ fn parse_one_package_slash() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -377,7 +433,11 @@ fn parse_one_infer() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, None, true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Infer,
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -402,7 +462,11 @@ fn parse_unified_v() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -430,7 +494,11 @@ fn parse_unified_infer() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, None, true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Infer,
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -458,7 +526,11 @@ fn parse_unified_lib() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -483,7 +555,11 @@ fn parse_disjoint_v() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -512,7 +588,11 @@ fn parse_disjoint_infer() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, None, true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Infer,
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -540,7 +620,11 @@ fn parse_disjoint_v_oddball() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -565,7 +649,11 @@ fn parse_disjoint_lib() {
         false,
     )
     .unwrap();
-    let announcing = select_tag(&mut graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
