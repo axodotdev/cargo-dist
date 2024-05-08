@@ -274,7 +274,7 @@ pub(crate) fn select_hosting(
     let hosting_providers = hosting
         .clone()
         .or_else(|| Some(vec![ci.as_ref()?.first()?.native_hosting()?]))?;
-    let repo_url = workspace.repository_url.as_ref()?;
+    let repo_url = workspace.web_url().unwrap_or_default()?;
     // Currently there's only one supported sourcehost provider
     let repo = workspace.github_repo().unwrap_or_default()?;
 
