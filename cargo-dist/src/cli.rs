@@ -1,6 +1,7 @@
 //! All the clap stuff for parsing/documenting the cli
 
 use camino::Utf8PathBuf;
+use cargo_dist::announce::{TagMode, TagSettings};
 use clap::{
     builder::{PossibleValuesParser, TypedValueParser},
     Args, Parser, Subcommand, ValueEnum,
@@ -103,6 +104,9 @@ pub struct Cli {
     #[clap(long)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub tag: Option<String>,
+    /// Force package versions to match the tag
+    #[clap(long)]
+    pub force_tag: bool,
     /// Allow generated files like CI scripts to be out of date
     #[clap(long)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
@@ -502,5 +506,25 @@ impl std::fmt::Display for HostingStyle {
             HostingStyle::Axodotdev => "axodotdev",
         };
         string.fmt(f)
+    }
+}
+
+impl Cli {
+    pub fn tag_settings(&self, needs_coherence: bool) -> TagSettings {
+        TagSettings {
+            needs_coherence,
+            tag: if let Some(tag) = &self.tag {
+                if tag == "timestamp" {
+                    assert!(self.force_tag, "TODO");
+                    TagMode::ForceMax
+                } else if self.force_tag {
+                    TagMode::Force(tag.clone())
+                } else {
+                    TagMode::Select(tag.clone())
+                }
+            } else {
+                TagMode::Infer
+            },
+        }
     }
 }

@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 //! Computing the Announcement
 //!
 //! This is both "selection of what we're announcing via the tag" and "changelog stuff"
@@ -27,6 +29,20 @@ pub(crate) struct AnnouncementTag {
     pub prerelease: bool,
     /// Which packages+bins we're announcing
     pub rust_releases: Vec<(PackageIdx, Vec<String>)>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TagSettings {
+    pub needs_coherence: bool,
+    pub tag: TagMode,
+}
+
+#[derive(Debug, Clone)]
+pub enum TagMode {
+    Infer,
+    Select(String),
+    Force(String),
+    ForceMax,
 }
 
 type ReleasesAndBins = Vec<(PackageIdx, Vec<String>)>;
@@ -164,25 +180,17 @@ fn check_dist_package(
 /// in the workspace.
 pub(crate) fn select_tag(
     graph: &mut DistGraphBuilder,
-    tag: Option<&str>,
-    needs_coherent_announcement_tag: bool,
+    settings: &TagSettings,
 ) -> DistResult<AnnouncementTag> {
-    let mut announcing = if let Some(tag) = tag {
-        // If we're given a specific real tag to use, ask axotag to parse it
-        // and identify which packages are selected by it.
-        let packages: Vec<Package> = graph
-            .workspace()
-            .packages()
-            .map(|(_, info)| Package {
-                name: info.name.clone(),
-                version: info.version.clone().map(|v| v.semver().clone()),
-            })
-            .collect();
-
-        parse_tag(&packages, tag)?
-    } else {
-        // Otherwise, start with all packages
-        PartialAnnouncementTag::default()
+    let mut announcing = match &settings.tag {
+        TagMode::Select(tag) => {
+            // If we're given a selection tag, immediately parse it to use as a selector
+            parse_tag_for_all_packages(graph, tag)?
+        }
+        TagMode::Infer | TagMode::ForceMax | TagMode::Force(_) => {
+            // Otherwise, start with all packages
+            PartialAnnouncementTag::default()
+        }
     };
 
     // Further filter down the list of packages based on whether they're "distable",
@@ -193,20 +201,10 @@ pub(crate) fn select_tag(
     require_releases(graph, &releases)?;
 
     // If we still need to compute a tag, do so now
-    ensure_tag(
-        graph,
-        &releases,
-        &mut announcing,
-        needs_coherent_announcement_tag,
-    )?;
+    ensure_tag(graph, &releases, &mut announcing, settings)?;
 
     // Make sure axotag agrees with what we did
-    require_axotag_consistency(
-        graph,
-        &announcing,
-        &releases,
-        needs_coherent_announcement_tag,
-    )?;
+    require_axotag_consistency(graph, &announcing, settings)?;
 
     // Ok, we're done, return the result
     let mut version = None;
@@ -232,26 +230,15 @@ pub(crate) fn select_tag(
 fn require_axotag_consistency(
     graph: &mut DistGraphBuilder,
     announcing: &PartialAnnouncementTag,
-    releases: &ReleasesAndBins,
-    needs_coherent_announcement_tag: bool,
+    settings: &TagSettings,
 ) -> DistResult<()> {
-    if !needs_coherent_announcement_tag {
+    if !settings.needs_coherence {
         // Don't care
         return Ok(());
     }
 
     let expected = announcing;
-    let packages = releases
-        .iter()
-        .map(|(p, _)| {
-            let info = graph.workspace().package(*p);
-            Package {
-                name: info.name.clone(),
-                version: info.version.clone().map(|v| v.semver().clone()),
-            }
-        })
-        .collect::<Vec<_>>();
-    let computed = parse_tag(&packages, &announcing.tag)?;
+    let computed = parse_tag_for_all_packages(graph, &announcing.tag)?;
 
     match (&computed.release, &expected.release) {
         (ReleaseType::Version(computed), ReleaseType::Version(expected)) => {
@@ -375,7 +362,7 @@ fn ensure_tag(
     graph: &mut DistGraphBuilder,
     releases: &ReleasesAndBins,
     announcing: &mut PartialAnnouncementTag,
-    needs_coherent_announcement_tag: bool,
+    settings: &TagSettings,
 ) -> DistResult<()> {
     // This extra logic only applies if we didn't already have a tag,
     // which would have set ReleaseType
@@ -383,34 +370,162 @@ fn ensure_tag(
         return Ok(());
     }
 
-    // Group distable packages by version, if there's only one then use that as the tag
-    let versions = possible_tags(graph, releases.iter().map(|(idx, _)| *idx));
-    if versions.len() == 1 {
-        // Nice, one version, use it
-        let version = *versions.first_key_value().unwrap().0;
-        let tag = format!("v{version}");
-        info!("inferred Announcement tag: {}", tag);
-        announcing.tag = tag;
-        announcing.prerelease = !version.pre.is_empty();
-        announcing.release = ReleaseType::Version(version.clone());
-    } else if needs_coherent_announcement_tag {
-        // More than one version, give the user some suggestions
-        let help = tag_help(
-            graph,
-            versions,
-            "Please either specify --tag, or give them all the same version",
-        );
-        return Err(DistError::TooManyUnrelatedApps { help });
-    } else {
-        // Ok we got more than one version but we're being run by a command
-        // like `init` or `generate` which just wants us to hand it everything
-        // and doesn't care about coherent announcements. So use a fake tag
-        // and hand it the fully unconstrained list of rust_releases.
-        announcing.tag = "v1.0.0-FAKEVER".to_owned();
-        announcing.prerelease = true;
-        announcing.release = ReleaseType::Version("1.0.0-FAKEVER".parse().unwrap());
+    match &settings.tag {
+        TagMode::Select(_) => {
+            unreachable!("internal dist error: tag selection should have picked a tag");
+        }
+        TagMode::Infer => {
+            // Group distable packages by version, if there's only one then use that as the tag
+            let versions = possible_tags(graph, releases.iter().map(|(idx, _)| *idx));
+            if versions.len() == 1 {
+                // Nice, one version, use it
+                let version = *versions.first_key_value().unwrap().0;
+                let tag = format!("v{version}");
+                info!("inferred Announcement tag: {}", tag);
+                *announcing = parse_tag_for_all_packages(graph, &tag)?;
+            } else if settings.needs_coherence {
+                // More than one version, give the user some suggestions
+                let help = tag_help(
+                    graph,
+                    versions,
+                    "Please either specify --tag, or give them all the same version",
+                );
+                return Err(DistError::TooManyUnrelatedApps { help });
+            } else {
+                // Ok we got more than one version but we're being run by a command
+                // like `init` or `generate` which just wants us to hand it everything
+                // and doesn't care about coherent announcements. So use a fake tag
+                // and hand it the fully unconstrained list of rust_releases.
+                //
+                // Note that we (currently) intentionally don't use overwrite_package_versions,
+                // as this mode is intended to be for things like integrity checks
+                announcing.tag = "v1.0.0-FAKEVER".to_owned();
+                announcing.prerelease = true;
+                announcing.release = ReleaseType::Version("1.0.0-FAKEVER".parse().unwrap());
+            }
+        }
+        TagMode::Force(tag) => {
+            // We've been given a tag (presumably from a previous plan step)
+            // to force all distable packages to conform to, mutating their versions to match.
+            //
+            // First, ask axotag to parse the tag for us. It doesn't matter that the version
+            // doesn't match the packages, axotag only uses the list of packages for parsing
+            // the "my-app" prefix out of my-app-v1.0.0. If the tag is just a unified version,
+            // then it will parse that out for us.
+            *announcing = parse_tag_for_all_packages(graph, tag)?;
+            match &announcing.release {
+                ReleaseType::None => {
+                    unreachable!("internal dist error: tag selection should have picked a tag")
+                }
+                ReleaseType::Version(version) => {
+                    // It was indeed a version tag, force all distable packages to have that version
+                    let packages = releases.iter().map(|(idx, _)| *idx);
+                    overwrite_package_versions(graph, packages.clone(), version);
+                }
+                ReleaseType::Package { idx, version } => {
+                    // If this was a package tag, force just that one package to have that version
+                    //
+                    // NOTE: I believe currently axotag will actually error out on an integrity
+                    // check for whether the version actually matches, so this branch is
+                    // probably useless/impossible. However if we ever drop the limit in axotag,
+                    // might as well make this work while we're thinking about this.
+                    //
+                    // ...that said this also probably requires mutating the input `releases` list
+                    overwrite_package_versions(graph, Some(PackageIdx(*idx)), version);
+                }
+            }
+        }
+        TagMode::ForceMax => {
+            // We've just been told to release all distable packages at all cost.
+            //
+            // The biggest issue with this is that they might be different versions,
+            // but we need to make a tag that axotag agrees matches all the packages
+            // we're trying to release (because e.g. axo Releases will check that server-side).
+            //
+            // So we do the following set of transforms to ensure that.
+            let packages = releases.iter().map(|(idx, _)| *idx);
+            // First, get the maximum version of all distable packages, as a way to get
+            // a "reasonable" version. This will work for a fully unified version workspace,
+            // or for a workspace where packages that didn't change are allowed to not bump ver.
+            let mut forced_version = maximum_version(graph, packages.clone()).unwrap();
+            // Add a timestamp buildid to the version so this release is unique and a prerelease.
+            timestamp_version(&mut forced_version);
+            // Overwrite all distable packages to have this new version
+            overwrite_package_versions(graph, packages.clone(), &forced_version);
+            // Make a tag for that version
+            let tag = format!("v{forced_version}");
+            // Ask axotag to make sense of it all
+            *announcing = parse_tag_for_all_packages(graph, &tag)?;
+        }
     }
+
     Ok(())
+}
+
+fn timestamp_version(version: &mut Version) {
+    // Could be optional
+    if version.pre.is_empty() {
+        version.pre = semver::Prerelease::new("alpha").unwrap();
+    }
+    // Could be git commit (but that wouldn't provide chronology well)
+    let now = std::time::SystemTime::now();
+    let secs = now.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+    // Use chrono for better format?
+    version.build = semver::BuildMetadata::new(&format!("{secs}")).unwrap();
+}
+
+fn maximum_version(
+    graph: &DistGraphBuilder,
+    packages: impl Iterator<Item = PackageIdx>,
+) -> Option<Version> {
+    let mut max_ver = None;
+    for pkg_idx in packages {
+        let version = graph
+            .workspace()
+            .package(pkg_idx)
+            .version
+            .as_ref()
+            .unwrap()
+            .cargo();
+        let Some(cur_max) = &max_ver else {
+            max_ver = Some(version.clone());
+            continue;
+        };
+        if version > cur_max {
+            max_ver = Some(version.clone());
+        }
+    }
+    max_ver
+}
+
+fn overwrite_package_versions(
+    graph: &mut DistGraphBuilder,
+    packages: impl IntoIterator<Item = PackageIdx>,
+    version: &Version,
+) {
+    for pkg_idx in packages {
+        graph.workspace.package_info[pkg_idx.0].version =
+            Some(axoproject::Version::Cargo(version.clone()));
+    }
+}
+
+fn parse_tag_for_all_packages(
+    graph: &DistGraphBuilder,
+    tag: &str,
+) -> DistResult<PartialAnnouncementTag> {
+    // If we're given a specific real tag to use, ask axotag to parse it
+    // and identify which packages are selected by it.
+    let packages: Vec<Package> = graph
+        .workspace()
+        .packages()
+        .map(|(_, info)| Package {
+            name: info.name.clone(),
+            version: info.version.clone().map(|v| v.semver().clone()),
+        })
+        .collect();
+
+    let announcing = parse_tag(&packages, tag)?;
+    Ok(announcing)
 }
 
 /// Get a list of possible version --tags to use, given a list of packages we want to Announce
