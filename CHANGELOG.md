@@ -3,6 +3,15 @@
 Nothing Yet!
 
 
+# Version 0.14.1 (2024-05-08)
+
+This is a bugfix release which fixes release announcement text for apps whose `repository` field in `Cargo.toml` ends with `.git` ([#1020](https://github.com/axodotdev/cargo-dist/issues/1020)). It also updates several dependencies and upgrades the version of Rust used to build cargo-dist to 1.78.0.
+
+## Fixes
+
+* @mistydemeo [fix: host should use web_url()](https://github.com/axodotdev/cargo-dist/pull/1024)
+
+
 # Version 0.14.0 (2024-05-06)
 
 This is a BIG release for installers, with every installer getting big bugfixes and reworks.
