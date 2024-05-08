@@ -106,6 +106,7 @@ pub struct Cli {
     pub tag: Option<String>,
     /// Force package versions to match the tag
     #[clap(long)]
+    #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub force_tag: bool,
     /// Allow generated files like CI scripts to be out of date
     #[clap(long)]
