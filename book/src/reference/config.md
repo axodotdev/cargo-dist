@@ -420,7 +420,11 @@ GitHub Releases isn't really designed for this, so there's a few strange things 
 
 * GitHub Releases will provide a source tarball pointing at the tagged commit on `myorg/public`, but that's (presumably) not the source that your release was actually built from. This cannot be disabled, but it's also essentially harmless. However **cargo-dist uploads its own source tarball and that *WILL* contain the source of the private repo**. If you don't want this, use [the `source-tarball = false` setting](#source-tarball).
 
-In the future we'll introduce some mechanism for identifying a git submodule where the commit on `myorg/public` should be sourced from, as we expect that to be a common usecase for these kinds of remote releases.
+### github-releases-submodule-path
+
+> since 0.15.0
+
+Designed for use with `github-releases-repo` above. When specified, the cached commit of the submodule at this path will be used as the commit to tag in the target repository. If not specified, the latest commit in the target repository will be used instead.
 
 
 ### global-artifacts-jobs
