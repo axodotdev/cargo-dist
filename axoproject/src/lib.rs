@@ -164,7 +164,7 @@ impl WorkspaceInfo {
         &self.package_info[idx.0]
     }
     /// Get a mutable package
-    pub fn package_mut(&mut self, idx: PackageIdx) -> &PackageInfo {
+    pub fn package_mut(&mut self, idx: PackageIdx) -> &mut PackageInfo {
         &mut self.package_info[idx.0]
     }
     /// Iterate over packages
