@@ -1,5 +1,3 @@
-#![allow(missing_docs)]
-
 //! Computing the Announcement
 //!
 //! This is both "selection of what we're announcing via the tag" and "changelog stuff"
@@ -31,18 +29,58 @@ pub(crate) struct AnnouncementTag {
     pub rust_releases: Vec<(PackageIdx, Vec<String>)>,
 }
 
+/// Settings for [`select_tag`][]
 #[derive(Debug, Clone)]
 pub struct TagSettings {
+    /// Whether the tag and versions need to be coherent with eachother.
+    ///
+    /// If false, [`select_tag`][] is allowed to make up a fake tag/version
+    /// that doesn't need to match the packages.
+    ///
+    /// This is allowed to be false for commands which are intended to
+    /// just work on the full workspace regardless of whether it ever
+    /// makes sense to actually announce the full thing at the same time.
+    ///
+    /// Notably commands like `init` and `generate` can set this false.
     pub needs_coherence: bool,
+    /// How we're tagging the announcement
     pub tag: TagMode,
 }
 
+/// How we're tagging the announcement
 #[derive(Debug, Clone)]
 pub enum TagMode {
+    /// No tag is provided, infer the result.
+    ///
+    /// If [`TagSettings::needs_coherence`][] is false, the inference
+    /// can pick some garbage to just keep things moving along.
     Infer,
+    /// The user gave us this tag, which should be parsed and used
+    /// for selecting the packages we're announcing.
     Select(String),
+    /// The user gave us this tag, and wants us to force all distable to conform to its version.
+    ///
+    /// Currently this means just mutating our own metadata on the versions, but in the future
+    /// we could actually mutate the in-tree manifests so things like
+    /// `my-app --version` report the given value.
     Force(String),
-    ForceMax,
+    /// The user just wants us to release whatever's in the tree, triggered on untagged pushes.
+    ///
+    /// This raises several ambiguities.
+    ///
+    /// First, the packages could have different versions,
+    /// but we don't really support that being the case. Or at least, we need a version to
+    /// pick for the tag, and things like axo Releases expect the tag's version to match
+    /// all the releases in the announcement.
+    ///
+    /// Second, since we're triggering on every push it's essentially guaranteed that
+    /// we'll be asked to publish a version that's already published.
+    ///
+    /// We avoid the first issue by selecting the maximum version among distable packages.
+    /// We avoid the second issue by adding a timestamp buildid to the version, making
+    /// every release with this flow a prerelease. We then use the same logic as
+    /// `TagMode::Force` to rewrite the packages versions to match this value.
+    ForceMaxAndTimestamp,
 }
 
 type ReleasesAndBins = Vec<(PackageIdx, Vec<String>)>;
@@ -187,7 +225,7 @@ pub(crate) fn select_tag(
             // If we're given a selection tag, immediately parse it to use as a selector
             parse_tag_for_all_packages(graph, tag)?
         }
-        TagMode::Infer | TagMode::ForceMax | TagMode::Force(_) => {
+        TagMode::Infer | TagMode::ForceMaxAndTimestamp | TagMode::Force(_) => {
             // Otherwise, start with all packages
             PartialAnnouncementTag::default()
         }
@@ -435,7 +473,7 @@ fn ensure_tag(
                 }
             }
         }
-        TagMode::ForceMax => {
+        TagMode::ForceMaxAndTimestamp => {
             // We've just been told to release all distable packages at all cost.
             //
             // The biggest issue with this is that they might be different versions,
@@ -462,21 +500,28 @@ fn ensure_tag(
     Ok(())
 }
 
+/// Modify
 fn timestamp_version(version: &mut Version) {
-    // Could be optional
+    // FIXME: it would be nice if this was configurable with a template
+    // the current template here is `{version}-alpha.{timestamp}`.
+    // Although as actually uses this is `{max_version}-alpha.{timestamp}`.
     if version.pre.is_empty() {
+        // FIXME?: should we actually unconditionally do this?
         version.pre = semver::Prerelease::new("alpha").unwrap();
     }
-    // Could be git commit (but that wouldn't provide chronology well)
+    // FIXME?: this could be configurable to be a git commit, but timestamps
+    // are nicer as a default (so sorting the releases works right)
     let now = std::time::SystemTime::now();
     let secs = now.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-    // Use chrono for better format?
+    // TODO?: use chrono for better format, or at least guarantee sorting work reliably
+    // (confirm how buildid sorting works in SemVer Version).
     version.build = semver::BuildMetadata::new(&format!("{secs}")).unwrap();
 }
 
+/// Get the maximum version among the given packages
 fn maximum_version(
     graph: &DistGraphBuilder,
-    packages: impl Iterator<Item = PackageIdx>,
+    packages: impl IntoIterator<Item = PackageIdx>,
 ) -> Option<Version> {
     let mut max_ver = None;
     for pkg_idx in packages {
@@ -498,6 +543,9 @@ fn maximum_version(
     max_ver
 }
 
+/// Overwrite the versions of the given packages
+///
+/// Currently this is
 fn overwrite_package_versions(
     graph: &mut DistGraphBuilder,
     packages: impl IntoIterator<Item = PackageIdx>,
@@ -509,6 +557,18 @@ fn overwrite_package_versions(
     }
 }
 
+/// Run axotag on the given tag. Primarily this exists to extract
+/// the Version from a tag, but if the tag is for a specific package,
+/// it will also identify that.
+///
+/// Note that in the case where the tag *isn't* for a specific package,
+/// axotag will happily parse any version, and doesn't care about the versions.
+///
+/// FIXME: We should probably change axotag to behave similarly for specific packages,
+/// separating out the version-match integrity check as an optional thing,
+/// as we may want to take the tag as a Force command, in which case the versions
+/// are expected to mismatch. If we do this we'll need to be careful about updating
+/// all the users of axotag, who expect that check to be done for them.
 fn parse_tag_for_all_packages(
     graph: &DistGraphBuilder,
     tag: &str,

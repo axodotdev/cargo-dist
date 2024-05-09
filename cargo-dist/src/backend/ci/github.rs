@@ -368,7 +368,7 @@ fn package_install_for_targets(
     targets: &Vec<&TargetTriple>,
     packages: &SystemDependencies,
 ) -> Option<String> {
-    // TODO handle mixed-OS targets
+    // FIXME?: handle mixed-OS targets
     for target in targets {
         match target.as_str() {
             "i686-apple-darwin" | "x86_64-apple-darwin" | "aarch64-apple-darwin" => {

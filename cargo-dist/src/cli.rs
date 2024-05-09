@@ -517,7 +517,7 @@ impl Cli {
             tag: if let Some(tag) = &self.tag {
                 if tag == "timestamp" {
                     assert!(self.force_tag, "TODO");
-                    TagMode::ForceMax
+                    TagMode::ForceMaxAndTimestamp
                 } else if self.force_tag {
                     TagMode::Force(tag.clone())
                 } else {

@@ -324,7 +324,7 @@ fn build_fake(
         }) => generate_fake_source_tarball(dist_graph, committish, prefix, target)?,
         // Or extra artifacts, which may involve real builds
         BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target)?,
-        BuildStep::Updater(_) => todo!(),
+        BuildStep::Updater(_) => unimplemented!(),
     }
     Ok(())
 }
