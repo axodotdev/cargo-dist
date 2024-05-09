@@ -144,6 +144,10 @@ pub struct GithubCiInfo {
     /// What kind of job to run on pull request
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pr_run_mode: Option<PrRunMode>,
+
+    /// A specific commit to tag in an external repository
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub external_repo_commit: Option<String>,
 }
 
 /// Github CI Matrix

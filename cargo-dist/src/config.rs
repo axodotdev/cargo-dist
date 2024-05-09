@@ -336,6 +336,11 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_releases_repo: Option<GithubRepoPair>,
 
+    /// If github-releases-repo is used, the commit ref to used will
+    /// be read from the HEAD of the submodule at this path
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_releases_submodule_path: Option<String>,
+
     /// \[unstable\] Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
@@ -418,6 +423,7 @@ impl DistMetadata {
             tag_namespace: _,
             install_updater: _,
             github_releases_repo: _,
+            github_releases_submodule_path: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -491,6 +497,7 @@ impl DistMetadata {
             tag_namespace,
             install_updater,
             github_releases_repo,
+            github_releases_submodule_path,
         } = self;
 
         // Check for global settings on local packages
@@ -526,6 +533,9 @@ impl DistMetadata {
         }
         if github_releases_repo.is_some() {
             warn!("package.metadata.dist.github-releases-repo is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_releases_submodule_path.is_some() {
+            warn!("package.metadata.dist.github-releases-submodule-path is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         // Arguably should be package-local for things like msi installers, but doesn't make sense for CI,
         // so let's not support that yet for its complexity!

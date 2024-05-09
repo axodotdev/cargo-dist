@@ -280,6 +280,14 @@ pub enum DistError {
     #[diagnostic(help("This is probably not your fault, please file an issue!"))]
     GitArchiveError {},
 
+    /// An error running `git -C path rev-parse HEAD`
+    #[error("We failed to query information about the git submodule at {path}")]
+    #[diagnostic(help("Does a submodule exist at that path? Has it been fetched with `git submodule update --init`?"))]
+    GitSubmoduleCommitError {
+        /// The path we failed to fetch
+        path: String,
+    },
+
     /// A required tool is missing
     #[error("{tool}, required to run this task, is missing")]
     #[diagnostic(help("Ensure {tool} is installed"))]
