@@ -133,7 +133,7 @@ pub struct ReleaseIdx(pub usize);
 pub struct BinaryIdx(pub usize);
 
 /// A convenience wrapper around a map of binary aliases
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct BinaryAliases(BTreeMap<String, Vec<String>>);
 
 impl BinaryAliases {
@@ -259,8 +259,6 @@ pub struct DistGraph {
     pub extra_artifacts: Vec<ExtraArtifact>,
     /// Custom GitHub runners, mapped by triple target
     pub github_custom_runners: HashMap<String, String>,
-    /// Aliases to publish binaries under, mapped source to target (ln style)
-    pub bin_aliases: BinaryAliases,
     /// LIES ALL LIES
     pub local_builds_are_lies: bool,
     /// Prefix git tags must include to be picked up (also renames release.yml)
@@ -680,6 +678,8 @@ pub struct Release {
     /// Computed support for platforms, gets iteratively refined over time, so check details
     /// as late as possible, if you can!
     pub platform_support: PlatformSupport,
+    /// Aliases to publish binaries under, mapped source to target (ln style)
+    pub bin_aliases: BinaryAliases,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -1077,9 +1077,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .github_custom_runners
                     .clone()
                     .unwrap_or_default(),
-                bin_aliases: BinaryAliases(
-                    workspace_metadata.bin_aliases.clone().unwrap_or_default(),
-                ),
                 install_updater: install_updater.unwrap_or_default(),
             },
             manifest: DistManifest {
@@ -1168,6 +1165,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .clone()
             .unwrap_or_default();
 
+        let bin_aliases = BinaryAliases(package_config.bin_aliases.clone().unwrap_or_default());
+
         let platform_support = PlatformSupport::default();
         let idx = ReleaseIdx(self.inner.releases.len());
         let id = app_name.clone();
@@ -1199,6 +1198,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             formula,
             system_dependencies,
             platform_support,
+            bin_aliases,
         });
         idx
     }
@@ -1729,7 +1729,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping shell installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-        let bin_aliases = self.inner.bin_aliases.for_targets(&target_triples);
+        let bin_aliases = release.bin_aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -1857,7 +1857,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Run))
             .map(|(name, _)| name)
             .collect();
-        let bin_aliases = self.inner.bin_aliases.for_targets(&target_triples);
+        let bin_aliases = release.bin_aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -1943,7 +1943,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping powershell installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-        let bin_aliases = self.inner.bin_aliases.for_targets(&target_triples);
+        let bin_aliases = release.bin_aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -2033,7 +2033,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("skipping npm installer: not building any supported platforms (use --artifacts=global)");
             return;
         };
-        let bin_aliases = self.inner.bin_aliases.for_targets(&target_triples);
+        let bin_aliases = release.bin_aliases.for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
