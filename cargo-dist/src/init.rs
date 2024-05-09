@@ -255,6 +255,7 @@ fn get_new_dist_metadata(
             publish_prereleases: None,
             create_release: None,
             github_releases_repo: None,
+            github_releases_submodule_path: None,
             pr_run_mode: None,
             allow_dirty: None,
             ssldotcom_windows_sign: None,
@@ -830,6 +831,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         publish_prereleases,
         create_release,
         github_releases_repo,
+        github_releases_submodule_path,
         pr_run_mode,
         allow_dirty,
         ssldotcom_windows_sign,
@@ -989,6 +991,15 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "github-releases-repo",
         "# Publish GitHub Releases to this repo instead\n",
         github_releases_repo.as_ref().map(|a| a.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "github-releases-submodule-path",
+        "# Read the commit to be tagged from the submodule at this path\n",
+        github_releases_submodule_path
+            .as_ref()
+            .map(|a| a.to_string()),
     );
 
     apply_string_or_list(

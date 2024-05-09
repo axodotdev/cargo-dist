@@ -269,6 +269,8 @@ pub struct DistGraph {
     pub install_updater: bool,
     /// Publish GitHub Releases to this other repo
     pub github_releases_repo: Option<config::GithubRepoPair>,
+    /// Read the commit to be tagged from the submodule at this path
+    pub github_releases_submodule_path: Option<String>,
 }
 
 /// Info about artifacts should be hosted
@@ -850,6 +852,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             all_features,
             create_release,
             github_releases_repo,
+            github_releases_submodule_path,
             pr_run_mode: _,
             allow_dirty,
             msvc_crt_static,
@@ -875,6 +878,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
         let tag_namespace = tag_namespace.clone();
         let github_releases_repo = github_releases_repo.clone();
+        let github_releases_submodule_path = github_releases_submodule_path.clone();
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -1040,6 +1044,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dispatch_releases,
                 create_release,
                 github_releases_repo,
+                github_releases_submodule_path,
                 ssldotcom_windows_sign,
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
@@ -2430,7 +2435,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         Ok(())
     }
 
-    fn compute_ci(&mut self) {
+    fn compute_ci(&mut self) -> DistResult<()> {
         for ci in &self.inner.ci_style {
             match ci {
                 CiStyle::Github => {
@@ -2439,16 +2444,27 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
         }
 
+        let external_repo_commit = self
+            .inner
+            .github_releases_submodule_path
+            .as_ref()
+            .map(|path| submodule_head(&self.inner.workspace_dir.join(path)))
+            .transpose()?
+            .flatten();
+
         // apply to manifest
         if !self.inner.ci_style.is_empty() {
             let CiInfo { github } = &self.inner.ci;
             let github = github.as_ref().map(|info| cargo_dist_schema::GithubCiInfo {
                 artifacts_matrix: Some(info.artifacts_matrix.clone()),
                 pr_run_mode: Some(info.pr_run_mode),
+                external_repo_commit,
             });
 
             self.manifest.ci = Some(cargo_dist_schema::CiInfo { github });
         }
+
+        Ok(())
     }
 
     fn compute_platform_support(&mut self, release: ReleaseIdx) {
@@ -2624,7 +2640,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     graph.compute_build_steps();
 
     // And now figure out how to orchestrate the result in CI
-    graph.compute_ci();
+    graph.compute_ci()?;
 
     Ok((graph.inner, graph.manifest))
 }
@@ -2793,5 +2809,36 @@ impl InstallReceipt {
             },
             binary_aliases: BTreeMap::default(),
         })
+    }
+}
+
+// Determines the *cached* HEAD for a submodule within the workspace.
+// Note that any unstaged commits, and any local changes to commit
+// history that aren't reflected by the submodule commit history,
+// won't be reflected here.
+fn submodule_head(submodule_path: &Utf8PathBuf) -> DistResult<Option<String>> {
+    let output = Cmd::new("git", "fetch cached commit for a submodule")
+        .arg("submodule")
+        .arg("status")
+        .arg("--cached")
+        .arg(submodule_path)
+        .output()
+        .map_err(|_| DistError::GitSubmoduleCommitError {
+            path: submodule_path.to_string(),
+        })?;
+
+    let line = String::from_utf8_lossy(&output.stdout);
+    // Format: one status character, commit, a space, repo name
+    let line = line.trim_start_matches([' ', '-', '+']);
+    let Some((commit, _)) = line.split_once(' ') else {
+        return Err(DistError::GitSubmoduleCommitError {
+            path: submodule_path.to_string(),
+        });
+    };
+
+    if commit.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(commit.to_owned()))
     }
 }

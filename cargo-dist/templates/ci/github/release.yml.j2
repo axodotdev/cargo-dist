@@ -577,6 +577,7 @@ jobs:
           owner: {{{ github_releases_repo.owner }}}
           repo: {{{ github_releases_repo.repo }}}
           token: ${{ secrets.GH_RELEASES_TOKEN }}
+          commit: ${{ fromJson(needs.host.outputs.val).ci.github.external_repo_commit }}
         {{%- endif %}}
           tag: ${{ needs.plan.outputs.tag }}
         {{%- if create_release %}}

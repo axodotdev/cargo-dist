@@ -60,7 +60,7 @@ pub struct GithubCiInfo {
     pub post_announce_jobs: Vec<String>,
     /// whether to create the release or assume an existing one
     pub create_release: bool,
-    /// whether to prefix release.yml and the tag pattern
+    /// external repo to release to
     pub github_releases_repo: Option<JinjaGithubRepoPair>,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,

@@ -534,6 +534,13 @@ expression: json_schema
             }
           ]
         },
+        "external_repo_commit": {
+          "description": "A specific commit to tag in an external repository",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "pr_run_mode": {
           "description": "What kind of job to run on pull request",
           "anyOf": [
