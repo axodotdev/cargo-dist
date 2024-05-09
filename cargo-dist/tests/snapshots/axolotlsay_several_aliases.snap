@@ -2006,7 +2006,7 @@ install(false);
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
         "rimraf": "^5.0.5",
-        "tar": "^7.0.1"
+        "tar": "^7.1.0"
       },
       "devDependencies": {
         "prettier": "^3.2.5"
@@ -2371,9 +2371,9 @@ install(false);
       "engines": {
         "node": ">=16 || 14 >=14.17"
       },
-      "integrity": "sha512-jYofLM5Dam9279rdkWzqHozUo4ybjdZmCsDHePy5V/PbBcVMiSZR97gmAy45aqi8CK1lG2ECd356FU86avfwUQ==",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.0.4.tgz",
-      "version": "7.0.4"
+      "integrity": "sha512-oGZRv2OT1lO2UF1zUcwdTb3wqUwI0kBGTgt/T7OdSj6M6N5m3o5uPf0AIW6lVxGGoiWUR7e2AwTE+xiwK8WQig==",
+      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.0.tgz",
+      "version": "7.1.0"
     },
     "node_modules/minizlib": {
       "dependencies": {
@@ -2583,7 +2583,7 @@ install(false);
       "dependencies": {
         "@isaacs/fs-minipass": "^4.0.0",
         "chownr": "^3.0.0",
-        "minipass": "^5.0.0",
+        "minipass": "^7.1.0",
         "minizlib": "^3.0.1",
         "mkdirp": "^3.0.1",
         "yallist": "^5.0.0"
@@ -2591,17 +2591,9 @@ install(false);
       "engines": {
         "node": ">=18"
       },
-      "integrity": "sha512-IjMhdQMZFpKsHEQT3woZVxBtCQY+0wk3CVxdRkGXEgyGa0dNS/ehPvOMr2nmfC7x5Zj2N+l6yZUpmICjLGS35w==",
-      "resolved": "https://registry.npmjs.org/tar/-/tar-7.0.1.tgz",
-      "version": "7.0.1"
-    },
-    "node_modules/tar/node_modules/minipass": {
-      "engines": {
-        "node": ">=8"
-      },
-      "integrity": "sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ==",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-5.0.0.tgz",
-      "version": "5.0.0"
+      "integrity": "sha512-ENhg4W6BmjYxl8GTaE7/h99f0aXiSWv4kikRZ9n2/JRxypZniE84ILZqimAhxxX7Zb8Px6pFdheW3EeHfhnXQQ==",
+      "resolved": "https://registry.npmjs.org/tar/-/tar-7.1.0.tgz",
+      "version": "7.1.0"
     },
     "node_modules/tunnel": {
       "engines": {
@@ -2745,7 +2737,7 @@ install(false);
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
     "rimraf": "^5.0.5",
-    "tar": "^7.0.1"
+    "tar": "^7.1.0"
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "devDependencies": {
