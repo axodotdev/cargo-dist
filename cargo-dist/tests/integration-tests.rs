@@ -392,12 +392,10 @@ installers = ["shell", "powershell", "homebrew", "npm"]
 tap = "axodotdev/homebrew-packages"
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
-hosting = ["axodotdev"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope = "@axodotdev"
 npm-package = "coolbeans"
-release-branch = "production"
 
 "#
         ))?;
