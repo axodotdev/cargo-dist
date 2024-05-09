@@ -29,12 +29,12 @@ pub(crate) struct AnnouncementTag {
     pub rust_releases: Vec<(PackageIdx, Vec<String>)>,
 }
 
-/// Settings for [`select_tag`][]
+/// Settings for `select_tag`
 #[derive(Debug, Clone)]
 pub struct TagSettings {
     /// Whether the tag and versions need to be coherent with eachother.
     ///
-    /// If false, [`select_tag`][] is allowed to make up a fake tag/version
+    /// If false, `select_tag` is allowed to make up a fake tag/version
     /// that doesn't need to match the packages.
     ///
     /// This is allowed to be false for commands which are intended to
