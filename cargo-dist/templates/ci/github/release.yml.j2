@@ -173,7 +173,7 @@ jobs:
         with:
           submodules: recursive
       {{%- if rust_version %}}
-      - name: Install Rust
+      - name: Update Rust
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - uses: swatinem/rust-cache@v2
