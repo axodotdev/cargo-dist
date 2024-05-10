@@ -10,6 +10,7 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
 
+use crate::announce::TagSettings;
 use crate::ProjectError;
 use crate::{
     errors::{DistError, DistResult},
@@ -233,6 +234,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dispatch_releases: Option<bool>,
 
+    /// Instead of triggering releases on tags, trigger on pushing to a specific branch
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub release_branch: Option<String>,
+
     /// The strategy to use for selecting a path to install things at:
     ///
     /// * `CARGO_HOME`: (default) install as if cargo did
@@ -393,6 +398,7 @@ impl DistMetadata {
             merge_tasks: _,
             build_local_artifacts: _,
             dispatch_releases: _,
+            release_branch: _,
             install_path: _,
             features: _,
             default_features: _,
@@ -466,6 +472,7 @@ impl DistMetadata {
             fail_fast,
             build_local_artifacts,
             dispatch_releases,
+            release_branch,
             install_path,
             features,
             default_features,
@@ -517,6 +524,9 @@ impl DistMetadata {
         }
         if dispatch_releases.is_some() {
             warn!("package.metadata.dist.dispatch-releases is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if release_branch.is_some() {
+            warn!("package.metadata.dist.release-branch is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if create_release.is_some() {
             warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
@@ -649,10 +659,8 @@ impl DistMetadata {
 /// Global config for commands
 #[derive(Debug, Clone)]
 pub struct Config {
-    /// Whether we need to compute an announcement tag or if we can fudge it
-    ///
-    /// Commands like generate and init don't need announcements, but want to run gather_work
-    pub needs_coherent_announcement_tag: bool,
+    /// Settings for the announcement tag
+    pub tag_settings: TagSettings,
     /// Whether to actually try to side-effectfully create a hosting directory on a server
     ///
     /// this is used for compute_hosting
@@ -669,8 +677,6 @@ pub struct Config {
     pub ci: Vec<CiStyle>,
     /// Installers we want to generate
     pub installers: Vec<InstallerStyle>,
-    /// The (git) tag to use for this Announcement.
-    pub announcement_tag: Option<String>,
     /// What command was being invoked here, used for SystemIds
     pub root_cmd: String,
 }

@@ -61,7 +61,7 @@ use semver::Version;
 use serde::Serialize;
 use tracing::{info, warn};
 
-use crate::announce::{self, AnnouncementTag};
+use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
@@ -205,6 +205,8 @@ pub struct DistGraph {
     pub dispatch_releases: bool,
     /// Whether to create a github release or edit an existing draft
     pub create_release: bool,
+    /// Trigger releases with pushes to this branch, instead of tags
+    pub release_branch: Option<String>,
     /// \[unstable\] if Some, sign binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// The desired cargo-dist version for handling this project
@@ -749,7 +751,7 @@ pub enum CargoTargetPackages {
 pub(crate) struct DistGraphBuilder<'pkg_graph> {
     pub(crate) inner: DistGraph,
     pub(crate) manifest: DistManifest,
-    pub(crate) workspace: &'pkg_graph WorkspaceInfo,
+    pub(crate) workspace: &'pkg_graph mut WorkspaceInfo,
     artifact_mode: ArtifactMode,
     binaries_by_id: FastMap<String, BinaryIdx>,
     workspace_metadata: DistMetadata,
@@ -760,7 +762,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     pub(crate) fn new(
         system_id: SystemId,
         tools: Tools,
-        workspace: &'pkg_graph WorkspaceInfo,
+        workspace: &'pkg_graph mut WorkspaceInfo,
         artifact_mode: ArtifactMode,
         allow_all_dirty: bool,
         announcement_tag_is_implicit: bool,
@@ -792,6 +794,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             fail_fast,
             build_local_artifacts,
             dispatch_releases,
+            release_branch,
             ssldotcom_windows_sign,
             tag_namespace,
             // Partially Processed elsewhere
@@ -873,6 +876,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let create_release = create_release.unwrap_or(true);
         let build_local_artifacts = build_local_artifacts.unwrap_or(true);
         let dispatch_releases = dispatch_releases.unwrap_or(false);
+        let release_branch = release_branch.clone();
         let msvc_crt_static = msvc_crt_static.unwrap_or(true);
         let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
         let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
@@ -1042,6 +1046,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 merge_tasks,
                 build_local_artifacts,
                 dispatch_releases,
+                release_branch,
                 create_release,
                 github_releases_repo,
                 github_releases_submodule_path,
@@ -2472,7 +2477,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.release_mut(release).platform_support = support;
     }
 
-    pub(crate) fn workspace(&self) -> &'pkg_graph WorkspaceInfo {
+    pub(crate) fn workspace(&self) -> &WorkspaceInfo {
         self.workspace
     }
     pub(crate) fn binary(&self, idx: BinaryIdx) -> &Binary {
@@ -2542,7 +2547,7 @@ impl DistGraph {
 pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
-    let workspace = crate::config::get_project()?;
+    let mut workspace = crate::config::get_project()?;
     let system_id = format!(
         "{}:{}:{}",
         cfg.root_cmd,
@@ -2552,10 +2557,10 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     let mut graph = DistGraphBuilder::new(
         system_id,
         tools,
-        &workspace,
+        &mut workspace,
         cfg.artifact_mode,
         cfg.allow_all_dirty,
-        cfg.announcement_tag.is_none(),
+        matches!(cfg.tag_settings.tag, TagMode::Infer),
     )?;
 
     // Prefer the CLI (cfg) if it's non-empty, but only select a subset
@@ -2612,11 +2617,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     info!("selected triples: {:?}", triples);
 
     // Figure out what packages we're announcing
-    let announcing = announce::select_tag(
-        &graph,
-        cfg.announcement_tag.as_deref(),
-        cfg.needs_coherent_announcement_tag,
-    )?;
+    let announcing = announce::select_tag(&mut graph, &cfg.tag_settings)?;
 
     // Immediately check if there's other manifests kicking around that provide info
     // we don't want to recompute (lets us move towards more of an architecture where

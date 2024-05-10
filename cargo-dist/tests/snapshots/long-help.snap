@@ -90,6 +90,9 @@ GLOBAL OPTIONS:
           
           In the future we may try to make this look at the current git tags or something?
 
+      --force-tag
+          Force package versions to match the tag
+
       --allow-dirty
           Allow generated files like CI scripts to be out of date
 

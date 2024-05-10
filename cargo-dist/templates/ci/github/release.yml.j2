@@ -27,13 +27,17 @@ name: Release
 permissions:
   contents: write
 
-{{%- if dispatch_releases %}}
+{{%- if release_branch %}}
+
+# This task will run whenever you push to {{{ release_branch }}}
+{{%- else %}}
+  {{%- if dispatch_releases %}}
 
 # This task will run whenever you workflow_dispatch with a tag that looks like a version
-{{%- else %}}
+  {{%- else %}}
 
 # This task will run whenever you push a git tag that looks like a version
-{{%- endif %}}
+  {{%- endif %}}
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
 # Various formats will be parsed into a VERSION and an optional PACKAGE_NAME, where
 # PACKAGE_NAME must be the name of a Cargo package in your workspace, and VERSION
@@ -54,7 +58,11 @@ permissions:
 #
 # If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
+{{%- endif %}}
 on:
+  {{%- if pr_run_mode != "skip" %}}
+  pull_request:
+  {{%- endif %}}
   {{%- if dispatch_releases %}}
   workflow_dispatch:
     inputs:
@@ -63,13 +71,18 @@ on:
         required: true
         default: dry-run
         type: string
+  {{%- elif release_branch %}}
+  push:
+    branches:
+      - {{{ release_branch }}}
+
+# don't let multiple instances of this run at the same time on the release branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   {{%- else %}}
   push:
     tags:
       - '{{%- if tag_namespace %}}{{{ tag_namespace | safe }}}{{%- endif %}}**[0-9]+.[0-9]+.[0-9]+*'
-  {{%- endif %}}
-  {{%- if pr_run_mode != "skip" %}}
-  pull_request:
   {{%- endif %}}
 
 jobs:
@@ -82,6 +95,10 @@ jobs:
       tag: ${{ (inputs.tag != 'dry-run' && inputs.tag) || '' }}
       tag-flag: ${{ inputs.tag && inputs.tag != 'dry-run' && format('--tag={0}', inputs.tag) || '' }}
       publishing: ${{ inputs.tag && inputs.tag != 'dry-run' }}
+      {{%- elif release_branch %}}
+      tag: ${{ steps.plan.outputs.tag }}
+      tag-flag: ${{ steps.plan.outputs.tag-flag }}
+      publishing: ${{ !github.event.pull_request }}
       {{%- else %}}
       tag: ${{ !github.event.pull_request && github.ref_name || '' }}
       tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
@@ -114,6 +131,7 @@ jobs:
         run: |
           cargo dist
           {{%- if dispatch_releases %}} ${{ (inputs.tag && inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag))
+          {{%- elif release_branch %}} ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp --force-tag')
           {{%- else %}} ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name))
           {{%- endif %}}
           {{%- if "axodotdev" in hosting_providers %}} || (env.AXO_RELEASES_TOKEN && 'host --steps=check') {{%- endif %}}
@@ -121,6 +139,10 @@ jobs:
           echo "cargo dist ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          {{%- if release_branch %}}
+          echo "tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "tag-flag=--tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json) --force-tag" >> "$GITHUB_OUTPUT"
+          {{%- endif %}}
       - name: "Upload dist-manifest.json"
         uses: actions/upload-artifact@v4
         with:

@@ -191,7 +191,7 @@ fn print_human_linkage(out: &mut Term, report: &DistManifest) -> Result<(), std:
 
 fn cmd_build(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
-        needs_coherent_announcement_tag: true,
+        tag_settings: cli.tag_settings(true),
         create_hosting: false,
         artifact_mode: args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
@@ -199,7 +199,6 @@ fn cmd_build(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
-        announcement_tag: cli.tag.clone(),
         root_cmd: "build".to_owned(),
     };
     let report = do_build(&config)?;
@@ -223,7 +222,7 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
         .collect::<Vec<_>>()
         .join(",");
     let config = cargo_dist::config::Config {
-        needs_coherent_announcement_tag: true,
+        tag_settings: cli.tag_settings(true),
         create_hosting: false,
         artifact_mode: config::ArtifactMode::All,
         no_local_paths: true,
@@ -231,7 +230,6 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
-        announcement_tag: cli.tag.clone(),
         root_cmd: format!("host:{arg_key}"),
     };
 
@@ -241,7 +239,7 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
 
 fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
-        needs_coherent_announcement_tag: true,
+        tag_settings: cli.tag_settings(true),
         create_hosting: false,
         artifact_mode: args.build_args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
@@ -249,7 +247,6 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
-        announcement_tag: cli.tag.clone(),
         root_cmd: "plan".to_owned(),
     };
     let report = do_manifest(&config)?;
@@ -273,7 +270,7 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
-        needs_coherent_announcement_tag: false,
+        tag_settings: cli.tag_settings(false),
         create_hosting: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
@@ -281,7 +278,6 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
-        announcement_tag: cli.tag.clone(),
         root_cmd: "init".to_owned(),
     };
     let args = cargo_dist::InitArgs {
@@ -296,7 +292,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
 
 fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
-        needs_coherent_announcement_tag: false,
+        tag_settings: cli.tag_settings(false),
         create_hosting: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
@@ -304,7 +300,6 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
-        announcement_tag: cli.tag.clone(),
         root_cmd: "generate".to_owned(),
     };
     let args = cargo_dist::GenerateArgs {
@@ -317,7 +312,7 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
 
 fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
-        needs_coherent_announcement_tag: false,
+        tag_settings: cli.tag_settings(false),
         create_hosting: false,
         artifact_mode: cargo_dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
@@ -325,7 +320,6 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
         targets: cli.target.clone(),
         ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
-        announcement_tag: cli.tag.clone(),
         root_cmd: "linkage".to_owned(),
     };
     let mut options = cargo_dist::linkage::LinkageArgs {

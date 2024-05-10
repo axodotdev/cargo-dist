@@ -362,6 +362,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 build-local-artifacts = false
 local-artifacts-jobs = ["./local-artifacts"]
+release-branch = "production"
 
 "#
         ))?;
@@ -1495,7 +1496,7 @@ windows-archive = ".tar.gz"
 }
 
 #[test]
-#[should_panic(expected = r#"you have no packages in your workspace with"#)]
+#[should_panic(expected = r#"no packages"#)]
 fn axoasset_basic() {
     // This is just a library so we should error with a helpful message
     let test_name = _function_name!();

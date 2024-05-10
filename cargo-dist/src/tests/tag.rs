@@ -7,27 +7,31 @@
 use super::mock::*;
 use semver::Version;
 
-use crate::announce::select_tag;
+use crate::announce::{select_tag, TagMode, TagSettings};
 use crate::{config::ArtifactMode, DistGraphBuilder};
 
 #[test]
 fn parse_one() {
     // "1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -38,21 +42,25 @@ fn parse_one() {
 #[test]
 fn parse_one_v() {
     // "v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -63,21 +71,25 @@ fn parse_one_v() {
 #[test]
 fn parse_one_package_v() {
     // "axolotlsay-v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("{BIN_AXO_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -88,21 +100,25 @@ fn parse_one_package_v() {
 #[test]
 fn parse_one_package() {
     // "axolotlsay-1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("{BIN_AXO_NAME}-{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -113,21 +129,25 @@ fn parse_one_package() {
 #[test]
 fn parse_one_v_alpha() {
     // "v1.0.0-prerelease.1" in a one package workspace
-    let workspace = workspace_just_axo_alpha();
+    let mut workspace = workspace_just_axo_alpha();
     let version: Version = BIN_AXO_VER_ALPHA.parse().unwrap();
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -138,21 +158,25 @@ fn parse_one_v_alpha() {
 #[test]
 fn parse_one_package_v_alpha() {
     // "axolotlsay-v1.0.0-prerelease.1" in a one package workspace
-    let workspace = workspace_just_axo_alpha();
+    let mut workspace = workspace_just_axo_alpha();
     let version: Version = BIN_AXO_VER_ALPHA.parse().unwrap();
     let tag = format!("{BIN_AXO_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -163,21 +187,25 @@ fn parse_one_package_v_alpha() {
 #[test]
 fn parse_one_prefix_slashv() {
     // "release/v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("release/v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -188,21 +216,25 @@ fn parse_one_prefix_slashv() {
 #[test]
 fn parse_one_prefix_slash() {
     // "release/1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("release/{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -213,21 +245,25 @@ fn parse_one_prefix_slash() {
 #[test]
 fn parse_one_prefix_slash_package_v() {
     // "release/axolotlsay-v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("release/{BIN_AXO_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -238,21 +274,25 @@ fn parse_one_prefix_slash_package_v() {
 #[test]
 fn parse_one_prefix_slash_package_slashv() {
     // "releases/axolotlsay/v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("releases/{BIN_AXO_NAME}/v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -263,21 +303,25 @@ fn parse_one_prefix_slash_package_slashv() {
 #[test]
 fn parse_one_package_slashv() {
     // "releases/axolotlsay/v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("{BIN_AXO_NAME}/v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -288,21 +332,25 @@ fn parse_one_package_slashv() {
 #[test]
 fn parse_one_prefix_slash_package_slash() {
     // "releases/axolotlsay/v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("releases/{BIN_AXO_NAME}/{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -313,21 +361,25 @@ fn parse_one_prefix_slash_package_slash() {
 #[test]
 fn parse_one_prefix_many_slash_package_slash() {
     // "releases/axolotlsay/v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("blah/blah/releases/{BIN_AXO_NAME}/{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -338,21 +390,25 @@ fn parse_one_prefix_many_slash_package_slash() {
 #[test]
 fn parse_one_package_slash() {
     // "releases/axolotlsay/v1.0.0" in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("{BIN_AXO_NAME}/{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -363,21 +419,25 @@ fn parse_one_package_slash() {
 #[test]
 fn parse_one_infer() {
     // Provide no explicit tag in a one package workspace
-    let workspace = workspace_just_axo();
+    let mut workspace = workspace_just_axo();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, None, true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Infer,
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -388,21 +448,25 @@ fn parse_one_infer() {
 #[test]
 fn parse_unified_v() {
     // "v1.0.0" in a unified workspace
-    let workspace = workspace_unified();
+    let mut workspace = workspace_unified();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -416,21 +480,25 @@ fn parse_unified_v() {
 #[test]
 fn parse_unified_infer() {
     // Provide no explicit tag in a unified workspace
-    let workspace = workspace_unified();
+    let mut workspace = workspace_unified();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, None, true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Infer,
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -444,21 +512,25 @@ fn parse_unified_infer() {
 #[test]
 fn parse_unified_lib() {
     // trying to explicitly publish a library in a unified workspace
-    let workspace = workspace_unified();
+    let mut workspace = workspace_unified();
     let version: Version = LIB_SOME_VER.parse().unwrap();
     let tag = format!("{LIB_SOME_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -469,21 +541,25 @@ fn parse_unified_lib() {
 #[test]
 fn parse_disjoint_v() {
     // selecting the bulk packages in a disjoint workspace
-    let workspace = workspace_disjoint();
+    let mut workspace = workspace_disjoint();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -498,21 +574,25 @@ fn parse_disjoint_v() {
 #[should_panic = "TooManyUnrelatedApps"]
 fn parse_disjoint_infer() {
     // Provide no explicit tag in a disjoint workspace (SHOULD FAIL!)
-    let workspace = workspace_disjoint();
+    let mut workspace = workspace_disjoint();
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, None, true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Infer,
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -526,21 +606,25 @@ fn parse_disjoint_infer() {
 #[test]
 fn parse_disjoint_v_oddball() {
     // selecting the oddball package in a disjoint workspace
-    let workspace = workspace_disjoint();
+    let mut workspace = workspace_disjoint();
     let version: Version = BIN_ODDBALL_VER.parse().unwrap();
     let tag = format!("v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
@@ -551,21 +635,25 @@ fn parse_disjoint_v_oddball() {
 #[test]
 fn parse_disjoint_lib() {
     // trying to explicitly publish a library in a disjoint workspace
-    let workspace = workspace_disjoint();
+    let mut workspace = workspace_disjoint();
     let version: Version = LIB_OTHER_VER.parse().unwrap();
     let tag = format!("{LIB_OTHER_NAME}-v{version}");
 
     let tools = mock_tools();
-    let graph = DistGraphBuilder::new(
+    let mut graph = DistGraphBuilder::new(
         "a".to_owned(),
         tools,
-        &workspace,
+        &mut workspace,
         ArtifactMode::All,
         true,
         false,
     )
     .unwrap();
-    let announcing = select_tag(&graph, Some(&tag), true).unwrap();
+    let settings = TagSettings {
+        needs_coherence: true,
+        tag: TagMode::Select(tag.clone()),
+    };
+    let announcing = select_tag(&mut graph, &settings).unwrap();
 
     assert!(!announcing.prerelease);
     assert_eq!(announcing.tag, tag);
