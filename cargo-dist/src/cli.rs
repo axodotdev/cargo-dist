@@ -516,7 +516,10 @@ impl Cli {
             needs_coherence,
             tag: if let Some(tag) = &self.tag {
                 if tag == "timestamp" {
-                    assert!(self.force_tag, "TODO");
+                    assert!(
+                        self.force_tag,
+                        "--tag=timestamp currently requires --force-tag"
+                    );
                     TagMode::ForceMaxAndTimestamp
                 } else if self.force_tag {
                     TagMode::Force(tag.clone())

@@ -32,7 +32,7 @@ pub(crate) struct AnnouncementTag {
 /// Settings for `select_tag`
 #[derive(Debug, Clone)]
 pub struct TagSettings {
-    /// Whether the tag and versions need to be coherent with eachother.
+    /// Whether the tag and versions need to be coherent with each other.
     ///
     /// If false, `select_tag` is allowed to make up a fake tag/version
     /// that doesn't need to match the packages.
@@ -287,17 +287,17 @@ fn require_axotag_consistency(
         }
         (
             ReleaseType::Package {
-                idx: _,
-                version: computed_version,
+                version: computed_ver,
+                ..
             },
             ReleaseType::Package {
-                idx: _,
-                version: expected_version,
+                version: expected_ver,
+                ..
             },
         ) => {
             // FIXME: compare indices (use original package list to make them comparable?)
             assert_eq!(
-                computed_version, expected_version,
+                computed_ver, expected_ver,
                 "internal dist error: axotag parsed a different version from tag"
             );
         }
@@ -500,7 +500,7 @@ fn ensure_tag(
     Ok(())
 }
 
-/// Modify
+/// Modify the version to include a timestamp in the prerelease portion
 fn timestamp_version(version: &mut Version) {
     // FIXME: it would be nice if this was configurable with a template
     // the current template here is `{version}-alpha.{timestamp}`.
@@ -509,12 +509,9 @@ fn timestamp_version(version: &mut Version) {
         // FIXME?: should we actually unconditionally do this?
         version.pre = semver::Prerelease::new("alpha").unwrap();
     }
-    // FIXME?: this could be configurable to be a git commit, but timestamps
-    // are nicer as a default (so sorting the releases works right)
     let now = std::time::SystemTime::now();
     let secs = now.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-    // TODO?: use chrono for better format, or at least guarantee sorting work reliably
-    // (confirm how buildid sorting works in SemVer Version).
+    // FIXME?: use chrono for better format
     version.build = semver::BuildMetadata::new(&format!("{secs}")).unwrap();
 }
 
@@ -523,24 +520,12 @@ fn maximum_version(
     graph: &DistGraphBuilder,
     packages: impl IntoIterator<Item = PackageIdx>,
 ) -> Option<Version> {
-    let mut max_ver = None;
-    for pkg_idx in packages {
-        let version = graph
-            .workspace()
-            .package(pkg_idx)
-            .version
-            .as_ref()
-            .unwrap()
-            .cargo();
-        let Some(cur_max) = &max_ver else {
-            max_ver = Some(version.clone());
-            continue;
-        };
-        if version > cur_max {
-            max_ver = Some(version.clone());
-        }
-    }
-    max_ver
+    packages
+        .into_iter()
+        .filter_map(|pkg_idx| graph.workspace().package(pkg_idx).version.as_ref())
+        .map(|v| v.cargo())
+        .max()
+        .cloned()
 }
 
 /// Overwrite the versions of the given packages
