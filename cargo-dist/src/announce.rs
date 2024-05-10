@@ -509,13 +509,14 @@ fn timestamp_version(version: &mut Version) {
         // FIXME?: should we actually unconditionally do this?
         version.pre = semver::Prerelease::new("alpha").unwrap();
     }
+
     // FIXME?: this could be configurable to be a git commit, but timestamps
     // are nicer as a default (so sorting the releases works right)
     let now = std::time::SystemTime::now();
     let secs = now.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
     // TODO?: use chrono for better format, or at least guarantee sorting work reliably
     // (confirm how buildid sorting works in SemVer Version).
-    version.build = semver::BuildMetadata::new(&format!("{secs}")).unwrap();
+    version.pre = semver::Prerelease::new(&format!("{}.{}", version.pre, secs)).unwrap();
 }
 
 /// Get the maximum version among the given packages
