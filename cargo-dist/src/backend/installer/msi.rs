@@ -5,7 +5,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use tracing::info;
 use wix::print::{wxs::WxsRenders, RenderOutput};
 
-use crate::{backend::diff_files, config, errors::*};
+use crate::{backend::diff_files, config, errors::*, DistGraph};
 
 const METADATA_WIX: &str = "wix";
 const WIX_GUID_KEYS: &[&str] = &["upgrade-guid", "path-guid"];
@@ -33,7 +33,7 @@ impl MsiInstallerInfo {
     ///
     /// Note that this assumes `write_wsx_to_disk` was run beforehand (via `cargo dist generate`),
     /// which should be enforced by `check_wsx` (via `cargo dist generate --check`).
-    pub fn build(&self) -> DistResult<()> {
+    pub fn build(&self, dist: &DistGraph) -> DistResult<()> {
         info!("building an msi: {}", self.file_path);
 
         let mut b = wix::create::Builder::new();
@@ -60,6 +60,7 @@ impl MsiInstallerInfo {
         })?;
 
         assert!(self.file_path.exists());
+        dist.signer.sign(&self.file_path)?;
         Ok(())
     }
 

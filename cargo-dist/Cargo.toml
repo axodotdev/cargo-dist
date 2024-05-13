@@ -37,12 +37,11 @@ axoupdater = { version = "0.6.4", optional = true }
 # Features used by the cli and library
 axotag = "0.2.0"
 cargo-dist-schema = { version = "=0.15.0-prerelease.19", path = "../cargo-dist-schema" }
-axoasset = { version = "0.9.3", features = ["json-serde", "toml-serde", "toml-edit", "compression"] }
+axoasset = { version = "0.9.3", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
 axoprocess = { version = "0.2.0" }
 axoproject = { version = "0.7.1", default-features = false, features = ["cargo-projects", "generic-projects"] }
 gazenot = { version = "0.3.1" }
-reqwest = { version = "0.12.4", default-features = false, features = ["blocking", "rustls-tls"] }
-
+reqwest = { version = "0.11.27", default-features = false, features = ["blocking", "rustls-tls"] }
 comfy-table = "7.1.1"
 miette = { version = "7.2.0" }
 thiserror = "1.0.61"
