@@ -187,6 +187,8 @@ impl BuildExpectations {
             .as_ref()
             .expect("bin src_path should have been checked by caller");
 
+        dist.signer.sign(src_path)?;
+
         // If we're faking it, don't run the linkage stuff
         let linkage = if self.fake {
             // FIXME: fake this more interestingly!

@@ -49,6 +49,7 @@ mod init;
 pub mod linkage;
 pub mod manifest;
 pub mod platform;
+pub mod sign;
 pub mod tasks;
 #[cfg(test)]
 mod tests;
@@ -676,17 +677,15 @@ fn generate_installer(
     manifest: &DistManifest,
 ) -> DistResult<()> {
     match style {
-        InstallerImpl::Shell(info) => {
-            installer::shell::write_install_sh_script(&dist.templates, info)?
-        }
+        InstallerImpl::Shell(info) => installer::shell::write_install_sh_script(dist, info)?,
         InstallerImpl::Powershell(info) => {
-            installer::powershell::write_install_ps_script(&dist.templates, info)?
+            installer::powershell::write_install_ps_script(dist, info)?
         }
-        InstallerImpl::Npm(info) => installer::npm::write_npm_project(&dist.templates, info)?,
+        InstallerImpl::Npm(info) => installer::npm::write_npm_project(dist, info)?,
         InstallerImpl::Homebrew(info) => {
-            installer::homebrew::write_homebrew_formula(&dist.templates, dist, info, manifest)?
+            installer::homebrew::write_homebrew_formula(dist, info, manifest)?
         }
-        InstallerImpl::Msi(info) => info.build()?,
+        InstallerImpl::Msi(info) => info.build(dist)?,
     }
     Ok(())
 }
