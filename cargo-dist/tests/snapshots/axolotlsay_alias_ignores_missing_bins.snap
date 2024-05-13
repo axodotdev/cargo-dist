@@ -375,6 +375,11 @@ install() {
 
     # The actual path we're going to install to
     local _install_dir
+    # The install prefix we write to the receipt.
+    # For organized install methods like CargoHome, which have
+    # subdirectories, this is the root without `/bin`. For other
+    # methods, this is the same as `_install_dir`.
+    local _receipt_install_dir
     # Path to the an shell script that adds install_dir to PATH
     local _env_script_path
     # Potentially-late-bound version of install_dir to write env_script
@@ -386,6 +391,7 @@ install() {
     # if we're overriding it.
     if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+        _receipt_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
@@ -393,6 +399,7 @@ install() {
     if [ -z "${_install_dir:-}" ]; then
         # first try $CARGO_HOME, then fallback to $HOME/.cargo
         if [ -n "${CARGO_HOME:-}" ]; then
+            _receipt_install_dir="$CARGO_HOME"
             _install_dir="$CARGO_HOME/bin"
             _env_script_path="$CARGO_HOME/env"
             # Initially make this early-bound to erase the potentially-temporary env-var
@@ -408,6 +415,7 @@ install() {
                 fi
             fi
         elif [ -n "${HOME:-}" ]; then
+            _receipt_install_dir="$HOME/.cargo"
             _install_dir="$HOME/.cargo/bin"
             _env_script_path="$HOME/.cargo/env"
             _install_dir_expr='$HOME/.cargo/bin'
@@ -426,7 +434,7 @@ install() {
     _fish_env_script_path_expr="${_env_script_path_expr}.fish"
 
     # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_receipt_install_dir,")
     # Also replace the aliases with the arch-specific one
     RECEIPT=$(echo "$RECEIPT" | sed "s'\"binary_aliases\":{}'\"binary_aliases\":$(json_binary_aliases "$_arch")'")
 
@@ -1235,12 +1243,19 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   $info = $platforms[$arch]
 
+  # The actual path we're going to install to
   $dest_dir = $null
+  # The install prefix we write to the receipt.
+  # For organized install methods like CargoHome, which have
+  # subdirectories, this is the root without `/bin`. For other
+  # methods, this is the same as `_install_dir`.
+  $receipt_dest_dir = $null
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
 
     $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+    $receipt_dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }
   if (-Not $dest_dir) {
     # first try $env:CARGO_HOME, then fallback to $HOME
@@ -1254,6 +1269,7 @@ function Invoke-Installer($bin_paths, $platforms) {
     }
 
     $dest_dir = Join-Path $root "bin"
+    $receipt_dest_dir = $root
   }
 
   # Looks like all of the above assignments failed
@@ -1262,7 +1278,7 @@ function Invoke-Installer($bin_paths, $platforms) {
   }
 
   # The replace call here ensures proper escaping is inlined into the receipt
-  $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $dest_dir.replace("\", "\\"))
+  $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $receipt_dest_dir.replace("\", "\\"))
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
   Write-Information "Installing to $dest_dir"

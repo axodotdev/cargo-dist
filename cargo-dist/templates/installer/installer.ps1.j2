@@ -207,7 +207,13 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   $info = $platforms[$arch]
 
+  # The actual path we're going to install to
   $dest_dir = $null
+  # The install prefix we write to the receipt.
+  # For organized install methods like CargoHome, which have
+  # subdirectories, this is the root without `/bin`. For other
+  # methods, this is the same as `_install_dir`.
+  $receipt_dest_dir = $null
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
@@ -216,6 +222,7 @@ function Invoke-Installer($bin_paths, $platforms) {
 {%- else -%}
     $dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
 {%- endif %}
+    $receipt_dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }
 {%- for install_path in install_paths %}
   if (-Not $dest_dir) {
@@ -231,16 +238,19 @@ function Invoke-Installer($bin_paths, $platforms) {
     }
 
     $dest_dir = Join-Path $root "bin"
+    $receipt_dest_dir = $root
 {%- elif install_path.kind == "HomeSubdir" %}
     # Install to $HOME/{{ install_path.subdir }}
     $dest_dir = if (($base_dir = $HOME)) {
       Join-Path $base_dir "{{ install_path.subdir }}"
     }
+    $receipt_dest_dir = $dest_dir
 {%- elif install_path.kind == "EnvSubdir" %}
     # Install to $env:{{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}
     $dest_dir = if (($base_dir = $env:{{ install_path.env_key }})) {
       Join-Path $base_dir "{{ install_path.subdir }}"
     }
+    $receipt_dest_dir = $dest_dir
 {%- else %}
     {{ error("unimplemented install_path format: " ~ install_path.kind) }}
 {%- endif %}
@@ -253,7 +263,7 @@ function Invoke-Installer($bin_paths, $platforms) {
   }
 
   # The replace call here ensures proper escaping is inlined into the receipt
-  $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $dest_dir.replace("\", "\\"))
+  $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $receipt_dest_dir.replace("\", "\\"))
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
   Write-Information "Installing to $dest_dir"
