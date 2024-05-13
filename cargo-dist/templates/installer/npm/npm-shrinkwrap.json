@@ -13,7 +13,7 @@
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
-        "rimraf": "^5.0.5",
+        "rimraf": "^5.0.7",
         "tar": "^7.1.0"
       },
       "devDependencies": {
@@ -449,9 +449,9 @@
       "integrity": "sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg=="
     },
     "node_modules/rimraf": {
-      "version": "5.0.5",
-      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-5.0.5.tgz",
-      "integrity": "sha512-CqDakW+hMe/Bz202FPEymy68P+G50RfMQK+Qo5YUqc9SPipvbGjCGKd0RSKEelbsfQuw3g5NZDSrlZZAJurH1A==",
+      "version": "5.0.7",
+      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-5.0.7.tgz",
+      "integrity": "sha512-nV6YcJo5wbLW77m+8KjH8aB/7/rxQy9SZ0HY5shnwULfS+9nmTtVXAJET5NdZmCzA4fPI/Hm1wo/Po/4mopOdg==",
       "dependencies": {
         "glob": "^10.3.7"
       },
@@ -459,7 +459,7 @@
         "rimraf": "dist/esm/bin.mjs"
       },
       "engines": {
-        "node": ">=14"
+        "node": ">=14.18"
       },
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
