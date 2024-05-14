@@ -323,6 +323,11 @@ install() {
 
     # The actual path we're going to install to
     local _install_dir
+    # The install prefix we write to the receipt.
+    # For organized install methods like CargoHome, which have
+    # subdirectories, this is the root without `/bin`. For other
+    # methods, this is the same as `_install_dir`.
+    local _receipt_install_dir
     # Path to the an shell script that adds install_dir to PATH
     local _env_script_path
     # Potentially-late-bound version of install_dir to write env_script
@@ -335,11 +340,13 @@ install() {
     if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
     {%- if install_paths | selectattr("kind", "equalto", "CargoHome") %}
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+        _receipt_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
     {%- else %}
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _receipt_install_dir="$_install_dir"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR")"
         _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
@@ -351,6 +358,7 @@ install() {
     {%- if install_path.kind == "CargoHome" %}
         # first try $CARGO_HOME, then fallback to $HOME/.cargo
         if [ -n "${CARGO_HOME:-}" ]; then
+            _receipt_install_dir="$CARGO_HOME"
             _install_dir="$CARGO_HOME/bin"
             _env_script_path="$CARGO_HOME/env"
             # Initially make this early-bound to erase the potentially-temporary env-var
@@ -366,6 +374,7 @@ install() {
                 fi
             fi
         elif [ -n "${HOME:-}" ]; then
+            _receipt_install_dir="$HOME/.cargo"
             _install_dir="$HOME/.cargo/bin"
             _env_script_path="$HOME/.cargo/env"
             _install_dir_expr='$HOME/.cargo/bin'
@@ -375,6 +384,7 @@ install() {
         # Install to $HOME/{{ install_path.subdir }}
         if [ -n "${HOME:-}" ]; then
             _install_dir="$HOME/{{ install_path.subdir }}"
+            _receipt_install_dir="$_install_dir"
             _env_script_path="$HOME/{{ install_path.subdir }}/env"
             _install_dir_expr='$HOME/{{ install_path.subdir }}'
             _env_script_path_expr='$HOME/{{ install_path.subdir }}/env'
@@ -383,6 +393,7 @@ install() {
         # Install to ${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}
         if [ -n "{{ "${" }}{{ install_path.env_key }}:-}" ]; then
             _install_dir="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}"
+            _receipt_install_dir="$_install_dir"
             _env_script_path="${{ install_path.env_key }}{% if install_path.subdir | length %}/{% endif %}{{ install_path.subdir }}/env"
             _install_dir_expr="$(replace_home "$_install_dir")"
             _env_script_path_expr="$(replace_home "$_env_script_path")"
@@ -404,7 +415,7 @@ install() {
     _fish_env_script_path_expr="${_env_script_path_expr}.fish"
 
     # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_install_dir,")
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_receipt_install_dir,")
     # Also replace the aliases with the arch-specific one
     RECEIPT=$(echo "$RECEIPT" | sed "s'\"binary_aliases\":{}'\"binary_aliases\":$(json_binary_aliases "$_arch")'")
 

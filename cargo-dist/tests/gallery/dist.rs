@@ -354,6 +354,28 @@ impl DistResult {
             release_type: String,
         }
 
+        let toml = axoasset::SourceFile::load_local("Cargo.toml")
+            .unwrap()
+            .deserialize_toml_edit()
+            .unwrap();
+        let metadata = toml
+            .get("workspace")
+            .and_then(|t| t.get("metadata"))
+            .and_then(|t| t.get("dist"))
+            .unwrap();
+
+        // If not defined, or if it's one string that equals CARGO_HOME,
+        // we have a prefix-style layout and the receipt will specify
+        // the parent instead of the bin dir.
+        let mut receipt_dir = bin_dir;
+        if let Some(install_path) = metadata.get("install-path") {
+            if install_path.as_str() == Some("CARGO_HOME") {
+                receipt_dir = bin_dir.parent().unwrap();
+            }
+        } else {
+            receipt_dir = bin_dir.parent().unwrap();
+        }
+
         assert!(receipt_file.exists());
         let receipt_src = SourceFile::load_local(receipt_file).expect("couldn't load receipt file");
         let receipt: InstallReceipt = receipt_src.deserialize_json().unwrap();
@@ -371,7 +393,7 @@ impl DistResult {
             .trim_end_matches('/')
             .trim_end_matches('\\')
             .to_owned();
-        let expected_bin_dir = bin_dir
+        let expected_bin_dir = receipt_dir
             .to_string()
             .trim_end_matches('/')
             .trim_end_matches('\\')
