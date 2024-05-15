@@ -67,7 +67,7 @@ temp-dir = "0.1.13"
 
 [dev-dependencies]
 homedir = "0.2.1"
-insta = { version = "1.38.0", features = ["filters"] }
+insta = { version = "1.39.0", features = ["filters"] }
 tar = "0.4.38"
 flate2 = "1.0.30"
 
