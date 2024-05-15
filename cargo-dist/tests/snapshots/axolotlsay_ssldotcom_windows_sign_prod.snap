@@ -447,6 +447,7 @@ install() {
     say "everything's installed!"
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
+        add_install_dir_to_ci_path "$_install_dir"
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile" "sh"
         exit1=$?
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc" "sh"
@@ -489,6 +490,22 @@ print_home_for_script() {
     esac
 
     echo "$_home"
+}
+
+add_install_dir_to_ci_path() {
+    # Attempt to do CI-specific rituals to get the install-dir on PATH faster
+    local _install_dir="$1"
+
+    # If GITHUB_PATH is present, then write install_dir to the file it refs.
+    # After each GitHub Action, the contents will be added to PATH.
+    # So if you put a curl | sh for this script in its own "run" step,
+    # the next step will have this dir on PATH.
+    #
+    # Note that GITHUB_PATH will not resolve any variables, so we in fact
+    # want to write install_dir and not install_dir_expr
+    if [ -n "${GITHUB_PATH:-}" ]; then
+        ensure echo "$_install_dir" >> "$GITHUB_PATH"
+    fi
 }
 
 add_install_dir_to_path() {
@@ -1240,10 +1257,25 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   Write-Information "Everything's installed!"
   if (-not $NoModifyPath) {
+    Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {
         Write-Information ""
         Write-Information "$dest_dir was added to your PATH, you may need to restart your shell for that to take effect."
     }
+  }
+}
+
+# Attempt to do CI-specific rituals to get the install-dir on PATH faster
+function Add-Ci-Path($OrigPathToAdd) {
+  # If GITHUB_PATH is present, then write install_dir to the file it refs.
+  # After each GitHub Action, the contents will be added to PATH.
+  # So if you put a curl | sh for this script in its own "run" step,
+  # the next step will have this dir on PATH.
+  #
+  # Note that GITHUB_PATH will not resolve any variables, so we in fact
+  # want to write the install dir and not an expression that evals to it
+  if (($gh_path = $env:GITHUB_PATH)) {
+    Write-Output "$OrigPathToAdd" | Out-File -FilePath "$gh_path" -Encoding utf8 -Append
   }
 }
 
