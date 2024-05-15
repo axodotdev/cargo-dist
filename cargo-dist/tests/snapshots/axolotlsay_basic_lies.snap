@@ -1808,7 +1808,14 @@ class Package {
   }
 
   exists() {
-    return existsSync(this.binaryPath);
+    for (const binaryName in this.binaries) {
+      const binRelPath = this.binaries[binaryName];
+      const binPath = join(this.installDirectory, binRelPath);
+      if (!existsSync(binPath)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   install(fetchOptions, suppressLogs = false) {
@@ -1999,17 +2006,6 @@ const install = (suppressLogs) => {
 const run = (binaryName) => {
   const package = getPackage();
   const proxy = configureProxy(package.url);
-
-  // If no binaryName is specified, and there's one that matches the app, use that
-  if (!binaryName && package.binaries[name]) {
-    binaryName = name;
-  }
-
-  // If no binaryName is specified and there's only one binary, use that
-  const binNames = Object.keys(package.binaries);
-  if (!binaryName && binNames.length == 1) {
-    binaryName = binNames[0];
-  }
 
   package.run(binaryName, proxy);
 };
@@ -2842,8 +2838,8 @@ install(false);
 ================ npm-package.tar.gz/package/run-axolotlsay.js ================
 #!/usr/bin/env node
 
-const { run, install: maybeInstall } = require("./binary");
-maybeInstall(true).then(() => run("axolotlsay"));
+const { run } = require("./binary");
+run("axolotlsay");
 
 ================ dist-manifest.json ================
 {
