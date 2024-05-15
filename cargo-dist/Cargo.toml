@@ -41,7 +41,7 @@ axoasset = { version = "0.9.3", features = ["json-serde", "toml-serde", "toml-ed
 axoprocess = { version = "0.2.0" }
 axoproject = { version = "0.7.1", default-features = false, features = ["cargo-projects", "generic-projects"] }
 gazenot = { version = "0.3.1" }
-octocrab = "0.38.0"
+reqwest = { version = "0.11.27", features = ["blocking"] }
 
 comfy-table = "7.1.1"
 miette = { version = "7.2.0" }
