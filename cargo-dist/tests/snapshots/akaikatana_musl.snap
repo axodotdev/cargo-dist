@@ -465,6 +465,7 @@ install() {
     say "everything's installed!"
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
+        add_install_dir_to_ci_path "$_install_dir"
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile" "sh"
         exit1=$?
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc" "sh"
@@ -509,6 +510,22 @@ print_home_for_script() {
     echo "$_home"
 }
 
+add_install_dir_to_ci_path() {
+    # Attempt to do CI-specific rituals to get the install-dir on PATH faster
+    local _install_dir="$1"
+
+    # If GITHUB_PATH is present, then write install_dir to the file it refs.
+    # After each GitHub Action, the contents will be added to PATH.
+    # So if you put a curl | sh for this script in its own "run" step,
+    # the next step will have this dir on PATH.
+    #
+    # Note that GITHUB_PATH will not resolve any variables, so we in fact
+    # want to write install_dir and not install_dir_expr
+    if [ -n "${GITHUB_PATH:-}" ]; then
+        ensure echo "$_install_dir" >> "$GITHUB_PATH"
+    fi
+}
+
 add_install_dir_to_path() {
     # Edit rcfiles ($HOME/.profile) to add install_dir to $PATH
     #
@@ -522,12 +539,6 @@ add_install_dir_to_path() {
     local _env_script_path_expr="$3"
     local _rcfiles="$4"
     local _shell="$5"
-
-    # Are we in GitHub CI? Let's add it to GITHUB_PATH, which
-    # puts the given directory on PATH in the next GitHub Action
-    if [ -n "${GITHUB_PATH:-}" ]; then
-        ensure echo "$_install_dir_expr" >> "$GITHUB_PATH"
-    fi
 
     if [ -n "${HOME:-}" ]; then
         local _target
