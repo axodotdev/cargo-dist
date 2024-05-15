@@ -2,7 +2,7 @@ const { Package } = require("./binary-install");
 const os = require("os");
 const cTable = require("console.table");
 const libc = require("detect-libc");
-const { configureProxy } = require("axios-proxy-builder");
+const HttpsProxyAgent = require("https-proxy-agent");
 
 const error = (msg) => {
   console.error(msg);
@@ -104,7 +104,7 @@ const install = (suppressLogs) => {
     return;
   }
   const package = getPackage();
-  const proxy = configureProxy(package.url);
+  const proxy = new HttpsProxyAgent(package.url);
 
   return package.install(proxy, suppressLogs);
 };

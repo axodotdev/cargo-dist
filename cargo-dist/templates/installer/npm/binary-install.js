@@ -2,7 +2,6 @@ const { existsSync, mkdirSync } = require("fs");
 const { join } = require("path");
 const { spawnSync } = require("child_process");
 
-const axios = require("axios");
 const tar = require("tar");
 const rimraf = require("rimraf");
 
@@ -80,7 +79,7 @@ class Package {
       console.error(`Downloading release from ${this.url}`);
     }
 
-    return axios({ ...fetchOptions, url: this.url, responseType: "stream" })
+    return fetch({ ...fetchOptions, url: this.url, responseType: "stream" })
       .then((res) => {
         return new Promise((resolve, reject) => {
           const sink = res.data.pipe(

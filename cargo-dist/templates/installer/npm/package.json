@@ -16,6 +16,7 @@
   "dependencies": {
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
+    "https-proxy-agent": "^7.0.4",
     "rimraf": "^5.0.5",
     "tar": "^7.1.0"
   },
@@ -23,4 +24,3 @@
     "prettier": "^3.2.5"
   }
 }
-
