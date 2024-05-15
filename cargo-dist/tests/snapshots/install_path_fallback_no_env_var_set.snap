@@ -517,12 +517,6 @@ add_install_dir_to_path() {
     local _rcfiles="$4"
     local _shell="$5"
 
-    # Are we in GitHub CI? Let's add it to GITHUB_PATH, which
-    # puts the given directory on PATH in the next GitHub Action
-    if [ -n "${GITHUB_PATH:-}" ]; then
-        ensure echo "$_install_dir_expr" >> "$GITHUB_PATH"
-    fi
-
     if [ -n "${HOME:-}" ]; then
         local _target
         local _home
@@ -1349,12 +1343,6 @@ function Add-Path($OrigPathToAdd) {
   $RegistryPath = "HKCU:\Environment"
   $PropertyName = "Path"
   $PathToAdd = $OrigPathToAdd
-
-  # Are we in GitHub CI? Let's add it to GITHUB_PATH, which
-  # puts the given directory on PATH in the next GitHub Action
-  if (($ci_magic = $env:GITHUB_PATH)) {
-    Write-Output "$OrigPathToAdd" | Out-File -FilePath "$ci_magic" -Encoding utf8 -Append
-  }
 
   $Item = if (Test-Path $RegistryPath) {
     # If the registry key exists, get it
