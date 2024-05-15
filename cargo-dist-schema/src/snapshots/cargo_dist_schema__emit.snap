@@ -78,6 +78,11 @@ expression: json_schema
         "null"
       ]
     },
+    "force_stable": {
+      "description": "Where possible, announce/publish a release as \"latest\" regardless of semver version",
+      "default": false,
+      "type": "boolean"
+    },
     "linkage": {
       "description": "Data about dynamic linkage in the built libraries",
       "default": [],

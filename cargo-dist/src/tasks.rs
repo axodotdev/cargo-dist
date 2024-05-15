@@ -850,6 +850,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Only the final value merged into a package_config matters
             post_announce_jobs: _,
             publish_prereleases,
+            force_stable,
             features,
             default_features,
             all_features,
@@ -1018,6 +1019,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             })
             .collect();
         let publish_prereleases = publish_prereleases.unwrap_or(false);
+        let force_stable = force_stable.unwrap_or(false);
 
         let allow_dirty = if allow_all_dirty {
             DirtyMode::AllowAll
@@ -1098,6 +1100,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 systems,
                 assets: Default::default(),
                 publish_prereleases,
+                force_stable,
                 ci: None,
                 linkage: vec![],
                 upload_files: vec![],
