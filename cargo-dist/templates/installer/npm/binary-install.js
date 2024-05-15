@@ -57,7 +57,14 @@ class Package {
   }
 
   exists() {
-    return existsSync(this.binaryPath);
+    for (const binaryName in this.binaries) {
+      const binRelPath = this.binaries[binaryName];
+      const binPath = join(this.installDirectory, binRelPath);
+      if (!existsSync(binPath)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   install(fetchOptions, suppressLogs = false) {

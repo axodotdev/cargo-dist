@@ -10,6 +10,7 @@ impl DistResult {
         {
             return Ok(());
         }
+
         // only do this if the formula exists
         let Some(package_tarball_path) = &self.npm_installer_package_path else {
             return Ok(());
@@ -23,7 +24,6 @@ impl DistResult {
         } else {
             package_tarball_path.to_owned()
         };
-
         // Only do this if npm and tar are installed
         let (Some(npm), Some(tar)) = (&ctx.tools.npm, &ctx.tools.tar) else {
             return Ok(());

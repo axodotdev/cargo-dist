@@ -113,17 +113,6 @@ const run = (binaryName) => {
   const package = getPackage();
   const proxy = configureProxy(package.url);
 
-  // If no binaryName is specified, and there's one that matches the app, use that
-  if (!binaryName && package.binaries[name]) {
-    binaryName = name;
-  }
-
-  // If no binaryName is specified and there's only one binary, use that
-  const binNames = Object.keys(package.binaries);
-  if (!binaryName && binNames.length == 1) {
-    binaryName = binNames[0];
-  }
-
   package.run(binaryName, proxy);
 };
 
