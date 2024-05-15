@@ -24,7 +24,6 @@ To setup your npm installer you need to create an npm access token and enable th
 
 1. Create an account on [npmjs.com](https://www.npmjs.com/signup).
 1. (Optionally) If you would like to publish a "scoped" package (aka `@mycorp/pkg`) you'll need to [create an npm organization](https://www.npmjs.com/org/create).
-1. (Optionally) If you'd like, you can also update your current user to an org so you can publish packages like `@myuser/pkg`.
 2. Go to your npm account settings and create a granular access token:
 
     - Expiration: The default is 30 days. You can pick what works for you and your team. (NOTE: If you really want a token that does not expire you can use a Classic Token but we expect that option to eventually be fully deprecated in the near future.)
