@@ -331,6 +331,12 @@ function Add-Path($OrigPathToAdd) {
   $PropertyName = "Path"
   $PathToAdd = $OrigPathToAdd
 
+  # Are we in GitHub CI? Let's add it to GITHUB_PATH, which
+  # puts the given directory on PATH in the next GitHub Action
+  if (($ci_magic = $env:GITHUB_PATH)) {
+    Write-Output "$OrigPathToAdd" | Out-File -FilePath "$ci_magic" -Encoding utf8 -Append
+  }
+
   $Item = if (Test-Path $RegistryPath) {
     # If the registry key exists, get it
     Get-Item -Path $RegistryPath
