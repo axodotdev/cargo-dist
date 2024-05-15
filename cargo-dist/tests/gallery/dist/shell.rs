@@ -11,7 +11,7 @@ impl DistResult {
         // Only do this on unix, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
         #[cfg(target_family = "unix")]
         if std::env::var(ENV_RUIN_ME)
-            .map(|s| !s.is_empty())
+            .map(|s| s == "shell" || s == "all")
             .unwrap_or(false)
         {
             let app_name = ctx.repo.app_name;

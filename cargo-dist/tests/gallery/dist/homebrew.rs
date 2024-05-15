@@ -12,7 +12,7 @@ impl DistResult {
         // Only do this on macOS, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
         #[cfg(target_os = "macos")]
         if std::env::var(ENV_RUIN_ME)
-            .map(|s| !s.is_empty())
+            .map(|s| s == "homebrew" || s == "all")
             .unwrap_or(false)
         {
             // only do this if the formula exists

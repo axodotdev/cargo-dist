@@ -5,7 +5,7 @@ impl DistResult {
     #[allow(unused_variables)]
     pub fn runtest_npm_installer(&self, ctx: &TestContext<Tools>) -> Result<()> {
         if !std::env::var(ENV_RUIN_ME)
-            .map(|s| !s.is_empty())
+            .map(|s| s == "npm" || s == "all")
             .unwrap_or(false)
         {
             return Ok(());
