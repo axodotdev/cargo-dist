@@ -11,7 +11,7 @@ impl DistResult {
         // Only do this on windows, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
         #[cfg(target_family = "windows")]
         if std::env::var(ENV_RUIN_ME)
-            .map(|s| !s.is_empty())
+            .map(|s| s == "powershell" || s == "all")
             .unwrap_or(false)
         {
             fn run_ps1_script(

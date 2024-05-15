@@ -81,7 +81,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       # runtest the installer scripts
-      RUIN_MY_COMPUTER_WITH_INSTALLERS: true
+      RUIN_MY_COMPUTER_WITH_INSTALLERS: all
       CARGO_DIST_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       # Test the cross-product of these platforms+toolchains
