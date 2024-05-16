@@ -1099,8 +1099,8 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_optional_value(
         table,
-        "always-publish-as-stable",
-        "# Always mark releases as stable, ignoring semver semantics\n",
+        "force-latest",
+        "# Always mark releases as latest, ignoring semver semantics\n",
         *force_latest,
     );
 
