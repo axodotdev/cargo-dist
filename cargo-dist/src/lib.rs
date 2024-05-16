@@ -160,27 +160,36 @@ fn run_build_step(
     Ok(())
 }
 
+const AXOUPDATER_ASSET_ROOT: &str =
+    "https://github.com/axodotdev/axoupdater/releases/latest/download";
+
 /// Fetches an installer executable and installs it in the expected target path.
 pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
-    let release = tokio::runtime::Handle::current()
-        .block_on(
-            octocrab::instance()
-                .repos("axodotdev", "axoupdater")
-                .releases()
-                .get_latest(),
-        )
+    let ext = if updater.target_triple.contains("pc-windows") {
+        ".zip"
+    } else {
+        ".tar.xz"
+    };
+    let expected_url = format!(
+        "{AXOUPDATER_ASSET_ROOT}/axoupdater-cli-{}{ext}",
+        updater.target_triple
+    );
+
+    let client = reqwest::blocking::Client::new();
+    let resp = client
+        .head(&expected_url)
+        .send()
         .map_err(|_| DistError::AxoupdaterReleaseCheckFailed {})?;
 
-    let appropriate_updater = release.assets.iter().find(|asset| {
-        asset
-            .name
-            .starts_with(&format!("axoupdater-cli-{}", updater.target_triple))
-    });
-    match appropriate_updater {
-        Some(asset) => {
-            fetch_updater_from_binary(dist_graph, updater, asset.browser_download_url.as_ref())
-        }
-        None => fetch_updater_from_source(dist_graph, updater),
+    // If we have a prebuilt asset, use it
+    if resp.status().is_success() {
+        fetch_updater_from_binary(dist_graph, updater, &expected_url)
+    // If we got a 404, there's no asset, so we have to build from source
+    } else if resp.status() == reqwest::StatusCode::NOT_FOUND {
+        fetch_updater_from_source(dist_graph, updater)
+    // Some unexpected result that wasn't 200 or 404
+    } else {
+        Err(DistError::AxoupdaterReleaseCheckFailed {})
     }
 }
 

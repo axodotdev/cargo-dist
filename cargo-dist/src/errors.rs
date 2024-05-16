@@ -296,7 +296,7 @@ pub enum DistError {
         tool: String,
     },
 
-    /// octocrab failed when checking axoupdater releases
+    /// reqwest returned non-2xx/404 when checking axoupdater releases
     #[error("Failed to check the latest release of axoupdater")]
     #[diagnostic(help(
         "Is your internet connection working? If not, this may be a bug; please file an issue!"
