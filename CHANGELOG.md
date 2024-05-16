@@ -3,6 +3,41 @@
 Nothing Yet!
 
 
+# Version 0.15.0 (unreleased)
+
+This release contains a number of new features and several fixes.
+
+## Improvements for installing tools within GitHub Actions
+
+Previously, our installers would update the user's `PATH` for local commandline access but wouldn't set themselves up in the `PATH` within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to `GITHUB_PATH` for future tasks within the job.
+
+* impl @Gankra [feat: add paths to GITHUB_PATH if available](https://github.com/axodotdev/cargo-dist/pull/1047)
+
+## Always treat releases as the latest stable release
+
+cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new [`force-latest`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest) configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.
+
+* impl @mistydemeo [feat: allow always marking releases as stable](https://github.com/axodotdev/cargo-dist/pull/1054)
+
+## Configuring the global runner
+
+In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs.
+
+* impl @mistydemeo [feat: allow configuring global runner](https://github.com/axodotdev/cargo-dist/pull/1055)
+
+## Specify commit to publish to in external repo
+
+In 0.14.0, we added the new [`github-releases-repo`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo) configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new [`github-releases-submodule-path`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path) configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.
+
+* impl @mistydemeo [feat: allow specifying external commit from submodule](https://github.com/axodotdev/cargo-dist/pull/1026)
+
+## Fixes
+
+* @mistydemeo [fix: improve reliability for fetching standalone updaters](https://github.com/axodotdev/cargo-dist/pull/1052)
+* @mistydemeo [fix: write correct install prefix to receipt](https://github.com/axodotdev/cargo-dist/pull/1037)
+* @mistydemeo [fix: bin_aliases should come from packages](https://github.com/axodotdev/cargo-dist/pull/1031)
+* @Gankra [fix: repair and cleanup npm binary caching](https://github.com/axodotdev/cargo-dist/pull/1050)
+
 # Version 0.14.1 (2024-05-08)
 
 This is a bugfix release which fixes release announcement text for apps whose `repository` field in `Cargo.toml` ends with `.git` ([#1020](https://github.com/axodotdev/cargo-dist/issues/1020)). It also updates several dependencies and upgrades the version of Rust used to build cargo-dist to 1.78.0.
