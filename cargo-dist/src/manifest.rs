@@ -76,7 +76,7 @@ pub(crate) fn load_and_merge_manifests(
             announcement_changelog: _,
             announcement_github_body: _,
             publish_prereleases: _,
-            force_stable: _,
+            force_latest: _,
             upload_files: _,
             artifacts,
             releases,
