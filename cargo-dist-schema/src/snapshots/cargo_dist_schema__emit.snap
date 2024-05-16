@@ -78,7 +78,7 @@ expression: json_schema
         "null"
       ]
     },
-    "force_stable": {
+    "force_latest": {
       "description": "Where possible, announce/publish a release as \"latest\" regardless of semver version",
       "default": false,
       "type": "boolean"

@@ -329,7 +329,7 @@ pub struct DistMetadata {
     /// marked as a prerelease in hosting services such as
     /// GitHub and Axo Releases.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub force_stable: Option<bool>,
+    pub force_latest: Option<bool>,
 
     /// Whether we should create the Github Release for you when you push a tag.
     ///
@@ -423,7 +423,7 @@ impl DistMetadata {
             publish_jobs: _,
             post_announce_jobs: _,
             publish_prereleases: _,
-            force_stable: _,
+            force_latest: _,
             create_release: _,
             pr_run_mode: _,
             allow_dirty: _,
@@ -498,7 +498,7 @@ impl DistMetadata {
             publish_jobs,
             post_announce_jobs,
             publish_prereleases,
-            force_stable,
+            force_latest,
             create_release,
             pr_run_mode,
             allow_dirty,
@@ -559,7 +559,7 @@ impl DistMetadata {
         if publish_prereleases.is_some() {
             warn!("package.metadata.dist.publish-prereleases is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
-        if force_stable.is_some() {
+        if force_latest.is_some() {
             warn!("package.metadata.dist.force-stable is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if pr_run_mode.is_some() {

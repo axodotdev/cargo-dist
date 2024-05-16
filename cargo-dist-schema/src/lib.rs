@@ -91,7 +91,7 @@ pub struct DistManifest {
     pub publish_prereleases: bool,
     /// Where possible, announce/publish a release as "latest" regardless of semver version
     #[serde(default)]
-    pub force_stable: bool,
+    pub force_latest: bool,
     /// ci backend info
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -442,7 +442,7 @@ impl DistManifest {
             systems: Default::default(),
             assets: Default::default(),
             publish_prereleases: false,
-            force_stable: false,
+            force_latest: false,
             ci: None,
             linkage: vec![],
             upload_files: vec![],

@@ -393,7 +393,7 @@ You must set this on `[package.metadata.dist]` and not `[workspace.metadata.dist
 
 > since 0.15.0
 
-Overrides cargo-dist's default handling of prerelease versions. Ordinarily, cargo-dist uses [semver](https://semver.org) rules to determine if a version number is a prerelease or not and has some special handling if it is. With this setting, cargo-dist will always consider a version to be stable no matter what its version number is. This affects a few things:
+Overrides cargo-dist's default handling of prerelease versions. Ordinarily, cargo-dist uses [semver](https://semver.org) rules to determine if a version number is a prerelease or not and has some special handling if it is. With this setting, cargo-dist will always consider a version to be the latest no matter what its version number is. This means that the following prerelease handling behaviour will no longer apply:
 
 * If cargo-dist interprets a version as a prerelease, it will publish it to GitHub as a "prerelease" instead of the "latest" release.
 * cargo-dist will not publish prereleases to [Homebrew][homebrew-installer] or [npm][npm installers] by default.

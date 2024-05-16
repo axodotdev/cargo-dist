@@ -257,7 +257,7 @@ pub(crate) fn select_tag(
 
     // Ignoring whatever we calculated, mark it as stable if the
     // user asked us to.
-    let prerelease = if graph.manifest.force_stable {
+    let prerelease = if graph.manifest.force_latest {
         false
     } else {
         announcing.prerelease

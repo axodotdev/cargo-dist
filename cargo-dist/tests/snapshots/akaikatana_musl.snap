@@ -1253,7 +1253,7 @@ download_binary_and_run_installer "$@" || exit 1
     }
   },
   "publish_prereleases": false,
-  "force_stable": false,
+  "force_latest": false,
   "ci": {
     "github": {
       "artifacts_matrix": {

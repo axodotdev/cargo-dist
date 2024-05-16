@@ -228,7 +228,7 @@ expression: self.payload
     }
   },
   "publish_prereleases": false,
-  "force_stable": false,
+  "force_latest": false,
   "ci": {
     "github": {
       "artifacts_matrix": {
