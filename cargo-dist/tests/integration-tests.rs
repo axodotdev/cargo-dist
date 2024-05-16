@@ -747,6 +747,7 @@ targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-unkn
 ci = ["github"]
 
 [workspace.metadata.dist.github-custom-runners]
+global = "buildjet-8vcpu-ubuntu-2204"
 x86_64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204"
 x86_64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204"
 aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
