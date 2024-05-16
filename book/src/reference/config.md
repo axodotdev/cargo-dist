@@ -391,7 +391,7 @@ You must set this on `[package.metadata.dist]` and not `[workspace.metadata.dist
 
 ### github-custom-runners
 
-> since 0.6.0
+> since 0.6.0 (target-specific runners), 0.15.0 (global runner)
 
 Example:
 
@@ -402,6 +402,8 @@ aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
 ```
 
 Allows specifying which runner to use for a target. The keys within this table are target triples in the same format as the ["targets"](#targets) setting. Any targets not specified in this table will use the defaults.
+
+In addition to defining runners for a target, it's also possible to specify a runner for the global, non-target-specific tasks using the `global` key. This runner will be used for tasks like `plan`, `host`, generating installers, and so on.
 
 
 ### github-releases-repo

@@ -121,9 +121,15 @@ impl GithubCiInfo {
         //
         // If we've done a Good Job, then these artifacts should be possible to build on *any*
         // platform. Linux is usually fast/cheap, so that's a reasonable choice.
+        let global_runner = dist
+            .github_custom_runners
+            .get("global")
+            .map(|s| s.as_str())
+            .unwrap_or(GITHUB_LINUX_RUNNER);
+
         let global_task = GithubMatrixEntry {
             targets: None,
-            runner: Some(GITHUB_LINUX_RUNNER.into()),
+            runner: Some(global_runner.into()),
             dist_args: Some("--artifacts=global".into()),
             install_dist: Some(install_dist_sh.clone()),
             packages_install: None,
