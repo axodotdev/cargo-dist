@@ -319,6 +319,18 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub publish_prereleases: Option<bool>,
 
+    /// Always regard releases as stable
+    ///
+    /// (defaults to false)
+    ///
+    /// Ordinarily, cargo-dist tries to detect if your release
+    /// is a prerelease based on its version number using
+    /// semver standards. If it's a prerelease, it will be
+    /// marked as a prerelease in hosting services such as
+    /// GitHub and Axo Releases.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub force_stable: Option<bool>,
+
     /// Whether we should create the Github Release for you when you push a tag.
     ///
     /// If true (default), cargo-dist will create a new Github Release and generate
@@ -411,6 +423,7 @@ impl DistMetadata {
             publish_jobs: _,
             post_announce_jobs: _,
             publish_prereleases: _,
+            force_stable: _,
             create_release: _,
             pr_run_mode: _,
             allow_dirty: _,
@@ -485,6 +498,7 @@ impl DistMetadata {
             publish_jobs,
             post_announce_jobs,
             publish_prereleases,
+            force_stable,
             create_release,
             pr_run_mode,
             allow_dirty,
@@ -544,6 +558,9 @@ impl DistMetadata {
         }
         if publish_prereleases.is_some() {
             warn!("package.metadata.dist.publish-prereleases is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if force_stable.is_some() {
+            warn!("package.metadata.dist.force-stable is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if pr_run_mode.is_some() {
             warn!("package.metadata.dist.pr-run-mode is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

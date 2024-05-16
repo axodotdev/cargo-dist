@@ -255,11 +255,19 @@ pub(crate) fn select_tag(
         }
     }
 
+    // Ignoring whatever we calculated, mark it as stable if the
+    // user asked us to.
+    let prerelease = if graph.manifest.force_stable {
+        false
+    } else {
+        announcing.prerelease
+    };
+
     Ok(AnnouncementTag {
         tag: announcing.tag,
         version,
         package,
-        prerelease: announcing.prerelease,
+        prerelease,
         rust_releases: releases,
     })
 }

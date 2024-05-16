@@ -1656,6 +1656,7 @@ try {
     }
   },
   "publish_prereleases": false,
+  "force_stable": false,
   "ci": {
     "github": {
       "artifacts_matrix": {

@@ -254,6 +254,7 @@ fn get_new_dist_metadata(
             publish_jobs: None,
             post_announce_jobs: None,
             publish_prereleases: None,
+            force_stable: None,
             create_release: None,
             github_releases_repo: None,
             github_releases_submodule_path: None,
@@ -831,6 +832,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         publish_jobs,
         post_announce_jobs,
         publish_prereleases,
+        force_stable,
         create_release,
         github_releases_repo,
         github_releases_submodule_path,
@@ -1093,6 +1095,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "publish-prereleases",
         "# Whether to publish prereleases to package managers\n",
         *publish_prereleases,
+    );
+
+    apply_optional_value(
+        table,
+        "always-publish-as-stable",
+        "# Always mark releases as stable, ignoring semver semantics\n",
+        *force_stable,
     );
 
     apply_optional_value(
