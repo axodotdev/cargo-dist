@@ -65,6 +65,13 @@ pub struct DistMetadata {
     #[serde(default, with = "opt_string_or_vec")]
     pub ci: Option<Vec<CiStyle>>,
 
+    /// Vendor external actions.
+    ///
+    /// This will substantially increase the size of your
+    /// repository, but may be desirable in some security contexts.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_vendor_actions: Option<bool>,
+
     /// Which actions to run on pull requests.
     ///
     /// "upload" will build and upload release artifacts, while "plan" will
@@ -393,6 +400,7 @@ impl DistMetadata {
             rust_toolchain_version: _,
             dist: _,
             ci: _,
+            github_vendor_actions: _,
             installers: _,
             tap: _,
             formula: _,
@@ -468,6 +476,7 @@ impl DistMetadata {
             rust_toolchain_version,
             dist,
             ci,
+            github_vendor_actions,
             installers,
             tap,
             formula,
@@ -523,6 +532,9 @@ impl DistMetadata {
         }
         if ci.is_some() {
             warn!("package.metadata.dist.ci is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_vendor_actions.is_some() {
+            warn!("package.metadata.dist.github-vendor-actions is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if precise_builds.is_some() {
             warn!("package.metadata.dist.precise-builds is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
@@ -692,6 +704,8 @@ pub struct Config {
     pub targets: Vec<TargetTriple>,
     /// CI kinds we want to support
     pub ci: Vec<CiStyle>,
+    /// Whether to vendor all external actions in generated config
+    // pub github_vendor_actions: bool,
     /// Installers we want to generate
     pub installers: Vec<InstallerStyle>,
     /// What command was being invoked here, used for SystemIds

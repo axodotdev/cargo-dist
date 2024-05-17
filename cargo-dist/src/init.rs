@@ -223,6 +223,7 @@ fn get_new_dist_metadata(
             // deprecated, default to not emitting it
             rust_toolchain_version: None,
             ci: None,
+            github_vendor_actions: None,
             installers: None,
             tap: None,
             formula: None,
@@ -802,6 +803,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         rust_toolchain_version,
         dist,
         ci,
+        github_vendor_actions,
         installers,
         tap,
         formula,
@@ -863,6 +865,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     );
 
     apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
+
+    apply_optional_value(
+        table,
+        "github-vendor-actions",
+        "# Whether to vendor all external actions when generating CI config (default false)\n",
+        *github_vendor_actions,
+    );
 
     apply_string_list(
         table,

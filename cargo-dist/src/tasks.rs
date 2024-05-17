@@ -271,6 +271,8 @@ pub struct DistGraph {
     pub github_releases_repo: Option<config::GithubRepoPair>,
     /// Read the commit to be tagged from the submodule at this path
     pub github_releases_submodule_path: Option<String>,
+    /// Whether to vendor all external actions
+    pub github_vendor_actions: bool,
 }
 
 /// Info about artifacts should be hosted
@@ -803,6 +805,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // after this function, seems like we should finish the job..? (Doing a big
             // refactor already, don't want to mess with this right now.)
             ci,
+            github_vendor_actions,
             // Only the final value merged into a package_config matters
             //
             // Note that we do *use* an auto-include from the workspace when doing
@@ -872,6 +875,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         if desired_rust_toolchain.is_some() {
             warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
         }
+        let github_vendor_actions = github_vendor_actions.unwrap_or(false);
         let merge_tasks = merge_tasks.unwrap_or(false);
         let fail_fast = fail_fast.unwrap_or(false);
         let create_release = create_release.unwrap_or(true);
@@ -1085,6 +1089,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .clone()
                     .unwrap_or_default(),
                 install_updater: install_updater.unwrap_or_default(),
+                github_vendor_actions,
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),

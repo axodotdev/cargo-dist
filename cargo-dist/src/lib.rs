@@ -654,6 +654,7 @@ pub fn check_integrity(cfg: &Config) -> DistResult<()> {
         installers: vec![],
         root_cmd: "check".to_owned(),
     };
+
     let (dist, _manifest) = tasks::gather_work(&check_config)?;
 
     if let Some(hosting) = &dist.hosting {

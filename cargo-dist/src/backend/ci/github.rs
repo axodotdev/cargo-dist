@@ -10,7 +10,10 @@ use serde::Serialize;
 use tracing::warn;
 
 use crate::{
-    backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
+    backend::{
+        diff_files,
+        templates::{TEMPLATE_CI_GITHUB, TEMPLATE_CI_VENDORED_ACTIONS},
+    },
     config::{
         DependencyKind, HostingStyle, JinjaGithubRepoPair, ProductionMode, SystemDependencies,
     },
@@ -18,6 +21,7 @@ use crate::{
     DistGraph, SortedMap, SortedSet, TargetTriple,
 };
 
+const GITHUB_ACTIONS_DIR: &str = ".github/actions/";
 const GITHUB_CI_DIR: &str = ".github/workflows/";
 const GITHUB_CI_FILE: &str = "release.yml";
 
@@ -70,6 +74,8 @@ pub struct GithubCiInfo {
     pub hosting_providers: Vec<HostingStyle>,
     /// whether to prefix release.yml and the tag pattern
     pub tag_namespace: Option<String>,
+    /// whether to vendor all external actions
+    pub vendor_actions: bool,
 }
 
 impl GithubCiInfo {
@@ -193,6 +199,7 @@ impl GithubCiInfo {
             github_releases_repo,
             ssldotcom_windows_sign,
             hosting_providers,
+            vendor_actions: dist.github_vendor_actions,
         }
     }
 
@@ -217,10 +224,27 @@ impl GithubCiInfo {
         Ok(rendered)
     }
 
+    /// Generate and write the vendored actions to disk
+    pub fn write_vendored_actions(&self, dist: &DistGraph) -> DistResult<()> {
+        let files = dist
+            .templates
+            .render_dir_to_clean_strings(TEMPLATE_CI_VENDORED_ACTIONS, self)?;
+
+        let path = dist.workspace_dir.join(GITHUB_ACTIONS_DIR);
+        for (relpath, rendered) in files {
+            LocalAsset::write_new_all(&rendered, path.join(relpath))?;
+        }
+
+        Ok(())
+    }
+
     /// Write release.yml to disk
     pub fn write_to_disk(&self, dist: &DistGraph) -> DistResult<()> {
         let ci_file = self.github_ci_path(dist);
         let rendered = self.generate_github_ci(dist)?;
+        if dist.github_vendor_actions {
+            self.write_vendored_actions(dist)?;
+        }
 
         LocalAsset::write_new_all(&rendered, &ci_file)?;
         eprintln!("generated Github CI to {}", ci_file);

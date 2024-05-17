@@ -23,6 +23,8 @@ pub const TEMPLATE_INSTALLER_NPM: TemplateId = "installer/npm";
 pub const TEMPLATE_INSTALLER_NPM_RUN_JS: TemplateId = "installer/npm/run.js";
 /// Template key for the github ci.yml
 pub const TEMPLATE_CI_GITHUB: TemplateId = "ci/github/release.yml";
+/// Template key for the vendored actions dir
+pub const TEMPLATE_CI_VENDORED_ACTIONS: TemplateId = "ci/vendor";
 
 /// ID used to look up an environment in [`Templates::envs`][]
 type EnvId = &'static str;
@@ -357,5 +359,8 @@ mod test {
             .unwrap();
 
         templates.get_template_file(TEMPLATE_CI_GITHUB).unwrap();
+        templates
+            .get_template_dir(TEMPLATE_CI_VENDORED_ACTIONS)
+            .unwrap();
     }
 }
