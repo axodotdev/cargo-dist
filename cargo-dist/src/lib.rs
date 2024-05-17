@@ -406,6 +406,16 @@ fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResul
             hasher.update(&file_bytes);
             hasher.finalize().as_slice().to_owned()
         }
+        ChecksumStyle::Blake2s => {
+            let mut hasher = blake2::Blake2s256::new();
+            hasher.update(&file_bytes);
+            hasher.finalize().as_slice().to_owned()
+        }
+        ChecksumStyle::Blake2b => {
+            let mut hasher = blake2::Blake2b512::new();
+            hasher.update(&file_bytes);
+            hasher.finalize().as_slice().to_owned()
+        }
         ChecksumStyle::False => {
             unreachable!()
         }

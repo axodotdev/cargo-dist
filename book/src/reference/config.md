@@ -206,6 +206,8 @@ Specifies how to checksum [archives][]. Supported values:
 * "sha512" - generate a .sha512 file for each archive
 * "sha3-256" - generate a .sha3-256 file for each archive
 * "sha3-512" - generate a .sha3-512 file for each archive
+* "blake2s" - generate a .blake2s file for each archive
+* "blake2b" - generate a .blake2b file for each archive
 * "false" - do not generate any checksums
 
 The hashes should match the result that sha256sum, sha512sum, etc. generate, and the file should be readable by those sorts of commands.
