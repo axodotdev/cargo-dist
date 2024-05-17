@@ -396,6 +396,16 @@ fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResul
             hasher.update(&file_bytes);
             hasher.finalize().as_slice().to_owned()
         }
+        ChecksumStyle::Sha3_256 => {
+            let mut hasher = sha3::Sha3_256::new();
+            hasher.update(&file_bytes);
+            hasher.finalize().as_slice().to_owned()
+        }
+        ChecksumStyle::Sha3_512 => {
+            let mut hasher = sha3::Sha3_512::new();
+            hasher.update(&file_bytes);
+            hasher.finalize().as_slice().to_owned()
+        }
         ChecksumStyle::False => {
             unreachable!()
         }

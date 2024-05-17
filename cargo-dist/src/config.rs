@@ -1203,6 +1203,10 @@ pub enum ChecksumStyle {
     Sha256,
     /// sha512sum (using the sha2 crate)
     Sha512,
+    /// sha3-256sum (using the sha3 crate)
+    Sha3_256,
+    /// sha3-512sum (using the sha3 crate)
+    Sha3_512,
     /// Do not checksum
     False,
 }
@@ -1213,6 +1217,8 @@ impl ChecksumStyle {
         match self {
             ChecksumStyle::Sha256 => "sha256",
             ChecksumStyle::Sha512 => "sha512",
+            ChecksumStyle::Sha3_256 => "sha3-256",
+            ChecksumStyle::Sha3_512 => "sha3-512",
             ChecksumStyle::False => "false",
         }
     }
