@@ -36,7 +36,7 @@ node-semver = { version = "2.1.0", optional = true }
 oro-package-spec = { version = "0.3.34", optional = true }
 thiserror = "1.0.60"
 pathdiff = { version = "0.2.1", features = ["camino"] }
-itertools = "0.12.1"
+itertools = "0.13.0"
 url = "2.5.0"
 parse-changelog = "0.6.8"
 
