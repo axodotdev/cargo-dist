@@ -223,6 +223,7 @@ fn get_new_dist_metadata(
             // deprecated, default to not emitting it
             rust_toolchain_version: None,
             ci: None,
+            vendor_workflow_deps: None,
             installers: None,
             tap: None,
             formula: None,
@@ -802,6 +803,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         rust_toolchain_version,
         dist,
         ci,
+        vendor_workflow_deps,
         installers,
         tap,
         formula,
@@ -863,6 +865,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     );
 
     apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
+
+    apply_optional_value(
+        table,
+        "vendor-workflow-deps",
+        "# Whether to vendor all external workflow dependencies when generating CI config (default false)\n",
+        *vendor_workflow_deps,
+    );
 
     apply_string_list(
         table,

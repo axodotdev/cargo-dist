@@ -144,7 +144,7 @@ jobs:
           echo "tag-flag=--tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json) --force-tag" >> "$GITHUB_OUTPUT"
           {{%- endif %}}
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/upload-artifact{{% else %}}actions/upload-artifact@v4{{% endif %}}
         with:
           name: artifacts-plan-dist-manifest
           path: plan-dist-manifest.json
@@ -204,14 +204,14 @@ jobs:
       - name: Install Rust
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
-      - uses: swatinem/rust-cache@v2
+      - uses: {{% if vendor_actions %}}./.github/actions/rust-cache{{% else %}}swatinem/rust-cache@v2{{% endif %}}
         with:
           key: ${{ join(matrix.targets, '-') }}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/download-artifact{{% else %}}actions/download-artifact@v4{{% endif %}}
         with:
           pattern: artifacts-*
           path: target/distrib/
@@ -238,7 +238,7 @@ jobs:
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/upload-artifact{{% else %}}actions/upload-artifact@v4{{% endif %}}
         with:
           name: artifacts-build-local-${{ join(matrix.targets, '_') }}
           path: |
@@ -290,7 +290,7 @@ jobs:
         run: {{{ global_task.install_dist }}}
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/download-artifact{{% else %}}actions/download-artifact@v4{{% endif %}}
         with:
           pattern: artifacts-*
           path: target/distrib/
@@ -308,7 +308,7 @@ jobs:
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/upload-artifact{{% else %}}actions/upload-artifact@v4{{% endif %}}
         with:
           name: artifacts-build-global
           path: |
@@ -385,7 +385,7 @@ jobs:
         run: {{{ global_task.install_dist }}}
       # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
-        uses: actions/download-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/download-artifact{{% else %}}actions/download-artifact@v4{{% endif %}}
         with:
           pattern: artifacts-*
           path: target/distrib/
@@ -404,7 +404,7 @@ jobs:
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/upload-artifact{{% else %}}actions/upload-artifact@v4{{% endif %}}
         with:
           # Overwrite the previous copy
           name: artifacts-dist-manifest
@@ -510,7 +510,7 @@ jobs:
       - name: Install cargo-dist
         run: {{{ global_task.install_dist }}}
       - name: Fetch Axo Artifacts
-        uses: actions/download-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/download-artifact{{% else %}}actions/download-artifact@v4{{% endif %}}
         with:
           pattern: artifacts-*
           path: target/distrib/
@@ -521,7 +521,7 @@ jobs:
     {{%- endif %}}
     {{%- if "github" in hosting_providers %}}
       - name: "Download GitHub Artifacts"
-        uses: actions/download-artifact@v4
+        uses: {{% if vendor_actions %}}./.github/actions/download-artifact{{% else %}}actions/download-artifact@v4{{% endif %}}
         with:
           pattern: artifacts-*
           path: artifacts
@@ -531,7 +531,7 @@ jobs:
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
       - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
+        uses: {{% if vendor_actions %}}./.github/actions/release-action{{% else %}}ncipollo/release-action@v1{{% endif %}}
         with:
         {{%- if github_releases_repo %}}
           owner: {{{ github_releases_repo.owner }}}
