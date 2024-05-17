@@ -1,0 +1,47 @@
+{
+  "name": "download-artifact",
+  "version": "4.1.7",
+  "description": "Download an Actions Artifact from a workflow run",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "release": "ncc build src/download-artifact.ts && git add -f dist/",
+    "check-all": "concurrently \"npm:format-check\" \"npm:lint\" \"npm:build\"",
+    "format": "prettier --write **/*.ts",
+    "format-check": "prettier --check **/*.ts",
+    "lint": "eslint **/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actions/download-artifact.git"
+  },
+  "keywords": [
+    "Actions",
+    "GitHub",
+    "Artifacts",
+    "Download"
+  ],
+  "author": "GitHub",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/actions/download-artifact/issues"
+  },
+  "homepage": "https://github.com/actions/download-artifact#readme",
+  "dependencies": {
+    "@actions/artifact": "^2.1.6",
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^5.1.1",
+    "minimatch": "^9.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^12.12.6",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@vercel/ncc": "^0.33.4",
+    "concurrently": "^5.2.0",
+    "eslint": "^8.55.0",
+    "eslint-plugin-github": "^4.10.1",
+    "eslint-plugin-prettier": "^5.0.1",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3"
+  }
+}

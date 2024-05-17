@@ -1,0 +1,32 @@
+name: "PR Checks"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: "yarn install"
+        run: yarn install
+      
+      - name: "yarn build"
+        run: yarn build
+
+      - name: "check for uncommitted changes"
+        # Ensure no changes, but ignore node_modules dir since dev/fresh ci deps installed.
+        run: |
+          git diff --exit-code --stat -- . ':!node_modules' \
+          || (echo "##[error] found changed files after build. please 'yarn build && npm run format'" \
+                   "and check in all changes" \
+              && exit 1)

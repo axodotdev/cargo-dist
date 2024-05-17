@@ -1,0 +1,53 @@
+name: "Rust Cache"
+description: "A GitHub Action that implements smart caching for rust/cargo projects with sensible defaults."
+author: "Arpad Borsos <swatinem@swatinem.de>"
+inputs:
+  prefix-key:
+    description: "The prefix cache key, this can be changed to start a new cache manually."
+    required: false
+    default: "v0-rust"
+  shared-key:
+    description: "A cache key that is used instead of the automatic `job`-based key, and is stable over multiple jobs."
+    required: false
+  key:
+    description: "An additional cache key that is added alongside the automatic `job`-based cache key and can be used to further differentiate jobs."
+    required: false
+  env-vars:
+    description: "Additional environment variables to include in the cache key, separated by spaces."
+    required: false
+  workspaces:
+    description: "Paths to multiple Cargo workspaces and their target directories, separated by newlines."
+    required: false
+  cache-directories:
+    description: "Additional non workspace directories to be cached, separated by newlines."
+    required: false
+  cache-targets:
+    description: "Determines whether workspace targets are cached. If `false`, only the cargo registry will be cached."
+    required: false
+    default: "true"
+  cache-on-failure:
+    description: "Cache even if the build fails. Defaults to false."
+    required: false
+  cache-all-crates:
+    description: "Determines which crates are cached. If `true` all crates will be cached, otherwise only dependent crates will be cached."
+    required: false
+    default: "false"
+  save-if:
+    description: "Determiners whether the cache should be saved. If `false`, the cache is only restored."
+    required: false
+    default: "true"
+  cache-provider:
+    description: "Determines which provider to use for caching. Options are github or buildjet, defaults to github."
+    required: false
+    default: "github"
+outputs:
+  cache-hit:
+    description: "A boolean value that indicates an exact match was found."
+runs:
+  using: "node20"
+  main: "dist/restore/index.js"
+  post: "dist/save/index.js"
+  post-if: "success() || env.CACHE_ON_FAILURE == 'true'"
+branding:
+  icon: "archive"
+  color: "gray-dark"

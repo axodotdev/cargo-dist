@@ -1,0 +1,25 @@
+name: install
+
+on: [push, pull_request]
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    name: Test `cargo install` on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - uses: ./
+
+      - run: cargo install cargo-deny --locked

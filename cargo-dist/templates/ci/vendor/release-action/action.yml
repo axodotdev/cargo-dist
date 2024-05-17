@@ -1,0 +1,131 @@
+name: 'Create Release'
+description: 'Creates github releases'
+author: 'Nick Cipollo'
+inputs:
+  allowUpdates:
+    description: 'An optional flag which indicates if we should update a release if it already exists. Defaults to false.'
+    required: false
+    default: ''
+  artifactErrorsFailBuild:
+    description: 'An optional flag which indicates if artifact read or upload errors should fail the build.'
+    required: false
+    default: ''
+  artifact:
+    deprecationMessage: Use 'artifacts' instead.
+    description: 'An optional set of paths representing artifacts to upload to the release. This may be a single path or a comma delimited list of paths (or globs)'
+    required: false
+    default: ''
+  artifacts:
+    description: 'An optional set of paths representing artifacts to upload to the release. This may be a single path or a comma delimited list of paths (or globs)'
+    required: false
+    default: ''
+  artifactContentType:
+    description: 'The content type of the artifact. Defaults to raw'
+    required: false
+    default: ''
+  body:
+    description: 'An optional body for the release.'
+    required: false
+    default: ''
+  bodyFile:
+    description: 'An optional body file for the release. This should be the path to the file'
+    required: false
+    default: ''
+  commit:
+    description: "An optional commit reference. This will be used to create the tag if it does not exist."
+    required: false
+    default: ''  
+  discussionCategory:
+    description: "When provided this will generate a discussion of the specified category. The category must exist otherwise this will cause the action to fail. This isn't used with draft releases"
+    required: false
+    default: ''
+  draft:
+    description: "Optionally marks this release as a draft release. Set to true to enable."
+    required: false
+    default: ''
+  generateReleaseNotes:
+    description: 'Indicates if release notes should be automatically generated.'
+    required: false
+    default: 'false'
+  makeLatest:
+    description: 'Indicates if the release should be the "latest" release or not.'
+    required: false
+    default: 'legacy'
+  name:
+    description: 'An optional name for the release. If this is omitted the tag will be used.'
+    required: false
+    default: ''
+  omitBody:
+    description: 'Indicates if the release body should be omitted.'
+    required: false
+    default: 'false'
+  omitBodyDuringUpdate:
+    description: 'Indicates if the release body should be omitted during updates. The body will still be applied for newly created releases. This will preserve the existing body during updates.'
+    required: false
+    default: 'false'
+  omitDraftDuringUpdate:
+    description: 'Indicates if the draft flag should be omitted during updates. The draft flag will still be applied for newly created releases. This will preserve the existing draft state during updates.'
+    required: false
+    default: 'false'
+  omitName:
+    description: 'Indicates if the release name should be omitted.'
+    required: false
+    default: 'false'
+  omitNameDuringUpdate:
+    description: 'Indicates if the release name should be omitted during updates. The name will still be applied for newly created releases. This will preserve the existing name during updates.'
+    required: false
+    default: 'false'
+  omitPrereleaseDuringUpdate:
+    description: 'Indicates if the prerelease flag should be omitted during updates. The prerelease flag will still be applied for newly created releases. This will preserve the existing prerelease state during updates.'
+    required: false
+    default: 'false'
+  owner:
+    description: "Optionally specify the owner of the repo where the release should be generated. Defaults to current repo's owner."
+    required: false
+    default: ''
+  prerelease:
+    description: "Optionally marks this release as prerelease. Set to true to enable."
+    required: false
+    default: ''
+  removeArtifacts:
+    description: 'Indicates if existing release artifacts should be removed, Defaults to false.'
+    required: false
+    default: 'false'
+  replacesArtifacts:
+    description: "Indicates if existing release artifacts should be replaced. Defaults to true."
+    required: false
+    default: 'true'
+  repo:
+    description: "Optionally specify the repo where the release should be generated. Defaults to current repo"
+    required: false
+    default: ''
+  skipIfReleaseExists:
+    description: "When skipIfReleaseExists is enabled the action will be skipped if a non-draft release already exists for the provided tag."
+    required: false
+    default: 'false'
+  tag:
+    description: 'An optional tag for the release. If this is omitted the git ref will be used (if it is a tag).'
+    required: false
+    default: ''
+  token:
+    description: 'The Github token.'
+    required: false
+    default: ${{ github.token }}
+  updateOnlyUnreleased:
+    description: "When allowUpdates is enabled, this will fail the action if the release it is updating is not a draft or a prerelease."
+    required: false
+    default: 'false'
+outputs:
+  id:
+    description: 'The identifier of the created release.'
+  html_url:
+    description: 'The HTML URL of the release.'
+  upload_url:
+    description: 'The URL for uploading assets to the release.'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+branding:
+  icon: 'tag'
+  color: 'gray-dark'
+

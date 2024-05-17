@@ -1,0 +1,29 @@
+name: target-dir
+
+on: [push, pull_request]
+
+jobs:
+  target-dir:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    name: Test custom target-dir on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: rustup toolchain install stable --profile minimal --no-self-update
+
+      # the `workspaces` option has the format `$workspace -> $target-dir`
+      # and the `$target-dir` is relative to the `$workspace`.
+      - uses: ./
+        with:
+          workspaces: tests -> ../custom-target-dir
+
+      - run: cargo test --manifest-path tests/Cargo.toml --target-dir custom-target-dir

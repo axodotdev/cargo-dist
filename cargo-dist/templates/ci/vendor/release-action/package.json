@@ -1,0 +1,76 @@
+{
+  "name": "release-action",
+  "version": "1.1.0",
+  "private": true,
+  "description": "An action which manages a github release",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf lib/*",
+    "coverage": "jest --coverage",
+    "debug": "yarn clean && yarn install && yarn build && yarn package",
+    "package": "ncc build --source-map --license licenses.txt",
+    "release": "yarn clean && yarn install --production && yarn build && yarn package",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ncipollo/release-action.git"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "author": "GitHub",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "jest": {
+    "clearMocks": true,
+    "collectCoverage": true,
+    "coveragePathIgnorePatterns": [
+      "src/Globber.ts",
+      "src/Releases.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 95,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    },
+    "moduleFileExtensions": [
+      "js",
+      "ts"
+    ],
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "testRunner": "jest-circus/runner",
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "verbose": true
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "@types/node": "^20.10.6",
+    "glob": "^10.3.10",
+    "untildify": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "jest-circus": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3"
+  },
+  "resolutions": {
+    "jest-cli/yargs": "^17.3.1"
+  }
+}

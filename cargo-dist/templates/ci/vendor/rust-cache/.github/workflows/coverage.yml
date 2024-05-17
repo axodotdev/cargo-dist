@@ -1,0 +1,30 @@
+name: coverage
+
+on: [push, pull_request]
+
+jobs:
+  coverage:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    name: Test `cargo-llvm-cov` on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: rustup toolchain install stable --profile minimal --component llvm-tools-preview --no-self-update
+
+      - uses: taiki-e/install-action@cargo-llvm-cov
+
+      - uses: ./
+        with:
+          workspaces: tests
+
+      - run: cargo llvm-cov --all-features --workspace
+        working-directory: tests

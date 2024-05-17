@@ -1,0 +1,32 @@
+name: buildjet
+
+on: [push, pull_request]
+
+jobs:
+  buildjet:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    name: Test buildjet provider on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - uses: ./
+        with:
+          workspaces: tests
+          cache-provider: buildjet
+
+      - run: |
+          cargo check
+          cargo test
+          cargo build --release
+        working-directory: tests

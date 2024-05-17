@@ -1,0 +1,251 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    name: Build
+
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Compile
+      run: npm run build
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Format
+      run: npm run format-check
+
+    - name: Test
+      run: npm run test
+
+    # Test end-to-end by uploading two artifacts and then downloading them
+    - name: Create artifact files
+      run: |
+        mkdir -p path/to/dir-1
+        mkdir -p path/to/dir-2
+        mkdir -p path/to/dir-3
+        echo "Lorem ipsum dolor sit amet" > path/to/dir-1/file1.txt
+        echo "Hello world from file #2" > path/to/dir-2/file2.txt
+
+    # Upload a single file artifact
+    - name: 'Upload artifact #1'
+      uses: ./
+      with:
+        name: 'Artifact-A-${{ matrix.runs-on }}'
+        path: path/to/dir-1/file1.txt
+
+    # Upload using a wildcard pattern
+    - name: 'Upload artifact #2'
+      uses: ./
+      with:
+        name: 'Artifact-Wildcard-${{ matrix.runs-on }}'
+        path: path/**/dir*/
+
+    # Upload a multi-path artifact
+    - name: 'Upload artifact #3'
+      uses: ./
+      with:
+        name: 'Multi-Path-Artifact-${{ matrix.runs-on }}'
+        path: |
+          path/to/dir-1/*
+          path/to/dir-[23]/*
+          !path/to/dir-3/*.txt
+
+    # Download Artifact #1 and verify the correctness of the content
+    - name: 'Download artifact #1'
+      uses: actions/download-artifact@v4
+      with:
+        name: 'Artifact-A-${{ matrix.runs-on }}'
+        path: some/new/path
+
+    - name: 'Verify Artifact #1'
+      run: |
+        $file = "some/new/path/file1.txt"
+        if(!(Test-Path -path $file))
+        {
+            Write-Error "Expected file does not exist"
+        }
+        if(!((Get-Content $file) -ceq "Lorem ipsum dolor sit amet"))
+        {
+            Write-Error "File contents of downloaded artifact are incorrect"
+        }
+      shell: pwsh
+
+    # Download Artifact #2 and verify the correctness of the content
+    - name: 'Download artifact #2'
+      uses: actions/download-artifact@v4
+      with:
+        name: 'Artifact-Wildcard-${{ matrix.runs-on }}'
+        path: some/other/path
+
+    - name: 'Verify Artifact #2'
+      run: |
+        $file1 = "some/other/path/to/dir-1/file1.txt"
+        $file2 = "some/other/path/to/dir-2/file2.txt"
+        if(!(Test-Path -path $file1) -or !(Test-Path -path $file2))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $file1) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $file2) -ceq "Hello world from file #2"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+    # Download Artifact #4 and verify the correctness of the content
+    - name: 'Download artifact #4'
+      uses: actions/download-artifact@v4
+      with:
+        name: 'Multi-Path-Artifact-${{ matrix.runs-on }}'
+        path: multi/artifact
+
+    - name: 'Verify Artifact #4'
+      run: |
+        $file1 = "multi/artifact/dir-1/file1.txt"
+        $file2 = "multi/artifact/dir-2/file2.txt"
+        if(!(Test-Path -path $file1) -or !(Test-Path -path $file2))
+        {
+            Write-Error "Expected files do not exist"
+        }
+        if(!((Get-Content $file1) -ceq "Lorem ipsum dolor sit amet") -or !((Get-Content $file2) -ceq "Hello world from file #2"))
+        {
+            Write-Error "File contents of downloaded artifacts are incorrect"
+        }
+      shell: pwsh
+
+    - name: 'Alter file 1 content'
+      run: |
+        echo "This file has changed" > path/to/dir-1/file1.txt
+
+    # Replace the contents of Artifact #1
+    - name: 'Overwrite artifact #1'
+      uses: ./
+      with:
+        name: 'Artifact-A-${{ matrix.runs-on }}'
+        path: path/to/dir-1/file1.txt
+        overwrite: true
+
+    # Download replaced Artifact #1 and verify the correctness of the content
+    - name: 'Download artifact #1 again'
+      uses: actions/download-artifact@v4
+      with:
+        name: 'Artifact-A-${{ matrix.runs-on }}'
+        path: overwrite/some/new/path
+
+    - name: 'Verify Artifact #1 again'
+      run: |
+        $file = "overwrite/some/new/path/file1.txt"
+        if(!(Test-Path -path $file))
+        {
+            Write-Error "Expected file does not exist"
+        }
+        if(!((Get-Content $file) -ceq "This file has changed"))
+        {
+            Write-Error "File contents of downloaded artifact are incorrect"
+        }
+      shell: pwsh
+  merge:
+    name: Merge
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Merge all artifacts from previous jobs
+    - name: Merge all artifacts in run
+      uses: ./merge/
+      with:
+        # our matrix produces artifacts with the same file, this prevents "stomping" on each other, also makes it
+        # easier to identify each of the merged artifacts
+        separate-directories: true
+    - name: 'Download merged artifacts'
+      uses: actions/download-artifact@v4
+      with:
+        name: merged-artifacts
+        path: all-merged-artifacts
+    - name: 'Check merged artifact has directories for each artifact'
+      run: |
+        $artifacts = @(
+          "Artifact-A-ubuntu-latest",
+          "Artifact-A-macos-latest",
+          "Artifact-A-windows-latest",
+          "Artifact-Wildcard-ubuntu-latest",
+          "Artifact-Wildcard-macos-latest",
+          "Artifact-Wildcard-windows-latest",
+          "Multi-Path-Artifact-ubuntu-latest",
+          "Multi-Path-Artifact-macos-latest",
+          "Multi-Path-Artifact-windows-latest"
+        )
+
+        foreach ($artifact in $artifacts) {
+          $path = "all-merged-artifacts/$artifact"
+          if (!(Test-Path $path)) {
+            Write-Error "$path does not exist."
+          }
+        }
+      shell: pwsh
+
+    # Merge Artifact-A-* from previous jobs
+    - name: Merge all Artifact-A
+      uses: ./merge/
+      with:
+        name: Merged-Artifact-As
+        pattern: 'Artifact-A-*'
+        separate-directories: true
+
+    # Download merged artifacts and verify the correctness of the content
+    - name: 'Download merged artifacts'
+      uses: actions/download-artifact@v4
+      with:
+        name: Merged-Artifact-As
+        path: merged-artifact-a
+
+    - name: 'Verify merged artifacts'
+      run: |
+        $files = @(
+          "merged-artifact-a/Artifact-A-ubuntu-latest/file1.txt",
+          "merged-artifact-a/Artifact-A-macos-latest/file1.txt",
+          "merged-artifact-a/Artifact-A-windows-latest/file1.txt"
+        )
+
+        foreach ($file in $files) {
+          if (!(Test-Path $file)) {
+            Write-Error "$file does not exist."
+          }
+
+          if (!((Get-Content $file) -ceq "This file has changed")) {
+            Write-Error "$file has incorrect content."
+          }
+        }
+      shell: pwsh
+

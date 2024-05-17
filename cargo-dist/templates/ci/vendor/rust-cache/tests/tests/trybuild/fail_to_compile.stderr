@@ -1,0 +1,5 @@
+error[E0599]: no method named `foobar` found for reference `&'static str` in the current scope
+ --> tests/trybuild/fail_to_compile.rs:2:14
+  |
+2 |     "foobar".foobar();
+  |              ^^^^^^ method not found in `&str`

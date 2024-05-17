@@ -1,0 +1,31 @@
+name: git-registry
+
+on: [push, pull_request]
+
+jobs:
+  git-registry:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    name: Test cargo "git" registry on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: git
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - uses: ./
+        with:
+          workspaces: tests
+
+      - run: |
+          cargo check
+          cargo test
+        working-directory: tests
