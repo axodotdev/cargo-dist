@@ -13,7 +13,7 @@ exclude = [
 ]
 
 [dependencies]
-camino = "1.1.1"
+camino = "1.1.7"
 schemars = "0.8.19"
 semver = "1.0.23"
 serde = { version = "1.0.201", features = ["derive"] }
