@@ -980,9 +980,9 @@ impl<'de> Deserialize<'de> for ZipStyle {
             ".zip" => Ok(ZipStyle::Zip),
             ".tar.gz" => Ok(ZipStyle::Tar(CompressionImpl::Gzip)),
             ".tar.xz" => Ok(ZipStyle::Tar(CompressionImpl::Xzip)),
-            ".tar.zst" => Ok(ZipStyle::Tar(CompressionImpl::Zstd)),
+            ".tar.zstd" | ".tar.zst" => Ok(ZipStyle::Tar(CompressionImpl::Zstd)),
             _ => Err(D::Error::custom(format!(
-                "unknown archive format {ext}, expected one of: .zip, .tar.gz, .tar.xz, .tar.zst"
+                "unknown archive format {ext}, expected one of: .zip, .tar.gz, .tar.xz, .tar.zstd, .tar.zst"
             ))),
         }
     }
