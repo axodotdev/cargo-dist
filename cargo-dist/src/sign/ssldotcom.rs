@@ -142,7 +142,6 @@ fn fetch_code_sign_tool(dist_dir: &Utf8Path) -> DistResult<Utf8PathBuf> {
     let zip_path = fetch_dir.join(ZIP_NAME);
     let unzipped_dir = fetch_dir.join(CODESIGNTOOL_SUBDIR);
     let cmd = unzipped_dir.join(WINDOWS_CMD_NAME);
-    // let unzipped_dir = Utf8PathBuf::from("C:/Users/ninte/Downloads/CodeSignTool-v1.3.0-windows/");
 
     // Cache the download
     if cmd.exists() {
