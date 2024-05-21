@@ -187,6 +187,12 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
+    {{%- if ssldotcom_windows_sign %}}
+      SSLDOTCOM_USERNAME: ${{ secrets.SSLDOTCOM_USERNAME }}
+      SSLDOTCOM_PASSWORD: ${{ secrets.SSLDOTCOM_PASSWORD }}
+      SSLDOTCOM_CREDENTIAL_ID: ${{ secrets.SSLDOTCOM_CREDENTIAL_ID }}
+      SSLDOTCOM_TOTP_SECRET: ${{ secrets.SSLDOTCOM_TOTP_SECRET }}
+    {{%- endif %}}
     steps:
       - name: enable windows longpaths
         run: |
@@ -326,68 +332,6 @@ jobs:
     secrets: inherit
 {{%- endfor %}}
 
-{{%- if ssldotcom_windows_sign %}}
-
-  # Sign Windows artifacts with ssl.com
-  sign-windows-artifacts:
-    needs:
-      - plan
-      - build-global-artifacts
-    {{%- for job in global_artifacts_jobs %}}
-      - custom-{{{ job|safe }}}
-    {{%- endfor %}}
-    runs-on: "ubuntu-20.04"
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SIGN_DIR_IN: target/distrib/sign-input
-      SIGN_DIR_OUT: target/distrib/sign-output
-    steps:
-      # Get all the artifacts for the signing tasks to use
-      - name: Fetch local artifacts
-        uses: actions/download-artifact@v4
-        with:
-          # At the moment we hardcode this, as this is the only Windows
-          # triple we support.
-          name: artifacts-build-local-x86_64-pc-windows-msvc
-          path: target/distrib/
-      # Only try to sign files that the tool can handle
-      - name: Select Signable Artifacts
-        run: |
-          mkdir -p "$SIGN_DIR_IN"
-          mkdir -p "$SIGN_DIR_OUT"
-          for file in target/distrib/*.{msi,ps1}; do
-            [[ -e $file ]] && mv "$file" "$SIGN_DIR_IN" && echo "signing $file";
-          done
-      # Sign the files
-      - name: Sign Artifacts with CodeSignTool
-        uses: sslcom/esigner-codesign@develop
-        with:
-          command: batch_sign
-          username: ${{ secrets.SSLDOTCOM_USERNAME }}
-          password: ${{ secrets.SSLDOTCOM_PASSWORD }}
-          credential_id: ${{ secrets.SSLDOTCOM_CREDENTIAL_ID }}
-          totp_secret: ${{ secrets.SSLDOTCOM_TOTP_SECRET }}
-          dir_path: ${{ env.SIGN_DIR_IN }}
-          output_path: ${{ env.SIGN_DIR_OUT }}
-          environment_name: {{%- if ssldotcom_windows_sign == "test" %}} TEST {{%- else %}} PROD {{%- endif %}}
-      # Regenerate checksum files for things that have been signed
-      - name: Regenerate Checksums
-        run: |
-          pushd "$SIGN_DIR_OUT"
-          for filename in *; do
-            echo "checksuming $filename"
-            sha256sum --binary "$filename" > "$filename.sha256"
-          done
-          popd
-      # Upload the result, overwriting old files
-      - name: "Upload artifacts"
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifacts-build-local-x86_64-pc-windows-msvc
-          path: ${{ env.SIGN_DIR_OUT }}
-          overwrite: true
-{{%- endif %}}
-
 {{%- if "axodotdev" in hosting_providers %}}
   # Uploads the artifacts to Axo Releases and tentatively creates Releases for them.
   # This makes perma URLs like /v1.0.0/ live for subsequent publish steps to use, but
@@ -412,9 +356,6 @@ jobs:
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
       - build-global-artifacts
-    {{%- if ssldotcom_windows_sign %}}
-      - sign-windows-artifacts
-    {{%- endif %}}
     {{%- for job in global_artifacts_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
@@ -479,9 +420,6 @@ jobs:
       - build-local-artifacts
     {{%- endif %}}
       - build-global-artifacts
-    {{%- if ssldotcom_windows_sign %}}
-      - sign-windows-artifacts
-    {{%- endif %}}
     {{%- for job in global_artifacts_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}

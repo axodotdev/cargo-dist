@@ -8,7 +8,7 @@ use super::InstallerInfo;
 use crate::{
     backend::templates::{Templates, TEMPLATE_INSTALLER_NPM, TEMPLATE_INSTALLER_NPM_RUN_JS},
     errors::DistResult,
-    SortedMap, SortedSet,
+    DistGraph, SortedMap, SortedSet,
 };
 
 /// Info about an npm installer
@@ -61,8 +61,9 @@ struct RunInfo {
     bin: String,
 }
 
-pub(crate) fn write_npm_project(templates: &Templates, info: &NpmInstallerInfo) -> DistResult<()> {
+pub(crate) fn write_npm_project(dist: &DistGraph, info: &NpmInstallerInfo) -> DistResult<()> {
     // First render the dir
+    let templates = &dist.templates;
     let mut files = templates.render_dir_to_clean_strings(TEMPLATE_INSTALLER_NPM, info)?;
     let platforms = platforms(info);
     mangle_run_js(templates, &platforms, &mut files)?;

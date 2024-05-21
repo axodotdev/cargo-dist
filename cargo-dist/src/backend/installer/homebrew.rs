@@ -6,11 +6,8 @@ use serde::Serialize;
 
 use super::InstallerInfo;
 use crate::{
-    backend::templates::{Templates, TEMPLATE_INSTALLER_RB},
-    config::ChecksumStyle,
-    errors::DistResult,
-    installer::ExecutableZipFragment,
-    tasks::DistGraph,
+    backend::templates::TEMPLATE_INSTALLER_RB, config::ChecksumStyle, errors::DistResult,
+    installer::ExecutableZipFragment, tasks::DistGraph,
 };
 
 /// Info about a Homebrew formula
@@ -51,8 +48,7 @@ pub struct HomebrewInstallerInfo {
 }
 
 pub(crate) fn write_homebrew_formula(
-    templates: &Templates,
-    _graph: &DistGraph,
+    dist: &DistGraph,
     source_info: &HomebrewInstallerInfo,
     manifest: &DistManifest,
 ) -> DistResult<()> {
@@ -72,7 +68,9 @@ pub(crate) fn write_homebrew_formula(
     use_sha256_checksum(manifest, &info.arm64_linux, &mut info.arm64_linux_sha256);
     use_sha256_checksum(manifest, &info.x86_64_linux, &mut info.x86_64_linux_sha256);
 
-    let script = templates.render_file_to_clean_string(TEMPLATE_INSTALLER_RB, &info)?;
+    let script = dist
+        .templates
+        .render_file_to_clean_string(TEMPLATE_INSTALLER_RB, &info)?;
     LocalAsset::write_new(&script, &info.inner.dest_path)?;
     Ok(())
 }

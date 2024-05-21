@@ -66,6 +66,7 @@ use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
 use crate::platform::PlatformSupport;
+use crate::sign::Signing;
 use crate::{
     backend::{
         installer::{
@@ -184,6 +185,8 @@ pub struct DistGraph {
 
     /// Info about the tools we're using to build
     pub tools: Tools,
+    /// Signing tools
+    pub signer: Signing,
     /// Minijinja templates we might want to render
     pub templates: Templates,
 
@@ -299,6 +302,10 @@ pub struct Tools {
     pub brew: Option<Tool>,
     /// git, used if the repository is a git repo
     pub git: Option<Tool>,
+    /// ssl.com's CodeSignTool, for Windows Code Signing
+    ///
+    /// <https://www.ssl.com/guide/esigner-codesigntool-command-guide/>
+    pub code_sign_tool: Option<Tool>,
 }
 
 /// Info about the cargo toolchain we're using
@@ -1036,6 +1043,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let systems = SortedMap::from_iter([(system_id.clone(), system)]);
 
+        let signer = Signing::new(
+            &tools.cargo.host_target,
+            &dist_dir,
+            ssldotcom_windows_sign.clone(),
+        )?;
+
         Ok(Self {
             inner: DistGraph {
                 system_id,
@@ -1056,6 +1069,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desired_cargo_dist_version,
                 desired_rust_toolchain,
                 tag_namespace,
+                signer,
                 tools,
                 local_builds_are_lies,
                 templates,
@@ -2708,6 +2722,8 @@ fn tool_info() -> DistResult<Tools> {
         rustup: find_tool("rustup", "-V"),
         brew: find_tool("brew", "--version"),
         git: find_tool("git", "--version"),
+        // Computed later if needed
+        code_sign_tool: None,
     })
 }
 
