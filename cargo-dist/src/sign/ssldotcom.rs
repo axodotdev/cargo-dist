@@ -11,9 +11,15 @@ use crate::errors::*;
 use crate::TargetTriple;
 
 /// An instance of ssl.com's CodeSignTool
+#[derive(Debug)]
 pub struct CodeSignTool {
     tool: Utf8PathBuf,
     tool_dir: Utf8PathBuf,
+    env: CodeSignToolEnv,
+}
+
+/// Required env var secrets for ssl.com's CodeSignTool
+struct CodeSignToolEnv {
     username: String,
     password: String,
     credential_id: String,
@@ -21,16 +27,42 @@ pub struct CodeSignTool {
 }
 
 // manual debug impl to prevent anyone adding derive(Debug) and leaking SECRETS
-impl std::fmt::Debug for CodeSignTool {
+impl std::fmt::Debug for CodeSignToolEnv {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("CodeSignTool")
-            .field("tool", &self.tool)
-            .field("tool_dir", &self.tool_dir)
+        f.debug_struct("CodeSignToolEnv")
             .field("username", &"<hidden>")
             .field("password", &"<hidden>")
             .field("credential_id", &"<hidden>")
             .field("totp_secret", &"<hidden>")
             .finish()
+    }
+}
+
+impl CodeSignToolEnv {
+    fn new() -> DistResult<Option<Self>> {
+        if let (Some(username), Some(password), Some(credential_id), Some(totp_secret)) = (
+            Self::var("SSLDOTCOM_USERNAME"),
+            Self::var("SSLDOTCOM_PASSWORD"),
+            Self::var("SSLDOTCOM_CREDENTIAL_ID"),
+            Self::var("SSLDOTCOM_TOTP_SECRET"),
+        ) {
+            Ok(Some(Self {
+                username,
+                password,
+                credential_id,
+                totp_secret,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn var(var: &str) -> Option<String> {
+        let val = std::env::var(var).ok();
+        if val.is_none() {
+            warn!("{var} is missing");
+        }
+        val
     }
 }
 
@@ -49,36 +81,23 @@ impl CodeSignTool {
             return Ok(None);
         }
 
-        let username = require_env_var("SSLDOTCOM_USERNAME")?;
-        let password = require_env_var("SSLDOTCOM_PASSWORD")?;
-        let credential_id = require_env_var("SSLDOTCOM_CREDENTIAL_ID")?;
-        let totp_secret = require_env_var("SSLDOTCOM_TOTP_SECRET")?;
+        if let Some(env) = CodeSignToolEnv::new()? {
+            let tool = fetch_code_sign_tool(dist_dir)?;
+            let tool_dir = tool
+                .parent()
+                .expect("CodeSignTool wasn't in a directory!?")
+                .to_owned();
+            configure_code_sign_tool(&tool_dir, mode)?;
 
-        // TODO: can we identify CI vs not to do this more carefully?
-        if username.is_empty()
-            || password.is_empty()
-            || credential_id.is_empty()
-            || totp_secret.is_empty()
-        {
-            warn!("skipping codesigning, some SSLDOTCOM env-vars aren't set");
-            return Ok(None);
+            Ok(Some(CodeSignTool {
+                tool,
+                tool_dir,
+                env,
+            }))
+        } else {
+            warn!("skipping codesigning, required SSLDOTCOM env-vars aren't set");
+            Ok(None)
         }
-
-        let tool = fetch_code_sign_tool(dist_dir)?;
-        let tool_dir = tool
-            .parent()
-            .expect("CodeSignTool wasn't in a directory!?")
-            .to_owned();
-        configure_code_sign_tool(&tool_dir, mode)?;
-
-        Ok(Some(CodeSignTool {
-            tool,
-            tool_dir,
-            username,
-            password,
-            credential_id,
-            totp_secret,
-        }))
     }
 
     pub fn sign(&self, file: &Utf8Path) -> DistResult<()> {
@@ -87,10 +106,7 @@ impl CodeSignTool {
         let CodeSignTool {
             tool,
             tool_dir,
-            username,
-            password,
-            credential_id,
-            totp_secret,
+            env,
         } = self;
 
         Cmd::new(tool, "sign windows artifacts")
@@ -99,10 +115,10 @@ impl CodeSignTool {
             .current_dir(tool_dir)
             .arg("sign")
             .arg(format!("-input_file_path={file}"))
-            .arg(format!("-username={username}"))
-            .arg(format!("-password={password}"))
-            .arg(format!("-credential_id={credential_id}"))
-            .arg(format!("-totp_secret={totp_secret}"))
+            .arg(format!("-username={}", &env.username))
+            .arg(format!("-password={}", &env.password))
+            .arg(format!("-credential_id={}", &env.credential_id))
+            .arg(format!("-totp_secret={}", &env.totp_secret))
             .arg("-override=true")
             // Disable logging, we're passing several SECRETS
             .log(None)
@@ -110,11 +126,6 @@ impl CodeSignTool {
             .status()?;
         Ok(())
     }
-}
-
-fn require_env_var(var: &str) -> DistResult<String> {
-    let val = std::env::var(var).unwrap_or_default();
-    Ok(val)
 }
 
 /// Download code sign tool and prepare it for usage
