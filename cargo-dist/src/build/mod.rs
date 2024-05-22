@@ -196,6 +196,7 @@ impl BuildExpectations {
             linkage.other.insert(cargo_dist_schema::Library {
                 path: "fakelib".to_owned(),
                 source: None,
+                package_manager: None,
             });
             linkage
         } else {

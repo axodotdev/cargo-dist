@@ -626,6 +626,17 @@ pub struct Linkage {
     pub frameworks: SortedSet<Library>,
 }
 
+/// Represents the package manager a library was installed by
+#[derive(
+    Clone, Copy, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord,
+)]
+pub enum PackageManager {
+    /// Homebrew (usually for Mac)
+    Homebrew,
+    /// Apt (Debian, Ubuntu, etc)
+    Apt,
+}
+
 /// Represents a dynamic library located somewhere on the system
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Library {
@@ -634,6 +645,8 @@ pub struct Library {
     /// The package from which a library comes, if relevant
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+    /// Which package manager provided this library
+    pub package_manager: Option<PackageManager>,
 }
 
 impl Linkage {
@@ -653,12 +666,41 @@ impl Linkage {
         self.other.extend(other.iter().cloned());
         self.frameworks.extend(frameworks.iter().cloned());
     }
+
+    /// Returns a flat list of packages that come from the specific package manager
+    pub fn packages_from(&self, package_manager: PackageManager) -> Vec<String> {
+        let mut packages = vec![];
+        packages.extend(
+            self.system
+                .iter()
+                .filter(|l| l.package_manager == Some(package_manager))
+                .filter_map(|l| l.source.clone()),
+        );
+        packages.extend(
+            self.homebrew
+                .iter()
+                .filter(|l| l.package_manager == Some(package_manager))
+                .filter_map(|l| l.source.clone()),
+        );
+        packages.extend(
+            self.other
+                .iter()
+                .filter(|l| l.package_manager == Some(package_manager))
+                .filter_map(|l| l.source.clone()),
+        );
+
+        packages
+    }
 }
 
 impl Library {
     /// Make a new Library with the given path and no source
     pub fn new(path: String) -> Self {
-        Self { path, source: None }
+        Self {
+            path,
+            source: None,
+            package_manager: None,
+        }
     }
 }
 

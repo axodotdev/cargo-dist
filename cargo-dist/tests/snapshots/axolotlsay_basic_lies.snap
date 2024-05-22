@@ -3294,7 +3294,8 @@ run("axolotlsay");
       "linkage": {
         "other": [
           {
-            "path": "fakelib"
+            "path": "fakelib",
+            "package_manager": null
           }
         ]
       }
@@ -3309,7 +3310,8 @@ run("axolotlsay");
       "linkage": {
         "other": [
           {
-            "path": "fakelib"
+            "path": "fakelib",
+            "package_manager": null
           }
         ]
       }
@@ -3324,7 +3326,8 @@ run("axolotlsay");
       "linkage": {
         "other": [
           {
-            "path": "fakelib"
+            "path": "fakelib",
+            "package_manager": null
           }
         ]
       }
@@ -3339,7 +3342,8 @@ run("axolotlsay");
       "linkage": {
         "other": [
           {
-            "path": "fakelib"
+            "path": "fakelib",
+            "package_manager": null
           }
         ]
       }
