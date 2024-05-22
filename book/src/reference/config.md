@@ -791,6 +791,19 @@ The supported choices are:
 By default all runs of `cargo-dist` will be trying to handle all platforms specified here at once. If you specify `--target=...` on the CLI this will focus the run to only those platforms. As discussed in [concepts][], this cannot be used to specify platforms that are not listed in `metadata.dist`, to ensure different runs agree on the maximum set of platforms.
 
 
+### vendor-workflow-deps
+
+> since 0.15.0
+
+Example: `vendor-workflow-deps = true`
+
+When enabled, `cargo dist init` will copy the complete source of (almost) all external GitHub actions into your git repository at `.github/actions` and configure your release workflow to use the local copies instead of the external copies. This feature is intended for users with specific restricted security contexts who want to ensure they're using known versions of actions without fetching them from third party repositories.
+
+The only action that won't be vendored is `actions/checkout`; we still need to call this external action to obtain a checkout of your source code in order to be able to access the other vendored actions.
+
+At the time of writing, the vendored repositories contain approximately 750,000 lines of text.
+
+
 ### unix-archive
 
 > since 0.0.5
