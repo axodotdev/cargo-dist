@@ -814,7 +814,8 @@ Allows you to specify the file format to use for [archives][] that target window
 * ".zip"
 * ".tar.gz"
 * ".tar.xz"
-* ".tar.zstd"
+* ".tar.zstd" (deprecated for Zstd)
+* ".tar.zst" (recommended for Zstd)
 
 See also unix-archive below.
 

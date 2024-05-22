@@ -953,7 +953,7 @@ pub enum CompressionImpl {
     Gzip,
     /// `.xz`
     Xzip,
-    /// `.zstd`
+    /// `.zst`
     Zstd,
 }
 impl ZipStyle {
@@ -965,7 +965,7 @@ impl ZipStyle {
             ZipStyle::Tar(compression) => match compression {
                 CompressionImpl::Gzip => ".tar.gz",
                 CompressionImpl::Xzip => ".tar.xz",
-                CompressionImpl::Zstd => ".tar.zstd",
+                CompressionImpl::Zstd => ".tar.zst",
             },
         }
     }
@@ -992,9 +992,9 @@ impl<'de> Deserialize<'de> for ZipStyle {
             ".zip" => Ok(ZipStyle::Zip),
             ".tar.gz" => Ok(ZipStyle::Tar(CompressionImpl::Gzip)),
             ".tar.xz" => Ok(ZipStyle::Tar(CompressionImpl::Xzip)),
-            ".tar.zstd" => Ok(ZipStyle::Tar(CompressionImpl::Zstd)),
+            ".tar.zstd" | ".tar.zst" => Ok(ZipStyle::Tar(CompressionImpl::Zstd)),
             _ => Err(D::Error::custom(format!(
-                "unknown archive format {ext}, expected one of: .zip, .tar.gz, .tar.xz, .tar.zstd"
+                "unknown archive format {ext}, expected one of: .zip, .tar.gz, .tar.xz, .tar.zstd, .tar.zst"
             ))),
         }
     }
