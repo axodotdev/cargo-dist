@@ -1911,7 +1911,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Install Rust
+      - name: Use rustup to set correct Rust version
         run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
       - uses: swatinem/rust-cache@v2
         with:

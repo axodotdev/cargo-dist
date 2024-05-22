@@ -201,7 +201,7 @@ jobs:
         with:
           submodules: recursive
       {{%- if rust_version %}}
-      - name: Install Rust
+      - name: Use rustup to set correct Rust version
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - uses: {{% if vendor_actions %}}./.github/actions/rust-cache{{% else %}}swatinem/rust-cache@v2{{% endif %}}
