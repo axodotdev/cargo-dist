@@ -2032,7 +2032,7 @@ install(false);
         "axolotlsay": "run-axolotlsay.js"
       },
       "dependencies": {
-        "axios": "^1.7.0",
+        "axios": "^1.7.2",
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
@@ -2126,10 +2126,10 @@ install(false);
         "form-data": "^4.0.0",
         "proxy-from-env": "^1.1.0"
       },
-      "integrity": "sha512-+LV37nQcd1EpFalkXksWNBiA17NZ5m5/WspmHGmZmdx1qBOg/VNq/c4eRJiA9VQQHBOs+N0ZhhdU10h2TyNK7Q==",
+      "integrity": "sha512-2A8QhOMrbomlDuiLeK9XibIBzuHeRcqqNOHp0Cyp5EoJ1IFDh+XZH3A6BkXtv0K4gFGCI0Y4BM7B1wOEi0Rmgw==",
       "license": "MIT",
-      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.1.tgz",
-      "version": "1.7.1"
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.2.tgz",
+      "version": "1.7.2"
     },
     "node_modules/axios-proxy-builder": {
       "dependencies": {
@@ -2338,7 +2338,7 @@ install(false);
       },
       "dependencies": {
         "foreground-child": "^3.1.0",
-        "jackspeak": "^2.3.6",
+        "jackspeak": "^3.1.2",
         "minimatch": "^9.0.1",
         "minipass": "^7.0.4",
         "path-scurry": "^1.11.0"
@@ -2349,10 +2349,10 @@ install(false);
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
       },
-      "integrity": "sha512-0c6RlJt1TICLyvJYIApxb8GsXoai0KUP7AxKKAtsYXdgJR1mGEUa7DgwShbdk1nly0PYoZj01xd4hzbq3fsjpw==",
+      "integrity": "sha512-JDKXl1DiuuHJ6fVS2FXjownaavciiHNUU4mOvV/B793RLh05vZL1rcPnCSaOgv1hDT6RDlY7AB7ZUvFYAtPgAw==",
       "license": "ISC",
-      "resolved": "https://registry.npmjs.org/glob/-/glob-10.3.15.tgz",
-      "version": "10.3.15"
+      "resolved": "https://registry.npmjs.org/glob/-/glob-10.3.16.tgz",
+      "version": "10.3.16"
     },
     "node_modules/is-fullwidth-code-point": {
       "engines": {
@@ -2379,13 +2379,13 @@ install(false);
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
       },
-      "integrity": "sha512-N3yCS/NegsOBokc8GAdM8UcmfsKiSS8cipheD/nivzr700H+nsMOxJjQnvwOcRYVuFkdH0wGUvW2WbXGmrZGbQ==",
+      "integrity": "sha512-kWmLKn2tRtfYMF/BakihVVRzBKOxz4gJMiL2Rj91WnAB5TPZumSH99R/Yf1qE1u4uRimvCSJfm6hnxohXeEXjQ==",
       "license": "BlueOak-1.0.0",
       "optionalDependencies": {
         "@pkgjs/parseargs": "^0.11.0"
       },
-      "resolved": "https://registry.npmjs.org/jackspeak/-/jackspeak-2.3.6.tgz",
-      "version": "2.3.6"
+      "resolved": "https://registry.npmjs.org/jackspeak/-/jackspeak-3.1.2.tgz",
+      "version": "3.1.2"
     },
     "node_modules/lru-cache": {
       "engines": {
@@ -2826,7 +2826,7 @@ install(false);
     "axolotlsay": "run-axolotlsay.js"
   },
   "dependencies": {
-    "axios": "^1.7.0",
+    "axios": "^1.7.2",
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
