@@ -2,12 +2,13 @@
 //!
 //! In the future this may get split up into submodules.
 
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, fmt::Write, str::FromStr};
 
 use axoasset::{LocalAsset, RemoteAsset};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
 use serde::Serialize;
+use sha2::Digest;
 use tracing::{info, warn};
 
 use crate::{
@@ -18,7 +19,7 @@ use crate::{
     },
     create_tmp,
     errors::DistResult,
-    DistGraph, SortedMap, SortedSet, TargetTriple,
+    DistError, DistGraph, SortedMap, SortedSet, TargetTriple,
 };
 
 const GITHUB_ACTIONS_DIR: &str = ".github/actions/";
@@ -30,15 +31,23 @@ const GITHUB_CI_FILE: &str = "release.yml";
 const GITHUB_VENDORED_DOWNLOAD_ARTIFACT_REPO: &str = "actions/download-artifact";
 // Floating tag: v4
 const GITHUB_VENDORED_DOWNLOAD_ARTIFACT_REVISION: &str = "65a9edc5881444af0b9093a5e628f2fe47ea3b2e";
+const GITHUB_VENDORED_DOWNLOAD_ARTIFACT_HASH: &str =
+    "a8711a1218e748f8f067ae8a2400fe6057f822d93df682a4893e0498824766bf";
 const GITHUB_VENDORED_RELEASE_REPO: &str = "ncipollo/release-action";
 // Floating tag: v1
 const GITHUB_VENDORED_RELEASE_REVISION: &str = "2c591bcc8ecdcd2db72b97d6147f871fcd833ba5";
+const GITHUB_VENDORED_RELEASE_HASH: &str =
+    "d250495fdc9e5fdb9ba11573a2db0280825ad99b599f9edc2a97c93c8c711dc3";
 const GITHUB_VENDORED_RUST_CACHE_REPO: &str = "Swatinem/rust-cache";
 // Floating tag: v2
 const GITHUB_VENDORED_RUST_CACHE_REVISION: &str = "23bce251a8cd2ffc3c1075eaa2367cf899916d84";
+const GITHUB_VENDORED_RUST_CACHE_HASH: &str =
+    "66d5fe3ef0d928c52baa7a604746eb73e23356d8891df65c2d7dd6353bbff97c";
 const GITHUB_VENDORED_UPLOAD_ARTIFACT_REPO: &str = "actions/upload-artifact";
 // Floating tag: v4
 const GITHUB_VENDORED_UPLOAD_ARTIFACT_REVISION: &str = "65462800fd760344b1a7b4382951275a0abb4808";
+const GITHUB_VENDORED_UPLOAD_ARTIFACT_HASH: &str =
+    "3574378b2862238bc550b90d3711eb09e9ccb9d8052519d9a23d061e468ed811";
 
 /// Info about running cargo-dist in Github CI
 #[derive(Debug, Serialize)]
@@ -239,23 +248,27 @@ impl GithubCiInfo {
         Ok(rendered)
     }
 
-    fn all_vendored_actions(&self) -> &[(&str, &str)] {
+    fn all_vendored_actions(&self) -> &[(&str, &str, &str)] {
         &[
             (
                 GITHUB_VENDORED_DOWNLOAD_ARTIFACT_REPO,
                 GITHUB_VENDORED_DOWNLOAD_ARTIFACT_REVISION,
+                GITHUB_VENDORED_DOWNLOAD_ARTIFACT_HASH,
             ),
             (
                 GITHUB_VENDORED_RELEASE_REPO,
                 GITHUB_VENDORED_RELEASE_REVISION,
+                GITHUB_VENDORED_RELEASE_HASH,
             ),
             (
                 GITHUB_VENDORED_RUST_CACHE_REPO,
                 GITHUB_VENDORED_RUST_CACHE_REVISION,
+                GITHUB_VENDORED_RUST_CACHE_HASH,
             ),
             (
                 GITHUB_VENDORED_UPLOAD_ARTIFACT_REPO,
                 GITHUB_VENDORED_UPLOAD_ARTIFACT_REVISION,
+                GITHUB_VENDORED_UPLOAD_ARTIFACT_HASH,
             ),
         ]
     }
@@ -264,11 +277,12 @@ impl GithubCiInfo {
     pub fn write_vendored_actions(&self, dist: &DistGraph) -> DistResult<()> {
         let path = dist.workspace_dir.join(GITHUB_ACTIONS_DIR);
 
-        for (repo, revision) in self.all_vendored_actions() {
+        for (repo, revision, hash) in self.all_vendored_actions() {
             vendor_repo(
                 &path,
                 &GithubRepoPair::from_str(repo).expect("failed to parse string?!"),
                 revision,
+                hash,
             )?;
         }
 
@@ -299,7 +313,12 @@ impl GithubCiInfo {
     }
 }
 
-fn vendor_repo(root: &Utf8PathBuf, repo: &GithubRepoPair, revision: &str) -> DistResult<()> {
+fn vendor_repo(
+    root: &Utf8PathBuf,
+    repo: &GithubRepoPair,
+    revision: &str,
+    expected_hash: &str,
+) -> DistResult<()> {
     let url = format!("https://github.com/{repo}/archive/{revision}.tar.gz");
 
     let repo_path = root.join(&repo.repo);
@@ -312,6 +331,22 @@ fn vendor_repo(root: &Utf8PathBuf, repo: &GithubRepoPair, revision: &str) -> Dis
     info!("Vendoring action {}@{}", repo, revision);
     let handle = tokio::runtime::Handle::current();
     let bytes = handle.block_on(RemoteAsset::load_bytes(&url))?;
+
+    // Validate checksum before using the fetched tarball
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(&bytes);
+    let mut hash_string = String::new();
+    for byte in hasher.finalize() {
+        write!(&mut hash_string, "{:02x}", byte).unwrap();
+    }
+
+    if hash_string != expected_hash {
+        return Err(DistError::VendoredActionHashMismatch {
+            expected: expected_hash.to_owned(),
+            actual: hash_string,
+            repo: repo.to_string(),
+        });
+    }
 
     let (_tmp_dir, tmp_root) = create_tmp()?;
     let artifact_file = tmp_root.join(format!("{revision}.tar.gz"));

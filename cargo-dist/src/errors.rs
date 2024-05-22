@@ -375,6 +375,18 @@ pub enum DistError {
         /// The input
         pair: String,
     },
+
+    /// Checksum mismatch when fetching vendored actions
+    #[error("Checksum mismatch when fetching vendored GitHub action {repo}")]
+    #[diagnostic(help("Expected {expected} but got {actual}"))]
+    VendoredActionHashMismatch {
+        /// The checksum we expected
+        expected: String,
+        /// The actual checksum
+        actual: String,
+        /// The action we were fetching (owner/repo format)
+        repo: String,
+    },
 }
 
 /// Errors related to finding the project
