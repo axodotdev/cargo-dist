@@ -104,16 +104,14 @@ impl Templates {
             // Github CI ymls already use {{ }} as delimiters so add an extra layer
             // of braces to disambiguate without needing tons of escaping
             let mut yaml_env = Environment::new();
-            yaml_env
-                .set_syntax(minijinja::Syntax {
-                    block_start: "{{%".into(),
-                    block_end: "%}}".into(),
-                    variable_start: "{{{".into(),
-                    variable_end: "}}}".into(),
-                    comment_start: "{{#".into(),
-                    comment_end: "#}}".into(),
-                })
-                .expect("failed to change jinja2 syntax for yaml files");
+            yaml_env.set_syntax(
+                minijinja::syntax::SyntaxConfig::builder()
+                    .block_delimiters("{{%", "%}}")
+                    .variable_delimiters("{{{", "}}}")
+                    .comment_delimiters("{{#", "#}}")
+                    .build()
+                    .expect("failed to change jinja2 syntax for yaml files"),
+            );
             envs.insert(ENV_YAML, yaml_env);
         }
         for env in envs.values_mut() {
