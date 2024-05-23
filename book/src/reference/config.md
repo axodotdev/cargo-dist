@@ -748,6 +748,22 @@ Example: `source-tarball = false`
 By default, cargo-dist creates and uploads source tarballs from your repository. This setting disables that behaviour. This is especially useful for users who distribute closed-source software to hosts outside their git repos and who would prefer not to distribute source code to their users.
 
 
+### ssldotcom-windows-sign
+
+> since 0.15.0
+
+Example: `ssldotcom-windows-sign = "prod"`
+
+If you wish to sign your Windows artifacts (`exe`, `msi`, and `ps1`), 
+
+This config option takes one of two string values: 
+
+- `"prod"`, or
+- `"test"`
+
+These strings are directly correlated with the [environment name](https://github.com/SSLcom/esigner-codesign/blob/develop/README.md?plain=1#L48) that the [SSL.com codesigner tool](https://github.com/SSLcom/esigner-codesign) uses. Setting this to `"prod"` will generate a release workflow that will sign the Windows artifacts with your certificate- which prevents the Windows Defender program from flagging your application as potential malware to the end user. `"test"` is not recommended for production workflows, but can be useful for experimenting with a demo account- signing with this setting will not prevent Windows Defender from flagging your program.
+
+
 ### tag-namespace
 
 > since 0.10.0
