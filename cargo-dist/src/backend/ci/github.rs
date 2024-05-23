@@ -2,52 +2,24 @@
 //!
 //! In the future this may get split up into submodules.
 
-use std::{collections::HashMap, fmt::Write, str::FromStr};
+use std::collections::HashMap;
 
-use axoasset::{LocalAsset, RemoteAsset};
-use camino::Utf8PathBuf;
+use axoasset::LocalAsset;
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
 use serde::Serialize;
-use sha2::Digest;
-use tracing::{info, warn};
+use tracing::warn;
 
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
     config::{
-        DependencyKind, GithubRepoPair, HostingStyle, JinjaGithubRepoPair, ProductionMode,
-        SystemDependencies,
+        DependencyKind, HostingStyle, JinjaGithubRepoPair, ProductionMode, SystemDependencies,
     },
-    create_tmp,
     errors::DistResult,
-    DistError, DistGraph, SortedMap, SortedSet, TargetTriple,
+    DistGraph, SortedMap, SortedSet, TargetTriple,
 };
 
-const GITHUB_ACTIONS_DIR: &str = ".github/actions/";
 const GITHUB_CI_DIR: &str = ".github/workflows/";
 const GITHUB_CI_FILE: &str = "release.yml";
-
-// These represent the latest revision of each vendored action's
-// floating tags at the time of vendoring.
-const GITHUB_VENDORED_DOWNLOAD_ARTIFACT_REPO: &str = "actions/download-artifact";
-// Floating tag: v4
-const GITHUB_VENDORED_DOWNLOAD_ARTIFACT_REVISION: &str = "65a9edc5881444af0b9093a5e628f2fe47ea3b2e";
-const GITHUB_VENDORED_DOWNLOAD_ARTIFACT_HASH: &str =
-    "a8711a1218e748f8f067ae8a2400fe6057f822d93df682a4893e0498824766bf";
-const GITHUB_VENDORED_RELEASE_REPO: &str = "ncipollo/release-action";
-// Floating tag: v1
-const GITHUB_VENDORED_RELEASE_REVISION: &str = "2c591bcc8ecdcd2db72b97d6147f871fcd833ba5";
-const GITHUB_VENDORED_RELEASE_HASH: &str =
-    "d250495fdc9e5fdb9ba11573a2db0280825ad99b599f9edc2a97c93c8c711dc3";
-const GITHUB_VENDORED_RUST_CACHE_REPO: &str = "Swatinem/rust-cache";
-// Floating tag: v2
-const GITHUB_VENDORED_RUST_CACHE_REVISION: &str = "23bce251a8cd2ffc3c1075eaa2367cf899916d84";
-const GITHUB_VENDORED_RUST_CACHE_HASH: &str =
-    "66d5fe3ef0d928c52baa7a604746eb73e23356d8891df65c2d7dd6353bbff97c";
-const GITHUB_VENDORED_UPLOAD_ARTIFACT_REPO: &str = "actions/upload-artifact";
-// Floating tag: v4
-const GITHUB_VENDORED_UPLOAD_ARTIFACT_REVISION: &str = "65462800fd760344b1a7b4382951275a0abb4808";
-const GITHUB_VENDORED_UPLOAD_ARTIFACT_HASH: &str =
-    "3574378b2862238bc550b90d3711eb09e9ccb9d8052519d9a23d061e468ed811";
 
 /// Info about running cargo-dist in Github CI
 #[derive(Debug, Serialize)]
@@ -98,8 +70,6 @@ pub struct GithubCiInfo {
     pub hosting_providers: Vec<HostingStyle>,
     /// whether to prefix release.yml and the tag pattern
     pub tag_namespace: Option<String>,
-    /// whether to vendor all external actions
-    pub vendor_actions: bool,
 }
 
 impl GithubCiInfo {
@@ -223,7 +193,6 @@ impl GithubCiInfo {
             github_releases_repo,
             ssldotcom_windows_sign,
             hosting_providers,
-            vendor_actions: dist.vendor_workflow_deps,
         }
     }
 
@@ -248,54 +217,10 @@ impl GithubCiInfo {
         Ok(rendered)
     }
 
-    fn all_vendored_actions(&self) -> &[(&str, &str, &str)] {
-        &[
-            (
-                GITHUB_VENDORED_DOWNLOAD_ARTIFACT_REPO,
-                GITHUB_VENDORED_DOWNLOAD_ARTIFACT_REVISION,
-                GITHUB_VENDORED_DOWNLOAD_ARTIFACT_HASH,
-            ),
-            (
-                GITHUB_VENDORED_RELEASE_REPO,
-                GITHUB_VENDORED_RELEASE_REVISION,
-                GITHUB_VENDORED_RELEASE_HASH,
-            ),
-            (
-                GITHUB_VENDORED_RUST_CACHE_REPO,
-                GITHUB_VENDORED_RUST_CACHE_REVISION,
-                GITHUB_VENDORED_RUST_CACHE_HASH,
-            ),
-            (
-                GITHUB_VENDORED_UPLOAD_ARTIFACT_REPO,
-                GITHUB_VENDORED_UPLOAD_ARTIFACT_REVISION,
-                GITHUB_VENDORED_UPLOAD_ARTIFACT_HASH,
-            ),
-        ]
-    }
-
-    /// Generate and write the vendored actions to disk
-    pub fn write_vendored_actions(&self, dist: &DistGraph) -> DistResult<()> {
-        let path = dist.workspace_dir.join(GITHUB_ACTIONS_DIR);
-
-        for (repo, revision, hash) in self.all_vendored_actions() {
-            vendor_repo(
-                &path,
-                &GithubRepoPair::from_str(repo).expect("failed to parse string?!"),
-                revision,
-                hash,
-            )?;
-        }
-
-        Ok(())
-    }
-
     /// Write release.yml to disk
     pub fn write_to_disk(&self, dist: &DistGraph) -> DistResult<()> {
         let ci_file = self.github_ci_path(dist);
         let rendered = self.generate_github_ci(dist)?;
-        if dist.vendor_workflow_deps {
-            self.write_vendored_actions(dist)?;
-        }
 
         LocalAsset::write_new_all(&rendered, &ci_file)?;
         eprintln!("generated Github CI to {}", ci_file);
@@ -311,56 +236,6 @@ impl GithubCiInfo {
         let rendered = self.generate_github_ci(dist)?;
         diff_files(&ci_file, &rendered)
     }
-}
-
-fn vendor_repo(
-    root: &Utf8PathBuf,
-    repo: &GithubRepoPair,
-    revision: &str,
-    expected_hash: &str,
-) -> DistResult<()> {
-    let url = format!("https://github.com/{repo}/archive/{revision}.tar.gz");
-
-    let repo_path = root.join(&repo.repo);
-    // If we're updating an existing vendored copy, remove it before
-    // cloning a new copy.
-    if repo_path.exists() {
-        LocalAsset::remove_dir_all(&repo_path)?;
-    }
-
-    info!("Vendoring action {}@{}", repo, revision);
-    let handle = tokio::runtime::Handle::current();
-    let bytes = handle.block_on(RemoteAsset::load_bytes(&url))?;
-
-    // Validate checksum before using the fetched tarball
-    let mut hasher = sha2::Sha256::new();
-    hasher.update(&bytes);
-    let mut hash_string = String::new();
-    for byte in hasher.finalize() {
-        write!(&mut hash_string, "{:02x}", byte).unwrap();
-    }
-
-    if hash_string != expected_hash {
-        return Err(DistError::VendoredActionHashMismatch {
-            expected: expected_hash.to_owned(),
-            actual: hash_string,
-            repo: repo.to_string(),
-        });
-    }
-
-    let (_tmp_dir, tmp_root) = create_tmp()?;
-    let artifact_file = tmp_root.join(format!("{revision}.tar.gz"));
-    std::fs::write(&artifact_file, bytes)?;
-
-    // This will produce a base directory named reponame-revision,
-    // which we'll need to rename to the desired target.
-    // If we were using the CLI tar tool, we'd just be able to
-    // pass `--strip-components`, but the tar crate doesn't have
-    // that feature.
-    LocalAsset::untar_gz_all(&artifact_file, root)?;
-    std::fs::rename(root.join(format!("{}-{}", repo.repo, revision)), repo_path)?;
-
-    Ok(())
 }
 
 /// Given a set of targets we want to build local artifacts for, map them to Github Runners

@@ -19,16 +19,6 @@ cargo-dist has traditionally parsed the version number of new releases and used 
 
 * impl @mistydemeo [feat: allow always marking releases as stable](https://github.com/axodotdev/cargo-dist/pull/1054)
 
-## Vendoring external GitHub actions
-
-This feature allows vendoring (almost) all external GitHub actions called by the release workflow. When enabled, specific known versions of all external actions (except `actions/checkout`) are copied into your repository as a part of `cargo dist init`.
-
-To enable this feature, set the [`vendor-workflow-deps`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#vendor-workflow-deps) option in your `Cargo.toml` to `true`.
-
-* impl
-  * @mistydemeo [feat: vendor GitHub actions](https://github.com/axodotdev/cargo-dist/pull/1074)
-  * @mistydemeo [feat: validate checksums when vendoring actions](https://github.com/axodotdev/cargo-dist/pull/1080)
-
 ## Configuring the global runner
 
 In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs.
