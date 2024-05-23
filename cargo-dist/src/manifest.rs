@@ -125,12 +125,6 @@ pub(crate) fn load_and_merge_manifests(
         };
 
         // Just merge all the system-specific info
-        if systems.keys().any(|k| output.systems.contains_key(k)) {
-            // for now i'm making this only a warning, since the data loss would
-            // be relatively minor, and crashing someone's release process because
-            // we might grab the wrong toolchain info is a bit too rude.
-            warn!("!!! duplicate system keys, platforms may get conflated !!!");
-        }
         output.systems.extend(systems);
         output.assets.extend(assets);
         output.linkage.extend(linkage);
