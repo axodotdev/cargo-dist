@@ -110,7 +110,7 @@ If you know you like the changes, just use `cargo insta accept` to auto-apply al
 
 ## Cutting Releases
 
-cargo-dist is self-hosting, so you just need to push a git-tag with the right format to "do" a release. Of course there's lots of other tedious tasks that come with updating a release, and we use cargo-release to handle all those mechanical details of updating versions/headings/tags. See [these sections of the docs for the release workflow we use](https://opensource.axo.dev/cargo-dist/book/cargo-release-guide.html#using-cargo-release-with-pull-requests).
+cargo-dist is self-hosting, so you just need to push a git-tag with the right format to "do" a release. Of course there's lots of other tedious tasks that come with updating a release, and we use cargo-release to handle all those mechanical details of updating versions/headings/tags. See [these sections of the docs for the release workflow we use](https://opensource.axo.dev/cargo-dist/book/workspaces/cargo-release-guide.html#using-cargo-release-with-pull-requests).
 
 TL;DR:
 
