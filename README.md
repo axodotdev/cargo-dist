@@ -66,21 +66,21 @@ As a distribution tool, cargo-dist gets to flex its biggest superpower: **it gen
     * Uploads build artifacts to the Release
     * Adds relevant release notes from your RELEASES/CHANGELOG
 
-[tarballs]: https://opensource.axo.dev/cargo-dist/book/artifacts/archives.html
-[installers]: https://opensource.axo.dev/cargo-dist/book/installers/index.html
-[manifest]: https://opensource.axo.dev/cargo-dist/book/reference/schema.html
-[github-ci]: https://opensource.axo.dev/cargo-dist/book/ci/github.html
-[ci-providers]: https://opensource.axo.dev/cargo-dist/book/ci/index.html
+[tarballs]: https://axodotdev.github.io/cargo-dist/book/artifacts/archives.html
+[installers]: https://axodotdev.github.io/cargo-dist/book/installers/index.html
+[manifest]: https://axodotdev.github.io/cargo-dist/book/reference/schema.html
+[github-ci]: https://axodotdev.github.io/cargo-dist/book/ci/github.html
+[ci-providers]: https://axodotdev.github.io/cargo-dist/book/ci/index.html
 
 # Read The Book!
 
 We've got all the docs you need over at the [cargo-dist book](https://axodotdev.github.io/cargo-dist/book/)!
 
-* [Introduction](https://opensource.axo.dev/cargo-dist/book/introduction.html)
-* [Install](https://opensource.axo.dev/cargo-dist/book/install.html)
-* [Way-Too-Quickstart](https://opensource.axo.dev/cargo-dist/book/way-too-quickstart.html)
-* [Workspaces Guide](https://opensource.axo.dev/cargo-dist/book/workspaces/index.html)
-* [Reference](https://opensource.axo.dev/cargo-dist/book/reference/index.html)
+* [Introduction](https://axodotdev.github.io/cargo-dist/book/introduction.html)
+* [Install](https://axodotdev.github.io/cargo-dist/book/install.html)
+* [Way-Too-Quickstart](https://axodotdev.github.io/cargo-dist/book/way-too-quickstart.html)
+* [Workspaces Guide](https://axodotdev.github.io/cargo-dist/book/workspaces/index.html)
+* [Reference](https://axodotdev.github.io/cargo-dist/book/reference/index.html)
 
 <div class="oranda-hide">
 
@@ -110,7 +110,7 @@ If you know you like the changes, just use `cargo insta accept` to auto-apply al
 
 ## Cutting Releases
 
-cargo-dist is self-hosting, so you just need to push a git-tag with the right format to "do" a release. Of course there's lots of other tedious tasks that come with updating a release, and we use cargo-release to handle all those mechanical details of updating versions/headings/tags. See [these sections of the docs for the release workflow we use](https://opensource.axo.dev/cargo-dist/book/workspaces/cargo-release-guide.html#using-cargo-release-with-pull-requests).
+cargo-dist is self-hosting, so you just need to push a git-tag with the right format to "do" a release. Of course there's lots of other tedious tasks that come with updating a release, and we use cargo-release to handle all those mechanical details of updating versions/headings/tags. See [these sections of the docs for the release workflow we use](https://axodotdev.github.io/cargo-dist/book/workspaces/cargo-release-guide.html#using-cargo-release-with-pull-requests).
 
 TL;DR:
 
