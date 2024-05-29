@@ -219,6 +219,10 @@ pub(crate) fn add_releases_to_manifest(
                 add_manifest_artifact(cfg, dist, manifest, release, artifact_idx);
             }
         }
+        let out_release =
+            manifest.ensure_release(release.app_name.clone(), release.version.to_string());
+        out_release.display = release.display;
+        out_release.display_name.clone_from(&release.display_name);
     }
 
     Ok(())

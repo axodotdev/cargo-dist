@@ -390,6 +390,13 @@ pub struct DistMetadata {
     /// Whether to install an updater program alongside the software
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_updater: Option<bool>,
+
+    /// Whether artifacts/installers for this app should be displayed in release bodies
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display: Option<bool>,
+    /// How to refer to the app in release bodies
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
 }
 
 impl DistMetadata {
@@ -446,6 +453,8 @@ impl DistMetadata {
             install_updater: _,
             github_releases_repo: _,
             github_releases_submodule_path: _,
+            display: _,
+            display_name: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -522,6 +531,8 @@ impl DistMetadata {
             install_updater,
             github_releases_repo,
             github_releases_submodule_path,
+            display,
+            display_name,
         } = self;
 
         // Check for global settings on local packages
@@ -672,6 +683,12 @@ impl DistMetadata {
         }
         if install_updater.is_none() {
             *install_updater = workspace_config.install_updater;
+        }
+        if display.is_none() {
+            *display = workspace_config.display;
+        }
+        if display_name.is_none() {
+            display_name.clone_from(&workspace_config.display_name);
         }
 
         // This was historically implemented as extend, but I'm not convinced the

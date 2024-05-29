@@ -787,6 +787,13 @@ expression: json_schema
         "app_version"
       ],
       "properties": {
+        "advertise_in_announcements": {
+          "description": "Whether to advertise this app's installers/artifacts in announcements",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "app_name": {
           "description": "The name of the app",
           "type": "string"
@@ -801,6 +808,13 @@ expression: json_schema
           "items": {
             "type": "string"
           }
+        },
+        "display_name": {
+          "description": "Alternative display name that can be prettier",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "hosting": {
           "description": "Hosting info",
