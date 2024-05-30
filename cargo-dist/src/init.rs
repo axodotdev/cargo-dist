@@ -224,6 +224,7 @@ fn get_new_dist_metadata(
             rust_toolchain_version: None,
             ci: None,
             installers: None,
+            install_success_msg: None,
             tap: None,
             formula: None,
             system_dependencies: None,
@@ -803,6 +804,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         dist,
         ci,
         installers,
+        install_success_msg,
         tap,
         formula,
         system_dependencies: _,
@@ -932,6 +934,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "npm-package",
         "# The npm package should have this name\n",
         npm_package.as_deref(),
+    );
+
+    apply_optional_value(
+        table,
+        "install-success-msg",
+        "# Custom message to display on successful install\n",
+        install_success_msg.as_deref(),
     );
 
     apply_optional_value(

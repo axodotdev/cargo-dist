@@ -57,6 +57,8 @@ pub struct InstallerInfo {
     pub hint: String,
     /// Where to install binaries
     pub install_paths: Vec<JinjaInstallPathStrategy>,
+    /// Custom message to display on install success
+    pub install_success_msg: String,
     /// Install receipt to write, if any
     pub receipt: Option<InstallReceipt>,
     /// Aliases to install binaries under

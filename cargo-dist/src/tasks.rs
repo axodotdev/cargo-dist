@@ -678,6 +678,8 @@ pub struct Release {
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
     /// Strategy for selecting paths to install to
     pub install_path: Vec<InstallPathStrategy>,
+    /// Custom message to display on installer success
+    pub install_success_msg: String,
     /// GitHub repository to push the Homebrew formula to, if built
     pub tap: Option<String>,
     /// Customize the name of the Homebrew formula
@@ -843,6 +845,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Only the final value merged into a package_config matters
             install_path: _,
             // Only the final value merged into a package_config matters
+            install_success_msg: _,
+            // Only the final value merged into a package_config matters
             plan_jobs: _,
             // Only the final value merged into a package_config matters
             local_artifacts_jobs: _,
@@ -879,6 +883,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         if desired_rust_toolchain.is_some() {
             warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
         }
+
         let merge_tasks = merge_tasks.unwrap_or(false);
         let fail_fast = fail_fast.unwrap_or(false);
         let create_release = create_release.unwrap_or(true);
@@ -1153,6 +1158,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .install_path
             .clone()
             .unwrap_or(vec![InstallPathStrategy::CargoHome]);
+        let install_success_msg = package_config
+            .install_success_msg
+            .as_deref()
+            .unwrap_or("everything's installed!")
+            .to_owned();
         let tap = package_config.tap.clone();
         let formula = package_config.formula.clone();
 
@@ -1216,6 +1226,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             npm_package,
             npm_scope,
             install_path,
+            install_success_msg,
             tap,
             formula,
             system_dependencies,
@@ -1768,6 +1779,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .iter()
                     .map(|p| p.clone().into_jinja())
                     .collect(),
+                install_success_msg: release.install_success_msg.to_owned(),
                 base_url: download_url.to_owned(),
                 artifacts,
                 hint,
@@ -1912,6 +1924,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .iter()
                         .map(|p| p.clone().into_jinja())
                         .collect(),
+                    install_success_msg: release.install_success_msg.to_owned(),
                     base_url: download_url.to_owned(),
                     artifacts,
                     hint,
@@ -1982,6 +1995,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .iter()
                     .map(|p| p.clone().into_jinja())
                     .collect(),
+                install_success_msg: release.install_success_msg.to_owned(),
                 base_url: download_url.to_owned(),
                 artifacts,
                 hint,
@@ -2088,6 +2102,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .iter()
                         .map(|p| p.clone().into_jinja())
                         .collect(),
+                    install_success_msg: release.install_success_msg.to_owned(),
                     base_url: download_url.to_owned(),
                     artifacts,
                     hint,
