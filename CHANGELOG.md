@@ -31,12 +31,27 @@ In 0.14.0, we added the new [`github-releases-repo`](https://opensource.axo.dev/
 
 * impl @mistydemeo [feat: allow specifying external commit from submodule](https://github.com/axodotdev/cargo-dist/pull/1026)
 
+## Improved Windows codesigning
+
+0.15.0 revamps support for codesigning Windows artifacts. This feature uses ssl.com's codesigning tool and requires appropriate credentials to be set up.
+
+* impl @Gankra [feat: reimplement ssldotcom-windows-sign](https://github.com/axodotdev/cargo-dist/pull/1036)
+
+## Additional hash algorithms
+
+The SHA-3 and BLAKE2 hash algorithms are now supported.
+
+Thanks to @sorairolake for contributing this!
+
+* impl @sorairolake [feat: support SHA-3 and BLAKE2](https://github.com/axodotdev/cargo-dist/pull/1067)
+
 ## Fixes
 
 * @mistydemeo [fix: improve reliability for fetching standalone updaters](https://github.com/axodotdev/cargo-dist/pull/1052)
 * @mistydemeo [fix: write correct install prefix to receipt](https://github.com/axodotdev/cargo-dist/pull/1037)
 * @mistydemeo [fix: bin_aliases should come from packages](https://github.com/axodotdev/cargo-dist/pull/1031)
 * @Gankra [fix: repair and cleanup npm binary caching](https://github.com/axodotdev/cargo-dist/pull/1050)
+* @sorairolake [fix: zstd file extension](https://github.com/axodotdev/cargo-dist/pull/1066)
 
 # Version 0.14.1 (2024-05-08)
 
