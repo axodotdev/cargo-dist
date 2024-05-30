@@ -6,6 +6,7 @@
 - [Updating](./updating.md)
 - [Troubleshooting](./troubleshooting.md)
 - [Generic Builds](./generic-builds.md)
+- [Signing and Attestation](./signing-and-attestation.md)
 - [Installers](./installers/index.md)
   - [shell](./installers/shell.md)
   - [powershell](./installers/powershell.md)
