@@ -754,14 +754,14 @@ By default, cargo-dist creates and uploads source tarballs from your repository.
 
 Example: `ssldotcom-windows-sign = "prod"`
 
-If you wish to sign your Windows artifacts (`exe`, `msi`, and `ps1`), 
+If you wish to sign your Windows artifacts (EXEs and [MSIs](../installers/msi.md)) such that Windows SmartScreen won't complain about them, this is the feature for you. [See the full guide for details](../signing-and-attestation.md#windows-artifact-signing-with-sslcom-certificates).
 
-This config option takes one of two string values: 
+This setting takes one of two values:
 
-- `"prod"`, or
-- `"test"`
+* "prod": use the production ssl.com signing service
+* "test": use the testing ("sandbox") ssl.com signing service
 
-These strings are directly correlated with the [environment name](https://github.com/SSLcom/esigner-codesign/blob/develop/README.md?plain=1#L48) that the [SSL.com codesigner tool](https://github.com/SSLcom/esigner-codesign) uses. Setting this to `"prod"` will generate a release workflow that will sign the Windows artifacts with your certificate- which prevents the Windows Defender program from flagging your application as potential malware to the end user. `"test"` is not recommended for production workflows, but can be useful for experimenting with a demo account- signing with this setting will not prevent Windows Defender from flagging your program.
+These strings match the [environment_name setting](https://github.com/SSLcom/esigner-codesign/blob/32825070bd8ca335577862dc735343ae155f2652/README.md#L48) that [SSL.com's code signing action uses](https://github.com/SSLcom/esigner-codesign) uses.
 
 
 ### tag-namespace
