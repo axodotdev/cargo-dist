@@ -8,9 +8,11 @@ cargo-dist can automatically codesign Windows EXEs and [MSIs](installers/msi.md)
 
 Although there are many ways to do code signing, this process is specifically concerned with ensuring [Windows SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who [downloads your application with a web browser](https://en.wikipedia.org/wiki/Mark_of_the_Web) will get a popup warning them against running it. (Alternative methods of downloading and installing, such as [cargo-dist's powershell installers](installers/powershell.md) do not trigger SmartScreen.)
 
-Windows code signing is done using essentially the same certificate infrastructure as HTTPS, just with stricter requirements on issuance and management of the private keys. In principle this means you can go to your favourite SSL/TLS Certificate vendor and ask for an EV Code Signing Certificate and follow the same process regardless of which vendor you picked. **However [as of July 2023](https://knowledge.digicert.com/alerts/code-signing-changes-in-2023), all the relevant kinds of code signing certificates can only be issued via hardware security modules (HSMs) like Yubikeys.** This poses a significant challenge for CI/CD pipelines, because you can't just plug a usb key into GitHub CI.
+Windows code signing is done using essentially the same certificate infrastructure as HTTPS, just with stricter requirements on issuance and management of the private keys. In principle this means you can go to your favourite SSL/TLS Certificate vendor and ask for an EV Code Signing Certificate and follow the same process regardless of which vendor you picked. **However [as of July 2023](https://knowledge.digicert.com/alerts/code-signing-changes-in-2023), all the relevant kinds of code signing certificates can only be issued via hardware security modules (HSMs) like Yubikeys.** This poses a significant challenge for CI/CD pipelines, because you can't just plug a USB key into GitHub CI.
 
 Although this will hopefully improve in the future, for now this has resulted in a fragmented system where each certificate vendor has its own cloud signing service where they host the HSMs and you send them the things you want signed. As a result it's no longer possible to provide a reasonable *generic* Windows code signing workflow, so for now we've made ours specific to one vendor: [SSL.com](https://www.ssl.com/).
+
+Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file an issue](https://github.com/axodotdev/cargo-dist/issues).
 
 
 ### Quickstart
@@ -48,7 +50,7 @@ Although this will hopefully improve in the future, for now this has resulted in
 5. **Add [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) to your repository**
 
     - `SSLDOTCOM_USERNAME`: the username of your ssl.com account
-    - `SSLDOTCOM_PASSWORD`: the password to you ssl.com account
+    - `SSLDOTCOM_PASSWORD`: the password to your ssl.com account
     - `SSLDOTCOM_TOTP_SECRET`: this is the totp "secret code" from Step 2
     - `SSLDOTCOM_CREDENTIAL_ID`: this is the "credential id" from Step 3
 
