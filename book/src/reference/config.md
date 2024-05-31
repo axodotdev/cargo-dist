@@ -248,6 +248,17 @@ already exists with the title/body you want, and just upload artifacts to it.
 At the end of a successful publish it will undraft the Github Release.
 
 
+### custom-success-msg
+
+> since 0.15.0
+
+Example: `custom-success-msg = "axolotlsay is ready to rumble! >o_o<"`
+
+A custom message to display on success in the [shell](../installers/shell.md) and [powershell](../installers/powershell.md) installers.
+
+Defaults to "everything's installed!"
+
+
 ### default-features
 
 > since 0.2.0

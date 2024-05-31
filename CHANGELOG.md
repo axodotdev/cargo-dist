@@ -1,41 +1,21 @@
 # Unreleased
 
-Nothing Yet!
+This release contains a ton of new features and some fixes.
+
+For the supplychain folks, we now support windows codesigning and several new hashing algorithms.
+
+For projects with complex repositories, we now have several new options for configuring the release process.
 
 
-# Version 0.15.0 (unreleased)
+## Windows codesigning
 
-This release contains a number of new features and several fixes.
+cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.
 
-## Improvements for installing tools within GitHub Actions
+Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)
 
-Previously, our installers would update the user's `PATH` for local commandline access but wouldn't set themselves up in the `PATH` within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to `GITHUB_PATH` for future tasks within the job.
-
-* impl @Gankra [feat: add paths to GITHUB_PATH if available](https://github.com/axodotdev/cargo-dist/pull/1047)
-
-## Always treat releases as the latest stable release
-
-cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new [`force-latest`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest) configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.
-
-* impl @mistydemeo [feat: allow always marking releases as stable](https://github.com/axodotdev/cargo-dist/pull/1054)
-
-## Configuring the global runner
-
-In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs.
-
-* impl @mistydemeo [feat: allow configuring global runner](https://github.com/axodotdev/cargo-dist/pull/1055)
-
-## Specify commit to publish to in external repo
-
-In 0.14.0, we added the new [`github-releases-repo`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo) configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new [`github-releases-submodule-path`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path) configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.
-
-* impl @mistydemeo [feat: allow specifying external commit from submodule](https://github.com/axodotdev/cargo-dist/pull/1026)
-
-## Improved Windows codesigning
-
-0.15.0 revamps support for codesigning Windows artifacts. This feature uses ssl.com's codesigning tool and requires appropriate credentials to be set up.
-
+* [docs](https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates)
 * impl @Gankra [feat: reimplement ssldotcom-windows-sign](https://github.com/axodotdev/cargo-dist/pull/1036)
+
 
 ## Additional hash algorithms
 
@@ -43,7 +23,48 @@ The SHA-3 and BLAKE2 hash algorithms are now supported.
 
 Thanks to @sorairolake for contributing this!
 
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum)
 * impl @sorairolake [feat: support SHA-3 and BLAKE2](https://github.com/axodotdev/cargo-dist/pull/1067)
+
+
+## Improvements for installing tools within GitHub Actions
+
+Previously, our installers would update the user's `PATH` for local commandline access but wouldn't set themselves up in the `PATH` within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to `GITHUB_PATH` for future tasks within the job.
+
+* impl @Gankra [feat: add paths to GITHUB_PATH if available](https://github.com/axodotdev/cargo-dist/pull/1047)
+
+
+## Custom installer output
+
+When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with [the `install-success-msg` setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg).
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg)
+* impl @ashleygwilliams [feat: custom success msg](https://github.com/axodotdev/cargo-dist/pull/1102)
+
+
+## Forcing prereleases to be the latest
+
+cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new [`force-latest`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest) configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.
+
+This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest)
+* impl @mistydemeo [feat: allow always marking releases as stable](https://github.com/axodotdev/cargo-dist/pull/1054)
+
+## Configuring the global runner
+
+In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using [the "global" key](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners).
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners)
+* impl @mistydemeo [feat: allow configuring global runner](https://github.com/axodotdev/cargo-dist/pull/1055)
+
+## Specify commit to publish to in external repo
+
+In 0.14.0, we added the new [`github-releases-repo`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo) configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new [`github-releases-submodule-path`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path) configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path)
+* impl @mistydemeo [feat: allow specifying external commit from submodule](https://github.com/axodotdev/cargo-dist/pull/1026)
+
 
 ## Fixes
 
@@ -52,6 +73,7 @@ Thanks to @sorairolake for contributing this!
 * @mistydemeo [fix: bin_aliases should come from packages](https://github.com/axodotdev/cargo-dist/pull/1031)
 * @Gankra [fix: repair and cleanup npm binary caching](https://github.com/axodotdev/cargo-dist/pull/1050)
 * @sorairolake [fix: zstd file extension](https://github.com/axodotdev/cargo-dist/pull/1066)
+
 
 # Version 0.14.1 (2024-05-08)
 
