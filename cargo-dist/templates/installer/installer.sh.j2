@@ -437,7 +437,7 @@ install() {
         say "  $_bin_name"
     done
 
-    say "everything's installed!"
+    say "{{ install_success_msg }}"
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_ci_path "$_install_dir"

@@ -444,7 +444,7 @@ install() {
         say "  $_bin_name"
     done
 
-    say "everything's installed!"
+    say ">o_o< everything's installed!"
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_ci_path "$_install_dir"
@@ -1315,7 +1315,7 @@ function Invoke-Installer($bin_paths, $platforms) {
   $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
   [IO.File]::WriteAllLines("$receipt_home/axolotlsay-receipt.json", "$receipt", $Utf8NoBomEncoding)
 
-  Write-Information "Everything's installed!"
+  Write-Information ">o_o< everything's installed!"
   if (-not $NoModifyPath) {
     Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {

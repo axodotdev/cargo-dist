@@ -38,6 +38,7 @@ installers = ["shell", "powershell", "homebrew", "npm", "msi"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew", "npm"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+install-success-msg = ">o_o< everything's installed!"
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"

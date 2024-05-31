@@ -94,6 +94,14 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<InstallerStyle>>,
 
+    /// Custom sucess message for installers
+    ///
+    /// When an shell or powershell installer succeeds at installing your app it
+    /// will out put a message to the user. This config allows a user to specify
+    /// a custom message as opposed to the default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_success_msg: Option<String>,
+
     /// A Homebrew tap to push the Homebrew formula to, if built
     pub tap: Option<String>,
     /// Customize the name of the Homebrew formula
@@ -394,6 +402,7 @@ impl DistMetadata {
             dist: _,
             ci: _,
             installers: _,
+            install_success_msg: _,
             tap: _,
             formula: _,
             system_dependencies: _,
@@ -469,6 +478,7 @@ impl DistMetadata {
             dist,
             ci,
             installers,
+            install_success_msg,
             tap,
             formula,
             system_dependencies,
@@ -629,6 +639,9 @@ impl DistMetadata {
         }
         if install_path.is_none() {
             install_path.clone_from(&workspace_config.install_path);
+        }
+        if install_success_msg.is_none() {
+            install_success_msg.clone_from(&workspace_config.install_success_msg);
         }
         if features.is_none() {
             features.clone_from(&workspace_config.features);
