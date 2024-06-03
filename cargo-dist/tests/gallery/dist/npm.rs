@@ -86,7 +86,7 @@ fn runtest_yarn(
     // Have npm install/unpack the tarball to a project
     eprintln!("running npm install...");
     let parent_package_dir = tempdir.to_owned();
-    install_tarball_package(yarn, &parent_package_dir, package_tarball_path)?;
+    yarn_install_tarball_package(yarn, &parent_package_dir, package_tarball_path)?;
 
     // Run the installed app
     eprintln!("npm exec'ing installed app...");
@@ -179,6 +179,20 @@ fn install_tarball_package(
     npm.output_checked(|cmd| {
         cmd.current_dir(to_project)
             .arg("install")
+            .arg(package_tarball_path)
+    })?;
+    Ok(())
+}
+
+fn yarn_install_tarball_package(
+    yarn: &CommandInfo,
+    to_project: &Utf8Path,
+    package_tarball_path: &Utf8Path,
+) -> Result<()> {
+    // Install the npm package to a project (this will automatically create one)
+    yarn.output_checked(|cmd| {
+        cmd.current_dir(to_project)
+            .arg("add")
             .arg(package_tarball_path)
     })?;
     Ok(())
