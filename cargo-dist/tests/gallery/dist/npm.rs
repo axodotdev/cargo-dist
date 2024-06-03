@@ -25,7 +25,7 @@ impl DistResult {
             package_tarball_path.to_owned()
         };
         // Only do this if npm and tar are installed
-        let (Some(npm), Some(tar)) = (&ctx.tools.npm, &ctx.tools.tar) else {
+        let Some(tar) = &ctx.tools.tar else {
             return Ok(());
         };
         let app_name = ctx.repo.app_name;
@@ -36,28 +36,75 @@ impl DistResult {
         let repo_dir = &ctx.repo_dir;
         let repo_id = &ctx.repo_id;
         let parent = repo_dir.parent().unwrap();
+
         let tempdir = parent.join(format!("{repo_id}__{test_name}"));
-        if tempdir.exists() {
-            std::fs::remove_dir_all(&tempdir).unwrap();
-        }
-        std::fs::create_dir_all(&tempdir).unwrap();
+        runtest_npm(&ctx.tools.npm, tar, &tempdir, &package_tarball_path, app_name, bins)?;
+        runtest_pnpm(&ctx.tools.npm, &ctx.tools.pnpm, tar, &tempdir, &package_tarball_path, app_name, bins)?;
+        // runtest_npm(&ctx.tools.yarn, tar, &tempdir, &package_tarball_path, app_name, bins)?;
 
-        // Have npm install/unpack the tarball to a project
-        eprintln!("running npm install...");
-        let parent_package_dir = tempdir.clone();
-        install_tarball_package(npm, &parent_package_dir, &package_tarball_path)?;
-
-        // Run the installed app
-        eprintln!("npm exec'ing installed app...");
-        run_installed_package(npm, &parent_package_dir, app_name, bins)?;
-
-        // Now let's hop into the installed package and have it lint itself
-        eprintln!("linting installed app...");
-        unpack_tarball_package(tar, &parent_package_dir, &package_tarball_path)?;
-        let package_dir = parent_package_dir.join("package");
-        lint_package(npm, &package_dir, app_name)?;
         Ok(())
     }
+}
+
+fn runtest_pnpm(npm: &Option<CommandInfo>, pnpm: &Option<CommandInfo>, tar: &CommandInfo, tempdir: &Utf8Path, package_tarball_path: &Utf8Path, app_name: &str, bins: &[&str]) -> Result<()> {
+    let Some(npm) = npm else {
+        return Ok(())
+    };
+    let Some(pnpm) = pnpm else {
+        return Ok(())
+    };
+
+    clear_tempdir(&tempdir);
+
+    // Have npm install/unpack the tarball to a project
+    eprintln!("running npm install...");
+    let parent_package_dir = tempdir.to_owned();
+    install_tarball_package(pnpm, &parent_package_dir, &package_tarball_path)?;
+
+    // Run the installed app
+    eprintln!("npm exec'ing installed app...");
+    run_installed_package(npm, &parent_package_dir, app_name, bins)?;
+
+    // Now let's hop into the installed package and have it lint itself
+    eprintln!("linting installed app...");
+    unpack_tarball_package(tar, &parent_package_dir, &package_tarball_path)?;
+    let package_dir = parent_package_dir.join("package");
+    lint_package(npm, &package_dir, app_name)?;
+
+    Ok(())
+}
+
+
+fn runtest_npm(npm: &Option<CommandInfo>, tar: &CommandInfo, tempdir: &Utf8Path, package_tarball_path: &Utf8Path, app_name: &str, bins: &[&str]) -> Result<()> {
+    let Some(npm) = npm else {
+        return Ok(())
+    };
+
+    clear_tempdir(&tempdir);
+
+    // Have npm install/unpack the tarball to a project
+    eprintln!("running npm install...");
+    let parent_package_dir = tempdir.to_owned();
+    install_tarball_package(npm, &parent_package_dir, &package_tarball_path)?;
+
+    // Run the installed app
+    eprintln!("npm exec'ing installed app...");
+    run_installed_package(npm, &parent_package_dir, app_name, bins)?;
+
+    // Now let's hop into the installed package and have it lint itself
+    eprintln!("linting installed app...");
+    unpack_tarball_package(tar, &parent_package_dir, &package_tarball_path)?;
+    let package_dir = parent_package_dir.join("package");
+    lint_package(npm, &package_dir, app_name)?;
+
+    Ok(())
+}
+
+fn clear_tempdir(tempdir: &Utf8Path) {
+    if tempdir.exists() {
+        std::fs::remove_dir_all(&tempdir).unwrap();
+    }
+    std::fs::create_dir_all(&tempdir).unwrap();
 }
 
 fn install_tarball_package(
