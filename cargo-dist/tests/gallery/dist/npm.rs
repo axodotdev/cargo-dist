@@ -261,8 +261,7 @@ fn lint_package(npm: &CommandInfo, package_dir: &Utf8Path, _package_name: &str) 
     // Setup its deps
     npm.output_checked(|cmd| cmd.current_dir(package_dir).arg("ci"))?;
     // Lint check it
-    // FIXME: DISABLED FOR HAUNTED
-    // npm.output_checked(|cmd| cmd.current_dir(package_dir).arg("run").arg("fmt:check"))?;
+    npm.output_checked(|cmd| cmd.current_dir(package_dir).arg("run").arg("fmt:check"))?;
 
     Ok(())
 }
