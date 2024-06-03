@@ -40,11 +40,40 @@ impl DistResult {
         let tempdir = parent.join(format!("{repo_id}__{test_name}"));
         runtest_npm(&ctx.tools.npm, tar, &tempdir, &package_tarball_path, app_name, bins)?;
         runtest_pnpm(&ctx.tools.npm, &ctx.tools.pnpm, tar, &tempdir, &package_tarball_path, app_name, bins)?;
-        // runtest_npm(&ctx.tools.yarn, tar, &tempdir, &package_tarball_path, app_name, bins)?;
+        runtest_yarn(&ctx.tools.npm, &ctx.tools.yarn, tar, &tempdir, &package_tarball_path, app_name, bins)?;
 
         Ok(())
     }
 }
+
+fn runtest_yarn(npm: &Option<CommandInfo>, yarn: &Option<CommandInfo>, tar: &CommandInfo, tempdir: &Utf8Path, package_tarball_path: &Utf8Path, app_name: &str, bins: &[&str]) -> Result<()> {
+    let Some(npm) = npm else {
+        return Ok(())
+    };
+    let Some(yarn) = yarn else {
+        return Ok(())
+    };
+
+    clear_tempdir(&tempdir);
+
+    // Have npm install/unpack the tarball to a project
+    eprintln!("running npm install...");
+    let parent_package_dir = tempdir.to_owned();
+    install_tarball_package(yarn, &parent_package_dir, &package_tarball_path)?;
+
+    // Run the installed app
+    eprintln!("npm exec'ing installed app...");
+    run_installed_package(npm, &parent_package_dir, app_name, bins)?;
+
+    // Now let's hop into the installed package and have it lint itself
+    eprintln!("linting installed app...");
+    unpack_tarball_package(tar, &parent_package_dir, &package_tarball_path)?;
+    let package_dir = parent_package_dir.join("package");
+    lint_package(npm, &package_dir, app_name)?;
+
+    Ok(())
+}
+
 
 fn runtest_pnpm(npm: &Option<CommandInfo>, pnpm: &Option<CommandInfo>, tar: &CommandInfo, tempdir: &Utf8Path, package_tarball_path: &Utf8Path, app_name: &str, bins: &[&str]) -> Result<()> {
     let Some(npm) = npm else {
