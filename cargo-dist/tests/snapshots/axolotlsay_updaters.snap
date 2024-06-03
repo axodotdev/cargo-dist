@@ -1804,7 +1804,7 @@ class Package {
     }
     this.url = url;
     this.name = name;
-    this.installDirectory = join(__dirname, "node_modules", ".bin");
+    this.installDirectory = join(__dirname, "node_modules", ".bin_real");
     this.binaries = binaries;
 
     if (!existsSync(this.installDirectory)) {
