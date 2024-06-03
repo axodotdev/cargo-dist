@@ -224,6 +224,7 @@ fn run_installed_package(
             cmd.current_dir(in_project)
                 .arg("exec")
                 .arg(format!("--package=@axodotdev/{package_name}"))
+                .arg("--no")
                 .arg("-c")
                 .arg(format!("{bin} --version"))
         })?;
@@ -236,6 +237,7 @@ fn run_installed_package(
             cmd.current_dir(in_project)
                 .arg("exec")
                 .arg(format!("@axodotdev/{package_name}"))
+                .arg("--no")
                 .arg("--")
                 .arg("--version")
         })?;
@@ -246,6 +248,7 @@ fn run_installed_package(
         cmd.current_dir(in_project)
             .arg("exec")
             .arg(format!("--package=@axodotdev/{package_name}"))
+            .arg("--no")
             .arg("-c")
             .arg("asdasdadfakebin --version")
     });
