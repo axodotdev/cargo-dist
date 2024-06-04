@@ -802,6 +802,20 @@ expression: json_schema
             "type": "string"
           }
         },
+        "display": {
+          "description": "Whether to advertise this app's installers/artifacts in announcements",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "display_name": {
+          "description": "Alternative display name that can be prettier",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "hosting": {
           "description": "Hosting info",
           "allOf": [

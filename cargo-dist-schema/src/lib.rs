@@ -235,6 +235,14 @@ pub struct Release {
     /// The version of the app
     // FIXME: should be a Version but JsonSchema doesn't support (yet?)
     pub app_version: String,
+    /// Alternative display name that can be prettier
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    /// Whether to advertise this app's installers/artifacts in announcements
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display: Option<bool>,
     /// The artifacts for this release (zips, debuginfo, metadata...)
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -522,6 +530,8 @@ impl DistManifest {
                 app_version: version,
                 artifacts: vec![],
                 hosting: Hosting::default(),
+                display: None,
+                display_name: None,
             });
             self.releases.last_mut().unwrap()
         }

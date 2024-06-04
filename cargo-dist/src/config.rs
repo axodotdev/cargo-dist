@@ -94,6 +94,14 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<InstallerStyle>>,
 
+    /// Custom sucess message for installers
+    ///
+    /// When an shell or powershell installer succeeds at installing your app it
+    /// will out put a message to the user. This config allows a user to specify
+    /// a custom message as opposed to the default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_success_msg: Option<String>,
+
     /// A Homebrew tap to push the Homebrew formula to, if built
     pub tap: Option<String>,
     /// Customize the name of the Homebrew formula
@@ -382,6 +390,13 @@ pub struct DistMetadata {
     /// Whether to install an updater program alongside the software
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_updater: Option<bool>,
+
+    /// Whether artifacts/installers for this app should be displayed in release bodies
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display: Option<bool>,
+    /// How to refer to the app in release bodies
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
 }
 
 impl DistMetadata {
@@ -394,6 +409,7 @@ impl DistMetadata {
             dist: _,
             ci: _,
             installers: _,
+            install_success_msg: _,
             tap: _,
             formula: _,
             system_dependencies: _,
@@ -437,6 +453,8 @@ impl DistMetadata {
             install_updater: _,
             github_releases_repo: _,
             github_releases_submodule_path: _,
+            display: _,
+            display_name: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -469,6 +487,7 @@ impl DistMetadata {
             dist,
             ci,
             installers,
+            install_success_msg,
             tap,
             formula,
             system_dependencies,
@@ -512,6 +531,8 @@ impl DistMetadata {
             install_updater,
             github_releases_repo,
             github_releases_submodule_path,
+            display,
+            display_name,
         } = self;
 
         // Check for global settings on local packages
@@ -630,6 +651,9 @@ impl DistMetadata {
         if install_path.is_none() {
             install_path.clone_from(&workspace_config.install_path);
         }
+        if install_success_msg.is_none() {
+            install_success_msg.clone_from(&workspace_config.install_success_msg);
+        }
         if features.is_none() {
             features.clone_from(&workspace_config.features);
         }
@@ -659,6 +683,12 @@ impl DistMetadata {
         }
         if install_updater.is_none() {
             *install_updater = workspace_config.install_updater;
+        }
+        if display.is_none() {
+            *display = workspace_config.display;
+        }
+        if display_name.is_none() {
+            display_name.clone_from(&workspace_config.display_name);
         }
 
         // This was historically implemented as extend, but I'm not convinced the

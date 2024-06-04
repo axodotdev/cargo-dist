@@ -224,6 +224,7 @@ fn get_new_dist_metadata(
             rust_toolchain_version: None,
             ci: None,
             installers: None,
+            install_success_msg: None,
             tap: None,
             formula: None,
             system_dependencies: None,
@@ -268,6 +269,8 @@ fn get_new_dist_metadata(
             bin_aliases: None,
             tag_namespace: None,
             install_updater: None,
+            display: None,
+            display_name: None,
         }
     };
 
@@ -803,6 +806,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         dist,
         ci,
         installers,
+        install_success_msg,
         tap,
         formula,
         system_dependencies: _,
@@ -846,6 +850,8 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         github_custom_runners: _,
         bin_aliases: _,
         install_updater,
+        display,
+        display_name,
     } = &meta;
 
     apply_optional_value(
@@ -932,6 +938,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "npm-package",
         "# The npm package should have this name\n",
         npm_package.as_deref(),
+    );
+
+    apply_optional_value(
+        table,
+        "install-success-msg",
+        "# Custom message to display on successful install\n",
+        install_success_msg.as_deref(),
     );
 
     apply_optional_value(
@@ -1151,6 +1164,20 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "install-updater",
         "# Whether to install an updater program\n",
         *install_updater,
+    );
+
+    apply_optional_value(
+        table,
+        "display",
+        "# Whether to display this app's installers/artifacts in release bodies\n",
+        *display,
+    );
+
+    apply_optional_value(
+        table,
+        "display-name",
+        "# Custom display name to use for this app in release bodies\n",
+        display_name.as_ref(),
     );
 
     // Finalize the table

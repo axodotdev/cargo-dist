@@ -25,10 +25,15 @@ impl DistResult {
             package_tarball_path.to_owned()
         };
         // Only do this if npm and tar are installed
-        let (Some(npm), Some(tar)) = (&ctx.tools.npm, &ctx.tools.tar) else {
+        let Some(tar) = &ctx.tools.tar else {
             return Ok(());
         };
-        let app_name = ctx.repo.app_name;
+        let app_name = ctx
+            .options
+            .npm_package_name
+            .as_deref()
+            .unwrap_or(ctx.repo.app_name);
+        let scope = ctx.options.npm_scope.as_deref().unwrap_or("axodotdev");
         let test_name = &self.test_name;
         let bins = ctx.repo.bins;
 
@@ -36,28 +41,129 @@ impl DistResult {
         let repo_dir = &ctx.repo_dir;
         let repo_id = &ctx.repo_id;
         let parent = repo_dir.parent().unwrap();
+
         let tempdir = parent.join(format!("{repo_id}__{test_name}"));
-        if tempdir.exists() {
-            std::fs::remove_dir_all(&tempdir).unwrap();
-        }
-        std::fs::create_dir_all(&tempdir).unwrap();
 
-        // Have npm install/unpack the tarball to a project
-        eprintln!("running npm install...");
-        let parent_package_dir = tempdir.clone();
-        install_tarball_package(npm, &parent_package_dir, &package_tarball_path)?;
+        runtest_npm(
+            &ctx.tools.npm,
+            tar,
+            &tempdir,
+            &package_tarball_path,
+            scope,
+            app_name,
+            bins,
+        )?;
+        runtest_pnpm(
+            &ctx.tools.npm,
+            &ctx.tools.pnpm,
+            &tempdir,
+            &package_tarball_path,
+            scope,
+            app_name,
+            bins,
+        )?;
+        runtest_yarn(
+            &ctx.tools.npm,
+            &ctx.tools.yarn,
+            &tempdir,
+            &package_tarball_path,
+            scope,
+            app_name,
+            bins,
+        )?;
 
-        // Run the installed app
-        eprintln!("npm exec'ing installed app...");
-        run_installed_package(npm, &parent_package_dir, app_name, bins)?;
-
-        // Now let's hop into the installed package and have it lint itself
-        eprintln!("linting installed app...");
-        unpack_tarball_package(tar, &parent_package_dir, &package_tarball_path)?;
-        let package_dir = parent_package_dir.join("package");
-        lint_package(npm, &package_dir, app_name)?;
         Ok(())
     }
+}
+
+fn runtest_yarn(
+    npm: &Option<CommandInfo>,
+    yarn: &Option<CommandInfo>,
+    tempdir: &Utf8Path,
+    package_tarball_path: &Utf8Path,
+    scope: &str,
+    app_name: &str,
+    bins: &[&str],
+) -> Result<()> {
+    let Some(npm) = npm else { return Ok(()) };
+    let Some(yarn) = yarn else { return Ok(()) };
+
+    clear_tempdir(tempdir);
+
+    // Have yarn install/unpack the tarball to a project
+    eprintln!("running yarn add...");
+    let parent_package_dir = tempdir.to_owned();
+    yarn_install_tarball_package(yarn, &parent_package_dir, package_tarball_path)?;
+
+    // Run the installed app
+    eprintln!("npm exec'ing installed app...");
+    run_installed_package(npm, &parent_package_dir, scope, app_name, bins)?;
+
+    Ok(())
+}
+
+fn runtest_pnpm(
+    npm: &Option<CommandInfo>,
+    pnpm: &Option<CommandInfo>,
+    tempdir: &Utf8Path,
+    package_tarball_path: &Utf8Path,
+    scope: &str,
+    app_name: &str,
+    bins: &[&str],
+) -> Result<()> {
+    let Some(npm) = npm else { return Ok(()) };
+    let Some(pnpm) = pnpm else { return Ok(()) };
+
+    clear_tempdir(tempdir);
+
+    // Have pnpm install/unpack the tarball to a project
+    eprintln!("running pnpm install...");
+    let parent_package_dir = tempdir.to_owned();
+    install_tarball_package(pnpm, &parent_package_dir, package_tarball_path)?;
+
+    // Run the installed app
+    eprintln!("npm exec'ing installed app...");
+    run_installed_package(npm, &parent_package_dir, scope, app_name, bins)?;
+
+    Ok(())
+}
+
+fn runtest_npm(
+    npm: &Option<CommandInfo>,
+    tar: &CommandInfo,
+    tempdir: &Utf8Path,
+    package_tarball_path: &Utf8Path,
+    scope: &str,
+    app_name: &str,
+    bins: &[&str],
+) -> Result<()> {
+    let Some(npm) = npm else { return Ok(()) };
+
+    clear_tempdir(tempdir);
+
+    // Have npm install/unpack the tarball to a project
+    eprintln!("running npm install...");
+    let parent_package_dir = tempdir.to_owned();
+    install_tarball_package(npm, &parent_package_dir, package_tarball_path)?;
+
+    // Run the installed app
+    eprintln!("npm exec'ing installed app...");
+    run_installed_package(npm, &parent_package_dir, scope, app_name, bins)?;
+
+    // Now let's hop into the installed package and have it lint itself
+    eprintln!("linting installed app...");
+    unpack_tarball_package(tar, &parent_package_dir, package_tarball_path)?;
+    let package_dir = parent_package_dir.join("package");
+    lint_package(npm, &package_dir, scope, app_name)?;
+
+    Ok(())
+}
+
+fn clear_tempdir(tempdir: &Utf8Path) {
+    if tempdir.exists() {
+        std::fs::remove_dir_all(tempdir).unwrap();
+    }
+    std::fs::create_dir_all(tempdir).unwrap();
 }
 
 fn install_tarball_package(
@@ -69,6 +175,25 @@ fn install_tarball_package(
     npm.output_checked(|cmd| {
         cmd.current_dir(to_project)
             .arg("install")
+            .arg(package_tarball_path)
+    })?;
+    Ok(())
+}
+
+fn yarn_install_tarball_package(
+    yarn: &CommandInfo,
+    to_project: &Utf8Path,
+    package_tarball_path: &Utf8Path,
+) -> Result<()> {
+    // Purge the accursed yarn cache, which will insist that two tarballs at
+    // the exact same path (over time) must ALWAYS have the same contents.
+    // Without this it will actually ignore the contents of the tarball,
+    // preferring its cached copy for the given file path!!!?!?!?
+    yarn.output_checked(|cmd| cmd.current_dir(to_project).arg("cache").arg("clean"))?;
+    // Install the npm package to a project (this will automatically create one)
+    yarn.output_checked(|cmd| {
+        cmd.current_dir(to_project)
+            .arg("add")
             .arg(package_tarball_path)
     })?;
     Ok(())
@@ -91,6 +216,7 @@ fn unpack_tarball_package(
 fn run_installed_package(
     npm: &CommandInfo,
     in_project: &Utf8Path,
+    scope: &str,
     package_name: &str,
     bins: &[&str],
 ) -> Result<()> {
@@ -99,7 +225,8 @@ fn run_installed_package(
         let _version_out = npm.output_checked(|cmd| {
             cmd.current_dir(in_project)
                 .arg("exec")
-                .arg(format!("--package=@axodotdev/{package_name}"))
+                .arg(format!("--package=@{scope}/{package_name}"))
+                .arg("--no")
                 .arg("-c")
                 .arg(format!("{bin} --version"))
         })?;
@@ -111,7 +238,8 @@ fn run_installed_package(
         let _version_out = npm.output_checked(|cmd| {
             cmd.current_dir(in_project)
                 .arg("exec")
-                .arg(format!("@axodotdev/{package_name}"))
+                .arg(format!("@{scope}/{package_name}"))
+                .arg("--no")
                 .arg("--")
                 .arg("--version")
         })?;
@@ -121,7 +249,8 @@ fn run_installed_package(
     let test = npm.output_checked(|cmd| {
         cmd.current_dir(in_project)
             .arg("exec")
-            .arg(format!("--package=@axodotdev/{package_name}"))
+            .arg(format!("--package=@{scope}/{package_name}"))
+            .arg("--no")
             .arg("-c")
             .arg("asdasdadfakebin --version")
     });
@@ -130,12 +259,16 @@ fn run_installed_package(
     Ok(())
 }
 
-fn lint_package(npm: &CommandInfo, package_dir: &Utf8Path, _package_name: &str) -> Result<()> {
+fn lint_package(
+    npm: &CommandInfo,
+    package_dir: &Utf8Path,
+    _scope: &str,
+    _package_name: &str,
+) -> Result<()> {
     // Setup its deps
     npm.output_checked(|cmd| cmd.current_dir(package_dir).arg("ci"))?;
     // Lint check it
-    // FIXME: DISABLED FOR HAUNTED
-    // npm.output_checked(|cmd| cmd.current_dir(package_dir).arg("run").arg("fmt:check"))?;
+    npm.output_checked(|cmd| cmd.current_dir(package_dir).arg("run").arg("fmt:check"))?;
 
     Ok(())
 }
