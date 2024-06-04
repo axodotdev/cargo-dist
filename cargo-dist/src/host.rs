@@ -154,6 +154,8 @@ impl<'a> DistGraphBuilder<'a> {
                             .hosting
                             .github = Some(cargo_dist_schema::GithubHosting {
                             artifact_download_url: format!("{repo_url}/releases/download/{tag}"),
+                            owner: hosting.owner.clone(),
+                            repo: hosting.project.clone(),
                         })
                     }
                 }

@@ -5,7 +5,7 @@
 use axoproject::platforms::triple_to_display_name;
 use axoproject::PackageIdx;
 use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{DistManifest, GithubHosting};
 use itertools::Itertools;
 use semver::Version;
 use tracing::info;
@@ -751,7 +751,7 @@ pub fn announcement_github(manifest: &mut DistManifest) {
             gh_body.push_str("|  File  | Platform | Checksum |\n");
             gh_body.push_str("|--------|----------|----------|\n");
 
-            for artifact in other_artifacts {
+            for artifact in &other_artifacts {
                 // Artifacts with no name do not exist as files, and should have had install-hints
                 let Some(name) = &artifact.name else {
                     continue;
@@ -789,15 +789,16 @@ pub fn announcement_github(manifest: &mut DistManifest) {
         }
 
         if !other_artifacts.is_empty() && manifest.github_attestations {
-            writeln!(&mut gh_body, "## Verifying GitHub Artifact Attestations\n",).unwrap();
-            writeln!(&mut gh_body, "The artifacts in this release have attestations generated with GitHub Artifact Attestations. These can be verified by using the [GitHub CLI](https://cli.github.com/manual/gh_attestation_verify):").unwrap();
-            // TODO: How do we get the repo owner (org) and repo names to probide them in this example?
-            writeln!(
-                &mut gh_body,
-                "```gh attestation verify <file-path of downloaded artifact> --owener {} --repo {}```",
-                "", ""
-            )
-            // TODO: Add an example of offline verification where the attestation bundles are pre-downloaded by the user.
+            if let Some(GithubHosting { owner, repo, .. }) = &release.hosting.github {
+                writeln!(&mut gh_body, "## Verifying GitHub Artifact Attestations\n",).unwrap();
+                writeln!(&mut gh_body, "The artifacts in this release have attestations generated with GitHub Artifact Attestations. These can be verified by using the [GitHub CLI](https://cli.github.com/manual/gh_attestation_verify):").unwrap();
+                writeln!(
+                    &mut gh_body,
+                    "```gh attestation verify <file-path of downloaded artifact> --repo {owner}/{repo}```",
+                ).unwrap();
+                // FIXME: Add an example of offline verification where the attestation bundles are pre-downloaded by the user?
+                // maybe `gh attestation verify oci://<image-uri> --owner {owner} --bundle sha256:foo.jsonl`?
+            }
         }
     }
 

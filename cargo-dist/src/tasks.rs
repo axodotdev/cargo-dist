@@ -1187,6 +1187,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             installers: _,
             targets: _,
             msvc_crt_static: _,
+            github_attestations: _,
         } = self.package_metadata(pkg_idx);
 
         let version = package_info.version.as_ref().unwrap().semver().clone();
