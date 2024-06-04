@@ -691,6 +691,10 @@ pub struct Release {
     pub platform_support: PlatformSupport,
     /// Aliases to publish binaries under, mapped source to target (ln style)
     pub bin_aliases: BinaryAliases,
+    /// Whether to advertise the intallers/artifacts for this app in an announcement body
+    pub display: Option<bool>,
+    /// Custom name to use for the app in announcement bodies
+    pub display_name: Option<String>,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -806,6 +810,21 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             release_branch,
             ssldotcom_windows_sign,
             tag_namespace,
+            install_updater,
+            publish_prereleases,
+            force_latest,
+            features,
+            default_features,
+            all_features,
+            create_release,
+            github_releases_repo,
+            github_releases_submodule_path,
+            allow_dirty,
+            msvc_crt_static,
+            hosting,
+            extra_artifacts,
+            pr_run_mode,
+            tap,
             // Partially Processed elsewhere
             //
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
@@ -818,64 +837,31 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // changelogs, but we don't consult this config, and just unconditionally use it.
             // That seems *fine*, but I wanted to note that here.
             auto_includes: _,
-            // Only the final value merged into a package_config matters
+            // For the rest of these, only the final value merged into a package_config matters
             targets: _,
-            // Only the final value merged into a package_config matters
             dist: _,
-            // Only the final value merged into a package_config matters
             installers: _,
-            // Only the final value merged into a package_config matters
-            tap: _,
-            // Only the final value merged into a package_config matters
             formula: _,
-            // Only the final value merged into a package_config matters
             system_dependencies: _,
-            // Only the final value merged into a package_config matters
             windows_archive: _,
-            // Only the final value merged into a package_config matters
             unix_archive: _,
-            // Only the final value merged into a package_config matters
             include: _,
-            // Only the final value merged into a package_config matters
             npm_package: _,
-            // Only the final value merged into a package_config matters
             npm_scope: _,
-            // Only the final value merged into a package_config matters
             checksum: _,
-            // Only the final value merged into a package_config matters
             install_path: _,
-            // Only the final value merged into a package_config matters
             install_success_msg: _,
-            // Only the final value merged into a package_config matters
             plan_jobs: _,
-            // Only the final value merged into a package_config matters
             local_artifacts_jobs: _,
-            // Only the final value merged into a package_config matters
             global_artifacts_jobs: _,
-            // Only the final value merged into a package_config matters
             source_tarball: _,
-            // Only the final value merged into a package_config matters
             host_jobs: _,
-            // Only the final value merged into a package_config matters
             publish_jobs: _,
-            // Only the final value merged into a package_config matters
             post_announce_jobs: _,
-            publish_prereleases,
-            force_latest,
-            features,
-            default_features,
-            all_features,
-            create_release,
-            github_releases_repo,
-            github_releases_submodule_path,
-            pr_run_mode: _,
-            allow_dirty,
-            msvc_crt_static,
-            hosting,
-            extra_artifacts,
             github_custom_runners: _,
             bin_aliases: _,
-            install_updater,
+            display: _,
+            display_name: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -1086,8 +1072,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 variants: vec![],
                 releases: vec![],
                 ci: CiInfo::default(),
-                pr_run_mode: workspace_metadata.pr_run_mode.unwrap_or_default(),
-                tap: workspace_metadata.tap.clone(),
+                pr_run_mode: pr_run_mode.unwrap_or_default(),
+                tap: tap.clone(),
                 plan_jobs,
                 local_artifacts_jobs,
                 global_artifacts_jobs,
@@ -1142,7 +1128,60 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
     fn add_release(&mut self, pkg_idx: PackageIdx) -> ReleaseIdx {
         let package_info = self.workspace().package(pkg_idx);
-        let package_config = self.package_metadata(pkg_idx);
+        let DistMetadata {
+            tap,
+            formula,
+            system_dependencies,
+            include,
+            auto_includes,
+            windows_archive,
+            unix_archive,
+            npm_package,
+            npm_scope,
+            checksum,
+            install_path,
+            install_success_msg,
+            bin_aliases,
+            display,
+            display_name,
+            // The rest of these are workspace-only
+            precise_builds: _,
+            merge_tasks: _,
+            fail_fast: _,
+            build_local_artifacts: _,
+            dispatch_releases: _,
+            release_branch: _,
+            features: _,
+            default_features: _,
+            all_features: _,
+            plan_jobs: _,
+            local_artifacts_jobs: _,
+            global_artifacts_jobs: _,
+            source_tarball: _,
+            host_jobs: _,
+            publish_jobs: _,
+            post_announce_jobs: _,
+            publish_prereleases: _,
+            force_latest: _,
+            create_release: _,
+            github_releases_repo: _,
+            github_releases_submodule_path: _,
+            ssldotcom_windows_sign: _,
+            hosting: _,
+            extra_artifacts: _,
+            github_custom_runners: _,
+            tag_namespace: _,
+            install_updater: _,
+            cargo_dist_version: _,
+            rust_toolchain_version: _,
+            dist: _,
+            ci: _,
+            pr_run_mode: _,
+            allow_dirty: _,
+            installers: _,
+            targets: _,
+            msvc_crt_static: _,
+        } = self.package_metadata(pkg_idx);
 
         let version = package_info.version.as_ref().unwrap().semver().clone();
         let app_name = package_info.name.clone();
@@ -1152,29 +1191,27 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_repository_url = package_info.repository_url.clone();
         let app_homepage_url = package_info.homepage_url.clone();
         let app_keywords = package_info.keywords.clone();
-        let npm_package = package_config.npm_package.clone();
-        let npm_scope = package_config.npm_scope.clone();
-        let install_path = package_config
-            .install_path
+        let npm_package = npm_package.clone();
+        let npm_scope = npm_scope.clone();
+        let install_path = install_path
             .clone()
             .unwrap_or(vec![InstallPathStrategy::CargoHome]);
-        let install_success_msg = package_config
-            .install_success_msg
+        let install_success_msg = install_success_msg
             .as_deref()
             .unwrap_or("everything's installed!")
             .to_owned();
-        let tap = package_config.tap.clone();
-        let formula = package_config.formula.clone();
+        let tap = tap.clone();
+        let formula = formula.clone();
+        let display = *display;
+        let display_name = display_name.clone();
 
-        let windows_archive = package_config.windows_archive.unwrap_or(ZipStyle::Zip);
-        let unix_archive = package_config
-            .unix_archive
-            .unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
-        let checksum = package_config.checksum.unwrap_or(ChecksumStyle::Sha256);
+        let windows_archive = windows_archive.unwrap_or(ZipStyle::Zip);
+        let unix_archive = unix_archive.unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
+        let checksum = checksum.unwrap_or(ChecksumStyle::Sha256);
 
         // Add static assets
         let mut static_assets = vec![];
-        let auto_includes_enabled = package_config.auto_includes.unwrap_or(true);
+        let auto_includes_enabled = auto_includes.unwrap_or(true);
         if auto_includes_enabled {
             if let Some(readme) = &package_info.readme_file {
                 static_assets.push((StaticAssetKind::Readme, readme.clone()));
@@ -1186,18 +1223,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 static_assets.push((StaticAssetKind::License, license.clone()));
             }
         }
-        if let Some(include) = &package_config.include {
+        if let Some(include) = &include {
             for static_asset in include {
                 static_assets.push((StaticAssetKind::Other, static_asset.clone()));
             }
         }
 
-        let system_dependencies = package_config
-            .system_dependencies
-            .clone()
-            .unwrap_or_default();
+        let system_dependencies = system_dependencies.clone().unwrap_or_default();
 
-        let bin_aliases = BinaryAliases(package_config.bin_aliases.clone().unwrap_or_default());
+        let bin_aliases = BinaryAliases(bin_aliases.clone().unwrap_or_default());
 
         let platform_support = PlatformSupport::default();
         let idx = ReleaseIdx(self.inner.releases.len());
@@ -1232,6 +1266,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             system_dependencies,
             platform_support,
             bin_aliases,
+            display,
+            display_name,
         });
         idx
     }

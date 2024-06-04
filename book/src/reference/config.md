@@ -325,6 +325,28 @@ Enabling this disables tag-push releases, but keeps pr checks enabled.
 By default the workflow dispatch form will have "dry-run" populated as the tag, which is taken to have the same meaning as `pr-run-mode = upload`: run the plan and build steps, but not the publish or announce ones. Currently hosting is also disabled, but future versions may add some forms of hosting in this mode.
 
 
+### display
+
+> since 0.16.0
+
+Example: `display = false`
+
+(defaults `true`)
+
+Specifies whether this App should be displayed in release bodies (like GitHub Releases). This is useful for hiding things that aren't the "primary" or "featured" application but still need to be included in the release for logistical reasons.
+
+
+### display-name
+
+> since 0.16.0
+
+Example: `display-name = "my cool app"`
+
+(defaults to the App's actual name)
+
+Specifies how to refer to the App in release bodies (like GitHub Releases). This is useful for situations where the app name *must* have a certain value for logistical reasons but you want to refer to it by a nicer name.
+
+
 ### dist
 
 > since 0.0.3

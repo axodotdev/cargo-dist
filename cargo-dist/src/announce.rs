@@ -683,9 +683,14 @@ pub fn announcement_github(manifest: &mut DistManifest) {
         if release.hosting.github.is_none() {
             continue;
         }
+        // Skip "hidden" apps
+        if !release.display.unwrap_or(true) {
+            continue;
+        }
         announcing_github = true;
 
-        let heading_suffix = format!("{} {}", release.app_name, release.app_version);
+        let display_name = release.display_name.as_ref().unwrap_or(&release.app_name);
+        let heading_suffix = format!("{} {}", display_name, release.app_version);
 
         // Delineate releases if there's more than 1
         if manifest.releases.len() > 1 {
