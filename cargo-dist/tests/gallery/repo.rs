@@ -26,6 +26,13 @@ pub struct RawTestContext {
 pub struct TestContext<'a, Tools> {
     raw_ctx: &'a RawTestContext,
     pub tools: &'a Tools,
+    pub options: TestOptions,
+}
+
+#[derive(Debug, Default)]
+pub struct TestOptions {
+    pub npm_scope: Option<String>,
+    pub npm_package_name: Option<String>,
 }
 impl<'a, Tools> std::ops::Deref for TestContext<'a, Tools> {
     type Target = RawTestContext;
@@ -66,7 +73,7 @@ where
     }
 
     /// Run a test on this repo
-    pub fn run_test(&self, test: impl FnOnce(&TestContext<Tools>) -> Result<()>) -> Result<()> {
+    pub fn run_test(&self, test: impl FnOnce(TestContext<Tools>) -> Result<()>) -> Result<()> {
         std::env::set_var("CARGO_DIST_MOCK_NETWORKING", "1");
         let maybe_tools = self.tools.lock();
         let maybe_repo = self.ctx.lock();
@@ -76,11 +83,15 @@ where
         let raw_ctx_guard = Self::init_mutex(maybe_repo, || self.init_context(tools).unwrap());
         let raw_ctx = raw_ctx_guard.as_ref().unwrap();
 
-        let ctx = TestContext { raw_ctx, tools };
+        let ctx = TestContext {
+            raw_ctx,
+            tools,
+            options: TestOptions::default(),
+        };
         // Ensure we're in the right dir before running the test
         std::env::set_current_dir(&ctx.repo_dir).into_diagnostic()?;
 
-        test(&ctx)
+        test(ctx)
     }
 
     /// Create the RawTestContext for this Repo by git fetching it to a sufficient temp dir

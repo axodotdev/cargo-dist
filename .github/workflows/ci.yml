@@ -97,6 +97,8 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           key: ${{ matrix.os }}
+      # install pnpm for npm runtests
+      - run: npm i -g pnpm
       # Currently there is essentially no difference between default and --all-features,
       # with the difference essentially being polyfilling a new stdio API for MSRV.
       # For now prefer --all-features (the prebuilt binaries config) for testing to cut CI in half.

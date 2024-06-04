@@ -8,6 +8,8 @@ pub struct Tools {
     pub psanalyzer: Option<CommandInfo>,
     pub homebrew: Option<CommandInfo>,
     pub npm: Option<CommandInfo>,
+    pub pnpm: Option<CommandInfo>,
+    pub yarn: Option<CommandInfo>,
     pub tar: Option<CommandInfo>,
 }
 
@@ -29,6 +31,8 @@ impl Tools {
         let psanalyzer = CommandInfo::new_powershell_command("Invoke-ScriptAnalyzer");
         let homebrew = CommandInfo::new("brew", None);
         let npm = CommandInfo::new("npm", None);
+        let pnpm = CommandInfo::new("pnpm", None);
+        let yarn = CommandInfo::new("yarn", None);
         let tar = CommandInfo::new("tar", None);
         assert!(tar.is_some());
         Self {
@@ -38,6 +42,8 @@ impl Tools {
             psanalyzer,
             homebrew,
             npm,
+            pnpm,
+            yarn,
             tar,
         }
     }

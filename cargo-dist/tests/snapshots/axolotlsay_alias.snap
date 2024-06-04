@@ -1810,7 +1810,7 @@ class Package {
     }
     this.url = url;
     this.name = name;
-    this.installDirectory = join(__dirname, "node_modules", ".bin");
+    this.installDirectory = join(__dirname, "node_modules", ".bin_real");
     this.binaries = binaries;
 
     if (!existsSync(this.installDirectory)) {
@@ -2857,6 +2857,7 @@ install(false);
   "homepage": "https://github.com/axodotdev/axolotlsay",
   "license": "MIT OR Apache-2.0",
   "name": "@axodotdev/axolotlsay",
+  "preferUnplugged": true,
   "repository": "https://github.com/axodotdev/axolotlsay.git",
   "scripts": {
     "fmt": "prettier --write **/*.js",
