@@ -3,6 +3,15 @@
 Nothing Yet!
 
 
+# Version 0.15.1 (2024-06-04)
+
+This is a small release to improve the compatibility of the npm installers with other JS package managers.
+
+In 0.15.0 we introduced a regression for installing via pnpm, resulting in infinite loops that produced a cryptic "argument list too long" error. This only affected pnpm because of the precise timing of when it creates shim scripts for binaries. This has now been fixed, and we've introduced tests to ensure that pnpm is explicitly supported from here on out.
+
+We now signal to yarn that we mutate node_modules (to fetch and install binaries), avoiding issues with yarn PnP which assumes node_modules is immutable. Tests have been introduced to ensure that yarn is explicitly supported from here on out.
+
+
 # Version 0.15.0 (2024-05-31)
 
 This release contains a ton of new features and some fixes.
