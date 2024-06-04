@@ -108,6 +108,12 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub upload_files: Vec<String>,
+    /// Whether Artifact Attestations should be found in the GitHub Release
+    ///
+    /// <https://github.blog/2024-05-02-introducing-artifact-attestations-now-in-public-beta/>
+    #[serde(default)]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub github_attestations: bool,
 }
 
 /// Info about an Asset (binary)
@@ -444,6 +450,7 @@ impl DistManifest {
             announcement_title: None,
             announcement_changelog: None,
             announcement_github_body: None,
+            github_attestations: false,
             system_info: None,
             releases,
             artifacts,
@@ -588,7 +595,13 @@ pub struct Hosting {
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct GithubHosting {
     /// The URL of the Github Release's artifact downloads
+    ///
+    /// e.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`
     pub artifact_download_url: String,
+    /// The owner of the repo
+    pub owner: String,
+    /// The name of the repo
+    pub repo: String,
 }
 
 impl Hosting {

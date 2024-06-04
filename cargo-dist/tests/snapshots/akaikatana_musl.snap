@@ -1037,7 +1037,9 @@ download_binary_and_run_installer "$@" || exit 1
       ],
       "hosting": {
         "github": {
-          "artifact_download_url": "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
+          "artifact_download_url": "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0",
+          "owner": "mistydemeo",
+          "repo": "akaikatana-repack"
         }
       }
     }
