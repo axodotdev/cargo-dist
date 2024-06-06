@@ -796,8 +796,11 @@ pub fn announcement_github(manifest: &mut DistManifest) {
                     &mut gh_body,
                     "```gh attestation verify <file-path of downloaded artifact> --repo {owner}/{repo}```",
                 ).unwrap();
-                // FIXME: Add an example of offline verification where the attestation bundles are pre-downloaded by the user?
-                // maybe `gh attestation verify oci://<image-uri> --owner {owner} --bundle sha256:foo.jsonl`?
+                writeln!(&mut gh_body, "You can also download the attestation from [GitHub](https://github.com/{owner}/{repo}/attestations) and verify against that directly:").unwrap();
+                writeln!(
+                    &mut gh_body,
+                    "```gh attestation verify <file-path of downloaded artifact> --bundle <file-path of downloaded attestation>```",
+                ).unwrap();
             }
         }
     }
