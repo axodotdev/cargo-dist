@@ -146,6 +146,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83394fb98d130ef5a4713d26dccc1bb25c66e1d58f351fed710af62c57abb8fa"
 dependencies = [
  "camino",
+ "image",
+ "miette",
+ "mime",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "toml",
+ "toml_edit",
+ "url",
+ "walkdir",
+]
+
+[[package]]
+name = "axoasset"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16c9c37631b93b983fc2adfc5616df4f6839d6d8d5fbcac00a748b54880d2c7e"
+dependencies = [
+ "camino",
  "flate2",
  "image",
  "miette",
@@ -198,7 +218,7 @@ version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d1a159bdbe9423891114563e07bd5158ba964dfc75c08015e757844972127850"
 dependencies = [
- "axoasset",
+ "axoasset 0.9.5",
  "camino",
  "guppy",
  "itertools 0.12.1",
@@ -229,7 +249,7 @@ version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "669a5ea910fb9b97e3df709c7d0f626fc9e5e9cb83c00bd3a1b4c54835ed8b66"
 dependencies = [
- "axoasset",
+ "axoasset 0.9.5",
  "axoprocess",
  "axotag",
  "camino",
@@ -378,7 +398,7 @@ dependencies = [
 name = "cargo-dist"
 version = "0.15.1"
 dependencies = [
- "axoasset",
+ "axoasset 0.10.0",
  "axocli",
  "axoprocess",
  "axoproject",
@@ -931,7 +951,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d48f72c27df37233564f3050f767b1b77fff511143c7428a64b929f279b7a558"
 dependencies = [
- "axoasset",
+ "axoasset 0.9.5",
  "backon",
  "camino",
  "miette",

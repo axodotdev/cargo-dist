@@ -1,5 +1,6 @@
 //! Codesigning using ssl.com's CodeSignTool
 use axoasset::LocalAsset;
+use axoasset::RemoteAsset;
 use axoprocess::Cmd;
 use camino::Utf8Path;
 use camino::Utf8PathBuf;
@@ -152,7 +153,8 @@ fn fetch_code_sign_tool(dist_dir: &Utf8Path) -> DistResult<Utf8PathBuf> {
     info!("fetching CodeSignTool");
     // Download and unpack the zip
     LocalAsset::create_dir_all(fetch_dir)?;
-    tokio::runtime::Handle::current().block_on(axoasset2::copy(WINDOWS_URL, zip_path.as_str()))?;
+    tokio::runtime::Handle::current()
+        .block_on(RemoteAsset::copy(WINDOWS_URL, zip_path.as_str()))?;
     LocalAsset::unzip_all(zip_path, unzipped_dir)?;
 
     Cmd::new(&cmd, "check tool is runnable")
@@ -197,41 +199,4 @@ TSA_LEGACY_URL=http://ts.ssl.com/legacy
         tool_dir.join("conf/code_sign_tool.properties"),
     )?;
     Ok(())
-}
-
-// TODO: upstream fixes to axoasset to make RemoteAsset::copy work with .zips
-mod axoasset2 {
-    use axoasset::AxoassetError;
-    use camino::{Utf8Path, Utf8PathBuf};
-    use std::fs;
-
-    pub async fn copy(origin_path: &str, dest_file: &str) -> Result<Utf8PathBuf, AxoassetError> {
-        match load(origin_path).await {
-            Ok(contents) => {
-                let dest_path = Utf8Path::new(dest_file);
-                match fs::write(dest_path, contents) {
-                    Ok(_) => Ok(dest_path.to_owned()),
-                    Err(details) => Err(AxoassetError::RemoteAssetWriteFailed {
-                        origin_path: origin_path.to_string(),
-                        dest_path: dest_path.to_string(),
-                        details,
-                    }),
-                }
-            }
-            Err(details) => Err(AxoassetError::RemoteAssetLoadFailed {
-                origin_path: origin_path.to_string(),
-                details: Box::new(details),
-            }),
-        }
-    }
-
-    pub async fn load(origin_path: &str) -> Result<Vec<u8>, AxoassetError> {
-        match reqwest::get(origin_path).await {
-            Ok(response) => Ok(response.bytes().await?.to_vec()),
-            Err(details) => Err(AxoassetError::RemoteAssetRequestFailed {
-                origin_path: origin_path.to_string(),
-                details,
-            }),
-        }
-    }
 }
