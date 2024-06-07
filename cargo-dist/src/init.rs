@@ -1150,7 +1150,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     apply_optional_value(
         table,
         "github-attestations",
-        "# Whether to enable GitHub Attestations",
+        "# Whether to enable GitHub Attestations\n",
         *github_attestations,
     );
 
