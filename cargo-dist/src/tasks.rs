@@ -337,7 +337,9 @@ pub struct Binary {
     ///
     /// (e.g. my-binary-v1.0.0-x86_64-pc-windows-msvc)
     pub id: String,
-    /// The package this binary is defined by
+    /// The idx of the package this binary is defined by
+    pub pkg_idx: PackageIdx,
+    /// The cargo package this binary is defined by
     ///
     /// This is an "opaque" string that will show up in things like cargo machine-readable output,
     /// but **this is not the format that cargo -p flags expect**. Use pkg_spec for that.
@@ -361,7 +363,6 @@ pub struct Binary {
     pub copy_symbols_to: Vec<Utf8PathBuf>,
     /// feature flags!
     pub features: CargoTargetFeatures,
-    pkg_idx: PackageIdx,
 }
 
 /// A build step we would like to perform
@@ -420,6 +421,10 @@ pub struct GenericBuildStep {
     pub target_triple: TargetTriple,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+    /// The working directory to run the build in
+    pub working_dir: Utf8PathBuf,
+    /// The output directory to find build outputs in
+    pub out_dir: Utf8PathBuf,
     /// The command to run to produce the expected binaries
     pub build_command: Vec<String>,
 }
@@ -828,7 +833,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             github_releases_submodule_path,
             allow_dirty,
             msvc_crt_static,
-            hosting,
             extra_artifacts,
             pr_run_mode,
             tap,
@@ -837,7 +841,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
             // after this function, seems like we should finish the job..? (Doing a big
             // refactor already, don't want to mess with this right now.)
-            ci,
+            ci: _,
+            hosting: _,
             // Only the final value merged into a package_config matters
             //
             // Note that we do *use* an auto-include from the workspace when doing
@@ -1034,8 +1039,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let cargo_version_line = tools.cargo.version_line.clone();
 
-        let hosting = crate::host::select_hosting(workspace, hosting.clone(), ci.as_deref());
-
         let system = SystemInfo {
             id: system_id.clone(),
             cargo_version_line,
@@ -1092,7 +1095,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 post_announce_jobs,
                 allow_dirty,
                 msvc_crt_static,
-                hosting,
+                hosting: None,
                 extra_artifacts: extra_artifacts.clone().unwrap_or_default(),
                 github_custom_runners: workspace_metadata
                     .github_custom_runners
@@ -2689,7 +2692,12 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     )?;
 
     // Figure out how artifacts should be hosted
-    graph.compute_hosting(cfg, &announcing)?;
+    graph.compute_hosting(
+        cfg,
+        &announcing,
+        graph.workspace_metadata.hosting.clone(),
+        graph.workspace_metadata.ci.clone(),
+    )?;
 
     // Figure out what we're releasing/building
     graph.compute_releases(cfg, &announcing, triples, bypass_package_target_prefs)?;
