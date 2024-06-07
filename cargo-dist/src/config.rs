@@ -365,6 +365,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 
+    /// Whether GitHub Attestations is enabled (default false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_attestations: Option<bool>,
+
     /// Hosting provider
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default, with = "opt_string_or_vec")]
@@ -444,6 +448,7 @@ impl DistMetadata {
             pr_run_mode: _,
             allow_dirty: _,
             ssldotcom_windows_sign: _,
+            github_attestations: _,
             msvc_crt_static: _,
             hosting: _,
             extra_artifacts: _,
@@ -522,6 +527,7 @@ impl DistMetadata {
             pr_run_mode,
             allow_dirty,
             ssldotcom_windows_sign,
+            github_attestations,
             msvc_crt_static,
             hosting,
             extra_artifacts,
@@ -588,6 +594,9 @@ impl DistMetadata {
         }
         if ssldotcom_windows_sign.is_some() {
             warn!("package.metadata.dist.ssldotcom-windows-sign is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_attestations.is_some() {
+            warn!("package.metadata.dist.github-attestations is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if msvc_crt_static.is_some() {
             warn!("package.metadata.dist.msvc-crt-static is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

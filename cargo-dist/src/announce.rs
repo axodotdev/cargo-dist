@@ -5,7 +5,7 @@
 use axoproject::platforms::triple_to_display_name;
 use axoproject::PackageIdx;
 use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{DistManifest, GithubHosting};
 use itertools::Itertools;
 use semver::Version;
 use tracing::info;
@@ -751,7 +751,7 @@ pub fn announcement_github(manifest: &mut DistManifest) {
             gh_body.push_str("|  File  | Platform | Checksum |\n");
             gh_body.push_str("|--------|----------|----------|\n");
 
-            for artifact in other_artifacts {
+            for artifact in &other_artifacts {
                 // Artifacts with no name do not exist as files, and should have had install-hints
                 let Some(name) = &artifact.name else {
                     continue;
@@ -786,6 +786,22 @@ pub fn announcement_github(manifest: &mut DistManifest) {
                 writeln!(&mut gh_body, "| {download} | {triple} | {checksum} |").unwrap();
             }
             writeln!(&mut gh_body).unwrap();
+        }
+
+        if !other_artifacts.is_empty() && manifest.github_attestations {
+            if let Some(GithubHosting { owner, repo, .. }) = &release.hosting.github {
+                writeln!(&mut gh_body, "## Verifying GitHub Artifact Attestations\n",).unwrap();
+                writeln!(&mut gh_body, "The artifacts in this release have attestations generated with GitHub Artifact Attestations. These can be verified by using the [GitHub CLI](https://cli.github.com/manual/gh_attestation_verify):").unwrap();
+                writeln!(
+                    &mut gh_body,
+                    "```sh\ngh attestation verify <file-path of downloaded artifact> --repo {owner}/{repo}\n```\n",
+                ).unwrap();
+                writeln!(&mut gh_body, "You can also download the attestation from [GitHub](https://github.com/{owner}/{repo}/attestations) and verify against that directly:").unwrap();
+                writeln!(
+                    &mut gh_body,
+                    "```sh\ngh attestation verify <file-path of downloaded artifact> --bundle <file-path of downloaded attestation>\n```\n",
+                ).unwrap();
+            }
         }
     }
 

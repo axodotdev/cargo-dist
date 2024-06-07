@@ -83,6 +83,10 @@ expression: json_schema
       "default": false,
       "type": "boolean"
     },
+    "github_attestations": {
+      "description": "Whether Artifact Attestations should be found in the GitHub Release\n\n<https://github.blog/2024-05-02-introducing-artifact-attestations-now-in-public-beta/>",
+      "type": "boolean"
+    },
     "linkage": {
       "description": "Data about dynamic linkage in the built libraries",
       "default": [],
@@ -563,11 +567,21 @@ expression: json_schema
       "description": "Github Hosting",
       "type": "object",
       "required": [
-        "artifact_download_url"
+        "artifact_download_url",
+        "owner",
+        "repo"
       ],
       "properties": {
         "artifact_download_url": {
-          "description": "The URL of the Github Release's artifact downloads",
+          "description": "The URL of the Github Release's artifact downloads\n\ne.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`",
+          "type": "string"
+        },
+        "owner": {
+          "description": "The owner of the repo",
+          "type": "string"
+        },
+        "repo": {
+          "description": "The name of the repo",
           "type": "string"
         }
       }
