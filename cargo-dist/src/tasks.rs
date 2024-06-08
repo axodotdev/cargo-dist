@@ -58,7 +58,7 @@ use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
 use semver::Version;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
 use crate::announce::{self, AnnouncementTag, TagMode};
@@ -276,6 +276,31 @@ pub struct DistGraph {
     pub github_releases_repo: Option<config::GithubRepoPair>,
     /// Read the commit to be tagged from the submodule at this path
     pub github_releases_submodule_path: Option<String>,
+    /// Cache provider
+    pub cache_provider: Option<CacheProvider>,
+}
+
+/// The supported cache providers by `swatinem/rust-cache`
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+)]
+pub enum CacheProvider {
+    /// Use the default github actions cache.
+    #[default]
+    #[serde(rename = "github")]
+    Github,
+    /// Use the buildjet cache.
+    #[serde(rename = "buildjet")]
+    BuildJet,
+}
+
+impl std::fmt::Display for CacheProvider {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CacheProvider::Github => write!(f, "github"),
+            CacheProvider::BuildJet => write!(f, "buildjet"),
+        }
+    }
 }
 
 /// Info about artifacts should be hosted
@@ -828,6 +853,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             extra_artifacts,
             pr_run_mode,
             tap,
+            cache_provider,
             // Partially Processed elsewhere
             //
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
@@ -1095,6 +1121,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .clone()
                     .unwrap_or_default(),
                 install_updater: install_updater.unwrap_or_default(),
+                cache_provider: *cache_provider,
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
@@ -1188,6 +1215,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             targets: _,
             msvc_crt_static: _,
             github_attestations: _,
+            cache_provider: _,
         } = self.package_metadata(pkg_idx);
 
         let version = package_info.version.as_ref().unwrap().semver().clone();

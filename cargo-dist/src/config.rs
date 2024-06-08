@@ -11,11 +11,11 @@ use serde::{Deserialize, Serialize};
 use tracing::log::warn;
 
 use crate::announce::TagSettings;
-use crate::ProjectError;
 use crate::{
     errors::{DistError, DistResult},
     TargetTriple, METADATA_DIST,
 };
+use crate::{CacheProvider, ProjectError};
 
 /// A container to assist deserializing metadata from generic, non-Cargo projects
 #[derive(Debug, Deserialize)]
@@ -401,6 +401,12 @@ pub struct DistMetadata {
     /// How to refer to the app in release bodies
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
+
+    /// Cache provider
+    ///
+    /// By default, cargo-dist will cache builds using the default GitHub Actions cache.
+    /// This can be overridden to use a different provider, such as buildjet.
+    pub cache_provider: Option<CacheProvider>,
 }
 
 impl DistMetadata {
@@ -460,6 +466,7 @@ impl DistMetadata {
             github_releases_submodule_path: _,
             display: _,
             display_name: _,
+            cache_provider: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -539,6 +546,7 @@ impl DistMetadata {
             github_releases_submodule_path,
             display,
             display_name,
+            cache_provider,
         } = self;
 
         // Check for global settings on local packages
@@ -627,6 +635,10 @@ impl DistMetadata {
         }
         if tag_namespace.is_some() {
             warn!("package.metadata.dist.tag-namespace is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+
+        if cache_provider.is_some() {
+            warn!("package.metadata.dist.cache-provider is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings

@@ -72,6 +72,9 @@ pub struct GithubCiInfo {
     pub hosting_providers: Vec<HostingStyle>,
     /// whether to prefix release.yml and the tag pattern
     pub tag_namespace: Option<String>,
+    /// Cache provider
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cache_provider: Option<String>,
 }
 
 impl GithubCiInfo {
@@ -149,6 +152,8 @@ impl GithubCiInfo {
         let user_publish_jobs = dist.user_publish_jobs.clone();
         let post_announce_jobs = dist.post_announce_jobs.clone();
 
+        let cache_provider = dist.cache_provider.map(|c| c.to_string());
+
         // Figure out what Local Artifact tasks we need
         let local_runs = if dist.merge_tasks {
             distribute_targets_to_runners_merged(local_targets, &dist.github_custom_runners)
@@ -197,6 +202,7 @@ impl GithubCiInfo {
             ssldotcom_windows_sign,
             github_attestations,
             hosting_providers,
+            cache_provider,
         }
     }
 

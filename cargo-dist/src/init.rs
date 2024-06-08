@@ -272,6 +272,7 @@ fn get_new_dist_metadata(
             install_updater: None,
             display: None,
             display_name: None,
+            cache_provider: None,
         }
     };
 
@@ -854,6 +855,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         install_updater,
         display,
         display_name,
+        cache_provider,
     } = &meta;
 
     apply_optional_value(
@@ -1187,6 +1189,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "display-name",
         "# Custom display name to use for this app in release bodies\n",
         display_name.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "cache-provider",
+        "# Cache provider for builds. Can be one of github or buildjet.\n",
+        cache_provider.as_ref().map(|p| p.to_string()),
     );
 
     // Finalize the table

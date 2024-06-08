@@ -211,6 +211,9 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           key: ${{ join(matrix.targets, '-') }}
+          {{%- if cache_provider is defined %}}
+          cache-provider: {{{ cache_provider }}}
+          {{%- endif %}}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest
