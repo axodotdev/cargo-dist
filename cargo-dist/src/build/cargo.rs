@@ -98,19 +98,38 @@ impl<'a> DistGraphBuilder<'a> {
                     }));
                 }
             } else {
-                // If we think a workspace build is possible, every binary agrees on the features, so take an arbitrary one
-                let features = binaries
-                    .first()
-                    .map(|&idx| self.binary(idx).features.clone())
-                    .unwrap_or_default();
-                builds.push(BuildStep::Cargo(CargoBuildStep {
-                    target_triple: target.clone(),
-                    package: CargoTargetPackages::Workspace,
-                    features,
-                    rustflags,
-                    profile: String::from(PROFILE_DIST),
-                    expected_binaries: binaries,
-                }));
+                // We have a potential optimisation if we have to build multiple binaries.
+                // A side effect is that unused dependencies will be built, so it is probably
+                // only worth it if we have more than one binary.
+                match binaries.as_slice() {
+                    [binary] => {
+                        let binary = self.binary(*binary);
+                        let features = binary.features.clone();
+                        builds.push(BuildStep::Cargo(CargoBuildStep {
+                            target_triple: target.clone(),
+                            package: CargoTargetPackages::Package(binary.pkg_spec.to_owned()),
+                            features,
+                            rustflags,
+                            profile: String::from(PROFILE_DIST),
+                            expected_binaries: binaries,
+                        }));
+                    }
+                    multiple_binaries => {
+                        // If we think a workspace build is possible, every binary agrees on the features, so take an arbitrary one
+                        let features = multiple_binaries
+                            .first()
+                            .map(|&idx| self.binary(idx).features.clone())
+                            .unwrap_or_default();
+                        builds.push(BuildStep::Cargo(CargoBuildStep {
+                            target_triple: target.clone(),
+                            package: CargoTargetPackages::Workspace,
+                            features,
+                            rustflags,
+                            profile: String::from(PROFILE_DIST),
+                            expected_binaries: binaries,
+                        }));
+                    }
+                }
             }
         }
         builds
