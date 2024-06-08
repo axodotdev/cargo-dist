@@ -101,20 +101,22 @@ impl<'a> DistGraphBuilder<'a> {
                 // We have a potential optimisation if we have to build multiple binaries.
                 // A side effect is that unused dependencies will be built, so it is probably
                 // only worth it if we have more than one binary.
-                match binaries.as_slice() {
-                    [binary] => {
-                        let binary = self.binary(*binary);
-                        let features = binary.features.clone();
-                        builds.push(BuildStep::Cargo(CargoBuildStep {
-                            target_triple: target.clone(),
-                            package: CargoTargetPackages::Package(binary.pkg_spec.to_owned()),
-                            features,
-                            rustflags,
-                            profile: String::from(PROFILE_DIST),
-                            expected_binaries: binaries,
-                        }));
+                match (binaries.as_slice(), self.force_per_package) {
+                    (binaries, true) | (binaries @ [_], false) => {
+                        for binary_idx in binaries {
+                            let binary = self.binary(*binary_idx);
+                            let features = binary.features.clone();
+                            builds.push(BuildStep::Cargo(CargoBuildStep {
+                                target_triple: target.clone(),
+                                package: CargoTargetPackages::Package(binary.pkg_spec.to_owned()),
+                                features,
+                                rustflags: rustflags.clone(),
+                                profile: String::from(PROFILE_DIST),
+                                expected_binaries: vec![*binary_idx],
+                            }));
+                        }
                     }
-                    multiple_binaries => {
+                    (multiple_binaries, false) => {
                         // If we think a workspace build is possible, every binary agrees on the features, so take an arbitrary one
                         let features = multiple_binaries
                             .first()

@@ -272,6 +272,7 @@ fn get_new_dist_metadata(
             install_updater: None,
             display: None,
             display_name: None,
+            force_per_package: None,
         }
     };
 
@@ -854,6 +855,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         install_updater,
         display,
         display_name,
+        force_per_package,
     } = &meta;
 
     apply_optional_value(
@@ -1187,6 +1189,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "display-name",
         "# Custom display name to use for this app in release bodies\n",
         display_name.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "force-per-package",
+        "# Whether to force building a package for each binary\n",
+        *force_per_package,
     );
 
     // Finalize the table

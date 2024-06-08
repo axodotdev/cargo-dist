@@ -767,6 +767,7 @@ pub(crate) struct DistGraphBuilder<'pkg_graph> {
     pub(crate) inner: DistGraph,
     pub(crate) manifest: DistManifest,
     pub(crate) workspace: &'pkg_graph mut WorkspaceInfo,
+    pub(crate) force_per_package: bool,
     artifact_mode: ArtifactMode,
     binaries_by_id: FastMap<String, BinaryIdx>,
     workspace_metadata: DistMetadata,
@@ -834,6 +835,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // after this function, seems like we should finish the job..? (Doing a big
             // refactor already, don't want to mess with this right now.)
             ci,
+            force_per_package,
             // Only the final value merged into a package_config matters
             //
             // Note that we do *use* an auto-include from the workspace when doing
@@ -1117,6 +1119,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 github_attestations,
             },
             package_metadata,
+            force_per_package: force_per_package.unwrap_or_default(),
             workspace_metadata,
             workspace,
             binaries_by_id: FastMap::new(),
@@ -1188,6 +1191,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             targets: _,
             msvc_crt_static: _,
             github_attestations: _,
+            force_per_package: _,
         } = self.package_metadata(pkg_idx);
 
         let version = package_info.version.as_ref().unwrap().semver().clone();

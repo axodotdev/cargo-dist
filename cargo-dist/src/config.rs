@@ -401,6 +401,15 @@ pub struct DistMetadata {
     /// How to refer to the app in release bodies
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
+
+    /// Whether to force building a package for each binary
+    ///
+    /// By default cargo-dist will do a workspace-level build if you have
+    /// multiple binaries. This will speed builds up in the general case but
+    /// can cause issues if, for example, you have an unused dependency in
+    /// the workspace that cannot be built. In that case you can set this
+    /// to true to force a build for each binary.
+    pub force_per_package: Option<bool>,
 }
 
 impl DistMetadata {
@@ -460,6 +469,7 @@ impl DistMetadata {
             github_releases_submodule_path: _,
             display: _,
             display_name: _,
+            force_per_package: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -539,6 +549,7 @@ impl DistMetadata {
             github_releases_submodule_path,
             display,
             display_name,
+            force_per_package,
         } = self;
 
         // Check for global settings on local packages
@@ -627,6 +638,10 @@ impl DistMetadata {
         }
         if tag_namespace.is_some() {
             warn!("package.metadata.dist.tag-namespace is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+
+        if force_per_package.is_some() {
+            warn!("package.metadata.dist.force-per-package is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
