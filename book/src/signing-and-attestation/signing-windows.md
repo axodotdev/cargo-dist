@@ -1,6 +1,4 @@
-# Signing and Attestation
-
-## Windows Artifact Signing with SSL.com Certificates
+# Windows Artifact Signing with SSL.com Certificates
 
 > since 0.15.0
 
@@ -15,9 +13,9 @@ Although this will hopefully improve in the future, for now this has resulted in
 Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file an issue](https://github.com/axodotdev/cargo-dist/issues).
 
 
-### Quickstart
+## Quickstart
 
-#### Part 1: Create an SSL.com certificate (real or sandbox)
+### Part 1: Create an SSL.com certificate (real or sandbox)
 
 1. **Make an account and order your certificate**
 
@@ -57,7 +55,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
     For reference, the [SSL.com documentation for their official GitHub Action](https://www.ssl.com/how-to/cloud-code-signing-integration-with-github-actions/) uses the names: ES_USERNAME, ES_PASSWORD, ES_TOTP_SECRET, and CREDENTIAL_ID for these values. The “ES” stands for “esign”. We renamed these variables to make them more specific and clear.
 
 
-#### Part 2: Enable SSL.com signing with cargo-dist
+### Part 2: Enable SSL.com signing with cargo-dist
 
 1. **Configure cargo-dist to codesign**
 
@@ -65,7 +63,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     ```toml
     [workspace.metadata.dist]
-    ssldotcom-windows-sign = "prod" # or "test" if you are using a sandbox account
+    ssldotcom-windows-sign = "prod"  or "test" if you are using a sandbox account
     ```
 
 
