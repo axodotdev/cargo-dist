@@ -253,7 +253,7 @@ dependencies = [
  "axoprocess",
  "axotag",
  "camino",
- "gazenot",
+ "gazenot 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "homedir",
  "miette",
  "reqwest",
@@ -415,7 +415,7 @@ dependencies = [
  "console",
  "dialoguer",
  "flate2",
- "gazenot",
+ "gazenot 0.3.1 (git+https://github.com/axodotdev/gazenot.git?branch=axoasset_fix_version)",
  "goblin",
  "homedir",
  "include_dir",
@@ -445,7 +445,7 @@ name = "cargo-dist-schema"
 version = "0.15.1"
 dependencies = [
  "camino",
- "gazenot",
+ "gazenot 0.3.1 (git+https://github.com/axodotdev/gazenot.git?branch=axoasset_fix_version)",
  "insta",
  "schemars",
  "semver",
@@ -956,6 +956,24 @@ dependencies = [
  "camino",
  "miette",
  "reqwest",
+ "schemars",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "gazenot"
+version = "0.3.1"
+source = "git+https://github.com/axodotdev/gazenot.git?branch=axoasset_fix_version#de1deb3ffd258391caae96fdfced6114ddfae2f0"
+dependencies = [
+ "axoasset 0.10.1",
+ "backon",
+ "camino",
+ "miette",
  "schemars",
  "serde",
  "serde_json",
