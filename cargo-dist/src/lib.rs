@@ -340,7 +340,7 @@ fn build_fake(
 }
 
 fn run_fake_extra_artifacts_build(dist: &DistGraph, target: &ExtraBuildStep) -> DistResult<()> {
-    for artifact in &target.expected_artifacts {
+    for artifact in &target.artifact_relpaths {
         let path = dist.dist_dir.join(artifact);
         LocalAsset::write_new_all("", &path)?;
     }
