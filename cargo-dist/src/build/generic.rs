@@ -3,7 +3,7 @@
 use std::{env, process::ExitStatus};
 
 use axoprocess::Cmd;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::DistManifest;
 
 use crate::{
@@ -102,10 +102,11 @@ fn platform_appropriate_cxx(target: &str) -> &str {
 
 fn run_build(
     dist_graph: &DistGraph,
-    command_string: &[String],
-    target: Option<&str>,
+    build_command: &[String],
+    working_dir: &Utf8Path,
+    target: Option<&TargetTriple>,
 ) -> DistResult<ExitStatus> {
-    let mut command_string = command_string.to_owned();
+    let mut command_string = build_command.to_owned();
 
     let mut desired_extra_env = vec![];
     let mut cflags = None;
@@ -125,6 +126,7 @@ fn run_build(
         .first()
         .expect("The build command must contain at least one entry");
     let mut command = Cmd::new(command_name, format!("exec generic build: {command_name}"));
+    command.current_dir(working_dir);
     command.stdout_to_stderr();
     for arg in args {
         command.arg(arg);
@@ -174,6 +176,7 @@ pub fn build_generic_target(
     let result = run_build(
         dist_graph,
         &target.build_command,
+        &dist_graph.workspace_dir,
         Some(&target.target_triple),
     )?;
 
@@ -205,8 +208,7 @@ pub fn run_extra_artifacts_build(dist: &DistGraph, build: &ExtraBuildStep) -> Di
         build.build_command.join(" ")
     );
 
-    // TODO: run this in build.working_dir (conflicts with other inflight PR)
-    let result = run_build(dist, &build.build_command, None)?;
+    let result = run_build(dist, &build.build_command, &build.working_dir, None)?;
 
     if !result.success() {
         eprintln!("Build exited non-zero: {}", result);
