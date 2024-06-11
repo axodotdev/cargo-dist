@@ -272,6 +272,8 @@ pub struct DistGraph {
     pub tag_namespace: Option<String>,
     /// Whether to install updaters alongside with binaries
     pub install_updater: bool,
+    /// Whether to use native system certs for TLS instead of WebPKI when fetching the updater
+    pub native_certs: bool,
     /// Publish GitHub Releases to this other repo
     pub github_releases_repo: Option<config::GithubRepoPair>,
     /// Read the commit to be tagged from the submodule at this path
@@ -814,6 +816,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             github_attestations,
             tag_namespace,
             install_updater,
+            native_certs,
             publish_prereleases,
             force_latest,
             features,
@@ -1095,6 +1098,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .clone()
                     .unwrap_or_default(),
                 install_updater: install_updater.unwrap_or_default(),
+                native_certs: native_certs.unwrap_or_default(),
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
@@ -1178,6 +1182,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             github_custom_runners: _,
             tag_namespace: _,
             install_updater: _,
+            native_certs: _,
             cargo_dist_version: _,
             rust_toolchain_version: _,
             dist: _,

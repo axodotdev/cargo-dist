@@ -176,7 +176,20 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResul
         updater.target_triple
     );
 
-    let client = reqwest::blocking::Client::new();
+    let client = if dist_graph.native_certs {
+        reqwest::blocking::Client::builder()
+            .tls_built_in_webpki_certs(false)
+            .tls_built_in_native_certs(true)
+            .build()
+            .map_err(|_| DistError::AxoupdaterReleaseCheckFailed {})?
+    } else {
+        reqwest::blocking::Client::builder()
+            .tls_built_in_webpki_certs(true)
+            .tls_built_in_native_certs(false)
+            .build()
+            .map_err(|_| DistError::AxoupdaterReleaseCheckFailed {})?
+    };
+
     let resp = client
         .head(&expected_url)
         .send()

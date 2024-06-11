@@ -395,6 +395,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_updater: Option<bool>,
 
+    /// Whether to use native system certs for TLS instead of WebPKI when fetching the updater
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub native_certs: Option<bool>,
+
     /// Whether artifacts/installers for this app should be displayed in release bodies
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display: Option<bool>,
@@ -456,6 +460,7 @@ impl DistMetadata {
             bin_aliases: _,
             tag_namespace: _,
             install_updater: _,
+            native_certs: _,
             github_releases_repo: _,
             github_releases_submodule_path: _,
             display: _,
@@ -539,6 +544,7 @@ impl DistMetadata {
             github_releases_submodule_path,
             display,
             display_name,
+            ..
         } = self;
 
         // Check for global settings on local packages
