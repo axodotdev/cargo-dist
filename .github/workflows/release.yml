@@ -64,7 +64,7 @@ jobs:
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.15.1/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.16.0-prerelease.4/cargo-dist-installer.sh | sh"
       # sure would be cool if github gave us proper conditionals...
       # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
       # functionality based on whether this is a pull_request, and whether it's from a fork.
@@ -169,7 +169,7 @@ jobs:
           submodules: recursive
       - name: Install cargo-dist
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.15.1/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.16.0-prerelease.4/cargo-dist-installer.sh | sh"
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
@@ -224,7 +224,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.15.1/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.16.0-prerelease.4/cargo-dist-installer.sh | sh"
       # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
         uses: actions/download-artifact@v4
@@ -323,7 +323,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.15.1/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.16.0-prerelease.4/cargo-dist-installer.sh | sh"
       - name: Fetch Axo Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -344,10 +344,13 @@ jobs:
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
       - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ needs.plan.outputs.tag }}
-          name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
-          body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
-          prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
-          artifacts: "artifacts/*"
+        env:
+          PRERELEASE_FLAG: "${{ fromJson(needs.host.outputs.val).announcement_is_prerelease && '--prerelease' || '' }}"
+          ANNOUNCEMENT_TITLE: "${{ fromJson(needs.host.outputs.val).announcement_title }}"
+          ANNOUNCEMENT_BODY: "${{ fromJson(needs.host.outputs.val).announcement_github_body }}"
+        run: |
+          # Write and read notes from a file to avoid quoting breaking things
+          echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
+
+          gh release create "${{ needs.plan.outputs.tag }}" --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" $PRERELEASE_FLAG
+          gh release upload "${{ needs.plan.outputs.tag }}" artifacts/*
