@@ -1,4 +1,4 @@
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{changelog::ChangelogInfo, errors::AxoprojectError, Version, WorkspaceKind};
 
@@ -564,11 +564,82 @@ fn test_generic_c() {
         .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Generic);
     assert_eq!(project.package_info.len(), 1);
+    assert!(project.manifest_path.exists());
 
     let package = &project.package_info[0];
     assert_eq!(package.name, "testprog");
     assert_eq!(package.binaries.len(), 1);
+    assert!(project.manifest_path.exists());
 
     let binary = &package.binaries[0];
     assert_eq!(binary, "main");
+}
+
+#[test]
+fn test_generic_workspace_root() {
+    generic_workspace_check("tests/projects/generic-workspace")
+}
+
+#[test]
+fn test_generic_workspace_subdir() {
+    generic_workspace_check("tests/projects/generic-workspace/generic1/")
+}
+
+fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
+    let project = crate::get_workspaces(path.into(), None).best().unwrap();
+    assert_eq!(project.kind, WorkspaceKind::Generic);
+    assert_eq!(project.package_info.len(), 2);
+    assert!(project.manifest_path.exists());
+    check_file(
+        project.root_auto_includes.readme.as_deref().unwrap(),
+        "root fake readme!",
+    );
+    check_file(
+        &project.root_auto_includes.licenses[0],
+        "root fake license!",
+    );
+    check_file(
+        project.root_auto_includes.changelog.as_deref().unwrap(),
+        "root fake changelog!",
+    );
+
+    {
+        let package = &project.package_info[0];
+        assert_eq!(package.name, "generic1");
+        assert_eq!(package.binaries.len(), 1);
+        let binary = &package.binaries[0];
+        assert_eq!(binary, "main");
+        assert!(package.manifest_path.exists());
+        assert!(package.manifest_path != project.manifest_path);
+        check_file(
+            package.readme_file.as_deref().unwrap(),
+            "inner fake readme!",
+        );
+        check_file(&package.license_files[0], "inner fake license!");
+        check_file(
+            package.changelog_file.as_deref().unwrap(),
+            "inner fake changelog!",
+        );
+    }
+
+    {
+        let package = &project.package_info[1];
+        assert_eq!(package.name, "generic2");
+        assert_eq!(package.binaries.len(), 1);
+        let binary = &package.binaries[0];
+        assert_eq!(binary, "main");
+        assert!(package.manifest_path.exists());
+        assert!(package.manifest_path != project.manifest_path);
+        check_file(package.readme_file.as_deref().unwrap(), "root fake readme!");
+        check_file(&package.license_files[0], "root fake license!");
+        check_file(
+            package.changelog_file.as_deref().unwrap(),
+            "root fake changelog!",
+        );
+    }
+}
+
+#[track_caller]
+fn check_file(file: &Utf8Path, val: &str) {
+    assert!(axoasset::LocalAsset::load_string(file).unwrap().trim() == val)
 }

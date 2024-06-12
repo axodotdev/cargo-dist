@@ -85,8 +85,10 @@ fn workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
     let root_auto_includes = crate::find_auto_includes(&workspace_dir)?;
 
     let mut package_info = vec![];
-    for member_dir in &manifest.workspace.members {
-        let mut package = package_from(&member_dir.join(DIST_PACKAGE_TOML))?;
+    for member_reldir in &manifest.workspace.members {
+        let member_dir = workspace_dir.join(member_reldir);
+        let member_manifest_path = member_dir.join(DIST_PACKAGE_TOML);
+        let mut package = package_from(&member_manifest_path)?;
         crate::merge_auto_includes(&mut package, &root_auto_includes);
         package_info.push(package);
     }
