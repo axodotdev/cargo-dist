@@ -272,7 +272,7 @@ impl GithubCiInfo {
     }
 }
 
-/// Get the best `cache-provider`` key to use for <https://github.com/Swatinem/rust-cache>.
+/// Get the best `cache-provider` key to use for <https://github.com/Swatinem/rust-cache>.
 ///
 /// In the future we might make "None" here be a way to say "disable the cache".
 fn cache_provider_for_runner(runner: &str) -> Option<String> {
