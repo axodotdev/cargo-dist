@@ -603,6 +603,13 @@ expression: json_schema
       "description": "Entry for a github matrix",
       "type": "object",
       "properties": {
+        "cache_provider": {
+          "description": "what cache provider to use",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "dist_args": {
           "description": "Arguments to pass to cargo-dist",
           "type": [

@@ -239,7 +239,8 @@ expression: self.payload
             ],
             "runner": "macos-12",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
+            "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -247,7 +248,8 @@ expression: self.payload
             ],
             "runner": "macos-12",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
+            "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -255,7 +257,8 @@ expression: self.payload
             ],
             "runner": "windows-2019",
             "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex\"",
-            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -263,7 +266,8 @@ expression: self.payload
             ],
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
+            "cache_provider": "github"
           }
         ]
       },
@@ -392,6 +396,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           key: ${{ join(matrix.targets, '-') }}
+          cache-provider: ${{ matrix.cache_provider }}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest

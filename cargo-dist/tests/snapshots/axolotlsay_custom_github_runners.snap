@@ -237,7 +237,8 @@ expression: self.payload
             ],
             "runner": "buildjet-8vcpu-ubuntu-2204-arm",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu"
+            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu",
+            "cache_provider": "buildjet"
           },
           {
             "targets": [
@@ -246,7 +247,8 @@ expression: self.payload
             "runner": "buildjet-8vcpu-ubuntu-2204-arm",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-unknown-linux-musl",
-            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools"
+            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools",
+            "cache_provider": "buildjet"
           },
           {
             "targets": [
@@ -254,7 +256,8 @@ expression: self.payload
             ],
             "runner": "buildjet-8vcpu-ubuntu-2204",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
+            "cache_provider": "buildjet"
           },
           {
             "targets": [
@@ -263,7 +266,8 @@ expression: self.payload
             "runner": "buildjet-8vcpu-ubuntu-2204",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
-            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools"
+            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools",
+            "cache_provider": "buildjet"
           }
         ]
       },
@@ -390,6 +394,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           key: ${{ join(matrix.targets, '-') }}
+          cache-provider: ${{ matrix.cache_provider }}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest

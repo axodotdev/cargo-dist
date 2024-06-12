@@ -432,7 +432,8 @@ stdout:
             ],
             "runner": "macos-12",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
+            "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -440,7 +441,8 @@ stdout:
             ],
             "runner": "buildjet-8vcpu-ubuntu-2204-arm",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu"
+            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu",
+            "cache_provider": "buildjet"
           },
           {
             "targets": [
@@ -449,7 +451,8 @@ stdout:
             "runner": "buildjet-8vcpu-ubuntu-2204-arm",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-unknown-linux-musl",
-            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools"
+            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools",
+            "cache_provider": "buildjet"
           },
           {
             "targets": [
@@ -457,7 +460,8 @@ stdout:
             ],
             "runner": "macos-12",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
+            "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -465,7 +469,8 @@ stdout:
             ],
             "runner": "windows-2019",
             "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex\"",
-            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -473,7 +478,8 @@ stdout:
             ],
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -482,7 +488,8 @@ stdout:
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
-            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools"
+            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools",
+            "cache_provider": "github"
           }
         ]
       },

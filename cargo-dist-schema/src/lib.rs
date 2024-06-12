@@ -195,6 +195,9 @@ pub struct GithubMatrixEntry {
     /// Command to run to install dependencies
     #[serde(skip_serializing_if = "Option::is_none")]
     pub packages_install: Option<String>,
+    /// what cache provider to use
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cache_provider: Option<String>,
 }
 
 /// Type of job to run on pull request
