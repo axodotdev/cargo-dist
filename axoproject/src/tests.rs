@@ -1,6 +1,8 @@
 use camino::{Utf8Path, Utf8PathBuf};
 
-use crate::{changelog::ChangelogInfo, errors::AxoprojectError, Version, WorkspaceKind};
+use crate::{
+    changelog::ChangelogInfo, errors::AxoprojectError, PackageIdx, Version, WorkspaceKind,
+};
 
 #[cfg(feature = "cargo-projects")]
 #[test]
@@ -602,6 +604,8 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         project.root_auto_includes.changelog.as_deref().unwrap(),
         "root fake changelog!",
     );
+    // repository is inconsistent, so this should be Err
+    assert!(project.repository_url(None).is_err());
 
     {
         let package = &project.package_info[0];
@@ -611,6 +615,7 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         assert_eq!(binary, "main");
         assert!(package.manifest_path.exists());
         assert!(package.manifest_path != project.manifest_path);
+        // Inner package defines its own auto_includes
         check_file(
             package.readme_file.as_deref().unwrap(),
             "inner fake readme!",
@@ -619,6 +624,14 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         check_file(
             package.changelog_file.as_deref().unwrap(),
             "inner fake changelog!",
+        );
+        // repository should yield this one, so this should faile
+        assert_eq!(
+            project
+                .repository_url(Some(&[PackageIdx(0)]))
+                .unwrap()
+                .unwrap(),
+            "https://github.com/mistydemeo/testprog1"
         );
     }
 
@@ -630,11 +643,19 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         assert_eq!(binary, "main");
         assert!(package.manifest_path.exists());
         assert!(package.manifest_path != project.manifest_path);
+        // Inner package inherits root auto_includes
         check_file(package.readme_file.as_deref().unwrap(), "root fake readme!");
         check_file(&package.license_files[0], "root fake license!");
         check_file(
             package.changelog_file.as_deref().unwrap(),
             "root fake changelog!",
+        );
+        assert_eq!(
+            project
+                .repository_url(Some(&[PackageIdx(1)]))
+                .unwrap()
+                .unwrap(),
+            "https://github.com/mistydemeo/testprog2"
         );
     }
 }

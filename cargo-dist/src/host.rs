@@ -75,7 +75,7 @@ impl<'a> DistGraphBuilder<'a> {
         hosting: Option<Vec<HostingStyle>>,
         ci: Option<Vec<CiStyle>>,
     ) -> DistResult<()> {
-        self.inner.hosting = select_hosting(&self.workspace, announcing, hosting, ci.as_deref());
+        self.inner.hosting = select_hosting(self.workspace, announcing, hosting, ci.as_deref());
         // If we don't think we can host things, don't bother
         let Some(hosting) = &self.inner.hosting else {
             return Ok(());

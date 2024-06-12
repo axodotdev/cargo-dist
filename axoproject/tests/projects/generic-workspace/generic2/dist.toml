@@ -3,7 +3,7 @@ name = "generic2"
 description = "A test of a C program for cargo-dist"
 version = "0.0.1"
 license = "WTFPL"
-repository = "https://github.com/mistydemeo/testprog"
+repository = "https://github.com/mistydemeo/testprog2"
 binaries = ["main"]
 build-command = ["make"]
 
