@@ -131,9 +131,9 @@ impl GithubCiInfo {
             .get("global")
             .map(|s| s.as_str())
             .unwrap_or(GITHUB_LINUX_RUNNER);
-
         let global_task = GithubMatrixEntry {
             targets: None,
+            cache_provider: cache_provider_for_runner(global_runner),
             runner: Some(global_runner.into()),
             dist_args: Some("--artifacts=global".into()),
             install_dist: Some(install_dist_sh.clone()),
@@ -167,7 +167,8 @@ impl GithubCiInfo {
             }
             tasks.push(GithubMatrixEntry {
                 targets: Some(targets.iter().map(|s| s.to_string()).collect()),
-                runner: Some(runner.to_owned()),
+                cache_provider: cache_provider_for_runner(&runner),
+                runner: Some(runner),
                 dist_args: Some(dist_args),
                 install_dist: Some(install_dist.to_owned()),
                 packages_install: package_install_for_targets(&targets, &dependencies),
@@ -268,6 +269,17 @@ impl GithubCiInfo {
 
         let rendered = self.generate_github_ci(dist)?;
         diff_files(&ci_file, &rendered)
+    }
+}
+
+/// Get the best `cache-provider`` key to use for <https://github.com/Swatinem/rust-cache>.
+///
+/// In the future we might make "None" here be a way to say "disable the cache".
+fn cache_provider_for_runner(runner: &str) -> Option<String> {
+    if runner.contains("buildjet") {
+        Some("buildjet".into())
+    } else {
+        Some("github".into())
     }
 }
 
