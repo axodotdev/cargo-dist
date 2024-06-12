@@ -408,6 +408,9 @@ impl DistMetadata {
     pub fn make_relative_to(&mut self, base_path: &Utf8Path) {
         // This is intentionally written awkwardly to make you update it
         let DistMetadata {
+            include,
+            extra_artifacts,
+            // The rest of these don't include relative paths
             cargo_dist_version: _,
             rust_toolchain_version: _,
             dist: _,
@@ -418,7 +421,6 @@ impl DistMetadata {
             formula: _,
             system_dependencies: _,
             targets: _,
-            include,
             auto_includes: _,
             windows_archive: _,
             unix_archive: _,
@@ -451,7 +453,6 @@ impl DistMetadata {
             github_attestations: _,
             msvc_crt_static: _,
             hosting: _,
-            extra_artifacts: _,
             github_custom_runners: _,
             bin_aliases: _,
             tag_namespace: _,
@@ -464,6 +465,15 @@ impl DistMetadata {
         if let Some(include) = include {
             for include in include {
                 *include = base_path.join(&*include);
+            }
+        }
+        if let Some(extra_artifacts) = extra_artifacts {
+            for extra in extra_artifacts {
+                // We update the working_dir to be relative to this file
+                // (by default it's empty and this just sets the working dir to base_path),
+                // but we don't update the paths to the artifacts as those are assumed to be
+                // relative to the working_dir.
+                extra.working_dir = base_path.join(&extra.working_dir);
             }
         }
     }
@@ -1477,11 +1487,25 @@ pub enum ProductionMode {
 /// An extra artifact to upload alongside the release tarballs,
 /// and the build command which produces it.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct ExtraArtifact {
-    /// The build command to invoke
-    pub build: Vec<String>,
-    /// The artifact(s) produced via this build script
-    pub artifacts: Vec<String>,
+    /// The working dir to run the command in
+    ///
+    /// If blank, the directory of the manifest that defines this is used.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "path_is_empty")]
+    pub working_dir: Utf8PathBuf,
+    /// The build command to invoke in the working_dir
+    #[serde(rename = "build")]
+    pub command: Vec<String>,
+    /// Relative paths (from the working_dir) to artifacts that should be included
+    #[serde(rename = "artifacts")]
+    pub artifact_relpaths: Vec<Utf8PathBuf>,
+}
+
+/// Why doesn't this exist omg
+fn path_is_empty(p: &Utf8PathBuf) -> bool {
+    p.as_str().is_empty()
 }
 
 impl std::fmt::Display for ProductionMode {

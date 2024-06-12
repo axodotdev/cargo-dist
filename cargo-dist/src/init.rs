@@ -810,7 +810,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         install_success_msg,
         tap,
         formula,
-        system_dependencies: _,
         targets,
         include,
         auto_includes,
@@ -848,12 +847,14 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         msvc_crt_static,
         hosting,
         tag_namespace,
-        extra_artifacts: _,
-        github_custom_runners: _,
-        bin_aliases: _,
         install_updater,
         display,
         display_name,
+        // These settings are complex enough that we don't support editing them in init
+        extra_artifacts: _,
+        github_custom_runners: _,
+        bin_aliases: _,
+        system_dependencies: _,
     } = &meta;
 
     apply_optional_value(

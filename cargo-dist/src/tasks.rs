@@ -427,8 +427,10 @@ pub struct GenericBuildStep {
 /// An "extra" build step, producing new sidecar artifacts
 #[derive(Debug)]
 pub struct ExtraBuildStep {
-    /// Binaries we expect from this build
-    pub expected_artifacts: Vec<String>,
+    /// The dir to run the build_command in
+    pub working_dir: Utf8PathBuf,
+    /// Relative paths (from the working_dir) to binaries we expect to find
+    pub artifact_relpaths: Vec<Utf8PathBuf>,
     /// The command to run to produce the expected binaries
     pub build_command: Vec<String>,
 }
@@ -618,10 +620,12 @@ pub struct SourceTarball {
 /// An extra artifact of some kind
 #[derive(Clone, Debug)]
 pub struct ExtraArtifactImpl {
-    /// The build command to run to produce this artifact
-    pub build: Vec<String>,
-    /// The artifact this build should produce
-    pub artifact: Utf8PathBuf,
+    /// Working dir to run the command in
+    pub working_dir: Utf8PathBuf,
+    /// The command to run to produce this artifact
+    pub command: Vec<String>,
+    /// Relative path to the artifact, from the working_dir
+    pub artifact_relpath: Utf8PathBuf,
 }
 
 /// An updater executable
@@ -1405,18 +1409,22 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifacts = dist_metadata.extra_artifacts.to_owned().unwrap_or_default();
 
         for extra in artifacts {
-            for filename in extra.artifacts.clone() {
-                let target_path = dist_dir.join(&filename);
-
+            for artifact_relpath in extra.artifact_relpaths {
+                let artifact_name = artifact_relpath
+                    .file_name()
+                    .expect("extra artifact had no name!?")
+                    .to_owned();
+                let target_path = dist_dir.join(&artifact_name);
                 let artifact = Artifact {
-                    id: filename.to_owned(),
+                    id: artifact_name,
                     target_triples: vec![],
                     file_path: target_path.to_owned(),
                     required_binaries: FastMap::new(),
                     archive: None,
                     kind: ArtifactKind::ExtraArtifact(ExtraArtifactImpl {
-                        build: extra.build.to_owned(),
-                        artifact: target_path.to_owned(),
+                        working_dir: extra.working_dir.clone(),
+                        command: extra.command.clone(),
+                        artifact_relpath,
                     }),
                     checksum: None,
                     is_global: true,
@@ -2285,29 +2293,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         self.inner.artifacts.push(artifact);
         idx
-    }
-
-    fn compute_extra_builds(&mut self) -> Vec<BuildStep> {
-        let artifacts = self
-            .inner
-            .artifacts
-            .iter()
-            .map(|artifact| artifact.id.clone())
-            .collect::<Vec<String>>();
-
-        self.inner
-            .extra_artifacts
-            .iter()
-            // We want to avoid adding build jobs for any artifacts
-            // that were already filtered out in a previous step
-            .filter(|extra| extra.artifacts.iter().any(|a| artifacts.contains(a)))
-            .map(|extra| {
-                BuildStep::Extra(ExtraBuildStep {
-                    expected_artifacts: extra.artifacts.clone(),
-                    build_command: extra.build.clone(),
-                })
-            })
-            .collect()
     }
 
     fn compute_build_steps(&mut self) {
