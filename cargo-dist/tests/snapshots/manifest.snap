@@ -496,7 +496,8 @@ stdout:
       "pr_run_mode": "plan"
     }
   },
-  "linkage": []
+  "linkage": [],
+  "github_attestations": true
 }
 
 stderr:
