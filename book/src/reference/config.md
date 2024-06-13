@@ -437,6 +437,18 @@ Overrides cargo-dist's default handling of prerelease versions. Ordinarily, carg
 
 See also the ["publish-prereleases"](#publish-prereleases) setting.
 
+
+### github-attestations
+
+> since 0.16.0
+
+Example: `github-attestations = true`
+
+Defaults false (but may become true in the future).
+
+If you're using GitHub Releases, this will enable GitHub's experimental artifact attestation feature. [See the full docs for details](../supplychain-security/attestations/github.md).
+
+
 ### github-custom-runners
 
 > since 0.6.0 (target-specific runners), 0.15.0 (global runner)
