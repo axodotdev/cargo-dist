@@ -446,7 +446,7 @@ Example: `github-attestations = true`
 
 Defaults false (but may become true in the future).
 
-If you're using GitHub Releases, this will enable GitHub's experimental artifact attestation feature. [See the full docs for details](../signing-and-attestation/github-attestations.md).
+If you're using GitHub Releases, this will enable GitHub's experimental artifact attestation feature. [See the full docs for details](../supplychain-security/attestations/github.md).
 
 
 ### github-custom-runners

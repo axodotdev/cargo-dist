@@ -63,7 +63,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     ```toml
     [workspace.metadata.dist]
-    ssldotcom-windows-sign = "prod"  or "test" if you are using a sandbox account
+    ssldotcom-windows-sign = "prod"  # or "test" if you are using a sandbox account
     ```
 
 
