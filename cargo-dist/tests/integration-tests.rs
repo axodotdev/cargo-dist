@@ -1678,3 +1678,36 @@ windows-archive = ".tar.gz"
         Ok(())
     })
 }
+
+#[test]
+fn axolotlsay_generic_workspace_basic() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY_HYBRID.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_dist_workspace(format!(
+            r#"
+        [dist]
+        cargo-dist-version = "{dist_version}"
+        installers = ["shell", "powershell", "homebrew"]
+        tap = "axodotdev/homebrew-packages"
+        publish-jobs = ["homebrew"]
+        targets = ["x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+        install-success-msg = ">o_o< everything's installed!"
+        ci = ["github"]
+        unix-archive = ".tar.xz"
+        windows-archive = ".zip"
+
+        "#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}

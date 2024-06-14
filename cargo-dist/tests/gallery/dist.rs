@@ -65,6 +65,17 @@ pub static AXOASSET: TestContextLock<Tools> = TestContextLock::new(
         bins: &[],
     },
 );
+/// generic workspace containing axolotlsay-js and axolotlsay (Rust)
+pub static AXOLOTLSAY_HYBRID: TestContextLock<Tools> = TestContextLock::new(
+    &TOOLS,
+    &Repo {
+        repo_owner: "axodotdev",
+        repo_name: "axolotlsay-hybrid",
+        commit_sha: "d00a7e3e75a2b7e24e756dca35b3cd693f3efc49",
+        app_name: "axolotlsay-js",
+        bins: &["axolotlsay-js"],
+    },
+);
 pub struct DistResult {
     test_name: String,
     // Only used in some cfgs
@@ -270,6 +281,30 @@ impl<'a> TestContext<'a, Tools> {
         let toml_out = toml.to_string();
         eprintln!("writing Cargo.toml...");
         axoasset::LocalAsset::write_new(&toml_out, "Cargo.toml")?;
+
+        Ok(())
+    }
+
+    pub fn patch_dist_workspace(&self, new_toml: String) -> Result<()> {
+        eprintln!("loading dist-workspace.toml...");
+        let toml_src = axoasset::SourceFile::load_local("dist-workspace.toml")?;
+        let mut toml = toml_src.deserialize_toml_edit()?;
+        eprintln!("editing dist-workspace.toml...");
+        let new_table_src = axoasset::SourceFile::new("new-dist-workspace.toml", new_toml);
+        let new_table = new_table_src.deserialize_toml_edit()?;
+
+        if let Some(new_meta) = new_table.get("dist") {
+            let old_meta = toml["dist"].or_insert(toml_edit::table());
+            eprintln!("{new_table}");
+            for (key, new) in new_meta.as_table().unwrap() {
+                let old = &mut old_meta[key];
+                *old = new.clone();
+            }
+        }
+
+        let toml_out = toml.to_string();
+        eprintln!("writing dist-workspace.toml...");
+        axoasset::LocalAsset::write_new(&toml_out, "dist-workspace.toml")?;
 
         Ok(())
     }
