@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.16.0 (2024-06-14)
+
 This release introduces some new [supplychain security features](https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html), and fixes some bugs.
 
 ## GitHub Artifact Attestations
