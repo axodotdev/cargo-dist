@@ -95,6 +95,7 @@ impl<'a> DistGraphBuilder<'a> {
                         rustflags: rustflags.clone(),
                         profile: String::from(PROFILE_DIST),
                         expected_binaries,
+                        working_dir: self.inner.workspace_dir.clone(),
                     }));
                 }
             } else {
@@ -110,6 +111,7 @@ impl<'a> DistGraphBuilder<'a> {
                     rustflags,
                     profile: String::from(PROFILE_DIST),
                     expected_binaries: binaries,
+                    working_dir: self.inner.workspace_dir.clone(),
                 }));
             }
         }
@@ -148,6 +150,7 @@ pub fn build_cargo_target(
         .arg("--target")
         .arg(&target.target_triple)
         .env("RUSTFLAGS", &rustflags)
+        .current_dir(&target.working_dir)
         .stdout(std::process::Stdio::piped());
     if !target.features.default_features {
         command.arg("--no-default-features");

@@ -412,6 +412,8 @@ pub struct CargoBuildStep {
     pub rustflags: String,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+    /// The working directory to run the build in
+    pub working_dir: Utf8PathBuf,
 }
 
 /// A cargo build (and copy the outputs to various locations)
