@@ -1,0 +1,83 @@
+name: Rust
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '11 7 * * 1,4'
+
+env:
+  RUSTFLAGS: -Dwarnings
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Run cargo check
+      run: |
+        cargo check --all --tests
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Run cargo fmt
+        run: |
+          cargo fmt --all -- --check
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Run cargo clippy
+        run: |
+          cargo clippy --tests --examples
+  docs:
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -Dwarnings
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run rustdoc
+        run: |
+          cargo doc --no-deps
+  feature-check:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@cargo-hack
+      # Note that bare "--no-default-features" isn't supported, you must pick a backend!
+      # Unfortunately just selecting the "cli" feature also runs into this problem. really
+      # we want to express "you must choose at least one of 'cargo-projects' or 'npm-projects'"
+      # but I don't see a good way of doing this.
+      #
+      # As a workaround I'm just going to make `check` not use 'cli', making this effectively
+      # testing of the library. The subsequent deeper tests hit the CI modes so we still have
+      # solid coverage.
+      - name: Run cargo hack powerset
+        run: |
+          cargo hack check --feature-powerset --no-dev-deps --exclude-no-default-features --skip=cli
+  os-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        # note that bare "--no-default-features" isn't supported, you must pick a backend!
+        feature-flags: ["", "--all-features"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run cargo test
+        run: |
+          cargo test ${{ matrix.feature-flags }}

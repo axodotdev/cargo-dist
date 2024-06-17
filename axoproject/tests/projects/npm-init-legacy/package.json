@@ -1,0 +1,14 @@
+{
+  "name": "npm-init-legacy",
+  "version": "1.0.0",
+  "bin": {
+    "npm-init-legacy": "src/main.js"
+  },
+  "description": "a legacy project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
