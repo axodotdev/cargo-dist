@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "virtual",
+    "virtual-gui",
+    "some-lib",
+]

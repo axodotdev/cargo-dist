@@ -1,9 +1,11 @@
 [workspace]
 members = [
+    "axoproject",
     "cargo-dist",
     "cargo-dist-schema",
 ]
 resolver = "2"
+exclude = ["axoproject/tests/projects/"]
 
 [workspace.metadata.release]
 shared-version = true
@@ -36,7 +38,7 @@ github-attestations = true
 
 [[workspace.metadata.dist.extra-artifacts]]
 artifacts = ["dist-manifest-schema.json"]
-build = ["cargo", "run", "--", "dist", "manifest-schema", "--output=dist-manifest-schema.json"]
+build = ["cargo", "run", "--release", "--", "dist", "manifest-schema", "--output=dist-manifest-schema.json"]
 
 [workspace.metadata.dist.github-custom-runners]
 aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
