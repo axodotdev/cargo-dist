@@ -62,17 +62,17 @@ jobs:
 
   # Make sure the docs build without warnings
   docs:
-   runs-on: ubuntu-latest
-   env:
-     RUSTDOCFLAGS: -Dwarnings
-   steps:
-     - uses: actions/checkout@master
-     - uses: dtolnay/rust-toolchain@master
-       with:
-         toolchain: stable
-         components: rust-docs
-     - uses: swatinem/rust-cache@v2
-     - run: cargo doc --workspace --no-deps
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -Dwarnings
+    steps:
+      - uses: actions/checkout@master
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rust-docs
+      - uses: swatinem/rust-cache@v2
+      - run: cargo doc --workspace --no-deps
 
   # Build and run tests/doctests/examples on all platforms
   # FIXME: look into `cargo-hack` which lets you more aggressively
@@ -101,21 +101,21 @@ jobs:
       - run: npm i -g pnpm
       # Currently there is essentially no difference between default and --all-features,
       # with the difference essentially being polyfilling a new stdio API for MSRV.
-      # For now prefer --all-features (the prebuilt binaries config) for testing to cut CI in half.
+      # For now avoid --all-features which causes issues with axoproject.
 
       # Run the tests/doctests (default features)
       # - run: cargo test --workspace
       #  env:
       #    PWD: ${{ env.GITHUB_WORKSPACE }}
-      # Run the tests/doctests (all features)
-      - run: cargo test --workspace --all-features
+      # Run the tests/doctests
+      - run: cargo test --workspace
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
       # Test the examples (default features)
       # - run: cargo test --workspace --examples --bins
       #  env:
       #    PWD: ${{ env.GITHUB_WORKSPACE }}
-      # Test the examples (all features)
-      - run: cargo test --workspace --all-features --examples --bins
+      # Test the examples
+      - run: cargo test --workspace --examples --bins
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
