@@ -1,6 +1,3 @@
-[workspace]
-exclude = ["tests/projects/"]
-
 [package]
 name = "axoproject"
 description = "project detection logic for various axo.dev applications"
@@ -39,8 +36,3 @@ pathdiff = { version = "0.2.1", features = ["camino"] }
 itertools = "0.13.0"
 url = "2.5.0"
 parse-changelog = "0.6.8"
-
-# The profile that 'cargo dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"
