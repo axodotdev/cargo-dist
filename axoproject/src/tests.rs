@@ -7,7 +7,7 @@ use crate::{changelog::ChangelogInfo, errors::AxoprojectError, Version, Workspac
 fn test_self_detect() {
     let project = crate::get_workspaces("./".into(), None).best().unwrap();
     assert_eq!(project.kind, WorkspaceKind::Rust);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project.package_info.len(), 3);
 
     let package = &project.package_info[0];
     assert_eq!(package.name, "axoproject");
