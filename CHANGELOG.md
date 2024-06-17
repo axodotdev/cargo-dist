@@ -3,6 +3,38 @@
 Nothing Yet!
 
 
+# Version 0.16.0 (2024-06-14)
+
+This release introduces some new [supplychain security features](https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html), and fixes some bugs.
+
+## GitHub Artifact Attestations
+
+With the new [`github-attestations = true` setting](https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html) you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.
+
+* @dunxen [feat: add support for github artifact attestations](https://github.com/axodotdev/cargo-dist/pull/1012)
+
+
+## Reducing Third-Party Actions
+
+We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing [ncipollo/release-action](https://github.com/ncipollo/release-action) with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.
+
+@mistydemeo [feat: use the raw github cli instead of an action for releases](https://github.com/axodotdev/cargo-dist/pull/1089)
+
+
+## Autodetect Buildjet Runners For Rust Cache
+
+We use [swatinem/rust-cache](https://github.com/Swatinem/rust-cache) to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often [enable buildjet for arm linux builds](https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners), so hopefully those should be faster now!
+
+@gankra + @arlyon [feat: autodetect buildjet runners to use their backend for rust cache](https://github.com/axodotdev/cargo-dist/pull/1129)
+
+
+## Path Flexibility For Extra Artifacts
+
+Previously [the extra-artifacts setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts) didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.
+
+@gankra [fix: rework extra_artifacts to properly use paths](https://github.com/axodotdev/cargo-dist/pull/1128)
+
+
 # Version 0.15.1 (2024-06-04)
 
 This is a small release to improve the compatibility of the npm installers with other JS package managers.
