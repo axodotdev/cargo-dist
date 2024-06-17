@@ -30,17 +30,31 @@ impl<'a> DistGraphBuilder<'a> {
 
         let mut builds = vec![];
         for (target, binaries) in targets {
-            builds.push(BuildStep::Generic(GenericBuildStep {
-                target_triple: target.clone(),
-                expected_binaries: binaries,
-                build_command: self
-                    .workspace
-                    .build_command
-                    .clone()
-                    .expect("A build command is mandatory for generic builds"),
-            }));
+            // `(target, pkg_idx)` uniquely identifies a build we need to do,
+            // so group all the binaries under those buckets and add a build for each one
+            // (targets is handled by the loop we're in)
+            let mut builds_by_pkg_idx = SortedMap::new();
+            for bin_idx in binaries {
+                let bin = self.binary(bin_idx);
+                builds_by_pkg_idx
+                    .entry(bin.pkg_idx)
+                    .or_insert(vec![])
+                    .push(bin_idx);
+            }
+            for (pkg_idx, expected_binaries) in builds_by_pkg_idx {
+                let package = self.workspace().package(pkg_idx);
+                builds.push(BuildStep::Generic(GenericBuildStep {
+                    target_triple: target.clone(),
+                    expected_binaries,
+                    working_dir: package.manifest_path.clone(),
+                    out_dir: package.manifest_path.clone(),
+                    build_command: package
+                        .build_command
+                        .clone()
+                        .expect("A build command is mandatory for generic builds"),
+                }));
+            }
         }
-
         builds
     }
 
@@ -176,7 +190,7 @@ pub fn build_generic_target(
     let result = run_build(
         dist_graph,
         &target.build_command,
-        &dist_graph.workspace_dir,
+        &target.working_dir,
         Some(&target.target_triple),
     )?;
 
@@ -190,7 +204,7 @@ pub fn build_generic_target(
     // we expected, BuildExpectations will check for us
     for binary_idx in &target.expected_binaries {
         let binary = dist_graph.binary(*binary_idx);
-        let src_path = Utf8PathBuf::from(&binary.file_name);
+        let src_path = target.out_dir.join(&binary.file_name);
         expected.found_bin(package_id_string(binary.pkg_id.as_ref()), src_path, vec![]);
     }
 

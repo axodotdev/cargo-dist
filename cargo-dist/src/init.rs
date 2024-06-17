@@ -435,7 +435,7 @@ fn get_new_dist_metadata(
             #[allow(irrefutable_let_patterns)]
             if let CiStyle::Github = item {
                 github_key = 0;
-                if let Some(repo_url) = &workspace_info.repository_url {
+                if let Some(repo_url) = &workspace_info.repository_url(None).unwrap_or_default() {
                     if repo_url.contains("github.com") {
                         default = true;
                     }
@@ -481,7 +481,12 @@ fn get_new_dist_metadata(
         .as_ref()
         .map(|ci| ci.contains(&CiStyle::Github))
         .unwrap_or(false);
-    if has_github_ci && workspace_info.repository_url.is_none() {
+    if has_github_ci
+        && workspace_info
+            .repository_url(None)
+            .unwrap_or_default()
+            .is_none()
+    {
         // If axoproject complained about inconsistency, forward that
         // Massively jank manual implementation of "clone" here because lots of error types
         // (like std::io::Error) don't implement Clone and so axoproject errors can't either

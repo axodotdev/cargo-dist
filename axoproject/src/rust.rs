@@ -2,10 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::{
-    errors::AxoprojectError, PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind,
-    WorkspaceSearch,
-};
+use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind, WorkspaceSearch};
 use axoasset::SourceFile;
 use camino::{Utf8Path, Utf8PathBuf};
 use guppy::{
@@ -63,7 +60,7 @@ fn package_graph(start_dir: &Utf8Path) -> Result<PackageGraph> {
 fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
     let workspace = pkg_graph.workspace();
     let members = pkg_graph.resolve_workspace();
-    let mut warnings = vec![];
+    let warnings = vec![];
 
     let manifest_path = workspace.root().join("Cargo.toml");
     // I originally had this as a proper Error but honestly this would be MADNESS and
@@ -78,45 +75,10 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
     let cargo_metadata_table = Some(workspace.metadata_table().clone());
     let workspace_root = workspace.root();
     let root_auto_includes = crate::find_auto_includes(workspace_root)?;
-
-    let mut repo_url_conflicted = false;
-    let mut repo_url = None::<String>;
-    let mut repo_url_origin = None::<Utf8PathBuf>;
     let mut all_package_info = vec![];
     for package in members.packages(DependencyDirection::Forward) {
         let mut info = package_info(workspace_root, &package)?;
-
-        // Apply root workspace's auto-includes
         crate::merge_auto_includes(&mut info, &root_auto_includes);
-
-        // Try to find repo URL consensus
-        if !repo_url_conflicted {
-            if let Some(new_url) = &info.repository_url {
-                // Normalize away trailing `/` stuff before comparing
-                let mut normalized_new_url = new_url.clone();
-                if normalized_new_url.ends_with('/') {
-                    normalized_new_url.pop();
-                }
-                if let Some(cur_url) = &repo_url {
-                    if &normalized_new_url == cur_url {
-                        // great! consensus!
-                    } else {
-                        warnings.push(AxoprojectError::InconsistentRepositoryKey {
-                            file1: repo_url_origin.as_ref().unwrap().to_owned(),
-                            url1: cur_url.clone(),
-                            file2: info.manifest_path.clone(),
-                            url2: normalized_new_url,
-                        });
-                        repo_url_conflicted = true;
-                        repo_url = None;
-                    }
-                } else {
-                    repo_url = Some(normalized_new_url);
-                    repo_url_origin = Some(info.manifest_path.clone());
-                }
-            }
-        }
-
         all_package_info.push(info);
     }
 
@@ -129,14 +91,11 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
         workspace_dir,
         package_info: all_package_info,
         manifest_path,
-
-        repository_url: repo_url,
         root_auto_includes,
         cargo_metadata_table,
         cargo_profiles,
 
         warnings,
-        build_command: None,
     })
 }
 
@@ -259,6 +218,8 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         cstaticlibs,
         cargo_metadata_table,
         cargo_package_id,
+        #[cfg(feature = "generic-projects")]
+        build_command: None,
     };
 
     // Find files we might want to auto-include

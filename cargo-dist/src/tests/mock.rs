@@ -76,6 +76,7 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
         cdylibs: vec![],
         cargo_metadata_table: None,
         cargo_package_id: None,
+        build_command: None,
     }
 }
 
@@ -86,14 +87,12 @@ pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceInfo {
         workspace_dir: Default::default(),
         package_info: packages,
         manifest_path: Default::default(),
-        repository_url: Some(REPO_URL.to_owned()),
         root_auto_includes: AutoIncludes {
             readme: None,
             licenses: vec![],
             changelog: None,
         },
         warnings: vec![],
-        build_command: None,
         cargo_metadata_table: None,
         cargo_profiles: Default::default(),
     }

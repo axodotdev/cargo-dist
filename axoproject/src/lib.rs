@@ -137,19 +137,12 @@ pub struct WorkspaceInfo {
     /// may or may not represent a "real" package. Both systems have some notion of
     /// "virtual" manifest which exists only to list the actual packages in the workspace.
     pub manifest_path: Utf8PathBuf,
-    /// A consensus URL for the repo according to the packages in the workspace
-    ///
-    /// If there are multiple packages in the workspace that specify a repository
-    /// but they disagree, this will be None.
-    pub repository_url: Option<String>,
     /// If the workspace root has some auto-includeable files, here they are!
     ///
     /// This is currently what is use for top-level Announcement contents.
     pub root_auto_includes: AutoIncludes,
     /// Non-fatal issues that were encountered and should probably be reported
     pub warnings: Vec<AxoprojectError>,
-    /// Build command to run for this workspace; not required for cargo
-    pub build_command: Option<Vec<String>>,
     /// Raw cargo `[workspace.metadata]` table
     #[cfg(feature = "cargo-projects")]
     pub cargo_metadata_table: Option<serde_json::Value>,
@@ -176,8 +169,8 @@ impl WorkspaceInfo {
     }
 
     /// Returns a struct which contains the repository's owner and name.
-    pub fn github_repo(&self) -> Result<Option<GithubRepo>> {
-        match self.repository_url.clone() {
+    pub fn github_repo(&self, packages: Option<&[PackageIdx]>) -> Result<Option<GithubRepo>> {
+        match self.repository_url(packages)? {
             None => Ok(None),
             Some(url) => Ok(Some(GithubRepoInput::new(url)?.parse()?)),
         }
@@ -185,8 +178,48 @@ impl WorkspaceInfo {
 
     /// Returns a web version of the repository URL,
     /// converted from SSH if necessary, with .git suffix trimmed.
-    pub fn web_url(&self) -> Result<Option<String>> {
-        Ok(self.github_repo()?.map(|repo| repo.web_url()))
+    pub fn web_url(&self, packages: Option<&[PackageIdx]>) -> Result<Option<String>> {
+        Ok(self.github_repo(packages)?.map(|repo| repo.web_url()))
+    }
+
+    /// Returns a consensus package URL for the given packages, if any exists
+    pub fn repository_url(&self, packages: Option<&[PackageIdx]>) -> Result<Option<String>> {
+        let mut repo_url = None::<String>;
+        let mut repo_url_origin = None::<Utf8PathBuf>;
+
+        let package_list = if let Some(packages) = packages {
+            packages
+                .iter()
+                .map(|idx| self.package(*idx))
+                .collect::<Vec<_>>()
+        } else {
+            self.package_info.iter().collect::<Vec<_>>()
+        };
+        for info in package_list {
+            if let Some(new_url) = &info.repository_url {
+                // Normalize away trailing `/` stuff before comparing
+                let mut normalized_new_url = new_url.clone();
+                if normalized_new_url.ends_with('/') {
+                    normalized_new_url.pop();
+                }
+                if let Some(cur_url) = &repo_url {
+                    if &normalized_new_url == cur_url {
+                        // great! consensus!
+                    } else {
+                        return Err(AxoprojectError::InconsistentRepositoryKey {
+                            file1: repo_url_origin.as_ref().unwrap().to_owned(),
+                            url1: cur_url.clone(),
+                            file2: info.manifest_path.clone(),
+                            url2: normalized_new_url,
+                        });
+                    }
+                } else {
+                    repo_url = Some(normalized_new_url);
+                    repo_url_origin = Some(info.manifest_path.clone());
+                }
+            }
+        }
+        Ok(repo_url)
     }
 }
 
@@ -300,6 +333,9 @@ pub struct PackageInfo {
     /// A unique id used by Cargo to refer to the package
     #[cfg(feature = "cargo-projects")]
     pub cargo_package_id: Option<PackageId>,
+    /// Command to run to build this package
+    #[cfg(feature = "generic-projects")]
+    pub build_command: Option<Vec<String>>,
 }
 
 impl PackageInfo {
