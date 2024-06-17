@@ -128,24 +128,6 @@ checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
 
 [[package]]
 name = "axoasset"
-version = "0.9.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83394fb98d130ef5a4713d26dccc1bb25c66e1d58f351fed710af62c57abb8fa"
-dependencies = [
- "camino",
- "miette 7.2.0",
- "mime",
- "serde",
- "serde_json",
- "thiserror",
- "toml",
- "toml_edit",
- "url",
- "walkdir",
-]
-
-[[package]]
-name = "axoasset"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "324ff9901b842d132aad26d113d5ecbed193a97ea263dfe531296b026de9ff80"
@@ -201,7 +183,7 @@ dependencies = [
 name = "axoproject"
 version = "0.7.1"
 dependencies = [
- "axoasset 0.10.1",
+ "axoasset",
  "camino",
  "guppy",
  "itertools 0.13.0",
@@ -209,26 +191,6 @@ dependencies = [
  "node-semver",
  "oro-common",
  "oro-package-spec",
- "parse-changelog",
- "pathdiff",
- "semver",
- "serde",
- "thiserror",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "axoproject"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1a159bdbe9423891114563e07bd5158ba964dfc75c08015e757844972127850"
-dependencies = [
- "axoasset 0.9.5",
- "camino",
- "guppy",
- "itertools 0.12.1",
- "miette 7.2.0",
  "parse-changelog",
  "pathdiff",
  "semver",
@@ -255,7 +217,7 @@ version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8cc5997cf9d00fa790ba6f19688d93b89760bd641d1c2482bcfbc2bf56988576"
 dependencies = [
- "axoasset 0.10.1",
+ "axoasset",
  "axoprocess",
  "axotag",
  "camino",
@@ -410,10 +372,10 @@ dependencies = [
 name = "cargo-dist"
 version = "0.16.0-prerelease.6"
 dependencies = [
- "axoasset 0.10.1",
+ "axoasset",
  "axocli",
  "axoprocess",
- "axoproject 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "axoproject",
  "axotag",
  "axoupdater",
  "blake2",
@@ -1029,7 +991,7 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77c01a17924566e445bdf7499f23c0910e8ebe6c34dffd8a72ebdaa81395c3a7"
 dependencies = [
- "axoasset 0.10.1",
+ "axoasset",
  "backon",
  "camino",
  "miette 7.2.0",
