@@ -210,6 +210,7 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
         .arg("axoupdater-cli")
         .arg("--root")
         .arg(&tmp_root)
+        .current_dir(&tmp_root)
         .arg("--bin")
         .arg("axoupdater");
 
