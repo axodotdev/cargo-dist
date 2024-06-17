@@ -134,7 +134,7 @@ pub fn build_cargo_target(
     let mut desired_extra_env = vec![];
     let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
     if !skip_brewfile {
-        if let Some(env_output) = fetch_brew_env(dist_graph)? {
+        if let Some(env_output) = fetch_brew_env(dist_graph, &target.working_dir)? {
             let brew_env = parse_env(&env_output)?;
             desired_extra_env = select_brew_env(&brew_env);
             rustflags = determine_brew_rustflags(&rustflags, &brew_env);
