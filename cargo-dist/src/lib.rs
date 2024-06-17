@@ -181,19 +181,19 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResul
             .tls_built_in_webpki_certs(false)
             .tls_built_in_native_certs(true)
             .build()
-            .map_err(|_| DistError::AxoupdaterReleaseCheckFailed {})?
+            .map_err(|_| DistError::AxoupdaterResponseFailed {})?
     } else {
         reqwest::blocking::Client::builder()
             .tls_built_in_webpki_certs(true)
             .tls_built_in_native_certs(false)
             .build()
-            .map_err(|_| DistError::AxoupdaterReleaseCheckFailed {})?
+            .map_err(|_| DistError::AxoupdaterResponseFailed {})?
     };
 
     let resp = client
         .head(&expected_url)
         .send()
-        .map_err(|_| DistError::AxoupdaterReleaseCheckFailed {})?;
+        .map_err(|_| DistError::AxoupdaterResponseFailed {})?;
 
     // If we have a prebuilt asset, use it
     if resp.status().is_success() {

@@ -296,6 +296,17 @@ pub enum DistError {
         tool: String,
     },
 
+    /// reqwest could not fetch an axoupdater release from the remote repo, either because a client could not be build'
+    /// or because the client could not get a response
+    #[error(
+        "Failed to build a client or get a response when fetching the latest release of axoupdater"
+    )]
+    #[diagnostic(help(
+        "Is your internet connection working? If it is, you may need to change which set of TLS certs (WebPKI/native system)
+        you are using by changing the 'native-certs option' in your Cargo.toml file."
+    ))]
+    AxoupdaterResponseFailed {},
+
     /// reqwest returned non-2xx/404 when checking axoupdater releases
     #[error("Failed to check the latest release of axoupdater")]
     #[diagnostic(help(
