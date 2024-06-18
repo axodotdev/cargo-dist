@@ -2,7 +2,9 @@
 //! but other functions/consts will help you assert the results
 
 use crate::{announce::ReleaseArtifacts, CargoInfo, Tools};
-use axoproject::{AutoIncludes, PackageIdx, PackageInfo, WorkspaceInfo};
+use axoproject::{
+    AutoIncludes, PackageIdx, PackageInfo, WorkspaceGraph, WorkspaceInfo, WorkspaceStructure,
+};
 use serde_json::json;
 
 pub const REPO_URL: &str = "https://github.com/axodotdev/axolotlsay";
@@ -55,9 +57,12 @@ pub fn mock_tools() -> Tools {
 }
 
 pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
+    let version = Some(axoproject::Version::Cargo(ver.parse().unwrap()));
     PackageInfo {
+        true_name: name.to_owned(),
+        true_version: version.clone(),
         name: name.to_owned(),
-        version: Some(axoproject::Version::Cargo(ver.parse().unwrap())),
+        version,
         manifest_path: Default::default(),
         package_root: Default::default(),
         description: Some(REPO_DESC.to_owned()),
@@ -80,22 +85,28 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
     }
 }
 
-pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceInfo {
-    WorkspaceInfo {
-        kind: axoproject::WorkspaceKind::Rust,
-        target_dir: Default::default(),
-        workspace_dir: Default::default(),
-        package_info: packages,
-        manifest_path: Default::default(),
-        root_auto_includes: AutoIncludes {
-            readme: None,
-            licenses: vec![],
-            changelog: None,
+pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceGraph {
+    let mut workspaces = WorkspaceGraph::default();
+    let workspace = WorkspaceStructure {
+        sub_workspaces: vec![],
+        packages,
+        workspace: WorkspaceInfo {
+            kind: axoproject::WorkspaceKind::Rust,
+            target_dir: Default::default(),
+            workspace_dir: Default::default(),
+
+            manifest_path: Default::default(),
+            root_auto_includes: AutoIncludes {
+                readme: None,
+                licenses: vec![],
+                changelog: None,
+            },
+            cargo_metadata_table: None,
+            cargo_profiles: Default::default(),
         },
-        warnings: vec![],
-        cargo_metadata_table: None,
-        cargo_profiles: Default::default(),
-    }
+    };
+    workspaces.add_workspace(workspace, None);
+    workspaces
 }
 
 /// axolotlsay 1.0.0
@@ -226,17 +237,17 @@ pub fn pkg_test_bin2() -> PackageInfo {
     }
 }
 /// axolotlsay
-pub fn workspace_just_axo() -> WorkspaceInfo {
+pub fn workspace_just_axo() -> WorkspaceGraph {
     mock_workspace(vec![pkg_axo_bin()])
 }
 
 /// axolotlsay (alpha release)
-pub fn workspace_just_axo_alpha() -> WorkspaceInfo {
+pub fn workspace_just_axo_alpha() -> WorkspaceGraph {
     mock_workspace(vec![pkg_axo_bin_alpha()])
 }
 
 /// axolotlsay, some-lib, helper-bin -- all same version
-pub fn workspace_unified() -> WorkspaceInfo {
+pub fn workspace_unified() -> WorkspaceGraph {
     mock_workspace(vec![pkg_axo_bin(), pkg_some_lib(), pkg_helper_bin()])
 }
 
@@ -246,7 +257,7 @@ pub fn workspace_unified() -> WorkspaceInfo {
 /// forced-bin has publish=false AND dist=true, so should be included
 /// test-bin1 has publish=false, so should be ignored
 /// test-bin2 has dist=false, so should be ignored
-pub fn workspace_disjoint() -> WorkspaceInfo {
+pub fn workspace_disjoint() -> WorkspaceGraph {
     // axolotlsay, a lib
     mock_workspace(vec![
         pkg_axo_bin(),

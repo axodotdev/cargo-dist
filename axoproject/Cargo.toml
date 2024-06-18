@@ -16,7 +16,7 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["generic-projects", "cargo-projects"]
+default = ["generic-projects", "cargo-projects", "npm-projects"]
 generic-projects = []
 cargo-projects = ["guppy"]
 npm-projects = ["oro-common", "oro-package-spec", "node-semver"]

@@ -7,7 +7,7 @@ use oro_package_spec::GitInfo;
 
 use crate::{
     errors::AxoprojectError, PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind,
-    WorkspaceSearch,
+    WorkspaceSearch, WorkspaceStructure,
 };
 
 /// Try to find an npm/js workspace at the given path.
@@ -31,7 +31,7 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
     }
 }
 
-fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
+fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
     let root = manifest_path.parent().unwrap().to_owned();
     let manifest = load_manifest(manifest_path)?;
 
@@ -61,7 +61,7 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
         .unwrap_or_default();
 
     // FIXME: do we care that we're dropping lots of useful semantic info on the ground here?
-    let mut repository_url = manifest.repository.and_then(|url| match url {
+    let repository_url = manifest.repository.and_then(|url| match url {
         Repository::Str(magic) => {
             // This "shorthand" form can be all kinds of magic things that we need to try to
             // parse out. Thankfully oro-package-spec provides an implementation of this with
@@ -73,12 +73,6 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
         }
         Repository::Obj { url, .. } => url,
     });
-    // Normalize away trailing `/` on repo URL
-    if let Some(repo_url) = &mut repository_url {
-        if repo_url.ends_with('/') {
-            repo_url.pop();
-        }
-    }
 
     // FIXME: it's unfortunate that we're loading the package.json twice!
     // Also arguably we shouldn't hard fail if we fail to make sense of the
@@ -105,6 +99,8 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
     };
 
     let mut info = PackageInfo {
+        true_name: package_name.clone(),
+        true_version: version.clone(),
         name: package_name,
         version,
         manifest_path: manifest_path.to_owned(),
@@ -141,18 +137,21 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
 
     let package_info = vec![info];
 
-    Ok(WorkspaceInfo {
-        kind: WorkspaceKind::Javascript,
-        target_dir,
-        workspace_dir: root,
-        package_info,
-        manifest_path: manifest_path.to_owned(),
-        root_auto_includes,
-        warnings: vec![],
-        #[cfg(feature = "cargo-projects")]
-        cargo_metadata_table: None,
-        #[cfg(feature = "cargo-projects")]
-        cargo_profiles: crate::rust::CargoProfiles::new(),
+    Ok(WorkspaceStructure {
+        sub_workspaces: vec![],
+        packages: package_info,
+        workspace: WorkspaceInfo {
+            kind: WorkspaceKind::Javascript,
+            target_dir,
+            workspace_dir: root,
+
+            manifest_path: manifest_path.to_owned(),
+            root_auto_includes,
+            #[cfg(feature = "cargo-projects")]
+            cargo_metadata_table: None,
+            #[cfg(feature = "cargo-projects")]
+            cargo_profiles: crate::rust::CargoProfiles::new(),
+        },
     })
 }
 

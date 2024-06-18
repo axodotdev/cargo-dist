@@ -3,6 +3,7 @@
 use std::{env, process::ExitStatus};
 
 use axoprocess::Cmd;
+use axoproject::WorkspaceIdx;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::DistManifest;
 
@@ -15,11 +16,15 @@ use crate::{
 };
 
 impl<'a> DistGraphBuilder<'a> {
-    pub(crate) fn compute_generic_builds(&mut self) -> Vec<BuildStep> {
+    pub(crate) fn compute_generic_builds(&mut self, workspace_idx: WorkspaceIdx) -> Vec<BuildStep> {
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
         for (binary_idx, binary) in self.inner.binaries.iter().enumerate() {
+            // Only bother with binaries owned by this workspace
+            if self.workspaces.workspace_for_package(binary.pkg_idx) != workspace_idx {
+                continue;
+            }
             if !binary.copy_exe_to.is_empty() || !binary.copy_symbols_to.is_empty() {
                 targets
                     .entry(binary.target.clone())
@@ -42,7 +47,7 @@ impl<'a> DistGraphBuilder<'a> {
                     .push(bin_idx);
             }
             for (pkg_idx, expected_binaries) in builds_by_pkg_idx {
-                let package = self.workspace().package(pkg_idx);
+                let package = self.workspaces.package(pkg_idx);
                 builds.push(BuildStep::Generic(GenericBuildStep {
                     target_triple: target.clone(),
                     expected_binaries,

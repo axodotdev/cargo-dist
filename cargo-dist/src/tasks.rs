@@ -55,7 +55,7 @@ use axoprocess::Cmd;
 use axoproject::platforms::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
 };
-use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
+use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
 use semver::Version;
@@ -816,7 +816,7 @@ pub enum CargoTargetPackages {
 pub(crate) struct DistGraphBuilder<'pkg_graph> {
     pub(crate) inner: DistGraph,
     pub(crate) manifest: DistManifest,
-    pub(crate) workspace: &'pkg_graph mut WorkspaceInfo,
+    pub(crate) workspaces: &'pkg_graph mut WorkspaceGraph,
     artifact_mode: ArtifactMode,
     binaries_by_id: FastMap<String, BinaryIdx>,
     workspace_metadata: DistMetadata,
@@ -827,24 +827,26 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     pub(crate) fn new(
         system_id: SystemId,
         tools: Tools,
-        workspace: &'pkg_graph mut WorkspaceInfo,
+        workspaces: &'pkg_graph mut WorkspaceGraph,
         artifact_mode: ArtifactMode,
         allow_all_dirty: bool,
         announcement_tag_is_implicit: bool,
     ) -> DistResult<Self> {
-        let target_dir = workspace.target_dir.clone();
-        let workspace_dir = workspace.workspace_dir.clone();
+        let root_workspace_idx = workspaces.root_workspace_idx();
+        let root_workspace = workspaces.workspace(root_workspace_idx);
+        let target_dir = root_workspace.target_dir.clone();
+        let workspace_dir = root_workspace.workspace_dir.clone();
         let dist_dir = target_dir.join(TARGET_DIST);
 
         let mut workspace_metadata =
             // Read the global config
             config::parse_metadata_table_or_manifest(
-                workspace.kind,
-                &workspace.manifest_path,
-                workspace.cargo_metadata_table.as_ref(),
+                root_workspace.kind,
+                &root_workspace.manifest_path,
+                root_workspace.cargo_metadata_table.as_ref(),
             )?;
 
-        workspace_metadata.make_relative_to(&workspace.workspace_dir);
+        workspace_metadata.make_relative_to(&root_workspace.workspace_dir);
 
         // This is intentionally written awkwardly to make you update this
         //
@@ -957,7 +959,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
         let mut package_metadata = vec![];
-        for package in &workspace.package_info {
+        for (_idx, package) in workspaces.all_packages() {
             let mut package_config = config::parse_metadata_table(
                 &package.manifest_path,
                 package.cargo_metadata_table.as_ref(),
@@ -1181,7 +1183,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             },
             package_metadata,
             workspace_metadata,
-            workspace,
+            workspaces,
             binaries_by_id: FastMap::new(),
             artifact_mode,
         })
@@ -1196,7 +1198,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn add_release(&mut self, pkg_idx: PackageIdx) -> ReleaseIdx {
-        let package_info = self.workspace().package(pkg_idx);
+        let package_info = self.workspaces.package(pkg_idx);
         let DistMetadata {
             tap,
             formula,
@@ -1401,14 +1403,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Add all the binaries of the release to this variant
         let mut binaries = vec![];
         for (pkg_idx, binary_name, kind) in packageables {
-            let package = self.workspace.package(pkg_idx);
+            let package = self.workspaces.package(pkg_idx);
             let package_metadata = self.package_metadata(pkg_idx);
             let pkg_id = package.cargo_package_id.clone();
             // For now we just use the name of the package as its package_spec.
             // I'm not sure if there are situations where this is ambiguous when
             // referring to a package in your workspace that you want to build an app for.
             // If they do exist, that's deeply cursed and I want a user to tell me about it.
-            let pkg_spec = package.name.clone();
+            let pkg_spec = package.true_name.clone();
             // FIXME: make this more of a GUID to allow variants to share binaries?
             let bin_id = format!("{variant_id}-{binary_name}");
 
@@ -2356,7 +2358,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let Some((pkg_spec, pkg_idx)) = package_info else {
                 return Err(DistError::NoPackageMsi { artifact_name })?;
             };
-            let manifest_path = self.workspace.package(pkg_idx).manifest_path.clone();
+            let manifest_path = self.workspaces.package(pkg_idx).manifest_path.clone();
             let wxs_path = manifest_path
                 .parent()
                 .expect("Cargo.toml had no parent dir!?")
@@ -2443,11 +2445,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let mut local_build_steps = vec![];
         let mut global_build_steps = vec![];
-        let builds = match self.workspace.kind {
-            axoproject::WorkspaceKind::Generic => self.compute_generic_builds(),
-            axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(),
-        };
-        local_build_steps.extend(builds);
+
+        for workspace_idx in self.workspaces.all_workspace_indices() {
+            let workspace_kind = self.workspaces.workspace(workspace_idx).kind;
+            let builds = match workspace_kind {
+                axoproject::WorkspaceKind::Javascript => self.compute_generic_builds(workspace_idx),
+                axoproject::WorkspaceKind::Generic => self.compute_generic_builds(workspace_idx),
+                axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(workspace_idx),
+            };
+            local_build_steps.extend(builds);
+        }
         global_build_steps.extend(self.compute_extra_builds());
 
         Self::add_build_steps_for_artifacts(
@@ -2686,9 +2693,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.release_mut(release).platform_support = support;
     }
 
-    pub(crate) fn workspace(&self) -> &WorkspaceInfo {
-        self.workspace
-    }
     pub(crate) fn binary(&self, idx: BinaryIdx) -> &Binary {
         &self.inner.binaries[idx.0]
     }
@@ -2756,7 +2760,7 @@ impl DistGraph {
 pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
-    let mut workspace = crate::config::get_project()?;
+    let mut workspaces = crate::config::get_project()?;
     let system_id = format!(
         "{}:{}:{}",
         cfg.root_cmd,
@@ -2766,7 +2770,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     let mut graph = DistGraphBuilder::new(
         system_id,
         tools,
-        &mut workspace,
+        &mut workspaces,
         cfg.artifact_mode,
         cfg.allow_all_dirty,
         matches!(cfg.tag_settings.tag, TagMode::Infer),
@@ -2789,8 +2793,8 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     // If all targets specified, union together the targets our packages support
     // Note that this uses BTreeSet as an intermediate to make the order stable
     let all_target_triples = graph
-        .workspace
-        .packages()
+        .workspaces
+        .all_packages()
         .flat_map(|(id, _)| graph.package_metadata(id).targets.iter().flatten())
         .collect::<SortedSet<_>>()
         .into_iter()

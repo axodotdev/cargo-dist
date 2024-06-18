@@ -2,7 +2,7 @@
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
-================ installer.sh ================
+================ axolotlsay-installer.sh ================
 #!/bin/sh
 # shellcheck shell=dash
 #
