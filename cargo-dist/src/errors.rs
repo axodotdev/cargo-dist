@@ -302,8 +302,7 @@ pub enum DistError {
         "Failed to build a client or get a response when fetching the latest release of axoupdater"
     )]
     #[diagnostic(help(
-        "Is your internet connection working? If it is, you may need to change which set of TLS certs (WebPKI/native system)
-        you are using by changing the 'native-certs option' in your Cargo.toml file."
+        "Is your internet connection working? If it is, you may need to change which set of TLS certs (WebPKI/native system) you are using by changing the 'native-certs' option in your Cargo.toml file."
     ))]
     AxoupdaterResponseFailed {},
 
