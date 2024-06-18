@@ -127,7 +127,7 @@ fn run_build(
     let mut ldflags = None;
     let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
     if !skip_brewfile {
-        if let Some(env_output) = fetch_brew_env(dist_graph)? {
+        if let Some(env_output) = fetch_brew_env(dist_graph, working_dir)? {
             let brew_env = parse_env(&env_output)?;
             desired_extra_env = select_brew_env(&brew_env);
             cflags = Some(calculate_cflags(&brew_env));

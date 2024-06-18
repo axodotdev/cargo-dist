@@ -10,7 +10,10 @@ use axoprocess::Cmd;
 use camino::Utf8Path;
 
 /// Fetches the Homebrew environment from `brew bundle exec`
-pub fn fetch_brew_env(dist_graph: &DistGraph) -> DistResult<Option<String>> {
+pub fn fetch_brew_env(
+    dist_graph: &DistGraph,
+    working_dir: &Utf8Path,
+) -> DistResult<Option<String>> {
     if let Some(brew) = &dist_graph.tools.brew {
         if Utf8Path::new("Brewfile").exists() {
             // Uses `brew bundle exec` to just print its own environment,
@@ -21,6 +24,7 @@ pub fn fetch_brew_env(dist_graph: &DistGraph) -> DistResult<Option<String>> {
                 .arg("exec")
                 .arg("--")
                 .arg("/usr/bin/env")
+                .current_dir(working_dir)
                 .output()?;
 
             return Ok(Some(String::from_utf8_lossy(&result.stdout).to_string()));

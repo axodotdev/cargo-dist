@@ -412,6 +412,8 @@ pub struct CargoBuildStep {
     pub rustflags: String,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+    /// The working directory to run the build in
+    pub working_dir: Utf8PathBuf,
 }
 
 /// A cargo build (and copy the outputs to various locations)
@@ -494,6 +496,8 @@ pub struct SourceTarballStep {
     pub prefix: String,
     /// target filename
     pub target: Utf8PathBuf,
+    /// The dir to run the git command in
+    pub working_dir: Utf8PathBuf,
 }
 
 /// Fetch or build an updater
@@ -620,6 +624,8 @@ pub struct SourceTarball {
     pub prefix: String,
     /// target filename
     pub target: Utf8PathBuf,
+    /// path to the git checkout
+    pub working_dir: Utf8PathBuf,
 }
 
 /// An extra artifact of some kind
@@ -1454,6 +1460,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
+        let working_dir = self.inner.workspace_dir.clone();
+
         // It's possible to run cargo-dist in something that's not a git
         // repo, including a brand-new repo that hasn't been `git init`ted yet;
         // we can't act on those.
@@ -1466,6 +1474,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
             .check(false)
+            .current_dir(&working_dir)
             .status();
         // We'll be stubbing the actual generation in this case
         let is_git_repo = if self.inner.local_builds_are_lies {
@@ -1482,6 +1491,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
             .check(false)
+            .current_dir(&working_dir)
             .status();
         let has_head = if self.inner.local_builds_are_lies {
             true
@@ -1531,6 +1541,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 committish: "HEAD".to_owned(),
                 prefix,
                 target: target_path.to_owned(),
+                working_dir,
             }),
             checksum: None,
             is_global: true,
@@ -2364,6 +2375,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         committish: tarball.committish.to_owned(),
                         prefix: tarball.prefix.to_owned(),
                         target: tarball.target.to_owned(),
+                        working_dir: tarball.working_dir.to_owned(),
                     }));
                 }
                 ArtifactKind::ExtraArtifact(_) => {

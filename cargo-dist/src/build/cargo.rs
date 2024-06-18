@@ -95,6 +95,7 @@ impl<'a> DistGraphBuilder<'a> {
                         rustflags: rustflags.clone(),
                         profile: String::from(PROFILE_DIST),
                         expected_binaries,
+                        working_dir: self.inner.workspace_dir.clone(),
                     }));
                 }
             } else {
@@ -110,6 +111,7 @@ impl<'a> DistGraphBuilder<'a> {
                     rustflags,
                     profile: String::from(PROFILE_DIST),
                     expected_binaries: binaries,
+                    working_dir: self.inner.workspace_dir.clone(),
                 }));
             }
         }
@@ -132,7 +134,7 @@ pub fn build_cargo_target(
     let mut desired_extra_env = vec![];
     let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
     if !skip_brewfile {
-        if let Some(env_output) = fetch_brew_env(dist_graph)? {
+        if let Some(env_output) = fetch_brew_env(dist_graph, &target.working_dir)? {
             let brew_env = parse_env(&env_output)?;
             desired_extra_env = select_brew_env(&brew_env);
             rustflags = determine_brew_rustflags(&rustflags, &brew_env);
@@ -148,6 +150,7 @@ pub fn build_cargo_target(
         .arg("--target")
         .arg(&target.target_triple)
         .env("RUSTFLAGS", &rustflags)
+        .current_dir(&target.working_dir)
         .stdout(std::process::Stdio::piped());
     if !target.features.default_features {
         command.arg("--no-default-features");
@@ -217,12 +220,13 @@ pub fn build_cargo_target(
 }
 
 /// Build a cargo target
-pub fn rustup_toolchain(_dist_graph: &DistGraph, cmd: &RustupStep) -> DistResult<()> {
+pub fn rustup_toolchain(dist_graph: &DistGraph, cmd: &RustupStep) -> DistResult<()> {
     eprintln!("running rustup to ensure you have {} installed", cmd.target);
     Cmd::new(&cmd.rustup.cmd, "install rustup toolchain")
         .arg("target")
         .arg("add")
         .arg(&cmd.target)
+        .current_dir(&dist_graph.workspace_dir)
         .run()?;
     Ok(())
 }

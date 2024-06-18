@@ -154,7 +154,8 @@ fn run_build_step(
             committish,
             prefix,
             target,
-        }) => generate_source_tarball(dist_graph, committish, prefix, target)?,
+            working_dir,
+        }) => generate_source_tarball(dist_graph, committish, prefix, target, working_dir)?,
         BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target)?,
         BuildStep::Updater(updater) => fetch_updater(dist_graph, updater)?,
     };
@@ -210,6 +211,7 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
         .arg("axoupdater-cli")
         .arg("--root")
         .arg(&tmp_root)
+        .current_dir(&tmp_root)
         .arg("--bin")
         .arg("axoupdater");
 
@@ -331,7 +333,8 @@ fn build_fake(
             committish,
             prefix,
             target,
-        }) => generate_fake_source_tarball(dist_graph, committish, prefix, target)?,
+            working_dir,
+        }) => generate_fake_source_tarball(dist_graph, committish, prefix, target, working_dir)?,
         // Or extra artifacts, which may involve real builds
         BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target)?,
         BuildStep::Updater(_) => unimplemented!(),
@@ -436,6 +439,7 @@ fn generate_source_tarball(
     committish: &str,
     prefix: &str,
     target: &Utf8Path,
+    working_dir: &Utf8Path,
 ) -> DistResult<()> {
     let git = if let Some(tool) = &graph.tools.git {
         tool.cmd.to_owned()
@@ -453,6 +457,7 @@ fn generate_source_tarball(
         .arg(prefix)
         .arg("--output")
         .arg(target)
+        .current_dir(working_dir)
         .run()?;
 
     Ok(())
@@ -463,6 +468,7 @@ fn generate_fake_source_tarball(
     _committish: &str,
     _prefix: &str,
     target: &Utf8Path,
+    _working_dir: &Utf8Path,
 ) -> DistResult<()> {
     LocalAsset::write_new_all("", target)?;
 
