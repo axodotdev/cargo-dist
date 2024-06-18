@@ -72,6 +72,8 @@ pub struct GithubCiInfo {
     pub hosting_providers: Vec<HostingStyle>,
     /// whether to prefix release.yml and the tag pattern
     pub tag_namespace: Option<String>,
+    /// `gh` command to run to create the release
+    pub release_command: String,
 }
 
 impl GithubCiInfo {
@@ -129,9 +131,9 @@ impl GithubCiInfo {
             .get("global")
             .map(|s| s.as_str())
             .unwrap_or(GITHUB_LINUX_RUNNER);
-
         let global_task = GithubMatrixEntry {
             targets: None,
+            cache_provider: cache_provider_for_runner(global_runner),
             runner: Some(global_runner.into()),
             dist_args: Some("--artifacts=global".into()),
             install_dist: Some(install_dist_sh.clone()),
@@ -165,12 +167,39 @@ impl GithubCiInfo {
             }
             tasks.push(GithubMatrixEntry {
                 targets: Some(targets.iter().map(|s| s.to_string()).collect()),
-                runner: Some(runner.to_owned()),
+                cache_provider: cache_provider_for_runner(&runner),
+                runner: Some(runner),
                 dist_args: Some(dist_args),
                 install_dist: Some(install_dist.to_owned()),
                 packages_install: package_install_for_targets(&targets, &dependencies),
             });
         }
+
+        let mut release_args = vec![];
+        let action;
+        if github_releases_repo.is_some() {
+            release_args.push("--repo");
+            release_args.push("\"$REPO\"")
+        }
+        if dist.github_releases_submodule_path.is_some() {
+            release_args.push("--target");
+            release_args.push("\"$EXTERNAL_REPO_COMMIT\"");
+        }
+        if dist.create_release {
+            action = "create";
+            release_args.push("--title");
+            release_args.push("\"$ANNOUNCEMENT_TITLE\"");
+            release_args.push("--notes-file");
+            release_args.push("\"$RUNNER_TEMP/notes.txt\"");
+        } else {
+            action = "edit";
+            release_args.push("--draft=false");
+        }
+        release_args.push("$PRERELEASE_FLAG");
+        let release_command = format!(
+            "gh release {action} \"${{{{ needs.plan.outputs.tag }}}}\" {}",
+            release_args.join(" ")
+        );
 
         GithubCiInfo {
             tag_namespace,
@@ -197,6 +226,7 @@ impl GithubCiInfo {
             ssldotcom_windows_sign,
             github_attestations,
             hosting_providers,
+            release_command,
         }
     }
 
@@ -239,6 +269,17 @@ impl GithubCiInfo {
 
         let rendered = self.generate_github_ci(dist)?;
         diff_files(&ci_file, &rendered)
+    }
+}
+
+/// Get the best `cache-provider` key to use for <https://github.com/Swatinem/rust-cache>.
+///
+/// In the future we might make "None" here be a way to say "disable the cache".
+fn cache_provider_for_runner(runner: &str) -> Option<String> {
+    if runner.contains("buildjet") {
+        Some("buildjet".into())
+    } else {
+        Some("github".into())
     }
 }
 

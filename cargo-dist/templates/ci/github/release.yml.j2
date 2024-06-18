@@ -211,6 +211,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           key: ${{ join(matrix.targets, '-') }}
+          cache-provider: ${{ matrix.cache_provider }}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest
@@ -541,26 +542,32 @@ jobs:
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
       - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
-        with:
-        {{%- if github_releases_repo %}}
-          owner: {{{ github_releases_repo.owner }}}
-          repo: {{{ github_releases_repo.repo }}}
-          token: ${{ secrets.GH_RELEASES_TOKEN }}
-          commit: ${{ fromJson(needs.host.outputs.val).ci.github.external_repo_commit }}
-        {{%- endif %}}
-          tag: ${{ needs.plan.outputs.tag }}
+        env:
+          PRERELEASE_FLAG: "${{ fromJson(needs.host.outputs.val).announcement_is_prerelease && '--prerelease' || '' }}"
+          {{%- if create_release %}}
+          ANNOUNCEMENT_TITLE: "${{ fromJson(needs.host.outputs.val).announcement_title }}"
+          ANNOUNCEMENT_BODY: "${{ fromJson(needs.host.outputs.val).announcement_github_body }}"
+          {{%- endif %}}
+          {{%- if github_releases_repo %}}
+          REPO: "{{{ github_releases_repo.owner | safe }}}/{{{ github_releases_repo.repo | safe }}}"
+          EXTERNAL_REPO_COMMIT: "${{ fromJson(needs.host.outputs.val).ci.github.external_repo_commit }}"
+          # We need to ensure `gh` uses the token that can auth
+          # to the external repo instead of the runner token.
+          GH_TOKEN: ${{ secrets.GH_RELEASES_TOKEN }}
+          {{%- endif %}}
+        run: |
         {{%- if create_release %}}
-          name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
-          body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
-        {{%- else %}}
-          allowUpdates: true
-          updateOnlyUnreleased: true
-          omitBodyDuringUpdate: true
-          omitNameDuringUpdate: true
+          # Write and read notes from a file to avoid quoting breaking things
+          echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
         {{%- endif %}}
-          prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
-          artifacts: "artifacts/*"
+
+          {{{ release_command|safe }}}
+
+        {{%- if github_releases_repo %}}
+          gh release upload "${{ needs.plan.outputs.tag }}" artifacts/* --repo "$REPO"
+        {{%- else %}}
+          gh release upload "${{ needs.plan.outputs.tag }}" artifacts/*
+        {{%- endif %}}
     {{%- endif %}}
 
 {{%- for job in post_announce_jobs %}}

@@ -339,7 +339,9 @@ pub struct Binary {
     ///
     /// (e.g. my-binary-v1.0.0-x86_64-pc-windows-msvc)
     pub id: String,
-    /// The package this binary is defined by
+    /// The idx of the package this binary is defined by
+    pub pkg_idx: PackageIdx,
+    /// The cargo package this binary is defined by
     ///
     /// This is an "opaque" string that will show up in things like cargo machine-readable output,
     /// but **this is not the format that cargo -p flags expect**. Use pkg_spec for that.
@@ -363,7 +365,6 @@ pub struct Binary {
     pub copy_symbols_to: Vec<Utf8PathBuf>,
     /// feature flags!
     pub features: CargoTargetFeatures,
-    pkg_idx: PackageIdx,
 }
 
 /// A build step we would like to perform
@@ -413,6 +414,8 @@ pub struct CargoBuildStep {
     pub rustflags: String,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+    /// The working directory to run the build in
+    pub working_dir: Utf8PathBuf,
 }
 
 /// A cargo build (and copy the outputs to various locations)
@@ -422,6 +425,10 @@ pub struct GenericBuildStep {
     pub target_triple: TargetTriple,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
+    /// The working directory to run the build in
+    pub working_dir: Utf8PathBuf,
+    /// The output directory to find build outputs in
+    pub out_dir: Utf8PathBuf,
     /// The command to run to produce the expected binaries
     pub build_command: Vec<String>,
 }
@@ -429,8 +436,10 @@ pub struct GenericBuildStep {
 /// An "extra" build step, producing new sidecar artifacts
 #[derive(Debug)]
 pub struct ExtraBuildStep {
-    /// Binaries we expect from this build
-    pub expected_artifacts: Vec<String>,
+    /// The dir to run the build_command in
+    pub working_dir: Utf8PathBuf,
+    /// Relative paths (from the working_dir) to binaries we expect to find
+    pub artifact_relpaths: Vec<Utf8PathBuf>,
     /// The command to run to produce the expected binaries
     pub build_command: Vec<String>,
 }
@@ -489,6 +498,8 @@ pub struct SourceTarballStep {
     pub prefix: String,
     /// target filename
     pub target: Utf8PathBuf,
+    /// The dir to run the git command in
+    pub working_dir: Utf8PathBuf,
 }
 
 /// Fetch or build an updater
@@ -615,15 +626,19 @@ pub struct SourceTarball {
     pub prefix: String,
     /// target filename
     pub target: Utf8PathBuf,
+    /// path to the git checkout
+    pub working_dir: Utf8PathBuf,
 }
 
 /// An extra artifact of some kind
 #[derive(Clone, Debug)]
 pub struct ExtraArtifactImpl {
-    /// The build command to run to produce this artifact
-    pub build: Vec<String>,
-    /// The artifact this build should produce
-    pub artifact: Utf8PathBuf,
+    /// Working dir to run the command in
+    pub working_dir: Utf8PathBuf,
+    /// The command to run to produce this artifact
+    pub command: Vec<String>,
+    /// Relative path to the artifact, from the working_dir
+    pub artifact_relpath: Utf8PathBuf,
 }
 
 /// An updater executable
@@ -827,7 +842,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             github_releases_submodule_path,
             allow_dirty,
             msvc_crt_static,
-            hosting,
             extra_artifacts,
             pr_run_mode,
             tap,
@@ -836,7 +850,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
             // after this function, seems like we should finish the job..? (Doing a big
             // refactor already, don't want to mess with this right now.)
-            ci,
+            ci: _,
+            hosting: _,
             // Only the final value merged into a package_config matters
             //
             // Note that we do *use* an auto-include from the workspace when doing
@@ -1033,8 +1048,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let cargo_version_line = tools.cargo.version_line.clone();
 
-        let hosting = crate::host::select_hosting(workspace, hosting.clone(), ci.as_deref());
-
         let system = SystemInfo {
             id: system_id.clone(),
             cargo_version_line,
@@ -1091,7 +1104,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 post_announce_jobs,
                 allow_dirty,
                 msvc_crt_static,
-                hosting,
+                hosting: None,
                 extra_artifacts: extra_artifacts.clone().unwrap_or_default(),
                 github_custom_runners: workspace_metadata
                     .github_custom_runners
@@ -1410,18 +1423,22 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifacts = dist_metadata.extra_artifacts.to_owned().unwrap_or_default();
 
         for extra in artifacts {
-            for filename in extra.artifacts.clone() {
-                let target_path = dist_dir.join(&filename);
-
+            for artifact_relpath in extra.artifact_relpaths {
+                let artifact_name = artifact_relpath
+                    .file_name()
+                    .expect("extra artifact had no name!?")
+                    .to_owned();
+                let target_path = dist_dir.join(&artifact_name);
                 let artifact = Artifact {
-                    id: filename.to_owned(),
+                    id: artifact_name,
                     target_triples: vec![],
                     file_path: target_path.to_owned(),
                     required_binaries: FastMap::new(),
                     archive: None,
                     kind: ArtifactKind::ExtraArtifact(ExtraArtifactImpl {
-                        build: extra.build.to_owned(),
-                        artifact: target_path.to_owned(),
+                        working_dir: extra.working_dir.clone(),
+                        command: extra.command.clone(),
+                        artifact_relpath,
                     }),
                     checksum: None,
                     is_global: true,
@@ -1448,6 +1465,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
 
+        let working_dir = self.inner.workspace_dir.clone();
+
         // It's possible to run cargo-dist in something that's not a git
         // repo, including a brand-new repo that hasn't been `git init`ted yet;
         // we can't act on those.
@@ -1460,6 +1479,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
             .check(false)
+            .current_dir(&working_dir)
             .status();
         // We'll be stubbing the actual generation in this case
         let is_git_repo = if self.inner.local_builds_are_lies {
@@ -1476,6 +1496,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
             .check(false)
+            .current_dir(&working_dir)
             .status();
         let has_head = if self.inner.local_builds_are_lies {
             true
@@ -1525,6 +1546,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 committish: "HEAD".to_owned(),
                 prefix,
                 target: target_path.to_owned(),
+                working_dir,
             }),
             checksum: None,
             is_global: true,
@@ -2292,29 +2314,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         idx
     }
 
-    fn compute_extra_builds(&mut self) -> Vec<BuildStep> {
-        let artifacts = self
-            .inner
-            .artifacts
-            .iter()
-            .map(|artifact| artifact.id.clone())
-            .collect::<Vec<String>>();
-
-        self.inner
-            .extra_artifacts
-            .iter()
-            // We want to avoid adding build jobs for any artifacts
-            // that were already filtered out in a previous step
-            .filter(|extra| extra.artifacts.iter().any(|a| artifacts.contains(a)))
-            .map(|extra| {
-                BuildStep::Extra(ExtraBuildStep {
-                    expected_artifacts: extra.artifacts.clone(),
-                    build_command: extra.build.clone(),
-                })
-            })
-            .collect()
-    }
-
     fn compute_build_steps(&mut self) {
         // FIXME: more intelligently schedule these in a proper graph?
 
@@ -2381,6 +2380,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         committish: tarball.committish.to_owned(),
                         prefix: tarball.prefix.to_owned(),
                         target: tarball.target.to_owned(),
+                        working_dir: tarball.working_dir.to_owned(),
                     }));
                 }
                 ArtifactKind::ExtraArtifact(_) => {
@@ -2709,7 +2709,12 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     )?;
 
     // Figure out how artifacts should be hosted
-    graph.compute_hosting(cfg, &announcing)?;
+    graph.compute_hosting(
+        cfg,
+        &announcing,
+        graph.workspace_metadata.hosting.clone(),
+        graph.workspace_metadata.ci.clone(),
+    )?;
 
     // Figure out what we're releasing/building
     graph.compute_releases(cfg, &announcing, triples, bypass_package_target_prefs)?;

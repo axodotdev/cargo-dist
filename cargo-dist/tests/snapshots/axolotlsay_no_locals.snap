@@ -237,7 +237,8 @@ expression: self.payload
             ],
             "runner": "macos-12",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
+            "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -245,7 +246,8 @@ expression: self.payload
             ],
             "runner": "macos-12",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
+            "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -253,7 +255,8 @@ expression: self.payload
             ],
             "runner": "windows-2019",
             "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex\"",
-            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
+            "cache_provider": "github"
           },
           {
             "targets": [
@@ -261,7 +264,8 @@ expression: self.payload
             ],
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
-            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
+            "cache_provider": "github"
           }
         ]
       },
@@ -462,14 +466,18 @@ jobs:
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
       - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
-        with:
-          owner: "custom-owner"
-          repo: "cool-repo"
-          token: ${{ secrets.GH_RELEASES_TOKEN }}
-          commit: ${{ fromJson(needs.host.outputs.val).ci.github.external_repo_commit }}
-          tag: ${{ needs.plan.outputs.tag }}
-          name: ${{ fromJson(needs.host.outputs.val).announcement_title }}
-          body: ${{ fromJson(needs.host.outputs.val).announcement_github_body }}
-          prerelease: ${{ fromJson(needs.host.outputs.val).announcement_is_prerelease }}
-          artifacts: "artifacts/*"
+        env:
+          PRERELEASE_FLAG: "${{ fromJson(needs.host.outputs.val).announcement_is_prerelease && '--prerelease' || '' }}"
+          ANNOUNCEMENT_TITLE: "${{ fromJson(needs.host.outputs.val).announcement_title }}"
+          ANNOUNCEMENT_BODY: "${{ fromJson(needs.host.outputs.val).announcement_github_body }}"
+          REPO: "custom-owner/cool-repo"
+          EXTERNAL_REPO_COMMIT: "${{ fromJson(needs.host.outputs.val).ci.github.external_repo_commit }}"
+          # We need to ensure `gh` uses the token that can auth
+          # to the external repo instead of the runner token.
+          GH_TOKEN: ${{ secrets.GH_RELEASES_TOKEN }}
+        run: |
+          # Write and read notes from a file to avoid quoting breaking things
+          echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
+
+          gh release create "${{ needs.plan.outputs.tag }}" --repo "$REPO" --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" $PRERELEASE_FLAG
+          gh release upload "${{ needs.plan.outputs.tag }}" artifacts/* --repo "$REPO"

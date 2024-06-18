@@ -436,7 +436,7 @@ fn get_new_dist_metadata(
             #[allow(irrefutable_let_patterns)]
             if let CiStyle::Github = item {
                 github_key = 0;
-                if let Some(repo_url) = &workspace_info.repository_url {
+                if let Some(repo_url) = &workspace_info.repository_url(None).unwrap_or_default() {
                     if repo_url.contains("github.com") {
                         default = true;
                     }
@@ -482,7 +482,12 @@ fn get_new_dist_metadata(
         .as_ref()
         .map(|ci| ci.contains(&CiStyle::Github))
         .unwrap_or(false);
-    if has_github_ci && workspace_info.repository_url.is_none() {
+    if has_github_ci
+        && workspace_info
+            .repository_url(None)
+            .unwrap_or_default()
+            .is_none()
+    {
         // If axoproject complained about inconsistency, forward that
         // Massively jank manual implementation of "clone" here because lots of error types
         // (like std::io::Error) don't implement Clone and so axoproject errors can't either
@@ -811,7 +816,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         install_success_msg,
         tap,
         formula,
-        system_dependencies: _,
         targets,
         include,
         auto_includes,
@@ -849,12 +853,14 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         msvc_crt_static,
         hosting,
         tag_namespace,
-        extra_artifacts: _,
-        github_custom_runners: _,
-        bin_aliases: _,
         install_updater,
         display,
         display_name,
+        // These settings are complex enough that we don't support editing them in init
+        extra_artifacts: _,
+        github_custom_runners: _,
+        bin_aliases: _,
+        system_dependencies: _,
         ..
     } = &meta;
 

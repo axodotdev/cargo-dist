@@ -12,6 +12,7 @@ use crate::{
 use axoproject::WorkspaceInfo;
 use cargo_dist_schema::{DistManifest, Hosting};
 use gazenot::{AnnouncementKey, Gazenot};
+use tracing::warn;
 
 /// Do hosting
 pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
@@ -71,7 +72,10 @@ impl<'a> DistGraphBuilder<'a> {
         &mut self,
         cfg: &Config,
         announcing: &AnnouncementTag,
+        hosting: Option<Vec<HostingStyle>>,
+        ci: Option<Vec<CiStyle>>,
     ) -> DistResult<()> {
+        self.inner.hosting = select_hosting(self.workspace, announcing, hosting, ci.as_deref());
         // If we don't think we can host things, don't bother
         let Some(hosting) = &self.inner.hosting else {
             return Ok(());
@@ -269,16 +273,29 @@ fn announce_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot)
 
 pub(crate) fn select_hosting(
     workspace: &WorkspaceInfo,
+    announcing: &AnnouncementTag,
     hosting: Option<Vec<HostingStyle>>,
     ci: Option<&[CiStyle]>,
 ) -> Option<HostingInfo> {
+    let package_list = announcing
+        .rust_releases
+        .iter()
+        .map(|(idx, _)| *idx)
+        .collect::<Vec<_>>();
     // Either use the explicit one, or default to the CI provider's native solution
     let hosting_providers = hosting
         .clone()
         .or_else(|| Some(vec![ci.as_ref()?.first()?.native_hosting()?]))?;
-    let repo_url = workspace.web_url().unwrap_or_default()?;
+    // Check that there's a consistent repository URL, and if not, warn
+    if let Err(warning) = workspace.repository_url(Some(&package_list)) {
+        let report = miette::Report::new(warning);
+        warn!("{:?}", report);
+    };
+    let repo_url = workspace.web_url(Some(&package_list)).unwrap_or_default()?;
     // Currently there's only one supported sourcehost provider
-    let repo = workspace.github_repo().unwrap_or_default()?;
+    let repo = workspace
+        .github_repo(Some(&package_list))
+        .unwrap_or_default()?;
 
     Some(HostingInfo {
         hosts: hosting_providers,

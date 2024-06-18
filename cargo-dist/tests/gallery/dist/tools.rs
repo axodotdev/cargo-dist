@@ -1,6 +1,8 @@
 use super::*;
 use crate::gallery::command::CommandInfo;
 
+// Allowing dead code because some of these are platform-specific
+#[allow(dead_code)]
 pub struct Tools {
     pub git: CommandInfo,
     pub cargo_dist: CommandInfo,
