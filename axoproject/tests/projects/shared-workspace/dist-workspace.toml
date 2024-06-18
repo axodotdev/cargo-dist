@@ -1,0 +1,3 @@
+[workspace]
+members = ["generic1", "generic2"]
+cargo-workspaces = ["../cargo-nonvirtual", "../cargo-virtual"]

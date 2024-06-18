@@ -1569,6 +1569,14 @@ fn get_git_repo_root(run_in: &Utf8PathBuf) -> DistResult<Utf8PathBuf> {
     Ok(Utf8PathBuf::from(string))
 }
 
+/// TODO: implement this more robustly?
+pub fn get_project2() -> std::result::Result<axoproject::WorkspaceGraph, ProjectError> {
+    let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
+    let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
+    let clamp_to_dir = get_git_repo_root(&start_dir).ok();
+    Ok(axoproject::WorkspaceGraph::find(&start_dir, clamp_to_dir.as_deref()))
+}
+
 /// Get the general info about the project (via axo-project)
 pub fn get_project() -> std::result::Result<axoproject::WorkspaceInfo, ProjectError> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");

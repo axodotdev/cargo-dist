@@ -33,6 +33,172 @@ mod tests;
 
 pub use crate::repo::GithubRepo;
 use crate::repo::GithubRepoInput;
+/// A sorted map impl
+pub type SortedMap<K, V> = std::collections::BTreeMap<K, V>;
+
+/// Workspaces
+#[derive(Debug, Default)]
+pub struct WorkspaceGraph {
+    /// All workspaces
+    workspaces: Vec<WorkspaceInfo>,
+    /// All packages
+    packages: Vec<PackageInfo>,
+    workspace_workspace_children: SortedMap<WorkspaceIdx, Vec<WorkspaceIdx>>,
+    workspace_package_children: SortedMap<WorkspaceIdx, Vec<PackageIdx>>,
+    workspace_parents: SortedMap<WorkspaceIdx, WorkspaceIdx>,
+    package_parents: SortedMap<PackageIdx, WorkspaceIdx>,
+}
+
+impl WorkspaceGraph {
+    /// Create WorkspaceGraph
+    pub fn find(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> Self {
+        // TODO: add proper logic and error handling here!
+        let mut workspaces = Self::default();
+        let generic = generic::get_workspace(start_dir, clamp_to_dir);
+        if let WorkspaceSearch::Found(ws) = generic {
+            workspaces.add_workspace(ws, None);
+            return workspaces;
+        }
+
+        let rust = rust::get_workspace(start_dir, clamp_to_dir);
+        if let WorkspaceSearch::Found(ws) = rust {
+            workspaces.add_workspace(ws, None);
+            return workspaces;
+        }
+
+        workspaces
+    }
+
+    /// Add workspaces
+    pub fn add_workspace(
+        &mut self,
+        mut workspace: WorkspaceInfo,
+        parent_workspace: Option<WorkspaceIdx>,
+    ) {
+        let sub_workspaces = std::mem::take(&mut workspace._sub_workspaces);
+        let packages = std::mem::take(&mut workspace._package_info);
+
+        // Add the workspace and edges to parent
+        let workspace_idx: WorkspaceIdx = WorkspaceIdx(self.workspaces.len());
+        self.workspaces.push(workspace);
+        if let Some(parent_workspace) = parent_workspace {
+            self.workspace_workspace_children
+                .entry(parent_workspace)
+                .or_default()
+                .push(workspace_idx);
+            self.workspace_parents
+                .insert(workspace_idx, parent_workspace);
+        }
+
+        // Add the packages and edges to the workspace
+        for package in packages {
+            let package_idx = PackageIdx(self.packages.len());
+            self.packages.push(package);
+            self.workspace_package_children
+                .entry(workspace_idx)
+                .or_default()
+                .push(package_idx);
+            self.package_parents.insert(package_idx, workspace_idx);
+        }
+
+        // Recursively add subworkspaces
+        for sub_workspace in sub_workspaces {
+            self.add_workspace(sub_workspace, Some(workspace_idx));
+        }
+    }
+
+    /// Get the root workspace's index
+    pub fn root_workspace_idx(&self) -> WorkspaceIdx {
+        WorkspaceIdx(0)
+    }
+    /// Get the root workspace
+    pub fn root_workspace(&self) -> &WorkspaceInfo {
+        self.workspace(self.root_workspace_idx())
+    }
+
+    /// Get a workspace
+    pub fn workspace(&self, idx: WorkspaceIdx) -> &WorkspaceInfo {
+        &self.workspaces[idx.0]
+    }
+    /// Get a package
+    pub fn package(&self, idx: PackageIdx) -> &PackageInfo {
+        &self.packages[idx.0]
+    }
+    /// Get a mutable workspace
+    pub fn workspace_mut(&mut self, idx: WorkspaceIdx) -> &mut WorkspaceInfo {
+        &mut self.workspaces[idx.0]
+    }
+    /// Get a mutable package
+    pub fn package_mut(&mut self, idx: PackageIdx) -> &mut PackageInfo {
+        &mut self.packages[idx.0]
+    }
+    /// Get the parent workspace of a package
+    pub fn workspace_for_package(&self, idx: PackageIdx) -> WorkspaceIdx {
+        self.package_parents[&idx]
+    }
+
+    /// Get a workspace's packages (only direct children)
+    pub fn direct_packages(
+        &self,
+        idx: WorkspaceIdx,
+    ) -> impl Iterator<Item = (PackageIdx, &PackageInfo)> {
+        self.workspace_package_children
+            .get(&idx)
+            .map(|pkgs| &**pkgs)
+            .unwrap_or_default()
+            .iter()
+            .map(|p_idx| (*p_idx, &self.packages[p_idx.0]))
+    }
+
+    /// Get a workspace's packages (recursively getting children of subworkspaces)
+    pub fn recursive_packages(
+        &self,
+        idx: WorkspaceIdx,
+    ) -> impl Iterator<Item = (PackageIdx, &PackageInfo)> {
+        let mut working_set = vec![idx];
+        let mut package_indices = vec![];
+        while let Some(workspace_idx) = working_set.pop() {
+            // Add own packages
+            if let Some(packages) = self.workspace_package_children.get(&workspace_idx) {
+                package_indices.extend(packages.iter().copied());
+            }
+            // Add child workspaces to working set
+            if let Some(sub_workspaces) = self.workspace_workspace_children.get(&workspace_idx) {
+                working_set.extend(sub_workspaces.iter().copied());
+            }
+        }
+        // Return result
+        package_indices
+            .into_iter()
+            .map(|idx| (idx, self.package(idx)))
+    }
+
+    /// Get all packages
+    pub fn all_packages(&self) -> impl Iterator<Item = (PackageIdx, &PackageInfo)> {
+        self.packages
+            .iter()
+            .enumerate()
+            .map(|(idx, pkg)| (PackageIdx(idx), pkg))
+    }
+
+    /// Get all workspaces
+    pub fn all_workspace_indices(&self) -> impl Iterator<Item = WorkspaceIdx> {
+        (0..self.workspaces.len()).map(WorkspaceIdx)
+    }
+
+    /// Try to get a consensus repository_url for the given packages (or all if None given)
+    pub fn repository_url(&self, packages: Option<&[PackageIdx]>) -> Result<Option<RepositoryUrl>> {
+        let package_list = if let Some(packages) = packages {
+            packages
+                .iter()
+                .map(|idx| self.package(*idx))
+                .collect::<Vec<_>>()
+        } else {
+            self.packages.iter().collect::<Vec<_>>()
+        };
+        RepositoryUrl::from_packages(package_list)
+    }
+}
 
 /// Information about various kinds of workspaces
 pub struct Workspaces {
@@ -101,6 +267,20 @@ pub enum WorkspaceSearch {
     Missing(AxoprojectError),
 }
 
+impl WorkspaceSearch {
+    /// Simplify the search into a Result
+    pub fn into_result(self) -> Result<WorkspaceInfo> {
+        match self {
+            WorkspaceSearch::Found(val) => Ok(val),
+            WorkspaceSearch::Missing(val) => Err(val),
+            WorkspaceSearch::Broken {
+                manifest_path: _,
+                cause,
+            } => Err(cause),
+        }
+    }
+}
+
 /// Kind of workspace
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WorkspaceKind {
@@ -119,18 +299,21 @@ pub enum WorkspaceKind {
 ///
 /// This can either be a cargo workspace or an npm workspace, the concepts
 /// are conflated to let users of axoproject handle things more uniformly.
+#[derive(Debug)]
 pub struct WorkspaceInfo {
-    /// The kinf of workspace this is (Rust or Javascript)
+    /// The kind of workspace this is (Rust or Javascript)
     pub kind: WorkspaceKind,
     /// The directory where build output will go (generally `target/`)
     pub target_dir: Utf8PathBuf,
     /// The root directory of the workspace (where the root Cargo.toml is)
     pub workspace_dir: Utf8PathBuf,
-    /// Computed info about the packages.
+    /// Nested workspaces (exists temp, do not use outside axoproject)
+    pub _sub_workspaces: Vec<WorkspaceInfo>,
+    /// Computed info about the packages (exists temp, do not use outside axoproject)
     ///
     /// This notably includes finding readmes and licenses even if the user didn't
     /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
-    pub package_info: Vec<PackageInfo>,
+    pub _package_info: Vec<PackageInfo>,
     /// Path to the root manifest of the workspace
     ///
     /// This can be either a Cargo.toml or package.json. In either case this manifest
@@ -151,66 +334,47 @@ pub struct WorkspaceInfo {
     pub cargo_profiles: rust::CargoProfiles,
 }
 
-impl WorkspaceInfo {
-    /// Get a package
-    pub fn package(&self, idx: PackageIdx) -> &PackageInfo {
-        &self.package_info[idx.0]
-    }
-    /// Get a mutable package
-    pub fn package_mut(&mut self, idx: PackageIdx) -> &mut PackageInfo {
-        &mut self.package_info[idx.0]
-    }
-    /// Iterate over packages
-    pub fn packages(&self) -> impl Iterator<Item = (PackageIdx, &PackageInfo)> {
-        self.package_info
-            .iter()
-            .enumerate()
-            .map(|(i, k)| (PackageIdx(i), k))
-    }
+/// A URL to a repository, with some normalization applied
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+pub struct RepositoryUrl(pub String);
 
-    /// Returns a struct which contains the repository's owner and name.
-    pub fn github_repo(&self, packages: Option<&[PackageIdx]>) -> Result<Option<GithubRepo>> {
-        match self.repository_url(packages)? {
-            None => Ok(None),
-            Some(url) => Ok(Some(GithubRepoInput::new(url)?.parse()?)),
+impl std::ops::Deref for RepositoryUrl {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl RepositoryUrl {
+    /// Construct a RepositoryUrl from a String
+    pub fn from_string(url: impl Into<String>) -> Self {
+        let mut url = url.into();
+        // Normalize away trailing `/` stuff
+        if url.ends_with('/') {
+            url.pop();
         }
-    }
-
-    /// Returns a web version of the repository URL,
-    /// converted from SSH if necessary, with .git suffix trimmed.
-    pub fn web_url(&self, packages: Option<&[PackageIdx]>) -> Result<Option<String>> {
-        Ok(self.github_repo(packages)?.map(|repo| repo.web_url()))
+        Self(url)
     }
 
     /// Returns a consensus package URL for the given packages, if any exists
-    pub fn repository_url(&self, packages: Option<&[PackageIdx]>) -> Result<Option<String>> {
-        let mut repo_url = None::<String>;
+    pub fn from_packages<'a>(
+        packages: impl IntoIterator<Item = &'a PackageInfo>,
+    ) -> Result<Option<Self>> {
+        let mut repo_url = None::<RepositoryUrl>;
         let mut repo_url_origin = None::<Utf8PathBuf>;
 
-        let package_list = if let Some(packages) = packages {
-            packages
-                .iter()
-                .map(|idx| self.package(*idx))
-                .collect::<Vec<_>>()
-        } else {
-            self.package_info.iter().collect::<Vec<_>>()
-        };
-        for info in package_list {
+        for info in packages {
             if let Some(new_url) = &info.repository_url {
-                // Normalize away trailing `/` stuff before comparing
-                let mut normalized_new_url = new_url.clone();
-                if normalized_new_url.ends_with('/') {
-                    normalized_new_url.pop();
-                }
+                let normalized_new_url = RepositoryUrl::from_string(new_url);
                 if let Some(cur_url) = &repo_url {
                     if &normalized_new_url == cur_url {
                         // great! consensus!
                     } else {
                         return Err(AxoprojectError::InconsistentRepositoryKey {
                             file1: repo_url_origin.as_ref().unwrap().to_owned(),
-                            url1: cur_url.clone(),
+                            url1: cur_url.0.clone(),
                             file2: info.manifest_path.clone(),
-                            url2: normalized_new_url,
+                            url2: normalized_new_url.0,
                         });
                     }
                 } else {
@@ -220,6 +384,29 @@ impl WorkspaceInfo {
             }
         }
         Ok(repo_url)
+    }
+
+    /// Returns a struct which contains the repository's owner and name.
+    pub fn github_repo(&self) -> Result<GithubRepo> {
+        GithubRepoInput::new(self.0.clone())?.parse()
+    }
+}
+
+impl WorkspaceInfo {
+    /// Get a package
+    pub fn package(&self, idx: PackageIdx) -> &PackageInfo {
+        &self._package_info[idx.0]
+    }
+    /// Get a mutable package
+    pub fn package_mut(&mut self, idx: PackageIdx) -> &mut PackageInfo {
+        &mut self._package_info[idx.0]
+    }
+    /// Iterate over packages
+    pub fn packages(&self) -> impl Iterator<Item = (PackageIdx, &PackageInfo)> {
+        self._package_info
+            .iter()
+            .enumerate()
+            .map(|(i, k)| (PackageIdx(i), k))
     }
 }
 
@@ -354,9 +541,13 @@ impl PackageInfo {
     }
 }
 
-/// An id for a [`PackageInfo`][] entry in a [`WorkspaceInfo`][].
+/// An id for a [`PackageInfo`][] entry in a [`WorkspaceInfo`][] or [`WorkspaceGraph`][].
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PackageIdx(pub usize);
+
+/// An id for a [`WorkspaceInfo`][] entry in a [`WorkspaceGraph`][].
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WorkspaceIdx(pub usize);
 
 /// A Version abstracted over project type
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

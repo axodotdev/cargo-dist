@@ -1,6 +1,6 @@
 use axoasset::toml_edit;
 use axoproject::{errors::AxoprojectError, platforms::triple_to_display_name};
-use axoproject::{WorkspaceInfo, WorkspaceKind};
+use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::PrRunMode;
 use semver::Version;
@@ -45,15 +45,17 @@ struct MultiDistMetadata {
 
 /// Run 'cargo dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
-    let workspace = config::get_project()?;
+    let workspaces = config::get_project2()?;
+    let root_workspace = workspaces.root_workspace();
 
     // Load in the workspace toml to edit and write back
-    let mut workspace_toml = config::load_cargo_toml(&workspace.manifest_path)?;
+    let mut workspace_toml = config::load_cargo_toml(&root_workspace.manifest_path)?;
 
     let check = console::style("✔".to_string()).for_stderr().green();
 
     // Init things
-    let did_add_profile = if workspace.kind == WorkspaceKind::Rust {
+    // TODO: spider subworkspaces
+    let did_add_profile = if root_workspace.kind == WorkspaceKind::Rust {
         init_dist_profile(cfg, &mut workspace_toml)?
     } else {
         false
@@ -69,7 +71,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         multi_meta
     } else {
         // run (potentially interactive) init logic
-        let meta = get_new_dist_metadata(cfg, args, &workspace)?;
+        let meta = get_new_dist_metadata(cfg, args, &workspaces)?;
         MultiDistMetadata {
             workspace: Some(meta),
             packages: SortedMap::new(),
@@ -77,13 +79,13 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     };
 
     if let Some(meta) = &multi_meta.workspace {
-        apply_dist_to_workspace_toml(&mut workspace_toml, workspace.kind, meta);
+        apply_dist_to_workspace_toml(&mut workspace_toml, root_workspace.kind, meta);
     }
 
     eprintln!();
 
     // Save the workspace toml (potentially an effective no-op if we made no edits)
-    config::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
+    config::save_cargo_toml(&root_workspace.manifest_path, workspace_toml)?;
     if did_add_profile {
         eprintln!("{check} added [profile.dist] to your root Cargo.toml");
     }
@@ -91,7 +93,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     // Now that we've done the stuff that's definitely part of the root Cargo.toml,
     // Optionally apply updates to packages
-    for (_idx, package) in workspace.packages() {
+    for (_idx, package) in workspaces.all_packages() {
         // Gather up all the things we'd like to be written to this file
         let meta = multi_meta.packages.get(&package.name);
         let needs_edit = meta.is_some();
@@ -205,16 +207,17 @@ fn has_metadata_table(workspace_info: &WorkspaceInfo) -> bool {
 fn get_new_dist_metadata(
     cfg: &Config,
     args: &InitArgs,
-    workspace_info: &WorkspaceInfo,
+    workspaces: &WorkspaceGraph,
 ) -> DistResult<DistMetadata> {
     use dialoguer::{Confirm, Input, MultiSelect, Select};
-    let has_config = has_metadata_table(workspace_info);
+    let root_workspace = workspaces.root_workspace();
+    let has_config = has_metadata_table(root_workspace);
 
     let mut meta = if has_config {
         config::parse_metadata_table_or_manifest(
-            workspace_info.kind,
-            &workspace_info.manifest_path,
-            workspace_info.cargo_metadata_table.as_ref(),
+            root_workspace.kind,
+            &root_workspace.manifest_path,
+            root_workspace.cargo_metadata_table.as_ref(),
         )?
     } else {
         DistMetadata {
@@ -435,7 +438,7 @@ fn get_new_dist_metadata(
             #[allow(irrefutable_let_patterns)]
             if let CiStyle::Github = item {
                 github_key = 0;
-                if let Some(repo_url) = &workspace_info.repository_url(None).unwrap_or_default() {
+                if let Some(repo_url) = &workspaces.repository_url(None).unwrap_or_default() {
                     if repo_url.contains("github.com") {
                         default = true;
                     }
@@ -481,33 +484,43 @@ fn get_new_dist_metadata(
         .as_ref()
         .map(|ci| ci.contains(&CiStyle::Github))
         .unwrap_or(false);
+    // TODO (FIXME?): we now support more precisely getting the repository url
+    // filtered to a list of packages, so that we can apply publish=false/dist=false
+    // before trying to check the repository_url is consistent. However
+    // init is in this weird state where we're setting things up, so it's awkward
+    // to apply those annotations and so init still bombs out, as it doesn't
+    // have the filter to apply (this is solveable but not trivial...)
     if has_github_ci
-        && workspace_info
+        && workspaces
             .repository_url(None)
             .unwrap_or_default()
             .is_none()
     {
-        // If axoproject complained about inconsistency, forward that
+        // If axoproject complains about inconsistency, forward that
         // Massively jank manual implementation of "clone" here because lots of error types
         // (like std::io::Error) don't implement Clone and so axoproject errors can't either
-        let conflict = workspace_info.warnings.iter().find_map(|w| {
-            if let AxoprojectError::InconsistentRepositoryKey {
-                file1,
-                url1,
-                file2,
-                url2,
-            } = w
-            {
-                Some(AxoprojectError::InconsistentRepositoryKey {
-                    file1: file1.clone(),
-                    url1: url1.clone(),
-                    file2: file2.clone(),
-                    url2: url2.clone(),
-                })
-            } else {
-                None
-            }
-        });
+        let conflict = workspaces
+            .repository_url(None)
+            .map_err(|w| {
+                if let AxoprojectError::InconsistentRepositoryKey {
+                    file1,
+                    url1,
+                    file2,
+                    url2,
+                } = w
+                {
+                    Some(AxoprojectError::InconsistentRepositoryKey {
+                        file1: file1.clone(),
+                        url1: url1.clone(),
+                        file2: file2.clone(),
+                        url2: url2.clone(),
+                    })
+                } else {
+                    None
+                }
+            })
+            .err()
+            .unwrap_or_default();
         if let Some(inner) = conflict {
             Err(DistError::CantEnableGithubUrlInconsistent { inner })?;
         } else {

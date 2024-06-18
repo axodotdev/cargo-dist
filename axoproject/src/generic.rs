@@ -16,8 +16,12 @@ struct WorkspaceManifest {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
 struct Workspace {
     members: Vec<Utf8PathBuf>,
+    #[cfg(feature = "cargo-projects")]
+    #[serde(default)]
+    cargo_workspaces: Vec<Utf8PathBuf>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -93,11 +97,20 @@ fn workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceInfo> {
         package_info.push(package);
     }
 
+    let mut sub_workspaces = vec![];
+    for cargo_workspace_reldir in &manifest.workspace.cargo_workspaces {
+        let cargo_workspace_dir = workspace_dir.join(cargo_workspace_reldir);
+        let search = crate::rust::get_workspace(&cargo_workspace_dir, Some(&cargo_workspace_dir))
+            .into_result()?;
+        sub_workspaces.push(search);
+    }
+
     Ok(WorkspaceInfo {
         kind: crate::WorkspaceKind::Generic,
         target_dir: workspace_dir.join(DIST_TARGET_DIR),
         workspace_dir,
-        package_info,
+        _sub_workspaces: sub_workspaces,
+        _package_info: package_info,
         manifest_path: manifest_path.to_owned(),
         root_auto_includes,
         warnings: vec![],
@@ -118,7 +131,8 @@ fn single_package_workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceIn
         workspace_dir: package.package_root.clone(),
         manifest_path: package.manifest_path.clone(),
         root_auto_includes,
-        package_info: vec![package],
+        _sub_workspaces: vec![],
+        _package_info: vec![package],
         warnings: vec![],
         #[cfg(feature = "cargo-projects")]
         cargo_metadata_table: None,

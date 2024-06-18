@@ -102,7 +102,11 @@ impl<'a> DistGraphBuilder<'a> {
         let info = if let Some(announcing_version) = &announcing.version {
             // Try to find the version we're announcing in the top level CHANGELOG/RELEASES
             let version = axoproject::Version::Cargo(announcing_version.clone());
-            let Ok(Some(info)) = self.workspace.changelog_for_version(&version) else {
+            let Ok(Some(info)) = self
+                .workspaces
+                .root_workspace()
+                .changelog_for_version(&version)
+            else {
                 info!(
                     "failed to find {version} in workspace changelogs, skipping changelog generation"
                 );
@@ -112,14 +116,14 @@ impl<'a> DistGraphBuilder<'a> {
             info
         } else if let Some(announcing_package) = announcing.package {
             // Try to find the package's specific CHANGELOG/RELEASES
-            let package = self.workspace.package(announcing_package);
+            let package = self.workspaces.package(announcing_package);
             let package_name = &package.name;
             let version = package
                 .version
                 .as_ref()
                 .expect("cargo package without a version!?");
             let Ok(Some(info)) = self
-                .workspace
+                .workspaces
                 .package(announcing_package)
                 .changelog_for_version(version)
             else {
@@ -341,7 +345,7 @@ fn select_packages(
     let disabled_sty = console::Style::new().dim();
     let enabled_sty = console::Style::new();
     let mut releases = vec![];
-    for (pkg_id, pkg) in graph.workspace().packages() {
+    for (pkg_id, pkg) in graph.workspaces.all_packages() {
         let pkg_name = &pkg.name;
 
         // Determine if this package's binaries should be Released
@@ -531,7 +535,7 @@ fn maximum_version(
 ) -> Option<Version> {
     packages
         .into_iter()
-        .filter_map(|pkg_idx| graph.workspace().package(pkg_idx).version.as_ref())
+        .filter_map(|pkg_idx| graph.workspaces.package(pkg_idx).version.as_ref())
         .map(|v| v.cargo())
         .max()
         .cloned()
@@ -546,7 +550,7 @@ fn overwrite_package_versions(
     version: &Version,
 ) {
     for pkg_idx in packages {
-        graph.workspace.package_info[pkg_idx.0].version =
+        graph.workspaces.package_mut(pkg_idx).version =
             Some(axoproject::Version::Cargo(version.clone()));
     }
 }
@@ -570,8 +574,8 @@ fn parse_tag_for_all_packages(
     // If we're given a specific real tag to use, ask axotag to parse it
     // and identify which packages are selected by it.
     let packages: Vec<Package> = graph
-        .workspace()
-        .packages()
+        .workspaces
+        .all_packages()
         .map(|(_, info)| Package {
             name: info.name.clone(),
             version: info.version.clone().map(|v| v.semver().clone()),
@@ -592,7 +596,7 @@ fn possible_tags<'a>(
 ) -> SortedMap<&'a Version, Vec<PackageIdx>> {
     let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
     for pkg_idx in rust_releases {
-        let info = graph.workspace().package(pkg_idx);
+        let info = graph.workspaces.package(pkg_idx);
         let version = info.version.as_ref().unwrap().semver();
         versions.entry(version).or_default().push(pkg_idx);
     }
@@ -626,7 +630,7 @@ fn tag_help(
         write!(help, "--tag=v{version} will Announce: ").unwrap();
         let mut multi_package = false;
         for &pkg_id in packages {
-            let info = &graph.workspace().package(pkg_id);
+            let info = graph.workspaces.package(pkg_id);
             if multi_package {
                 write!(help, ", ").unwrap();
             } else {
@@ -637,7 +641,7 @@ fn tag_help(
         writeln!(help).unwrap();
     }
     help.push('\n');
-    let info = &graph.workspace().package(*some_pkg);
+    let info = graph.workspaces.package(*some_pkg);
     let some_tag = format!(
         "--tag={}-v{}",
         info.name,
