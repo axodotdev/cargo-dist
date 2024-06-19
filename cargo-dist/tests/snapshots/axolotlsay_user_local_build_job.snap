@@ -2034,7 +2034,7 @@ install(false);
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
         "rimraf": "^5.0.7",
-        "tar": "^7.1.0"
+        "tar": "^7.4.0"
       },
       "devDependencies": {
         "prettier": "^3.3.2"
@@ -2433,10 +2433,9 @@ install(false);
       "engines": {
         "node": ">=16 || 14 >=14.17"
       },
-      "integrity": "sha512-UZ7eQ+h8ywIRAW1hIEl2AqdwzJucU/Kp59+8kkZeSvafXhZjul247BvIJjEVFVeON6d7lM46XX1HXCduKAS8VA==",
-      "license": "ISC",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.1.tgz",
-      "version": "7.1.1"
+      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
+      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
+      "version": "7.1.2"
     },
     "node_modules/minizlib": {
       "dependencies": {
@@ -2663,7 +2662,7 @@ install(false);
       "dependencies": {
         "@isaacs/fs-minipass": "^4.0.0",
         "chownr": "^3.0.0",
-        "minipass": "^7.1.0",
+        "minipass": "^7.1.2",
         "minizlib": "^3.0.1",
         "mkdirp": "^3.0.1",
         "yallist": "^5.0.0"
@@ -2671,10 +2670,9 @@ install(false);
       "engines": {
         "node": ">=18"
       },
-      "integrity": "sha512-ENhg4W6BmjYxl8GTaE7/h99f0aXiSWv4kikRZ9n2/JRxypZniE84ILZqimAhxxX7Zb8Px6pFdheW3EeHfhnXQQ==",
-      "license": "ISC",
-      "resolved": "https://registry.npmjs.org/tar/-/tar-7.1.0.tgz",
-      "version": "7.1.0"
+      "integrity": "sha512-XQs0S8fuAkQWuqhDeCdMlJXDX80D7EOVLDPVFkna9yQfzS+PHKgfxcei0jf6/+QAWcjqrnC8uM3fSAnrQl+XYg==",
+      "resolved": "https://registry.npmjs.org/tar/-/tar-7.4.0.tgz",
+      "version": "7.4.0"
     },
     "node_modules/tunnel": {
       "engines": {
@@ -2827,7 +2825,7 @@ install(false);
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
     "rimraf": "^5.0.7",
-    "tar": "^7.1.0"
+    "tar": "^7.4.0"
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "devDependencies": {
