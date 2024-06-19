@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use axoasset::{toml_edit, SourceFile};
+use axoprocess::Cmd;
 use axoproject::{WorkspaceKind, WorkspaceSearch};
 use camino::{Utf8Path, Utf8PathBuf};
 use miette::Report;
@@ -1553,11 +1554,35 @@ pub(crate) fn parse_metadata_table(
         .unwrap_or_default())
 }
 
+fn get_git_repo_root(run_in: &Utf8PathBuf) -> DistResult<Utf8PathBuf> {
+    let mut command = Cmd::new("git", "get git repo root");
+    command
+        .arg("-C")
+        .arg(run_in)
+        .arg("rev-parse")
+        .arg("--show-toplevel");
+
+    let string = String::from_utf8(command.output()?.stdout)?
+        .trim_end()
+        .to_owned();
+
+    Ok(Utf8PathBuf::from(string))
+}
+
 /// Get the general info about the project (via axo-project)
 pub fn get_project() -> std::result::Result<axoproject::WorkspaceInfo, ProjectError> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
-    let workspaces = axoproject::get_workspaces(&start_dir, None);
+
+    let root = get_git_repo_root(&start_dir);
+
+    let clamp = if let Ok(path) = &root {
+        Some(path.as_path())
+    } else {
+        None
+    };
+
+    let workspaces = axoproject::get_workspaces(&start_dir, clamp);
 
     let mut missing = vec![];
 
