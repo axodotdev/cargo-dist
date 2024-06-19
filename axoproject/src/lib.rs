@@ -466,11 +466,11 @@ pub struct AutoIncludes {
 }
 
 /// Tries to find information about the workspace at start_dir, walking up
-/// ancestors as necessary until we reach root_dir (or run out of ancestors).
+/// ancestors as necessary until we reach clamp_to_dir (or run out of ancestors).
 ///
-/// Behaviour is unspecified if only part of the workspace is nested in root_dir.
+/// Behaviour is unspecified if only part of the workspace is nested in clamp_to_dir.
 ///
-/// In the future setting root_dir may cause the output's paths to be relative
+/// In the future setting clamp_to_dir may cause the output's paths to be relative
 /// to that directory, but for now they're always absolute. The cli does this
 /// relativizing, but not the library.
 ///
