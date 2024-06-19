@@ -23,8 +23,23 @@ New release installed!
 
 If you would prefer to handle polling for updates yourself, for example in order to incorporate it as an internal subcommand of your own software, axoupdater is available as a [crate] which can be used as a library within your program. More information about how to use axoupdater as a library in your own program can be found in its README and in its [API documentation][axoupdater-docs].
 
+## GitHub Actions and Rate Limits in CI
+
+By default, axoupdater uses unauthenticated GitHub API calls when fetching release information. This is reliable in normal use, but it's much more likely to run into rate limits in the highly artificial environment of a CI test. If you're testing the standalone updater in your CI configuration, we recommend setting the `AXOUPDATER_GITHUB_TOKEN` environment variable to the value of the `GITHUB_TOKEN` secret that GitHub Action defines automatically.
+
+```yaml
+env:
+  AXOUPDATER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+A sample in cargo-dist's CI configuration can be found [here][cargo-dist-ci-config].
+
+If you use the axoupdater crate to implement the updater yourself, instructions for opting into a token in CI can be found [here][axoupdater-token-docs].
+
 [axoupdater]: https://github.com/axodotdev/axoupdater
 [axoupdater-docs]: https://docs.rs/axoupdater/
+[axoupdater-token-docs]: https://github.com/axodotdev/axoupdater?tab=readme-ov-file#github-actions-and-rate-limits-in-ci
+[cargo-dist-ci-config]: https://github.com/axodotdev/cargo-dist/blob/80f2e19e5aa79b7b1f64beb62ceb07aa71566707/.github/workflows/ci.yml#L82-L85
 [crate]: https://crates.io/crates/axoupdater
 [shell]: ../shell.md
 [PowerShell]: ../powershell.md
