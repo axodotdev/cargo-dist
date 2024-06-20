@@ -45,24 +45,30 @@ struct MultiDistMetadata {
 
 /// Run 'cargo dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
-    let workspaces = config::get_project2()?;
+    let workspaces = config::get_project()?;
     let root_workspace = workspaces.root_workspace();
-
-    // Load in the workspace toml to edit and write back
-    let mut workspace_toml = config::load_cargo_toml(&root_workspace.manifest_path)?;
-
     let check = console::style("✔".to_string()).for_stderr().green();
-
-    // Init things
-    // TODO: spider subworkspaces
-    let did_add_profile = if root_workspace.kind == WorkspaceKind::Rust {
-        init_dist_profile(cfg, &mut workspace_toml)?
-    } else {
-        false
-    };
 
     eprintln!("let's setup your cargo-dist config...");
     eprintln!();
+
+    // For each [workspace] Cargo.toml in the workspaces, initialize [profile]
+    let mut did_add_profile = false;
+    for workspace_idx in workspaces.all_workspace_indices() {
+        let workspace = workspaces.workspace(workspace_idx);
+        if workspace.kind == WorkspaceKind::Rust {
+            let mut workspace_toml = config::load_cargo_toml(&workspace.manifest_path)?;
+            did_add_profile |= init_dist_profile(cfg, &mut workspace_toml)?;
+            config::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
+        }
+    }
+
+    if did_add_profile {
+        eprintln!("{check} added [profile.dist] to your workspace Cargo.toml");
+    }
+
+    // Load in the root workspace toml to edit and write back
+    let mut workspace_toml = config::load_cargo_toml(&root_workspace.manifest_path)?;
 
     let multi_meta = if let Some(json_path) = &args.with_json_config {
         // json update path, read from a file and apply all requested updates verbatim
@@ -86,9 +92,6 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     // Save the workspace toml (potentially an effective no-op if we made no edits)
     config::save_cargo_toml(&root_workspace.manifest_path, workspace_toml)?;
-    if did_add_profile {
-        eprintln!("{check} added [profile.dist] to your root Cargo.toml");
-    }
     eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
 
     // Now that we've done the stuff that's definitely part of the root Cargo.toml,
@@ -484,7 +487,7 @@ fn get_new_dist_metadata(
         .as_ref()
         .map(|ci| ci.contains(&CiStyle::Github))
         .unwrap_or(false);
-    // TODO (FIXME?): we now support more precisely getting the repository url
+    // FIXME: we now support more precisely getting the repository url
     // filtered to a list of packages, so that we can apply publish=false/dist=false
     // before trying to check the repository_url is consistent. However
     // init is in this weird state where we're setting things up, so it's awkward

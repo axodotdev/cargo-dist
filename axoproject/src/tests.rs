@@ -594,7 +594,7 @@ fn test_shared_workspace_root() {
 }
 
 fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
-    let workspaces = WorkspaceGraph::find(path.into(), None);
+    let workspaces = WorkspaceGraph::find(path.into(), None).unwrap();
     let project = workspaces.root_workspace();
     let packages = workspaces
         .direct_packages(workspaces.root_workspace_idx())
@@ -673,7 +673,7 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
 }
 
 fn shared_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
-    let workspaces = WorkspaceGraph::find(path.into(), None);
+    let workspaces = WorkspaceGraph::find(path.into(), None).unwrap();
     let project = workspaces.root_workspace();
     let direct_packages = workspaces
         .direct_packages(workspaces.root_workspace_idx())

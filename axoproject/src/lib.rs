@@ -12,7 +12,7 @@ use std::fmt::Display;
 use axoasset::serde_json;
 use axoasset::{AxoassetError, LocalAsset};
 use camino::{Utf8Path, Utf8PathBuf};
-use errors::{AxoprojectError, Result};
+use errors::{AxoprojectError, ProjectError, Result};
 use tracing::info;
 
 #[cfg(feature = "cargo-projects")]
@@ -51,22 +51,38 @@ pub struct WorkspaceGraph {
 
 impl WorkspaceGraph {
     /// Create WorkspaceGraph
-    pub fn find(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> Self {
-        // TODO: add proper logic and error handling here!
-        let mut workspaces = Self::default();
-        let generic = generic::get_workspace(start_dir, clamp_to_dir);
-        if let WorkspaceSearch::Found(ws) = generic {
-            workspaces.add_workspace(ws, None);
-            return workspaces;
+    pub fn find(
+        start_dir: &Utf8Path,
+        clamp_to_dir: Option<&Utf8Path>,
+    ) -> std::result::Result<Self, ProjectError> {
+        let mut missing = vec![];
+
+        // Prefer generic workspace, then use rust workspace
+        for ws in [
+            generic::get_workspace(start_dir, clamp_to_dir),
+            rust::get_workspace(start_dir, clamp_to_dir),
+        ] {
+            match ws {
+                // Accept the first one we find
+                WorkspaceSearch::Found(ws) => {
+                    let mut workspaces = Self::default();
+                    workspaces.add_workspace(ws, None);
+                    return Ok(workspaces);
+                }
+                // If we find a broken workspace, bail out immediately
+                WorkspaceSearch::Broken {
+                    manifest_path: _,
+                    cause,
+                } => {
+                    return Err(ProjectError::ProjectBroken { cause });
+                }
+                // Ignore the missing case; iterate through to the next project type
+                WorkspaceSearch::Missing(e) => missing.push(e),
+            }
         }
 
-        let rust = rust::get_workspace(start_dir, clamp_to_dir);
-        if let WorkspaceSearch::Found(ws) = rust {
-            workspaces.add_workspace(ws, None);
-            return workspaces;
-        }
-
-        workspaces
+        // Nothing found, report the missing ones
+        Err(ProjectError::ProjectMissing { sources: missing })
     }
 
     /// Add workspaces

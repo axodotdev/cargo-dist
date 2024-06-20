@@ -123,3 +123,23 @@ pub enum AxoprojectError {
         version: Version,
     },
 }
+
+/// Errors related to finding the project
+#[derive(Debug, Error, Diagnostic)]
+pub enum ProjectError {
+    /// No workspace found from axoproject
+    #[error("No workspace found; either your project doesn't have a Cargo.toml/dist.toml, or we couldn't read it")]
+    ProjectMissing {
+        /// axoproject's error for the unidentified project
+        #[related]
+        sources: Vec<AxoprojectError>,
+    },
+
+    /// Found a workspace but it was malformed
+    #[error("We encountered an issue trying to read your workspace")]
+    ProjectBroken {
+        /// The cause
+        #[source]
+        cause: AxoprojectError,
+    },
+}
