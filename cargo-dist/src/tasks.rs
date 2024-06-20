@@ -50,6 +50,7 @@
 
 use std::collections::BTreeMap;
 
+use axoasset::AxoClient;
 use axoprocess::Cmd;
 use axoproject::platforms::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
@@ -68,6 +69,7 @@ use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
     ProductionMode, SystemDependencies,
 };
+use crate::net::ClientSettings;
 use crate::platform::PlatformSupport;
 use crate::sign::Signing;
 use crate::{
@@ -285,6 +287,10 @@ pub struct DistGraph {
     pub github_releases_submodule_path: Option<String>,
     /// Which phase to create a GitHub release at
     pub github_release: GithubReleasePhase,
+    /// HTTP client settings
+    pub client_settings: ClientSettings,
+    /// A reusable client for basic http fetches
+    pub axoclient: AxoClient,
 }
 
 /// Info about artifacts should be hosted
@@ -1067,7 +1073,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let systems = SortedMap::from_iter([(system_id.clone(), system)]);
 
+        let client_settings = ClientSettings::new();
+        let axoclient = crate::net::create_axoasset_client(&client_settings)?;
+
         let signer = Signing::new(
+            &axoclient,
             &tools.cargo.host_target,
             &dist_dir,
             ssldotcom_windows_sign.clone(),
@@ -1124,6 +1134,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 github_custom_runners,
                 github_custom_job_permissions,
                 install_updater,
+                client_settings,
+                axoclient,
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
