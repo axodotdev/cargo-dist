@@ -389,15 +389,43 @@ impl DistResult {
             release_type: String,
         }
 
-        let toml = axoasset::SourceFile::load_local("Cargo.toml")
-            .unwrap()
-            .deserialize_toml_edit()
-            .unwrap();
-        let metadata = toml
-            .get("workspace")
-            .and_then(|t| t.get("metadata"))
-            .and_then(|t| t.get("dist"))
-            .unwrap();
+        let manifest = if Utf8Path::new("dist-workspace.toml").exists() {
+            "dist-workspace.toml"
+        } else if Utf8Path::new("dist.toml").exists() {
+            "dist.toml"
+        } else if Utf8Path::new("Cargo.toml").exists() {
+            "Cargo.toml"
+        } else {
+            panic!(
+                "Unable to locate manifest! Checked: dist-workspace.toml, dist.toml, Cargo.toml"
+            );
+        };
+
+        let toml;
+        let metadata = match manifest {
+            "Cargo.toml" => {
+                toml = axoasset::SourceFile::load_local("Cargo.toml")
+                    .unwrap()
+                    .deserialize_toml_edit()
+                    .unwrap();
+                toml.get("workspace")
+                    .and_then(|t| t.get("metadata"))
+                    .and_then(|t| t.get("dist"))
+                    .unwrap()
+            }
+            "dist-workspace.toml" | "dist.toml" => {
+                toml = axoasset::SourceFile::load_local(manifest)
+                    .unwrap()
+                    .deserialize_toml_edit()
+                    .unwrap();
+                toml.get("dist").unwrap()
+            }
+            _ => {
+                panic!(
+                    "Unable to locate manifest! Checked: dist-workspace.toml, dist.toml, Cargo.toml"
+                );
+            }
+        };
 
         // If not defined, or if it's one string that equals CARGO_HOME,
         // we have a prefix-style layout and the receipt will specify
