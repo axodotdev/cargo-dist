@@ -7,7 +7,7 @@ use miette::miette;
 
 use super::command::CommandInfo;
 use super::errors::Result;
-use super::repo::{Repo, TestContext, TestContextLock, ToolsImpl};
+use super::repo::{App, Repo, TestContext, TestContextLock, ToolsImpl};
 pub use snapshot::*;
 pub use tools::*;
 
@@ -39,8 +39,10 @@ pub static AXOLOTLSAY: TestContextLock<Tools> = TestContextLock::new(
         repo_owner: "axodotdev",
         repo_name: "axolotlsay",
         commit_sha: "470fef1c2e1aecc35b1c8a704960d558906c58ff",
-        app_name: "axolotlsay",
-        bins: &["axolotlsay"],
+        apps: &[App {
+            name: "axolotlsay",
+            bins: &["axolotlsay"],
+        }],
     },
 );
 /// akaikatana-repack 0.2.0 has multiple bins!
@@ -50,8 +52,10 @@ pub static AKAIKATANA_REPACK: TestContextLock<Tools> = TestContextLock::new(
         repo_owner: "mistydemeo",
         repo_name: "akaikatana-repack",
         commit_sha: "9516f77ab81b7833e0d66de766ecf802e056f91f",
-        app_name: "akaikatana-repack",
-        bins: &["akextract", "akmetadata", "akrepack"],
+        apps: &[App {
+            name: "akaikatana-repack",
+            bins: &["akextract", "akmetadata", "akrepack"],
+        }],
     },
 );
 /// axoasset only has libraries!
@@ -61,8 +65,10 @@ pub static AXOASSET: TestContextLock<Tools> = TestContextLock::new(
         repo_owner: "axodotdev",
         repo_name: "axoasset",
         commit_sha: "5d6a531428fb645bbb1259fd401575c6c651be94",
-        app_name: "axoasset",
-        bins: &[],
+        apps: &[App {
+            name: "axoasset",
+            bins: &[],
+        }],
     },
 );
 /// generic workspace containing axolotlsay-js and axolotlsay (Rust)
@@ -72,14 +78,28 @@ pub static AXOLOTLSAY_HYBRID: TestContextLock<Tools> = TestContextLock::new(
         repo_owner: "axodotdev",
         repo_name: "axolotlsay-hybrid",
         commit_sha: "f17c02934af7a421db8eda96e8962ab773dcd3c1",
-        app_name: "axolotlsay-js",
-        bins: &["axolotlsay-js"],
+        apps: &[
+            App {
+                name: "axolotlsay-js",
+                bins: &["axolotlsay-js"],
+            },
+            App {
+                name: "axolotlsay",
+                bins: &["axolotlsay"],
+            },
+        ],
     },
 );
 pub struct DistResult {
     test_name: String,
-    // Only used in some cfgs
+    apps: Vec<AppResult>,
+}
+
+pub struct AppResult {
+    test_name: String,
     trust_hashes: bool,
+    app_name: String,
+    bins: Vec<String>,
     shell_installer_path: Option<Utf8PathBuf>,
     homebrew_installer_path: Option<Utf8PathBuf>,
     powershell_installer_path: Option<Utf8PathBuf>,
@@ -208,51 +228,32 @@ impl<'a> TestContext<'a, Tools> {
     fn load_dist_results(&self, test_name: &str, trust_hashes: bool) -> Result<DistResult> {
         // read/analyze installers
         eprintln!("loading results...");
-        let app_name = &self.repo.app_name;
-        let target_dir = Utf8PathBuf::from("target/distrib");
-        let ps_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.ps1"));
-        let sh_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.sh"));
-        let homebrew_installer = Self::load_file_with_suffix(target_dir.clone(), ".rb");
-        let npm_installer =
-            Utf8PathBuf::from(format!("{target_dir}/{app_name}-npm-package.tar.gz"));
+        let mut app_results = vec![];
+        for app in self.repo.apps {
+            let app_name = app.name.to_owned();
+            let target_dir = Utf8PathBuf::from("target/distrib");
+            let ps_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.ps1"));
+            let sh_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.sh"));
+            let brew_app_name = self.options.homebrew_package_name(&app_name);
+            let homebrew_installer = Utf8PathBuf::from(format!("{target_dir}/{brew_app_name}.rb"));
+            let npm_installer =
+                Utf8PathBuf::from(format!("{target_dir}/{app_name}-npm-package.tar.gz"));
+            app_results.push(AppResult {
+                test_name: test_name.to_owned(),
+                trust_hashes,
+                app_name,
+                bins: app.bins.iter().map(|s| s.to_string()).collect(),
+                shell_installer_path: sh_installer.exists().then_some(sh_installer),
+                powershell_installer_path: ps_installer.exists().then_some(ps_installer),
+                homebrew_installer_path: homebrew_installer.exists().then_some(homebrew_installer),
+                npm_installer_package_path: npm_installer.exists().then_some(npm_installer),
+            })
+        }
 
         Ok(DistResult {
             test_name: test_name.to_owned(),
-            trust_hashes,
-            shell_installer_path: sh_installer.exists().then_some(sh_installer),
-            powershell_installer_path: ps_installer.exists().then_some(ps_installer),
-            homebrew_installer_path: homebrew_installer,
-            npm_installer_package_path: npm_installer.exists().then_some(npm_installer),
+            apps: app_results,
         })
-    }
-
-    fn load_file_with_suffix(dirname: Utf8PathBuf, suffix: &str) -> Option<Utf8PathBuf> {
-        let files = Self::load_files_with_suffix(dirname, suffix);
-        let number_found = files.len();
-        assert!(
-            number_found <= 1,
-            "found {} files with the suffix {}, expected 1 or 0",
-            number_found,
-            suffix
-        );
-        files.first().cloned()
-    }
-
-    fn load_files_with_suffix(dirname: Utf8PathBuf, suffix: &str) -> Vec<Utf8PathBuf> {
-        // Collect all dist-manifests and fetch the appropriate Mac ones
-        let mut files = vec![];
-        for file in dirname
-            .read_dir()
-            .expect("loading target dir failed, something has gone very wrong")
-        {
-            let path = file.unwrap().path();
-            if let Some(filename) = path.file_name() {
-                if filename.to_string_lossy().ends_with(suffix) {
-                    files.push(Utf8PathBuf::from_path_buf(path).unwrap())
-                }
-            }
-        }
-        files
     }
 
     pub fn patch_cargo_toml(&self, new_toml: String) -> Result<()> {
@@ -330,34 +331,39 @@ impl DistResult {
     }
 
     pub fn linttests(&self, ctx: &TestContext<Tools>) -> Result<()> {
-        // If we have shellcheck, check our shell script
-        self.shellcheck(ctx)?;
+        for app in &self.apps {
+            // If we have shellcheck, check our shell script
+            app.shellcheck(ctx)?;
 
-        // If we have PsScriptAnalyzer, check our powershell script
-        self.psanalyzer(ctx)?;
+            // If we have PsScriptAnalyzer, check our powershell script
+            app.psanalyzer(ctx)?;
+        }
         Ok(())
     }
 
     pub fn runtests(&self, ctx: &TestContext<Tools>, expected_bin_dir: &str) -> Result<()> {
-        // If we can, run the shell script in a temp HOME
-        self.runtest_shell_installer(ctx, expected_bin_dir)?;
+        for app in &self.apps {
+            // If we can, run the shell script in a temp HOME
+            app.runtest_shell_installer(ctx, expected_bin_dir)?;
 
-        // If we can, run the powershell script in a temp HOME
-        self.runtest_powershell_installer(ctx, expected_bin_dir)?;
+            // If we can, run the powershell script in a temp HOME
+            app.runtest_powershell_installer(ctx, expected_bin_dir)?;
 
-        // If we can, run the homebrew script in a temp HOME
-        self.runtest_homebrew_installer(ctx)?;
+            // If we can, run the homebrew script in a temp HOME
+            app.runtest_homebrew_installer(ctx)?;
 
-        // If we can, run the npm package
-        self.runtest_npm_installer(ctx)?;
-
+            // If we can, run the npm package
+            app.runtest_npm_installer(ctx)?;
+        }
         Ok(())
     }
+}
 
+impl AppResult {
     #[cfg(any(target_family = "unix", target_family = "windows"))]
     fn check_install_receipt(
         &self,
-        ctx: &TestContext<Tools>,
+        _ctx: &TestContext<Tools>,
         bin_dir: &Utf8Path,
         receipt_file: &Utf8Path,
         bin_ext: &str,
@@ -442,11 +448,10 @@ impl DistResult {
         assert!(receipt_file.exists());
         let receipt_src = SourceFile::load_local(receipt_file).expect("couldn't load receipt file");
         let receipt: InstallReceipt = receipt_src.deserialize_json().unwrap();
-        assert_eq!(receipt.source.app_name, ctx.repo.app_name);
+        assert_eq!(receipt.source.app_name, self.app_name);
         assert_eq!(
             receipt.binaries,
-            ctx.repo
-                .bins
+            self.bins
                 .iter()
                 .map(|s| format!("{s}{bin_ext}"))
                 .collect::<Vec<_>>()

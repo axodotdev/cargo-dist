@@ -2,7 +2,7 @@
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
-================ formula.rb ================
+================ axolotl-brew.rb ================
 class AxolotlBrew < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
   homepage "https://github.com/axodotdev/axolotlsay"

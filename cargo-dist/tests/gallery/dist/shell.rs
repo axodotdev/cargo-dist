@@ -1,6 +1,6 @@
 use super::*;
 
-impl DistResult {
+impl AppResult {
     // Runs the installer script in a temp dir, attempting to set env vars to contain it to that dir
     #[allow(unused_variables)]
     pub fn runtest_shell_installer(
@@ -14,7 +14,7 @@ impl DistResult {
             .map(|s| s == "shell" || s == "all")
             .unwrap_or(false)
         {
-            let app_name = ctx.repo.app_name;
+            let app_name = &self.app_name;
             let test_name = &self.test_name;
 
             // only do this if the script exists
@@ -77,12 +77,12 @@ impl DistResult {
             assert!(env_script.exists(), "env script wasn't created");
 
             // Check that all the binaries work
-            for bin_name in ctx.repo.bins {
-                let bin_path = bin_dir.join(bin_name);
+            for bin_name in ctx.options.bins_with_aliases(&self.app_name, &self.bins) {
+                let bin_path = bin_dir.join(&bin_name);
                 assert!(bin_path.exists(), "bin wasn't created");
 
-                let bin =
-                    CommandInfo::new(bin_name, Some(bin_path.as_str())).expect("failed to run bin");
+                let bin = CommandInfo::new(&bin_name, Some(bin_path.as_str()))
+                    .expect("failed to run bin");
                 assert!(bin.version().is_some(), "failed to get app version");
                 eprintln!("installer.sh worked!");
 
