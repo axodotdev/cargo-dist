@@ -46,8 +46,8 @@ impl<'a> DistGraphBuilder<'a> {
                 builds.push(BuildStep::Generic(GenericBuildStep {
                     target_triple: target.clone(),
                     expected_binaries,
-                    working_dir: package.manifest_path.clone(),
-                    out_dir: package.manifest_path.clone(),
+                    working_dir: package.package_root.clone(),
+                    out_dir: package.package_root.clone(),
                     build_command: package
                         .build_command
                         .clone()

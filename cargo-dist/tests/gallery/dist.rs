@@ -65,6 +65,17 @@ pub static AXOASSET: TestContextLock<Tools> = TestContextLock::new(
         bins: &[],
     },
 );
+/// generic workspace containing axolotlsay-js and axolotlsay (Rust)
+pub static AXOLOTLSAY_HYBRID: TestContextLock<Tools> = TestContextLock::new(
+    &TOOLS,
+    &Repo {
+        repo_owner: "axodotdev",
+        repo_name: "axolotlsay-hybrid",
+        commit_sha: "d00a7e3e75a2b7e24e756dca35b3cd693f3efc49",
+        app_name: "axolotlsay-js",
+        bins: &["axolotlsay-js"],
+    },
+);
 pub struct DistResult {
     test_name: String,
     // Only used in some cfgs
@@ -273,6 +284,30 @@ impl<'a> TestContext<'a, Tools> {
 
         Ok(())
     }
+
+    pub fn patch_dist_workspace(&self, new_toml: String) -> Result<()> {
+        eprintln!("loading dist-workspace.toml...");
+        let toml_src = axoasset::SourceFile::load_local("dist-workspace.toml")?;
+        let mut toml = toml_src.deserialize_toml_edit()?;
+        eprintln!("editing dist-workspace.toml...");
+        let new_table_src = axoasset::SourceFile::new("new-dist-workspace.toml", new_toml);
+        let new_table = new_table_src.deserialize_toml_edit()?;
+
+        if let Some(new_meta) = new_table.get("dist") {
+            let old_meta = toml["dist"].or_insert(toml_edit::table());
+            eprintln!("{new_table}");
+            for (key, new) in new_meta.as_table().unwrap() {
+                let old = &mut old_meta[key];
+                *old = new.clone();
+            }
+        }
+
+        let toml_out = toml.to_string();
+        eprintln!("writing dist-workspace.toml...");
+        axoasset::LocalAsset::write_new(&toml_out, "dist-workspace.toml")?;
+
+        Ok(())
+    }
 }
 
 impl DistResult {
@@ -354,15 +389,43 @@ impl DistResult {
             release_type: String,
         }
 
-        let toml = axoasset::SourceFile::load_local("Cargo.toml")
-            .unwrap()
-            .deserialize_toml_edit()
-            .unwrap();
-        let metadata = toml
-            .get("workspace")
-            .and_then(|t| t.get("metadata"))
-            .and_then(|t| t.get("dist"))
-            .unwrap();
+        let manifest = if Utf8Path::new("dist-workspace.toml").exists() {
+            "dist-workspace.toml"
+        } else if Utf8Path::new("dist.toml").exists() {
+            "dist.toml"
+        } else if Utf8Path::new("Cargo.toml").exists() {
+            "Cargo.toml"
+        } else {
+            panic!(
+                "Unable to locate manifest! Checked: dist-workspace.toml, dist.toml, Cargo.toml"
+            );
+        };
+
+        let toml;
+        let metadata = match manifest {
+            "Cargo.toml" => {
+                toml = axoasset::SourceFile::load_local("Cargo.toml")
+                    .unwrap()
+                    .deserialize_toml_edit()
+                    .unwrap();
+                toml.get("workspace")
+                    .and_then(|t| t.get("metadata"))
+                    .and_then(|t| t.get("dist"))
+                    .unwrap()
+            }
+            "dist-workspace.toml" | "dist.toml" => {
+                toml = axoasset::SourceFile::load_local(manifest)
+                    .unwrap()
+                    .deserialize_toml_edit()
+                    .unwrap();
+                toml.get("dist").unwrap()
+            }
+            _ => {
+                panic!(
+                    "Unable to locate manifest! Checked: dist-workspace.toml, dist.toml, Cargo.toml"
+                );
+            }
+        };
 
         // If not defined, or if it's one string that equals CARGO_HOME,
         // we have a prefix-style layout and the receipt will specify

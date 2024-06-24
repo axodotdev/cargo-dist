@@ -105,13 +105,20 @@ impl CommandInfo {
     }
 }
 
-/// Parse out the version from `--version` assuming the standard `app-name 0.1.0` format
+/// Parse out the version from `--version` assuming the standard `app-name 0.1.0` format or a base `0.1.0` format
 fn parse_version(output: std::process::Output) -> Option<String> {
     let version_bytes = output.stdout;
     let version_full = String::from_utf8(version_bytes).ok()?;
     let version_line = version_full.lines().next()?;
-    let version_suffix = version_line.split_once(' ')?.1.trim().to_owned();
-    Some(version_suffix)
+    // app-name 0.1.0
+    let version_number = if version_line.contains(' ') {
+        version_line.split_once(' ')?.1.trim().to_owned()
+    // 0.1.0
+    } else {
+        version_line.trim().to_owned()
+    };
+
+    Some(version_number)
 }
 
 /// Pretty print a command invocation
