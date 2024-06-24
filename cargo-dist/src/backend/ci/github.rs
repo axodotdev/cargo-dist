@@ -177,29 +177,30 @@ impl GithubCiInfo {
 
         let mut release_args = vec![];
         let action;
+        // Always need to use the tag flag
+        release_args.push("\"${{ needs.plan.outputs.tag }}\"");
+
+        // If using remote repos, specify the repo
         if github_releases_repo.is_some() {
             release_args.push("--repo");
             release_args.push("\"$REPO\"")
         }
-        if dist.github_releases_submodule_path.is_some() {
-            release_args.push("--target");
-            release_args.push("\"$EXTERNAL_REPO_COMMIT\"");
-        }
+        release_args.push("--target");
+        release_args.push("\"$RELEASE_COMMIT\"");
+        release_args.push("$PRERELEASE_FLAG");
         if dist.create_release {
             action = "create";
             release_args.push("--title");
             release_args.push("\"$ANNOUNCEMENT_TITLE\"");
             release_args.push("--notes-file");
             release_args.push("\"$RUNNER_TEMP/notes.txt\"");
+            // When creating release, upload artifacts transactionally
+            release_args.push("artifacts/*");
         } else {
             action = "edit";
             release_args.push("--draft=false");
         }
-        release_args.push("$PRERELEASE_FLAG");
-        let release_command = format!(
-            "gh release {action} \"${{{{ needs.plan.outputs.tag }}}}\" {}",
-            release_args.join(" ")
-        );
+        let release_command = format!("gh release {action} {}", release_args.join(" "));
 
         GithubCiInfo {
             tag_namespace,
