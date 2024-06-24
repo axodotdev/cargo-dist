@@ -259,6 +259,7 @@ fn get_new_dist_metadata(
             create_release: None,
             github_releases_repo: None,
             github_releases_submodule_path: None,
+            github_release: None,
             pr_run_mode: None,
             allow_dirty: None,
             ssldotcom_windows_sign: None,
@@ -855,6 +856,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         install_updater,
         display,
         display_name,
+        github_release,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -1016,6 +1018,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "create-release",
         "# Whether cargo-dist should create a Github Release or use an existing draft\n",
         *create_release,
+    );
+
+    apply_optional_value(
+        table,
+        "github-release",
+        "# Which phase cargo-dist should use to create the GitHub release\n",
+        github_release.as_ref().map(|a| a.to_string()),
     );
 
     apply_optional_value(

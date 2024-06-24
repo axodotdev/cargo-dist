@@ -64,7 +64,10 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
+use crate::config::{
+    DependencyKind, DirtyMode, ExtraArtifact, GithubReleasePhase, ProductionMode,
+    SystemDependencies,
+};
 use crate::platform::PlatformSupport;
 use crate::sign::Signing;
 use crate::{
@@ -276,6 +279,8 @@ pub struct DistGraph {
     pub github_releases_repo: Option<config::GithubRepoPair>,
     /// Read the commit to be tagged from the submodule at this path
     pub github_releases_submodule_path: Option<String>,
+    /// Which phase to create a GitHub release at
+    pub github_release: GithubReleasePhase,
 }
 
 /// Info about artifacts should be hosted
@@ -837,6 +842,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             create_release,
             github_releases_repo,
             github_releases_submodule_path,
+            github_release,
             allow_dirty,
             msvc_crt_static,
             extra_artifacts,
@@ -901,6 +907,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let tag_namespace = tag_namespace.clone();
         let github_releases_repo = github_releases_repo.clone();
         let github_releases_submodule_path = github_releases_submodule_path.clone();
+        let github_release = github_release.unwrap_or_default();
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -1073,6 +1080,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 create_release,
                 github_releases_repo,
                 github_releases_submodule_path,
+                github_release,
                 ssldotcom_windows_sign,
                 github_attestations,
                 desired_cargo_dist_version,
@@ -1201,6 +1209,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             targets: _,
             msvc_crt_static: _,
             github_attestations: _,
+            github_release: _,
         } = self.package_metadata(pkg_idx);
 
         let version = package_info.version.as_ref().unwrap().semver().clone();

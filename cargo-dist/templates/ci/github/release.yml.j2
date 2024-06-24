@@ -416,7 +416,7 @@ jobs:
     {{%- if "axodotdev" in hosting_providers %}}
       # Upload files to Axo Releases and create the Releases
     {{%- endif %}}
-    {{%- if "github" in hosting_providers %}}
+    {{%- if "github" in hosting_providers and release_phase == "announce" %}}
       # This is a harmless no-op for GitHub Releases, hosting for that happens in "announce"
     {{%- endif %}}
       - id: host
@@ -432,6 +432,9 @@ jobs:
           # Overwrite the previous copy
           name: artifacts-dist-manifest
           path: dist-manifest.json
+    {{%- if "github" in hosting_providers and release_phase == "host" %}}
+{{% include 'ci/github/partials/publish_github.yml' %}}
+    {{%- endif %}}
 
 
 {{%- for job in host_jobs %}}
@@ -488,7 +491,7 @@ jobs:
 {{%- if "axodotdev" in hosting_providers %}}
   # Create an Announcement for all the Axo Releases, updating the "latest" release
 {{%- endif %}}
-{{%- if "github" in hosting_providers %}}
+{{%- if "github" in hosting_providers and release_phase == "announce" %}}
   # Create a GitHub Release while uploading all files to it
 {{%- endif %}}
   announce:
@@ -546,43 +549,8 @@ jobs:
         run: |
           cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
     {{%- endif %}}
-    {{%- if "github" in hosting_providers %}}
-      - name: "Download GitHub Artifacts"
-        uses: actions/download-artifact@v4
-        with:
-          pattern: artifacts-*
-          path: artifacts
-          merge-multiple: true
-      - name: Cleanup
-        run: |
-          # Remove the granular manifests
-          rm -f artifacts/*-dist-manifest.json
-      - name: Create GitHub Release
-        env:
-          PRERELEASE_FLAG: "${{ fromJson(needs.host.outputs.val).announcement_is_prerelease && '--prerelease' || '' }}"
-          {{%- if create_release %}}
-          ANNOUNCEMENT_TITLE: "${{ fromJson(needs.host.outputs.val).announcement_title }}"
-          ANNOUNCEMENT_BODY: "${{ fromJson(needs.host.outputs.val).announcement_github_body }}"
-          {{%- endif %}}
-          {{%- if github_releases_repo %}}
-          REPO: "{{{ github_releases_repo.owner | safe }}}/{{{ github_releases_repo.repo | safe }}}"
-          RELEASE_COMMIT: "${{ fromJson(needs.host.outputs.val).ci.github.external_repo_commit }}"
-          # We need to ensure `gh` uses the token that can auth
-          # to the external repo instead of the runner token.
-          GH_TOKEN: ${{ secrets.GH_RELEASES_TOKEN }}
-          {{%- else %}}
-          RELEASE_COMMIT: "${{ github.sha }}"
-          {{%- endif %}}
-        run: |
-        {{%- if create_release %}}
-          # Write and read notes from a file to avoid quoting breaking things
-          echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
-        {{%- else %}}
-          # If we're editing a release in place, we need to upload things ahead of time
-          gh release upload "${{ needs.plan.outputs.tag }}" artifacts/*
-        {{%- endif %}}
-
-          {{{ release_command|safe }}}
+    {{%- if "github" in hosting_providers and release_phase == "announce" %}}
+{{% include 'ci/github/partials/publish_github.yml' %}}
     {{%- endif %}}
 
 {{%- for job in post_announce_jobs %}}

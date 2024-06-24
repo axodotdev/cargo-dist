@@ -532,6 +532,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+github-create-release-phase = "host"
 "#
         ))?;
 

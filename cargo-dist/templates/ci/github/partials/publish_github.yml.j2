@@ -1,0 +1,37 @@
+      # Create a GitHub Release while uploading all files to it
+      - name: "Download GitHub Artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: artifacts
+          merge-multiple: true
+      - name: Cleanup
+        run: |
+          # Remove the granular manifests
+          rm -f artifacts/*-dist-manifest.json
+      - name: Create GitHub Release
+        env: {{%- set manifest = "needs.host.outputs.val" if release_phase == "announce" else "steps.host.outputs.manifest" %}}
+          PRERELEASE_FLAG: "${{ fromJson({{{ manifest | safe }}}).announcement_is_prerelease && '--prerelease' || '' }}"
+          {{%- if create_release %}}
+          ANNOUNCEMENT_TITLE: "${{ fromJson({{{ manifest | safe }}}).announcement_title }}"
+          ANNOUNCEMENT_BODY: "${{ fromJson({{{ manifest | safe }}}).announcement_github_body }}"
+          {{%- endif %}}
+          {{%- if github_releases_repo %}}
+          REPO: "{{{ github_releases_repo.owner | safe }}}/{{{ github_releases_repo.repo | safe }}}"
+          RELEASE_COMMIT: "${{ fromJson({{{ manifest | safe }}}).ci.github.external_repo_commit }}"
+          # We need to ensure `gh` uses the token that can auth
+          # to the external repo instead of the runner token.
+          GH_TOKEN: ${{ secrets.GH_RELEASES_TOKEN }}
+          {{%- else %}}
+          RELEASE_COMMIT: "${{ github.sha }}"
+          {{%- endif %}}
+        run: |
+        {{%- if create_release %}}
+          # Write and read notes from a file to avoid quoting breaking things
+          echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
+        {{%- else %}}
+          # If we're editing a release in place, we need to upload things ahead of time
+          gh release upload "${{ needs.plan.outputs.tag }}" artifacts/*
+        {{%- endif %}}
+
+          {{{ release_command|safe }}}

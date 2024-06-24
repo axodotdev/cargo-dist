@@ -12,7 +12,8 @@ use tracing::warn;
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
     config::{
-        DependencyKind, HostingStyle, JinjaGithubRepoPair, ProductionMode, SystemDependencies,
+        DependencyKind, GithubReleasePhase, HostingStyle, JinjaGithubRepoPair, ProductionMode,
+        SystemDependencies,
     },
     errors::DistResult,
     DistGraph, SortedMap, SortedSet, TargetTriple,
@@ -74,6 +75,8 @@ pub struct GithubCiInfo {
     pub tag_namespace: Option<String>,
     /// `gh` command to run to create the release
     pub release_command: String,
+    /// Which phase to create the release at
+    pub release_phase: GithubReleasePhase,
 }
 
 impl GithubCiInfo {
@@ -115,6 +118,24 @@ impl GithubCiInfo {
             .expect("should not be possible to have the Github CI backend without hosting!?")
             .hosts
             .clone();
+
+        let release_phase = if dist.github_release == GithubReleasePhase::Auto {
+            // We typically prefer to release in announce.
+            // If Axo is in use, we also want the release to come late
+            // because the release body will contain links to Axo URLs
+            // that won't become live until the announce phase.
+            if hosting_providers.contains(&HostingStyle::Axodotdev) {
+                GithubReleasePhase::Announce
+            // Otherwise, if Axo isn't present, we lean on host for
+            // safety reasons - because npm/Homebrew contain links to
+            // URLs that won't exist until the GitHub release happens.
+            } else {
+                GithubReleasePhase::Host
+            }
+        // If the user chose a non-auto option, respect that.
+        } else {
+            dist.github_release
+        };
 
         // Build up the task matrix for building Artifacts
         let mut tasks = vec![];
@@ -228,6 +249,7 @@ impl GithubCiInfo {
             github_attestations,
             hosting_providers,
             release_command,
+            release_phase,
         }
     }
 

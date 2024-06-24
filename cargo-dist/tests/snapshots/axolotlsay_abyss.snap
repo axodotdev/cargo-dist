@@ -3614,6 +3614,7 @@ jobs:
       - name: Announce Axo Releases
         run: |
           cargo dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
+      # Create a GitHub Release while uploading all files to it
       - name: "Download GitHub Artifacts"
         uses: actions/download-artifact@v4
         with:

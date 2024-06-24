@@ -3519,7 +3519,6 @@ jobs:
           pattern: artifacts-*
           path: target/distrib/
           merge-multiple: true
-      # This is a harmless no-op for GitHub Releases, hosting for that happens in "announce"
       - id: host
         shell: bash
         run: |
@@ -3533,6 +3532,26 @@ jobs:
           # Overwrite the previous copy
           name: artifacts-dist-manifest
           path: dist-manifest.json
+      # Create a GitHub Release while uploading all files to it
+      - name: "Download GitHub Artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: artifacts
+          merge-multiple: true
+      - name: Cleanup
+        run: |
+          # Remove the granular manifests
+          rm -f artifacts/*-dist-manifest.json
+      - name: Create GitHub Release
+        env:
+          PRERELEASE_FLAG: "${{ fromJson(steps.host.outputs.manifest).announcement_is_prerelease && '--prerelease' || '' }}"
+          RELEASE_COMMIT: "${{ github.sha }}"
+        run: |
+          # If we're editing a release in place, we need to upload things ahead of time
+          gh release upload "${{ needs.plan.outputs.tag }}" artifacts/*
+
+          gh release edit "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --draft=false
 
   publish-homebrew-formula:
     needs:
@@ -3574,7 +3593,6 @@ jobs:
           done
           git push
 
-  # Create a GitHub Release while uploading all files to it
   announce:
     needs:
       - plan
@@ -3591,22 +3609,3 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: "Download GitHub Artifacts"
-        uses: actions/download-artifact@v4
-        with:
-          pattern: artifacts-*
-          path: artifacts
-          merge-multiple: true
-      - name: Cleanup
-        run: |
-          # Remove the granular manifests
-          rm -f artifacts/*-dist-manifest.json
-      - name: Create GitHub Release
-        env:
-          PRERELEASE_FLAG: "${{ fromJson(needs.host.outputs.val).announcement_is_prerelease && '--prerelease' || '' }}"
-          RELEASE_COMMIT: "${{ github.sha }}"
-        run: |
-          # If we're editing a release in place, we need to upload things ahead of time
-          gh release upload "${{ needs.plan.outputs.tag }}" artifacts/*
-
-          gh release edit "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --draft=false
