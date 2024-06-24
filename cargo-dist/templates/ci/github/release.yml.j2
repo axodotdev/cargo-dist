@@ -445,11 +445,6 @@ jobs:
 {{% include 'ci/github/partials/publish_homebrew.yml' %}}
 {{%- endif %}}
 
-{{%- if 'npm' in publish_jobs %}}
-
-{{% include 'ci/github/partials/publish_npm.yml' %}}
-{{%- endif %}}
-
 {{%- for job in user_publish_jobs %}}
 
   custom-{{{ job|safe }}}:
@@ -485,9 +480,6 @@ jobs:
       - host
     {{%- if 'homebrew' in publish_jobs and tap %}}
       - publish-homebrew-formula
-    {{%- endif %}}
-    {{%- if 'npm' in publish_jobs %}}
-      - publish-npm
     {{%- endif %}}
     {{%- for job in user_publish_jobs %}}
       - custom-{{{ job|safe }}}
@@ -570,12 +562,20 @@ jobs:
         {{%- endif %}}
     {{%- endif %}}
 
+{{%- if 'npm' in publish_jobs %}}
+
+{{% include 'ci/github/partials/publish_npm.yml' %}}
+{{%- endif %}}
+
 {{%- for job in post_announce_jobs %}}
 
   custom-{{{ job|safe }}}:
     needs:
       - plan
       - announce
+    {{%- if 'npm' in publish_jobs %}}
+      - publish-npm
+    {{%- endif %}}
     uses: ./.github/workflows/{{{ job|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}

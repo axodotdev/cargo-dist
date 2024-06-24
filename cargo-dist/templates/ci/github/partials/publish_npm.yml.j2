@@ -2,6 +2,7 @@
     needs:
       - plan
       - host
+      - announce
     {{%- for job in host_jobs %}}
       - custom-{{{ job|safe }}}
     {{%- endfor %}}
