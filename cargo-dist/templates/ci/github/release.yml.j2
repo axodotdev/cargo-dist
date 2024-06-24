@@ -126,6 +126,11 @@ jobs:
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
         run: {{{ install_dist_sh }}}
+      - name: Cache cargo-dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-dist-cache
+          path: ~/.cargo/bin/cargo-dist
       # sure would be cool if github gave us proper conditionals...
       # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
       # functionality based on whether this is a pull_request, and whether it's from a fork.
@@ -296,9 +301,12 @@ jobs:
       - name: Install Rust
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
-      - name: Install cargo-dist
-        shell: bash
-        run: {{{ global_task.install_dist }}}
+      - name: Install cached cargo-dist
+        uses: actions/download-artifact@v4
+        with:
+          name: cargo-dist-cache
+          path: ~/.cargo/bin/
+      - run: chmod +x ~/.cargo/bin/cargo-dist
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
@@ -392,8 +400,12 @@ jobs:
       - name: Install Rust
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
-      - name: Install cargo-dist
-        run: {{{ global_task.install_dist }}}
+      - name: Install cached cargo-dist
+        uses: actions/download-artifact@v4
+        with:
+          name: cargo-dist-cache
+          path: ~/.cargo/bin/
+      - run: chmod +x ~/.cargo/bin/cargo-dist
       # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
         uses: actions/download-artifact@v4
@@ -518,8 +530,12 @@ jobs:
       - name: Install Rust
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
-      - name: Install cargo-dist
-        run: {{{ global_task.install_dist }}}
+      - name: Install cached cargo-dist
+        uses: actions/download-artifact@v4
+        with:
+          name: cargo-dist-cache
+          path: ~/.cargo/bin/
+      - run: chmod +x ~/.cargo/bin/cargo-dist
       - name: Fetch Axo Artifacts
         uses: actions/download-artifact@v4
         with:
