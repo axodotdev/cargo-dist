@@ -37,7 +37,7 @@ axoupdater = { version = "0.6.6", optional = true }
 # Features used by the cli and library
 axotag = "0.2.0"
 cargo-dist-schema = { version = "=0.16.0", path = "../cargo-dist-schema" }
-axoasset = { version = "0.10.1", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
+axoasset = { version = "0.10.1", git = "https://github.com/axodotdev/axoasset", branch = "rework", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
 axoprocess = { version = "0.2.0" }
 axoproject = { version = "0.7.1", default-features = false, features = ["cargo-projects", "generic-projects"], path = "../axoproject" }
 gazenot = { version = "0.3.2" }

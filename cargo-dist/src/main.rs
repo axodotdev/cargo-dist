@@ -18,6 +18,7 @@ use cli::{
 };
 use console::Term;
 use miette::{miette, IntoDiagnostic};
+use net::ClientSettings;
 
 use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs};
 
@@ -586,6 +587,12 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
         axoupdater::UpdateRequest::Latest
     };
     updater.configure_version_specifier(specifier);
+
+    // TODO: pass cli flags..?
+    let ClientSettings {
+        prefer_native_tls: _,
+    } = ClientSettings::new(false);
+    // TODO: add API to axoupdater
 
     // This uses debug assertions because we want to avoid this
     // being compiled into the release build; this is purely for

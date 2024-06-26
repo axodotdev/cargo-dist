@@ -50,6 +50,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
+use axoasset::AxoClient;
 use axoprocess::Cmd;
 use axoproject::platforms::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
@@ -65,6 +66,7 @@ use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::config::{DependencyKind, DirtyMode, ExtraArtifact, ProductionMode, SystemDependencies};
+use crate::net::ClientSettings;
 use crate::platform::PlatformSupport;
 use crate::sign::Signing;
 use crate::{
@@ -276,6 +278,10 @@ pub struct DistGraph {
     pub github_releases_repo: Option<config::GithubRepoPair>,
     /// Read the commit to be tagged from the submodule at this path
     pub github_releases_submodule_path: Option<String>,
+    /// HTTP client settings
+    pub client_settings: ClientSettings,
+    /// A reusable client for basic http fetches
+    pub axoclient: AxoClient,
 }
 
 /// Info about artifacts should be hosted
@@ -1051,7 +1057,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let systems = SortedMap::from_iter([(system_id.clone(), system)]);
 
+        // TODO: set this properly
+        let client_settings = ClientSettings::new(false);
+        let axoclient = crate::net::create_axoasset_client(&client_settings)?;
+
         let signer = Signing::new(
+            &axoclient,
             &tools.cargo.host_target,
             &dist_dir,
             ssldotcom_windows_sign.clone(),
@@ -1108,6 +1119,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .clone()
                     .unwrap_or_default(),
                 install_updater: install_updater.unwrap_or_default(),
+                client_settings,
+                axoclient,
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),

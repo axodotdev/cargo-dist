@@ -1,6 +1,6 @@
 //! Codesigning using ssl.com's CodeSignTool
+use axoasset::AxoClient;
 use axoasset::LocalAsset;
-use axoasset::RemoteAsset;
 use axoprocess::Cmd;
 use camino::Utf8Path;
 use camino::Utf8PathBuf;
@@ -69,6 +69,7 @@ impl CodeSignToolEnv {
 
 impl CodeSignTool {
     pub fn new(
+        client: &AxoClient,
         host_target: &TargetTriple,
         dist_dir: &Utf8Path,
         ssldotcom_windows_sign: Option<ProductionMode>,
@@ -83,7 +84,7 @@ impl CodeSignTool {
         }
 
         if let Some(env) = CodeSignToolEnv::new()? {
-            let tool = fetch_code_sign_tool(dist_dir)?;
+            let tool = fetch_code_sign_tool(client, dist_dir)?;
             let tool_dir = tool
                 .parent()
                 .expect("CodeSignTool wasn't in a directory!?")
@@ -130,7 +131,7 @@ impl CodeSignTool {
 }
 
 /// Download code sign tool and prepare it for usage
-fn fetch_code_sign_tool(dist_dir: &Utf8Path) -> DistResult<Utf8PathBuf> {
+fn fetch_code_sign_tool(client: &AxoClient, dist_dir: &Utf8Path) -> DistResult<Utf8PathBuf> {
     // Download links from <https://www.ssl.com/guide/esigner-codesigntool-command-guide/>
     // On windows they provide a .bat script that we're supposed to use as the primary interface.
     const WINDOWS_CMD_NAME: &str = "CodeSignTool.bat";
@@ -154,8 +155,8 @@ fn fetch_code_sign_tool(dist_dir: &Utf8Path) -> DistResult<Utf8PathBuf> {
     // Download and unpack the zip
     LocalAsset::create_dir_all(fetch_dir)?;
     tokio::runtime::Handle::current()
-        .block_on(RemoteAsset::copy(WINDOWS_URL, zip_path.as_str()))?;
-    LocalAsset::unzip_all(zip_path, unzipped_dir)?;
+        .block_on(client.load_and_write_to_file(WINDOWS_URL, &zip_path))?;
+    LocalAsset::unzip_all(&zip_path, unzipped_dir)?;
 
     Cmd::new(&cmd, "check tool is runnable")
         .current_dir(cmd.parent().unwrap())

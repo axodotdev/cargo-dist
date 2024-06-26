@@ -7,6 +7,7 @@ use crate::{
     errors::DistResult,
     gather_work,
     manifest::save_manifest,
+    net::create_gazenot_client,
     DistGraph, DistGraphBuilder, HostingInfo,
 };
 use axoproject::WorkspaceInfo;
@@ -32,8 +33,11 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
         for host in &hosting.hosts {
             match host {
                 HostingStyle::Axodotdev => {
-                    let abyss: gazenot::Gazenot =
-                        gazenot::Gazenot::into_the_abyss(&hosting.source_host, &hosting.owner)?;
+                    let abyss = create_gazenot_client(
+                        &dist.client_settings,
+                        &hosting.source_host,
+                        &hosting.owner,
+                    )?;
                     if host_args.steps.contains(&HostStyle::Check) {
                         check_hosting(&dist, &manifest, &abyss)?;
                     }
@@ -127,8 +131,11 @@ impl<'a> DistGraphBuilder<'a> {
                         .map(|(name, _version)| name.clone());
 
                     let artifact_sets = if create_hosting {
-                        let abyss =
-                            gazenot::Gazenot::into_the_abyss(&hosting.source_host, &hosting.owner)?;
+                        let abyss = create_gazenot_client(
+                            &self.inner.client_settings,
+                            &hosting.source_host,
+                            &hosting.owner,
+                        )?;
                         tokio::runtime::Handle::current()
                             .block_on(abyss.create_artifact_sets(packages))?
                     } else {
