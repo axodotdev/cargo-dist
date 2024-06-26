@@ -362,6 +362,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_releases_submodule_path: Option<String>,
 
+    /// If enabled, the GitHub
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_release: Option<GithubReleasePhase>,
+
     /// \[unstable\] Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
@@ -450,6 +454,7 @@ impl DistMetadata {
             create_release: _,
             pr_run_mode: _,
             allow_dirty: _,
+            github_release: _,
             ssldotcom_windows_sign: _,
             github_attestations: _,
             msvc_crt_static: _,
@@ -537,6 +542,7 @@ impl DistMetadata {
             create_release,
             pr_run_mode,
             allow_dirty,
+            github_release,
             ssldotcom_windows_sign,
             github_attestations,
             msvc_crt_static,
@@ -638,6 +644,9 @@ impl DistMetadata {
         }
         if tag_namespace.is_some() {
             warn!("package.metadata.dist.tag-namespace is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_release.is_some() {
+            warn!("package.metadata.dist.github-create-release-phase is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
@@ -840,6 +849,30 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Npm => "npm",
             InstallerStyle::Homebrew => "homebrew",
             InstallerStyle::Msi => "msi",
+        };
+        string.fmt(f)
+    }
+}
+
+/// When to create GitHub releases
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum GithubReleasePhase {
+    /// Release position depends on whether axo releases is enabled
+    #[default]
+    Auto,
+    /// Create release during the "host" stage, before npm and Homebrew
+    Host,
+    /// Create release during the "announce" stage, after all publish jobs
+    Announce,
+}
+
+impl std::fmt::Display for GithubReleasePhase {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            GithubReleasePhase::Auto => "auto",
+            GithubReleasePhase::Host => "host",
+            GithubReleasePhase::Announce => "announce",
         };
         string.fmt(f)
     }

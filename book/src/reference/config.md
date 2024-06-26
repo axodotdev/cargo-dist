@@ -466,6 +466,29 @@ Allows specifying which runner to use for a target. The keys within this table a
 In addition to defining runners for a target, it's also possible to specify a runner for the global, non-target-specific tasks using the `global` key. This runner will be used for tasks like `plan`, `host`, generating installers, and so on.
 
 
+### github-release
+
+> since 0.17.0
+
+Example: `github-release = "announce"`
+
+Possible values:
+
+* `auto`: create the GitHub Release whenever is best
+* `host`: create the GitHub Release during the host step
+* `announce`: create the GitHub Release during the announce step
+
+Controls which stage of the release process the GitHub Release will be created in.
+
+By default, the GitHub Release is created during the "host" phase, as it hosts the files some installers will try to download. If axo Releases is also enabled, it will be moved back to the "announce" phase, as the files will be primarily hosted on axo Releases, and GitHub Releases will be treated like a backup and announcement of the release.
+
+**Most users should be well-served by the default setting, and changing it is likely to introduce undesirable publishing race conditions.** The only reason you might want to override this setting is if you're using [`dispatch-releases = true`](#dispatch-releases) and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist). In this case setting github-release = "announce" will accomplish that, but see below for what race conditions this might introduce.
+
+If using only GitHub Releases, and you force it to run during "announce", there will be a very brief window (~30 seconds) during which generated Homebrew and npm installers are live and referencing URLs that will only exist when the GitHub Release is created, causing the packages to error out when installed.
+
+However, if you're publishing only packages that don't reference hosted artifacts (such as Cargo crates, or any custom publish job that fully embeds the binaries), then there is no race, and you could consider changing the default. That said, it would be a looming footgun if you ever introduce new publish jobs and forget about this.
+
+
 ### github-releases-repo
 
 > since 0.14.0
