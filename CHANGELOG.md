@@ -21,7 +21,7 @@ When we first created cargo-dist, we didn't support publishing packages, so we p
 
 In fact, because the GitHub Release contains instructions to install from npm/homebrew, there was essentially a circular dependency between them, with no way to publish all of them in a non-racey way. At the time we opted for preserving existing behaviour of GitHub Last, resulting in a roughly 30 second period where npm/homebrew packages would be published but would error out on install because the artifacts aren't yet uploaded.
 
-We were of course frustrated with this and [had a lot of words to say about URLs, resulting in us making axo releases, which solved the problem properly](https://blog.axo.dev/2024/01/axo-releases-urls).
+We were of course frustrated with this and [had a lot of words to say about URLs, resulting in us making axo Releases, which solved the problem properly](https://blog.axo.dev/2024/01/axo-releases-urls).
 
 But pure GitHub users aren't going away, and this conflict still exists for them. Since then it's become increasingly clear that we made the wrong call here, and in fact the npm/homebrew package integrity is *way* more important than someone maybe getting an email about a GitHub Release referencing packages that don't yet exist. As such we've reversed the original decision and moved GitHub Releases to the host step.
 
