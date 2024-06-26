@@ -1,6 +1,35 @@
 # Unreleased
 
-Nothing Yet!
+This release is mostly several fixes to how we create GitHub Releases, as well as some internal improvements for future feature work.
+
+
+## GitHub Release Ordering
+
+We now prefer creating your [GitHub Release in the host step](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release), ensuring published npm and Homebrew packages never refer to URLs that don't yet exist.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release)
+* @mistydemeo [fix: prefer creating github releases in host step](https://github.com/axodotdev/cargo-dist/pull/1171)
+
+
+## GitHub Release Reliability
+
+GitHub Releases should once again be created transactionally, preventing a release from being created without its artifacts being uploaded. This fixes a regression from the previous release.
+
+When using the `dispatch-releases = true` setting, we now more strictly specify the commit that should be tagged, preventing any race conditions from changing it. This race potentially always existed, but only seemed to be observable if you retried a failed release.
+
+* @gankra + @mistydemeo [fix: make github releases more robust](https://github.com/axodotdev/cargo-dist/pull/1164)
+
+
+## Other Fixes
+
+* @gankra [feat: experimental generic workspaces](https://github.com/axodotdev/cargo-dist/pull/1116)
+* @mistydemeo [chore: move axoproject in tree](https://github.com/axodotdev/cargo-dist/pull/1135)
+* @mistydemeo [fix: clamp workspace search to current repo](https://github.com/axodotdev/cargo-dist/pull/1158)
+* @mistydemeo [fix: pass correct path to generic builds](https://github.com/axodotdev/cargo-dist/pull/1157)
+* @mistydemeo [fix: add generic workspace tests](https://github.com/axodotdev/cargo-dist/pull/1150)
+* @mistydemeo [fix: pipe working directory to more commands](https://github.com/axodotdev/cargo-dist/pull/1139)
+* @mistydemeo [feat: cache cargo-dist binary in global tasks](https://github.com/axodotdev/cargo-dist/pull/1165)
+
 
 
 # Version 0.16.0 (2024-06-14)
