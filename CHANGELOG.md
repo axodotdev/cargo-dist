@@ -27,7 +27,9 @@ But pure GitHub users aren't going away, and this conflict still exists for them
 
 When using axo Releases together with GitHub Releases, GitHub remains in the announce step where it belongs, because it's more of a mirror/announcement, and not the canonical file host.
 
-If for whatever reason you need to get the old behaviour back, you can use the new [`github-release = "announce"` config](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release)
+If for whatever reason you need to get the old behaviour back, you can use the new [`github-release = "announce"` config](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release).
+
+The only reason you might want to override this setting is if you're using [`dispatch-releases = true`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases) and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist, and many organizations really don't like when you delete/change git tags). In this case setting `github-release = "announce"` will accomplish that, but the above race conditions would then apply.
 
 * [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release)
 * @mistydemeo [fix: prefer creating github releases in host step](https://github.com/axodotdev/cargo-dist/pull/1171)
