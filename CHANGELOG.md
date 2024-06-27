@@ -1,6 +1,59 @@
 # Unreleased
 
-Nothing Yet!
+This release is mostly several fixes to how we create GitHub Releases, as well as some internal improvements for future feature work.
+
+
+## GitHub Release Ordering
+
+We now prefer creating your [GitHub Release in the host step](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release), ensuring published npm and Homebrew packages never refer to URLs that don't yet exist.
+
+Conceptually the cargo-dist pipeline is as follow:
+
+1. plan the release
+2. build the artifacts
+3. host the artifacts
+4. publish the packages (these can fetch the hosted artifacts!)
+5. announce the release (this says to install the published packages!)
+
+GitHub Releases has always been a bit problematic as a hosting provider because it's both where we want to host our files, and creating it is also in some sense announcing the release. Ideally you would be able to draft the GitHub Release to host your files, publish everything that references those files, and then undraft it at the end to announce and tag the release. However the URLs of artifacts in a draft release are temporary, and go away when you undraft it, so this doesn't work.
+
+When we first created cargo-dist, we didn't support publishing packages, so we put GitHub Release at the end, since it was basically the only "side-effect" of running cargo-dist, and you want those at the end. Once we added publishing of things to npm and homebrew, the dual nature of GitHub releases became way more apparent.
+
+In fact, because the GitHub Release contains instructions to install from npm/homebrew, there was essentially a circular dependency between them, with no way to publish all of them in a non-racey way. At the time we opted for preserving existing behaviour of GitHub Last, resulting in a roughly 30 second period where npm/homebrew packages would be published but would error out on install because the artifacts aren't yet uploaded.
+
+We were of course frustrated with this and [had a lot of words to say about URLs, resulting in us making axo Releases, which solved the problem properly](https://blog.axo.dev/2024/01/axo-releases-urls).
+
+But pure GitHub users aren't going away, and this conflict still exists for them. Since then it's become increasingly clear that we made the wrong call here, and in fact the npm/homebrew package integrity is *way* more important than someone maybe getting an email about a GitHub Release referencing packages that don't yet exist. As such we've reversed the original decision and moved GitHub Releases to the host step.
+
+When using axo Releases together with GitHub Releases, GitHub remains in the announce step where it belongs, because it's more of a mirror/announcement, and not the canonical file host.
+
+If for whatever reason you need to get the old behaviour back, you can use the new [`github-release = "announce"` config](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release).
+
+The only reason you might want to override this setting is if you're using [`dispatch-releases = true`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases) and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist, and many organizations really don't like when you delete/change git tags). In this case setting `github-release = "announce"` will accomplish that, but the above race conditions would then apply.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release)
+* @mistydemeo [fix: prefer creating github releases in host step](https://github.com/axodotdev/cargo-dist/pull/1171)
+
+
+## GitHub Release Reliability
+
+GitHub Releases should once again be created transactionally, preventing a release from being created without its artifacts being uploaded, if uploading the artifacts fails for any reason. This fixes a regression from the previous release.
+
+When using the `dispatch-releases = true` setting, we now more strictly specify the commit that should be tagged, preventing any race conditions from changing it. This race potentially always existed, but only seemed to be observable if you retried a failed release.
+
+* @gankra + @mistydemeo [fix: make github releases more robust](https://github.com/axodotdev/cargo-dist/pull/1164)
+
+
+## Other Fixes
+
+* @gankra [feat: experimental generic workspaces](https://github.com/axodotdev/cargo-dist/pull/1116)
+* @mistydemeo [chore: move axoproject in tree](https://github.com/axodotdev/cargo-dist/pull/1135)
+* @mistydemeo [fix: clamp workspace search to current repo](https://github.com/axodotdev/cargo-dist/pull/1158)
+* @mistydemeo [fix: pass correct path to generic builds](https://github.com/axodotdev/cargo-dist/pull/1157)
+* @mistydemeo [fix: add generic workspace tests](https://github.com/axodotdev/cargo-dist/pull/1150)
+* @mistydemeo [fix: pipe working directory to more commands](https://github.com/axodotdev/cargo-dist/pull/1139)
+* @mistydemeo [feat: cache cargo-dist binary in global tasks](https://github.com/axodotdev/cargo-dist/pull/1165)
+
 
 
 # Version 0.16.0 (2024-06-14)
