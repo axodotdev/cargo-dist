@@ -1,6 +1,6 @@
 use super::*;
 
-impl DistResult {
+impl AppResult {
     // Runs the installer script in a temp dir, attempting to set env vars to contain it to that dir
     #[allow(unused_variables)]
     pub fn runtest_powershell_installer(
@@ -25,14 +25,14 @@ impl DistResult {
                 let output = powershell.output_checked(|cmd| {
                     cmd.arg("-c")
                         .arg(script_path)
-                        .env("UserProfile", &tempdir)
+                        .env("UserProfile", tempdir)
                         .env_remove("PsModulePath")
                 })?;
                 eprintln!("{}", String::from_utf8(output.stderr).unwrap());
                 Ok(String::from_utf8(output.stdout).unwrap().trim().to_owned())
             }
 
-            let app_name = ctx.repo.app_name;
+            let app_name = &self.app_name;
             let test_name = &self.test_name;
 
             // only do this if the script exists
@@ -77,7 +77,7 @@ impl DistResult {
                 fn drop(&mut self) {
                     let saved_path = &self.saved_path;
                     eprintln!("restoring PATH: {saved_path}\n");
-                    run_ps1_script(&self.powershell, &self.tempdir, "restorepath.ps1", &format!(r#"
+                    run_ps1_script(self.powershell, self.tempdir, "restorepath.ps1", &format!(r#"
                         $Item = Get-Item -Path "HKCU:\Environment"
                         $Item | New-ItemProperty -Name "Path" -Value "{saved_path}" -PropertyType String -Force | Out-Null
                     "#)).unwrap();
@@ -132,17 +132,17 @@ impl DistResult {
             // Check that the script wrote files where we expected
             let receipt_file = appdata.join(format!("{app_name}\\{app_name}-receipt.json"));
             let expected_bin_dir = Utf8PathBuf::from(expected_bin_dir.replace('/', "\\"));
-            let bin_dir = tempdir.join(&expected_bin_dir);
+            let bin_dir = tempdir.join(expected_bin_dir);
 
             assert!(bin_dir.exists(), "bin dir wasn't created");
 
             // Check that all the binaries work
-            for bin_name in ctx.repo.bins {
+            for bin_name in ctx.options.bins_with_aliases(app_name, &self.bins) {
                 let bin_path = bin_dir.join(format!("{bin_name}.exe"));
                 assert!(bin_path.exists(), "{bin_name} wasn't created");
 
-                let bin =
-                    CommandInfo::new(bin_name, Some(bin_path.as_str())).expect("failed to run bin");
+                let bin = CommandInfo::new(&bin_name, Some(bin_path.as_str()))
+                    .expect("failed to run bin");
                 assert!(bin.version().is_some(), "failed to get app version");
 
                 // checking path...

@@ -2,7 +2,7 @@
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
-================ installer.sh ================
+================ akaikatana-repack-installer.sh ================
 #!/bin/sh
 # shellcheck shell=dash
 #
@@ -992,7 +992,7 @@ downloader() {
 
 download_binary_and_run_installer "$@" || exit 1
 
-================ formula.rb ================
+================ akaikatana-repack.rb ================
 class AkaikatanaRepack < Formula
   desc "The akaikatana-repack application"
   homepage "https://github.com/mistydemeo/akaikatana-repack"
@@ -1052,7 +1052,7 @@ class AkaikatanaRepack < Formula
   end
 end
 
-================ installer.ps1 ================
+================ akaikatana-repack-installer.ps1 ================
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 # option. This file may not be copied, modified, or distributed

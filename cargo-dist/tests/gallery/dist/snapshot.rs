@@ -13,26 +13,40 @@ impl DistResult {
         // in one test (necessitating rerunning it multiple times or passing special flags to get all the changes)
         let mut snapshots = String::new();
 
-        append_snapshot_file(
-            &mut snapshots,
-            "installer.sh",
-            self.shell_installer_path.as_deref(),
-        )?;
-        append_snapshot_file(
-            &mut snapshots,
-            "formula.rb",
-            self.homebrew_installer_path.as_deref(),
-        )?;
-        append_snapshot_file(
-            &mut snapshots,
-            "installer.ps1",
-            self.powershell_installer_path.as_deref(),
-        )?;
-        append_snapshot_tarball(
-            &mut snapshots,
-            "npm-package.tar.gz",
-            self.npm_installer_package_path.as_deref(),
-        )?;
+        for app in &self.apps {
+            append_snapshot_file(
+                &mut snapshots,
+                app.shell_installer_path
+                    .as_deref()
+                    .and_then(|p| p.file_name())
+                    .unwrap_or_default(),
+                app.shell_installer_path.as_deref(),
+            )?;
+            append_snapshot_file(
+                &mut snapshots,
+                app.homebrew_installer_path
+                    .as_deref()
+                    .and_then(|p| p.file_name())
+                    .unwrap_or_default(),
+                app.homebrew_installer_path.as_deref(),
+            )?;
+            append_snapshot_file(
+                &mut snapshots,
+                app.powershell_installer_path
+                    .as_deref()
+                    .and_then(|p| p.file_name())
+                    .unwrap_or_default(),
+                app.powershell_installer_path.as_deref(),
+            )?;
+            append_snapshot_tarball(
+                &mut snapshots,
+                app.npm_installer_package_path
+                    .as_deref()
+                    .and_then(|p| p.file_name())
+                    .unwrap_or_default(),
+                app.npm_installer_package_path.as_deref(),
+            )?;
+        }
 
         Ok(Snapshots {
             settings: snapshot_settings_with_gallery_filter(),

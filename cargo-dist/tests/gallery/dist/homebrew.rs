@@ -1,6 +1,6 @@
 use super::*;
 
-impl DistResult {
+impl AppResult {
     // Runs the installer script in the system's Homebrew installation
     #[allow(unused_variables)]
     pub fn runtest_homebrew_installer(&self, ctx: &TestContext<Tools>) -> Result<()> {
@@ -10,7 +10,6 @@ impl DistResult {
         }
 
         // Only do this on macOS, and only do it if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
-        #[cfg(target_os = "macos")]
         if std::env::var(ENV_RUIN_ME)
             .map(|s| s == "homebrew" || s == "all")
             .unwrap_or(false)
@@ -38,7 +37,7 @@ impl DistResult {
             let prefix = prefix_raw.strip_suffix('\n').unwrap();
             let bin = Utf8PathBuf::from(&prefix).join("bin");
 
-            for bin_name in ctx.repo.bins {
+            for bin_name in ctx.options.bins_with_aliases(&self.app_name, &self.bins) {
                 let bin_path = bin.join(bin_name);
                 assert!(bin_path.exists(), "bin wasn't created");
             }

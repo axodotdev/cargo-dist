@@ -2,7 +2,7 @@
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
-================ installer.sh ================
+================ axolotlsay-installer.sh ================
 #!/bin/sh
 # shellcheck shell=dash
 #
@@ -987,7 +987,7 @@ downloader() {
 
 download_binary_and_run_installer "$@" || exit 1
 
-================ formula.rb ================
+================ axolotlsay.rb ================
 class Axolotlsay < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
   homepage "https://github.com/axodotdev/axolotlsay"
@@ -1047,7 +1047,7 @@ class Axolotlsay < Formula
   end
 end
 
-================ installer.ps1 ================
+================ axolotlsay-installer.ps1 ================
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 # option. This file may not be copied, modified, or distributed

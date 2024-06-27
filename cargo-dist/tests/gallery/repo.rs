@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard};
 
 use camino::{Utf8Path, Utf8PathBuf};
@@ -31,9 +32,72 @@ pub struct TestContext<'a, Tools> {
 
 #[derive(Debug, Default)]
 pub struct TestOptions {
+    pub apps: HashMap<String, AppOverrides>,
+}
+
+impl TestOptions {
+    pub fn set_options(&mut self, app_name: &str) -> &mut AppOverrides {
+        self.apps.entry(app_name.to_owned()).or_default()
+    }
+
+    pub fn options(&self, app_name: &str) -> &AppOverrides {
+        self.apps.get(app_name).unwrap_or(&EMPTY_OVERRIDES)
+    }
+
+    pub fn npm_scope(&self, app_name: &str) -> &str {
+        self.options(app_name)
+            .npm_scope
+            .as_deref()
+            .unwrap_or("axodotdev")
+    }
+    pub fn npm_package_name<'a>(&'a self, app_name: &'a str) -> &'a str {
+        self.options(app_name)
+            .npm_package_name
+            .as_deref()
+            .unwrap_or(app_name)
+    }
+    #[allow(dead_code)]
+    pub fn homebrew_tap(&self, app_name: &str) -> &str {
+        self.options(app_name)
+            .homebrew_tap
+            .as_deref()
+            .unwrap_or("axodotdev/homebrew-tap")
+    }
+    pub fn homebrew_package_name<'a>(&'a self, app_name: &'a str) -> &'a str {
+        self.options(app_name)
+            .homebrew_package_name
+            .as_deref()
+            .unwrap_or(app_name)
+    }
+    pub fn bins_with_aliases(&self, app_name: &str, bins: &[String]) -> Vec<String> {
+        self.options(app_name)
+            .bin_aliases
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .chain(bins.to_owned())
+            .collect()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct AppOverrides {
     pub npm_scope: Option<String>,
     pub npm_package_name: Option<String>,
+    #[allow(dead_code)]
+    pub homebrew_tap: Option<String>,
+    pub homebrew_package_name: Option<String>,
+    pub bin_aliases: Option<Vec<String>>,
 }
+
+static EMPTY_OVERRIDES: AppOverrides = AppOverrides {
+    npm_package_name: None,
+    npm_scope: None,
+    homebrew_tap: None,
+    homebrew_package_name: None,
+    bin_aliases: None,
+};
+
 impl<'a, Tools> std::ops::Deref for TestContext<'a, Tools> {
     type Target = RawTestContext;
     fn deref(&self) -> &Self::Target {
@@ -45,9 +109,12 @@ pub struct Repo {
     pub repo_owner: &'static str,
     pub repo_name: &'static str,
     pub commit_sha: &'static str,
-    /// name of the application (crate)
-    pub app_name: &'static str,
-    /// names of binaries the application should have
+    /// Apps included
+    pub apps: &'static [App],
+}
+
+pub struct App {
+    pub name: &'static str,
     pub bins: &'static [&'static str],
 }
 

@@ -2,7 +2,7 @@
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 ---
-================ installer.sh ================
+================ axolotlsay-installer.sh ================
 #!/bin/sh
 # shellcheck shell=dash
 #
@@ -1010,11 +1010,11 @@ downloader() {
 
 download_binary_and_run_installer "$@" || exit 1
 
-================ npm-package.tar.gz/package/.gitignore ================
+================ axolotlsay-npm-package.tar.gz/package/.gitignore ================
 /node_modules
 
 
-================ npm-package.tar.gz/package/CHANGELOG.md ================
+================ axolotlsay-npm-package.tar.gz/package/CHANGELOG.md ================
 # Version 0.2.2
 
 ```text
@@ -1055,7 +1055,7 @@ download_binary_and_run_installer "$@" || exit 1
 ≽(◕ ᴗ ◕)≼
 ```
 
-================ npm-package.tar.gz/package/LICENSE-APACHE ================
+================ axolotlsay-npm-package.tar.gz/package/LICENSE-APACHE ================
                               Apache License
                         Version 2.0, January 2004
                      http://www.apache.org/licenses/
@@ -1258,7 +1258,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-================ npm-package.tar.gz/package/LICENSE-MIT ================
+================ axolotlsay-npm-package.tar.gz/package/LICENSE-MIT ================
 Copyright (c) 2022-2024 Axo Developer Co.
 
 Permission is hereby granted, free of charge, to any
@@ -1285,7 +1285,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
-================ npm-package.tar.gz/package/README.md ================
+================ axolotlsay-npm-package.tar.gz/package/README.md ================
 # axolotlsay
 > 💬 a CLI for learning to distribute CLIs in rust
 
@@ -1311,7 +1311,7 @@ Licensed under either of
 
 at your option.
 
-================ npm-package.tar.gz/package/binary-install.js ================
+================ axolotlsay-npm-package.tar.gz/package/binary-install.js ================
 const { existsSync, mkdirSync } = require("fs");
 const { join } = require("path");
 const { spawnSync } = require("child_process");
@@ -1454,7 +1454,7 @@ class Package {
 
 module.exports.Package = Package;
 
-================ npm-package.tar.gz/package/binary.js ================
+================ axolotlsay-npm-package.tar.gz/package/binary.js ================
 const { Package } = require("./binary-install");
 const os = require("os");
 const cTable = require("console.table");
@@ -1579,13 +1579,13 @@ module.exports = {
   getPackage,
 };
 
-================ npm-package.tar.gz/package/install.js ================
+================ axolotlsay-npm-package.tar.gz/package/install.js ================
 #!/usr/bin/env node
 
 const { install } = require("./binary");
 install(false);
 
-================ npm-package.tar.gz/package/npm-shrinkwrap.json ================
+================ axolotlsay-npm-package.tar.gz/package/npm-shrinkwrap.json ================
 {
   "lockfileVersion": 3,
   "name": "@axodotdev/axolotlsay",
@@ -2378,7 +2378,7 @@ install(false);
   "requires": true,
   "version": "0.2.2"
 }
-================ npm-package.tar.gz/package/package.json ================
+================ axolotlsay-npm-package.tar.gz/package/package.json ================
 {
   "artifactDownloadUrl": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2",
   "author": "axodotdev <hello@axo.dev>",
@@ -2454,7 +2454,7 @@ install(false);
     "npm": "9.5.0"
   }
 }
-================ npm-package.tar.gz/package/run-axolotlsay.js ================
+================ axolotlsay-npm-package.tar.gz/package/run-axolotlsay.js ================
 #!/usr/bin/env node
 
 const { run } = require("./binary");

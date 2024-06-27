@@ -1,0 +1,2 @@
+[workspace]
+members = ["dist:generic1", "dist:generic2", "cargo:../cargo-nonvirtual", "cargo:../cargo-virtual", "npm:../npm-init-legacy"]

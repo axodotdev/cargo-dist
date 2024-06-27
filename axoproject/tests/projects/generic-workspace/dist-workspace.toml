@@ -1,2 +1,2 @@
 [workspace]
-members = ["generic1", "generic2"]
+members = ["dist:generic1", "dist:generic2"]

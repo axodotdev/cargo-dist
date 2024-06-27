@@ -3,6 +3,7 @@
 use std::env;
 
 use axoprocess::Cmd;
+use axoproject::WorkspaceIdx;
 use cargo_dist_schema::DistManifest;
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
@@ -15,11 +16,20 @@ use crate::{
 };
 
 impl<'a> DistGraphBuilder<'a> {
-    pub(crate) fn compute_cargo_builds(&mut self) -> Vec<BuildStep> {
+    pub(crate) fn compute_cargo_builds(&mut self, workspace_idx: WorkspaceIdx) -> Vec<BuildStep> {
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
+        let working_dir = self
+            .workspaces
+            .workspace(workspace_idx)
+            .workspace_dir
+            .clone();
         for (binary_idx, binary) in self.inner.binaries.iter().enumerate() {
+            // Only bother with binaries owned by this workspace
+            if self.workspaces.workspace_for_package(binary.pkg_idx) != workspace_idx {
+                continue;
+            }
             if !binary.copy_exe_to.is_empty() || !binary.copy_symbols_to.is_empty() {
                 targets
                     .entry(binary.target.clone())
@@ -95,7 +105,7 @@ impl<'a> DistGraphBuilder<'a> {
                         rustflags: rustflags.clone(),
                         profile: String::from(PROFILE_DIST),
                         expected_binaries,
-                        working_dir: self.inner.workspace_dir.clone(),
+                        working_dir: working_dir.clone(),
                     }));
                 }
             } else {
@@ -111,7 +121,7 @@ impl<'a> DistGraphBuilder<'a> {
                     rustflags,
                     profile: String::from(PROFILE_DIST),
                     expected_binaries: binaries,
-                    working_dir: self.inner.workspace_dir.clone(),
+                    working_dir: working_dir.clone(),
                 }));
             }
         }
@@ -219,7 +229,7 @@ pub fn build_cargo_target(
     Ok(())
 }
 
-/// Build a cargo target
+/// Run rustup to setup a cargo target
 pub fn rustup_toolchain(dist_graph: &DistGraph, cmd: &RustupStep) -> DistResult<()> {
     eprintln!("running rustup to ensure you have {} installed", cmd.target);
     Cmd::new(&cmd.rustup.cmd, "install rustup toolchain")

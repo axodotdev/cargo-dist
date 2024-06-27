@@ -19,6 +19,9 @@ fn parse_rust_config(src: SourceFile) -> DistResult<DistMetadata> {
 
 fn parse_config(src: &SourceFile, input_kind: WorkspaceKind) -> DistResult<DistMetadata> {
     match input_kind {
+        WorkspaceKind::Javascript => {
+            unimplemented!("npm packages don't have [package.metadata.dist]")
+        }
         WorkspaceKind::Rust => parse_rust_config(src.clone()),
         WorkspaceKind::Generic => parse_generic_config(src.clone()),
     }
@@ -39,6 +42,7 @@ fn format_config(
 
 fn source(input: &str, input_kind: WorkspaceKind) -> SourceFile {
     let src_name = match input_kind {
+        WorkspaceKind::Javascript => "package.json",
         WorkspaceKind::Rust => "Cargo.toml",
         WorkspaceKind::Generic => "dist.toml",
     };

@@ -1,6 +1,6 @@
 use super::*;
 
-impl DistResult {
+impl AppResult {
     // Runs the installer script in the system's Homebrew installation
     #[allow(unused_variables)]
     pub fn runtest_npm_installer(&self, ctx: &TestContext<Tools>) -> Result<()> {
@@ -28,14 +28,10 @@ impl DistResult {
         let Some(tar) = &ctx.tools.tar else {
             return Ok(());
         };
-        let app_name = ctx
-            .options
-            .npm_package_name
-            .as_deref()
-            .unwrap_or(ctx.repo.app_name);
-        let scope = ctx.options.npm_scope.as_deref().unwrap_or("axodotdev");
+        let app_name = ctx.options.npm_package_name(&self.app_name);
+        let scope = ctx.options.npm_scope(&self.app_name);
         let test_name = &self.test_name;
-        let bins = ctx.repo.bins;
+        let bins = ctx.options.bins_with_aliases(&self.app_name, &self.bins);
 
         // Create/clobber a temp dir in target
         let repo_dir = &ctx.repo_dir;
@@ -51,7 +47,7 @@ impl DistResult {
             &package_tarball_path,
             scope,
             app_name,
-            bins,
+            &bins,
         )?;
         runtest_pnpm(
             &ctx.tools.npm,
@@ -60,7 +56,7 @@ impl DistResult {
             &package_tarball_path,
             scope,
             app_name,
-            bins,
+            &bins,
         )?;
         runtest_yarn(
             &ctx.tools.npm,
@@ -69,7 +65,7 @@ impl DistResult {
             &package_tarball_path,
             scope,
             app_name,
-            bins,
+            &bins,
         )?;
 
         Ok(())
@@ -83,7 +79,7 @@ fn runtest_yarn(
     package_tarball_path: &Utf8Path,
     scope: &str,
     app_name: &str,
-    bins: &[&str],
+    bins: &[String],
 ) -> Result<()> {
     let Some(npm) = npm else { return Ok(()) };
     let Some(yarn) = yarn else { return Ok(()) };
@@ -109,7 +105,7 @@ fn runtest_pnpm(
     package_tarball_path: &Utf8Path,
     scope: &str,
     app_name: &str,
-    bins: &[&str],
+    bins: &[String],
 ) -> Result<()> {
     let Some(npm) = npm else { return Ok(()) };
     let Some(pnpm) = pnpm else { return Ok(()) };
@@ -135,7 +131,7 @@ fn runtest_npm(
     package_tarball_path: &Utf8Path,
     scope: &str,
     app_name: &str,
-    bins: &[&str],
+    bins: &[String],
 ) -> Result<()> {
     let Some(npm) = npm else { return Ok(()) };
 
@@ -218,7 +214,7 @@ fn run_installed_package(
     in_project: &Utf8Path,
     scope: &str,
     package_name: &str,
-    bins: &[&str],
+    bins: &[String],
 ) -> Result<()> {
     // Explicitly run each binary
     for bin in bins {
@@ -234,7 +230,7 @@ fn run_installed_package(
 
     // If common npx special cases apply where "just run the package" is unambiguous
     // then also check that that mode also works fine.
-    if bins.len() == 1 || bins.contains(&package_name) {
+    if bins.len() == 1 || bins.contains(&package_name.to_owned()) {
         let _version_out = npm.output_checked(|cmd| {
             cmd.current_dir(in_project)
                 .arg("exec")
