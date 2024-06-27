@@ -1692,7 +1692,7 @@ fn axolotlsay_generic_workspace_basic() -> Result<(), miette::Report> {
         installers = ["shell", "powershell", "homebrew"]
         tap = "axodotdev/homebrew-packages"
         publish-jobs = ["homebrew"]
-        targets = ["x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+        targets = ["x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
         install-success-msg = ">o_o< everything's installed!"
         ci = ["github"]
         unix-archive = ".tar.xz"
