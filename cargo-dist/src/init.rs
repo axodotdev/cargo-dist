@@ -271,6 +271,7 @@ fn get_new_dist_metadata(
             bin_aliases: None,
             tag_namespace: None,
             install_updater: None,
+            native_certs: None,
             display: None,
             display_name: None,
         }
@@ -862,6 +863,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         github_custom_runners: _,
         bin_aliases: _,
         system_dependencies: _,
+        ..
     } = &meta;
 
     apply_optional_value(
