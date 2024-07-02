@@ -397,6 +397,7 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope = "@axodotdev"
 npm-package = "coolbeans"
+cache-builds = true
 
 "#
         ))?;
@@ -565,6 +566,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+
 "#
         ))?;
 

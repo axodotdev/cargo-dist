@@ -205,6 +205,8 @@ pub struct DistGraph {
     pub merge_tasks: bool,
     /// Whether failing tasks should make us give up on all other tasks
     pub fail_fast: bool,
+    /// Whether to cache builds in CI
+    pub cache_builds: bool,
     /// Whether CI should include auto-generated local artifacts tasks
     pub build_local_artifacts: bool,
     /// Whether releases should be triggered by explicit dispatch, instead of tags
@@ -827,6 +829,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             precise_builds,
             merge_tasks,
             fail_fast,
+            cache_builds,
             build_local_artifacts,
             dispatch_releases,
             release_branch,
@@ -896,6 +899,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let merge_tasks = merge_tasks.unwrap_or(false);
         let fail_fast = fail_fast.unwrap_or(false);
+        let cache_builds = cache_builds.unwrap_or(false);
         let create_release = create_release.unwrap_or(true);
         let build_local_artifacts = build_local_artifacts.unwrap_or(true);
         let dispatch_releases = dispatch_releases.unwrap_or(false);
@@ -1073,6 +1077,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dist_dir,
                 precise_builds,
                 fail_fast,
+                cache_builds,
                 merge_tasks,
                 build_local_artifacts,
                 dispatch_releases,
@@ -1175,6 +1180,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             precise_builds: _,
             merge_tasks: _,
             fail_fast: _,
+            cache_builds: _,
             build_local_artifacts: _,
             dispatch_releases: _,
             release_branch: _,

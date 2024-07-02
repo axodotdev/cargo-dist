@@ -213,10 +213,12 @@ jobs:
       - name: Use rustup to set correct Rust version
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
+      {{%- if cache_builds %}}
       - uses: swatinem/rust-cache@v2
         with:
           key: ${{ join(matrix.targets, '-') }}
           cache-provider: ${{ matrix.cache_provider }}
+      {{%- endif %}}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest

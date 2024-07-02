@@ -179,6 +179,19 @@ cargo dist manifest --artifacts=local --no-local-paths
 Also note that for legacy reasons a tarball is expected to have all the contents nested under a root dir with the same name as the tarball (sans extension), while zips are expected to have all the files directly in the root (installers pass `--strip-components=1` to tar when extracting).
 
 
+### cache-builds
+
+> since 0.18.0
+
+Example: `cache-builds = true`
+
+Determines whether CI will try to cache work between builds. Defaults false.
+
+This is unlikely to be productive because for safety the cache agressively invalidates based on things like "Cargo.toml or Cargo.lock changed", and a noop cache run can randomly take over 2 minutes.
+
+The cases where it *can* be productive are when using a `release-branch` or `pr-run-mode = upload`.
+
+
 ### cargo-dist-version
 
 > since 0.0.3
