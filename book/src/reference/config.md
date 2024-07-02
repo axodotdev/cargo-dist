@@ -140,8 +140,8 @@ Example:
 
 ```toml
 [package.metadata.dist.bin-aliases]
-"myrealbin" = ["somealias", "otheralias"]
-"myotherbin" = "alias"
+"mybin" = ["somealias"]
+"myotherbin" = ["someotheralias", "anotheralias"]
 ```
 
 The `[bin-aliases]` setting lets you specify aliases that should be introduced for your binaries by your installers. These aliases aren't included in your archives, and are only created by the installers themselves. The way the alias is created is installer-specific, and may change in the future. Currently:
