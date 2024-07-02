@@ -899,7 +899,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let merge_tasks = merge_tasks.unwrap_or(false);
         let fail_fast = fail_fast.unwrap_or(false);
-        let cache_builds = cache_builds.unwrap_or(false);
+        let pr_run_mode = pr_run_mode.unwrap_or_default();
         let create_release = create_release.unwrap_or(true);
         let build_local_artifacts = build_local_artifacts.unwrap_or(true);
         let dispatch_releases = dispatch_releases.unwrap_or(false);
@@ -912,6 +912,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let github_releases_repo = github_releases_repo.clone();
         let github_releases_submodule_path = github_releases_submodule_path.clone();
         let github_release = github_release.unwrap_or_default();
+
+        let caching_could_be_profitable =
+            release_branch.is_some() || pr_run_mode == cargo_dist_schema::PrRunMode::Upload;
+        let cache_builds = cache_builds.unwrap_or(caching_could_be_profitable);
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -1103,7 +1107,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 variants: vec![],
                 releases: vec![],
                 ci: CiInfo::default(),
-                pr_run_mode: pr_run_mode.unwrap_or_default(),
+                pr_run_mode,
                 tap: tap.clone(),
                 plan_jobs,
                 local_artifacts_jobs,
