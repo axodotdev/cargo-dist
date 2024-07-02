@@ -239,7 +239,7 @@ pub struct DistMetadata {
     /// (since bumping your version changes both those files).
     ///
     /// As of this writing the two major exceptions to when it would be
-    /// useful are `pr-run-mode = upload` and `release-branch = "my-branch"`
+    /// useful are `pr-run-mode = "upload"` and `release-branch = "my-branch"`
     /// which can run the CI action frequently and without Cargo.toml changes.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_builds: Option<bool>,
