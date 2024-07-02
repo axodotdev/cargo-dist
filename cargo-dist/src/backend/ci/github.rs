@@ -33,6 +33,8 @@ pub struct GithubCiInfo {
     pub install_dist_ps1: String,
     /// Whether to fail-fast
     pub fail_fast: bool,
+    /// Whether to cache builds
+    pub cache_builds: bool,
     /// Whether to include builtin local artifacts tasks
     pub build_local_artifacts: bool,
     /// Whether to make CI get dispatched manually instead of by tag
@@ -92,6 +94,7 @@ impl GithubCiInfo {
             .as_ref()
             .unwrap_or(&self_dist_version);
         let fail_fast = dist.fail_fast;
+        let cache_builds = dist.cache_builds;
         let build_local_artifacts = dist.build_local_artifacts;
         let dispatch_releases = dist.dispatch_releases;
         let release_branch = dist.release_branch.clone();
@@ -229,6 +232,7 @@ impl GithubCiInfo {
             install_dist_sh,
             install_dist_ps1,
             fail_fast,
+            cache_builds,
             build_local_artifacts,
             dispatch_releases,
             release_branch,

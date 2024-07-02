@@ -240,6 +240,7 @@ fn get_new_dist_metadata(
             precise_builds: None,
             merge_tasks: None,
             fail_fast: None,
+            cache_builds: None,
             build_local_artifacts: None,
             dispatch_releases: None,
             release_branch: None,
@@ -827,6 +828,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         precise_builds,
         merge_tasks,
         fail_fast,
+        cache_builds,
         build_local_artifacts,
         dispatch_releases,
         release_branch,
@@ -990,6 +992,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "fail-fast",
         "# Whether failing tasks should make us give up on all other tasks\n",
         *fail_fast,
+    );
+
+    apply_optional_value(
+        table,
+        "cache-builds",
+        "# Whether builds should try to be cached in CI\n",
+        *cache_builds,
     );
 
     apply_optional_value(

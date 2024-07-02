@@ -179,6 +179,19 @@ cargo dist manifest --artifacts=local --no-local-paths
 Also note that for legacy reasons a tarball is expected to have all the contents nested under a root dir with the same name as the tarball (sans extension), while zips are expected to have all the files directly in the root (installers pass `--strip-components=1` to tar when extracting).
 
 
+### cache-builds
+
+> since 0.18.0
+
+Example: `cache-builds = true`
+
+Determines whether CI will try to cache work between builds. Defaults false, unless `release-branch` or `pr-run-mode = "upload"` are enabled.
+
+This is unlikely to be productive because for safety the cache agressively invalidates based on things like "Cargo.toml or Cargo.lock changed" (which is always true if you change the version of a Rust project), and a noop cache run can randomly take over 2 minutes (typically more like 10 seconds).
+
+The cases where we enable it by default are the only ones we know where you *might* want to enable it.
+
+
 ### cargo-dist-version
 
 > since 0.0.3
@@ -322,7 +335,7 @@ Example: `dispatch-releases = true`
 
 Enabling this disables tag-push releases, but keeps pr checks enabled.
 
-By default the workflow dispatch form will have "dry-run" populated as the tag, which is taken to have the same meaning as `pr-run-mode = upload`: run the plan and build steps, but not the publish or announce ones. Currently hosting is also disabled, but future versions may add some forms of hosting in this mode.
+By default the workflow dispatch form will have "dry-run" populated as the tag, which is taken to have the same meaning as `pr-run-mode = "upload"`: run the plan and build steps, but not the publish or announce ones. Currently hosting is also disabled, but future versions may add some forms of hosting in this mode.
 
 
 ### display
