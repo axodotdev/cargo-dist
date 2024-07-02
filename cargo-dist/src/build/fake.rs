@@ -50,7 +50,7 @@ fn build_fake_binaries(
         let real_fake_bin = tempdir.join(&binary.file_name);
         let package_id = super::package_id_string(binary.pkg_id.as_ref());
         LocalAsset::write_new_all("", &real_fake_bin)?;
-        expectations.found_bin(package_id, real_fake_bin, vec![]);
+        expectations.found_bins(package_id, vec![real_fake_bin]);
     }
 
     expectations.process_bins(dist, manifest)?;

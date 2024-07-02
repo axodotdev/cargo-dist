@@ -275,6 +275,8 @@ fn get_new_dist_metadata(
             install_updater: None,
             display: None,
             display_name: None,
+            package_cdylibs: None,
+            install_cdylibs: None,
         }
     };
 
@@ -860,6 +862,8 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         display,
         display_name,
         github_release,
+        package_cdylibs,
+        install_cdylibs,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -1229,6 +1233,20 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "display-name",
         "# Custom display name to use for this app in release bodies\n",
         display_name.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "package-cdylibs",
+        "# Whether to include built C dynamic libraries in the final archives\n",
+        *package_cdylibs,
+    );
+
+    apply_optional_value(
+        table,
+        "install-cdylibs",
+        "# Whether to install packaged C dynamic libraries\n",
+        *install_cdylibs,
     );
 
     // Finalize the table

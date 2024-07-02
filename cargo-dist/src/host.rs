@@ -91,9 +91,9 @@ impl<'a> DistGraphBuilder<'a> {
         let releases_without_hosting = announcing
             .rust_releases
             .iter()
-            .filter_map(|(package, _)| {
+            .filter_map(|release| {
                 // Get the names of the apps we're releasing
-                let package = self.workspace.package(*package);
+                let package = self.workspace.package(release.package_idx);
                 let version = package
                     .version
                     .clone()
@@ -287,7 +287,7 @@ pub(crate) fn select_hosting(
     let package_list = announcing
         .rust_releases
         .iter()
-        .map(|(idx, _)| *idx)
+        .map(|release| release.package_idx)
         .collect::<Vec<_>>();
     // Either use the explicit one, or default to the CI provider's native solution
     let hosting_providers = hosting
