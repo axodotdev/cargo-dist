@@ -268,6 +268,7 @@ fn get_new_dist_metadata(
             hosting: None,
             extra_artifacts: None,
             github_custom_runners: None,
+            github_custom_job_permissions: None,
             bin_aliases: None,
             tag_namespace: None,
             install_updater: None,
@@ -860,6 +861,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
+        github_custom_job_permissions: _,
         bin_aliases: _,
         system_dependencies: _,
     } = &meta;

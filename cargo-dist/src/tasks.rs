@@ -48,7 +48,7 @@
 //! Also note that the BuildSteps for installers are basically monolithic "build that installer"
 //! steps to give them the freedom to do whatever they need to do.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use axoprocess::Cmd;
 use axoproject::platforms::{
@@ -268,7 +268,9 @@ pub struct DistGraph {
     /// Additional artifacts to build and upload
     pub extra_artifacts: Vec<ExtraArtifact>,
     /// Custom GitHub runners, mapped by triple target
-    pub github_custom_runners: HashMap<String, String>,
+    pub github_custom_runners: BTreeMap<String, String>,
+    /// Permissions each custom job has
+    pub github_custom_job_permissions: BTreeMap<String, Vec<String>>,
     /// LIES ALL LIES
     pub local_builds_are_lies: bool,
     /// Prefix git tags must include to be picked up (also renames release.yml)
@@ -843,11 +845,20 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             github_releases_repo,
             github_releases_submodule_path,
             github_release,
+            github_custom_runners,
+            github_custom_job_permissions,
+            plan_jobs,
+            local_artifacts_jobs,
+            global_artifacts_jobs,
+            host_jobs,
+            publish_jobs,
+            post_announce_jobs,
             allow_dirty,
             msvc_crt_static,
             extra_artifacts,
             pr_run_mode,
             tap,
+
             // Partially Processed elsewhere
             //
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
@@ -875,14 +886,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             checksum: _,
             install_path: _,
             install_success_msg: _,
-            plan_jobs: _,
-            local_artifacts_jobs: _,
-            global_artifacts_jobs: _,
             source_tarball: _,
-            host_jobs: _,
-            publish_jobs: _,
-            post_announce_jobs: _,
-            github_custom_runners: _,
             bin_aliases: _,
             display: _,
             display_name: _,
@@ -908,6 +912,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let github_releases_repo = github_releases_repo.clone();
         let github_releases_submodule_path = github_releases_submodule_path.clone();
         let github_release = github_release.unwrap_or_default();
+        let github_custom_runners = github_custom_runners.clone().unwrap_or_default();
+        let github_custom_job_permissions =
+            github_custom_job_permissions.clone().unwrap_or_default();
+        let extra_artifacts = extra_artifacts.clone().unwrap_or_default();
+        let install_updater = install_updater.unwrap_or(false);
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -945,8 +954,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             requires_precise
         };
 
-        let plan_jobs = workspace_metadata
-            .plan_jobs
+        let plan_jobs = plan_jobs
             .clone()
             .unwrap_or_default()
             .into_iter()
@@ -960,8 +968,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             })
             .collect();
 
-        let local_artifacts_jobs = workspace_metadata
-            .local_artifacts_jobs
+        let local_artifacts_jobs = local_artifacts_jobs
             .clone()
             .unwrap_or_default()
             .into_iter()
@@ -975,8 +982,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             })
             .collect();
 
-        let global_artifacts_jobs = workspace_metadata
-            .global_artifacts_jobs
+        let global_artifacts_jobs = global_artifacts_jobs
             .clone()
             .unwrap_or_default()
             .into_iter()
@@ -990,8 +996,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             })
             .collect();
 
-        let host_jobs = workspace_metadata
-            .host_jobs
+        let host_jobs = host_jobs
             .clone()
             .unwrap_or_default()
             .into_iter()
@@ -1005,8 +1010,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             })
             .collect();
 
-        let post_announce_jobs = workspace_metadata
-            .post_announce_jobs
+        let post_announce_jobs = post_announce_jobs
             .clone()
             .unwrap_or_default()
             .into_iter()
@@ -1021,10 +1025,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .collect();
 
         let templates = Templates::new()?;
-        let publish_jobs: Vec<PublishStyle>;
-        let user_publish_jobs: Vec<PublishStyle>;
-        (publish_jobs, user_publish_jobs) = workspace_metadata
-            .publish_jobs
+        let (publish_jobs, user_publish_jobs): (Vec<_>, Vec<_>) = publish_jobs
             .clone()
             .unwrap_or(vec![])
             .into_iter()
@@ -1110,12 +1111,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 allow_dirty,
                 msvc_crt_static,
                 hosting: None,
-                extra_artifacts: extra_artifacts.clone().unwrap_or_default(),
-                github_custom_runners: workspace_metadata
-                    .github_custom_runners
-                    .clone()
-                    .unwrap_or_default(),
-                install_updater: install_updater.unwrap_or_default(),
+                extra_artifacts,
+                github_custom_runners,
+                github_custom_job_permissions,
+                install_updater,
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
@@ -1197,6 +1196,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             hosting: _,
             extra_artifacts: _,
             github_custom_runners: _,
+            github_custom_job_permissions: _,
             tag_namespace: _,
             install_updater: _,
             cargo_dist_version: _,

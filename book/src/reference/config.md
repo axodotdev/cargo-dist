@@ -449,6 +449,24 @@ Defaults false (but may become true in the future).
 If you're using GitHub Releases, this will enable GitHub's experimental artifact attestation feature. [See the full docs for details](../supplychain-security/attestations/github.md).
 
 
+### github-custom-job-permissions
+
+> since 0.18.0
+
+Example:
+
+```
+publish-jobs = ["npm", "./my-custom-publish"]
+github-custom-job-permissions = { "my-custom-publish" = ["packages: admin"] }
+```
+
+Allows you to customize the permissions given to your custom CI jobs.
+
+By default all custom `publish-jobs` get `["id-token: write", "packages: write"]`.
+If you override a publish job's permissions, the default permissions will be removed.
+All other custom jobs default to no special permissions.
+
+
 ### github-custom-runners
 
 > since 0.6.0 (target-specific runners), 0.15.0 (global runner)

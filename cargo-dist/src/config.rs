@@ -1,6 +1,6 @@
 //! Config types (for workspace.metadata.dist)
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use axoasset::{toml_edit, SourceFile};
 use axoprocess::Cmd;
@@ -385,7 +385,11 @@ pub struct DistMetadata {
 
     /// Custom GitHub runners, mapped by triple target
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub github_custom_runners: Option<HashMap<String, String>>,
+    pub github_custom_runners: Option<BTreeMap<String, String>>,
+
+    /// Custom permissions for jobs
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_custom_job_permissions: Option<BTreeMap<String, Vec<String>>>,
 
     /// Aliases to install binaries as
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -460,6 +464,7 @@ impl DistMetadata {
             msvc_crt_static: _,
             hosting: _,
             github_custom_runners: _,
+            github_custom_job_permissions: _,
             bin_aliases: _,
             tag_namespace: _,
             install_updater: _,
@@ -549,6 +554,7 @@ impl DistMetadata {
             hosting,
             extra_artifacts,
             github_custom_runners,
+            github_custom_job_permissions,
             bin_aliases,
             tag_namespace,
             install_updater,
@@ -646,7 +652,13 @@ impl DistMetadata {
             warn!("package.metadata.dist.tag-namespace is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if github_release.is_some() {
-            warn!("package.metadata.dist.github-create-release-phase is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+            warn!("package.metadata.dist.github-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_custom_job_permissions.is_some() {
+            warn!("package.metadata.dist.github-custom-job-permissions is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_custom_runners.is_some() {
+            warn!("package.metadata.dist.github-custom-runners is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
@@ -703,9 +715,6 @@ impl DistMetadata {
         }
         if extra_artifacts.is_none() {
             extra_artifacts.clone_from(&workspace_config.extra_artifacts);
-        }
-        if github_custom_runners.is_none() {
-            github_custom_runners.clone_from(&workspace_config.github_custom_runners);
         }
         if bin_aliases.is_none() {
             bin_aliases.clone_from(&workspace_config.bin_aliases);

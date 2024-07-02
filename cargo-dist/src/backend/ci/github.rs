@@ -2,7 +2,7 @@
 //!
 //! In the future this may get split up into submodules.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use axoasset::LocalAsset;
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
@@ -48,19 +48,19 @@ pub struct GithubCiInfo {
     /// homebrew tap
     pub tap: Option<String>,
     /// plan jobs
-    pub plan_jobs: Vec<String>,
+    pub plan_jobs: Vec<GithubCiJob>,
     /// local artifacts jobs
-    pub local_artifacts_jobs: Vec<String>,
+    pub local_artifacts_jobs: Vec<GithubCiJob>,
     /// global artifacts jobs
-    pub global_artifacts_jobs: Vec<String>,
+    pub global_artifacts_jobs: Vec<GithubCiJob>,
     /// host jobs
-    pub host_jobs: Vec<String>,
+    pub host_jobs: Vec<GithubCiJob>,
     /// publish jobs
     pub publish_jobs: Vec<String>,
     /// user-specified publish jobs
-    pub user_publish_jobs: Vec<String>,
+    pub user_publish_jobs: Vec<GithubCiJob>,
     /// post-announce jobs
-    pub post_announce_jobs: Vec<String>,
+    pub post_announce_jobs: Vec<GithubCiJob>,
     /// whether to create the release or assume an existing one
     pub create_release: bool,
     /// external repo to release to
@@ -77,6 +77,15 @@ pub struct GithubCiInfo {
     pub release_command: String,
     /// Which phase to create the release at
     pub release_phase: GithubReleasePhase,
+}
+
+/// A custom ci job
+#[derive(Debug, Serialize)]
+pub struct GithubCiJob {
+    /// Name of the job
+    pub name: String,
+    /// Permisions to give the job
+    pub permissions: Option<Vec<String>>,
 }
 
 impl GithubCiInfo {
@@ -164,13 +173,20 @@ impl GithubCiInfo {
         let pr_run_mode = dist.pr_run_mode;
 
         let tap = dist.tap.clone();
-        let plan_jobs = dist.plan_jobs.clone();
-        let local_artifacts_jobs = dist.local_artifacts_jobs.clone();
-        let global_artifacts_jobs = dist.global_artifacts_jobs.clone();
-        let host_jobs = dist.host_jobs.clone();
+        let mut job_permissions = dist.github_custom_job_permissions.clone();
+        // use publish jobs default to elevated priviledges
+        for name in &dist.user_publish_jobs {
+            job_permissions.entry(name.clone()).or_insert_with(|| {
+                vec!["id-token: write".to_owned(), "packages: write".to_owned()]
+            });
+        }
+        let plan_jobs = build_jobs(&dist.plan_jobs, &job_permissions);
+        let local_artifacts_jobs = build_jobs(&dist.local_artifacts_jobs, &job_permissions);
+        let global_artifacts_jobs = build_jobs(&dist.global_artifacts_jobs, &job_permissions);
+        let host_jobs = build_jobs(&dist.host_jobs, &job_permissions);
         let publish_jobs = dist.publish_jobs.iter().map(|j| j.to_string()).collect();
-        let user_publish_jobs = dist.user_publish_jobs.clone();
-        let post_announce_jobs = dist.post_announce_jobs.clone();
+        let user_publish_jobs = build_jobs(&dist.user_publish_jobs, &job_permissions);
+        let post_announce_jobs = build_jobs(&dist.post_announce_jobs, &job_permissions);
 
         // Figure out what Local Artifact tasks we need
         let local_runs = if dist.merge_tasks {
@@ -295,6 +311,17 @@ impl GithubCiInfo {
     }
 }
 
+fn build_jobs(jobs: &[String], perms: &SortedMap<String, Vec<String>>) -> Vec<GithubCiJob> {
+    let mut output = vec![];
+    for name in jobs {
+        output.push(GithubCiJob {
+            name: name.clone(),
+            permissions: perms.get(name).cloned(),
+        });
+    }
+    output
+}
+
 /// Get the best `cache-provider` key to use for <https://github.com/Swatinem/rust-cache>.
 ///
 /// In the future we might make "None" here be a way to say "disable the cache".
@@ -319,7 +346,7 @@ fn cache_provider_for_runner(runner: &str) -> Option<String> {
 /// In priniciple it does remove some duplicated setup work, so this is ostensibly "cheaper".
 fn distribute_targets_to_runners_merged<'a>(
     targets: SortedSet<&'a TargetTriple>,
-    custom_runners: &HashMap<String, String>,
+    custom_runners: &BTreeMap<String, String>,
 ) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTriple>)> {
     let mut groups = SortedMap::<GithubRunner, Vec<&TargetTriple>>::new();
     for target in targets {
@@ -340,7 +367,7 @@ fn distribute_targets_to_runners_merged<'a>(
 /// while preferring each target gets its own runner for latency and fault-isolation.
 fn distribute_targets_to_runners_split<'a>(
     targets: SortedSet<&'a TargetTriple>,
-    custom_runners: &HashMap<String, String>,
+    custom_runners: &BTreeMap<String, String>,
 ) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTriple>)> {
     let mut groups = vec![];
     for target in targets {
@@ -369,7 +396,7 @@ const GITHUB_WINDOWS_RUNNER: &str = "windows-2019";
 /// Get the appropriate Github Runner for building a target
 fn github_runner_for_target(
     target: &TargetTriple,
-    custom_runners: &HashMap<String, String>,
+    custom_runners: &BTreeMap<String, String>,
 ) -> Option<GithubRunner> {
     if let Some(runner) = custom_runners.get(target) {
         return Some(runner.to_owned());
