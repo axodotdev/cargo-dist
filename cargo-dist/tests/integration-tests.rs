@@ -117,6 +117,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
+release-branch = "production"
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -397,6 +398,7 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope = "@axodotdev"
 npm-package = "coolbeans"
+cache-builds = true
 
 "#
         ))?;
@@ -533,6 +535,8 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
 github-create-release-phase = "host"
+pr-run-mode = "upload"
+
 "#
         ))?;
 
@@ -565,6 +569,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+
 "#
         ))?;
 

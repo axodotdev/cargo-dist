@@ -232,6 +232,18 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fail_fast: Option<bool>,
 
+    /// Whether CI tasks should have build caches enabled.
+    ///
+    /// Defaults false because currently Cargo.toml / Cargo.lock changes
+    /// invalidate the cache, making it useless for typical usage
+    /// (since bumping your version changes both those files).
+    ///
+    /// As of this writing the two major exceptions to when it would be
+    /// useful are `pr-run-mode = "upload"` and `release-branch = "my-branch"`
+    /// which can run the CI action frequently and without Cargo.toml changes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cache_builds: Option<bool>,
+
     /// Whether CI should include logic to build local artifacts (default true)
     ///
     /// If false, it will be assumed that the local_artifacts_jobs will include custom
@@ -434,6 +446,7 @@ impl DistMetadata {
             checksum: _,
             precise_builds: _,
             fail_fast: _,
+            cache_builds: _,
             merge_tasks: _,
             build_local_artifacts: _,
             dispatch_releases: _,
@@ -523,6 +536,7 @@ impl DistMetadata {
             precise_builds,
             merge_tasks,
             fail_fast,
+            cache_builds,
             build_local_artifacts,
             dispatch_releases,
             release_branch,
@@ -576,6 +590,9 @@ impl DistMetadata {
         }
         if fail_fast.is_some() {
             warn!("package.metadata.dist.fail-fast is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if cache_builds.is_some() {
+            warn!("package.metadata.dist.cache-builds is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if build_local_artifacts.is_some() {
             warn!("package.metadata.dist.build-local-artifacts is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

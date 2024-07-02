@@ -1884,10 +1884,6 @@ jobs:
           submodules: recursive
       - name: Use rustup to set correct Rust version
         run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
-      - uses: swatinem/rust-cache@v2
-        with:
-          key: ${{ join(matrix.targets, '-') }}
-          cache-provider: ${{ matrix.cache_provider }}
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       # Get the dist-manifest
