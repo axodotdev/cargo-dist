@@ -3,7 +3,7 @@
       - plan
       - host
     {{%- for job in host_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     runs-on: {{{ global_task.runner }}}
     env:

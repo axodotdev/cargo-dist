@@ -375,6 +375,14 @@ pub enum DistError {
         /// The input
         pair: String,
     },
+
+    /// Unknown permission specified in GitHub Actions config
+    #[error("One or more unrecognized permissons levels were specified: {levels:?}")]
+    #[diagnostic(help("recognized values are: admin, write, read"))]
+    GithubUnknownPermission {
+        /// The input
+        levels: Vec<String>,
+    },
 }
 
 /// Errors related to finding the project

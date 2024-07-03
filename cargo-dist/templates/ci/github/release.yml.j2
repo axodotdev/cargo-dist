@@ -24,12 +24,12 @@
 
 name: Release
 
+{{%- if root_permissions %}}
 permissions:
-  contents: write
-  {{%- if github_attestations %}}
-  id-token: write
-  attestations: write
-  {{%- endif %}}
+  {{%- for perm_name in root_permissions %}}
+  {{{ perm_name }}}: {{{ root_permissions[perm_name] }}}
+  {{%- endfor %}}
+{{%- endif %}}
 
 {{%- if release_branch %}}
 
@@ -160,9 +160,15 @@ jobs:
 
 {{%- for job in plan_jobs %}}
 
-  custom-{{{ job|safe }}}:
-    uses: ./.github/workflows/{{{ job|safe }}}.yml
+  custom-{{{ job.name|safe }}}:
+    uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     secrets: inherit
+    {{%- if job.permissions %}}
+    permissions:
+      {{%- for perm_name in job.permissions %}}
+      {{{ perm_name }}}: {{{ job.permissions[perm_name] }}}
+      {{%- endfor %}}
+    {{%- endif %}}
 {{%- endfor %}}
 
 {{%- if build_local_artifacts %}}
@@ -174,7 +180,7 @@ jobs:
     needs:
       - plan
     {{%- for job in plan_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload')
     {{%- if dispatch_releases %}} || inputs.tag == 'dry-run' {{%- endif %}}
@@ -266,19 +272,25 @@ jobs:
 
 {{%- for job in local_artifacts_jobs %}}
 
-  custom-{{{ job|safe }}}:
+  custom-{{{ job.name|safe }}}:
     needs:
       - plan
     {{%- for job in plan_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     if: ${{ needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload'
     {{%- if dispatch_releases %}} || inputs.tag == 'dry-run' {{%- endif %}}
     {{{- " }}" | safe }}}
-    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
+    {{%- if job.permissions %}}
+    permissions:
+      {{%- for perm_name in job.permissions %}}
+      {{{ perm_name }}}: {{{ job.permissions[perm_name] }}}
+      {{%- endfor %}}
+    {{%- endif %}}
 {{%- endfor %}}
 
   # Build and package all the platform-agnostic(ish) things
@@ -289,7 +301,7 @@ jobs:
       - build-local-artifacts
     {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     runs-on: {{{ global_task.runner }}}
     env:
@@ -338,19 +350,25 @@ jobs:
 
 {{%- for job in global_artifacts_jobs %}}
 
-  custom-{{{ job|safe }}}:
+  custom-{{{ job.name|safe }}}:
     needs:
       - plan
     {{%- if build_local_artifacts %}}
       - build-local-artifacts
     {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
-    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
+    {{%- if job.permissions %}}
+    permissions:
+      {{%- for perm_name in job.permissions %}}
+      {{{ perm_name }}}: {{{ job.permissions[perm_name] }}}
+      {{%- endfor %}}
+    {{%- endif %}}
 {{%- endfor %}}
 
 {{%- if "axodotdev" in hosting_providers %}}
@@ -374,17 +392,17 @@ jobs:
       - build-local-artifacts
     {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
       - build-global-artifacts
     {{%- for job in global_artifacts_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
     if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success')
-    {{%- for job in global_artifacts_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
+    {{%- for job in global_artifacts_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
     {{%- if build_local_artifacts %}} && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') {{%- endif %}}
-    {{%- for job in local_artifacts_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
+    {{%- for job in local_artifacts_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
     {{{- " }}" | safe }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -441,7 +459,7 @@ jobs:
 
 {{%- for job in host_jobs %}}
 
-  custom-{{{ job|safe }}}:
+  custom-{{{ job.name|safe }}}:
     needs:
       - plan
     {{%- if build_local_artifacts %}}
@@ -449,12 +467,18 @@ jobs:
     {{%- endif %}}
       - build-global-artifacts
     {{%- for job in global_artifacts_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
-    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
+    {{%- if job.permissions %}}
+    permissions:
+      {{%- for perm_name in job.permissions %}}
+      {{{ perm_name }}}: {{{ job.permissions[perm_name] }}}
+      {{%- endfor %}}
+    {{%- endif %}}
 {{%- endfor %}}
 
 {{%- if 'homebrew' in publish_jobs and tap %}}
@@ -469,22 +493,25 @@ jobs:
 
 {{%- for job in user_publish_jobs %}}
 
-  custom-{{{ job|safe }}}:
+  custom-{{{ job.name|safe }}}:
     needs:
       - plan
       - host
     {{%- for job in host_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
     # publish jobs get escalated permissions
+    {{%- if job.permissions %}}
     permissions:
-      id-token: write
-      packages: write
+      {{%- for perm_name in job.permissions %}}
+      {{{ perm_name }}}: {{{ job.permissions[perm_name] }}}
+      {{%- endfor %}}
+    {{%- endif %}}
 {{%- endfor %}}
 
 {{#- being extremely Normal about whitespace/newlines -#}}
@@ -507,10 +534,10 @@ jobs:
       - publish-npm
     {{%- endif %}}
     {{%- for job in user_publish_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     {{%- for job in host_jobs %}}
-      - custom-{{{ job|safe }}}
+      - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
@@ -518,7 +545,7 @@ jobs:
     if: ${{ always() && needs.host.result == 'success'
     {{%- if 'homebrew' in publish_jobs and tap %}} && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') {{%- endif %}}
     {{%- if 'npm' in publish_jobs %}} && (needs.publish-npm.result == 'skipped' || needs.publish-npm.result == 'success') {{%- endif %}}
-    {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job|safe }}}.result == 'skipped' || needs.custom-{{{ job|safe }}}.result == 'success') {{%- endfor %}}
+    {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
     {{{- " }}" | safe }}}
     runs-on: {{{ global_task.runner }}}
     env:
@@ -557,12 +584,18 @@ jobs:
 
 {{%- for job in post_announce_jobs %}}
 
-  custom-{{{ job|safe }}}:
+  custom-{{{ job.name|safe }}}:
     needs:
       - plan
       - announce
-    uses: ./.github/workflows/{{{ job|safe }}}.yml
+    uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
+    {{%- if job.permissions %}}
+    permissions:
+      {{%- for perm_name in job.permissions %}}
+      {{{ perm_name }}}: {{{ job.permissions[perm_name] }}}
+      {{%- endfor %}}
+    {{%- endif %}}
 {{%- endfor %}}

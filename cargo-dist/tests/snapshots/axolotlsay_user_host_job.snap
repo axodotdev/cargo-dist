@@ -3298,9 +3298,8 @@ run("axolotlsay");
 # title/body based on your changelogs.
 
 name: Release
-
 permissions:
-  contents: write
+  "contents": "write"
 
 # This task will run whenever you push a git tag that looks like a version
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.

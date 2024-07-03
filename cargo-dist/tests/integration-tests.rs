@@ -153,6 +153,7 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
 hosting = ["axodotdev", "github"]
+github-attestations = true
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -364,6 +365,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 build-local-artifacts = false
 local-artifacts-jobs = ["./local-artifacts"]
+github-custom-job-permissions = {{ local-artifacts = {{ packages = "write" }} }}
 release-branch = "production"
 
 "#
