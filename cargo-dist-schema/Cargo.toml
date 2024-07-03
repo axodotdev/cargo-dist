@@ -1,10 +1,11 @@
 [package]
 name = "cargo-dist-schema"
 description = "Schema information for cargo-dist's dist-manifest.json"
-version = "0.17.0"
-edition = "2021"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/axodotdev/cargo-dist"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 exclude = [
   "book/*",
   "src/snapshots/*",
@@ -13,12 +14,16 @@ exclude = [
 ]
 
 [dependencies]
-camino = "1.1.7"
-schemars = "0.8.21"
-semver = "1.0.23"
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.120"
+# would be nice to inherit this from workspace but we don't want to pull in
+# a full http client for the schema crate!
 gazenot = { version = "0.3.0", default-features = false }
 
+camino.workspace = true
+schemars.workspace = true
+semver.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+
 [dev-dependencies]
-insta = "1.39.0"
+insta.workspace = true

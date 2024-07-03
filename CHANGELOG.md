@@ -3,6 +3,45 @@
 Nothing Yet!
 
 
+# Version 0.18.0 (2024-07-03)
+
+
+## Features
+
+
+### disabling the CI build cache when unecessary
+
+For a long time now we've had [`swatinem/rust-cache`](https://github.com/Swatinem/rust-cache) as part of cargo-dist's CI build jobs. In fact, improving the configuration for that cache has been one of the most frequent new contributions!
+
+With all the improvements applied, we've actually discovered that the cache largely wasn't doing anything in practice. This is because `swatinem/rust-cache` quite reasonably invalidates the cache whenever your Cargo.toml or Cargo.lock changes, which includes changing the version of your crate to publish a new version -- the thing you do right before cutting a release with cargo-dist!
+
+Worse yet, the cache can hang each build machine for over 2 minutes to determine this fact, meaning it often *slows down* releases!
+
+So we've introduced the [cache-builds setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#cache-builds) and defaulted it to off for most users. Users that might benefit from it still will have it defaulted on. See the docs for details!
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#cache-builds)
+* @gankra [feat: add cache-builds setting, and disable by default](https://github.com/axodotdev/cargo-dist/pull/1178)
+
+
+
+
+### allowing custom job permissions to be changed
+
+When using custom CI jobs, cargo-dist's CI needs to pass down permissions to each one. For a long time now we've passed special permissions to custom publish jobs to let them publish to [GitHub packages](https://github.com/features/packages), but they've been hardcoded, and all other jobs have had no special permissions.
+
+Now using the [github-custom-job-permissions setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-job-permissions) you can give any of your custom jobs whatever permissions they need.
+
+* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-job-permissions)
+* @gankra [feat: add github-custom-job-permissions setting](https://github.com/axodotdev/cargo-dist/pull/1179)
+
+
+## Fixes
+
+* @zanieb [docs: improve example for bin-aliases option](https://github.com/axodotdev/cargo-dist/pull/1180)
+
+
+
+
 # Version 0.17.0 (2024-06-27)
 
 This release is mostly several fixes to how we create GitHub Releases, as well as some internal improvements for future feature work.

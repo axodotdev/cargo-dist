@@ -7,6 +7,65 @@ members = [
 resolver = "2"
 exclude = ["axoproject/tests/projects/"]
 
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/axodotdev/cargo-dist"
+homepage = "https://opensource.axo.dev/cargo-dist/"
+version = "0.18.0"
+
+[workspace.dependencies]
+# intra-workspace deps (you need to bump these versions when you cut releases too!
+cargo-dist-schema = { version = "=0.18.0", path = "cargo-dist-schema" }
+axoproject = { version = "=0.18.0", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects"] }
+
+# first-party deps
+axocli = { version = "0.2.0" }
+axoupdater = { version = "0.6.6" }
+axotag = "0.2.0"
+axoasset = { version = "0.10.1", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
+axoprocess = { version = "0.2.0" }
+gazenot = { version = "0.3.2" }
+
+# third-party deps
+clap = { version = "4.5.8", features = ["derive"] }
+console = { version = "0.15.8" }
+clap-cargo = { version = "0.14.0" }
+reqwest = { version = "0.12.5", default-features = false, features = ["blocking", "rustls-tls", "json"] }
+comfy-table = "7.1.1"
+miette = { version = "7.2.0" }
+thiserror = "1.0.61"
+tracing = { version = "0.1.36", features = ["log"] }
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+cargo_metadata = "0.18.1"
+camino = { version = "1.1.4", features = ["serde1"] }
+semver = "1.0.23"
+newline-converter = "0.3.0"
+dialoguer = "0.11.0"
+sha2 = "0.10.6"
+minijinja = { version = "2.0.2", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
+include_dir = "0.7.4"
+itertools = "0.13.0"
+cargo-wix = "0.3.8"
+uuid = { version = "1", features = ["v4"] }
+mach_object = "0.1"
+goblin = "0.8.2"
+similar = "2.5.0"
+tokio = { version = "1.38.0", features = ["full"] }
+temp-dir = "0.1.13"
+sha3 = "0.10.8"
+blake2 = "0.10.6"
+homedir = "0.2.1"
+insta = { version = "1.39.0", features = ["filters"] }
+tar = "0.4.41"
+flate2 = "1.0.30"
+pathdiff = { version = "0.2.1", features = ["camino"] }
+url = "2.5.0"
+parse-changelog = "0.6.8"
+schemars = "0.8.21"
+
+
 [workspace.metadata.release]
 shared-version = true
 tag-name = "v{{version}}"
@@ -16,7 +75,7 @@ publish = false
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.17.0-prerelease.2"
+cargo-dist-version = "0.18.0-prerelease.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
