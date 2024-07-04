@@ -84,4 +84,7 @@ You'll end up publish the binaries in "axolotlsay" to an npm package called "@ax
 
 The current implementation can only [unpack `.tar.gz` archives][issue-unpacking]. As a result, `cargo dist init` will prompt you to change [windows-archive][config-windows-archive] and [unix-archive][config-unix-archive] to ".tar.gz" if you enable the npm installer, erroring if you decline.
 
+[artifact-url]: ../reference/artifact-url.md
+[config-windows-archive]: ../reference/config.md#windows-archive
+[config-unix-archive]: ../reference/config.md#unix-archive
 [issue-unpacking]: https://github.com/axodotdev/cargo-dist/issues/226
