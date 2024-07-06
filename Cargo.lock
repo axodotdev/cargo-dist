@@ -213,8 +213,9 @@ dependencies = [
 
 [[package]]
 name = "axoupdater"
-version = "0.6.7"
-source = "git+https://github.com/axodotdev/axoupdater?branch=native-tls#ecbc2ac9f740d85a9fcad46dc6d065de2efb42a2"
+version = "0.6.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d51e87c9280d6f722419f783fdcef745dffd6b45d38d665380ae6b7f237d3b74"
 dependencies = [
  "axoasset",
  "axoprocess",
