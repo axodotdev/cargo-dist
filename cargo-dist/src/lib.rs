@@ -209,7 +209,7 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
     // Install to a temporary path before moving it to the destination
     cmd.arg("install")
         .arg("axoupdater-cli")
-        // .arg("--features=tls_native_roots")
+        .arg("--features=tls_native_roots")
         .arg("--root")
         .arg(&tmp_root)
         .current_dir(&tmp_root)
