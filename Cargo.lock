@@ -152,6 +152,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "axoasset"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45e7b7ac1c1cd4fdcaa2f9e704defa9defd996039083d85e17efa5e8eefb3bd2"
+dependencies = [
+ "camino",
+ "image",
+ "miette 7.2.0",
+ "mime",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "url",
+ "walkdir",
+]
+
+[[package]]
 name = "axocli"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -183,7 +201,7 @@ dependencies = [
 name = "axoproject"
 version = "0.18.0"
 dependencies = [
- "axoasset",
+ "axoasset 0.10.1",
  "camino",
  "guppy",
  "itertools 0.13.0",
@@ -213,18 +231,17 @@ dependencies = [
 
 [[package]]
 name = "axoupdater"
-version = "0.6.6"
+version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cc5997cf9d00fa790ba6f19688d93b89760bd641d1c2482bcfbc2bf56988576"
+checksum = "d51e87c9280d6f722419f783fdcef745dffd6b45d38d665380ae6b7f237d3b74"
 dependencies = [
- "axoasset",
+ "axoasset 1.0.0",
  "axoprocess",
  "axotag",
  "camino",
  "gazenot",
  "homedir",
  "miette 7.2.0",
- "reqwest",
  "serde",
  "tempfile",
  "thiserror",
@@ -372,7 +389,7 @@ dependencies = [
 name = "cargo-dist"
 version = "0.18.0"
 dependencies = [
- "axoasset",
+ "axoasset 0.10.1",
  "axocli",
  "axoprocess",
  "axoproject",
@@ -987,11 +1004,11 @@ dependencies = [
 
 [[package]]
 name = "gazenot"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c01a17924566e445bdf7499f23c0910e8ebe6c34dffd8a72ebdaa81395c3a7"
+checksum = "7628c2e8e192258187c04c7632aa417b17d4b290b2c233c5f423c51119018db8"
 dependencies = [
- "axoasset",
+ "axoasset 1.0.0",
  "backon",
  "camino",
  "miette 7.2.0",
