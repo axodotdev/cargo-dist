@@ -13,7 +13,7 @@
 use std::io::Write;
 
 use announce::{TagMode, TagSettings};
-use axoasset::{LocalAsset, RemoteAsset};
+use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use backend::{
     ci::CiInfo,
@@ -48,6 +48,7 @@ pub mod host;
 mod init;
 pub mod linkage;
 pub mod manifest;
+pub mod net;
 pub mod platform;
 pub mod sign;
 pub mod tasks;
@@ -177,17 +178,16 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResul
         updater.target_triple
     );
 
-    let client = reqwest::blocking::Client::new();
-    let resp = client
-        .head(&expected_url)
-        .send()
+    let handle = tokio::runtime::Handle::current();
+    let resp = handle
+        .block_on(dist_graph.axoclient.head(&expected_url))
         .map_err(|_| DistError::AxoupdaterReleaseCheckFailed {})?;
 
     // If we have a prebuilt asset, use it
     if resp.status().is_success() {
         fetch_updater_from_binary(dist_graph, updater, &expected_url)
     // If we got a 404, there's no asset, so we have to build from source
-    } else if resp.status() == reqwest::StatusCode::NOT_FOUND {
+    } else if resp.status() == axoasset::reqwest::StatusCode::NOT_FOUND {
         fetch_updater_from_source(dist_graph, updater)
     // Some unexpected result that wasn't 200 or 404
     } else {
@@ -209,6 +209,7 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
     // Install to a temporary path before moving it to the destination
     cmd.arg("install")
         .arg("axoupdater-cli")
+        .arg("--features=tls_native_roots")
         .arg("--root")
         .arg(&tmp_root)
         .current_dir(&tmp_root)
@@ -222,7 +223,7 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
     if updater.target_triple.contains("windows") {
         source.set_extension("exe");
     }
-    LocalAsset::copy(source, dist_graph.target_dir.join(&updater.target_filename))?;
+    LocalAsset::copy_file_to_file(source, dist_graph.target_dir.join(&updater.target_filename))?;
 
     Ok(())
 }
@@ -244,8 +245,11 @@ fn fetch_updater_from_binary(
     let zipball_target = tmp_root.join("archive");
 
     let handle = tokio::runtime::Handle::current();
-    let asset = handle.block_on(RemoteAsset::load_bytes(asset_url))?;
-    std::fs::write(&zipball_target, asset)?;
+    handle.block_on(
+        dist_graph
+            .axoclient
+            .load_and_write_to_file(asset_url, &zipball_target),
+    )?;
     let suffix = if updater.target_triple.contains("windows") {
         ".exe"
     } else {
@@ -516,12 +520,12 @@ fn init_artifact_dir(_dist: &DistGraph, artifact: &Artifact) -> DistResult<()> {
 }
 
 pub(crate) fn copy_file(src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
-    LocalAsset::copy_named(src_path, dest_path)?;
+    LocalAsset::copy_file_to_file(src_path, dest_path)?;
     Ok(())
 }
 
 pub(crate) fn copy_dir(src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
-    LocalAsset::copy_dir_named(src_path, dest_path)?;
+    LocalAsset::copy_dir_to_dir(src_path, dest_path)?;
     Ok(())
 }
 

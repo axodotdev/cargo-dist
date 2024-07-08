@@ -1,5 +1,6 @@
 //! Code/artifact signing support
 
+use axoasset::AxoClient;
 use camino::Utf8Path;
 
 use crate::{config::ProductionMode, DistResult, TargetTriple};
@@ -15,12 +16,13 @@ pub struct Signing {
 impl Signing {
     /// Setup signing
     pub fn new(
+        client: &AxoClient,
         host_target: &TargetTriple,
         dist_dir: &Utf8Path,
         ssldotcom_windows_sign: Option<ProductionMode>,
     ) -> DistResult<Self> {
         let ssldotcom =
-            ssldotcom::CodeSignTool::new(host_target, dist_dir, ssldotcom_windows_sign)?;
+            ssldotcom::CodeSignTool::new(client, host_target, dist_dir, ssldotcom_windows_sign)?;
         Ok(Self { ssldotcom })
     }
 
