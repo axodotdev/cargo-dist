@@ -25,7 +25,7 @@ axoupdater = { version = "0.6.6" }
 axotag = "0.2.0"
 axoasset = { version = "0.10.1", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
 axoprocess = { version = "0.2.0" }
-gazenot = { version = "0.3.2" }
+gazenot = { version = "0.3.3" }
 
 # third-party deps
 clap = { version = "4.5.8", features = ["derive"] }
