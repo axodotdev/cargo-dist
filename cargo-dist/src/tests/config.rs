@@ -74,6 +74,8 @@ pr-run-mode = "plan"
 hosting = ["axodotdev", "github"]
 # Whether to install an updater program
 install-updater = false
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
 
 [[workspace.metadata.dist.extra-artifacts]]
 artifacts = ["dist-manifest-schema.json"]

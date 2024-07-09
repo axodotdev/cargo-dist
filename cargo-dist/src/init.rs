@@ -8,8 +8,8 @@ use serde::Deserialize;
 
 use crate::{
     config::{
-        self, CiStyle, CompressionImpl, Config, DistMetadata, HostingStyle, InstallerStyle,
-        PublishStyle, ZipStyle,
+        self, CiStyle, CompressionImpl, Config, DistMetadata, HostingStyle, InstallPathStrategy,
+        InstallerStyle, PublishStyle, ZipStyle,
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -867,6 +867,22 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         bin_aliases: _,
         system_dependencies: _,
     } = &meta;
+
+    // Forcibly inline the default install_path if not specified,
+    // and if we've specified a shell or powershell installer
+    let install_path = if install_path.is_none()
+        && installers
+            .as_ref()
+            .map(|i| {
+                i.iter()
+                    .any(|el| matches!(el, InstallerStyle::Shell | InstallerStyle::Powershell))
+            })
+            .unwrap_or(false)
+    {
+        &Some(InstallPathStrategy::default_list())
+    } else {
+        install_path
+    };
 
     apply_optional_value(
         table,
