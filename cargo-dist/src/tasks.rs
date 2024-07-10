@@ -1246,7 +1246,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let npm_scope = npm_scope.clone();
         let install_path = install_path
             .clone()
-            .unwrap_or(vec![InstallPathStrategy::CargoHome]);
+            .unwrap_or(InstallPathStrategy::default_list());
         let install_success_msg = install_success_msg
             .as_deref()
             .unwrap_or("everything's installed!")

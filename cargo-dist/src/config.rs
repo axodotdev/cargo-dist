@@ -1140,6 +1140,13 @@ pub enum InstallPathStrategy {
     },
 }
 
+impl InstallPathStrategy {
+    /// Returns the default set of install paths
+    pub fn default_list() -> Vec<Self> {
+        vec![InstallPathStrategy::CargoHome]
+    }
+}
+
 impl std::str::FromStr for InstallPathStrategy {
     type Err = DistError;
     fn from_str(path: &str) -> DistResult<Self> {
