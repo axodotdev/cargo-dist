@@ -1,6 +1,27 @@
 # Unreleased
 
-Nothing Yet!
+This release improves support for corporate networks, fixes a regression in the ssldotcom-windows-sign feature, and lands some more groundwork for future improvements.
+
+
+## System Certificates
+
+When doing network requests, cargo-dist and axoupdater can be configured to look at both the system certificate stores and [builtin webpki-roots](https://github.com/rustls/webpki-roots). Usually the latter is sufficient, but the former may be necessary to when running these tools in some corporate networks.
+
+As of cargo-dist 0.19.0 and axoupdater 0.6.8, all prebuilt binaries of these two tools have both sources enabled, ensuring maximum interoperability and portability.
+
+When building from source (with e.g. `cargo install`), or using axoupdater as library, we currently default to only using the webpki roots. If you need system certificates to be consulted, they can be enabled in either project with `--features=tls_native_roots`.
+
+In the future we *may* just enable system certificates by default. We're being a bit cautious because we've heard some concerns about portability and performance but haven't yet seen them in the wild, at least for the systems we've tested on.
+
+* @gankra + @mchernicoff [feat: add experimental tls_native_roots feature](https://github.com/axodotdev/cargo-dist/pull/1160)
+* [docs](TODO)
+
+
+## Fixes
+
+* @gankra [fix: update axoasset to fix regression in ssldotcom-windows-sign](https://github.com/axodotdev/cargo-dist/pull/1160)
+* @mistydemeo [fix: handle Invoke-Installer errors](https://github.com/axodotdev/cargo-dist/pull/1199)
+* @mistydemeo [fix: writeback default install-path to config to prepare for changing the default](https://github.com/axodotdev/cargo-dist/pull/1195)
 
 
 # Version 0.18.0 (2024-07-03)
