@@ -14,7 +14,6 @@ When building from source (with e.g. `cargo install`), or using axoupdater as li
 In the future we *may* just enable system certificates by default. We're being a bit cautious because we've heard some concerns about portability and performance but haven't yet seen them in the wild, at least for the systems we've tested on.
 
 * @gankra + @mchernicoff [feat: add experimental tls_native_roots feature](https://github.com/axodotdev/cargo-dist/pull/1160)
-* [docs](TODO)
 
 
 ## Fixes
