@@ -383,6 +383,21 @@ pub enum DistError {
         /// The input
         levels: Vec<String>,
     },
+
+    /// An unknown target was found
+    #[error("Unrecognized target: {target}")]
+    #[diagnostic(help("The full list of supported targets can be found here: https://opensource.axo.dev/cargo-dist/book/reference/config.html#targets"))]
+    UnrecognizedTarget {
+        /// The target in question
+        target: String,
+    },
+
+    /// Installers requested despite having nothing to install
+    #[error("Installers were requested, but app contains no installable binaries")]
+    #[diagnostic(help(
+        "The only installable files are libraries, but `install-cdylibs` isn't enabled."
+    ))]
+    EmptyInstaller {},
 }
 
 /// Errors related to finding the project

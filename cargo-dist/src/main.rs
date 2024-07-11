@@ -124,6 +124,12 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
                             writeln!(out, "        (symbols artifact: {syms})")?;
                         }
                     }
+                    if let AssetKind::CDynamicLibrary(lib) = &asset.kind {
+                        writeln!(out, "      [cdylib] {}", path)?;
+                        if let Some(syms) = &lib.symbols_artifact {
+                            writeln!(out, "        (symbols artifact: {syms})")?;
+                        }
+                    }
                 }
             }
 
@@ -131,7 +137,10 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
             // (We have more specific labels than "misc" here, but we don't care)
             let mut printed_asset = false;
             for asset in &artifact.assets {
-                if !matches!(&asset.kind, AssetKind::Executable(_)) {
+                if !matches!(
+                    &asset.kind,
+                    AssetKind::Executable(_) | AssetKind::CDynamicLibrary(_)
+                ) {
                     if let Some(path) = &asset.path {
                         if printed_asset {
                             write!(out, ", ")?;

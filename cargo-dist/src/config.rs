@@ -419,9 +419,18 @@ pub struct DistMetadata {
     /// Whether artifacts/installers for this app should be displayed in release bodies
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display: Option<bool>,
+
     /// How to refer to the app in release bodies
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
+
+    /// Whether to include built C dynamic libraries in the release archive
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub package_cdylibs: Option<bool>,
+
+    /// Whether installers should install cdylibs from the release archive
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_cdylibs: Option<bool>,
 }
 
 /// values of the form `permission-name: read`
@@ -502,6 +511,8 @@ impl DistMetadata {
             github_releases_submodule_path: _,
             display: _,
             display_name: _,
+            package_cdylibs: _,
+            install_cdylibs: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -593,6 +604,8 @@ impl DistMetadata {
             github_releases_submodule_path,
             display,
             display_name,
+            package_cdylibs,
+            install_cdylibs,
         } = self;
 
         // Check for global settings on local packages
@@ -761,6 +774,12 @@ impl DistMetadata {
         }
         if display_name.is_none() {
             display_name.clone_from(&workspace_config.display_name);
+        }
+        if package_cdylibs.is_none() {
+            package_cdylibs.clone_from(&workspace_config.package_cdylibs);
+        }
+        if install_cdylibs.is_none() {
+            install_cdylibs.clone_from(&workspace_config.install_cdylibs);
         }
 
         // This was historically implemented as extend, but I'm not convinced the

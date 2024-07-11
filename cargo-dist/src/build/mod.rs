@@ -6,8 +6,8 @@ use cargo_dist_schema::{AssetInfo, DistManifest};
 use tracing::info;
 
 use crate::{
-    copy_file, linkage::determine_linkage, Binary, BinaryIdx, DistError, DistGraph, DistResult,
-    SortedMap, TargetTriple,
+    copy_file, linkage::determine_linkage, Binary, BinaryIdx, BinaryKind, DistError, DistGraph,
+    DistResult, SortedMap, TargetTriple,
 };
 
 pub mod cargo;
@@ -41,6 +41,8 @@ pub struct ExpectedBinary {
     ///
     /// Initially this is empty, but should be Some by the end of the build from calls to found_bin
     pub sym_paths: Vec<Utf8PathBuf>,
+    /// What kind of binary this is (executable, dynamic library, etc.)
+    pub kind: BinaryKind,
 }
 
 impl BuildExpectations {
@@ -60,6 +62,7 @@ impl BuildExpectations {
                     idx: binary_idx,
                     src_path: None,
                     sym_paths: vec![],
+                    kind: binary.kind,
                 },
             );
         }
@@ -86,12 +89,16 @@ impl BuildExpectations {
     ///
     /// NOTE: it is correct/expected to hand this a bunch of random paths to things
     /// that vaguely might be what we want, assuming it knows how to pick the right ones out.
-    pub fn found_bin(
-        &mut self,
-        pkg_id: String,
-        src_path: Utf8PathBuf,
-        maybe_symbols: Vec<Utf8PathBuf>,
-    ) {
+    pub fn found_bins(&mut self, pkg_id: String, filenames: Vec<Utf8PathBuf>) {
+        // The files we're given by cargo are one big mush of
+        // the executables, libraries, symbols, etc.
+        // Try to partition this into what's probably symbols
+        // and probably exes/libs
+        let (maybe_symbols, maybe_bins): (Vec<_>, Vec<_>) = filenames
+            .into_iter()
+            // FIXME: unhardcode this when we add support for other symbol kinds!
+            .partition(|f| f.extension().map(|e| e == "pdb").unwrap_or(false));
+
         // NOTE: its expected for these early returns to trigger. It's this functions
         // jobs to sort through build outputs and grab the ones we actually care about.
         //
@@ -99,34 +106,38 @@ impl BuildExpectations {
         // of feature resolution), this can produce a bunch of binaries for examples or
         // packages you don't care about, which cargo/rustc will happily report back to us,
         // and we need to be aware enough to throw those irrelevant results out.
-        info!("got a new binary: {}", src_path);
+        for src_path in maybe_bins {
+            info!("got a new binary: {}", src_path);
 
-        // lookup the package
-        let Some(pkg) = self.packages.get_mut(&pkg_id) else {
-            return;
-        };
-
-        // lookup the binary in the package
-        let Some(bin_name) = src_path.file_stem() else {
-            return;
-        };
-        let Some(bin_result) = pkg.binaries.get_mut(bin_name) else {
-            return;
-        };
-
-        // Cool, we expected this binary, register its location!
-        bin_result.src_path = Some(src_path);
-
-        // Also register symbols
-        for sym_path in maybe_symbols {
-            // FIXME: unhardcode this when we add support for other symbol kinds!
-            let is_symbols = sym_path.extension().map(|e| e == "pdb").unwrap_or(false);
-            if !is_symbols {
+            // lookup the package
+            let Some(pkg) = self.packages.get_mut(&pkg_id) else {
                 continue;
-            }
+            };
 
-            // These are symbols we expected! Save the path.
-            bin_result.sym_paths.push(sym_path);
+            // lookup the binary in the package
+            let Some(bin_name) = bin_basename(&src_path) else {
+                continue;
+            };
+            let Some(bin_result) = pkg.binaries.get_mut(&bin_name) else {
+                continue;
+            };
+
+            // Cool, we expected this binary, register its location!
+            bin_result.src_path = Some(src_path);
+
+            // Also register symbols
+            for sym_path in &maybe_symbols {
+                let is_for_this_bin = sym_path
+                    .file_stem()
+                    .map(|stem| stem == bin_name)
+                    .unwrap_or(false);
+                if !is_for_this_bin {
+                    continue;
+                }
+
+                // These are symbols we expected! Save the path.
+                bin_result.sym_paths.push(sym_path.to_owned());
+            }
         }
     }
 
@@ -236,6 +247,35 @@ impl BuildExpectations {
 
         Ok(())
     }
+}
+
+/// Returns the base filename for `src_path`, with file extension
+/// stripped and, for .so/.dylib libraries, `lib` prefix too
+fn bin_basename(src_path: &Utf8PathBuf) -> Option<String> {
+    if let Some(extname) = src_path.extension() {
+        match extname {
+            // If this is a Linux/macOS library, strip both
+            // the file extension *and* the lib prefix.
+            // (Windows .dll libraries are missing the lib
+            // prefix, so we don't need to handle those.)
+            "so" | "dylib" => {
+                return src_path
+                    .file_stem()
+                    .and_then(|stem| stem.strip_prefix("lib"))
+                    .map(String::from);
+            }
+            // If this is a .dll or .exe, strip just the extension
+            "dll" | "exe" => {
+                return src_path.file_stem().map(String::from);
+            }
+            _ => {}
+        }
+    }
+
+    // If it's none of the above, return the filename unaltered.
+    // This protects us from confusing other file types, like
+    // .pdbs, for for the files we were really looking for.
+    src_path.file_name().map(String::from)
 }
 
 fn package_id_string(id: Option<&PackageId>) -> String {

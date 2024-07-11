@@ -385,6 +385,28 @@ expression: json_schema
           }
         },
         {
+          "description": "A C dynamic library",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "c_dynamic_library"
+              ]
+            },
+            "symbols_artifact": {
+              "description": "The name of the Artifact containing symbols for this library",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
           "description": "A README file",
           "type": "object",
           "required": [

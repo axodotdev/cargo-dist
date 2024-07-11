@@ -201,11 +201,8 @@ pub fn build_cargo_target(
         };
         match message {
             cargo_metadata::Message::CompilerArtifact(artifact) => {
-                let Some(new_exe) = artifact.executable else {
-                    continue;
-                };
-                // Hey we got an executable, record that fact
-                expected.found_bin(artifact.package_id.to_string(), new_exe, artifact.filenames);
+                // Hey we got some files, record that fact
+                expected.found_bins(artifact.package_id.to_string(), artifact.filenames);
             }
             _ => {
                 // Nothing else interesting?

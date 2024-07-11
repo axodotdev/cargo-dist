@@ -1,7 +1,7 @@
 //! Mock testing utils, mostly you want the `workspace_*` functions,
 //! but other functions/consts will help you assert the results
 
-use crate::{CargoInfo, Tools};
+use crate::{announce::ReleaseArtifacts, CargoInfo, Tools};
 use axoproject::{AutoIncludes, PackageIdx, PackageInfo, WorkspaceInfo};
 use serde_json::json;
 
@@ -112,8 +112,12 @@ pub fn pkg_axo_bin_alpha() -> PackageInfo {
         ..mock_package(BIN_AXO_NAME, BIN_AXO_VER_ALPHA)
     }
 }
-pub fn entry_axo_bin() -> (PackageIdx, Vec<String>) {
-    (BIN_AXO_IDX, vec![BIN_AXO_NAME.to_owned()])
+pub fn entry_axo_bin() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: BIN_AXO_IDX,
+        executables: vec![BIN_AXO_NAME.to_owned()],
+        cdylibs: vec![],
+    }
 }
 
 /// some-lib 1.0.0
@@ -122,8 +126,12 @@ pub fn pkg_some_lib() -> PackageInfo {
         ..mock_package(LIB_SOME_NAME, LIB_SOME_VER)
     }
 }
-pub fn entry_some_lib() -> (PackageIdx, Vec<String>) {
-    (LIB_SOME_IDX, vec![])
+pub fn entry_some_lib() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: LIB_SOME_IDX,
+        executables: vec![],
+        cdylibs: vec![],
+    }
 }
 
 /// helper-bin 1.0.0 (has 2 binaries)
@@ -133,11 +141,12 @@ pub fn pkg_helper_bin() -> PackageInfo {
         ..mock_package(BIN_HELPER_NAME, BIN_HELPER_VER)
     }
 }
-pub fn entry_helper_bin() -> (PackageIdx, Vec<String>) {
-    (
-        BIN_HELPER_IDX,
-        vec![BIN_HELPER_NAME.to_owned(), BIN_HELPER_NAME2.to_owned()],
-    )
+pub fn entry_helper_bin() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: BIN_HELPER_IDX,
+        executables: vec![BIN_HELPER_NAME.to_owned(), BIN_HELPER_NAME2.to_owned()],
+        cdylibs: vec![],
+    }
 }
 
 /// other-lib 0.5.0 (non-harmonious version)
@@ -146,8 +155,12 @@ pub fn pkg_other_lib() -> PackageInfo {
         ..mock_package(LIB_OTHER_NAME, LIB_OTHER_VER)
     }
 }
-pub fn entry_other_lib() -> (PackageIdx, Vec<String>) {
-    (LIB_OTHER_IDX, vec![])
+pub fn entry_other_lib() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: LIB_OTHER_IDX,
+        executables: vec![],
+        cdylibs: vec![],
+    }
 }
 
 /// oddball-bin 0.1.0 (non-harmonious version)
@@ -157,8 +170,12 @@ pub fn pkg_oddball_bin() -> PackageInfo {
         ..mock_package(BIN_ODDBALL_NAME, BIN_ODDBALL_VER)
     }
 }
-pub fn entry_oddball_bin() -> (PackageIdx, Vec<String>) {
-    (BIN_ODDBALL_IDX, vec![BIN_ODDBALL_NAME.to_owned()])
+pub fn entry_oddball_bin() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: BIN_ODDBALL_IDX,
+        executables: vec![BIN_ODDBALL_NAME.to_owned()],
+        cdylibs: vec![],
+    }
 }
 
 /// forced-bin 1.0.0
@@ -176,8 +193,12 @@ pub fn pkg_forced_bin() -> PackageInfo {
         ..mock_package(BIN_FORCED_NAME, BIN_FORCED_VER)
     }
 }
-pub fn entry_forced_bin() -> (PackageIdx, Vec<String>) {
-    (BIN_FORCED_IDX, vec![BIN_FORCED_NAME.to_owned()])
+pub fn entry_forced_bin() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: BIN_FORCED_IDX,
+        executables: vec![BIN_FORCED_NAME.to_owned()],
+        cdylibs: vec![],
+    }
 }
 
 /// test-bin1 1.0.0

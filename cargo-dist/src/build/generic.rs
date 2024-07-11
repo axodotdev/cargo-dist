@@ -205,7 +205,7 @@ pub fn build_generic_target(
     for binary_idx in &target.expected_binaries {
         let binary = dist_graph.binary(*binary_idx);
         let src_path = target.out_dir.join(&binary.file_name);
-        expected.found_bin(package_id_string(binary.pkg_id.as_ref()), src_path, vec![]);
+        expected.found_bins(package_id_string(binary.pkg_id.as_ref()), vec![src_path]);
     }
 
     // Check and process the binaries

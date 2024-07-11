@@ -25,8 +25,15 @@ pub(crate) struct AnnouncementTag {
     pub package: Option<PackageIdx>,
     /// whether we're prereleasing
     pub prerelease: bool,
-    /// Which packages+bins we're announcing
-    pub rust_releases: Vec<(PackageIdx, Vec<String>)>,
+    /// Which packages+bins+libs we're announcing
+    pub rust_releases: Vec<ReleaseArtifacts>,
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct ReleaseArtifacts {
+    pub package_idx: PackageIdx,
+    pub executables: Vec<String>,
+    pub cdylibs: Vec<String>,
 }
 
 /// Settings for `select_tag`
@@ -82,8 +89,6 @@ pub enum TagMode {
     /// `TagMode::Force` to rewrite the packages versions to match this value.
     ForceMaxAndTimestamp,
 }
-
-type ReleasesAndBins = Vec<(PackageIdx, Vec<String>)>;
 
 impl<'a> DistGraphBuilder<'a> {
     pub(crate) fn compute_announcement_info(&mut self, announcing: &AnnouncementTag) {
@@ -164,9 +169,20 @@ fn check_dist_package(
     pkg: &axoproject::PackageInfo,
     announcing: &PartialAnnouncementTag,
 ) -> Option<String> {
-    // Nothing to publish if there's no binaries!
-    if pkg.binaries.is_empty() {
-        return Some("no binaries".to_owned());
+    let package_cdylibs = graph
+        .package_metadata(pkg_id)
+        .package_cdylibs
+        .unwrap_or(false);
+
+    let package_empty = if package_cdylibs {
+        pkg.binaries.is_empty() && pkg.cdylibs.is_empty()
+    } else {
+        pkg.binaries.is_empty()
+    };
+
+    // Nothing to publish if there's no binaries/libraries!
+    if package_empty {
+        return Some("no binaries or cdylibs".to_owned());
     }
 
     // If [metadata.dist].dist is explicitly set, respect it!
@@ -334,7 +350,7 @@ fn require_axotag_consistency(
 fn select_packages(
     graph: &DistGraphBuilder,
     announcing: &PartialAnnouncementTag,
-) -> ReleasesAndBins {
+) -> Vec<ReleaseArtifacts> {
     info!("");
     info!("selecting packages from workspace: ");
     // Choose which binaries we want to release
@@ -367,9 +383,23 @@ fn select_packages(
             }
         }
 
+        let mut cdylibs = vec![];
+        for library in &pkg.cdylibs {
+            info!("    {}", sty.apply_to(format!("[cdylib] {}", library)));
+            // In the future might want to allow this to be granular for each library
+            if disabled_reason.is_none() {
+                cdylibs.push(library.to_owned());
+            }
+        }
+
         // If any binaries were accepted for this package, it's a Release!
-        if !binaries.is_empty() {
-            releases.push((pkg_id, binaries));
+        if !binaries.is_empty() || !cdylibs.is_empty() {
+            let release = ReleaseArtifacts {
+                package_idx: pkg_id,
+                executables: binaries,
+                cdylibs,
+            };
+            releases.push(release);
         }
     }
     info!("");
@@ -378,7 +408,11 @@ fn select_packages(
     // add that package as a release still, on the assumption it's a Library
     if releases.is_empty() {
         if let ReleaseType::Package { idx, version: _ } = announcing.release {
-            releases.push((PackageIdx(idx), vec![]));
+            releases.push(ReleaseArtifacts {
+                package_idx: PackageIdx(idx),
+                executables: vec![],
+                cdylibs: vec![],
+            });
         }
     }
 
@@ -386,7 +420,7 @@ fn select_packages(
 }
 
 /// Require at least one release, otherwise provide helpful info
-fn require_releases(graph: &DistGraphBuilder, releases: &ReleasesAndBins) -> DistResult<()> {
+fn require_releases(graph: &DistGraphBuilder, releases: &[ReleaseArtifacts]) -> DistResult<()> {
     if !releases.is_empty() {
         return Ok(());
     }
@@ -398,7 +432,10 @@ fn require_releases(graph: &DistGraphBuilder, releases: &ReleasesAndBins) -> Dis
     // `--tag` so we can get all the options for a good help message.
     let announcing = PartialAnnouncementTag::default();
     let rust_releases = select_packages(graph, &announcing);
-    let versions = possible_tags(graph, rust_releases.iter().map(|(idx, _)| *idx));
+    let versions = possible_tags(
+        graph,
+        rust_releases.iter().map(|release| release.package_idx),
+    );
     let help = tag_help(graph, versions, "You may need to pass the current version as --tag, or need to give all your packages the same version");
     Err(DistError::NothingToRelease { help })
 }
@@ -406,7 +443,7 @@ fn require_releases(graph: &DistGraphBuilder, releases: &ReleasesAndBins) -> Dis
 /// If we don't have a tag yet we MUST successfully select one here or fail
 fn ensure_tag(
     graph: &mut DistGraphBuilder,
-    releases: &ReleasesAndBins,
+    releases: &[ReleaseArtifacts],
     announcing: &mut PartialAnnouncementTag,
     settings: &TagSettings,
 ) -> DistResult<()> {
@@ -422,7 +459,7 @@ fn ensure_tag(
         }
         TagMode::Infer => {
             // Group distable packages by version, if there's only one then use that as the tag
-            let versions = possible_tags(graph, releases.iter().map(|(idx, _)| *idx));
+            let versions = possible_tags(graph, releases.iter().map(|release| release.package_idx));
             if versions.len() == 1 {
                 // Nice, one version, use it
                 let version = *versions.first_key_value().unwrap().0;
@@ -465,7 +502,7 @@ fn ensure_tag(
                 }
                 ReleaseType::Version(version) => {
                     // It was indeed a version tag, force all distable packages to have that version
-                    let packages = releases.iter().map(|(idx, _)| *idx);
+                    let packages = releases.iter().map(|release| release.package_idx);
                     overwrite_package_versions(graph, packages.clone(), version);
                 }
                 ReleaseType::Package { idx, version } => {
@@ -489,7 +526,7 @@ fn ensure_tag(
             // we're trying to release (because e.g. axo Releases will check that server-side).
             //
             // So we do the following set of transforms to ensure that.
-            let packages = releases.iter().map(|(idx, _)| *idx);
+            let packages = releases.iter().map(|release| release.package_idx);
             // First, get the maximum version of all distable packages, as a way to get
             // a "reasonable" version. This will work for a fully unified version workspace,
             // or for a workspace where packages that didn't change are allowed to not bump ver.

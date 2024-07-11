@@ -339,6 +339,9 @@ pub enum AssetKind {
     /// An executable artifact
     #[serde(rename = "executable")]
     Executable(ExecutableAsset),
+    /// A C dynamic library
+    #[serde(rename = "c_dynamic_library")]
+    CDynamicLibrary(DynamicLibraryAsset),
     /// A README file
     #[serde(rename = "readme")]
     Readme,
@@ -394,6 +397,15 @@ pub enum ArtifactKind {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ExecutableAsset {
     /// The name of the Artifact containing symbols for this executable
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub symbols_artifact: Option<String>,
+}
+
+/// A C dynamic library artifact (so/dylib/dll)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct DynamicLibraryAsset {
+    /// The name of the Artifact containing symbols for this library
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub symbols_artifact: Option<String>,

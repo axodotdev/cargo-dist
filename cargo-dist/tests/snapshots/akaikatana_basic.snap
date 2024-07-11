@@ -28,7 +28,7 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_LIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/akaikatana-repack"
@@ -143,6 +143,8 @@ download_binary_and_run_installer() {
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _libs=""
+            _libs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -151,6 +153,8 @@ download_binary_and_run_installer() {
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _libs=""
+            _libs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -159,6 +163,8 @@ download_binary_and_run_installer() {
             _zip_ext=".zip"
             _bins="akextract.exe akmetadata.exe akrepack.exe"
             _bins_js_array='"akextract.exe","akmetadata.exe","akrepack.exe"'
+            _libs=""
+            _libs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -167,6 +173,8 @@ download_binary_and_run_installer() {
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
+            _libs=""
+            _libs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -177,6 +185,7 @@ download_binary_and_run_installer() {
 
     # Replace the placeholder binaries with the calculated array from above
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_BINS"'/"$_bins_js_array"/)"
+    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_LIBS"'/"$_libs_js_array"/)"
 
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
@@ -235,7 +244,7 @@ download_binary_and_run_installer() {
             ;;
     esac
 
-    install "$_dir" "$_bins" "$_arch" "$@"
+    install "$_dir" "$_bins" "$_libs" "$_arch" "$@"
     local _retval=$?
     if [ "$_retval" != 0 ]; then
         return "$_retval"
@@ -363,6 +372,8 @@ install() {
 
     # The actual path we're going to install to
     local _install_dir
+    # The directory C dynamic/static libraries install to
+    local _lib_install_dir
     # The install prefix we write to the receipt.
     # For organized install methods like CargoHome, which have
     # subdirectories, this is the root without `/bin`. For other
@@ -379,6 +390,7 @@ install() {
     # if we're overriding it.
     if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
+        _lib_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
         _receipt_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
         _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
         _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
@@ -389,6 +401,7 @@ install() {
         if [ -n "${CARGO_HOME:-}" ]; then
             _receipt_install_dir="$CARGO_HOME"
             _install_dir="$CARGO_HOME/bin"
+            _lib_install_dir="$CARGO_HOME/bin"
             _env_script_path="$CARGO_HOME/env"
             # Initially make this early-bound to erase the potentially-temporary env-var
             _install_dir_expr="$_install_dir"
@@ -405,6 +418,7 @@ install() {
         elif [ -n "${HOME:-}" ]; then
             _receipt_install_dir="$HOME/.cargo"
             _install_dir="$HOME/.cargo/bin"
+            _lib_install_dir="$HOME/.cargo/bin"
             _env_script_path="$HOME/.cargo/env"
             _install_dir_expr='$HOME/.cargo/bin'
             _env_script_path_expr='$HOME/.cargo/env'
@@ -428,11 +442,13 @@ install() {
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
+    ensure mkdir -p "$_lib_install_dir"
 
     # copy all the binaries to the install dir
     local _src_dir="$1"
     local _bins="$2"
-    local _arch="$3"
+    local _libs="$3"
+    local _arch="$4"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
         ensure mv "$_bin" "$_install_dir"
@@ -442,6 +458,14 @@ install() {
             ln -sf "$_install_dir/$_bin_name" "$_install_dir/$_dest"
         done
         say "  $_bin_name"
+    done
+    # Like the above, but no aliases
+    for _lib_name in $_libs; do
+        local _lib="$_src_dir/$_lib_name"
+        ensure mv "$_lib" "$_lib_install_dir"
+        # unzip seems to need this chmod
+        ensure chmod +x "$_lib_install_dir/$_lib_name"
+        say "  $_lib_name"
     done
 
     say "everything's installed!"
@@ -1097,7 +1121,7 @@ $app_name = 'akaikatana-repack'
 $app_version = '0.2.0'
 
 $receipt = @"
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_LIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"akaikatana-repack","name":"akaikatana-repack","owner":"mistydemeo","release_type":"github"},"version":"CENSORED"}
 "@
 $receipt_home = "${env:LOCALAPPDATA}\akaikatana-repack"
 
@@ -1113,7 +1137,8 @@ function Install-Binary($install_args) {
   $platforms = @{
     "aarch64-pc-windows-msvc" = @{
       "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc.zip"
-      "bins" = "akextract.exe", "akmetadata.exe", "akrepack.exe"
+      "bins" = @("akextract.exe", "akmetadata.exe", "akrepack.exe")
+      "libs" = @()
       "zip_ext" = ".zip"
       "aliases" = @{
       }
@@ -1121,7 +1146,8 @@ function Install-Binary($install_args) {
     }
     "x86_64-pc-windows-msvc" = @{
       "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc.zip"
-      "bins" = "akextract.exe", "akmetadata.exe", "akrepack.exe"
+      "bins" = @("akextract.exe", "akmetadata.exe", "akrepack.exe")
+      "libs" = @()
       "zip_ext" = ".zip"
       "aliases" = @{
       }
@@ -1132,7 +1158,7 @@ function Install-Binary($install_args) {
   $fetched = Download "$ArtifactDownloadUrl" $platforms
   # FIXME: add a flag that lets the user not do this step
   try {
-    Invoke-Installer -bin_paths $fetched -platforms $platforms "$install_args"
+    Invoke-Installer -artifacts $fetched -platforms $platforms "$install_args"
   } catch {
     throw @"
 We encountered an error trying to perform the installation;
@@ -1190,6 +1216,7 @@ function Download($download_url, $platforms) {
   $info = $platforms[$arch]
   $zip_ext = $info["zip_ext"]
   $bin_names = $info["bins"]
+  $lib_names = $info["libs"]
   $artifact_name = $info["artifact_name"]
 
   # Make a new temp dir to unpack things to
@@ -1231,6 +1258,11 @@ function Download($download_url, $platforms) {
     Write-Verbose "  Unpacked $bin_name"
     $bin_paths += "$tmp\$bin_name"
   }
+  $lib_paths = @()
+  foreach ($lib_name in $lib_names) {
+    Write-Verbose "  Unpacked $lib_name"
+    $lib_paths += "$tmp\$lib_name"
+  }
 
   if ($null -ne $info["updater"]) {
     $updater_id = $info["updater"]["artifact_name"]
@@ -1241,10 +1273,13 @@ function Download($download_url, $platforms) {
     $bin_paths += $out_name
   }
 
-  return $bin_paths
+  return @{
+    "bin_paths" = $bin_paths
+    "lib_paths" = $lib_paths
+  }
 }
 
-function Invoke-Installer($bin_paths, $platforms) {
+function Invoke-Installer($artifacts, $platforms) {
   # Replaces the placeholder binary entry with the actual list of binaries
   $arch = Get-TargetTriple
 
@@ -1257,6 +1292,7 @@ function Invoke-Installer($bin_paths, $platforms) {
 
   # The actual path we're going to install to
   $dest_dir = $null
+  $dest_dir_lib = $null
   # The install prefix we write to the receipt.
   # For organized install methods like CargoHome, which have
   # subdirectories, this is the root without `/bin`. For other
@@ -1267,6 +1303,7 @@ function Invoke-Installer($bin_paths, $platforms) {
   if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
 
     $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+    $dest_dir_lib = $dest_dir
     $receipt_dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }
   if (-Not $dest_dir) {
@@ -1281,6 +1318,7 @@ function Invoke-Installer($bin_paths, $platforms) {
     }
 
     $dest_dir = Join-Path $root "bin"
+    $dest_dir_lib = $dest_dir
     $receipt_dest_dir = $root
   }
 
@@ -1293,9 +1331,10 @@ function Invoke-Installer($bin_paths, $platforms) {
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $receipt_dest_dir.replace("\", "\\"))
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
+  $dest_dir_lib = New-Item -Force -ItemType Directory -Path $dest_dir_lib
   Write-Information "Installing to $dest_dir"
   # Just copy the binaries from the temp location to the install dir
-  foreach ($bin_path in $bin_paths) {
+  foreach ($bin_path in $artifacts["bin_paths"]) {
     $installed_file = Split-Path -Path "$bin_path" -Leaf
     Copy-Item "$bin_path" -Destination "$dest_dir" -ErrorAction Stop
     Remove-Item "$bin_path" -Recurse -Force -ErrorAction Stop
@@ -1309,9 +1348,17 @@ function Invoke-Installer($bin_paths, $platforms) {
       }
     }
   }
+  foreach ($lib_path in $artifacts["lib_paths"]) {
+    $installed_file = Split-Path -Path "$lib_path" -Leaf
+    Copy-Item "$lib_path" -Destination "$dest_dir_lib" -ErrorAction Stop
+    Remove-Item "$lib_path" -Recurse -Force -ErrorAction Stop
+    Write-Information "  $installed_file"
+  }
 
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
+  $formatted_libs = ($info["libs"] | ForEach-Object { '"' + $_ + '"' }) -join ","
+  $receipt = $receipt.Replace('"CARGO_DIST_LIBS"', $formatted_libs)
   # Also replace the aliases with the arch-specific one
   $receipt = $receipt.Replace('"binary_aliases":{}', -join('"binary_aliases":',  $info['aliases_json']))
 

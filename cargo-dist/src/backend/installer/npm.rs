@@ -195,7 +195,7 @@ fn platforms(info: &NpmInstallerInfo) -> PlatformSummary {
         let target = archive.target_triple.clone();
 
         let mut bins = SortedMap::new();
-        for bin in &archive.binaries {
+        for bin in &archive.executables {
             // Add the binary
             let raw_name = bin.strip_suffix(".exe").unwrap_or(bin);
             bins.insert(raw_name.to_owned(), bin.to_owned());
