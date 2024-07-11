@@ -1126,7 +1126,16 @@ function Install-Binary($install_args) {
 
   $fetched = Download "$ArtifactDownloadUrl" $platforms
   # FIXME: add a flag that lets the user not do this step
-  Invoke-Installer -bin_paths $fetched -platforms $platforms "$install_args"
+  try {
+    Invoke-Installer -bin_paths $fetched -platforms $platforms "$install_args"
+  } catch {
+    throw @"
+We encountered an error trying to perform the installation;
+please review the error messages below.
+
+$_
+"@
+  }
 }
 
 function Get-TargetTriple() {
@@ -1283,15 +1292,15 @@ function Invoke-Installer($bin_paths, $platforms) {
   # Just copy the binaries from the temp location to the install dir
   foreach ($bin_path in $bin_paths) {
     $installed_file = Split-Path -Path "$bin_path" -Leaf
-    Copy-Item "$bin_path" -Destination "$dest_dir"
-    Remove-Item "$bin_path" -Recurse -Force
+    Copy-Item "$bin_path" -Destination "$dest_dir" -ErrorAction Stop
+    Remove-Item "$bin_path" -Recurse -Force -ErrorAction Stop
     Write-Information "  $installed_file"
 
     if (($dests = $info["aliases"][$installed_file])) {
       $source = Join-Path "$dest_dir" "$installed_file"
       foreach ($dest_name in $dests) {
           $dest = Join-Path $dest_dir $dest_name
-          $null = New-Item -ItemType HardLink -Target "$source" -Path "$dest" -Force
+          $null = New-Item -ItemType HardLink -Target "$source" -Path "$dest" -Force -ErrorAction Stop
       }
     }
   }
