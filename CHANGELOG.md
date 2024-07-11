@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.19.0 (2024-07-11)
+
 This release improves support for corporate networks, fixes a regression in the ssldotcom-windows-sign feature, and lands some more groundwork for future improvements.
 
 
