@@ -2,7 +2,9 @@
 
 use std::collections::BTreeMap;
 
-use crate::{PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind, WorkspaceSearch};
+use crate::{
+    PackageInfo, Result, Version, WorkspaceInfo, WorkspaceKind, WorkspaceSearch, WorkspaceStructure,
+};
 use axoasset::SourceFile;
 use camino::{Utf8Path, Utf8PathBuf};
 use guppy::{
@@ -57,10 +59,9 @@ fn package_graph(start_dir: &Utf8Path) -> Result<PackageGraph> {
 }
 
 /// Computes [`WorkspaceInfo`][] for the current workspace.
-fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
+fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
     let workspace = pkg_graph.workspace();
     let members = pkg_graph.resolve_workspace();
-    let warnings = vec![];
 
     let manifest_path = workspace.root().join("Cargo.toml");
     // I originally had this as a proper Error but honestly this would be MADNESS and
@@ -85,17 +86,19 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceInfo> {
     let target_dir = workspace.target_directory().to_owned();
     let workspace_dir = workspace.root().to_owned();
 
-    Ok(WorkspaceInfo {
-        kind: WorkspaceKind::Rust,
-        target_dir,
-        workspace_dir,
-        package_info: all_package_info,
-        manifest_path,
-        root_auto_includes,
-        cargo_metadata_table,
-        cargo_profiles,
+    Ok(WorkspaceStructure {
+        sub_workspaces: vec![],
+        packages: all_package_info,
+        workspace: WorkspaceInfo {
+            kind: WorkspaceKind::Rust,
+            target_dir,
+            workspace_dir,
 
-        warnings,
+            manifest_path,
+            root_auto_includes,
+            cargo_metadata_table,
+            cargo_profiles,
+        },
     })
 }
 
@@ -193,9 +196,12 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
             )
         };
 
+    let version = Some(Version::Cargo(package.version().clone()));
     let mut info = PackageInfo {
+        true_name: package.name().to_owned(),
+        true_version: version.clone(),
         name: package.name().to_owned(),
-        version: Some(Version::Cargo(package.version().clone())),
+        version,
         manifest_path,
         package_root: package_root.clone(),
         description: package.description().map(ToOwned::to_owned),

@@ -102,7 +102,7 @@ path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 #[test]
 fn axolotlsay_custom_formula() -> Result<(), miette::Report> {
     let test_name = _function_name!();
-    AXOLOTLSAY.run_test(|ctx| {
+    AXOLOTLSAY.run_test(|mut ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
@@ -125,6 +125,8 @@ path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
 "#
         ))?;
+
+        ctx.options.set_options("axolotlsay").homebrew_package_name = Some("axolotl-brew".to_owned());
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
@@ -404,7 +406,7 @@ cache-builds = true
 
 "#
         ))?;
-        ctx.options.npm_package_name = Some("coolbeans".to_owned());
+        ctx.options.set_options("axolotlsay").npm_package_name = Some("coolbeans".to_owned());
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
@@ -1699,7 +1701,7 @@ fn axolotlsay_generic_workspace_basic() -> Result<(), miette::Report> {
         installers = ["shell", "powershell", "homebrew"]
         tap = "axodotdev/homebrew-packages"
         publish-jobs = ["homebrew"]
-        targets = ["x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+        targets = ["x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
         install-success-msg = ">o_o< everything's installed!"
         ci = ["github"]
         unix-archive = ".tar.xz"

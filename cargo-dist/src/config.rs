@@ -4,19 +4,18 @@ use std::collections::BTreeMap;
 
 use axoasset::{toml_edit, SourceFile};
 use axoprocess::Cmd;
-use axoproject::{WorkspaceKind, WorkspaceSearch};
+use axoproject::WorkspaceKind;
 use camino::{Utf8Path, Utf8PathBuf};
-use miette::Report;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
 
 use crate::announce::TagSettings;
+use crate::SortedMap;
 use crate::{
     errors::{DistError, DistResult},
     TargetTriple, METADATA_DIST,
 };
-use crate::{ProjectError, SortedMap};
 
 /// A container to assist deserializing metadata from generic, non-Cargo projects
 #[derive(Debug, Deserialize)]
@@ -1626,6 +1625,7 @@ pub(crate) fn parse_metadata_table_or_manifest(
     metadata_table: Option<&serde_json::Value>,
 ) -> DistResult<DistMetadata> {
     match workspace_type {
+        WorkspaceKind::Javascript => unimplemented!("npm packages not yet supported here"),
         // Pre-parsed Rust metadata table
         WorkspaceKind::Rust => parse_metadata_table(manifest_path, metadata_table),
         // Generic dist.toml
@@ -1671,53 +1671,13 @@ fn get_git_repo_root(run_in: &Utf8PathBuf) -> DistResult<Utf8PathBuf> {
     Ok(Utf8PathBuf::from(string))
 }
 
-/// Get the general info about the project (via axo-project)
-pub fn get_project() -> std::result::Result<axoproject::WorkspaceInfo, ProjectError> {
+/// Find the dist workspaces relative to the current directory
+pub fn get_project() -> Result<axoproject::WorkspaceGraph, axoproject::errors::ProjectError> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
-
-    let root = get_git_repo_root(&start_dir);
-
-    let clamp = if let Ok(path) = &root {
-        Some(path.as_path())
-    } else {
-        None
-    };
-
-    let workspaces = axoproject::get_workspaces(&start_dir, clamp);
-
-    let mut missing = vec![];
-
-    for ws in [workspaces.rust, workspaces.generic] {
-        match ws {
-            WorkspaceSearch::Found(mut workspace) => {
-                // This is a goofy as heck workaround for two facts:
-                //   * the convenient Report approach requires us to provide an Error by-val
-                //   * many error types (like std::io::Error) don't impl Clone, so we can't
-                //     clone axoproject Errors.
-                //
-                // So we temporarily take ownership of the warnings and then pull them back
-                // out of the Report with runtime reflection to put them back in :)
-                let mut warnings = std::mem::take(&mut workspace.warnings);
-                for warning in warnings.drain(..) {
-                    let report = Report::new(warning);
-                    warn!("{:?}", report);
-                    workspace.warnings.push(report.downcast().unwrap());
-                }
-                return Ok(workspace);
-            }
-            WorkspaceSearch::Broken {
-                manifest_path: _,
-                cause,
-            } => {
-                return Err(ProjectError::ProjectBroken { cause });
-            }
-            // Ignore the missing case; iterate through to the next project type
-            WorkspaceSearch::Missing(e) => missing.push(e),
-        }
-    }
-
-    Err(ProjectError::ProjectMissing { sources: missing })
+    let clamp_to_dir = get_git_repo_root(&start_dir).ok();
+    let workspaces = axoproject::WorkspaceGraph::find(&start_dir, clamp_to_dir.as_deref())?;
+    Ok(workspaces)
 }
 
 /// Load a Cargo.toml into toml-edit form
