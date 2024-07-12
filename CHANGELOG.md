@@ -3,6 +3,11 @@
 Nothing Yet!
 
 
+# Version 0.19.1 (2024-07-12)
+
+This is a minor release that makes cargo-dist build with versions of rustc older than 1.79.0 (as of this writing, the latest release). The previous cargo-dist release accidentally relied on the rustc's [new temporary lifetime extension features](https://blog.rust-lang.org/2024/06/13/Rust-1.79.0.html#extending-automatic-temporary-lifetime-extension), making us suddenly require bleeding edge rustc for no good reason.
+
+
 # Version 0.19.0 (2024-07-11)
 
 This release improves support for corporate networks, fixes a regression in the ssldotcom-windows-sign feature, and lands some more groundwork for future improvements.
