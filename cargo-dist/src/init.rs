@@ -879,9 +879,9 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
             })
             .unwrap_or(false)
     {
-        &Some(InstallPathStrategy::default_list())
+        Some(InstallPathStrategy::default_list())
     } else {
-        install_path
+        install_path.clone()
     };
 
     apply_optional_value(
