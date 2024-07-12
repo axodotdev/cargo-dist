@@ -13,10 +13,11 @@ const {
   name,
   artifactDownloadUrl,
   supportedPlatforms,
+  glibcMinimum,
 } = require("./package.json");
 
-const builderGlibcMajorVersion = 2;
-const builderGlibcMInorVersion = 31;
+const builderGlibcMajorVersion = glibcMinimum.major;
+const builderGlibcMInorVersion = glibcMinimum.series;
 
 const getPlatform = () => {
   const rawOsType = os.type();

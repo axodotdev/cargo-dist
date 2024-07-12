@@ -418,6 +418,7 @@ stdout:
     "plan:lies:": {
       "id": "plan:lies:",
       "cargo_version_line": "CENSORED"
+      "build_environment": "indeterminate"
     }
   },
   "publish_prereleases": false,

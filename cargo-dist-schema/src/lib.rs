@@ -116,6 +116,51 @@ pub struct DistManifest {
     pub github_attestations: bool,
 }
 
+/// Information about the build environment on this system
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub enum BuildEnvironment {
+    /// Linux-specific information
+    #[serde(rename = "linux")]
+    Linux {
+        /// The builder's glibc verison, relevant to glibc-based
+        /// builds.
+        glibc_version: Option<GlibcVersion>,
+    },
+    /// macOS-specific information
+    #[serde(rename = "macos")]
+    MacOS {
+        /// The version of macOS used by the builder
+        os_version: String,
+    },
+    /// Windows-specific information
+    #[serde(rename = "windows")]
+    Windows,
+    /// Unable to determine what the host OS was - error?
+    #[serde(rename = "indeterminate")]
+    Indeterminate,
+}
+
+/// Minimum glibc version required to run software
+#[derive(
+    Debug, Clone, Serialize, Deserialize, JsonSchema, Hash, PartialEq, Eq, PartialOrd, Ord,
+)]
+pub struct GlibcVersion {
+    /// Major version
+    pub major: u64,
+    /// Series (minor) version
+    pub series: u64,
+}
+
+impl Default for GlibcVersion {
+    fn default() -> Self {
+        Self {
+            // Values from the default Ubuntu runner
+            major: 2,
+            series: 31,
+        }
+    }
+}
+
 /// Info about an Asset (binary)
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct AssetInfo {
@@ -234,6 +279,8 @@ pub struct SystemInfo {
     pub id: SystemId,
     /// The version of Cargo used (first line of cargo -vV)
     pub cargo_version_line: Option<String>,
+    /// Environment of the System
+    pub build_environment: BuildEnvironment,
 }
 
 /// A Release of an Application

@@ -28,11 +28,9 @@ EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/{{ app_name }}"
 
-# glibc provided by our Ubuntu 20.04 runners;
-# in the future, we should actually record which glibc was on the runner,
-# and inject that into the script.
-BUILDER_GLIBC_MAJOR="2"
-BUILDER_GLIBC_SERIES="31"
+# glibc provided by the system(s) which built these binaries
+BUILDER_GLIBC_MAJOR="{{ runtime_conditions.linux.glibc.major }}"
+BUILDER_GLIBC_SERIES="{{ runtime_conditions.linux.glibc.series }}"
 
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)

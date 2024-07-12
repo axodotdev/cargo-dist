@@ -5,12 +5,13 @@ use std::{env, process::ExitStatus};
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{BuildEnvironment, DistManifest};
 
 use crate::{
     build::{package_id_string, BuildExpectations},
     copy_file,
     env::{calculate_cflags, calculate_ldflags, fetch_brew_env, parse_env, select_brew_env},
+    linkage::determine_build_environment,
     ArtifactKind, BinaryIdx, BuildStep, DistError, DistGraph, DistGraphBuilder, DistResult,
     ExtraBuildStep, GenericBuildStep, SortedMap, TargetTriple,
 };
@@ -215,6 +216,16 @@ pub fn build_generic_target(
 
     // Check and process the binaries
     expected.process_bins(dist_graph, manifest)?;
+
+    // Record the build environment
+    let system_id = format!("build:local:{}", target.target_triple);
+    if let Some(info) = manifest.systems.get_mut(&system_id) {
+        // Not yet set; do that now
+        if matches!(info.build_environment, BuildEnvironment::Indeterminate) {
+            let build_environment = determine_build_environment(&target.target_triple);
+            info.build_environment = build_environment;
+        }
+    };
 
     Ok(())
 }

@@ -4,12 +4,13 @@ use std::env;
 
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{BuildEnvironment, DistManifest};
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
 
 use crate::build::BuildExpectations;
 use crate::env::{calculate_ldflags, fetch_brew_env, parse_env, select_brew_env};
+use crate::linkage::determine_build_environment;
 use crate::{errors::*, BinaryIdx, BuildStep, DistGraphBuilder, TargetTriple, PROFILE_DIST};
 use crate::{
     CargoBuildStep, CargoTargetFeatureList, CargoTargetPackages, DistGraph, RustupStep, SortedMap,
@@ -222,6 +223,16 @@ pub fn build_cargo_target(
 
     // Process all the resulting binaries
     expected.process_bins(dist_graph, manifest)?;
+
+    let system_id = format!("build:local:{}", target.target_triple);
+    // Record the build environment
+    if let Some(info) = manifest.systems.get_mut(&system_id) {
+        // Not yet set; do that now
+        if matches!(info.build_environment, BuildEnvironment::Indeterminate) {
+            let build_environment = determine_build_environment(&target.target_triple);
+            info.build_environment = build_environment;
+        }
+    };
 
     Ok(())
 }

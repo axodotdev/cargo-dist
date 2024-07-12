@@ -555,6 +555,73 @@ expression: json_schema
         }
       }
     },
+    "BuildEnvironment": {
+      "description": "Information about the build environment on this system",
+      "oneOf": [
+        {
+          "description": "Linux-specific information",
+          "type": "object",
+          "required": [
+            "linux"
+          ],
+          "properties": {
+            "linux": {
+              "type": "object",
+              "properties": {
+                "glibc_version": {
+                  "description": "The builder's glibc verison, relevant to glibc-based builds.",
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/GlibcVersion"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "macOS-specific information",
+          "type": "object",
+          "required": [
+            "macos"
+          ],
+          "properties": {
+            "macos": {
+              "type": "object",
+              "required": [
+                "os_version"
+              ],
+              "properties": {
+                "os_version": {
+                  "description": "The version of macOS used by the builder",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Windows-specific information",
+          "type": "string",
+          "enum": [
+            "windows"
+          ]
+        },
+        {
+          "description": "Unable to determine what the host OS was - error?",
+          "type": "string",
+          "enum": [
+            "indeterminate"
+          ]
+        }
+      ]
+    },
     "CiInfo": {
       "description": "CI backend info",
       "type": "object",
@@ -691,6 +758,28 @@ expression: json_schema
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "GlibcVersion": {
+      "description": "Minimum glibc version required to run software",
+      "type": "object",
+      "required": [
+        "major",
+        "series"
+      ],
+      "properties": {
+        "major": {
+          "description": "Major version",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "series": {
+          "description": "Series (minor) version",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
         }
       }
     },
@@ -895,9 +984,18 @@ expression: json_schema
       "description": "Info about a system used to build this announcement.",
       "type": "object",
       "required": [
+        "build_environment",
         "id"
       ],
       "properties": {
+        "build_environment": {
+          "description": "Environment of the System",
+          "allOf": [
+            {
+              "$ref": "#/definitions/BuildEnvironment"
+            }
+          ]
+        },
         "cargo_version_line": {
           "description": "The version of Cargo used (first line of cargo -vV)",
           "type": [

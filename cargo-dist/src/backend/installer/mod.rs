@@ -9,6 +9,7 @@ use serde::Serialize;
 
 use crate::{
     config::{JinjaInstallPathStrategy, LibraryStyle, ZipStyle},
+    platform::RuntimeConditions,
     InstallReceipt, TargetTriple,
 };
 
@@ -65,6 +66,8 @@ pub struct InstallerInfo {
     pub bin_aliases: BTreeMap<String, BTreeMap<String, Vec<String>>>,
     /// Whether to install generated C dynamic libraries
     pub install_libraries: Vec<LibraryStyle>,
+    /// Platform-specific runtime conditions
+    pub runtime_conditions: RuntimeConditions,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

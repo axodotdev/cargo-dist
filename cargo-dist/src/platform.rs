@@ -3,6 +3,7 @@ use axoproject::platforms::{
     TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
 };
 use cargo_dist_schema::ArtifactId;
+use serde::Serialize;
 
 use crate::{
     backend::installer::{ExecutableZipFragment, UpdaterFragment},
@@ -59,7 +60,8 @@ pub enum SupportQuality {
 }
 
 /// A condition that an installer should ideally check before using this an archive
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(untagged)]
 pub enum RuntimeCondition {
     /// The system glibc must be at least this version
     MinGlibcVersion {
@@ -77,6 +79,24 @@ pub enum RuntimeCondition {
     },
     /// The system must have Rosetta2 installed
     Rosetta2,
+}
+
+/// Runtime conditions specific to Linux
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Default)]
+pub struct LinuxRuntimeConditions {
+    /// The system glibc must be at least this version
+    pub glibc: Option<RuntimeCondition>,
+    /// The system musl libc must be at least this version
+    pub musl: Option<RuntimeCondition>,
+}
+
+/// Runtime conditions collected for every platform
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Default)]
+pub struct RuntimeConditions {
+    /// Linux-specific conditions
+    pub linux: LinuxRuntimeConditions,
+    /// MacOS-specific conditions
+    pub macos: Option<RuntimeCondition>,
 }
 
 /// Computed platform support details for a Release
