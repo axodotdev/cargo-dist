@@ -10,7 +10,7 @@ use crate::{
     net::create_gazenot_client,
     DistGraph, DistGraphBuilder, HostingInfo,
 };
-use axoproject::WorkspaceInfo;
+use axoproject::WorkspaceGraph;
 use cargo_dist_schema::{DistManifest, Hosting};
 use gazenot::{AnnouncementKey, Gazenot};
 use tracing::warn;
@@ -79,7 +79,7 @@ impl<'a> DistGraphBuilder<'a> {
         hosting: Option<Vec<HostingStyle>>,
         ci: Option<Vec<CiStyle>>,
     ) -> DistResult<()> {
-        self.inner.hosting = select_hosting(self.workspace, announcing, hosting, ci.as_deref());
+        self.inner.hosting = select_hosting(self.workspaces, announcing, hosting, ci.as_deref());
         // If we don't think we can host things, don't bother
         let Some(hosting) = &self.inner.hosting else {
             return Ok(());
@@ -91,9 +91,9 @@ impl<'a> DistGraphBuilder<'a> {
         let releases_without_hosting = announcing
             .rust_releases
             .iter()
-            .filter_map(|(package, _)| {
+            .filter_map(|release| {
                 // Get the names of the apps we're releasing
-                let package = self.workspace.package(*package);
+                let package = self.workspaces.package(release.package_idx);
                 let version = package
                     .version
                     .clone()
@@ -279,7 +279,7 @@ fn announce_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot)
 }
 
 pub(crate) fn select_hosting(
-    workspace: &WorkspaceInfo,
+    workspaces: &WorkspaceGraph,
     announcing: &AnnouncementTag,
     hosting: Option<Vec<HostingStyle>>,
     ci: Option<&[CiStyle]>,
@@ -287,22 +287,29 @@ pub(crate) fn select_hosting(
     let package_list = announcing
         .rust_releases
         .iter()
-        .map(|(idx, _)| *idx)
+        .map(|release| release.package_idx)
         .collect::<Vec<_>>();
     // Either use the explicit one, or default to the CI provider's native solution
     let hosting_providers = hosting
         .clone()
         .or_else(|| Some(vec![ci.as_ref()?.first()?.native_hosting()?]))?;
-    // Check that there's a consistent repository URL, and if not, warn
-    if let Err(warning) = workspace.repository_url(Some(&package_list)) {
-        let report = miette::Report::new(warning);
-        warn!("{:?}", report);
-    };
-    let repo_url = workspace.web_url(Some(&package_list)).unwrap_or_default()?;
+
+    let raw_repository_url = workspaces
+        .repository_url(Some(&package_list))
+        .map_err(|warning| {
+            let report = miette::Report::new(warning);
+            warn!("{:?}", report);
+        })
+        .ok()??;
     // Currently there's only one supported sourcehost provider
-    let repo = workspace
-        .github_repo(Some(&package_list))
-        .unwrap_or_default()?;
+    let repo = raw_repository_url
+        .github_repo()
+        .map_err(|warning| {
+            let report = miette::Report::new(warning);
+            warn!("{:?}", report);
+        })
+        .ok()?;
+    let repo_url = repo.web_url();
 
     Some(HostingInfo {
         hosts: hosting_providers,

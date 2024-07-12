@@ -602,6 +602,17 @@ This is a list of installers you want to be made for your application(s). In pri
 See "repository" for some discussion on the "Artifact Download URL".
 
 
+### install-cdylibs
+
+> since 0.19.0
+
+Example: `install-cdylibs = false`
+
+Whether to install C dynamic libraries using the Homebrew/shell/PowerShell installers. This is disabled by default. When enabled, C dynamic libraries will be installed alongside a package's binaries. Packaging libraries must first be enabled using the [package-cdylibs](#package-cdylibs) option.
+
+This feature is still experimental. The currently-supported install paths will place dynamic libraries alongside binaries. This means they may appear in the user's `$PATH`, which you may find undesirable.
+
+
 ### install-path
 
 > since 0.1.0
@@ -716,6 +727,19 @@ Example: `npm-scope = "@axodotdev"`
 Specifies that [npm installers][] should be published under the given [scope][]. The leading `@` is mandatory. If you newly enable the npm installer in `cargo dist init`'s interactive UI, then it will give you an opportunity to add the scope.
 
 If no scope is specified the package will be global.
+
+
+### package-cdylibs
+
+> since 0.19.0
+
+Example: `package-cdylibs = true`
+
+This is an experimental feature.
+
+Whether to include C dynamic libraries in release archives. This is disabled by default, which means C dynamic libraries will still be built but will be excluded from release artifacts.
+
+When enabled, C dynamic libraries will be included in release artifacts but won't be installed by default. That can be enabled using the [install-cdylibs](#install-cdylibs) setting.
 
 
 ### plan-jobs

@@ -1,8 +1,10 @@
 //! Mock testing utils, mostly you want the `workspace_*` functions,
 //! but other functions/consts will help you assert the results
 
-use crate::{CargoInfo, Tools};
-use axoproject::{AutoIncludes, PackageIdx, PackageInfo, WorkspaceInfo};
+use crate::{announce::ReleaseArtifacts, CargoInfo, Tools};
+use axoproject::{
+    AutoIncludes, PackageIdx, PackageInfo, WorkspaceGraph, WorkspaceInfo, WorkspaceStructure,
+};
 use serde_json::json;
 
 pub const REPO_URL: &str = "https://github.com/axodotdev/axolotlsay";
@@ -55,9 +57,12 @@ pub fn mock_tools() -> Tools {
 }
 
 pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
+    let version = Some(axoproject::Version::Cargo(ver.parse().unwrap()));
     PackageInfo {
+        true_name: name.to_owned(),
+        true_version: version.clone(),
         name: name.to_owned(),
-        version: Some(axoproject::Version::Cargo(ver.parse().unwrap())),
+        version,
         manifest_path: Default::default(),
         package_root: Default::default(),
         description: Some(REPO_DESC.to_owned()),
@@ -80,22 +85,28 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
     }
 }
 
-pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceInfo {
-    WorkspaceInfo {
-        kind: axoproject::WorkspaceKind::Rust,
-        target_dir: Default::default(),
-        workspace_dir: Default::default(),
-        package_info: packages,
-        manifest_path: Default::default(),
-        root_auto_includes: AutoIncludes {
-            readme: None,
-            licenses: vec![],
-            changelog: None,
+pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceGraph {
+    let mut workspaces = WorkspaceGraph::default();
+    let workspace = WorkspaceStructure {
+        sub_workspaces: vec![],
+        packages,
+        workspace: WorkspaceInfo {
+            kind: axoproject::WorkspaceKind::Rust,
+            target_dir: Default::default(),
+            workspace_dir: Default::default(),
+
+            manifest_path: Default::default(),
+            root_auto_includes: AutoIncludes {
+                readme: None,
+                licenses: vec![],
+                changelog: None,
+            },
+            cargo_metadata_table: None,
+            cargo_profiles: Default::default(),
         },
-        warnings: vec![],
-        cargo_metadata_table: None,
-        cargo_profiles: Default::default(),
-    }
+    };
+    workspaces.add_workspace(workspace, None);
+    workspaces
 }
 
 /// axolotlsay 1.0.0
@@ -112,8 +123,12 @@ pub fn pkg_axo_bin_alpha() -> PackageInfo {
         ..mock_package(BIN_AXO_NAME, BIN_AXO_VER_ALPHA)
     }
 }
-pub fn entry_axo_bin() -> (PackageIdx, Vec<String>) {
-    (BIN_AXO_IDX, vec![BIN_AXO_NAME.to_owned()])
+pub fn entry_axo_bin() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: BIN_AXO_IDX,
+        executables: vec![BIN_AXO_NAME.to_owned()],
+        cdylibs: vec![],
+    }
 }
 
 /// some-lib 1.0.0
@@ -122,8 +137,12 @@ pub fn pkg_some_lib() -> PackageInfo {
         ..mock_package(LIB_SOME_NAME, LIB_SOME_VER)
     }
 }
-pub fn entry_some_lib() -> (PackageIdx, Vec<String>) {
-    (LIB_SOME_IDX, vec![])
+pub fn entry_some_lib() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: LIB_SOME_IDX,
+        executables: vec![],
+        cdylibs: vec![],
+    }
 }
 
 /// helper-bin 1.0.0 (has 2 binaries)
@@ -133,11 +152,12 @@ pub fn pkg_helper_bin() -> PackageInfo {
         ..mock_package(BIN_HELPER_NAME, BIN_HELPER_VER)
     }
 }
-pub fn entry_helper_bin() -> (PackageIdx, Vec<String>) {
-    (
-        BIN_HELPER_IDX,
-        vec![BIN_HELPER_NAME.to_owned(), BIN_HELPER_NAME2.to_owned()],
-    )
+pub fn entry_helper_bin() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: BIN_HELPER_IDX,
+        executables: vec![BIN_HELPER_NAME.to_owned(), BIN_HELPER_NAME2.to_owned()],
+        cdylibs: vec![],
+    }
 }
 
 /// other-lib 0.5.0 (non-harmonious version)
@@ -146,8 +166,12 @@ pub fn pkg_other_lib() -> PackageInfo {
         ..mock_package(LIB_OTHER_NAME, LIB_OTHER_VER)
     }
 }
-pub fn entry_other_lib() -> (PackageIdx, Vec<String>) {
-    (LIB_OTHER_IDX, vec![])
+pub fn entry_other_lib() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: LIB_OTHER_IDX,
+        executables: vec![],
+        cdylibs: vec![],
+    }
 }
 
 /// oddball-bin 0.1.0 (non-harmonious version)
@@ -157,8 +181,12 @@ pub fn pkg_oddball_bin() -> PackageInfo {
         ..mock_package(BIN_ODDBALL_NAME, BIN_ODDBALL_VER)
     }
 }
-pub fn entry_oddball_bin() -> (PackageIdx, Vec<String>) {
-    (BIN_ODDBALL_IDX, vec![BIN_ODDBALL_NAME.to_owned()])
+pub fn entry_oddball_bin() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: BIN_ODDBALL_IDX,
+        executables: vec![BIN_ODDBALL_NAME.to_owned()],
+        cdylibs: vec![],
+    }
 }
 
 /// forced-bin 1.0.0
@@ -176,8 +204,12 @@ pub fn pkg_forced_bin() -> PackageInfo {
         ..mock_package(BIN_FORCED_NAME, BIN_FORCED_VER)
     }
 }
-pub fn entry_forced_bin() -> (PackageIdx, Vec<String>) {
-    (BIN_FORCED_IDX, vec![BIN_FORCED_NAME.to_owned()])
+pub fn entry_forced_bin() -> ReleaseArtifacts {
+    ReleaseArtifacts {
+        package_idx: BIN_FORCED_IDX,
+        executables: vec![BIN_FORCED_NAME.to_owned()],
+        cdylibs: vec![],
+    }
 }
 
 /// test-bin1 1.0.0
@@ -205,17 +237,17 @@ pub fn pkg_test_bin2() -> PackageInfo {
     }
 }
 /// axolotlsay
-pub fn workspace_just_axo() -> WorkspaceInfo {
+pub fn workspace_just_axo() -> WorkspaceGraph {
     mock_workspace(vec![pkg_axo_bin()])
 }
 
 /// axolotlsay (alpha release)
-pub fn workspace_just_axo_alpha() -> WorkspaceInfo {
+pub fn workspace_just_axo_alpha() -> WorkspaceGraph {
     mock_workspace(vec![pkg_axo_bin_alpha()])
 }
 
 /// axolotlsay, some-lib, helper-bin -- all same version
-pub fn workspace_unified() -> WorkspaceInfo {
+pub fn workspace_unified() -> WorkspaceGraph {
     mock_workspace(vec![pkg_axo_bin(), pkg_some_lib(), pkg_helper_bin()])
 }
 
@@ -225,7 +257,7 @@ pub fn workspace_unified() -> WorkspaceInfo {
 /// forced-bin has publish=false AND dist=true, so should be included
 /// test-bin1 has publish=false, so should be ignored
 /// test-bin2 has dist=false, so should be ignored
-pub fn workspace_disjoint() -> WorkspaceInfo {
+pub fn workspace_disjoint() -> WorkspaceGraph {
     // axolotlsay, a lib
     mock_workspace(vec![
         pkg_axo_bin(),

@@ -63,6 +63,8 @@ pub struct InstallerInfo {
     pub receipt: Option<InstallReceipt>,
     /// Aliases to install binaries under
     pub bin_aliases: BTreeMap<String, BTreeMap<String, Vec<String>>>,
+    /// Whether to install generated C dynamic libraries
+    pub install_cdylibs: bool,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers
@@ -72,8 +74,10 @@ pub struct ExecutableZipFragment {
     pub id: String,
     /// The target the artifact supports
     pub target_triple: TargetTriple,
-    /// The binaries the artifact contains (name, assumed at root)
-    pub binaries: Vec<String>,
+    /// The executables the artifact contains (name, assumed at root)
+    pub executables: Vec<String>,
+    /// The dynamic libraries the artifact contains (name, assumed at root)
+    pub cdylibs: Vec<String>,
     /// The style of zip this is
     pub zip_style: ZipStyle,
     /// The updater associated with this platform

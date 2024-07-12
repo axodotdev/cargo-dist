@@ -45,6 +45,8 @@ pub struct HomebrewInstallerInfo {
     pub inner: InstallerInfo,
     /// Additional packages to specify as dependencies
     pub dependencies: Vec<String>,
+    /// Whether to install packaged C dynamic libraries
+    pub install_cdylibs: bool,
 }
 
 pub(crate) fn write_homebrew_formula(

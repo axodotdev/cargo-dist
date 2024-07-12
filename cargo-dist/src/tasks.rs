@@ -55,7 +55,7 @@ use axoprocess::Cmd;
 use axoproject::platforms::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
 };
-use axoproject::{PackageId, PackageIdx, WorkspaceInfo};
+use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
 use semver::Version;
@@ -378,6 +378,17 @@ pub struct Binary {
     pub copy_symbols_to: Vec<Utf8PathBuf>,
     /// feature flags!
     pub features: CargoTargetFeatures,
+    /// What kind of binary this is
+    pub kind: BinaryKind,
+}
+
+/// Different kinds of binaries cargo-dist knows about
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum BinaryKind {
+    /// Standard executable
+    Executable,
+    /// C-style dynamic library (.so/.dylib/.dll)
+    DynamicLibrary,
 }
 
 /// A build step we would like to perform
@@ -685,6 +696,15 @@ pub struct Release {
     ///
     /// The string is the name of the binary under that package (without .exe extension)
     pub bins: Vec<(PackageIdx, String)>,
+    /// C dynamic libraries that every variant should ostensibly provide
+    ///
+    /// The string is the name of the library, without lib prefix, and without platform-specific suffix (.so, .dylib, .dll)
+    /// Note: Windows won't include lib prefix in the final lib.
+    pub cdylibs: Vec<(PackageIdx, String)>,
+    /// Whether to package C dynamic libraries in the final archive
+    pub package_cdylibs: bool,
+    /// Whether to install packaged C dynamic libraries
+    pub install_cdylibs: bool,
     /// Artifacts that are shared "globally" across all variants (shell-installer, metadata...)
     ///
     /// They might still be limited to some subset of the targets (e.g. powershell scripts are
@@ -796,7 +816,7 @@ pub enum CargoTargetPackages {
 pub(crate) struct DistGraphBuilder<'pkg_graph> {
     pub(crate) inner: DistGraph,
     pub(crate) manifest: DistManifest,
-    pub(crate) workspace: &'pkg_graph mut WorkspaceInfo,
+    pub(crate) workspaces: &'pkg_graph mut WorkspaceGraph,
     artifact_mode: ArtifactMode,
     binaries_by_id: FastMap<String, BinaryIdx>,
     workspace_metadata: DistMetadata,
@@ -807,24 +827,26 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     pub(crate) fn new(
         system_id: SystemId,
         tools: Tools,
-        workspace: &'pkg_graph mut WorkspaceInfo,
+        workspaces: &'pkg_graph mut WorkspaceGraph,
         artifact_mode: ArtifactMode,
         allow_all_dirty: bool,
         announcement_tag_is_implicit: bool,
     ) -> DistResult<Self> {
-        let target_dir = workspace.target_dir.clone();
-        let workspace_dir = workspace.workspace_dir.clone();
+        let root_workspace_idx = workspaces.root_workspace_idx();
+        let root_workspace = workspaces.workspace(root_workspace_idx);
+        let target_dir = root_workspace.target_dir.clone();
+        let workspace_dir = root_workspace.workspace_dir.clone();
         let dist_dir = target_dir.join(TARGET_DIST);
 
         let mut workspace_metadata =
             // Read the global config
             config::parse_metadata_table_or_manifest(
-                workspace.kind,
-                &workspace.manifest_path,
-                workspace.cargo_metadata_table.as_ref(),
+                root_workspace.kind,
+                &root_workspace.manifest_path,
+                root_workspace.cargo_metadata_table.as_ref(),
             )?;
 
-        workspace_metadata.make_relative_to(&workspace.workspace_dir);
+        workspace_metadata.make_relative_to(&root_workspace.workspace_dir);
 
         // This is intentionally written awkwardly to make you update this
         //
@@ -899,6 +921,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases: _,
             display: _,
             display_name: _,
+            package_cdylibs: _,
+            install_cdylibs: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -935,7 +959,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
         let mut package_metadata = vec![];
-        for package in &workspace.package_info {
+        for (_idx, package) in workspaces.all_packages() {
             let mut package_config = config::parse_metadata_table(
                 &package.manifest_path,
                 package.cargo_metadata_table.as_ref(),
@@ -1159,7 +1183,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             },
             package_metadata,
             workspace_metadata,
-            workspace,
+            workspaces,
             binaries_by_id: FastMap::new(),
             artifact_mode,
         })
@@ -1174,7 +1198,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn add_release(&mut self, pkg_idx: PackageIdx) -> ReleaseIdx {
-        let package_info = self.workspace().package(pkg_idx);
+        let package_info = self.workspaces.package(pkg_idx);
         let DistMetadata {
             tap,
             formula,
@@ -1191,6 +1215,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases,
             display,
             display_name,
+            package_cdylibs,
+            install_cdylibs,
             // The rest of these are workspace-only
             precise_builds: _,
             merge_tasks: _,
@@ -1260,6 +1286,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let unix_archive = unix_archive.unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
         let checksum = checksum.unwrap_or(ChecksumStyle::Sha256);
 
+        let package_cdylibs = package_cdylibs.unwrap_or(false);
+        let install_cdylibs = if !package_cdylibs {
+            false
+        } else {
+            install_cdylibs.unwrap_or(false)
+        };
+
         // Add static assets
         let mut static_assets = vec![];
         let auto_includes_enabled = auto_includes.unwrap_or(true);
@@ -1300,6 +1333,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             id,
             global_artifacts: vec![],
             bins: vec![],
+            cdylibs: vec![],
             targets: vec![],
             variants: vec![],
             changelog_body: None,
@@ -1319,11 +1353,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases,
             display,
             display_name,
+            package_cdylibs,
+            install_cdylibs,
         });
         idx
     }
 
-    fn add_variant(&mut self, to_release: ReleaseIdx, target: TargetTriple) -> ReleaseVariantIdx {
+    fn add_variant(
+        &mut self,
+        to_release: ReleaseIdx,
+        target: TargetTriple,
+    ) -> DistResult<ReleaseVariantIdx> {
         let idx = ReleaseVariantIdx(self.inner.variants.len());
         let Release {
             id: release_id,
@@ -1331,6 +1371,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             targets,
             static_assets,
             bins,
+            cdylibs,
+            package_cdylibs,
             ..
         } = self.release_mut(to_release);
         let static_assets = static_assets.clone();
@@ -1340,17 +1382,35 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         variants.push(idx);
         targets.push(target.clone());
 
+        let all_bins = bins
+            .clone()
+            .into_iter()
+            .map(|(idx, b)| (idx, b, BinaryKind::Executable));
+
+        // If we're not packaging cdylibs here, avoid chaining them
+        // into the list we're iterating over
+        let packageables: Vec<(PackageIdx, String, BinaryKind)> = if *package_cdylibs {
+            let all_dylibs = cdylibs
+                .clone()
+                .into_iter()
+                .map(|(idx, l)| (idx, l, BinaryKind::DynamicLibrary));
+
+            all_bins.chain(all_dylibs).collect()
+        } else {
+            all_bins.collect()
+        };
+
         // Add all the binaries of the release to this variant
         let mut binaries = vec![];
-        for (pkg_idx, binary_name) in bins.clone() {
-            let package = self.workspace.package(pkg_idx);
+        for (pkg_idx, binary_name, kind) in packageables {
+            let package = self.workspaces.package(pkg_idx);
             let package_metadata = self.package_metadata(pkg_idx);
             let pkg_id = package.cargo_package_id.clone();
             // For now we just use the name of the package as its package_spec.
             // I'm not sure if there are situations where this is ambiguous when
             // referring to a package in your workspace that you want to build an app for.
             // If they do exist, that's deeply cursed and I want a user to tell me about it.
-            let pkg_spec = package.name.clone();
+            let pkg_spec = package.true_name.clone();
             // FIXME: make this more of a GUID to allow variants to share binaries?
             let bin_id = format!("{variant_id}-{binary_name}");
 
@@ -1371,9 +1431,32 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 };
 
                 let target_is_windows = target.contains("windows");
-                let platform_exe_ext = if target_is_windows { ".exe" } else { "" };
+                let platform_exe_ext;
+                let platform_lib_prefix;
+                if target_is_windows {
+                    platform_exe_ext = ".exe";
+                    platform_lib_prefix = "";
+                } else {
+                    platform_exe_ext = "";
+                    platform_lib_prefix = "lib";
+                };
 
-                let file_name = format!("{binary_name}{platform_exe_ext}");
+                let platform_lib_ext = if target_is_windows {
+                    ".dll"
+                } else if target.contains("linux") {
+                    ".so"
+                } else if target.contains("darwin") {
+                    ".dylib"
+                } else {
+                    return Err(DistError::UnrecognizedTarget { target });
+                };
+
+                let file_name = match kind {
+                    BinaryKind::Executable => format!("{binary_name}{platform_exe_ext}"),
+                    BinaryKind::DynamicLibrary => {
+                        format!("{platform_lib_prefix}{binary_name}{platform_lib_ext}")
+                    }
+                };
 
                 info!("added binary {bin_id}");
                 let idx = BinaryIdx(self.inner.binaries.len());
@@ -1389,6 +1472,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     copy_symbols_to: vec![],
                     symbols_artifact: None,
                     features,
+                    kind,
                 };
                 self.inner.binaries.push(binary);
                 self.binaries_by_id.insert(bin_id, idx);
@@ -1405,12 +1489,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             binaries,
             static_assets,
         });
-        idx
+        Ok(idx)
     }
 
     fn add_binary(&mut self, to_release: ReleaseIdx, pkg_idx: PackageIdx, binary_name: String) {
         let release = self.release_mut(to_release);
         release.bins.push((pkg_idx, binary_name));
+    }
+
+    fn add_library(&mut self, to_release: ReleaseIdx, pkg_idx: PackageIdx, binary_name: String) {
+        let release = self.release_mut(to_release);
+        release.cdylibs.push((pkg_idx, binary_name));
     }
 
     fn add_executable_zip(&mut self, to_release: ReleaseIdx) {
@@ -1812,6 +1901,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         to_release: ReleaseIdx,
         installer: &InstallerStyle,
     ) -> DistResult<()> {
+        let release = self.release(to_release);
+        // This package consists solely of non-installable cdylibs
+        if !release.install_cdylibs && release.bins.is_empty() {
+            return Err(DistError::EmptyInstaller {});
+        }
+
         match installer {
             InstallerStyle::Shell => self.add_shell_installer(to_release),
             InstallerStyle::Powershell => self.add_powershell_installer(to_release),
@@ -1882,6 +1977,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
+                install_cdylibs: release.install_cdylibs,
             })),
             is_global: true,
         };
@@ -2027,7 +2123,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     desc,
                     receipt: None,
                     bin_aliases,
+                    install_cdylibs: release.install_cdylibs,
                 },
+                install_cdylibs: release.install_cdylibs,
             })),
             is_global: true,
         };
@@ -2098,6 +2196,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
+                install_cdylibs: release.install_cdylibs,
             })),
             is_global: true,
         };
@@ -2205,6 +2304,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     desc,
                     receipt: None,
                     bin_aliases,
+                    install_cdylibs: release.install_cdylibs,
                 },
             })),
             is_global: true,
@@ -2258,7 +2358,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let Some((pkg_spec, pkg_idx)) = package_info else {
                 return Err(DistError::NoPackageMsi { artifact_name })?;
             };
-            let manifest_path = self.workspace.package(pkg_idx).manifest_path.clone();
+            let manifest_path = self.workspaces.package(pkg_idx).manifest_path.clone();
             let wxs_path = manifest_path
                 .parent()
                 .expect("Cargo.toml had no parent dir!?")
@@ -2345,11 +2445,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let mut local_build_steps = vec![];
         let mut global_build_steps = vec![];
-        let builds = match self.workspace.kind {
-            axoproject::WorkspaceKind::Generic => self.compute_generic_builds(),
-            axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(),
-        };
-        local_build_steps.extend(builds);
+
+        for workspace_idx in self.workspaces.all_workspace_indices() {
+            let workspace_kind = self.workspaces.workspace(workspace_idx).kind;
+            let builds = match workspace_kind {
+                axoproject::WorkspaceKind::Javascript => self.compute_generic_builds(workspace_idx),
+                axoproject::WorkspaceKind::Generic => self.compute_generic_builds(workspace_idx),
+                axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(workspace_idx),
+            };
+            local_build_steps.extend(builds);
+        }
         global_build_steps.extend(self.compute_extra_builds());
 
         Self::add_build_steps_for_artifacts(
@@ -2462,22 +2567,27 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         bypass_package_target_prefs: bool,
     ) -> DistResult<()> {
         // Create a Release for each package
-        for (pkg_idx, binaries) in &announcing.rust_releases {
+        for info in &announcing.rust_releases {
             // FIXME: this clone is hacky but I'm in the middle of a nasty refactor
-            let package_config = self.package_metadata(*pkg_idx).clone();
+            let package_config = self.package_metadata(info.package_idx).clone();
 
             // Create a Release for this binary
-            let release = self.add_release(*pkg_idx);
+            let release = self.add_release(info.package_idx);
 
             // Don't bother with any of this without binaries
-            // (releases a library, nothing to Build)
-            if binaries.is_empty() {
+            // or C libraries
+            // (releases a Rust library, nothing to Build)
+            if info.executables.is_empty() && info.cdylibs.is_empty() {
                 continue;
             }
 
             // Tell the Release to include these binaries
-            for binary in binaries {
-                self.add_binary(release, *pkg_idx, (*binary).clone());
+            for binary in &info.executables {
+                self.add_binary(release, info.package_idx, binary.to_owned());
+            }
+
+            for lib in &info.cdylibs {
+                self.add_library(release, info.package_idx, lib.to_owned());
             }
 
             // Create variants for this Release for each target
@@ -2496,7 +2606,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
 
                 // Create the variant
-                let variant = self.add_variant(release, target.clone());
+                let variant = self.add_variant(release, target.clone())?;
 
                 if self.inner.install_updater {
                     self.add_updater(variant);
@@ -2583,9 +2693,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         self.release_mut(release).platform_support = support;
     }
 
-    pub(crate) fn workspace(&self) -> &WorkspaceInfo {
-        self.workspace
-    }
     pub(crate) fn binary(&self, idx: BinaryIdx) -> &Binary {
         &self.inner.binaries[idx.0]
     }
@@ -2653,7 +2760,7 @@ impl DistGraph {
 pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
-    let mut workspace = crate::config::get_project()?;
+    let mut workspaces = crate::config::get_project()?;
     let system_id = format!(
         "{}:{}:{}",
         cfg.root_cmd,
@@ -2663,7 +2770,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     let mut graph = DistGraphBuilder::new(
         system_id,
         tools,
-        &mut workspace,
+        &mut workspaces,
         cfg.artifact_mode,
         cfg.allow_all_dirty,
         matches!(cfg.tag_settings.tag, TagMode::Infer),
@@ -2686,8 +2793,8 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     // If all targets specified, union together the targets our packages support
     // Note that this uses BTreeSet as an intermediate to make the order stable
     let all_target_triples = graph
-        .workspace
-        .packages()
+        .workspaces
+        .all_packages()
         .flat_map(|(id, _)| graph.package_metadata(id).targets.iter().flatten())
         .collect::<SortedSet<_>>()
         .into_iter()
@@ -2882,6 +2989,8 @@ pub struct InstallReceipt {
     pub install_prefix: String,
     /// A list of all binaries installed by this app
     pub binaries: Vec<String>,
+    /// A list of all libraries installed by this app
+    pub cdylibs: Vec<String>,
     /// Information about where to request information on new releases
     pub source: ReleaseSource,
     /// The version that was installed
@@ -2910,6 +3019,7 @@ impl InstallReceipt {
             // These first two are placeholder values which the installer will update
             install_prefix: "AXO_INSTALL_PREFIX".to_owned(),
             binaries: vec!["CARGO_DIST_BINS".to_owned()],
+            cdylibs: vec!["CARGO_DIST_LIBS".to_owned()],
             version: release.version.to_string(),
             source: ReleaseSource {
                 release_type: source_type,

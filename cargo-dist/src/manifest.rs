@@ -38,7 +38,8 @@ use std::collections::btree_map::Entry;
 
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
-    Artifact, ArtifactId, Asset, AssetKind, DistManifest, ExecutableAsset, Hosting,
+    Artifact, ArtifactId, Asset, AssetKind, DistManifest, DynamicLibraryAsset, ExecutableAsset,
+    Hosting,
 };
 use tracing::warn;
 
@@ -245,12 +246,20 @@ fn add_manifest_artifact(
         .map(|(&binary_idx, exe_path)| {
             let binary = &dist.binary(binary_idx);
             let symbols_artifact = binary.symbols_artifact.map(|a| dist.artifact(a).id.clone());
+            let kind = match binary.kind {
+                crate::BinaryKind::DynamicLibrary => {
+                    AssetKind::CDynamicLibrary(DynamicLibraryAsset { symbols_artifact })
+                }
+                crate::BinaryKind::Executable => {
+                    AssetKind::Executable(ExecutableAsset { symbols_artifact })
+                }
+            };
             Asset {
                 id: Some(binary.id.clone()),
                 name: Some(binary.name.clone()),
                 // Always copied to the root... for now
                 path: Some(exe_path.file_name().unwrap().to_owned()),
-                kind: AssetKind::Executable(ExecutableAsset { symbols_artifact }),
+                kind,
             }
         });
 

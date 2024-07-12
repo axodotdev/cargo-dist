@@ -7,7 +7,7 @@ use cargo_dist_schema::ArtifactId;
 use crate::{
     backend::installer::{ExecutableZipFragment, UpdaterFragment},
     config::ZipStyle,
-    DistGraphBuilder, ReleaseIdx, SortedMap, TargetTriple,
+    BinaryKind, DistGraphBuilder, ReleaseIdx, SortedMap, TargetTriple,
 };
 
 /// Suffixes of TargetTriples that refer to statically linked linux libcs.
@@ -106,8 +106,10 @@ pub struct FetchableArchive {
     pub target_triples: Vec<TargetTriple>,
     /// The sha256sum of the archive
     pub sha256sum: Option<String>,
-    /// The binaries in the archive (may include .exe, assumed to be in root)
-    pub binaries: Vec<String>,
+    /// The executables in the archive (may include .exe, assumed to be in root)
+    pub executables: Vec<String>,
+    /// The dynamic libraries in the archive (assumed to be in root)
+    pub cdylibs: Vec<String>,
     /// The kind of compression the archive has
     pub zip_style: ZipStyle,
     /// The updater you should also fetch if you install this archive
@@ -176,11 +178,20 @@ impl PlatformSupport {
             let (artifact, binaries) =
                 dist.make_executable_zip_for_variant(release_idx, variant_idx);
 
+            let executables = binaries
+                .iter()
+                .filter(|(idx, _)| dist.binary(*idx).kind == BinaryKind::Executable);
+            let libraries = binaries
+                .iter()
+                .filter(|(idx, _)| dist.binary(*idx).kind == BinaryKind::DynamicLibrary);
+
             let archive = FetchableArchive {
                 id: artifact.id,
                 target_triples: artifact.target_triples,
-                binaries: binaries
-                    .into_iter()
+                executables: executables
+                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
+                    .collect(),
+                cdylibs: libraries
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
                 zip_style: artifact.archive.as_ref().unwrap().zip_style,
@@ -239,7 +250,8 @@ impl PlatformSupport {
                 id: archive.id.clone(),
                 target_triple: target.clone(),
                 zip_style: archive.zip_style,
-                binaries: archive.binaries.clone(),
+                executables: archive.executables.clone(),
+                cdylibs: archive.cdylibs.clone(),
                 updater,
             };
             fragments.push(fragment);

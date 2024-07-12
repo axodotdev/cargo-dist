@@ -22,6 +22,8 @@ First let's look at how cargo-dist computes the Universe.
 
 Each Cargo package in your workspace that has [binary targets][] is considered an App by cargo-dist. cargo-dist exists to build Apps, so making sure you and it agree on is important! (We prefer "App" over "package" because we want the freedom to one day decouple the two concepts -- for now they are strictly equivalent.)
 
+In addition to your executables cargo-dist can publish your [cdylibs][], including WASM bundles. Note that, for Rust specifically, there can be [messy issues around Cargo clobbering itself when you define two many things under one package][cargo-conflicts].
+
 Most invocations of cargo-dist will start by printing out a brief summary of the Apps that cargo-dist has found:
 
 ![screenshot of the debug log, described below][workspace-log]
@@ -33,8 +35,6 @@ In the above example the available Apps are "evil-workspace", "many-bin", and "t
 To match cargo-install's behaviour, if a package defines multiple binaries then they will be considered part of the same App and zips/[installers][] for it will contain/install all of them. We figure if you went out of your way to have multiple binaries under one package (as opposed to separate packages for each), you did that for a reason! If you don't want that, make separate packages. There is currently no way to group multiple packages into a single App, although there probably will be one day.
 
 If you don't want a package-with-binaries to be considered an App that cargo-dist should care about, you can use Cargo's own builtin [publish = false][publish-false]. You can also use `dist = false` or `dist = true` in [cargo-dist's own config][config-dist], which when defined will take priority over `publish`.
-
-Things like [cdylibs][] are not picked up by cargo-dist, even though they're similar to binaries. If anyone has a usecase for this we're happy to consider it ([although there's some messy issues around Cargo clobbering itself when you define two many things under one package][cargo-conflicts]).
 
 
 
@@ -259,4 +259,3 @@ CI will just invoke cargo-dist in the following sequence:
 [rust-platform]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [cargo-metadata]: https://doc.rust-lang.org/cargo/commands/cargo-metadata.html
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
-

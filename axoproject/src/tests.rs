@@ -1,17 +1,18 @@
 use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{
-    changelog::ChangelogInfo, errors::AxoprojectError, PackageIdx, Version, WorkspaceKind,
+    changelog::ChangelogInfo, errors::AxoprojectError, PackageIdx, Version, WorkspaceGraph,
+    WorkspaceKind,
 };
 
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_self_detect() {
     let project = crate::get_workspaces("./".into(), None).best().unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Rust);
-    assert_eq!(project.package_info.len(), 3);
+    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
+    assert_eq!(project.packages.len(), 3);
 
-    let package = &project.package_info[0];
+    let package = &project.packages[0];
     assert_eq!(package.name, "axoproject");
     assert_eq!(package.binaries.len(), 0);
 }
@@ -22,10 +23,10 @@ fn test_cargo_new() {
     let project = crate::get_workspaces("tests/projects/cargo-new/src/".into(), None)
         .best()
         .unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Rust);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
+    assert_eq!(project.packages.len(), 1);
 
-    let package = &project.package_info[0];
+    let package = &project.packages[0];
     assert_eq!(package.name, "cargo-new");
     assert_eq!(package.binaries.len(), 1);
 
@@ -70,10 +71,10 @@ fn test_rooted_cargo_good() {
     )
     .best()
     .unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Rust);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
+    assert_eq!(project.packages.len(), 1);
 
-    let package = &project.package_info[0];
+    let package = &project.packages[0];
     assert_eq!(package.name, "cargo-new");
     assert_eq!(package.binaries.len(), 1);
 
@@ -87,23 +88,23 @@ fn test_cargo_virtual() {
     let project = crate::get_workspaces("tests/projects/cargo-virtual/virtual/".into(), None)
         .best()
         .unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Rust);
-    assert_eq!(project.package_info.len(), 3);
+    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
+    assert_eq!(project.packages.len(), 3);
 
     {
-        let package = &project.package_info[0];
+        let package = &project.packages[0];
         assert_eq!(package.name, "virtual");
         assert_eq!(&package.binaries[..], &["virtual"]);
     }
 
     {
-        let package = &project.package_info[1];
+        let package = &project.packages[1];
         assert_eq!(package.name, "some-lib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.package_info[2];
+        let package = &project.packages[2];
         assert_eq!(package.name, "virtual-gui");
         assert_eq!(&package.binaries[..], &["virtual-gui"]);
     }
@@ -115,42 +116,42 @@ fn test_cargo_nonvirtual() {
     let project = crate::get_workspaces("tests/projects/cargo-nonvirtual/".into(), None)
         .best()
         .unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Rust);
-    assert_eq!(project.package_info.len(), 6);
+    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
+    assert_eq!(project.packages.len(), 6);
 
     {
-        let package = &project.package_info[0];
+        let package = &project.packages[0];
         assert_eq!(package.name, "some-cdylib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.package_info[1];
+        let package = &project.packages[1];
         assert_eq!(package.name, "some-lib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.package_info[2];
+        let package = &project.packages[2];
         assert_eq!(package.name, "some-other-lib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.package_info[3];
+        let package = &project.packages[3];
         assert_eq!(package.name, "some-staticlib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.package_info[4];
+        let package = &project.packages[4];
         assert_eq!(package.name, "test-bin");
         assert_eq!(&package.binaries[..], &["test-bin"]);
         assert!(!package.publish);
     }
 
     {
-        let package = &project.package_info[5];
+        let package = &project.packages[5];
         assert_eq!(package.name, "nonvirtual");
         assert_eq!(&package.binaries[..], &["cargo-nonvirtual", "nonvirtual"]);
         assert!(package.publish);
@@ -163,10 +164,10 @@ fn test_npm_init_legacy() {
     let project = crate::get_workspaces("tests/projects/npm-init-legacy".into(), None)
         .best()
         .unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project.workspace.kind, WorkspaceKind::Javascript);
+    assert_eq!(project.packages.len(), 1);
 
-    let package = &project.package_info[0];
+    let package = &project.packages[0];
     assert_eq!(package.name, "npm-init-legacy");
 
     // NOTE: we provide a path for this binary that doesn't exist, so if we
@@ -183,10 +184,10 @@ fn test_npm_create_react_app() {
     let project = crate::get_workspaces("tests/projects/npm-create-react-app/src/".into(), None)
         .best()
         .unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project.workspace.kind, WorkspaceKind::Javascript);
+    assert_eq!(project.packages.len(), 1);
 
-    let package = &project.package_info[0];
+    let package = &project.packages[0];
     assert_eq!(package.name, "npm-create-react-app");
 
     // NOTE: we provide paths that exist here, but they're not proper binaries, so if we
@@ -238,10 +239,10 @@ fn test_rooted_npm_good() {
     )
     .best()
     .unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project.workspace.kind, WorkspaceKind::Javascript);
+    assert_eq!(project.packages.len(), 1);
 
-    let package = &project.package_info[0];
+    let package = &project.packages[0];
     assert_eq!(package.name, "npm-init-legacy");
 
     // NOTE: we provide a path for this binary that doesn't exist, so if we
@@ -564,14 +565,14 @@ fn test_generic_c() {
     let project = crate::get_workspaces("tests/projects/generic-c/".into(), None)
         .best()
         .unwrap();
-    assert_eq!(project.kind, WorkspaceKind::Generic);
-    assert_eq!(project.package_info.len(), 1);
-    assert!(project.manifest_path.exists());
+    assert_eq!(project.workspace.kind, WorkspaceKind::Generic);
+    assert_eq!(project.packages.len(), 1);
+    assert!(project.workspace.manifest_path.exists());
 
-    let package = &project.package_info[0];
+    let package = &project.packages[0];
     assert_eq!(package.name, "testprog");
     assert_eq!(package.binaries.len(), 1);
-    assert!(project.manifest_path.exists());
+    assert!(project.workspace.manifest_path.exists());
 
     let binary = &package.binaries[0];
     assert_eq!(binary, "main");
@@ -587,10 +588,17 @@ fn test_generic_workspace_subdir() {
     generic_workspace_check("tests/projects/generic-workspace/generic1/")
 }
 
+#[test]
+fn test_shared_workspace_root() {
+    shared_workspace_check("tests/projects/shared-workspace")
+}
+
 fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
-    let project = crate::get_workspaces(path.into(), None).best().unwrap();
+    let workspaces = WorkspaceGraph::find(path.into(), None).unwrap();
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
     assert_eq!(project.kind, WorkspaceKind::Generic);
-    assert_eq!(project.package_info.len(), 2);
+    assert_eq!(packages.len(), 2);
     assert!(project.manifest_path.exists());
     check_file(
         project.root_auto_includes.readme.as_deref().unwrap(),
@@ -605,10 +613,10 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         "root fake changelog!",
     );
     // repository is inconsistent, so this should be Err
-    assert!(project.repository_url(None).is_err());
+    assert!(workspaces.repository_url(None).is_err());
 
     {
-        let package = &project.package_info[0];
+        let package = &packages[0].1;
         assert_eq!(package.name, "generic1");
         assert_eq!(package.binaries.len(), 1);
         let binary = &package.binaries[0];
@@ -627,16 +635,17 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         );
         // repository should yield this one, so this should faile
         assert_eq!(
-            project
+            workspaces
                 .repository_url(Some(&[PackageIdx(0)]))
                 .unwrap()
-                .unwrap(),
+                .unwrap()
+                .0,
             "https://github.com/mistydemeo/testprog1"
         );
     }
 
     {
-        let package = &project.package_info[1];
+        let package = &packages[1].1;
         assert_eq!(package.name, "generic2");
         assert_eq!(package.binaries.len(), 1);
         let binary = &package.binaries[0];
@@ -651,12 +660,134 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
             "root fake changelog!",
         );
         assert_eq!(
-            project
+            workspaces
                 .repository_url(Some(&[PackageIdx(1)]))
                 .unwrap()
-                .unwrap(),
+                .unwrap()
+                .0,
             "https://github.com/mistydemeo/testprog2"
         );
+    }
+}
+
+fn shared_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
+    let workspaces = WorkspaceGraph::find(path.into(), None).unwrap();
+    let project = workspaces.root_workspace();
+    let direct_packages = workspaces
+        .direct_packages(workspaces.root_workspace_idx())
+        .collect::<Vec<_>>();
+    assert_eq!(project.kind, WorkspaceKind::Generic);
+    assert_eq!(direct_packages.len(), 2);
+    let all_packages = workspaces.all_packages().collect::<Vec<_>>();
+    assert_eq!(all_packages.len(), 12);
+    assert!(project.manifest_path.exists());
+    check_file(
+        project.root_auto_includes.readme.as_deref().unwrap(),
+        "root fake readme!",
+    );
+    check_file(
+        &project.root_auto_includes.licenses[0],
+        "root fake license!",
+    );
+    check_file(
+        project.root_auto_includes.changelog.as_deref().unwrap(),
+        "root fake changelog!",
+    );
+    // repository is inconsistent, so this should be Err
+    assert!(workspaces.repository_url(None).is_err());
+
+    {
+        let package = &direct_packages[0].1;
+        assert_eq!(package.name, "generic1");
+        assert_eq!(package.binaries.len(), 1);
+        let binary = &package.binaries[0];
+        assert_eq!(binary, "main");
+        assert!(package.manifest_path.exists());
+        assert!(package.manifest_path != project.manifest_path);
+        // Inner package defines its own auto_includes
+        check_file(
+            package.readme_file.as_deref().unwrap(),
+            "inner fake readme!",
+        );
+        check_file(&package.license_files[0], "inner fake license!");
+        check_file(
+            package.changelog_file.as_deref().unwrap(),
+            "inner fake changelog!",
+        );
+        // repository should yield this one, so this should faile
+        assert_eq!(
+            workspaces
+                .repository_url(Some(&[PackageIdx(0)]))
+                .unwrap()
+                .unwrap()
+                .0,
+            "https://github.com/mistydemeo/testprog1"
+        );
+    }
+
+    {
+        let package = &direct_packages[1].1;
+        assert_eq!(package.name, "generic2");
+        assert_eq!(package.binaries.len(), 1);
+        let binary = &package.binaries[0];
+        assert_eq!(binary, "main");
+        assert!(package.manifest_path.exists());
+        assert!(package.manifest_path != project.manifest_path);
+        // Inner package inherits root auto_includes
+        check_file(package.readme_file.as_deref().unwrap(), "root fake readme!");
+        check_file(&package.license_files[0], "root fake license!");
+        check_file(
+            package.changelog_file.as_deref().unwrap(),
+            "root fake changelog!",
+        );
+        assert_eq!(
+            workspaces
+                .repository_url(Some(&[PackageIdx(1)]))
+                .unwrap()
+                .unwrap()
+                .0,
+            "https://github.com/mistydemeo/testprog2"
+        );
+    }
+
+    {
+        let package = &all_packages[11].1;
+        assert_eq!(package.name, "npm-init-legacy");
+        assert_eq!(package.binaries.len(), 1);
+        let binary = &package.binaries[0];
+        assert_eq!(binary, "npm-init-legacy");
+        assert_eq!(package.description.as_deref().unwrap(), "a legacy project");
+        assert_eq!(package.homepage_url.as_deref().unwrap(), "https://axo.dev/");
+        assert!(package.manifest_path.exists());
+        assert!(package.manifest_path != project.manifest_path);
+        // Inner package inherits root auto_includes
+        check_file(package.readme_file.as_deref().unwrap(), "root fake readme!");
+        check_file(&package.license_files[0], "root fake license!");
+        check_file(
+            package.changelog_file.as_deref().unwrap(),
+            "root fake changelog!",
+        );
+        assert!(workspaces
+            .repository_url(Some(&[PackageIdx(2)]))
+            .unwrap()
+            .is_none());
+    }
+
+    // Do some basic checks that the cargo packages looks vaguely right
+    for (pkg_idx, package) in &all_packages[3..11] {
+        assert!(package.manifest_path.exists());
+        assert!(package.manifest_path != project.manifest_path);
+        let subworkspace = workspaces.workspace(workspaces.workspace_for_package(*pkg_idx));
+        assert_eq!(subworkspace.kind, WorkspaceKind::Rust);
+        assert!(subworkspace.manifest_path.exists());
+        assert!(subworkspace.manifest_path != project.manifest_path);
+
+        // Check for cargo package overloading working
+        if package.true_name == "virtual-gui" {
+            assert_eq!(package.true_version.clone().unwrap().to_string(), "0.1.0");
+            assert_eq!(package.name, "virtual-gui-overloaded");
+            assert_eq!(package.version.clone().unwrap().to_string(), "1.0.0");
+        }
     }
 }
 
