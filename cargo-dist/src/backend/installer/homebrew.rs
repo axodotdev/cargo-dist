@@ -1,4 +1,4 @@
-//! Code for generating installer.sh
+//! Code for generating formula.rb
 
 use axoasset::LocalAsset;
 use cargo_dist_schema::DistManifest;
