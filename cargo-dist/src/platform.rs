@@ -110,6 +110,8 @@ pub struct FetchableArchive {
     pub executables: Vec<String>,
     /// The dynamic libraries in the archive (assumed to be in root)
     pub cdylibs: Vec<String>,
+    /// The static libraries in the archive (assumed to be in root)
+    pub cstaticlibs: Vec<String>,
     /// The kind of compression the archive has
     pub zip_style: ZipStyle,
     /// The updater you should also fetch if you install this archive
@@ -181,9 +183,12 @@ impl PlatformSupport {
             let executables = binaries
                 .iter()
                 .filter(|(idx, _)| dist.binary(*idx).kind == BinaryKind::Executable);
-            let libraries = binaries
+            let cdylibs = binaries
                 .iter()
                 .filter(|(idx, _)| dist.binary(*idx).kind == BinaryKind::DynamicLibrary);
+            let cstaticlibs = binaries
+                .iter()
+                .filter(|(idx, _)| dist.binary(*idx).kind == BinaryKind::StaticLibrary);
 
             let archive = FetchableArchive {
                 id: artifact.id,
@@ -191,7 +196,10 @@ impl PlatformSupport {
                 executables: executables
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
-                cdylibs: libraries
+                cdylibs: cdylibs
+                    .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
+                    .collect(),
+                cstaticlibs: cstaticlibs
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
                 zip_style: artifact.archive.as_ref().unwrap().zip_style,
@@ -252,6 +260,7 @@ impl PlatformSupport {
                 zip_style: archive.zip_style,
                 executables: archive.executables.clone(),
                 cdylibs: archive.cdylibs.clone(),
+                cstaticlibs: archive.cstaticlibs.clone(),
                 updater,
             };
             fragments.push(fragment);

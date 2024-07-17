@@ -39,7 +39,7 @@ use std::collections::btree_map::Entry;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
     Artifact, ArtifactId, Asset, AssetKind, DistManifest, DynamicLibraryAsset, ExecutableAsset,
-    Hosting,
+    Hosting, StaticLibraryAsset,
 };
 use tracing::warn;
 
@@ -249,6 +249,9 @@ fn add_manifest_artifact(
             let kind = match binary.kind {
                 crate::BinaryKind::DynamicLibrary => {
                     AssetKind::CDynamicLibrary(DynamicLibraryAsset { symbols_artifact })
+                }
+                crate::BinaryKind::StaticLibrary => {
+                    AssetKind::CStaticLibrary(StaticLibraryAsset { symbols_artifact })
                 }
                 crate::BinaryKind::Executable => {
                     AssetKind::Executable(ExecutableAsset { symbols_artifact })

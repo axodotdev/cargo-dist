@@ -389,6 +389,8 @@ pub enum BinaryKind {
     Executable,
     /// C-style dynamic library (.so/.dylib/.dll)
     DynamicLibrary,
+    /// C-style static library (.a/.lib)
+    StaticLibrary,
 }
 
 /// A build step we would like to perform
@@ -701,6 +703,11 @@ pub struct Release {
     /// The string is the name of the library, without lib prefix, and without platform-specific suffix (.so, .dylib, .dll)
     /// Note: Windows won't include lib prefix in the final lib.
     pub cdylibs: Vec<(PackageIdx, String)>,
+    /// C static libraries that every variant should ostensibly provide
+    ///
+    /// The string is the name of the library, without lib prefix, and without platform-specific suffix (.a, .lib)
+    /// Note: Windows won't include lib prefix in the final lib.
+    pub cstaticlibs: Vec<(PackageIdx, String)>,
     /// Whether to package C dynamic libraries in the final archive
     pub package_cdylibs: bool,
     /// Whether to install packaged C dynamic libraries
@@ -1334,6 +1341,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             global_artifacts: vec![],
             bins: vec![],
             cdylibs: vec![],
+            cstaticlibs: vec![],
             targets: vec![],
             variants: vec![],
             changelog_body: None,
@@ -1372,6 +1380,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             static_assets,
             bins,
             cdylibs,
+            cstaticlibs,
             package_cdylibs,
             ..
         } = self.release_mut(to_release);
@@ -1394,8 +1403,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 .clone()
                 .into_iter()
                 .map(|(idx, l)| (idx, l, BinaryKind::DynamicLibrary));
+            let all_cstaticlibs = cstaticlibs
+                .clone()
+                .into_iter()
+                .map(|(idx, l)| (idx, l, BinaryKind::StaticLibrary));
 
-            all_bins.chain(all_dylibs).collect()
+            all_bins.chain(all_dylibs).chain(all_cstaticlibs).collect()
         } else {
             all_bins.collect()
         };
@@ -1441,12 +1454,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     platform_lib_prefix = "lib";
                 };
 
-                let platform_lib_ext = if target_is_windows {
-                    ".dll"
+                let platform_lib_ext;
+                let platform_staticlib_ext;
+                if target_is_windows {
+                    platform_lib_ext = ".dll";
+                    platform_staticlib_ext = ".lib";
                 } else if target.contains("linux") {
-                    ".so"
+                    platform_lib_ext = ".so";
+                    platform_staticlib_ext = ".a";
                 } else if target.contains("darwin") {
-                    ".dylib"
+                    platform_lib_ext = ".dylib";
+                    platform_staticlib_ext = ".a";
                 } else {
                     return Err(DistError::UnrecognizedTarget { target });
                 };
@@ -1455,6 +1473,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     BinaryKind::Executable => format!("{binary_name}{platform_exe_ext}"),
                     BinaryKind::DynamicLibrary => {
                         format!("{platform_lib_prefix}{binary_name}{platform_lib_ext}")
+                    }
+                    BinaryKind::StaticLibrary => {
+                        format!("{platform_lib_prefix}{binary_name}{platform_staticlib_ext}")
                     }
                 };
 
@@ -1500,6 +1521,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     fn add_library(&mut self, to_release: ReleaseIdx, pkg_idx: PackageIdx, binary_name: String) {
         let release = self.release_mut(to_release);
         release.cdylibs.push((pkg_idx, binary_name));
+    }
+
+    fn add_static_library(
+        &mut self,
+        to_release: ReleaseIdx,
+        pkg_idx: PackageIdx,
+        binary_name: String,
+    ) {
+        let release = self.release_mut(to_release);
+        release.cstaticlibs.push((pkg_idx, binary_name));
     }
 
     fn add_executable_zip(&mut self, to_release: ReleaseIdx) {
@@ -2577,7 +2608,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Don't bother with any of this without binaries
             // or C libraries
             // (releases a Rust library, nothing to Build)
-            if info.executables.is_empty() && info.cdylibs.is_empty() {
+            if info.executables.is_empty() && info.cdylibs.is_empty() && info.cstaticlibs.is_empty()
+            {
                 continue;
             }
 
@@ -2588,6 +2620,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
             for lib in &info.cdylibs {
                 self.add_library(release, info.package_idx, lib.to_owned());
+            }
+
+            for lib in &info.cstaticlibs {
+                self.add_static_library(release, info.package_idx, lib.to_owned());
             }
 
             // Create variants for this Release for each target

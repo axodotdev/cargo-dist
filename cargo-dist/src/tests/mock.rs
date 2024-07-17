@@ -128,6 +128,7 @@ pub fn entry_axo_bin() -> ReleaseArtifacts {
         package_idx: BIN_AXO_IDX,
         executables: vec![BIN_AXO_NAME.to_owned()],
         cdylibs: vec![],
+        cstaticlibs: vec![],
     }
 }
 
@@ -142,6 +143,7 @@ pub fn entry_some_lib() -> ReleaseArtifacts {
         package_idx: LIB_SOME_IDX,
         executables: vec![],
         cdylibs: vec![],
+        cstaticlibs: vec![],
     }
 }
 
@@ -157,6 +159,7 @@ pub fn entry_helper_bin() -> ReleaseArtifacts {
         package_idx: BIN_HELPER_IDX,
         executables: vec![BIN_HELPER_NAME.to_owned(), BIN_HELPER_NAME2.to_owned()],
         cdylibs: vec![],
+        cstaticlibs: vec![],
     }
 }
 
@@ -171,6 +174,7 @@ pub fn entry_other_lib() -> ReleaseArtifacts {
         package_idx: LIB_OTHER_IDX,
         executables: vec![],
         cdylibs: vec![],
+        cstaticlibs: vec![],
     }
 }
 
@@ -186,6 +190,7 @@ pub fn entry_oddball_bin() -> ReleaseArtifacts {
         package_idx: BIN_ODDBALL_IDX,
         executables: vec![BIN_ODDBALL_NAME.to_owned()],
         cdylibs: vec![],
+        cstaticlibs: vec![],
     }
 }
 
@@ -209,6 +214,7 @@ pub fn entry_forced_bin() -> ReleaseArtifacts {
         package_idx: BIN_FORCED_IDX,
         executables: vec![BIN_FORCED_NAME.to_owned()],
         cdylibs: vec![],
+        cstaticlibs: vec![],
     }
 }
 

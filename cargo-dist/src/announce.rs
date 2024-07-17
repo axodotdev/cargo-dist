@@ -34,6 +34,7 @@ pub(crate) struct ReleaseArtifacts {
     pub package_idx: PackageIdx,
     pub executables: Vec<String>,
     pub cdylibs: Vec<String>,
+    pub cstaticlibs: Vec<String>,
 }
 
 /// Settings for `select_tag`
@@ -179,14 +180,14 @@ fn check_dist_package(
         .unwrap_or(false);
 
     let package_empty = if package_cdylibs {
-        pkg.binaries.is_empty() && pkg.cdylibs.is_empty()
+        pkg.binaries.is_empty() && pkg.cdylibs.is_empty() && pkg.cstaticlibs.is_empty()
     } else {
         pkg.binaries.is_empty()
     };
 
     // Nothing to publish if there's no binaries/libraries!
     if package_empty {
-        return Some("no binaries or cdylibs".to_owned());
+        return Some("no binaries or cdylibs/cstaticlibs".to_owned());
     }
 
     // If [metadata.dist].dist is explicitly set, respect it!
@@ -395,13 +396,22 @@ fn select_packages(
                 cdylibs.push(library.to_owned());
             }
         }
+        let mut cstaticlibs = vec![];
+        for library in &pkg.cstaticlibs {
+            info!("    {}", sty.apply_to(format!("[cstaticlib] {}", library)));
+            // In the future might want to allow this to be granular for each library
+            if disabled_reason.is_none() {
+                cstaticlibs.push(library.to_owned());
+            }
+        }
 
         // If any binaries were accepted for this package, it's a Release!
-        if !binaries.is_empty() || !cdylibs.is_empty() {
+        if !binaries.is_empty() || !cdylibs.is_empty() || !cstaticlibs.is_empty() {
             let release = ReleaseArtifacts {
                 package_idx: pkg_id,
                 executables: binaries,
                 cdylibs,
+                cstaticlibs,
             };
             releases.push(release);
         }
@@ -416,6 +426,7 @@ fn select_packages(
                 package_idx: PackageIdx(idx),
                 executables: vec![],
                 cdylibs: vec![],
+                cstaticlibs: vec![],
             });
         }
     }

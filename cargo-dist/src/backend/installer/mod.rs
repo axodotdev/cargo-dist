@@ -78,6 +78,8 @@ pub struct ExecutableZipFragment {
     pub executables: Vec<String>,
     /// The dynamic libraries the artifact contains (name, assumed at root)
     pub cdylibs: Vec<String>,
+    /// The static libraries the artifact contains (name, assumed at root)
+    pub cstaticlibs: Vec<String>,
     /// The style of zip this is
     pub zip_style: ZipStyle,
     /// The updater associated with this platform

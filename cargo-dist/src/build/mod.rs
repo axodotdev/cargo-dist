@@ -258,14 +258,14 @@ fn bin_basename(src_path: &Utf8PathBuf) -> Option<String> {
             // the file extension *and* the lib prefix.
             // (Windows .dll libraries are missing the lib
             // prefix, so we don't need to handle those.)
-            "so" | "dylib" => {
+            "so" | "dylib" | "a" => {
                 return src_path
                     .file_stem()
                     .and_then(|stem| stem.strip_prefix("lib"))
                     .map(String::from);
             }
-            // If this is a .dll or .exe, strip just the extension
-            "dll" | "exe" => {
+            // If this is a .dll, .lib or .exe, strip just the extension
+            "dll" | "exe" | "lib" => {
                 return src_path.file_stem().map(String::from);
             }
             _ => {}
