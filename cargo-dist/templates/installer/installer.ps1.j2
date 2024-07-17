@@ -78,6 +78,13 @@ function Install-Binary($install_args) {
       {%- else %}
       "libs" = @()
       {%- endif %}
+      {%- if "cstaticlib" in install_libraries %}
+      "staticlibs" = @({% for lib in artifact.cstaticlibs -%}
+        "{{ lib }}"{{ ", " if not loop.last else "" }}
+      {%- endfor %})
+      {%- else %}
+      "staticlibs" = @()
+      {%- endif %}
       "zip_ext" = "{{ artifact.zip_style }}"
       "aliases" = @{
       {%- for source, dests in bin_aliases[artifact.target_triple] | items %}
@@ -159,6 +166,7 @@ function Download($download_url, $platforms) {
   $zip_ext = $info["zip_ext"]
   $bin_names = $info["bins"]
   $lib_names = $info["libs"]
+  $staticlib_names = $info["staticlibs"]
   $artifact_name = $info["artifact_name"]
 
   # Make a new temp dir to unpack things to
@@ -205,6 +213,11 @@ function Download($download_url, $platforms) {
     Write-Verbose "  Unpacked $lib_name"
     $lib_paths += "$tmp\$lib_name"
   }
+  $staticlib_paths = @()
+  foreach ($lib_name in $staticlib_names) {
+    Write-Verbose "  Unpacked $lib_name"
+    $staticlib_paths += "$tmp\$lib_name"
+  }
 
   if ($null -ne $info["updater"]) {
     $updater_id = $info["updater"]["artifact_name"]
@@ -218,6 +231,7 @@ function Download($download_url, $platforms) {
   return @{
     "bin_paths" = $bin_paths
     "lib_paths" = $lib_paths
+    "staticlib_paths" = $staticlib_paths
   }
 }
 
@@ -320,11 +334,19 @@ function Invoke-Installer($artifacts, $platforms) {
     Remove-Item "$lib_path" -Recurse -Force -ErrorAction Stop
     Write-Information "  $installed_file"
   }
+  foreach ($lib_path in $artifacts["staticlib_paths"]) {
+    $installed_file = Split-Path -Path "$lib_path" -Leaf
+    Copy-Item "$lib_path" -Destination "$dest_dir_lib" -ErrorAction Stop
+    Remove-Item "$lib_path" -Recurse -Force -ErrorAction Stop
+    Write-Information "  $installed_file"
+  }
 
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
   $formatted_libs = ($info["libs"] | ForEach-Object { '"' + $_ + '"' }) -join ","
-  $receipt = $receipt.Replace('"CARGO_DIST_LIBS"', $formatted_libs)
+  $receipt = $receipt.Replace('"CARGO_DIST_DYLIBS"', $formatted_libs)
+  $formatted_staticlibs = ($info["staticlibs"] | ForEach-Object { '"' + $_ + '"' }) -join ","
+  $receipt = $receipt.Replace('"CARGO_DIST_STATICLIBS"', $formatted_staticlibs)
   # Also replace the aliases with the arch-specific one
   $receipt = $receipt.Replace('"binary_aliases":{}', -join('"binary_aliases":',  $info['aliases_json']))
 

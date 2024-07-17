@@ -92,6 +92,9 @@ class {{ formula_class }} < Formula
       {%- if arm64_macos.cdylibs and "cdylib" in install_libraries %}
       lib.install {% for library in arm64_macos.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
+      {%- if arm64_macos.cstaticlibs and "cstaticlib" in install_libraries %}
+      lib.install {% for library in arm64_macos.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      {%- endif %}
     end
     {%- endif %}
     {%- if x86_64_macos.executables or x86_64_macos.cdylibs %}
@@ -101,6 +104,9 @@ class {{ formula_class }} < Formula
       {%- endif %}
       {%- if x86_64_macos.cdylibs and "cdylib" in install_libraries %}
       lib.install {% for library in x86_64_macos.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      {%- endif %}
+      {%- if x86_64_macos.cstaticlibs and "cstaticlib" in install_libraries %}
+      lib.install {% for library in x86_64_macos.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
     end
     {%- endif %}
@@ -112,6 +118,9 @@ class {{ formula_class }} < Formula
       {%- if arm64_linux.cdylibs and "cdylib" in install_libraries %}
       lib.install {% for library in arm64_linux.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
+      {%- if arm64_linux.cstaticlibs and "cstaticlib" in install_libraries %}
+      lib.install {% for library in arm64_linux.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      {%- endif %}
     end
     {%- endif %}
     {%- if x86_64_linux.executables %}
@@ -121,6 +130,9 @@ class {{ formula_class }} < Formula
       {%- endif %}
       {%- if x86_64_linux.cdylibs and "cdylib" in install_libraries %}
       lib.install {% for library in x86_64_linux.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      {%- endif %}
+      {%- if x86_64_linux.cstaticlibs and "cstaticlib" in install_libraries %}
+      lib.install {% for library in x86_64_linux.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
     end
 {% endif %}

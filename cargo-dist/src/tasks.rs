@@ -3031,8 +3031,10 @@ pub struct InstallReceipt {
     pub install_prefix: String,
     /// A list of all binaries installed by this app
     pub binaries: Vec<String>,
-    /// A list of all libraries installed by this app
+    /// A list of all C dynamic libraries installed by this app
     pub cdylibs: Vec<String>,
+    /// A list of all C static libraries installed by this app
+    pub cstaticlibs: Vec<String>,
     /// Information about where to request information on new releases
     pub source: ReleaseSource,
     /// The version that was installed
@@ -3061,7 +3063,8 @@ impl InstallReceipt {
             // These first two are placeholder values which the installer will update
             install_prefix: "AXO_INSTALL_PREFIX".to_owned(),
             binaries: vec!["CARGO_DIST_BINS".to_owned()],
-            cdylibs: vec!["CARGO_DIST_LIBS".to_owned()],
+            cdylibs: vec!["CARGO_DIST_DYLIBS".to_owned()],
+            cstaticlibs: vec!["CARGO_DIST_STATICLIBS".to_owned()],
             version: release.version.to_string(),
             source: ReleaseSource {
                 release_type: source_type,

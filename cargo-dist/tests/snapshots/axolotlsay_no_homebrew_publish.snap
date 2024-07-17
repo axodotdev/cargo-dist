@@ -28,7 +28,7 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_LIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/axolotlsay"
@@ -145,6 +145,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -155,6 +157,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -165,6 +169,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay.exe"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -175,6 +181,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -185,7 +193,8 @@ download_binary_and_run_installer() {
 
     # Replace the placeholder binaries with the calculated array from above
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_BINS"'/"$_bins_js_array"/)"
-    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_LIBS"'/"$_libs_js_array"/)"
+    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_DYLIBS"'/"$_libs_js_array"/)"
+    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_STATICLIBS"'/"$_staticlibs_js_array"/)"
 
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
@@ -244,7 +253,7 @@ download_binary_and_run_installer() {
             ;;
     esac
 
-    install "$_dir" "$_bins" "$_libs" "$_arch" "$@"
+    install "$_dir" "$_bins" "$_libs" "$_staticlibs" "$_arch" "$@"
     local _retval=$?
     if [ "$_retval" != 0 ]; then
         return "$_retval"
@@ -448,7 +457,8 @@ install() {
     local _src_dir="$1"
     local _bins="$2"
     local _libs="$3"
-    local _arch="$4"
+    local _staticlibs="$4"
+    local _arch="$5"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
         ensure mv "$_bin" "$_install_dir"
@@ -461,6 +471,13 @@ install() {
     done
     # Like the above, but no aliases
     for _lib_name in $_libs; do
+        local _lib="$_src_dir/$_lib_name"
+        ensure mv "$_lib" "$_lib_install_dir"
+        # unzip seems to need this chmod
+        ensure chmod +x "$_lib_install_dir/$_lib_name"
+        say "  $_lib_name"
+    done
+    for _lib_name in $_staticlibs; do
         local _lib="$_src_dir/$_lib_name"
         ensure mv "$_lib" "$_lib_install_dir"
         # unzip seems to need this chmod
@@ -1121,7 +1138,7 @@ $app_name = 'axolotlsay'
 $app_version = '0.2.2'
 
 $receipt = @"
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_LIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 "@
 $receipt_home = "${env:LOCALAPPDATA}\axolotlsay"
 
@@ -1139,6 +1156,7 @@ function Install-Binary($install_args) {
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = @("axolotlsay.exe")
       "libs" = @()
+      "staticlibs" = @()
       "zip_ext" = ".tar.gz"
       "aliases" = @{
       }
@@ -1148,6 +1166,7 @@ function Install-Binary($install_args) {
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = @("axolotlsay.exe")
       "libs" = @()
+      "staticlibs" = @()
       "zip_ext" = ".tar.gz"
       "aliases" = @{
       }
@@ -1217,6 +1236,7 @@ function Download($download_url, $platforms) {
   $zip_ext = $info["zip_ext"]
   $bin_names = $info["bins"]
   $lib_names = $info["libs"]
+  $staticlib_names = $info["staticlibs"]
   $artifact_name = $info["artifact_name"]
 
   # Make a new temp dir to unpack things to
@@ -1263,6 +1283,11 @@ function Download($download_url, $platforms) {
     Write-Verbose "  Unpacked $lib_name"
     $lib_paths += "$tmp\$lib_name"
   }
+  $staticlib_paths = @()
+  foreach ($lib_name in $staticlib_names) {
+    Write-Verbose "  Unpacked $lib_name"
+    $staticlib_paths += "$tmp\$lib_name"
+  }
 
   if ($null -ne $info["updater"]) {
     $updater_id = $info["updater"]["artifact_name"]
@@ -1276,6 +1301,7 @@ function Download($download_url, $platforms) {
   return @{
     "bin_paths" = $bin_paths
     "lib_paths" = $lib_paths
+    "staticlib_paths" = $staticlib_paths
   }
 }
 
@@ -1354,11 +1380,19 @@ function Invoke-Installer($artifacts, $platforms) {
     Remove-Item "$lib_path" -Recurse -Force -ErrorAction Stop
     Write-Information "  $installed_file"
   }
+  foreach ($lib_path in $artifacts["staticlib_paths"]) {
+    $installed_file = Split-Path -Path "$lib_path" -Leaf
+    Copy-Item "$lib_path" -Destination "$dest_dir_lib" -ErrorAction Stop
+    Remove-Item "$lib_path" -Recurse -Force -ErrorAction Stop
+    Write-Information "  $installed_file"
+  }
 
   $formatted_bins = ($info["bins"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_BINS"', $formatted_bins)
   $formatted_libs = ($info["libs"] | ForEach-Object { '"' + $_ + '"' }) -join ","
-  $receipt = $receipt.Replace('"CARGO_DIST_LIBS"', $formatted_libs)
+  $receipt = $receipt.Replace('"CARGO_DIST_DYLIBS"', $formatted_libs)
+  $formatted_staticlibs = ($info["staticlibs"] | ForEach-Object { '"' + $_ + '"' }) -join ","
+  $receipt = $receipt.Replace('"CARGO_DIST_STATICLIBS"', $formatted_staticlibs)
   # Also replace the aliases with the arch-specific one
   $receipt = $receipt.Replace('"binary_aliases":{}', -join('"binary_aliases":',  $info['aliases_json']))
 
