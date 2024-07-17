@@ -9,6 +9,7 @@ use serde::Serialize;
 
 use crate::{
     config::{JinjaInstallPathStrategy, LibraryStyle, ZipStyle},
+    platform::RuntimeConditions,
     InstallReceipt, TargetTriple,
 };
 
@@ -84,6 +85,8 @@ pub struct ExecutableZipFragment {
     pub zip_style: ZipStyle,
     /// The updater associated with this platform
     pub updater: Option<UpdaterFragment>,
+    /// Conditions the system being installed to should ideally satisfy to install this
+    pub runtime_conditions: RuntimeConditions,
 }
 
 /// A fake fragment of an Updater artifact for installers
