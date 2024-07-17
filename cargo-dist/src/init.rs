@@ -1,5 +1,5 @@
 use axoasset::toml_edit;
-use axoproject::{errors::AxoprojectError, platforms::triple_to_display_name};
+use axoproject::platforms::triple_to_display_name;
 use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::PrRunMode;
@@ -492,50 +492,6 @@ fn get_new_dist_metadata(
         .as_ref()
         .map(|ci| ci.contains(&CiStyle::Github))
         .unwrap_or(false);
-    // FIXME: we now support more precisely getting the repository url
-    // filtered to a list of packages, so that we can apply publish=false/dist=false
-    // before trying to check the repository_url is consistent. However
-    // init is in this weird state where we're setting things up, so it's awkward
-    // to apply those annotations and so init still bombs out, as it doesn't
-    // have the filter to apply (this is solveable but not trivial...)
-    if has_github_ci
-        && workspaces
-            .repository_url(None)
-            .unwrap_or_default()
-            .is_none()
-    {
-        // If axoproject complains about inconsistency, forward that
-        // Massively jank manual implementation of "clone" here because lots of error types
-        // (like std::io::Error) don't implement Clone and so axoproject errors can't either
-        let conflict = workspaces
-            .repository_url(None)
-            .map_err(|w| {
-                if let AxoprojectError::InconsistentRepositoryKey {
-                    file1,
-                    url1,
-                    file2,
-                    url2,
-                } = w
-                {
-                    Some(AxoprojectError::InconsistentRepositoryKey {
-                        file1: file1.clone(),
-                        url1: url1.clone(),
-                        file2: file2.clone(),
-                        url2: url2.clone(),
-                    })
-                } else {
-                    None
-                }
-            })
-            .err()
-            .unwrap_or_default();
-        if let Some(inner) = conflict {
-            Err(DistError::CantEnableGithubUrlInconsistent { inner })?;
-        } else {
-            // Otherwise assume no URL
-            Err(DistError::CantEnableGithubNoUrl)?;
-        }
-    }
 
     if has_github_ci && meta.pr_run_mode.is_none() {
         let default_val = PrRunMode::default();

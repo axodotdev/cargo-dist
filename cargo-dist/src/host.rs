@@ -305,7 +305,13 @@ pub(crate) fn select_hosting(
     let raw_repository_url = match workspaces.repository_url(Some(&package_list)) {
         Ok(Some(url)) => url,
         Ok(None) => {
-            return Err(DistError::CantEnableGithubNoUrl);
+            let mut manifest_list = String::new();
+            for pkg_idx in package_list {
+                let package = workspaces.package(pkg_idx);
+                manifest_list.push('\n');
+                manifest_list.push_str(package.manifest_path.as_str());
+            }
+            return Err(DistError::CantEnableGithubNoUrl { manifest_list });
         }
         Err(e) => {
             return Err(DistError::CantEnableGithubUrlInconsistent { inner: e });

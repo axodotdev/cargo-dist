@@ -132,13 +132,15 @@ pub enum DistError {
     /// User tried to enable Github CI support but no url for the repo
     #[error("Github CI support requires you to specify the URL of your repository")]
     #[diagnostic(help(
-        r#"Set the repository = "https://github.com/..." key in the Cargo.toml of your app"#
+        r#"Set the repository = "https://github.com/..." key in these manifests: {manifest_list}"#
     ))]
-    CantEnableGithubNoUrl,
+    CantEnableGithubNoUrl {
+        /// List of manifests to change
+        manifest_list: String,
+    },
 
     /// We got a repository URL but couldn't interpret it as a GitHub repo
-    #[error("Github CI support requires your repository be hosted on Github")]
-    #[diagnostic(help(r#"You said your repository"#))]
+    #[error("GitHub CI support requires a GitHub repository")]
     CantEnableGithubUrlNotGithub {
         /// inner error that caught this
         #[diagnostic_source]
