@@ -5,10 +5,17 @@ use crate::{announce::ReleaseArtifacts, CargoInfo, Tools};
 use axoproject::{
     AutoIncludes, PackageIdx, PackageInfo, WorkspaceGraph, WorkspaceInfo, WorkspaceStructure,
 };
+use camino::Utf8PathBuf;
 use serde_json::json;
 
 pub const REPO_URL: &str = "https://github.com/axodotdev/axolotlsay";
+pub const REPO_OWNER: &str = "axodotdev";
+pub const REPO_PROJECT: &str = "axolotlsay";
+
 pub const REPO_DESC: &str = "💬 a CLI for learning to distribute CLIs in rust";
+
+pub const WORKSPACE_DIR: &str = "/real/fake/paths/myproj";
+pub const PACKAGES_DIR: &str = "crates";
 
 pub const BIN_AXO_NAME: &str = "axolotlsay";
 pub const BIN_AXO_VER: &str = "1.0.0";
@@ -42,6 +49,26 @@ pub const BIN_TEST1_VER: &str = BIN_AXO_VER;
 pub const BIN_TEST2_NAME: &str = "test-bin2";
 pub const BIN_TEST2_VER: &str = BIN_AXO_VER;
 
+fn workspace_dir() -> Utf8PathBuf {
+    WORKSPACE_DIR.into()
+}
+fn workspace_manifest() -> Utf8PathBuf {
+    // NOTE: we do these `/`'s manually to keep tests platform-independent
+    format!("{WORKSPACE_DIR}/dist-workspace.toml").into()
+}
+fn target_dir() -> Utf8PathBuf {
+    // NOTE: we do these `/`'s manually to keep tests platform-independent
+    format!("{WORKSPACE_DIR}/target2").into()
+}
+fn package_dir(name: &str) -> Utf8PathBuf {
+    // NOTE: we do these `/`'s manually to keep tests platform-independent
+    format!("{WORKSPACE_DIR}/{PACKAGES_DIR}/{name}").into()
+}
+fn package_manifest(name: &str) -> Utf8PathBuf {
+    // NOTE: we do these `/`'s manually to keep tests platform-independent
+    format!("{WORKSPACE_DIR}/{PACKAGES_DIR}/{name}/dist.toml").into()
+}
+
 pub fn mock_tools() -> Tools {
     Tools {
         cargo: CargoInfo {
@@ -58,21 +85,23 @@ pub fn mock_tools() -> Tools {
 
 pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
     let version = Some(axoproject::Version::Cargo(ver.parse().unwrap()));
+    let package_root = package_dir(name);
+    let manifest_path = package_manifest(name);
     PackageInfo {
         true_name: name.to_owned(),
         true_version: version.clone(),
         name: name.to_owned(),
         version,
-        manifest_path: Default::default(),
-        package_root: Default::default(),
+        manifest_path,
+        package_root,
         description: Some(REPO_DESC.to_owned()),
         authors: vec![],
         license: None,
         publish: true,
         keywords: None,
         repository_url: Some(REPO_URL.to_owned()),
-        homepage_url: None,
-        documentation_url: None,
+        homepage_url: Some(REPO_URL.to_owned()),
+        documentation_url: Some(REPO_URL.to_owned()),
         readme_file: None,
         license_files: vec![],
         changelog_file: None,
@@ -87,15 +116,19 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
 
 pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceGraph {
     let mut workspaces = WorkspaceGraph::default();
+    let workspace_dir = workspace_dir();
+    let manifest_path = workspace_manifest();
+    let target_dir = target_dir();
     let workspace = WorkspaceStructure {
         sub_workspaces: vec![],
         packages,
         workspace: WorkspaceInfo {
+            // This is currently load-bearing as generic workspaces induce
+            // us to read the manifest from disk, whereas rust uses cargo_metadata_table
             kind: axoproject::WorkspaceKind::Rust,
-            target_dir: Default::default(),
-            workspace_dir: Default::default(),
-
-            manifest_path: Default::default(),
+            target_dir,
+            workspace_dir,
+            manifest_path,
             root_auto_includes: AutoIncludes {
                 readme: None,
                 licenses: vec![],
