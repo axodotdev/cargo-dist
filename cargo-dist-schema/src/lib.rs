@@ -799,6 +799,22 @@ impl Library {
             package_manager: None,
         }
     }
+
+    /// Attempts to guess whether this specific library is glibc or not
+    pub fn is_glibc(&self) -> bool {
+        // If we were able to parse the source, we can be pretty precise
+        if let Some(source) = &self.source {
+            source == "libc6"
+        } else {
+            // Both patterns seen on Ubuntu (on the same system!)
+            self.path.contains("libc.so.6") ||
+            // This one will also contain the series version but
+            // we don't want to be too precise here to avoid
+            // filtering out later OS releases
+            // Specifically we want to avoid `libc-musl` or `libc.musl`
+            self.path.contains("libc-2")
+        }
+    }
 }
 
 impl std::fmt::Display for Library {

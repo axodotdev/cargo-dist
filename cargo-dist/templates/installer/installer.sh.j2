@@ -29,8 +29,8 @@ EORECEIPT
 RECEIPT_HOME="${HOME}/.config/{{ app_name }}"
 
 # glibc provided by the system(s) which built these binaries
-BUILDER_GLIBC_MAJOR="{{ runtime_conditions.linux.glibc.major }}"
-BUILDER_GLIBC_SERIES="{{ runtime_conditions.linux.glibc.series }}"
+BUILDER_GLIBC_MAJOR="{{ runtime_conditions.min_glibc_version.major }}"
+BUILDER_GLIBC_SERIES="{{ runtime_conditions.min_glibc_version.series }}"
 
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)

@@ -48,7 +48,7 @@
 //! Also note that the BuildSteps for installers are basically monolithic "build that installer"
 //! steps to give them the freedom to do whatever they need to do.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 
 use axoasset::AxoClient;
 use axoprocess::Cmd;
@@ -57,9 +57,7 @@ use axoproject::platforms::{
 };
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{
-    ArtifactId, BuildEnvironment, DistManifest, GlibcVersion, SystemId, SystemInfo,
-};
+use cargo_dist_schema::{ArtifactId, BuildEnvironment, DistManifest, SystemId, SystemInfo};
 use semver::Version;
 use serde::Serialize;
 use tracing::{info, warn};
@@ -72,9 +70,7 @@ use crate::config::{
     LibraryStyle, ProductionMode, SystemDependencies,
 };
 use crate::net::ClientSettings;
-use crate::platform::{
-    LinuxRuntimeConditions, PlatformSupport, RuntimeCondition, RuntimeConditions,
-};
+use crate::platform::{PlatformSupport, RuntimeConditions};
 use crate::sign::Signing;
 use crate::{
     backend::{
@@ -2009,7 +2005,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let bin_aliases = release.bin_aliases.for_targets(&target_triples);
 
-        let runtime_conditions = pick_runtime_conditions(&self.manifest.systems);
+        let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
         let installer_artifact = Artifact {
             id: artifact_name,
@@ -2133,7 +2129,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("The Homebrew publish job is enabled but no tap was specified\n  consider setting the tap field in Cargo.toml");
         }
 
-        let runtime_conditions = pick_runtime_conditions(&self.manifest.systems);
+        let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
         let dependencies: Vec<String> = release
             .system_dependencies
@@ -2328,7 +2324,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let bin_aliases = release.bin_aliases.for_targets(&target_triples);
 
-        let runtime_conditions = pick_runtime_conditions(&self.manifest.systems);
+        let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
         let installer_artifact = Artifact {
             id: artifact_name,
@@ -3138,38 +3134,5 @@ fn submodule_head(submodule_path: &Utf8PathBuf) -> DistResult<Option<String>> {
         Ok(None)
     } else {
         Ok(Some(commit.to_owned()))
-    }
-}
-
-// Picks the newest glibc in the case of conflicts
-fn glibc_thunderdome(glibcs: Vec<GlibcVersion>) -> GlibcVersion {
-    glibcs
-        .iter()
-        .max()
-        .unwrap_or(&GlibcVersion::default())
-        .to_owned()
-}
-
-fn pick_runtime_conditions(environments: &BTreeMap<String, SystemInfo>) -> RuntimeConditions {
-    let glibc_versions: HashSet<GlibcVersion> = environments
-        .values()
-        .filter_map(|info| match &info.build_environment {
-            BuildEnvironment::Linux { glibc_version } => Some(glibc_version.to_owned()),
-            _ => None,
-        })
-        .flatten()
-        .collect();
-
-    let glibc = glibc_thunderdome(glibc_versions.into_iter().collect());
-
-    RuntimeConditions {
-        linux: LinuxRuntimeConditions {
-            glibc: Some(RuntimeCondition::MinGlibcVersion {
-                major: glibc.major,
-                series: glibc.series,
-            }),
-            musl: None,
-        },
-        macos: None,
     }
 }

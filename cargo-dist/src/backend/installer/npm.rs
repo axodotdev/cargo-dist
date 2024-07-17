@@ -9,7 +9,7 @@ use super::InstallerInfo;
 use crate::{
     backend::templates::{Templates, TEMPLATE_INSTALLER_NPM, TEMPLATE_INSTALLER_NPM_RUN_JS},
     errors::DistResult,
-    platform::RuntimeCondition,
+    platform::LibcVersion,
     DistGraph, SortedMap, SortedSet,
 };
 
@@ -184,8 +184,8 @@ fn mangle_package_json(
     package_json["artifactDownloadUrl"] = info.inner.base_url.clone().into();
     package_json["supportedPlatforms"] = platforms.platform_support_json();
 
-    match info.inner.runtime_conditions.linux.glibc {
-        Some(RuntimeCondition::MinGlibcVersion { major, series }) => {
+    match info.inner.runtime_conditions.min_glibc_version {
+        Some(LibcVersion { major, series }) => {
             package_json["glibcMinimum"] = glibc_json(major, series)
         }
         _ => {
