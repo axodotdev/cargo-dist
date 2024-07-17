@@ -457,7 +457,7 @@ impl RuntimeConditions {
         self.min_glibc_version =
             max_of_min_libc_versions(&self.min_glibc_version, min_glibc_version);
         self.min_musl_version = max_of_min_libc_versions(&self.min_musl_version, min_musl_version);
-        self.rosetta2 &= rosetta2;
+        self.rosetta2 |= rosetta2;
     }
 }
 
