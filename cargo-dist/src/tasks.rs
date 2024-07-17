@@ -1425,8 +1425,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // referring to a package in your workspace that you want to build an app for.
             // If they do exist, that's deeply cursed and I want a user to tell me about it.
             let pkg_spec = package.true_name.clone();
+            let kind_label = match kind {
+                BinaryKind::Executable => "exe",
+                BinaryKind::DynamicLibrary => "cdylib",
+                BinaryKind::StaticLibrary => "cstaticlib",
+            };
             // FIXME: make this more of a GUID to allow variants to share binaries?
-            let bin_id = format!("{variant_id}-{binary_name}");
+            let bin_id = format!("{variant_id}-{kind_label}-{binary_name}");
 
             let idx = if let Some(&idx) = self.binaries_by_id.get(&bin_id) {
                 // If we already are building this binary we don't need to do it again!

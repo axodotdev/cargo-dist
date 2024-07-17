@@ -3028,7 +3028,7 @@ run("axolotlsay");
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-aarch64-apple-darwin-axolotlsay",
+          "id": "axolotlsay-aarch64-apple-darwin-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -3170,7 +3170,7 @@ run("axolotlsay");
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-apple-darwin-axolotlsay",
+          "id": "axolotlsay-x86_64-apple-darwin-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -3196,7 +3196,7 @@ run("axolotlsay");
       ],
       "assets": [
         {
-          "id": "axolotlsay-x86_64-pc-windows-msvc-axolotlsay",
+          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay.exe",
           "kind": "executable"
@@ -3243,7 +3243,7 @@ run("axolotlsay");
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-pc-windows-msvc-axolotlsay",
+          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay.exe",
           "kind": "executable"
@@ -3289,7 +3289,7 @@ run("axolotlsay");
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
+          "id": "axolotlsay-x86_64-unknown-linux-gnu-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -3339,8 +3339,8 @@ run("axolotlsay");
     }
   },
   "assets": {
-    "axolotlsay-aarch64-apple-darwin-axolotlsay": {
-      "id": "axolotlsay-aarch64-apple-darwin-axolotlsay",
+    "axolotlsay-aarch64-apple-darwin-exe-axolotlsay": {
+      "id": "axolotlsay-aarch64-apple-darwin-exe-axolotlsay",
       "name": "axolotlsay",
       "system": "build:lies:",
       "target_triples": [
@@ -3355,8 +3355,8 @@ run("axolotlsay");
         ]
       }
     },
-    "axolotlsay-x86_64-apple-darwin-axolotlsay": {
-      "id": "axolotlsay-x86_64-apple-darwin-axolotlsay",
+    "axolotlsay-x86_64-apple-darwin-exe-axolotlsay": {
+      "id": "axolotlsay-x86_64-apple-darwin-exe-axolotlsay",
       "name": "axolotlsay",
       "system": "build:lies:",
       "target_triples": [
@@ -3371,8 +3371,8 @@ run("axolotlsay");
         ]
       }
     },
-    "axolotlsay-x86_64-pc-windows-msvc-axolotlsay": {
-      "id": "axolotlsay-x86_64-pc-windows-msvc-axolotlsay",
+    "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsay": {
+      "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsay",
       "name": "axolotlsay",
       "system": "build:lies:",
       "target_triples": [
@@ -3387,8 +3387,8 @@ run("axolotlsay");
         ]
       }
     },
-    "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay": {
-      "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
+    "axolotlsay-x86_64-unknown-linux-gnu-exe-axolotlsay": {
+      "id": "axolotlsay-x86_64-unknown-linux-gnu-exe-axolotlsay",
       "name": "axolotlsay",
       "system": "build:lies:",
       "target_triples": [

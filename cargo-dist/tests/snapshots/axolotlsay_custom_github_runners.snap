@@ -65,7 +65,7 @@ expression: self.payload
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-aarch64-unknown-linux-gnu-axolotlsay",
+          "id": "axolotlsay-aarch64-unknown-linux-gnu-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -108,7 +108,7 @@ expression: self.payload
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-aarch64-unknown-linux-musl-axolotlsay",
+          "id": "axolotlsay-aarch64-unknown-linux-musl-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -151,7 +151,7 @@ expression: self.payload
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
+          "id": "axolotlsay-x86_64-unknown-linux-gnu-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -194,7 +194,7 @@ expression: self.payload
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-unknown-linux-musl-axolotlsay",
+          "id": "axolotlsay-x86_64-unknown-linux-musl-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"

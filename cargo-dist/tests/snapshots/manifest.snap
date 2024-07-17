@@ -83,7 +83,7 @@ stdout:
           "kind": "readme"
         },
         {
-          "id": "cargo-dist-aarch64-apple-darwin-cargo-dist",
+          "id": "cargo-dist-aarch64-apple-darwin-exe-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -126,7 +126,7 @@ stdout:
           "kind": "readme"
         },
         {
-          "id": "cargo-dist-aarch64-unknown-linux-gnu-cargo-dist",
+          "id": "cargo-dist-aarch64-unknown-linux-gnu-exe-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -169,7 +169,7 @@ stdout:
           "kind": "readme"
         },
         {
-          "id": "cargo-dist-aarch64-unknown-linux-musl-cargo-dist",
+          "id": "cargo-dist-aarch64-unknown-linux-musl-exe-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -239,7 +239,7 @@ stdout:
           "kind": "readme"
         },
         {
-          "id": "cargo-dist-x86_64-apple-darwin-cargo-dist",
+          "id": "cargo-dist-x86_64-apple-darwin-exe-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -282,7 +282,7 @@ stdout:
           "kind": "readme"
         },
         {
-          "id": "cargo-dist-x86_64-pc-windows-msvc-cargo-dist",
+          "id": "cargo-dist-x86_64-pc-windows-msvc-exe-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist.exe",
           "kind": "executable"
@@ -325,7 +325,7 @@ stdout:
           "kind": "readme"
         },
         {
-          "id": "cargo-dist-x86_64-unknown-linux-gnu-cargo-dist",
+          "id": "cargo-dist-x86_64-unknown-linux-gnu-exe-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"
@@ -368,7 +368,7 @@ stdout:
           "kind": "readme"
         },
         {
-          "id": "cargo-dist-x86_64-unknown-linux-musl-cargo-dist",
+          "id": "cargo-dist-x86_64-unknown-linux-musl-exe-cargo-dist",
           "name": "cargo-dist",
           "path": "cargo-dist",
           "kind": "executable"

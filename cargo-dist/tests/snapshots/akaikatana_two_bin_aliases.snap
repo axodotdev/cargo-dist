@@ -1583,19 +1583,19 @@ try {
           "kind": "readme"
         },
         {
-          "id": "akaikatana-repack-aarch64-apple-darwin-akextract",
+          "id": "akaikatana-repack-aarch64-apple-darwin-exe-akextract",
           "name": "akextract",
           "path": "akextract",
           "kind": "executable"
         },
         {
-          "id": "akaikatana-repack-aarch64-apple-darwin-akmetadata",
+          "id": "akaikatana-repack-aarch64-apple-darwin-exe-akmetadata",
           "name": "akmetadata",
           "path": "akmetadata",
           "kind": "executable"
         },
         {
-          "id": "akaikatana-repack-aarch64-apple-darwin-akrepack",
+          "id": "akaikatana-repack-aarch64-apple-darwin-exe-akrepack",
           "name": "akrepack",
           "path": "akrepack",
           "kind": "executable"
@@ -1650,19 +1650,19 @@ try {
           "kind": "readme"
         },
         {
-          "id": "akaikatana-repack-x86_64-apple-darwin-akextract",
+          "id": "akaikatana-repack-x86_64-apple-darwin-exe-akextract",
           "name": "akextract",
           "path": "akextract",
           "kind": "executable"
         },
         {
-          "id": "akaikatana-repack-x86_64-apple-darwin-akmetadata",
+          "id": "akaikatana-repack-x86_64-apple-darwin-exe-akmetadata",
           "name": "akmetadata",
           "path": "akmetadata",
           "kind": "executable"
         },
         {
-          "id": "akaikatana-repack-x86_64-apple-darwin-akrepack",
+          "id": "akaikatana-repack-x86_64-apple-darwin-exe-akrepack",
           "name": "akrepack",
           "path": "akrepack",
           "kind": "executable"
@@ -1695,19 +1695,19 @@ try {
           "kind": "readme"
         },
         {
-          "id": "akaikatana-repack-x86_64-pc-windows-msvc-akextract",
+          "id": "akaikatana-repack-x86_64-pc-windows-msvc-exe-akextract",
           "name": "akextract",
           "path": "akextract.exe",
           "kind": "executable"
         },
         {
-          "id": "akaikatana-repack-x86_64-pc-windows-msvc-akmetadata",
+          "id": "akaikatana-repack-x86_64-pc-windows-msvc-exe-akmetadata",
           "name": "akmetadata",
           "path": "akmetadata.exe",
           "kind": "executable"
         },
         {
-          "id": "akaikatana-repack-x86_64-pc-windows-msvc-akrepack",
+          "id": "akaikatana-repack-x86_64-pc-windows-msvc-exe-akrepack",
           "name": "akrepack",
           "path": "akrepack.exe",
           "kind": "executable"
@@ -1740,19 +1740,19 @@ try {
           "kind": "readme"
         },
         {
-          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akextract",
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-exe-akextract",
           "name": "akextract",
           "path": "akextract",
           "kind": "executable"
         },
         {
-          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akmetadata",
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-exe-akmetadata",
           "name": "akmetadata",
           "path": "akmetadata",
           "kind": "executable"
         },
         {
-          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-akrepack",
+          "id": "akaikatana-repack-x86_64-unknown-linux-gnu-exe-akrepack",
           "name": "akrepack",
           "path": "akrepack",
           "kind": "executable"
