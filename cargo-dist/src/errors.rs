@@ -128,10 +128,24 @@ pub enum DistError {
         #[diagnostic_source]
         inner: AxoprojectError,
     },
+
     /// User tried to enable Github CI support but no url for the repo
     #[error("Github CI support requires you to specify the URL of your repository")]
-    #[diagnostic(help(r#"Set the repository = "https://github.com/..." key in your Cargo.toml"#))]
-    CantEnableGithubNoUrl,
+    #[diagnostic(help(
+        r#"Set the repository = "https://github.com/..." key in these manifests: {manifest_list}"#
+    ))]
+    CantEnableGithubNoUrl {
+        /// List of manifests to change
+        manifest_list: String,
+    },
+
+    /// We got a repository URL but couldn't interpret it as a GitHub repo
+    #[error("GitHub CI support requires a GitHub repository")]
+    CantEnableGithubUrlNotGithub {
+        /// inner error that caught this
+        #[diagnostic_source]
+        inner: AxoprojectError,
+    },
     /// User declined to force tar.gz with npm
     #[error("Cannot enable npm support without forcing artifacts to be .tar.gz")]
     MustEnableTarGz,

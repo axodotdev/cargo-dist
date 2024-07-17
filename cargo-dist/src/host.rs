@@ -8,12 +8,11 @@ use crate::{
     gather_work,
     manifest::save_manifest,
     net::create_gazenot_client,
-    DistGraph, DistGraphBuilder, HostingInfo,
+    DistError, DistGraph, DistGraphBuilder, HostingInfo,
 };
 use axoproject::WorkspaceGraph;
 use cargo_dist_schema::{DistManifest, Hosting};
 use gazenot::{AnnouncementKey, Gazenot};
-use tracing::warn;
 
 /// Do hosting
 pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
@@ -79,7 +78,7 @@ impl<'a> DistGraphBuilder<'a> {
         hosting: Option<Vec<HostingStyle>>,
         ci: Option<Vec<CiStyle>>,
     ) -> DistResult<()> {
-        self.inner.hosting = select_hosting(self.workspaces, announcing, hosting, ci.as_deref());
+        self.inner.hosting = select_hosting(self.workspaces, announcing, hosting, ci.as_deref())?;
         // If we don't think we can host things, don't bother
         let Some(hosting) = &self.inner.hosting else {
             return Ok(());
@@ -283,39 +282,53 @@ pub(crate) fn select_hosting(
     announcing: &AnnouncementTag,
     hosting: Option<Vec<HostingStyle>>,
     ci: Option<&[CiStyle]>,
-) -> Option<HostingInfo> {
+) -> DistResult<Option<HostingInfo>> {
+    // Either use the explicit one, or default to the CI provider's native solution
+    let Some(hosting_providers) = hosting
+        .clone()
+        .or_else(|| Some(vec![ci.as_ref()?.first()?.native_hosting()?]))
+    else {
+        // This is the one case where we'll tolerate hosting not existing:
+        // * they don't have one set explicitly
+        // * and they haven't turned on a CI provider
+        // This implies early setup or using cargo-dist very "manually"
+        return Ok(None);
+    };
+
+    // Get the list of packages we actually care about
     let package_list = announcing
         .rust_releases
         .iter()
         .map(|release| release.package_idx)
         .collect::<Vec<_>>();
-    // Either use the explicit one, or default to the CI provider's native solution
-    let hosting_providers = hosting
-        .clone()
-        .or_else(|| Some(vec![ci.as_ref()?.first()?.native_hosting()?]))?;
 
-    let raw_repository_url = workspaces
-        .repository_url(Some(&package_list))
-        .map_err(|warning| {
-            let report = miette::Report::new(warning);
-            warn!("{:?}", report);
-        })
-        .ok()??;
+    let raw_repository_url = match workspaces.repository_url(Some(&package_list)) {
+        Ok(Some(url)) => url,
+        Ok(None) => {
+            let mut manifest_list = String::new();
+            for pkg_idx in package_list {
+                let package = workspaces.package(pkg_idx);
+                manifest_list.push('\n');
+                manifest_list.push_str(package.manifest_path.as_str());
+            }
+            return Err(DistError::CantEnableGithubNoUrl { manifest_list });
+        }
+        Err(e) => {
+            return Err(DistError::CantEnableGithubUrlInconsistent { inner: e });
+        }
+    };
+
     // Currently there's only one supported sourcehost provider
     let repo = raw_repository_url
         .github_repo()
-        .map_err(|warning| {
-            let report = miette::Report::new(warning);
-            warn!("{:?}", report);
-        })
-        .ok()?;
+        .map_err(|e| DistError::CantEnableGithubUrlNotGithub { inner: e })?;
     let repo_url = repo.web_url();
 
-    Some(HostingInfo {
+    Ok(Some(HostingInfo {
         hosts: hosting_providers,
         repo_url: repo_url.clone(),
         source_host: "github".to_owned(),
         owner: repo.owner,
         project: repo.name,
-    })
+    }))
 }
