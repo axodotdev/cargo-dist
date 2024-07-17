@@ -71,7 +71,7 @@ function Install-Binary($install_args) {
       "bins" = @({% for bin in artifact.executables -%}
         "{{ bin }}"{{ ", " if not loop.last else "" }}
       {%- endfor %})
-      {%- if install_cdylibs %}
+      {%- if "cdylib" in install_libraries %}
       "libs" = @({% for lib in artifact.cdylibs -%}
         "{{ lib }}"{{ ", " if not loop.last else "" }}
       {%- endfor %})

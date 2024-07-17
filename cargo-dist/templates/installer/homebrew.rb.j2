@@ -89,7 +89,7 @@ class {{ formula_class }} < Formula
       {%- if arm64_macos.executables %}
       bin.install {% for binary in arm64_macos.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
-      {%- if arm64_macos.cdylibs and install_cdylibs %}
+      {%- if arm64_macos.cdylibs and "cdylib" in install_libraries %}
       lib.install {% for library in arm64_macos.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
     end
@@ -99,7 +99,7 @@ class {{ formula_class }} < Formula
       {%- if x86_64_macos.executables %}
       bin.install {% for binary in x86_64_macos.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
-      {%- if x86_64_macos.cdylibs and install_cdylibs %}
+      {%- if x86_64_macos.cdylibs and "cdylib" in install_libraries %}
       lib.install {% for library in x86_64_macos.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
     end
@@ -109,7 +109,7 @@ class {{ formula_class }} < Formula
       {%- if arm64_linux.executables %}
       bin.install {% for binary in arm64_linux.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
-      {%- if arm64_linux.cdylibs and install_cdylibs %}
+      {%- if arm64_linux.cdylibs and "cdylib" in install_libraries %}
       lib.install {% for library in arm64_linux.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
     end
@@ -119,7 +119,7 @@ class {{ formula_class }} < Formula
       {%- if x86_64_linux.executables %}
       bin.install {% for binary in x86_64_linux.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
-      {%- if x86_64_linux.cdylibs and install_cdylibs %}
+      {%- if x86_64_linux.cdylibs and "cdylib" in install_libraries %}
       lib.install {% for library in x86_64_linux.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
     end

@@ -281,8 +281,8 @@ fn get_new_dist_metadata(
             install_updater: None,
             display: None,
             display_name: None,
-            package_cdylibs: None,
-            install_cdylibs: None,
+            package_libraries: None,
+            install_libraries: None,
         }
     };
 
@@ -878,8 +878,8 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         display,
         display_name,
         github_release,
-        package_cdylibs,
-        install_cdylibs,
+        package_libraries,
+        install_libraries,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -1251,18 +1251,18 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         display_name.as_ref(),
     );
 
-    apply_optional_value(
+    apply_string_or_list(
         table,
-        "package-cdylibs",
-        "# Whether to include built C dynamic libraries in the final archives\n",
-        *package_cdylibs,
+        "package-libraries",
+        "# Which kinds of built libraries to include in the final archives\n",
+        package_libraries.as_ref(),
     );
 
-    apply_optional_value(
+    apply_string_or_list(
         table,
-        "install-cdylibs",
-        "# Whether to install packaged C dynamic libraries\n",
-        *install_cdylibs,
+        "install-libraries",
+        "# Which kinds of packaged libraries to install\n",
+        install_libraries.as_ref(),
     );
 
     // Finalize the table

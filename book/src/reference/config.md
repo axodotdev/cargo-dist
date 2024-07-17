@@ -602,15 +602,15 @@ This is a list of installers you want to be made for your application(s). In pri
 See "repository" for some discussion on the "Artifact Download URL".
 
 
-### install-cdylibs
+### install-libraries
 
 > since 0.19.0
 
-Example: `install-cdylibs = false`
+Example: `install-libraries = ["cdylib", "staticlib"]`
 
-Whether to install C dynamic libraries using the Homebrew/shell/PowerShell installers. This is disabled by default. When enabled, C dynamic libraries will be installed alongside a package's binaries. Packaging libraries must first be enabled using the [package-cdylibs](#package-cdylibs) option.
+Which kinds of libraries to install using the Homebrew/shell/PowerShell installers. By default, no kinds of libraries will be installed. When enabled, libraries will be installed alongside a package's binaries. Packaging libraries must first be enabled using the [package-libraries](#package-libraries) option.
 
-This feature is still experimental. The currently-supported install paths will place dynamic libraries alongside binaries. This means they may appear in the user's `$PATH`, which you may find undesirable.
+This feature is still experimental. The currently-supported install paths will place libraries alongside binaries. This means they may appear in the user's `$PATH`, which you may find undesirable.
 
 
 ### install-path
@@ -729,17 +729,17 @@ Specifies that [npm installers][] should be published under the given [scope][].
 If no scope is specified the package will be global.
 
 
-### package-cdylibs
+### package-libraries
 
 > since 0.19.0
 
-Example: `package-cdylibs = true`
+Example: `package-libraries = ["cdylib", "staticlib"]`
 
 This is an experimental feature.
 
-Whether to include C dynamic libraries in release archives. This is disabled by default, which means C dynamic libraries will still be built but will be excluded from release artifacts.
+Which kinds of libraries to include in release archives. This is disabled by default, which means libraries will still be built but will be excluded from release artifacts.
 
-When enabled, C dynamic libraries will be included in release artifacts but won't be installed by default. That can be enabled using the [install-cdylibs](#install-cdylibs) setting.
+When enabled, libraries will be included in release artifacts but won't be installed by default. That can be enabled using the [install-libraries](#install-libraries) setting.
 
 
 ### plan-jobs

@@ -8,7 +8,7 @@ use camino::Utf8PathBuf;
 use serde::Serialize;
 
 use crate::{
-    config::{JinjaInstallPathStrategy, ZipStyle},
+    config::{JinjaInstallPathStrategy, LibraryStyle, ZipStyle},
     InstallReceipt, TargetTriple,
 };
 
@@ -64,7 +64,7 @@ pub struct InstallerInfo {
     /// Aliases to install binaries under
     pub bin_aliases: BTreeMap<String, BTreeMap<String, Vec<String>>>,
     /// Whether to install generated C dynamic libraries
-    pub install_cdylibs: bool,
+    pub install_libraries: Vec<LibraryStyle>,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

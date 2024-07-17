@@ -11,6 +11,7 @@ use semver::Version;
 use tracing::info;
 
 use crate::{
+    config::LibraryStyle,
     errors::{DistError, DistResult},
     DistGraphBuilder, SortedMap, TargetTriple,
 };
@@ -174,20 +175,26 @@ fn check_dist_package(
     pkg: &axoproject::PackageInfo,
     announcing: &PartialAnnouncementTag,
 ) -> Option<String> {
-    let package_cdylibs = graph
+    let package_libraries = graph
         .package_metadata(pkg_id)
-        .package_cdylibs
-        .unwrap_or(false);
+        .package_libraries
+        .clone()
+        .unwrap_or_default();
 
-    let package_empty = if package_cdylibs {
-        pkg.binaries.is_empty() && pkg.cdylibs.is_empty() && pkg.cstaticlibs.is_empty()
-    } else {
-        pkg.binaries.is_empty()
-    };
+    let mut package_empty = pkg.binaries.is_empty();
+    let mut missing_categories = vec!["binaries"];
+    if package_libraries.contains(&LibraryStyle::CDynamic) {
+        package_empty &= pkg.cdylibs.is_empty();
+        missing_categories.push("cdylibs");
+    }
+    if package_libraries.contains(&LibraryStyle::CStatic) {
+        package_empty &= pkg.cstaticlibs.is_empty();
+        missing_categories.push("cstaticlibs");
+    }
 
     // Nothing to publish if there's no binaries/libraries!
     if package_empty {
-        return Some("no binaries or cdylibs/cstaticlibs".to_owned());
+        return Some(format!("no {}", missing_categories.join(" ")));
     }
 
     // If [metadata.dist].dist is explicitly set, respect it!

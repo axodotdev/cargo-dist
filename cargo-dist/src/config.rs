@@ -423,13 +423,15 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
 
-    /// Whether to include built C dynamic libraries in the release archive
+    /// Whether to include built libraries in the release archive
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub package_cdylibs: Option<bool>,
+    #[serde(default, with = "opt_string_or_vec")]
+    pub package_libraries: Option<Vec<LibraryStyle>>,
 
-    /// Whether installers should install cdylibs from the release archive
+    /// Whether installers should install libraries from the release archive
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub install_cdylibs: Option<bool>,
+    #[serde(default, with = "opt_string_or_vec")]
+    pub install_libraries: Option<Vec<LibraryStyle>>,
 }
 
 /// values of the form `permission-name: read`
@@ -510,8 +512,8 @@ impl DistMetadata {
             github_releases_submodule_path: _,
             display: _,
             display_name: _,
-            package_cdylibs: _,
-            install_cdylibs: _,
+            package_libraries: _,
+            install_libraries: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -603,8 +605,8 @@ impl DistMetadata {
             github_releases_submodule_path,
             display,
             display_name,
-            package_cdylibs,
-            install_cdylibs,
+            package_libraries,
+            install_libraries,
         } = self;
 
         // Check for global settings on local packages
@@ -774,11 +776,11 @@ impl DistMetadata {
         if display_name.is_none() {
             display_name.clone_from(&workspace_config.display_name);
         }
-        if package_cdylibs.is_none() {
-            package_cdylibs.clone_from(&workspace_config.package_cdylibs);
+        if package_libraries.is_none() {
+            package_libraries.clone_from(&workspace_config.package_libraries);
         }
-        if install_cdylibs.is_none() {
-            install_cdylibs.clone_from(&workspace_config.install_cdylibs);
+        if install_libraries.is_none() {
+            install_libraries.clone_from(&workspace_config.install_libraries);
         }
 
         // This was historically implemented as extend, but I'm not convinced the
@@ -878,6 +880,43 @@ impl std::str::FromStr for CiStyle {
             "github" => CiStyle::Github,
             s => {
                 return Err(DistError::UnrecognizedCiStyle {
+                    style: s.to_string(),
+                })
+            }
+        };
+        Ok(res)
+    }
+}
+
+/// Type of library to install
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LibraryStyle {
+    /// cdylib
+    #[serde(rename = "cdylib")]
+    CDynamic,
+    /// cstaticlib
+    #[serde(rename = "cstaticlib")]
+    CStatic,
+}
+
+impl std::fmt::Display for LibraryStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            Self::CDynamic => "cdylib",
+            Self::CStatic => "cstaticlib",
+        };
+        string.fmt(f)
+    }
+}
+
+impl std::str::FromStr for LibraryStyle {
+    type Err = DistError;
+    fn from_str(val: &str) -> DistResult<Self> {
+        let res = match val {
+            "cdylib" => Self::CDynamic,
+            "cstaticlib" => Self::CStatic,
+            s => {
+                return Err(DistError::UnrecognizedLibraryStyle {
                     style: s.to_string(),
                 })
             }

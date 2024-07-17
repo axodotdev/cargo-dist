@@ -147,7 +147,7 @@ download_binary_and_run_installer() {
             _zip_ext="{{ artifact.zip_style }}"
             _bins="{% for bin in artifact.executables %}{{ bin }}{{ " " if not loop.last else "" }}{% endfor %}"
             _bins_js_array='{% for bin in artifact.executables %}"{{ bin }}"{{ "," if not loop.last else ""}}{% endfor %}'
-            {%- if install_cdylibs %}
+            {%- if "cdylib" in install_libraries %}
             _libs="{% for lib in artifact.cdylibs %}{{ lib }}{{ " " if not loop.last else "" }}{% endfor %}"
             _libs_js_array='{% for lib in artifact.cdylibs %}"{{ lib }}"{{ "," if not loop.last else ""}}{% endfor %}'
             {%- else %}

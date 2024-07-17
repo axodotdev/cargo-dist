@@ -67,7 +67,7 @@ use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
-    ProductionMode, SystemDependencies,
+    LibraryStyle, ProductionMode, SystemDependencies,
 };
 use crate::net::ClientSettings;
 use crate::platform::PlatformSupport;
@@ -709,9 +709,9 @@ pub struct Release {
     /// Note: Windows won't include lib prefix in the final lib.
     pub cstaticlibs: Vec<(PackageIdx, String)>,
     /// Whether to package C dynamic libraries in the final archive
-    pub package_cdylibs: bool,
+    pub package_libraries: Vec<LibraryStyle>,
     /// Whether to install packaged C dynamic libraries
-    pub install_cdylibs: bool,
+    pub install_libraries: Vec<LibraryStyle>,
     /// Artifacts that are shared "globally" across all variants (shell-installer, metadata...)
     ///
     /// They might still be limited to some subset of the targets (e.g. powershell scripts are
@@ -928,8 +928,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases: _,
             display: _,
             display_name: _,
-            package_cdylibs: _,
-            install_cdylibs: _,
+            package_libraries: _,
+            install_libraries: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -1222,8 +1222,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases,
             display,
             display_name,
-            package_cdylibs,
-            install_cdylibs,
+            package_libraries,
+            install_libraries,
             // The rest of these are workspace-only
             precise_builds: _,
             merge_tasks: _,
@@ -1293,11 +1293,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let unix_archive = unix_archive.unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
         let checksum = checksum.unwrap_or(ChecksumStyle::Sha256);
 
-        let package_cdylibs = package_cdylibs.unwrap_or(false);
-        let install_cdylibs = if !package_cdylibs {
-            false
+        let package_libraries = package_libraries.clone().unwrap_or(vec![]);
+        let install_libraries = if package_libraries.is_empty() {
+            vec![]
         } else {
-            install_cdylibs.unwrap_or(false)
+            install_libraries.clone().unwrap_or_default()
         };
 
         // Add static assets
@@ -1361,8 +1361,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases,
             display,
             display_name,
-            package_cdylibs,
-            install_cdylibs,
+            package_libraries,
+            install_libraries,
         });
         idx
     }
@@ -1381,7 +1381,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bins,
             cdylibs,
             cstaticlibs,
-            package_cdylibs,
+            package_libraries,
             ..
         } = self.release_mut(to_release);
         let static_assets = static_assets.clone();
@@ -1391,27 +1391,28 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         variants.push(idx);
         targets.push(target.clone());
 
-        let all_bins = bins
+        let mut packageables: Vec<(PackageIdx, String, BinaryKind)> = bins
             .clone()
             .into_iter()
-            .map(|(idx, b)| (idx, b, BinaryKind::Executable));
+            .map(|(idx, b)| (idx, b, BinaryKind::Executable))
+            .collect();
 
-        // If we're not packaging cdylibs here, avoid chaining them
+        // If we're not packaging libraries here, avoid chaining them
         // into the list we're iterating over
-        let packageables: Vec<(PackageIdx, String, BinaryKind)> = if *package_cdylibs {
+        if package_libraries.contains(&LibraryStyle::CDynamic) {
             let all_dylibs = cdylibs
                 .clone()
                 .into_iter()
                 .map(|(idx, l)| (idx, l, BinaryKind::DynamicLibrary));
+            packageables = packageables.into_iter().chain(all_dylibs).collect();
+        }
+        if package_libraries.contains(&LibraryStyle::CStatic) {
             let all_cstaticlibs = cstaticlibs
                 .clone()
                 .into_iter()
                 .map(|(idx, l)| (idx, l, BinaryKind::StaticLibrary));
-
-            all_bins.chain(all_dylibs).chain(all_cstaticlibs).collect()
-        } else {
-            all_bins.collect()
-        };
+            packageables = packageables.into_iter().chain(all_cstaticlibs).collect();
+        }
 
         // Add all the binaries of the release to this variant
         let mut binaries = vec![];
@@ -1934,7 +1935,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     ) -> DistResult<()> {
         let release = self.release(to_release);
         // This package consists solely of non-installable cdylibs
-        if !release.install_cdylibs && release.bins.is_empty() {
+        if release.install_libraries.is_empty() && release.bins.is_empty() {
             return Err(DistError::EmptyInstaller {});
         }
 
@@ -2008,7 +2009,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
-                install_cdylibs: release.install_cdylibs,
+                install_libraries: release.install_libraries.clone(),
             })),
             is_global: true,
         };
@@ -2154,9 +2155,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     desc,
                     receipt: None,
                     bin_aliases,
-                    install_cdylibs: release.install_cdylibs,
+                    install_libraries: release.install_libraries.clone(),
                 },
-                install_cdylibs: release.install_cdylibs,
+                install_libraries: release.install_libraries.clone(),
             })),
             is_global: true,
         };
@@ -2227,7 +2228,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
-                install_cdylibs: release.install_cdylibs,
+                install_libraries: release.install_libraries.clone(),
             })),
             is_global: true,
         };
@@ -2335,7 +2336,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     desc,
                     receipt: None,
                     bin_aliases,
-                    install_cdylibs: release.install_cdylibs,
+                    install_libraries: release.install_libraries.clone(),
                 },
             })),
             is_global: true,
