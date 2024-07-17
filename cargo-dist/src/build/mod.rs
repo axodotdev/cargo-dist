@@ -54,7 +54,7 @@ impl BuildExpectations {
 
             // Get the package id or an empty string (for generic builds)
             let package_id = package_id_string(binary.pkg_id.as_ref());
-            let exe_name = binary.name.clone();
+            let exe_name = binary.file_name.clone();
 
             packages.entry(package_id).or_default().binaries.insert(
                 exe_name,
@@ -99,6 +99,11 @@ impl BuildExpectations {
             // FIXME: unhardcode this when we add support for other symbol kinds!
             .partition(|f| f.extension().map(|e| e == "pdb").unwrap_or(false));
 
+        // lookup the package
+        let Some(pkg) = self.packages.get_mut(&pkg_id) else {
+            return;
+        };
+
         // NOTE: its expected for these early returns to trigger. It's this functions
         // jobs to sort through build outputs and grab the ones we actually care about.
         //
@@ -109,16 +114,15 @@ impl BuildExpectations {
         for src_path in maybe_bins {
             info!("got a new binary: {}", src_path);
 
-            // lookup the package
-            let Some(pkg) = self.packages.get_mut(&pkg_id) else {
-                continue;
-            };
-
             // lookup the binary in the package
-            let Some(bin_name) = bin_basename(&src_path) else {
+            let Some(bin_name) = src_path.file_name().map(String::from) else {
                 continue;
             };
             let Some(bin_result) = pkg.binaries.get_mut(&bin_name) else {
+                continue;
+            };
+            // used to compare to the symbol stem further down
+            let Some(bin_stem) = src_path.file_stem().map(String::from) else {
                 continue;
             };
 
@@ -129,7 +133,7 @@ impl BuildExpectations {
             for sym_path in &maybe_symbols {
                 let is_for_this_bin = sym_path
                     .file_stem()
-                    .map(|stem| stem == bin_name)
+                    .map(|stem| stem == bin_stem)
                     .unwrap_or(false);
                 if !is_for_this_bin {
                     continue;
@@ -247,35 +251,6 @@ impl BuildExpectations {
 
         Ok(())
     }
-}
-
-/// Returns the base filename for `src_path`, with file extension
-/// stripped and, for .so/.dylib libraries, `lib` prefix too
-fn bin_basename(src_path: &Utf8PathBuf) -> Option<String> {
-    if let Some(extname) = src_path.extension() {
-        match extname {
-            // If this is a Linux/macOS library, strip both
-            // the file extension *and* the lib prefix.
-            // (Windows .dll libraries are missing the lib
-            // prefix, so we don't need to handle those.)
-            "so" | "dylib" | "a" => {
-                return src_path
-                    .file_stem()
-                    .and_then(|stem| stem.strip_prefix("lib"))
-                    .map(String::from);
-            }
-            // If this is a .dll, .lib or .exe, strip just the extension
-            "dll" | "exe" | "lib" => {
-                return src_path.file_stem().map(String::from);
-            }
-            _ => {}
-        }
-    }
-
-    // If it's none of the above, return the filename unaltered.
-    // This protects us from confusing other file types, like
-    // .pdbs, for for the files we were really looking for.
-    src_path.file_name().map(String::from)
 }
 
 fn package_id_string(id: Option<&PackageId>) -> String {
