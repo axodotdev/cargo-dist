@@ -6,8 +6,11 @@ use serde::Serialize;
 
 use super::InstallerInfo;
 use crate::{
-    backend::templates::TEMPLATE_INSTALLER_RB, config::ChecksumStyle, errors::DistResult,
-    installer::ExecutableZipFragment, tasks::DistGraph,
+    backend::templates::TEMPLATE_INSTALLER_RB,
+    config::{ChecksumStyle, LibraryStyle},
+    errors::DistResult,
+    installer::ExecutableZipFragment,
+    tasks::DistGraph,
 };
 
 /// Info about a Homebrew formula
@@ -46,7 +49,7 @@ pub struct HomebrewInstallerInfo {
     /// Additional packages to specify as dependencies
     pub dependencies: Vec<String>,
     /// Whether to install packaged C dynamic libraries
-    pub install_cdylibs: bool,
+    pub install_libraries: Vec<LibraryStyle>,
 }
 
 pub(crate) fn write_homebrew_formula(

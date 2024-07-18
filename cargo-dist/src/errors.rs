@@ -268,6 +268,12 @@ pub enum DistError {
         /// value provided
         style: String,
     },
+    /// unrecognized library style
+    #[error("{style} is not a recognized type of library")]
+    UnrecognizedLibraryStyle {
+        /// value provided
+        style: String,
+    },
     /// Linkage report can't be run for this combination of OS and target
     #[error("unable to run linkage report for {target} on {host}")]
     LinkageCheckInvalidOS {

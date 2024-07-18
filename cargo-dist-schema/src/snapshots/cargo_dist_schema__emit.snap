@@ -407,6 +407,28 @@ expression: json_schema
           }
         },
         {
+          "description": "A C static library",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "c_static_library"
+              ]
+            },
+            "symbols_artifact": {
+              "description": "The name of the Artifact containing symbols for this library",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
           "description": "A README file",
           "type": "object",
           "required": [

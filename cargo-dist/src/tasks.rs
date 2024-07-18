@@ -67,7 +67,7 @@ use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
-    ProductionMode, SystemDependencies,
+    LibraryStyle, ProductionMode, SystemDependencies,
 };
 use crate::net::ClientSettings;
 use crate::platform::PlatformSupport;
@@ -389,6 +389,8 @@ pub enum BinaryKind {
     Executable,
     /// C-style dynamic library (.so/.dylib/.dll)
     DynamicLibrary,
+    /// C-style static library (.a/.lib)
+    StaticLibrary,
 }
 
 /// A build step we would like to perform
@@ -701,10 +703,15 @@ pub struct Release {
     /// The string is the name of the library, without lib prefix, and without platform-specific suffix (.so, .dylib, .dll)
     /// Note: Windows won't include lib prefix in the final lib.
     pub cdylibs: Vec<(PackageIdx, String)>,
+    /// C static libraries that every variant should ostensibly provide
+    ///
+    /// The string is the name of the library, without lib prefix, and without platform-specific suffix (.a, .lib)
+    /// Note: Windows won't include lib prefix in the final lib.
+    pub cstaticlibs: Vec<(PackageIdx, String)>,
     /// Whether to package C dynamic libraries in the final archive
-    pub package_cdylibs: bool,
+    pub package_libraries: Vec<LibraryStyle>,
     /// Whether to install packaged C dynamic libraries
-    pub install_cdylibs: bool,
+    pub install_libraries: Vec<LibraryStyle>,
     /// Artifacts that are shared "globally" across all variants (shell-installer, metadata...)
     ///
     /// They might still be limited to some subset of the targets (e.g. powershell scripts are
@@ -921,8 +928,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases: _,
             display: _,
             display_name: _,
-            package_cdylibs: _,
-            install_cdylibs: _,
+            package_libraries: _,
+            install_libraries: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -1215,8 +1222,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases,
             display,
             display_name,
-            package_cdylibs,
-            install_cdylibs,
+            package_libraries,
+            install_libraries,
             // The rest of these are workspace-only
             precise_builds: _,
             merge_tasks: _,
@@ -1286,11 +1293,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let unix_archive = unix_archive.unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
         let checksum = checksum.unwrap_or(ChecksumStyle::Sha256);
 
-        let package_cdylibs = package_cdylibs.unwrap_or(false);
-        let install_cdylibs = if !package_cdylibs {
-            false
+        let package_libraries = package_libraries.clone().unwrap_or(vec![]);
+        let install_libraries = if package_libraries.is_empty() {
+            vec![]
         } else {
-            install_cdylibs.unwrap_or(false)
+            install_libraries.clone().unwrap_or_default()
         };
 
         // Add static assets
@@ -1334,6 +1341,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             global_artifacts: vec![],
             bins: vec![],
             cdylibs: vec![],
+            cstaticlibs: vec![],
             targets: vec![],
             variants: vec![],
             changelog_body: None,
@@ -1353,8 +1361,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bin_aliases,
             display,
             display_name,
-            package_cdylibs,
-            install_cdylibs,
+            package_libraries,
+            install_libraries,
         });
         idx
     }
@@ -1372,7 +1380,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             static_assets,
             bins,
             cdylibs,
-            package_cdylibs,
+            cstaticlibs,
+            package_libraries,
             ..
         } = self.release_mut(to_release);
         let static_assets = static_assets.clone();
@@ -1382,23 +1391,28 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         variants.push(idx);
         targets.push(target.clone());
 
-        let all_bins = bins
+        let mut packageables: Vec<(PackageIdx, String, BinaryKind)> = bins
             .clone()
             .into_iter()
-            .map(|(idx, b)| (idx, b, BinaryKind::Executable));
+            .map(|(idx, b)| (idx, b, BinaryKind::Executable))
+            .collect();
 
-        // If we're not packaging cdylibs here, avoid chaining them
+        // If we're not packaging libraries here, avoid chaining them
         // into the list we're iterating over
-        let packageables: Vec<(PackageIdx, String, BinaryKind)> = if *package_cdylibs {
+        if package_libraries.contains(&LibraryStyle::CDynamic) {
             let all_dylibs = cdylibs
                 .clone()
                 .into_iter()
                 .map(|(idx, l)| (idx, l, BinaryKind::DynamicLibrary));
-
-            all_bins.chain(all_dylibs).collect()
-        } else {
-            all_bins.collect()
-        };
+            packageables = packageables.into_iter().chain(all_dylibs).collect();
+        }
+        if package_libraries.contains(&LibraryStyle::CStatic) {
+            let all_cstaticlibs = cstaticlibs
+                .clone()
+                .into_iter()
+                .map(|(idx, l)| (idx, l, BinaryKind::StaticLibrary));
+            packageables = packageables.into_iter().chain(all_cstaticlibs).collect();
+        }
 
         // Add all the binaries of the release to this variant
         let mut binaries = vec![];
@@ -1411,8 +1425,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // referring to a package in your workspace that you want to build an app for.
             // If they do exist, that's deeply cursed and I want a user to tell me about it.
             let pkg_spec = package.true_name.clone();
+            let kind_label = match kind {
+                BinaryKind::Executable => "exe",
+                BinaryKind::DynamicLibrary => "cdylib",
+                BinaryKind::StaticLibrary => "cstaticlib",
+            };
             // FIXME: make this more of a GUID to allow variants to share binaries?
-            let bin_id = format!("{variant_id}-{binary_name}");
+            let bin_id = format!("{variant_id}-{kind_label}-{binary_name}");
 
             let idx = if let Some(&idx) = self.binaries_by_id.get(&bin_id) {
                 // If we already are building this binary we don't need to do it again!
@@ -1441,12 +1460,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     platform_lib_prefix = "lib";
                 };
 
-                let platform_lib_ext = if target_is_windows {
-                    ".dll"
+                let platform_lib_ext;
+                let platform_staticlib_ext;
+                if target_is_windows {
+                    platform_lib_ext = ".dll";
+                    platform_staticlib_ext = ".lib";
                 } else if target.contains("linux") {
-                    ".so"
+                    platform_lib_ext = ".so";
+                    platform_staticlib_ext = ".a";
                 } else if target.contains("darwin") {
-                    ".dylib"
+                    platform_lib_ext = ".dylib";
+                    platform_staticlib_ext = ".a";
                 } else {
                     return Err(DistError::UnrecognizedTarget { target });
                 };
@@ -1455,6 +1479,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     BinaryKind::Executable => format!("{binary_name}{platform_exe_ext}"),
                     BinaryKind::DynamicLibrary => {
                         format!("{platform_lib_prefix}{binary_name}{platform_lib_ext}")
+                    }
+                    BinaryKind::StaticLibrary => {
+                        format!("{platform_lib_prefix}{binary_name}{platform_staticlib_ext}")
                     }
                 };
 
@@ -1500,6 +1527,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     fn add_library(&mut self, to_release: ReleaseIdx, pkg_idx: PackageIdx, binary_name: String) {
         let release = self.release_mut(to_release);
         release.cdylibs.push((pkg_idx, binary_name));
+    }
+
+    fn add_static_library(
+        &mut self,
+        to_release: ReleaseIdx,
+        pkg_idx: PackageIdx,
+        binary_name: String,
+    ) {
+        let release = self.release_mut(to_release);
+        release.cstaticlibs.push((pkg_idx, binary_name));
     }
 
     fn add_executable_zip(&mut self, to_release: ReleaseIdx) {
@@ -1903,7 +1940,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     ) -> DistResult<()> {
         let release = self.release(to_release);
         // This package consists solely of non-installable cdylibs
-        if !release.install_cdylibs && release.bins.is_empty() {
+        if release.install_libraries.is_empty() && release.bins.is_empty() {
             return Err(DistError::EmptyInstaller {});
         }
 
@@ -1977,7 +2014,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
-                install_cdylibs: release.install_cdylibs,
+                install_libraries: release.install_libraries.clone(),
             })),
             is_global: true,
         };
@@ -2123,9 +2160,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     desc,
                     receipt: None,
                     bin_aliases,
-                    install_cdylibs: release.install_cdylibs,
+                    install_libraries: release.install_libraries.clone(),
                 },
-                install_cdylibs: release.install_cdylibs,
+                install_libraries: release.install_libraries.clone(),
             })),
             is_global: true,
         };
@@ -2196,7 +2233,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
-                install_cdylibs: release.install_cdylibs,
+                install_libraries: release.install_libraries.clone(),
             })),
             is_global: true,
         };
@@ -2304,7 +2341,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     desc,
                     receipt: None,
                     bin_aliases,
-                    install_cdylibs: release.install_cdylibs,
+                    install_libraries: release.install_libraries.clone(),
                 },
             })),
             is_global: true,
@@ -2577,7 +2614,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             // Don't bother with any of this without binaries
             // or C libraries
             // (releases a Rust library, nothing to Build)
-            if info.executables.is_empty() && info.cdylibs.is_empty() {
+            if info.executables.is_empty() && info.cdylibs.is_empty() && info.cstaticlibs.is_empty()
+            {
                 continue;
             }
 
@@ -2588,6 +2626,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
             for lib in &info.cdylibs {
                 self.add_library(release, info.package_idx, lib.to_owned());
+            }
+
+            for lib in &info.cstaticlibs {
+                self.add_static_library(release, info.package_idx, lib.to_owned());
             }
 
             // Create variants for this Release for each target
@@ -2989,8 +3031,10 @@ pub struct InstallReceipt {
     pub install_prefix: String,
     /// A list of all binaries installed by this app
     pub binaries: Vec<String>,
-    /// A list of all libraries installed by this app
+    /// A list of all C dynamic libraries installed by this app
     pub cdylibs: Vec<String>,
+    /// A list of all C static libraries installed by this app
+    pub cstaticlibs: Vec<String>,
     /// Information about where to request information on new releases
     pub source: ReleaseSource,
     /// The version that was installed
@@ -3019,7 +3063,8 @@ impl InstallReceipt {
             // These first two are placeholder values which the installer will update
             install_prefix: "AXO_INSTALL_PREFIX".to_owned(),
             binaries: vec!["CARGO_DIST_BINS".to_owned()],
-            cdylibs: vec!["CARGO_DIST_LIBS".to_owned()],
+            cdylibs: vec!["CARGO_DIST_DYLIBS".to_owned()],
+            cstaticlibs: vec!["CARGO_DIST_STATICLIBS".to_owned()],
             version: release.version.to_string(),
             source: ReleaseSource {
                 release_type: source_type,

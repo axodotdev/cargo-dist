@@ -130,6 +130,12 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
                             writeln!(out, "        (symbols artifact: {syms})")?;
                         }
                     }
+                    if let AssetKind::CStaticLibrary(lib) = &asset.kind {
+                        writeln!(out, "      [cstaticlib] {}", path)?;
+                        if let Some(syms) = &lib.symbols_artifact {
+                            writeln!(out, "        (symbols artifact: {syms})")?;
+                        }
+                    }
                 }
             }
 
@@ -139,7 +145,9 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
             for asset in &artifact.assets {
                 if !matches!(
                     &asset.kind,
-                    AssetKind::Executable(_) | AssetKind::CDynamicLibrary(_)
+                    AssetKind::Executable(_)
+                        | AssetKind::CDynamicLibrary(_)
+                        | AssetKind::CStaticLibrary(_)
                 ) {
                     if let Some(path) = &asset.path {
                         if printed_asset {

@@ -28,7 +28,7 @@ PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_LIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/axolotlsay"
@@ -145,6 +145,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -155,6 +157,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -165,6 +169,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -175,6 +181,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -185,6 +193,8 @@ download_binary_and_run_installer() {
             _bins_js_array='"axolotlsay"'
             _libs=""
             _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
             _updater_name=""
             _updater_bin=""
             ;;
@@ -195,7 +205,8 @@ download_binary_and_run_installer() {
 
     # Replace the placeholder binaries with the calculated array from above
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_BINS"'/"$_bins_js_array"/)"
-    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_LIBS"'/"$_libs_js_array"/)"
+    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_DYLIBS"'/"$_libs_js_array"/)"
+    RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_STATICLIBS"'/"$_staticlibs_js_array"/)"
 
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
@@ -254,7 +265,7 @@ download_binary_and_run_installer() {
             ;;
     esac
 
-    install "$_dir" "$_bins" "$_libs" "$_arch" "$@"
+    install "$_dir" "$_bins" "$_libs" "$_staticlibs" "$_arch" "$@"
     local _retval=$?
     if [ "$_retval" != 0 ]; then
         return "$_retval"
@@ -468,7 +479,8 @@ install() {
     local _src_dir="$1"
     local _bins="$2"
     local _libs="$3"
-    local _arch="$4"
+    local _staticlibs="$4"
+    local _arch="$5"
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
         ensure mv "$_bin" "$_install_dir"
@@ -481,6 +493,13 @@ install() {
     done
     # Like the above, but no aliases
     for _lib_name in $_libs; do
+        local _lib="$_src_dir/$_lib_name"
+        ensure mv "$_lib" "$_lib_install_dir"
+        # unzip seems to need this chmod
+        ensure chmod +x "$_lib_install_dir/$_lib_name"
+        say "  $_lib_name"
+    done
+    for _lib_name in $_staticlibs; do
         local _lib="$_src_dir/$_lib_name"
         ensure mv "$_lib" "$_lib_install_dir"
         # unzip seems to need this chmod
@@ -2550,7 +2569,7 @@ run("axolotlsay");
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-aarch64-apple-darwin-axolotlsay",
+          "id": "axolotlsay-aarch64-apple-darwin-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -2676,7 +2695,7 @@ run("axolotlsay");
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-apple-darwin-axolotlsay",
+          "id": "axolotlsay-x86_64-apple-darwin-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -2719,7 +2738,7 @@ run("axolotlsay");
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-unknown-linux-gnu-axolotlsay",
+          "id": "axolotlsay-x86_64-unknown-linux-gnu-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
@@ -2762,7 +2781,7 @@ run("axolotlsay");
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-unknown-linux-musl-axolotlsay",
+          "id": "axolotlsay-x86_64-unknown-linux-musl-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
