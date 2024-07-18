@@ -283,6 +283,7 @@ fn get_new_dist_metadata(
             display_name: None,
             package_libraries: None,
             install_libraries: None,
+            github_build_setup: None,
         }
     };
 
@@ -842,6 +843,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         github_custom_job_permissions: _,
         bin_aliases: _,
         system_dependencies: _,
+        github_build_setup: _,
     } = &meta;
 
     // Forcibly inline the default install_path if not specified,

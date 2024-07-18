@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use axoasset::LocalAsset;
-use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
+use cargo_dist_schema::{GithubJobStep, GithubMatrix, GithubMatrixEntry};
 use serde::Serialize;
 use tracing::warn;
 
@@ -81,6 +81,8 @@ pub struct GithubCiInfo {
     pub release_phase: GithubReleasePhase,
     /// Extra permissions the workflow file should have
     pub root_permissions: Option<GithubPermissionMap>,
+    /// Extra build steps
+    pub github_build_setup: Vec<GithubJobStep>,
 }
 
 /// A custom ci job
@@ -287,6 +289,7 @@ impl GithubCiInfo {
             release_command,
             release_phase,
             root_permissions,
+            github_build_setup: dist.github_build_setup.clone(),
         })
     }
 

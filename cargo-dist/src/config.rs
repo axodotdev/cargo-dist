@@ -432,6 +432,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default, with = "opt_string_or_vec")]
     pub install_libraries: Option<Vec<LibraryStyle>>,
+
+    /// Any additional steps that need to be performed before building local artifacts
+    #[serde(default)]
+    pub github_build_setup: Option<String>,
 }
 
 /// values of the form `permission-name: read`
@@ -514,6 +518,7 @@ impl DistMetadata {
             display_name: _,
             package_libraries: _,
             install_libraries: _,
+            github_build_setup: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -607,6 +612,7 @@ impl DistMetadata {
             display_name,
             package_libraries,
             install_libraries,
+            github_build_setup,
         } = self;
 
         // Check for global settings on local packages
@@ -707,6 +713,9 @@ impl DistMetadata {
         }
         if github_custom_runners.is_some() {
             warn!("package.metadata.dist.github-custom-runners is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_build_setup.is_some() {
+            warn!("package.metadata.dist.github-build-setup is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings

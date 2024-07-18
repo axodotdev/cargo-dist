@@ -61,6 +61,10 @@ pub enum DistError {
     #[error(transparent)]
     AxotagError(#[from] axotag::errors::TagError),
 
+    /// Failure to deserialize yml
+    #[error(transparent)]
+    SerdeYml(#[from] serde_yml::Error),
+
     /// A problem with a jinja template, which is always a cargo-dist bug
     #[error("Failed to render template")]
     #[diagnostic(help("this is a bug in cargo-dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new"))]
@@ -146,6 +150,7 @@ pub enum DistError {
         #[diagnostic_source]
         inner: AxoprojectError,
     },
+
     /// User declined to force tar.gz with npm
     #[error("Cannot enable npm support without forcing artifacts to be .tar.gz")]
     MustEnableTarGz,
@@ -203,6 +208,7 @@ pub enum DistError {
         #[help]
         help: String,
     },
+
     /// Not an error; indicates that a file's contents differ via --check
     #[error("{} has out of date contents and needs to be regenerated:\n{diff}", file.origin_path())]
     #[diagnostic(help("run 'cargo dist init' to update the file\n('allow-dirty' in Cargo.toml to ignore out of date contents)"))]
@@ -222,6 +228,7 @@ pub enum DistError {
         /// The problematic mode
         generate_mode: crate::config::GenerateMode,
     },
+
     /// msi with too many packages
     #[error("{artifact_name} depends on multiple packages, which isn't yet supported")]
     #[diagnostic(help("depends on {spec1} and {spec2}"))]
@@ -233,6 +240,7 @@ pub enum DistError {
         /// A different package
         spec2: String,
     },
+
     /// msi with too few packages
     #[error("{artifact_name} has no binaries")]
     #[diagnostic(help("This should be impossible, you did nothing wrong, please file an issue!"))]
@@ -240,6 +248,7 @@ pub enum DistError {
         /// Name of the msi
         artifact_name: String,
     },
+
     /// These GUIDs for msi's are required and enforced by `cargo dist generate --check`
     #[error("missing WiX GUIDs in {manifest_path}: {keys:?}")]
     #[diagnostic(help("run 'cargo dist init' to generate them"))]
@@ -249,6 +258,7 @@ pub enum DistError {
         /// The missing keys
         keys: &'static [&'static str],
     },
+
     /// unrecognized job style
     #[error("{style} is not a recognized job value")]
     #[diagnostic(help("Jobs that do not come with cargo-dist should be prefixed with ./"))]
@@ -256,24 +266,28 @@ pub enum DistError {
         /// value provided
         style: String,
     },
+
     /// unrecognized hosting style
     #[error("{style} is not a recognized release host")]
     UnrecognizedHostingStyle {
         /// value provided
         style: String,
     },
+
     /// unrecognized ci style
     #[error("{style} is not a recognized ci provider")]
     UnrecognizedCiStyle {
         /// value provided
         style: String,
     },
+
     /// unrecognized library style
     #[error("{style} is not a recognized type of library")]
     UnrecognizedLibraryStyle {
         /// value provided
         style: String,
     },
+
     /// Linkage report can't be run for this combination of OS and target
     #[error("unable to run linkage report for {target} on {host}")]
     LinkageCheckInvalidOS {
@@ -282,6 +296,7 @@ pub enum DistError {
         /// The OS being checked
         target: String,
     },
+
     /// Linkage report can't be run for this target
     #[error("unable to run linkage report for this type of binary")]
     LinkageCheckUnsupportedBinary {},
@@ -418,6 +433,25 @@ pub enum DistError {
         "The only installable files are libraries, but `install-cdylibs` isn't enabled."
     ))]
     EmptyInstaller {},
+
+    /// Configuration value for github-build-setup defined but not found
+    #[error("Expected github-build-setup file at {expected_path} but it was not found")]
+    GithubBuildSetupNotFound {
+        /// The value from the configuration file
+        expected_path: Utf8PathBuf,
+    },
+
+    /// github-build-setup file contents are invalid
+    #[error("github-build-setup file at {file_path} was invalid: {message}")]
+    #[diagnostic(help(
+        "For more details about writing build steps see: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsid"
+    ))]
+    GithubBuildSetupNotValid {
+        /// The value from the configuration file
+        file_path: Utf8PathBuf,
+        /// Error messsage details
+        message: String,
+    },
 }
 
 impl From<minijinja::Error> for DistError {

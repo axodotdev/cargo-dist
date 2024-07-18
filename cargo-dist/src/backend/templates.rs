@@ -112,6 +112,21 @@ impl Templates {
                     .build()
                     .expect("failed to change jinja2 syntax for yaml files"),
             );
+            yaml_env.set_formatter(|o, s, v| {
+                let Some(value) = v.as_str() else {
+                    return minijinja::escape_formatter(o, s, v);
+                };
+                // preserve exising behavior for single line strings not sure why but
+                // an empty string is being formatted when importing the homebrew publish
+                // job so also preserve this behvaior for whitespace only strings
+                if !value.trim().contains('\n') {
+                    return minijinja::escape_formatter(o, s, v);
+                };
+                // This will avoid quote/escapes
+                o.write_str(value)?;
+                Ok(())
+            });
+
             envs.insert(ENV_YAML, yaml_env);
         }
         for env in envs.values_mut() {
@@ -125,6 +140,22 @@ impl Templates {
             }
 
             env.add_function("error", jinja_error);
+
+            fn is_empty(value: &minijinja::Value) -> bool {
+                let Some(len) = value.len() else {
+                    return false;
+                };
+                len == 0
+            }
+            env.add_test("empty", is_empty);
+
+            fn is_multiline(value: &minijinja::Value) -> bool {
+                let Some(s) = value.as_str() else {
+                    return false;
+                };
+                s.contains('\n')
+            }
+            env.add_test("multiline", is_multiline);
         }
 
         let mut entries = TemplateDir {
