@@ -1,5 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
+assertion_line: 92
 expression: self.payload
 ---
 ================ axolotlsay-installer.sh ================
@@ -486,7 +487,7 @@ install() {
         add_install_dir_to_ci_path "$_install_dir"
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile" "sh"
         exit1=$?
-        add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".bash_profile .bash_login .bashrc" "sh"
+        shotgun_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile .bashrc .bash_profile .bash_login" "sh"
         exit2=$?
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv" "sh"
         exit3=$?
@@ -637,6 +638,36 @@ add_install_dir_to_path() {
             fi
         else
             say_verbose "$_install_dir already on PATH"
+        fi
+    fi
+}
+
+shotgun_install_dir_to_path() {
+    # Edit rcfiles ($HOME/.profile) to add install_dir to $PATH
+    # (Shotgun edition - write to all provided files that exist rather than just the first)
+    local _install_dir_expr="$1"
+    local _env_script_path="$2"
+    local _env_script_path_expr="$3"
+    local _rcfiles="$4"
+    local _shell="$5"
+
+    if [ -n "${HOME:-}" ]; then
+        local _found=false
+        local _home
+
+        for _rcfile_relative in $_rcfiles; do
+            _home="$(print_home_for_script "$_rcfile_relative")"
+            local _rcfile_abs="$_home/$_rcfile_relative"
+
+            if [ -f "$_rcfile_abs" ]; then
+                _found=true
+                add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" "$_rcfile_relative" "$_shell"
+            fi
+        done
+
+        # Fall through to previous "create + write to first file in list" behavior
+	    if [ "$_found" = false ]; then
+            add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" "$_rcfiles" "$_shell"
         fi
     fi
 }
