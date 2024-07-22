@@ -53,8 +53,8 @@ impl AppResult {
 
             // Check that the script wrote files where we expected
             let rcfiles = &[
+                // .profile is shared between POSIX and Bash as the default
                 tempdir.join(".profile"),
-                tempdir.join(".bash_profile"),
                 tempdir.join(".zshrc"),
             ];
             let receipt_file = tempdir.join(format!(".config/{app_name}/{app_name}-receipt.json"));
