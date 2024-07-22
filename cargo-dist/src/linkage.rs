@@ -393,9 +393,12 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage
             do_ldd(path)?
         }
         // Can be run on any OS
-        "i686-pc-windows-msvc" | "x86_64-pc-windows-msvc" | "aarch64-pc-windows-msvc" => {
-            do_pe(path)?
-        }
+        "i686-pc-windows-msvc"
+        | "x86_64-pc-windows-msvc"
+        | "aarch64-pc-windows-msvc"
+        | "i686-pc-windows-gnu"
+        | "x86_64-pc-windows-gnu"
+        | "aarch64-pc-windows-gnu" => do_pe(path)?,
         _ => return Err(DistError::LinkageCheckUnsupportedBinary {}),
     };
 
