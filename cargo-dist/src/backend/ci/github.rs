@@ -676,7 +676,7 @@ impl GithubJobStepsBuilder {
         path: impl Into<Utf8PathBuf>,
     ) -> Self {
         Self {
-            steps: Vec::from_iter(steps.into_iter()),
+            steps: Vec::from_iter(steps),
             path: path.into(),
         }
     }
@@ -825,7 +825,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .expect("validation to pass");
     }
@@ -839,7 +839,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .unwrap();
     }
@@ -853,7 +853,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .unwrap();
     }
@@ -867,7 +867,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .unwrap();
     }
@@ -881,7 +881,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .unwrap();
     }
@@ -900,7 +900,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .unwrap();
     }
@@ -915,7 +915,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .unwrap();
     }
@@ -931,7 +931,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .unwrap();
     }
@@ -946,7 +946,7 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path)
+        GithubJobStepsBuilder::from_values(steps, path)
             .validate()
             .unwrap();
     }
@@ -958,7 +958,7 @@ mod tests {
             .expect("temp_dir made non-utf8 path!?");
         let cfg = "build-setup.yml".to_string();
         std::fs::write(
-            &base.join(&cfg),
+            base.join(&cfg),
             r#"
 - uses: some-action-user/some-action
   continue-on-error: ${{ some.expression }}
