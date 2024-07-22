@@ -5,6 +5,7 @@
 use std::collections::BTreeMap;
 
 use axoasset::LocalAsset;
+use camino::Utf8PathBuf;
 use cargo_dist_schema::{GithubJobStep, GithubMatrix, GithubMatrixEntry};
 use serde::Serialize;
 use tracing::warn;
@@ -293,8 +294,12 @@ impl GithubCiInfo {
         })
     }
 
-    fn github_ci_path(&self, dist: &DistGraph) -> camino::Utf8PathBuf {
-        let ci_dir = dist.workspace_dir.join(GITHUB_CI_DIR);
+    fn github_ci_dir(&self, dist: &DistGraph) -> Utf8PathBuf {
+        dist.repo_dir.join(GITHUB_CI_DIR)
+    }
+
+    fn github_ci_release_yml_path(&self, dist: &DistGraph) -> Utf8PathBuf {
+        let ci_dir = self.github_ci_dir(dist);
         // If tag-namespace is set, apply the prefix to the filename to emphasize it's
         // just one of many workflows in this project
         let prefix = self
@@ -316,7 +321,7 @@ impl GithubCiInfo {
 
     /// Write release.yml to disk
     pub fn write_to_disk(&self, dist: &DistGraph) -> DistResult<()> {
-        let ci_file = self.github_ci_path(dist);
+        let ci_file = self.github_ci_release_yml_path(dist);
         let rendered = self.generate_github_ci(dist)?;
 
         LocalAsset::write_new_all(&rendered, &ci_file)?;
@@ -328,7 +333,7 @@ impl GithubCiInfo {
     /// Check whether the new configuration differs from the config on disk
     /// writhout actually writing the result.
     pub fn check(&self, dist: &DistGraph) -> DistResult<()> {
-        let ci_file = self.github_ci_path(dist);
+        let ci_file = self.github_ci_release_yml_path(dist);
 
         let rendered = self.generate_github_ci(dist)?;
         diff_files(&ci_file, &rendered)

@@ -198,6 +198,8 @@ pub struct DistGraph {
 
     /// The cargo target dir.
     pub target_dir: Utf8PathBuf,
+    /// The root directory of the current git repo
+    pub repo_dir: Utf8PathBuf,
     /// The root directory of the current cargo workspace.
     pub workspace_dir: Utf8PathBuf,
     /// cargo-dist's target dir (generally nested under `target_dir`).
@@ -846,6 +848,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let root_workspace = workspaces.workspace(root_workspace_idx);
         let target_dir = root_workspace.target_dir.clone();
         let workspace_dir = root_workspace.workspace_dir.clone();
+        // FIXME: factor out the git repo detection code in source_tarball so that this
+        // is computed properly -- for now this is the value that's just been assumed
+        // already but at least code is clear about which it's referring to.
+        let repo_dir = workspace_dir.clone();
         let dist_dir = target_dir.join(TARGET_DIST);
 
         let mut workspace_metadata =
@@ -1126,6 +1132,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 system_id,
                 is_init: desired_cargo_dist_version.is_some(),
                 target_dir,
+                repo_dir,
                 workspace_dir,
                 dist_dir,
                 precise_builds,
@@ -3131,8 +3138,14 @@ pub struct GithubJobStepsBuilder {
 impl GithubJobStepsBuilder {
     #[cfg(test)]
     /// Test only ctor for skipping the fs lookup
-    pub fn from_values(steps: impl IntoIterator<Item = GithubJobStep>, path: impl Into<Utf8PathBuf>) -> Self {
-        Self { steps: Vec::from_iter(steps.into_iter()), path: path.into() }
+    pub fn from_values(
+        steps: impl IntoIterator<Item = GithubJobStep>,
+        path: impl Into<Utf8PathBuf>,
+    ) -> Self {
+        Self {
+            steps: Vec::from_iter(steps.into_iter()),
+            path: path.into(),
+        }
     }
 
     /// Create a new validator
@@ -3280,7 +3293,9 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path).validate().unwrap();
+        GithubJobStepsBuilder::from_values(steps, &path)
+            .validate()
+            .unwrap();
     }
 
     #[test]
@@ -3292,7 +3307,9 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path).validate().unwrap();
+        GithubJobStepsBuilder::from_values(steps, &path)
+            .validate()
+            .unwrap();
     }
 
     #[test]
@@ -3304,7 +3321,9 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path).validate().unwrap();
+        GithubJobStepsBuilder::from_values(steps, &path)
+            .validate()
+            .unwrap();
     }
 
     #[test]
@@ -3316,7 +3335,9 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path).validate().unwrap();
+        GithubJobStepsBuilder::from_values(steps, &path)
+            .validate()
+            .unwrap();
     }
 
     #[test]
@@ -3333,7 +3354,9 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path).validate().unwrap();
+        GithubJobStepsBuilder::from_values(steps, &path)
+            .validate()
+            .unwrap();
     }
 
     #[test]
@@ -3346,7 +3369,9 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path).validate().unwrap();
+        GithubJobStepsBuilder::from_values(steps, &path)
+            .validate()
+            .unwrap();
     }
 
     #[test]
@@ -3360,7 +3385,9 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path).validate().unwrap();
+        GithubJobStepsBuilder::from_values(steps, &path)
+            .validate()
+            .unwrap();
     }
 
     #[test]
@@ -3373,7 +3400,9 @@ mod tests {
             ..Default::default()
         }];
         let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
-        GithubJobStepsBuilder::from_values(steps, &path).validate().unwrap();
+        GithubJobStepsBuilder::from_values(steps, &path)
+            .validate()
+            .unwrap();
     }
 
     #[test]
