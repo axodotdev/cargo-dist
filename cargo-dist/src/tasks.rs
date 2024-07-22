@@ -69,6 +69,7 @@ use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
     LibraryStyle, ProductionMode, SystemDependencies,
 };
+use crate::linkage::determine_build_environment;
 use crate::net::ClientSettings;
 use crate::platform::{PlatformSupport, RuntimeConditions};
 use crate::sign::Signing;
@@ -1106,12 +1107,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             DirtyMode::AllowList(allow_dirty.clone().unwrap_or(vec![]))
         };
         let cargo_version_line = tools.cargo.version_line.clone();
+        let build_environment = if local_builds_are_lies {
+            BuildEnvironment::Indeterminate
+        } else {
+            determine_build_environment(&tools.cargo.host_target)
+        };
 
         let system = SystemInfo {
             id: system_id.clone(),
             cargo_version_line,
-            // Real value calculated during the build
-            build_environment: BuildEnvironment::Indeterminate,
+            build_environment,
         };
         let systems = SortedMap::from_iter([(system_id.clone(), system)]);
 

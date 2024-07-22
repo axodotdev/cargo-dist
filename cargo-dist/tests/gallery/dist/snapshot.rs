@@ -148,6 +148,18 @@ pub fn snapshot_settings_with_gallery_filter() -> insta::Settings {
     settings.add_filter(r#""sha256": .*"#, r#""sha256": "CENSORED""#);
     settings.add_filter(r#""sha512": .*"#, r#""sha512": "CENSORED""#);
     settings.add_filter(r#""version":"[a-zA-Z\.0-9\-]*""#, r#""version":"CENSORED""#);
+    settings.add_filter(
+        r#""build_environment": \{\n\s+"macos": \{\n\s+"os_version": ".+"\n\s+}\n\s+}"#,
+        r#""build_environment": "indeterminate""#,
+    );
+    settings.add_filter(
+        r#""build_environment": \{\n\s+"linux": \{\n\s+"glibc_version": \{\n\s+"major": .+\n\s+"series": .+\n\s+\}\n\s+}\n\s+}"#,
+        r#""build_environment": "indeterminate""#,
+    );
+    settings.add_filter(
+        r#""build_environment": "windows""#,
+        r#""build_environment": "indeterminate""#,
+    );
     settings
 }
 
@@ -183,6 +195,18 @@ pub fn snapshot_settings_with_dist_manifest_filter() -> insta::Settings {
     );
     settings.add_filter(r#""sha256": .*"#, r#""sha256": "CENSORED""#);
     settings.add_filter(r#""sha512": .*"#, r#""sha512": "CENSORED""#);
+    settings.add_filter(
+        r#""build_environment": \{\n\s+"macos": \{\n\s+"os_version": ".+"\n\s+}\n\s+}"#,
+        r#""build_environment": "indeterminate""#,
+    );
+    settings.add_filter(
+        r#""build_environment": \{\n\s+"linux": \{\n\s+"glibc_version": \{\n\s+"major": .+\n\s+"series": .+\n\s+\}\n\s+}\n\s+}"#,
+        r#""build_environment": "indeterminate""#,
+    );
+    settings.add_filter(
+        r#""build_environment": "windows""#,
+        r#""build_environment": "indeterminate""#,
+    );
 
     settings
 }
