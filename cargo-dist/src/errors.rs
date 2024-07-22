@@ -435,10 +435,19 @@ pub enum DistError {
     EmptyInstaller {},
 
     /// Configuration value for github-build-setup defined but not found
-    #[error("Expected github-build-setup file at {expected_path} but it was not found")]
+    #[error("failed to load github-build-setup file")]
     GithubBuildSetupNotFound {
-        /// The value from the configuration file
-        expected_path: Utf8PathBuf,
+        /// Inner i/o error with file path
+        #[diagnostic_source]
+        details: axoasset::AxoassetError,
+    },
+
+    /// Configuration value for github-build-setup defined but not found
+    #[error("github-build-setup file wasn't valid yaml")]
+    GithubBuildSetupParse {
+        /// Inner parse error with path and spans
+        #[diagnostic_source]
+        details: AxoassetYamlError,
     },
 
     /// github-build-setup file contents are invalid
@@ -452,6 +461,22 @@ pub enum DistError {
         /// Error messsage details
         message: String,
     },
+}
+
+/// This error indicates we tried to deserialize some YAML with serde_yml
+/// but failed.
+#[derive(Debug, Error, Diagnostic)]
+#[error("failed to parse YAML")]
+pub struct AxoassetYamlError {
+    /// The SourceFile we were try to parse
+    #[source_code]
+    pub source: axoasset::SourceFile,
+    /// The range the error was found on
+    #[label]
+    pub span: Option<miette::SourceSpan>,
+    /// Details of the error
+    #[source]
+    pub details: serde_yml::Error,
 }
 
 impl From<minijinja::Error> for DistError {

@@ -2,9 +2,9 @@
 //!
 //! In the future this may get split up into submodules.
 
-use std::{collections::BTreeMap, fs::File};
+use std::collections::BTreeMap;
 
-use axoasset::LocalAsset;
+use axoasset::{LocalAsset, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
 use serde::{Deserialize, Serialize};
@@ -687,17 +687,11 @@ impl GithubJobStepsBuilder {
         cfg_value: impl AsRef<Utf8Path>,
     ) -> Result<Self, DistError> {
         let path = base_path.as_ref().join(cfg_value.as_ref());
-        let mut f = File::options().read(true).open(&path).map_err(|e| {
-            eprintln!("Error opening {path}: {e}");
-            crate::DistError::GithubBuildSetupNotFound {
-                expected_path: path.clone(),
-            }
-        })?;
-        let steps = serde_yml::from_reader(&mut f)?;
-        Ok(Self {
-            steps,
-            path: path.to_path_buf(),
-        })
+        let src = SourceFile::load_local(&path)
+            .map_err(|e| DistError::GithubBuildSetupNotFound { details: e })?;
+        let steps =
+            deserialize_yaml(&src).map_err(|e| DistError::GithubBuildSetupParse { details: e })?;
+        Ok(Self { steps, path })
     }
 
     /// Validate the whole list of build setup steps
@@ -790,6 +784,25 @@ impl GithubJobStepsBuilder {
             .or_else(|| step.id.clone())
             .unwrap_or_else(|| idx.to_string())
     }
+}
+
+/// Try to deserialize the contents of the SourceFile as yaml
+///
+/// FIXME: upstream to axoasset
+fn deserialize_yaml<'a, T: for<'de> serde::Deserialize<'de>>(
+    src: &'a SourceFile,
+) -> Result<T, crate::errors::AxoassetYamlError> {
+    let yaml = serde_yml::from_str(src.contents()).map_err(|details| {
+        let span = details
+            .location()
+            .and_then(|location| src.span_for_line_col(location.line(), location.column()));
+        crate::errors::AxoassetYamlError {
+            source: src.clone(),
+            span,
+            details,
+        }
+    })?;
+    Ok(yaml)
 }
 
 #[cfg(test)]
