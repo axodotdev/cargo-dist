@@ -57,7 +57,7 @@ use axoproject::platforms::{
 };
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{ArtifactId, DistManifest, GithubJobStep, SystemId, SystemInfo};
+use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
 use semver::Version;
 use serde::Serialize;
 use tracing::{info, warn};
@@ -223,6 +223,8 @@ pub struct DistGraph {
     pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// Whether to enable GitHub Attestations
     pub github_attestations: bool,
+    /// Path relative to the github-ci-dir for steps to include
+    pub github_build_setup: Option<String>,
     /// The desired cargo-dist version for handling this project
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
@@ -293,8 +295,6 @@ pub struct DistGraph {
     pub client_settings: ClientSettings,
     /// A reusable client for basic http fetches
     pub axoclient: AxoClient,
-    /// Additional steps injected into the github build job
-    pub github_build_setup: Vec<GithubJobStep>,
 }
 
 /// Info about artifacts should be hosted
@@ -964,6 +964,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let github_custom_runners = github_custom_runners.clone().unwrap_or_default();
         let github_custom_job_permissions =
             github_custom_job_permissions.clone().unwrap_or_default();
+        let github_build_setup = github_build_setup.clone();
         let extra_artifacts = extra_artifacts.clone().unwrap_or_default();
         let install_updater = install_updater.unwrap_or(false);
 
@@ -1121,14 +1122,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             &dist_dir,
             ssldotcom_windows_sign.clone(),
         )?;
-        let github_build_setup = github_build_setup
-            .as_ref()
-            .map(|local| {
-                crate::backend::ci::github::GithubJobStepsBuilder::new(&workspace_dir, local)?
-                    .validate()
-            })
-            .transpose()?
-            .unwrap_or_default();
         Ok(Self {
             inner: DistGraph {
                 system_id,
@@ -1148,6 +1141,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 github_releases_repo,
                 github_releases_submodule_path,
                 github_release,
+                github_build_setup,
                 ssldotcom_windows_sign,
                 github_attestations,
                 desired_cargo_dist_version,
@@ -1183,7 +1177,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_updater,
                 client_settings,
                 axoclient,
-                github_build_setup,
             },
             manifest: DistManifest {
                 dist_version: Some(env!("CARGO_PKG_VERSION").to_owned()),

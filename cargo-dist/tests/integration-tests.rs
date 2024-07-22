@@ -1727,7 +1727,7 @@ fn axolotlsay_build_setup_steps() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY
         .run_test(|ctx| {
-            ctx.workspace_write_file("build_setup.yml", 
+            ctx.workspace_write_file(".github/workflows/build_setup.yml",
         include_str!("../../cargo-dist/tests/build_setup.yml"))?;
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
         ctx.patch_cargo_toml(format!(r#"

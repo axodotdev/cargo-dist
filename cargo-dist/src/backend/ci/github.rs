@@ -6,8 +6,8 @@ use std::{collections::BTreeMap, fs::File};
 
 use axoasset::LocalAsset;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{GithubJobStep, GithubMatrix, GithubMatrixEntry};
-use serde::Serialize;
+use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
+use serde::{Deserialize, Serialize};
 use tracing::warn;
 
 use crate::{
@@ -26,6 +26,9 @@ const GITHUB_CI_FILE: &str = "release.yml";
 /// Info about running cargo-dist in Github CI
 #[derive(Debug, Serialize)]
 pub struct GithubCiInfo {
+    /// Cached path to github CI workflows dir
+    #[serde(skip_serializing)]
+    pub github_ci_workflow_dir: Utf8PathBuf,
     /// Version of rust toolchain to install (deprecated)
     pub rust_version: Option<String>,
     /// expression to use for installing cargo-dist via shell script
@@ -84,6 +87,65 @@ pub struct GithubCiInfo {
     pub root_permissions: Option<GithubPermissionMap>,
     /// Extra build steps
     pub github_build_setup: Vec<GithubJobStep>,
+}
+
+/// A github action workflow step
+#[derive(Debug, Clone, Serialize, Default, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct GithubJobStep {
+    /// A step's ID for looking up any outputs in a later step
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+
+    /// If this step should run
+    #[serde(default)]
+    #[serde(rename = "if")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub if_expr: Option<serde_json::Value>,
+
+    /// The name of this step
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    /// The identifier for a marketplace action or relative path for a repo hosted action
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uses: Option<String>,
+
+    /// A script to run
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub run: Option<String>,
+
+    /// The working directory this action sould run
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub working_directory: Option<String>,
+
+    /// The shell name to run the `run` property in e.g. bash or powershell
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shell: Option<String>,
+
+    /// A map of action arguments
+    #[serde(default)]
+    pub with: BTreeMap<String, serde_json::Value>,
+
+    /// Environment variables for this step
+    #[serde(default)]
+    pub env: BTreeMap<String, serde_json::Value>,
+
+    /// If this job should continue if this step errors
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub continue_on_error: Option<serde_json::Value>,
+
+    /// Maximum number of minutes this step should take
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout_minutes: Option<serde_json::Value>,
 }
 
 /// A custom ci job
@@ -261,7 +323,22 @@ impl GithubCiInfo {
         }
         let release_command = format!("gh release {action} {}", release_args.join(" "));
 
+        let github_ci_workflow_dir = dist.repo_dir.join(GITHUB_CI_DIR);
+        let github_build_setup = dist
+            .github_build_setup
+            .as_ref()
+            .map(|local| {
+                crate::backend::ci::github::GithubJobStepsBuilder::new(
+                    &github_ci_workflow_dir,
+                    local,
+                )?
+                .validate()
+            })
+            .transpose()?
+            .unwrap_or_default();
+
         Ok(GithubCiInfo {
+            github_ci_workflow_dir,
             tag_namespace,
             rust_version,
             install_dist_sh,
@@ -290,16 +367,11 @@ impl GithubCiInfo {
             release_command,
             release_phase,
             root_permissions,
-            github_build_setup: dist.github_build_setup.clone(),
+            github_build_setup,
         })
     }
 
-    fn github_ci_dir(&self, dist: &DistGraph) -> Utf8PathBuf {
-        dist.repo_dir.join(GITHUB_CI_DIR)
-    }
-
-    fn github_ci_release_yml_path(&self, dist: &DistGraph) -> Utf8PathBuf {
-        let ci_dir = self.github_ci_dir(dist);
+    fn github_ci_release_yml_path(&self) -> Utf8PathBuf {
         // If tag-namespace is set, apply the prefix to the filename to emphasize it's
         // just one of many workflows in this project
         let prefix = self
@@ -307,7 +379,8 @@ impl GithubCiInfo {
             .as_deref()
             .map(|p| format!("{p}-"))
             .unwrap_or_default();
-        ci_dir.join(format!("{prefix}{GITHUB_CI_FILE}"))
+        self.github_ci_workflow_dir
+            .join(format!("{prefix}{GITHUB_CI_FILE}"))
     }
 
     /// Generate the requested configuration and returns it as a string.
@@ -321,7 +394,7 @@ impl GithubCiInfo {
 
     /// Write release.yml to disk
     pub fn write_to_disk(&self, dist: &DistGraph) -> DistResult<()> {
-        let ci_file = self.github_ci_release_yml_path(dist);
+        let ci_file = self.github_ci_release_yml_path();
         let rendered = self.generate_github_ci(dist)?;
 
         LocalAsset::write_new_all(&rendered, &ci_file)?;
@@ -333,7 +406,7 @@ impl GithubCiInfo {
     /// Check whether the new configuration differs from the config on disk
     /// writhout actually writing the result.
     pub fn check(&self, dist: &DistGraph) -> DistResult<()> {
-        let ci_file = self.github_ci_release_yml_path(dist);
+        let ci_file = self.github_ci_release_yml_path();
 
         let rendered = self.generate_github_ci(dist)?;
         diff_files(&ci_file, &rendered)
