@@ -968,9 +968,9 @@ This is an experimental feature.
 
 **This can only be set globally**
 
-This configuration value should be a path relative to the repository root, the file located at that
-path should contain a yaml array of [steps][github-workflow-step] which will be performed before we
-call `cargo dist build`.
+This configuration value should be a path relative to the repository your `.github/workflows` directory.
+The file located at that path should contain a yaml array of [steps][github-workflow-step] which will be
+performed before we call `cargo dist build`.
 
 See [customizing github ci][github-build-setup] for more details.
 

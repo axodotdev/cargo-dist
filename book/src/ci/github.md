@@ -159,10 +159,14 @@ This is an experimental feature.
 In the event that installing platform dependencies using cargo-dist's system dependency feature
 doesn't work for your needs, for example a build dependency for your project isn't provided by the
 system's package manager, cargo-dist provides a method for injecting build steps into the
-`build-local-artifacts` job to prepare the container. To use this you're cargo-dist configuration
-should include the key `github-build-setup` which should point to a `.yml` file containing the
-github workflow steps as an array. For example, if you needed the Lua programming language installed
-you could update your `Cargo.toml` with the following.
+`build-local-artifacts` job to prepare the container.
+
+To do this, use the [github-build-setup setting](../reference/config.md#github-build-setup) which
+should be a path relative to your `.github/workflows/` directory, and which should point to a
+`.yml` file containing the github workflow steps just as you would normally write them in a workflow.
+(don't forget that leading `-`!)
+
+For example, if you needed the Lua programming language installed you could update your `Cargo.toml` with the following:
 
 ```toml
 [workspace.metadata.dist]
@@ -170,7 +174,7 @@ you could update your `Cargo.toml` with the following.
 github-build-setup = "build-setup.yml"
 ```
 
-An then include in the root of your repository a file named `build-setup.yml` containing the
+An then include in the root of your repository a file named `.github/workflows/build-setup.yml` containing the
 following.
 
 ```yml
