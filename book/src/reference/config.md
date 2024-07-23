@@ -604,7 +604,7 @@ See "repository" for some discussion on the "Artifact Download URL".
 
 ### install-libraries
 
-> since 0.19.0
+> since 0.20.0
 
 Example: `install-libraries = ["cdylib", "staticlib"]`
 
@@ -731,7 +731,7 @@ If no scope is specified the package will be global.
 
 ### package-libraries
 
-> since 0.19.0
+> since 0.20.0
 
 Example: `package-libraries = ["cdylib", "staticlib"]`
 
