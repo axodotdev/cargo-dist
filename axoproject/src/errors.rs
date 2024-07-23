@@ -1,5 +1,7 @@
 //! Errors!
 
+use std::string::FromUtf8Error;
+
 use camino::Utf8PathBuf;
 use miette::Diagnostic;
 use thiserror::Error;
@@ -18,6 +20,11 @@ pub enum AxoprojectError {
     #[diagnostic(transparent)]
     Axoasset(#[from] axoasset::AxoassetError),
 
+    /// Axoprocess returned an error (I/O error)
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    Axoprocess(#[from] axoprocess::AxoprocessError),
+
     /// An error occured in guppy/cargo-metadata when trying to find a cargo project
     #[cfg(feature = "cargo-projects")]
     #[error(transparent)]
@@ -31,6 +38,10 @@ pub enum AxoprojectError {
     #[error(transparent)]
     #[diagnostic(transparent)]
     Generic(#[from] GenericManifestParseError),
+
+    /// An error producing a string
+    #[error(transparent)]
+    FromUtf8(#[from] FromUtf8Error),
 
     /// An error parsing a Cargo.toml
     #[cfg(feature = "cargo-projects")]

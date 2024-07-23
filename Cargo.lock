@@ -184,6 +184,7 @@ name = "axoproject"
 version = "0.20.0-prerelease.3"
 dependencies = [
  "axoasset",
+ "axoprocess",
  "camino",
  "guppy",
  "itertools 0.13.0",

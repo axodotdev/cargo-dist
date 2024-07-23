@@ -13,6 +13,7 @@ use axoasset::serde_json;
 use axoasset::{AxoassetError, LocalAsset};
 use camino::{Utf8Path, Utf8PathBuf};
 use errors::{AxoprojectError, ProjectError, Result};
+use local_repo::LocalRepo;
 use tracing::info;
 
 #[cfg(feature = "cargo-projects")]
@@ -24,6 +25,7 @@ pub mod errors;
 pub mod generic;
 #[cfg(feature = "npm-projects")]
 pub mod javascript;
+pub mod local_repo;
 pub mod platforms;
 mod repo;
 #[cfg(feature = "cargo-projects")]
@@ -39,6 +41,8 @@ pub type SortedMap<K, V> = std::collections::BTreeMap<K, V>;
 /// Workspaces
 #[derive(Debug, Default)]
 pub struct WorkspaceGraph {
+    /// Git repository containing these workspaces
+    pub repo: Option<LocalRepo>,
     /// All workspaces
     workspaces: Vec<WorkspaceInfo>,
     /// All packages
@@ -55,7 +59,22 @@ impl WorkspaceGraph {
         start_dir: &Utf8Path,
         clamp_to_dir: Option<&Utf8Path>,
     ) -> std::result::Result<Self, ProjectError> {
+        let local_repo = if let Some(dir) = clamp_to_dir {
+            LocalRepo::new("git", dir).ok()
+        } else {
+            None
+        };
+
+        WorkspaceGraph::find_from_git(start_dir, local_repo)
+    }
+
+    /// Create WorkspaceGraph from a local git repo
+    pub fn find_from_git(
+        start_dir: &Utf8Path,
+        local_repo: Option<LocalRepo>,
+    ) -> std::result::Result<Self, ProjectError> {
         let mut missing = vec![];
+        let clamp_to_dir = local_repo.as_ref().map(|r| r.path.as_path());
 
         // Prefer generic workspace, then use rust workspace.
         // JS is currently not allowed to be a root workspace, only a child
@@ -63,7 +82,10 @@ impl WorkspaceGraph {
             match ws(start_dir, clamp_to_dir) {
                 // Accept the first one we find
                 WorkspaceSearch::Found(ws) => {
-                    let mut workspaces = Self::default();
+                    let mut workspaces = Self {
+                        repo: local_repo.clone(),
+                        ..Default::default()
+                    };
                     workspaces.add_workspace(ws, None);
                     return Ok(workspaces);
                 }
