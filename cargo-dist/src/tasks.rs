@@ -847,10 +847,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let root_workspace = workspaces.workspace(root_workspace_idx);
         let target_dir = root_workspace.target_dir.clone();
         let workspace_dir = root_workspace.workspace_dir.clone();
-        // FIXME: factor out the git repo detection code in source_tarball so that this
-        // is computed properly -- for now this is the value that's just been assumed
-        // already but at least code is clear about which it's referring to.
-        let repo_dir = workspace_dir.clone();
+        let repo_dir = if let Some(repo) = &workspaces.repo {
+            repo.path.to_owned()
+        } else {
+            // Fallback if we're not building in a git repo
+            workspace_dir.clone()
+        };
         let dist_dir = target_dir.join(TARGET_DIST);
 
         let mut workspace_metadata =
