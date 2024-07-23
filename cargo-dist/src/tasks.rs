@@ -847,10 +847,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let root_workspace = workspaces.workspace(root_workspace_idx);
         let target_dir = root_workspace.target_dir.clone();
         let workspace_dir = root_workspace.workspace_dir.clone();
-        // FIXME: factor out the git repo detection code in source_tarball so that this
-        // is computed properly -- for now this is the value that's just been assumed
-        // already but at least code is clear about which it's referring to.
-        let repo_dir = workspace_dir.clone();
+        let repo_dir = if let Some(repo) = &workspaces.repo {
+            repo.path.to_owned()
+        } else {
+            // Fallback if we're not building in a git repo
+            workspace_dir.clone()
+        };
         let dist_dir = target_dir.join(TARGET_DIST);
 
         let mut workspace_metadata =
@@ -1621,50 +1623,26 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         }
 
-        let git = if let Some(tool) = &self.inner.tools.git {
-            tool.cmd.to_owned()
-        } else {
+        if self.inner.tools.git.is_none() {
             warn!("skipping source tarball; git not installed");
             return;
-        };
+        }
 
         let working_dir = self.inner.workspace_dir.clone();
 
-        // It's possible to run cargo-dist in something that's not a git
-        // repo, including a brand-new repo that hasn't been `git init`ted yet;
-        // we can't act on those.
-        //
-        // Note we don't need the output of --show-toplevel,
-        // just the exit status.
-        let status = Cmd::new(&git, "detect a git repo")
-            .arg("rev-parse")
-            .arg("--show-toplevel")
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped())
-            .check(false)
-            .current_dir(&working_dir)
-            .status();
+        let workspace_repo = &self.workspaces.repo;
+
         // We'll be stubbing the actual generation in this case
         let is_git_repo = if self.inner.local_builds_are_lies {
             true
-        } else if let Ok(status) = status {
-            status.success()
         } else {
-            false
+            workspace_repo.is_some()
         };
 
-        let status = Cmd::new(&git, "check for HEAD commit")
-            .arg("rev-parse")
-            .arg("HEAD")
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped())
-            .check(false)
-            .current_dir(&working_dir)
-            .status();
         let has_head = if self.inner.local_builds_are_lies {
             true
-        } else if let Ok(status) = status {
-            status.success()
+        } else if let Some(repo) = workspace_repo {
+            repo.head.is_some()
         } else {
             false
         };
