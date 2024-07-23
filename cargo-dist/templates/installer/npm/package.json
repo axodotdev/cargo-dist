@@ -4,6 +4,10 @@
   "repository": "https://github.com/axodotdev/cargo-dist/",
   "preferUnplugged": true,
   "artifactDownloadUrl": "",
+  "glibcMinimum": {
+    "major": 2,
+    "series": 31
+  },
   "supportedPlatforms": {},
   "scripts": {
     "postinstall": "node ./install.js",
@@ -30,4 +34,3 @@
     "prettier": "^3.3.3"
   }
 }
-

@@ -8,7 +8,9 @@ use std::{
 use axoasset::SourceFile;
 use axoprocess::Cmd;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{AssetInfo, DistManifest, Library, Linkage, PackageManager};
+use cargo_dist_schema::{
+    AssetInfo, BuildEnvironment, DistManifest, GlibcVersion, Library, Linkage, PackageManager,
+};
 use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
@@ -80,6 +82,7 @@ fn compute_linkage_assuming_local_build(
                     eprintln!("Binary {bin_path} missing; skipping check");
                 } else {
                     let linkage = determine_linkage(&bin_path, target)?;
+
                     manifest.assets.insert(
                         bin.id.clone(),
                         AssetInfo {
@@ -436,4 +439,70 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage
     }
 
     Ok(linkage)
+}
+
+/// Determine the build environment on the current host
+/// This should be done local to the builder!
+pub fn determine_build_environment(target: &str) -> BuildEnvironment {
+    if target.contains("darwin") {
+        determine_macos_build_environment().unwrap_or(BuildEnvironment::Indeterminate)
+    } else if target.contains("linux") {
+        determine_linux_build_environment().unwrap_or(BuildEnvironment::Indeterminate)
+    } else if target.contains("windows") {
+        BuildEnvironment::Windows
+    } else {
+        BuildEnvironment::Indeterminate
+    }
+}
+
+fn determine_linux_build_environment() -> DistResult<BuildEnvironment> {
+    // If we're running this cross-host somehow, we should return an
+    // indeterminate result here
+    if std::env::consts::OS != "linux" {
+        return Ok(BuildEnvironment::Indeterminate);
+    }
+
+    let mut cmd = Cmd::new("ldd", "determine glibc version");
+    cmd.arg("--version");
+    let output = cmd.output()?;
+    let output_str = String::from_utf8(output.stdout)?;
+    let first_line = output_str.lines().next().unwrap_or(&output_str).trim_end();
+    // Running on a system without glibc at all
+    let glibc_version = if !first_line.contains("GNU libc") && !first_line.contains("GLIBC") {
+        None
+    } else {
+        // Formats observed in the wild:
+        // ldd (Ubuntu GLIBC 2.35-0ubuntu3.8) 2.35 (Ubuntu 22.04)
+        // ldd (Debian GLIBC 2.36-9+deb12u7) 2.36 (Debian)
+        // ldd (GNU libc) 2.39 (Fedora)
+        first_line
+            .split(' ')
+            .last()
+            .and_then(|s| s.split_once('.').map(glibc_from_tuple))
+            .transpose()?
+    };
+
+    Ok(BuildEnvironment::Linux { glibc_version })
+}
+
+fn glibc_from_tuple(versions: (&str, &str)) -> Result<GlibcVersion, DistError> {
+    let major = versions.0.parse::<u64>()?;
+    let series = versions.1.parse::<u64>()?;
+
+    Ok(GlibcVersion { major, series })
+}
+
+fn determine_macos_build_environment() -> DistResult<BuildEnvironment> {
+    // If we're running this cross-host somehow, we should return an
+    // indeterminate result here
+    if std::env::consts::OS != "macos" {
+        return Ok(BuildEnvironment::Indeterminate);
+    }
+
+    let mut cmd = Cmd::new("sw_vers", "determine OS version");
+    cmd.arg("-productVersion");
+    let output = cmd.output()?;
+    let os_version = String::from_utf8(output.stdout)?.trim_end().to_owned();
+
+    Ok(BuildEnvironment::MacOS { os_version })
 }

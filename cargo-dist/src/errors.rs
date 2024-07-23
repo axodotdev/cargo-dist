@@ -65,6 +65,10 @@ pub enum DistError {
     #[error(transparent)]
     SerdeYml(#[from] serde_yml::Error),
 
+    /// random parseint error
+    #[error(transparent)]
+    ParseIntError(#[from] std::num::ParseIntError),
+
     /// A problem with a jinja template, which is always a cargo-dist bug
     #[error("Failed to render template")]
     #[diagnostic(help("this is a bug in cargo-dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new"))]

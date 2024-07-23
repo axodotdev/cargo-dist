@@ -2,12 +2,14 @@
 
 use axoasset::{LocalAsset, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_dist_schema::GlibcVersion;
 use serde::Serialize;
 
 use super::InstallerInfo;
 use crate::{
     backend::templates::{Templates, TEMPLATE_INSTALLER_NPM, TEMPLATE_INSTALLER_NPM_RUN_JS},
     errors::DistResult,
+    platform::LibcVersion,
     DistGraph, SortedMap, SortedSet,
 };
 
@@ -182,11 +184,29 @@ fn mangle_package_json(
     package_json["artifactDownloadUrl"] = info.inner.base_url.clone().into();
     package_json["supportedPlatforms"] = platforms.platform_support_json();
 
+    match info.inner.runtime_conditions.min_glibc_version {
+        Some(LibcVersion { major, series }) => {
+            package_json["glibcMinimum"] = glibc_json(major, series)
+        }
+        _ => {
+            let default = GlibcVersion::default();
+            package_json["glibcMinimum"] = glibc_json(default.major, default.series)
+        }
+    }
+
     // Commit the new package.json
     let new_package_json = serde_json::to_string_pretty(&package_json).expect("serde_json failed");
     files.insert(package_json_path.to_owned(), new_package_json);
 
     Ok(())
+}
+
+fn glibc_json(major: u64, series: u64) -> serde_json::Value {
+    let mut map = SortedMap::<&str, u64>::new();
+    map.insert("major", major);
+    map.insert("series", series);
+
+    serde_json::to_value(&map).expect("serde_json failed")
 }
 
 fn platforms(info: &NpmInstallerInfo) -> PlatformSummary {

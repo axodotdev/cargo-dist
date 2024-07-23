@@ -36,6 +36,7 @@ stdout:
     "plan:all:": {
       "id": "plan:all:",
       "cargo_version_line": "CENSORED"
+      "build_environment": "indeterminate"
     }
   },
   "publish_prereleases": false,

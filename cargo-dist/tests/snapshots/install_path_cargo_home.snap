@@ -34,9 +34,7 @@ EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/axolotlsay"
 
-# glibc provided by our Ubuntu 20.04 runners;
-# in the future, we should actually record which glibc was on the runner,
-# and inject that into the script.
+# glibc provided by the system(s) which built these binaries
 BUILDER_GLIBC_MAJOR="2"
 BUILDER_GLIBC_SERIES="31"
 
@@ -1823,6 +1821,7 @@ try {
     "plan:all:": {
       "id": "plan:all:",
       "cargo_version_line": "CENSORED"
+      "build_environment": "indeterminate"
     }
   },
   "publish_prereleases": false,

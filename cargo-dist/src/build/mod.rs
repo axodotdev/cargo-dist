@@ -217,6 +217,7 @@ impl BuildExpectations {
         } else {
             determine_linkage(src_path, target)?
         };
+
         let bin = dist.binary(src.idx);
         manifest.assets.insert(
             bin.id.clone(),

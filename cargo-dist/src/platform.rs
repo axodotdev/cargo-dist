@@ -2,7 +2,11 @@
 use axoproject::platforms::{
     TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
 };
-use cargo_dist_schema::ArtifactId;
+
+use cargo_dist_schema::{
+    ArtifactId, AssetId, BuildEnvironment, DistManifest, GlibcVersion, Linkage, SystemInfo,
+};
+use serde::Serialize;
 
 use crate::{
     backend::installer::{ExecutableZipFragment, UpdaterFragment},
@@ -58,25 +62,43 @@ pub enum SupportQuality {
     HighwayToHellmulated,
 }
 
-/// A condition that an installer should ideally check before using this an archive
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum RuntimeCondition {
-    /// The system glibc must be at least this version
-    MinGlibcVersion {
-        /// Major version
-        major: u64,
-        /// Series (minor) version
-        series: u64,
-    },
-    /// The system musl libc must be at least this version
-    MinMuslVersion {
-        /// Major version
-        major: u64,
-        /// Series (minor) version
-        series: u64,
-    },
-    /// The system must have Rosetta2 installed
-    Rosetta2,
+/// A unixy libc version
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Serialize)]
+pub struct LibcVersion {
+    /// Major version
+    pub major: u64,
+    /// Series (minor) version
+    pub series: u64,
+}
+
+impl LibcVersion {
+    fn default_glibc() -> Self {
+        Self {
+            major: 2,
+            series: 31,
+        }
+    }
+
+    fn glibc_from_schema(schema: &GlibcVersion) -> Self {
+        Self {
+            major: schema.major,
+            series: schema.series,
+        }
+    }
+}
+
+/// Conditions that an installer should ideally check before using this an archive
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct RuntimeConditions {
+    /// The system glibc should be at least this version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_glibc_version: Option<LibcVersion>,
+    /// The system musl libc should be at least this version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_musl_version: Option<LibcVersion>,
+    /// Rosetta2 should be installed
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub rosetta2: bool,
 }
 
 /// Computed platform support details for a Release
@@ -101,7 +123,7 @@ pub struct FetchableArchive {
     /// Runtime conditions that are native to this archive
     ///
     /// (You can largely ignore these in favour of the runtime_conditions in PlatformEntry)
-    pub native_runtime_conditions: Vec<RuntimeCondition>,
+    pub native_runtime_conditions: RuntimeConditions,
     /// What target triples does this archive natively support
     pub target_triples: Vec<TargetTriple>,
     /// The sha256sum of the archive
@@ -143,7 +165,7 @@ pub struct PlatformEntry {
     ///
     /// For instance if you have a linux-gnu build but the system glibc is too old to run it,
     /// you will want to skip it in favour of a more portable musl-static build.
-    pub runtime_conditions: Vec<RuntimeCondition>,
+    pub runtime_conditions: RuntimeConditions,
     /// The archive
     pub archive_idx: FetchableArchiveIdx,
 }
@@ -180,6 +202,9 @@ impl PlatformSupport {
             let (artifact, binaries) =
                 dist.make_executable_zip_for_variant(release_idx, variant_idx);
 
+            let native_runtime_conditions =
+                native_runtime_conditions_for_artifact(dist, &artifact.id);
+
             let executables = binaries
                 .iter()
                 .filter(|(idx, _)| dist.binary(*idx).kind == BinaryKind::Executable);
@@ -204,7 +229,7 @@ impl PlatformSupport {
                     .collect(),
                 zip_style: artifact.archive.as_ref().unwrap().zip_style,
                 sha256sum: None,
-                native_runtime_conditions: vec![],
+                native_runtime_conditions,
                 updater: updater_idx,
             };
             archives.push(archive);
@@ -261,11 +286,39 @@ impl PlatformSupport {
                 executables: archive.executables.clone(),
                 cdylibs: archive.cdylibs.clone(),
                 cstaticlibs: archive.cstaticlibs.clone(),
+                runtime_conditions: option.runtime_conditions.clone(),
                 updater,
             };
             fragments.push(fragment);
         }
         fragments
+    }
+
+    /// Conflate all the options that `fragments` suggests to create a single unified
+    /// RuntimeConditions that can be used in installers while we transition to implementations
+    /// that more granularly factor in these details.
+    pub fn conflated_runtime_conditions(&self) -> RuntimeConditions {
+        let mut runtime_conditions = RuntimeConditions::default();
+        for options in self.platforms.values() {
+            let Some(option) = options.first() else {
+                continue;
+            };
+            runtime_conditions.merge(&option.runtime_conditions);
+        }
+        runtime_conditions
+    }
+
+    /// Similar to conflated_runtime_conditions, but certain None values
+    /// are replaced by safe defaults.
+    /// Currently, a default value is provided for glibc; others may be
+    /// provided in the future.
+    pub fn safe_conflated_runtime_conditions(&self) -> RuntimeConditions {
+        let mut runtime_conditions = self.conflated_runtime_conditions();
+        if runtime_conditions.min_glibc_version.is_none() {
+            runtime_conditions.min_glibc_version = Some(LibcVersion::default_glibc());
+        }
+
+        runtime_conditions
     }
 }
 
@@ -360,12 +413,10 @@ fn supports(
         // and the auto-installer for it only applies to GUI apps, not CLI apps, so ideally
         // any installer that uses this fallback should check if Rosetta2 is installed!
         if target == TARGET_X64_MAC {
-            let runtime_conditions = archive
-                .native_runtime_conditions
-                .iter()
-                .cloned()
-                .chain(Some(RuntimeCondition::Rosetta2))
-                .collect();
+            let runtime_conditions = RuntimeConditions {
+                rosetta2: true,
+                ..archive.native_runtime_conditions.clone()
+            };
             res.push((
                 TARGET_ARM64_MAC.to_owned(),
                 PlatformEntry {
@@ -425,4 +476,107 @@ fn supports(
         }
     }
     res
+}
+
+impl RuntimeConditions {
+    fn merge(&mut self, other: &Self) {
+        let RuntimeConditions {
+            min_glibc_version,
+            min_musl_version,
+            rosetta2,
+        } = other;
+
+        self.min_glibc_version =
+            max_of_min_libc_versions(&self.min_glibc_version, min_glibc_version);
+        self.min_musl_version = max_of_min_libc_versions(&self.min_musl_version, min_musl_version);
+        self.rosetta2 |= rosetta2;
+    }
+}
+
+/// Combine two min_libc_versions to get a new min that satisfies both
+fn max_of_min_libc_versions(
+    lhs: &Option<LibcVersion>,
+    rhs: &Option<LibcVersion>,
+) -> Option<LibcVersion> {
+    match (*lhs, *rhs) {
+        (None, None) => None,
+        (Some(ver), None) | (None, Some(ver)) => Some(ver),
+        (Some(lhs), Some(rhs)) => Some(lhs.max(rhs)),
+    }
+}
+
+/// Compute the requirements for running the binaries of this release on its host platform
+fn native_runtime_conditions_for_artifact(
+    dist: &DistGraphBuilder,
+    artifact_id: &ArtifactId,
+) -> RuntimeConditions {
+    let manifest = &dist.manifest;
+    let Some(artifact) = manifest.artifacts.get(artifact_id) else {
+        return RuntimeConditions::default();
+    };
+
+    let mut runtime_conditions = RuntimeConditions::default();
+    for asset in &artifact.assets {
+        let asset_conditions = native_runtime_conditions_for_asset(manifest, &asset.id);
+        runtime_conditions.merge(&asset_conditions);
+    }
+
+    runtime_conditions
+}
+
+fn native_runtime_conditions_for_asset(
+    manifest: &DistManifest,
+    asset_id: &Option<AssetId>,
+) -> RuntimeConditions {
+    let Some(asset_id) = asset_id else {
+        return RuntimeConditions::default();
+    };
+    let Some(asset) = &manifest.assets.get(asset_id) else {
+        return RuntimeConditions::default();
+    };
+    let Some(linkage) = &asset.linkage else {
+        return RuntimeConditions::default();
+    };
+    // This one's actually infallible but better safe than sorry...
+    let Some(system) = manifest.systems.get(&asset.system) else {
+        return RuntimeConditions::default();
+    };
+
+    // Get various libc versions
+    let min_glibc_version = native_glibc_version(system, linkage);
+    let min_musl_version = native_musl_version(system, linkage);
+
+    // rosetta2 is never required to run a binary on its *host* platform
+    let rosetta2 = false;
+    RuntimeConditions {
+        min_glibc_version,
+        min_musl_version,
+        rosetta2,
+    }
+}
+
+/// Get the native glibc version this binary links against, to the best of our ability
+fn native_glibc_version(system: &SystemInfo, linkage: &Linkage) -> Option<LibcVersion> {
+    for lib in &linkage.system {
+        // If this links against glibc, then we need to require that
+        if lib.is_glibc() {
+            if let BuildEnvironment::Linux {
+                glibc_version: Some(system_glibc),
+            } = &system.build_environment
+            {
+                // If there's a system libc, assume that's what it was built against
+                return Some(LibcVersion::glibc_from_schema(system_glibc));
+            } else {
+                // If the system has no known libc version use Ubuntu 20.04's glibc as a guess
+                return Some(LibcVersion::default_glibc());
+            }
+        }
+    }
+    None
+}
+
+/// Get the native musl libc version this binary links against, to the best of our ability
+fn native_musl_version(_system: &SystemInfo, _linkage: &Linkage) -> Option<LibcVersion> {
+    // FIXME: this should be the same as glibc_version but we don't get this info yet!
+    None
 }

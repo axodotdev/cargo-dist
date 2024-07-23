@@ -57,7 +57,7 @@ use axoproject::platforms::{
 };
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{ArtifactId, DistManifest, SystemId, SystemInfo};
+use cargo_dist_schema::{ArtifactId, BuildEnvironment, DistManifest, SystemId, SystemInfo};
 use semver::Version;
 use serde::Serialize;
 use tracing::{info, warn};
@@ -69,8 +69,9 @@ use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
     LibraryStyle, ProductionMode, SystemDependencies,
 };
+use crate::linkage::determine_build_environment;
 use crate::net::ClientSettings;
-use crate::platform::PlatformSupport;
+use crate::platform::{PlatformSupport, RuntimeConditions};
 use crate::sign::Signing;
 use crate::{
     backend::{
@@ -1108,10 +1109,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             DirtyMode::AllowList(allow_dirty.clone().unwrap_or(vec![]))
         };
         let cargo_version_line = tools.cargo.version_line.clone();
+        let build_environment = if local_builds_are_lies {
+            BuildEnvironment::Indeterminate
+        } else {
+            determine_build_environment(&tools.cargo.host_target)
+        };
 
         let system = SystemInfo {
             id: system_id.clone(),
             cargo_version_line,
+            build_environment,
         };
         let systems = SortedMap::from_iter([(system_id.clone(), system)]);
 
@@ -1980,6 +1987,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
         let bin_aliases = release.bin_aliases.for_targets(&target_triples);
+
+        let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -2004,6 +2014,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
                 install_libraries: release.install_libraries.clone(),
+                runtime_conditions,
             })),
             is_global: true,
         };
@@ -2101,6 +2112,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             warn!("The Homebrew publish job is enabled but no tap was specified\n  consider setting the tap field in Cargo.toml");
         }
 
+        let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
+
         let dependencies: Vec<String> = release
             .system_dependencies
             .homebrew
@@ -2150,6 +2163,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     receipt: None,
                     bin_aliases,
                     install_libraries: release.install_libraries.clone(),
+                    runtime_conditions,
                 },
                 install_libraries: release.install_libraries.clone(),
             })),
@@ -2223,6 +2237,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
                 install_libraries: release.install_libraries.clone(),
+                runtime_conditions: RuntimeConditions::default(),
             })),
             is_global: true,
         };
@@ -2291,6 +2306,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         };
         let bin_aliases = release.bin_aliases.for_targets(&target_triples);
+
+        let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -2331,6 +2349,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     receipt: None,
                     bin_aliases,
                     install_libraries: release.install_libraries.clone(),
+                    runtime_conditions,
                 },
             })),
             is_global: true,
