@@ -1721,3 +1721,44 @@ fn axolotlsay_generic_workspace_basic() -> Result<(), miette::Report> {
         Ok(())
     })
 }
+
+#[test]
+fn axolotlsay_build_setup_steps() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY
+        .run_test(|ctx| {
+            ctx.workspace_write_file(".github/workflows/build_setup.yml",
+        include_str!("../../cargo-dist/tests/build_setup.yml"))?;
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+tap = "axodotdev/homebrew-packages"
+publish-jobs = ["homebrew", "npm"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+install-success-msg = ">o_o< everything's installed!"
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+npm-scope ="@axodotdev"
+github-build-setup = "build_setup.yml"
+
+[package.metadata.wix]
+upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
+path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}

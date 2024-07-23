@@ -958,7 +958,21 @@ Allows you to specify the file format to use for [archives][] that target window
 
 See also unix-archive below.
 
+### github-build-setup
 
+> since 0.20.0
+
+Example: `github-build-setup = "path/to/build-setup.yml"`
+
+This is an experimental feature.
+
+**This can only be set globally**
+
+This configuration value should be a path relative to the repository your `.github/workflows` directory.
+The file located at that path should contain a yaml array of [steps][github-workflow-step] which will be
+performed before we call `cargo dist build`.
+
+See [customizing github ci][github-build-setup] for more details.
 
 ## Subsetting CI Flags
 
@@ -986,6 +1000,7 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [generate]: ../reference/cli.md#cargo-dist-generate
 [archives]: ../artifacts/archives.md
 [artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
+[github-build-setup]: ../ci/github.md#customizing-build-setup
 
 [workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table
 [cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -998,3 +1013,4 @@ Caveat: the default "host" Artifact Mode does something fuzzier with `--target` 
 [crt-static]: https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md#future-work
 [axoupdater]: https://github.com/axodotdev/axoupdater
 [updater]: ../installers/updater.md
+[github-workflow-step]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsid

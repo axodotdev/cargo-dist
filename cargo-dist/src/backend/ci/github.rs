@@ -4,9 +4,10 @@
 
 use std::collections::BTreeMap;
 
-use axoasset::LocalAsset;
+use axoasset::{LocalAsset, SourceFile};
+use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tracing::warn;
 
 use crate::{
@@ -16,7 +17,7 @@ use crate::{
         JinjaGithubRepoPair, ProductionMode, SystemDependencies,
     },
     errors::DistResult,
-    DistGraph, SortedMap, SortedSet, TargetTriple,
+    DistError, DistGraph, SortedMap, SortedSet, TargetTriple,
 };
 
 const GITHUB_CI_DIR: &str = ".github/workflows/";
@@ -25,6 +26,9 @@ const GITHUB_CI_FILE: &str = "release.yml";
 /// Info about running cargo-dist in Github CI
 #[derive(Debug, Serialize)]
 pub struct GithubCiInfo {
+    /// Cached path to github CI workflows dir
+    #[serde(skip_serializing)]
+    pub github_ci_workflow_dir: Utf8PathBuf,
     /// Version of rust toolchain to install (deprecated)
     pub rust_version: Option<String>,
     /// expression to use for installing cargo-dist via shell script
@@ -81,6 +85,67 @@ pub struct GithubCiInfo {
     pub release_phase: GithubReleasePhase,
     /// Extra permissions the workflow file should have
     pub root_permissions: Option<GithubPermissionMap>,
+    /// Extra build steps
+    pub github_build_setup: Vec<GithubJobStep>,
+}
+
+/// A github action workflow step
+#[derive(Debug, Clone, Serialize, Default, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct GithubJobStep {
+    /// A step's ID for looking up any outputs in a later step
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+
+    /// If this step should run
+    #[serde(default)]
+    #[serde(rename = "if")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub if_expr: Option<serde_json::Value>,
+
+    /// The name of this step
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    /// The identifier for a marketplace action or relative path for a repo hosted action
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uses: Option<String>,
+
+    /// A script to run
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub run: Option<String>,
+
+    /// The working directory this action sould run
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub working_directory: Option<String>,
+
+    /// The shell name to run the `run` property in e.g. bash or powershell
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shell: Option<String>,
+
+    /// A map of action arguments
+    #[serde(default)]
+    pub with: BTreeMap<String, serde_json::Value>,
+
+    /// Environment variables for this step
+    #[serde(default)]
+    pub env: BTreeMap<String, serde_json::Value>,
+
+    /// If this job should continue if this step errors
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub continue_on_error: Option<serde_json::Value>,
+
+    /// Maximum number of minutes this step should take
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout_minutes: Option<serde_json::Value>,
 }
 
 /// A custom ci job
@@ -258,7 +323,22 @@ impl GithubCiInfo {
         }
         let release_command = format!("gh release {action} {}", release_args.join(" "));
 
+        let github_ci_workflow_dir = dist.repo_dir.join(GITHUB_CI_DIR);
+        let github_build_setup = dist
+            .github_build_setup
+            .as_ref()
+            .map(|local| {
+                crate::backend::ci::github::GithubJobStepsBuilder::new(
+                    &github_ci_workflow_dir,
+                    local,
+                )?
+                .validate()
+            })
+            .transpose()?
+            .unwrap_or_default();
+
         Ok(GithubCiInfo {
+            github_ci_workflow_dir,
             tag_namespace,
             rust_version,
             install_dist_sh,
@@ -287,11 +367,11 @@ impl GithubCiInfo {
             release_command,
             release_phase,
             root_permissions,
+            github_build_setup,
         })
     }
 
-    fn github_ci_path(&self, dist: &DistGraph) -> camino::Utf8PathBuf {
-        let ci_dir = dist.workspace_dir.join(GITHUB_CI_DIR);
+    fn github_ci_release_yml_path(&self) -> Utf8PathBuf {
         // If tag-namespace is set, apply the prefix to the filename to emphasize it's
         // just one of many workflows in this project
         let prefix = self
@@ -299,7 +379,8 @@ impl GithubCiInfo {
             .as_deref()
             .map(|p| format!("{p}-"))
             .unwrap_or_default();
-        ci_dir.join(format!("{prefix}{GITHUB_CI_FILE}"))
+        self.github_ci_workflow_dir
+            .join(format!("{prefix}{GITHUB_CI_FILE}"))
     }
 
     /// Generate the requested configuration and returns it as a string.
@@ -313,7 +394,7 @@ impl GithubCiInfo {
 
     /// Write release.yml to disk
     pub fn write_to_disk(&self, dist: &DistGraph) -> DistResult<()> {
-        let ci_file = self.github_ci_path(dist);
+        let ci_file = self.github_ci_release_yml_path();
         let rendered = self.generate_github_ci(dist)?;
 
         LocalAsset::write_new_all(&rendered, &ci_file)?;
@@ -325,7 +406,7 @@ impl GithubCiInfo {
     /// Check whether the new configuration differs from the config on disk
     /// writhout actually writing the result.
     pub fn check(&self, dist: &DistGraph) -> DistResult<()> {
-        let ci_file = self.github_ci_path(dist);
+        let ci_file = self.github_ci_release_yml_path();
 
         let rendered = self.generate_github_ci(dist)?;
         diff_files(&ci_file, &rendered)
@@ -578,4 +659,313 @@ fn package_install_for_targets(
     }
 
     None
+}
+
+/// Builder for looking up and reporting errors in the steps provided by the
+/// `github-build-setup` configuration
+pub struct GithubJobStepsBuilder {
+    steps: Vec<GithubJobStep>,
+    path: Utf8PathBuf,
+}
+
+impl GithubJobStepsBuilder {
+    #[cfg(test)]
+    /// Test only ctor for skipping the fs lookup
+    pub fn from_values(
+        steps: impl IntoIterator<Item = GithubJobStep>,
+        path: impl Into<Utf8PathBuf>,
+    ) -> Self {
+        Self {
+            steps: Vec::from_iter(steps),
+            path: path.into(),
+        }
+    }
+
+    /// Create a new validator
+    pub fn new(
+        base_path: impl AsRef<Utf8Path>,
+        cfg_value: impl AsRef<Utf8Path>,
+    ) -> Result<Self, DistError> {
+        let path = base_path.as_ref().join(cfg_value.as_ref());
+        let src = SourceFile::load_local(&path)
+            .map_err(|e| DistError::GithubBuildSetupNotFound { details: e })?;
+        let steps =
+            deserialize_yaml(&src).map_err(|e| DistError::GithubBuildSetupParse { details: e })?;
+        Ok(Self { steps, path })
+    }
+
+    /// Validate the whole list of build setup steps
+    pub fn validate(self) -> Result<Vec<GithubJobStep>, DistError> {
+        for (i, step) in self.steps.iter().enumerate() {
+            if let Some(message) = Self::validate_step(i, step) {
+                return Err(DistError::GithubBuildSetupNotValid {
+                    file_path: self.path.to_path_buf(),
+                    message,
+                });
+            }
+        }
+        Ok(self.steps)
+    }
+
+    /// validate a single step in the list of steps, returns `Some` if an error is detected
+    fn validate_step(idx: usize, step: &GithubJobStep) -> Option<String> {
+        //github-build-step {step_name} is invalid, cannot have both `uses` and `{conflict_step_name}` defined
+        let key_mismatch = |lhs: &str, rhs: &str| {
+            let step_name = Self::get_name_id_or_idx(idx, step);
+            format!("github-build-step {step_name} is invalid, cannot have both `{lhs}` and `{rhs}` defined")
+        };
+        let invalid_object = |prop: &str, msg: &str| {
+            let step_name = Self::get_name_id_or_idx(idx, step);
+            format!("github-build-step {step_name} has an invalid `{prop}` entry: {msg}")
+        };
+        if let Some(key) = Self::validate_step_uses_keys(step) {
+            return Some(key_mismatch("uses", key));
+        }
+        if let Some(key) = Self::validate_step_run_keys(step) {
+            return Some(key_mismatch("run", key));
+        }
+        if let Some(message) = Self::validate_with_shape(step) {
+            return Some(invalid_object("with", &message));
+        }
+        None
+    }
+
+    /// Validate there are no conflicting keys in this workflow that defines the `uses` keyword
+    ///
+    /// returns `Some` if an error is detected
+    fn validate_step_uses_keys(step: &GithubJobStep) -> Option<&'static str> {
+        // if uses is None, return early
+        step.uses.as_ref()?;
+        if step.run.is_some() {
+            return Some("run");
+        }
+        if step.shell.is_some() {
+            return Some("shell");
+        }
+        if step.working_directory.is_some() {
+            return Some("working-directory");
+        }
+        None
+    }
+
+    /// Validate there are no conflicting keys in this workflow that defines the `run` keyword
+    /// this is called _after_ `Self::validate_step_uses_keys`
+    ///
+    /// returns `Some` if an error is detected
+    fn validate_step_run_keys(step: &GithubJobStep) -> Option<&'static str> {
+        // if run is None, return early
+        step.run.as_ref()?;
+        if !step.with.is_empty() {
+            return Some("with");
+        }
+        None
+    }
+
+    /// Validate the with mapping only contains key/value pairs with the values being either
+    /// strings, booleans, or numbers
+    ///
+    /// returns `Some` if an error is detected
+    fn validate_with_shape(step: &GithubJobStep) -> Option<String> {
+        for (k, v) in &step.with {
+            let invalid_type = match v {
+                serde_json::Value::Null => "null",
+                serde_json::Value::Array(_) => "array",
+                serde_json::Value::Object(_) => "object",
+                _ => continue,
+            };
+            return Some(format!("key `{k}` has the type of `{invalid_type}` only `string`, `number` or `boolean` are supported"));
+        }
+        None
+    }
+
+    fn get_name_id_or_idx(idx: usize, step: &GithubJobStep) -> String {
+        step.name
+            .clone()
+            .or_else(|| step.id.clone())
+            .unwrap_or_else(|| idx.to_string())
+    }
+}
+
+/// Try to deserialize the contents of the SourceFile as yaml
+///
+/// FIXME: upstream to axoasset
+fn deserialize_yaml<'a, T: for<'de> serde::Deserialize<'de>>(
+    src: &'a SourceFile,
+) -> Result<T, crate::errors::AxoassetYamlError> {
+    let yaml = serde_yml::from_str(src.contents()).map_err(|details| {
+        let span = details
+            .location()
+            .and_then(|location| src.span_for_line_col(location.line(), location.column()));
+        crate::errors::AxoassetYamlError {
+            source: src.clone(),
+            span,
+            details,
+        }
+    })?;
+    Ok(yaml)
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::Value;
+
+    use super::*;
+
+    #[test]
+    fn validator_works() {
+        let steps = [GithubJobStep {
+            uses: Some("".to_string()),
+            with: BTreeMap::from_iter([
+                ("key".to_string(), Value::from("value")),
+                ("key2".to_string(), Value::from(2)),
+                ("key2".to_string(), Value::from(false)),
+            ]),
+            timeout_minutes: Some("8".into()),
+            continue_on_error: Some("true".into()),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .expect("validation to pass");
+    }
+
+    #[test]
+    #[should_panic = "cannot have both `uses` and `run` defined"]
+    fn validator_catches_run_and_uses() {
+        let steps = [GithubJobStep {
+            uses: Some("".to_string()),
+            run: Some("".to_string()),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic = "cannot have both `uses` and `shell` defined"]
+    fn validator_catches_run_and_shell() {
+        let steps = [GithubJobStep {
+            uses: Some("".to_string()),
+            shell: Some("".to_string()),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic = "cannot have both `uses` and `working-directory` defined"]
+    fn validator_catches_run_and_cwd() {
+        let steps = [GithubJobStep {
+            uses: Some("".to_string()),
+            working_directory: Some("".to_string()),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic = "cannot have both `run` and `with` defined"]
+    fn validator_catches_run_and_with() {
+        let steps = [GithubJobStep {
+            run: Some("".to_string()),
+            with: BTreeMap::from_iter([("key".to_string(), Value::from("value"))]),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic = "has an invalid `with` entry: key `key` has the type of `object` only `string`, `number` or `boolean` are supported"]
+    fn validator_catches_invalid_with() {
+        let steps = [GithubJobStep {
+            uses: Some("".to_string()),
+            with: BTreeMap::from_iter([(
+                "key".to_string(),
+                serde_json::json!({
+                    "obj-key": "obj-value"
+                }),
+            )]),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic = "step-name"]
+    fn validator_errors_with_name() {
+        let steps = [GithubJobStep {
+            name: Some("step-name".to_string()),
+            uses: Some(String::new()),
+            run: Some(String::new()),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic = "step-name"]
+    fn validator_errors_with_name_over_id() {
+        let steps = [GithubJobStep {
+            name: Some("step-name".to_string()),
+            id: Some("step-id".to_string()),
+            uses: Some(String::new()),
+            run: Some(String::new()),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic = "step-id"]
+    fn validator_errors_with_id() {
+        let steps = [GithubJobStep {
+            id: Some("step-id".to_string()),
+            uses: Some(String::new()),
+            run: Some(String::new()),
+            ..Default::default()
+        }];
+        let path = Utf8PathBuf::from(std::thread::current().name().unwrap_or(""));
+        GithubJobStepsBuilder::from_values(steps, path)
+            .validate()
+            .unwrap();
+    }
+
+    #[test]
+    fn build_setup_can_read() {
+        let tmp = temp_dir::TempDir::new().unwrap();
+        let base = Utf8PathBuf::from_path_buf(tmp.path().to_owned())
+            .expect("temp_dir made non-utf8 path!?");
+        let cfg = "build-setup.yml".to_string();
+        std::fs::write(
+            base.join(&cfg),
+            r#"
+- uses: some-action-user/some-action
+  continue-on-error: ${{ some.expression }}
+  timeout-minutes: ${{ matrix.timeout }}
+"#,
+        )
+        .unwrap();
+        GithubJobStepsBuilder::new(&base, &cfg).unwrap();
+    }
 }

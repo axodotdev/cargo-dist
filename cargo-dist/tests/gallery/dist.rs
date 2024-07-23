@@ -309,6 +309,17 @@ impl<'a> TestContext<'a, Tools> {
 
         Ok(())
     }
+
+    /// Shim a file into the git repository
+    pub fn workspace_write_file(
+        &self,
+        dest_path: impl AsRef<Utf8Path>,
+        contents: impl AsRef<str>,
+    ) -> Result<()> {
+        axoasset::LocalAsset::write_new(contents.as_ref(), dest_path.as_ref())?;
+        eprintln!("wrote file to {}", dest_path.as_ref());
+        Ok(())
+    }
 }
 
 impl DistResult {

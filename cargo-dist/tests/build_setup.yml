@@ -1,0 +1,19 @@
+- name: Some build step
+  uses: some-action-user/some-action
+  with:
+   input1: input1
+   input2: input2
+  continue-on-error: false
+- name: Some Other build step
+  uses: some-action-user/some-other-action
+  env:
+   ENV_VAR: ${{ github.head_ref }}
+- name: Some Run Step simple
+  if: false
+  run: echo "hello world!"
+  timeout_minutes: 1
+- name: Some Run Step Multi
+  shell: bash
+  run: |
+    HW="hello world"
+    echo $HW

@@ -150,6 +150,77 @@ While the linkage report can be run locally, the report for Linux artifacts can 
 The Windows report is currently unable to provide information about the sources of libraries.
 
 
+### Customizing Build Setup
+
+> since 0.20.0
+
+This is an experimental feature.
+
+In the event that installing platform dependencies using cargo-dist's system dependency feature
+doesn't work for your needs, for example a build dependency for your project isn't provided by the
+system's package manager, cargo-dist provides a method for injecting build steps into the
+`build-local-artifacts` job to prepare the container.
+
+To do this, use the [github-build-setup setting](../reference/config.md#github-build-setup) which
+should be a path relative to your `.github/workflows/` directory, and which should point to a
+`.yml` file containing the github workflow steps just as you would normally write them in a workflow.
+(don't forget that leading `-`!)
+
+For example, if you needed the Lua programming language installed you could update your `Cargo.toml` with the following:
+
+```toml
+[workspace.metadata.dist]
+# ...
+github-build-setup = "build-setup.yml"
+```
+
+An then include in the root of your repository a file named `.github/workflows/build-setup.yml` containing the
+following.
+
+```yml
+- name: Install Lua
+  uses: xpol/setup-lua@v1
+  with:
+    lua-version: "5.3"
+- name: Check lua installation
+  run: lua -e "print('hello world!')"
+```
+
+This would generate a `build-local-artifacts` job with the following modifications.
+
+```yml
+# ...
+jobs:
+# ...
+  build-local-artifacts:
+    # ...
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Lua
+        uses: xpol/setup-lua@v1
+          with:
+            lua-version: "5.3"
+      - name: Check lua installation
+        run: lua -e "print('hello world!')"
+# ...
+```
+
+Notice that we include the steps right after the `actions/checkout` step meaning that we are doing
+this as early in the build job as possible.
+
+#### Limitations
+
+##### Multi-line strings
+
+Currently the use of [folding](https://yaml.org/spec/1.2.2/#813-folded-style) (`>`) and
+[chomping](https://yaml.org/spec/1.2.2/#8112-block-chomping-indicator) (`-`) multi-line string
+modifiers will probably generate a surprising outputs. This is particularly important for any
+actions that use the `run` keyword and it is recomended to use the literal (`|`) string modifier for
+multi-line strings.
+
+
 [config-fail-fast]: ../reference/config.md#fail-fast
 [config-merge-tasks]: ../reference/config.md#merge-tasks
 [config-allow-dirty]: ../reference/config.md#allow-dirty

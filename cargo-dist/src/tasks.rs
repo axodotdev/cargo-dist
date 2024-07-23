@@ -197,6 +197,8 @@ pub struct DistGraph {
 
     /// The cargo target dir.
     pub target_dir: Utf8PathBuf,
+    /// The root directory of the current git repo
+    pub repo_dir: Utf8PathBuf,
     /// The root directory of the current cargo workspace.
     pub workspace_dir: Utf8PathBuf,
     /// cargo-dist's target dir (generally nested under `target_dir`).
@@ -221,6 +223,8 @@ pub struct DistGraph {
     pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// Whether to enable GitHub Attestations
     pub github_attestations: bool,
+    /// Path relative to the github-ci-dir for steps to include
+    pub github_build_setup: Option<String>,
     /// The desired cargo-dist version for handling this project
     pub desired_cargo_dist_version: Option<Version>,
     /// The desired rust toolchain for handling this project
@@ -843,6 +847,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let root_workspace = workspaces.workspace(root_workspace_idx);
         let target_dir = root_workspace.target_dir.clone();
         let workspace_dir = root_workspace.workspace_dir.clone();
+        // FIXME: factor out the git repo detection code in source_tarball so that this
+        // is computed properly -- for now this is the value that's just been assumed
+        // already but at least code is clear about which it's referring to.
+        let repo_dir = workspace_dir.clone();
         let dist_dir = target_dir.join(TARGET_DIST);
 
         let mut workspace_metadata =
@@ -896,7 +904,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             extra_artifacts,
             pr_run_mode,
             tap,
-
+            github_build_setup,
             // Partially Processed elsewhere
             //
             // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
@@ -956,6 +964,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let github_custom_runners = github_custom_runners.clone().unwrap_or_default();
         let github_custom_job_permissions =
             github_custom_job_permissions.clone().unwrap_or_default();
+        let github_build_setup = github_build_setup.clone();
         let extra_artifacts = extra_artifacts.clone().unwrap_or_default();
         let install_updater = install_updater.unwrap_or(false);
 
@@ -1113,12 +1122,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             &dist_dir,
             ssldotcom_windows_sign.clone(),
         )?;
-
         Ok(Self {
             inner: DistGraph {
                 system_id,
                 is_init: desired_cargo_dist_version.is_some(),
                 target_dir,
+                repo_dir,
                 workspace_dir,
                 dist_dir,
                 precise_builds,
@@ -1132,6 +1141,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 github_releases_repo,
                 github_releases_submodule_path,
                 github_release,
+                github_build_setup,
                 ssldotcom_windows_sign,
                 github_attestations,
                 desired_cargo_dist_version,
@@ -1265,6 +1275,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             msvc_crt_static: _,
             github_attestations: _,
             github_release: _,
+            github_build_setup: _,
         } = self.package_metadata(pkg_idx);
 
         let version = package_info.version.as_ref().unwrap().semver().clone();
