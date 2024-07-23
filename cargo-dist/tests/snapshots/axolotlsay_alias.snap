@@ -1,6 +1,5 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
-assertion_line: 92
 expression: self.payload
 ---
 ================ axolotlsay-installer.sh ================
@@ -2170,7 +2169,7 @@ install(false);
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
         "rimraf": "^5.0.8",
-        "tar": "^7.4.0"
+        "tar": "^7.4.1"
       },
       "devDependencies": {
         "prettier": "^3.3.3"
@@ -2805,9 +2804,9 @@ install(false);
       "engines": {
         "node": ">=18"
       },
-      "integrity": "sha512-XQs0S8fuAkQWuqhDeCdMlJXDX80D7EOVLDPVFkna9yQfzS+PHKgfxcei0jf6/+QAWcjqrnC8uM3fSAnrQl+XYg==",
-      "resolved": "https://registry.npmjs.org/tar/-/tar-7.4.0.tgz",
-      "version": "7.4.0"
+      "integrity": "sha512-dDJzpQf7Nud96mCs3wtw+XUiWGpi9WHxytSusrg0lYlj/Kr11DnB5hfw5bNDQNzx52JJ2Vy+7l8AFivp6H7ETA==",
+      "resolved": "https://registry.npmjs.org/tar/-/tar-7.4.1.tgz",
+      "version": "7.4.1"
     },
     "node_modules/tunnel": {
       "engines": {
@@ -2961,7 +2960,7 @@ install(false);
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
     "rimraf": "^5.0.8",
-    "tar": "^7.4.0"
+    "tar": "^7.4.1"
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "devDependencies": {
