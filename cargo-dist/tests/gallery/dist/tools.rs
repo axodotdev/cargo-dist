@@ -32,10 +32,10 @@ impl Tools {
         let shellcheck = CommandInfo::new("shellcheck", None);
         let psanalyzer = CommandInfo::new_powershell_command("Invoke-ScriptAnalyzer");
         let homebrew = CommandInfo::new("brew", None);
-        let npm = CommandInfo::new("npm", None);
-        let pnpm = CommandInfo::new("pnpm", None);
-        let yarn = CommandInfo::new("yarn", None);
         let tar = CommandInfo::new("tar", None);
+        let npm = CommandInfo::new_js("npm", None);
+        let pnpm = CommandInfo::new_js("pnpm", None);
+        let yarn = CommandInfo::new_js("yarn", None);
         assert!(tar.is_some());
         Self {
             git,
