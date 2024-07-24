@@ -606,7 +606,7 @@ See "repository" for some discussion on the "Artifact Download URL".
 
 > since 0.20.0
 
-Example: `install-libraries = ["cdylib", "staticlib"]`
+Example: `install-libraries = ["cdylib", "cstaticlib"]`
 
 Which kinds of libraries to install using the Homebrew/shell/PowerShell installers. By default, no kinds of libraries will be installed. When enabled, libraries will be installed alongside a package's binaries. Packaging libraries must first be enabled using the [package-libraries](#package-libraries) option.
 
@@ -733,7 +733,7 @@ If no scope is specified the package will be global.
 
 > since 0.20.0
 
-Example: `package-libraries = ["cdylib", "staticlib"]`
+Example: `package-libraries = ["cdylib", "cstaticlib"]`
 
 This is an experimental feature.
 
