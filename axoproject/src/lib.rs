@@ -548,7 +548,6 @@ pub struct PackageInfo {
     #[cfg(feature = "cargo-projects")]
     pub cargo_package_id: Option<PackageId>,
     /// Command to run to build this package
-    #[cfg(feature = "generic-projects")]
     pub build_command: Option<Vec<String>>,
 }
 

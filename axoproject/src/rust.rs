@@ -224,7 +224,6 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         cstaticlibs,
         cargo_metadata_table,
         cargo_package_id,
-        #[cfg(feature = "generic-projects")]
         build_command: None,
     };
 

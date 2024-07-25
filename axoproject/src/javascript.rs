@@ -1,5 +1,13 @@
 //! Support for npm-based JavaScript projects
 
+/// The extension to add when invoking JS programs which aren't proper executables.
+///
+/// This is necessary for invoking e.g. `npm` on Windows, where it's actually `npm.cmd`
+/// when invoked via `std::process::Command` (as opposed to typed in a shell).
+///
+/// See: <https://doc.rust-lang.org/nightly/std/process/struct.Command.html#platform-specific-behavior>
+pub const JS_PROGRAM_EXT: &str = if cfg!(windows) { ".cmd" } else { "" };
+
 use axoasset::SourceFile;
 use camino::{Utf8Path, Utf8PathBuf};
 use oro_common::{Manifest, Repository};
@@ -98,6 +106,17 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
         Some(manifest.keywords.into_iter().collect::<Vec<String>>())
     };
 
+    // If they define a `dist` script, then assume that's for us
+    let build_command = if manifest.scripts.contains_key("dist") {
+        Some(vec![
+            format!("npm{JS_PROGRAM_EXT}"),
+            "run".to_owned(),
+            "dist".to_owned(),
+        ])
+    } else {
+        None
+    };
+
     let mut info = PackageInfo {
         true_name: package_name.clone(),
         true_version: version.clone(),
@@ -130,8 +149,7 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
         cargo_metadata_table: None,
         #[cfg(feature = "cargo-projects")]
         cargo_package_id: None,
-        #[cfg(feature = "generic-projects")]
-        build_command: None,
+        build_command,
     };
     crate::merge_auto_includes(&mut info, &root_auto_includes);
 
