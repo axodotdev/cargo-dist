@@ -2161,7 +2161,7 @@ install(false);
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
         "rimraf": "^5.0.8",
-        "tar": "^7.4.1"
+        "tar": "^7.4.3"
       },
       "devDependencies": {
         "prettier": "^3.3.3"
@@ -2796,9 +2796,9 @@ install(false);
       "engines": {
         "node": ">=18"
       },
-      "integrity": "sha512-dDJzpQf7Nud96mCs3wtw+XUiWGpi9WHxytSusrg0lYlj/Kr11DnB5hfw5bNDQNzx52JJ2Vy+7l8AFivp6H7ETA==",
-      "resolved": "https://registry.npmjs.org/tar/-/tar-7.4.1.tgz",
-      "version": "7.4.1"
+      "integrity": "sha512-5S7Va8hKfV7W5U6g3aYxXmlPoZVAwUMy9AOKyF2fVuZa2UD3qZjg578OrLRt8PcNN1PleVaL/5/yYATNL0ICUw==",
+      "resolved": "https://registry.npmjs.org/tar/-/tar-7.4.3.tgz",
+      "version": "7.4.3"
     },
     "node_modules/tunnel": {
       "engines": {
@@ -2951,7 +2951,7 @@ install(false);
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
     "rimraf": "^5.0.8",
-    "tar": "^7.4.1"
+    "tar": "^7.4.3"
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "devDependencies": {
