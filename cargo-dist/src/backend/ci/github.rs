@@ -968,4 +968,27 @@ mod tests {
         .unwrap();
         GithubJobStepsBuilder::new(&base, &cfg).unwrap();
     }
+
+    #[test]
+    fn build_setup_with_if() {
+        let tmp = temp_dir::TempDir::new().unwrap();
+        let base = Utf8PathBuf::from_path_buf(tmp.path().to_owned())
+            .expect("temp_dir made non-utf8 path!?");
+        let cfg = "build-setup.yml".to_string();
+        std::fs::write(
+            base.join(&cfg),
+            r#"
+- uses: some-action-user/some-action
+  if: false
+"#,
+        )
+        .unwrap();
+        let out = GithubJobStepsBuilder::new(&base, &cfg)
+            .unwrap()
+            .validate()
+            .unwrap()
+            .pop()
+            .unwrap();
+        assert_eq!(out.if_expr, Some(false.into()));
+    }
 }
