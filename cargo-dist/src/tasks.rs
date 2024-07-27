@@ -66,6 +66,7 @@ use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::backend::installer::homebrew::to_homebrew_license_format;
+use crate::config::v1::{app_config, workspace_config, AppConfig, WorkspaceConfig};
 use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
     LibraryStyle, ProductionMode, SystemDependencies,
@@ -205,6 +206,9 @@ pub struct DistGraph {
     pub workspace_dir: Utf8PathBuf,
     /// cargo-dist's target dir (generally nested under `target_dir`).
     pub dist_dir: Utf8PathBuf,
+    /// misc workspace-global config
+    pub config: WorkspaceConfig,
+
     /// Whether to bother using --package instead of --workspace when building apps
     pub precise_builds: bool,
     /// Whether to try to merge otherwise-parallelizable tasks the same machine
@@ -698,6 +702,8 @@ pub struct Release {
     pub version: Version,
     /// The unique id of the release (e.g. "my-app-v1.0.0")
     pub id: String,
+    /// misc app-specific config
+    pub config: AppConfig,
     /// Targets this Release has artifacts for
     pub targets: Vec<TargetTriple>,
     /// Binaries that every variant should ostensibly provide
@@ -834,6 +840,7 @@ pub(crate) struct DistGraphBuilder<'pkg_graph> {
     binaries_by_id: FastMap<String, BinaryIdx>,
     workspace_metadata: DistMetadata,
     package_metadata: Vec<DistMetadata>,
+    package_configs: Vec<AppConfig>,
 }
 
 impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
@@ -882,6 +889,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             )?;
 
         workspace_metadata.make_relative_to(&root_workspace.workspace_dir);
+        let workspace_layer = workspace_metadata.to_toml_layer();
+        let config = workspace_config(workspaces, workspace_layer.clone());
 
         // This is intentionally written awkwardly to make you update this
         //
@@ -994,26 +1003,33 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
-        let mut package_metadata = vec![];
-        for (_idx, package) in workspaces.all_packages() {
-            let mut package_config = config::parse_metadata_table_or_manifest(
+        let mut package_metadatas = vec![];
+        let mut package_configs = vec![];
+        for (pkg_idx, package) in workspaces.all_packages() {
+            let mut package_metadata = config::parse_metadata_table_or_manifest(
                 &package.manifest_path,
                 package.dist_manifest_path.as_deref(),
                 package.cargo_metadata_table.as_ref(),
             )?;
-            package_config.make_relative_to(&package.package_root);
-            package_config.merge_workspace_config(&workspace_metadata, &package.manifest_path);
-            package_config.validate_install_paths()?;
+            package_metadata.make_relative_to(&package.package_root);
+            package_configs.push(app_config(
+                workspaces,
+                pkg_idx,
+                workspace_layer.clone(),
+                package_metadata.to_toml_layer(),
+            ));
+            package_metadata.merge_workspace_config(&workspace_metadata, &package.manifest_path);
+            package_metadata.validate_install_paths()?;
 
             // Only do workspace builds if all the packages agree with the workspace feature settings
-            if &package_config.features != features
-                || &package_config.all_features != all_features
-                || &package_config.default_features != default_features
+            if &package_metadata.features != features
+                || &package_metadata.all_features != all_features
+                || &package_metadata.default_features != default_features
             {
                 packages_with_mismatched_features.push(package.name.clone());
             }
 
-            package_metadata.push(package_config);
+            package_metadatas.push(package_metadata);
         }
 
         let requires_precise = !packages_with_mismatched_features.is_empty();
@@ -1157,6 +1173,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 repo_dir,
                 workspace_dir,
                 dist_dir,
+                config,
                 precise_builds,
                 fail_fast,
                 cache_builds,
@@ -1225,7 +1242,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 upload_files: vec![],
                 github_attestations,
             },
-            package_metadata,
+            package_metadata: package_metadatas,
+            package_configs,
             workspace_metadata,
             workspaces,
             binaries_by_id: FastMap::new(),
@@ -1243,6 +1261,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
     fn add_release(&mut self, pkg_idx: PackageIdx) -> ReleaseIdx {
         let package_info = self.workspaces.package(pkg_idx);
+        let config = self.package_config(pkg_idx).clone();
         let DistMetadata {
             tap,
             formula,
@@ -1384,6 +1403,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             variants: vec![],
             changelog_body: None,
             changelog_title: None,
+            config,
             windows_archive,
             unix_archive,
             static_assets,
@@ -2815,6 +2835,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             ArtifactMode::All => true,
             ArtifactMode::Lies => true,
         }
+    }
+
+    fn package_config(&self, pkg_idx: PackageIdx) -> &AppConfig {
+        &self.package_configs[pkg_idx.0]
     }
 }
 
