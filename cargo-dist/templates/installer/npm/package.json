@@ -28,7 +28,7 @@
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
     "rimraf": "^5.0.8",
-    "tar": "^7.4.1"
+    "tar": "^7.4.3"
   },
   "devDependencies": {
     "prettier": "^3.3.3"
