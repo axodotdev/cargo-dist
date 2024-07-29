@@ -227,8 +227,8 @@ jobs:
         {{%- if step.uses is not undefined %}}
         uses: {{{ step.uses }}}
         {{%- endif %}}
-        {{%- if step.if_expr is not undefined %}}
-        if: {{{ step.if_expr }}}
+        {{%- if step.if is not undefined %}}
+        if: {{{ step.if }}}
         {{%- endif %}}
         {{%- if step.run is not undefined %}}
         {{%- if step.run is multiline %}}
