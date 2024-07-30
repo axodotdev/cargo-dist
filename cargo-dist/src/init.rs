@@ -43,6 +43,15 @@ struct MultiDistMetadata {
     packages: SortedMap<String, DistMetadata>,
 }
 
+fn theme() -> dialoguer::theme::ColorfulTheme {
+    dialoguer::theme::ColorfulTheme {
+        checked_item_prefix: console::style("  [x]".to_string()).for_stderr().green(),
+        unchecked_item_prefix: console::style("  [ ]".to_string()).for_stderr().dim(),
+        active_item_style: console::Style::new().for_stderr().cyan().bold(),
+        ..dialoguer::theme::ColorfulTheme::default()
+    }
+}
+
 /// Run 'cargo dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let workspaces = config::get_project()?;
@@ -68,7 +77,42 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     }
 
     // Load in the root workspace toml to edit and write back
-    let mut workspace_toml = config::load_cargo_toml(&root_workspace.manifest_path)?;
+    let workspace_toml = config::load_cargo_toml(&root_workspace.manifest_path)?;
+    let mut original_workspace_toml = workspace_toml.clone();
+    let initted = has_metadata_table(root_workspace);
+
+    // If this is a Cargo.toml, offer to either write their config to
+    // a dist-workspace.toml, or migrate existing config there
+    let mut is_migrating = false;
+    // Users who haven't initted yet should be opted into the
+    // new config format by default.
+    let desired_workspace_kind = if root_workspace.kind == WorkspaceKind::Rust && !initted {
+        WorkspaceKind::Generic
+    // Already-initted users should be asked whether to migrate.
+    } else if root_workspace.kind == WorkspaceKind::Rust {
+        let prompt = r#"Would you like to keep your configuration in Cargo.toml?
+    Future versions of cargo-dist will feature major changes to the
+    configuration format, including a new cargo-dist-specific configuration file.
+    Answering "no" here will opt you into the new format early."#;
+        let res = if args.yes {
+            // We want to avoid --yes pulling it in at this point.
+            true
+        } else {
+            dialoguer::Confirm::with_theme(&theme())
+                .with_prompt(prompt)
+                .default(true)
+                .interact()?
+        };
+
+        if !res {
+            is_migrating = true;
+            WorkspaceKind::Generic
+        } else {
+            root_workspace.kind
+        }
+    } else {
+        root_workspace.kind
+    };
 
     let multi_meta = if let Some(json_path) = &args.with_json_config {
         // json update path, read from a file and apply all requested updates verbatim
@@ -84,15 +128,117 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         }
     };
 
+    // If we're migrating, the configuration will be missing the
+    // generic workspace specification, and will have some
+    // extraneous cargo-specific stuff that we don't want.
+    let mut workspace_toml = if is_migrating {
+        if let Some(dist) = workspace_toml
+            .get("workspace")
+            .and_then(|t| t.get("metadata"))
+            .and_then(|t| t.get("dist"))
+        {
+            let mut new_workspace = toml_edit::DocumentMut::new();
+
+            // Write generic workspace config
+            let mut table = toml_edit::table();
+            if let Some(t) = table.as_table_mut() {
+                let mut array = toml_edit::Array::new();
+                array.push("cargo:.");
+                t["members"] = toml_edit::value(array);
+            }
+            new_workspace.insert("workspace", table);
+
+            new_workspace.insert("dist", dist.to_owned());
+
+            new_workspace
+        } else {
+            workspace_toml
+        }
+    } else {
+        workspace_toml
+    };
+
     if let Some(meta) = &multi_meta.workspace {
-        apply_dist_to_workspace_toml(&mut workspace_toml, root_workspace.kind, meta);
+        apply_dist_to_workspace_toml(&mut workspace_toml, desired_workspace_kind, meta);
     }
 
     eprintln!();
 
+    let filename = match desired_workspace_kind {
+        WorkspaceKind::Rust => "Cargo.toml",
+        WorkspaceKind::Generic | WorkspaceKind::Javascript => "dist-workspace.toml",
+    };
+    let destination = root_workspace.workspace_dir.join(filename);
+
     // Save the workspace toml (potentially an effective no-op if we made no edits)
-    config::save_cargo_toml(&root_workspace.manifest_path, workspace_toml)?;
-    eprintln!("{check} added [workspace.metadata.dist] to your root Cargo.toml");
+    config::save_cargo_toml(&destination, workspace_toml)?;
+    let key = if desired_workspace_kind == WorkspaceKind::Rust {
+        "[workspace.metadata.dist]"
+    } else {
+        "[dist]"
+    };
+    eprintln!("{check} added {key} to your root {filename}");
+
+    if is_migrating {
+        // Migrate each package's Cargo.toml too
+        for (_, package) in workspaces.all_packages() {
+            if package.manifest_path.file_name() == Some("Cargo.toml") {
+                let manifest_src = axoasset::SourceFile::load_local(&package.manifest_path)?;
+                let mut manifest = manifest_src.deserialize_toml_edit()?;
+
+                let mut migrated = false;
+                // There's some package-specific dist config;
+                // migrate this too
+                if let Some(dist) = manifest
+                    .get("package")
+                    .and_then(|t| t.get("metadata"))
+                    .and_then(|t| t.get("dist"))
+                {
+                    let mut new_doc = toml_edit::DocumentMut::new();
+
+                    // axoproject expects there to at least be a
+                    // [package] key here, which can be left empty
+                    // to avoid duplicating the content of Cargo.toml
+                    let stub_package = toml_edit::table();
+                    new_doc.insert("package", stub_package);
+                    new_doc.insert("dist", dist.to_owned());
+
+                    let new_path = package
+                        .manifest_path
+                        .parent()
+                        .expect("No parent directory?!")
+                        .join("dist.toml");
+
+                    config::save_cargo_toml(&new_path, new_doc)?;
+
+                    migrated = true;
+                }
+
+                // Remove the dist table from Cargo.toml
+                if migrated {
+                    manifest
+                        .get_mut("package")
+                        .and_then(|t| t.get_mut("metadata"))
+                        .and_then(|t| t.as_table_mut())
+                        .and_then(|t| t.remove("dist"));
+
+                    config::save_cargo_toml(&package.manifest_path, manifest)?;
+                }
+            }
+        }
+    }
+
+    // We've been asked to migrate away from Cargo.toml; delete what
+    // we've added after writing the new config
+    if initted && is_migrating {
+        original_workspace_toml
+            .get_mut("workspace")
+            .and_then(|ws| ws.get_mut("metadata"))
+            .and_then(|metadata_item| metadata_item.as_table_mut())
+            .and_then(|table| table.remove("dist"));
+
+        config::save_cargo_toml(&root_workspace.manifest_path, original_workspace_toml)?;
+    }
 
     // Now that we've done the stuff that's definitely part of the root Cargo.toml,
     // Optionally apply updates to packages
@@ -293,12 +439,7 @@ fn get_new_dist_metadata(
     // Now prompt the user interactively to initialize these...
 
     // Tune the theming a bit
-    let theme = dialoguer::theme::ColorfulTheme {
-        checked_item_prefix: console::style("  [x]".to_string()).for_stderr().green(),
-        unchecked_item_prefix: console::style("  [ ]".to_string()).for_stderr().dim(),
-        active_item_style: console::Style::new().for_stderr().cyan().bold(),
-        ..dialoguer::theme::ColorfulTheme::default()
-    };
+    let theme = theme();
     // Some indicators we'll use in a few places
     let check = console::style("✔".to_string()).for_stderr().green();
     let notice = console::style("⚠️".to_string()).for_stderr().yellow();
