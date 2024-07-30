@@ -14,6 +14,8 @@ pub struct BuildConfig {
     pub cargo: Option<CargoBuildConfig>,
     /// TODO
     pub generic: Option<GenericBuildConfig>,
+    /// A set of packages to install before building
+    pub system_dependencies: SystemDependencies,
 }
 
 /// TODO
@@ -25,6 +27,8 @@ pub struct BuildConfigInheritable {
     pub cargo: Option<CargoBuildLayer>,
     /// TODO
     pub generic: Option<GenericBuildLayer>,
+    /// A set of packages to install before building
+    pub system_dependencies: SystemDependencies,
 }
 
 /// TODO
@@ -35,9 +39,15 @@ pub struct BuildLayer {
     #[serde(flatten)]
     pub common: CommonBuildLayer,
     /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo: Option<BoolOr<CargoBuildLayer>>,
     /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub generic: Option<BoolOr<GenericBuildLayer>>,
+    /// A set of packages to install before building
+    #[serde(rename = "dependencies")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system_dependencies: Option<SystemDependencies>,
 }
 impl BuildConfigInheritable {
     /// TODO
@@ -46,6 +56,7 @@ impl BuildConfigInheritable {
             common: CommonBuildConfig::defaults_for_package(workspaces, pkg_idx),
             cargo: None,
             generic: None,
+            system_dependencies: Default::default(),
         }
     }
     /// TODO
@@ -58,6 +69,7 @@ impl BuildConfigInheritable {
             common,
             cargo,
             generic,
+            system_dependencies,
         } = self;
         let cargo = cargo.map(|cargo| {
             let mut default = CargoBuildConfig::defaults_for_package(workspaces, pkg_idx, &common);
@@ -70,7 +82,11 @@ impl BuildConfigInheritable {
             default.apply_layer(generic);
             default
         });
-        BuildConfig { cargo, generic }
+        BuildConfig {
+            cargo,
+            generic,
+            system_dependencies,
+        }
     }
 }
 impl ApplyLayer for BuildConfigInheritable {
@@ -81,20 +97,19 @@ impl ApplyLayer for BuildConfigInheritable {
             common,
             cargo,
             generic,
+            system_dependencies,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
         self.cargo.apply_bool_layer(cargo);
         self.generic.apply_bool_layer(generic);
+        self.system_dependencies.apply_val(system_dependencies);
     }
 }
 
 /// TODO
 #[derive(Debug, Clone)]
 pub struct CommonBuildConfig {
-    /// A set of packages to install before building
-    pub system_dependencies: SystemDependencies,
-
     /// \[unstable\] Whether we should sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 
@@ -105,11 +120,6 @@ pub struct CommonBuildConfig {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CommonBuildLayer {
-    /// A set of packages to install before building
-    #[serde(rename = "dependencies")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub system_dependencies: Option<SystemDependencies>,
-
     /// \[unstable\] Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
@@ -125,7 +135,6 @@ impl CommonBuildConfig {
     /// TODO
     pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
         Self {
-            system_dependencies: Default::default(),
             ssldotcom_windows_sign: None,
             msvc_crt_static: true,
         }
@@ -136,12 +145,10 @@ impl ApplyLayer for CommonBuildConfig {
     fn apply_layer(
         &mut self,
         Self::Layer {
-            system_dependencies,
             ssldotcom_windows_sign,
             msvc_crt_static,
         }: Self::Layer,
     ) {
-        self.system_dependencies.apply_val(system_dependencies);
         self.ssldotcom_windows_sign
             .apply_opt(ssldotcom_windows_sign);
         self.msvc_crt_static.apply_val(msvc_crt_static);
@@ -152,12 +159,10 @@ impl ApplyLayer for CommonBuildLayer {
     fn apply_layer(
         &mut self,
         Self::Layer {
-            system_dependencies,
             ssldotcom_windows_sign,
             msvc_crt_static,
         }: Self::Layer,
     ) {
-        self.system_dependencies.apply_opt(system_dependencies);
         self.ssldotcom_windows_sign
             .apply_opt(ssldotcom_windows_sign);
         self.msvc_crt_static.apply_opt(msvc_crt_static);

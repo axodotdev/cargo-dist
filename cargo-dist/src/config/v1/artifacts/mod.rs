@@ -16,7 +16,7 @@ pub struct ArtifactConfig {
     /// Any extra artifacts and their buildscripts
     pub extra: Vec<ExtraArtifact>,
     /// How to checksum
-    pub checksum: Option<ChecksumStyle>,
+    pub checksum: ChecksumStyle,
 }
 /// TODO
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,7 +47,7 @@ impl ArtifactConfig {
             archives: ArchiveConfig::defaults_for_package(workspaces, pkg_idx),
             source_tarball: true,
             extra: vec![],
-            checksum: Some(ChecksumStyle::Sha256),
+            checksum: ChecksumStyle::Sha256,
         }
     }
 }
@@ -65,6 +65,6 @@ impl ApplyLayer for ArtifactConfig {
         self.archives.apply_val_layer(archives);
         self.source_tarball.apply_val(source_tarball);
         self.extra.apply_val(extra);
-        self.checksum.apply_opt(checksum);
+        self.checksum.apply_val(checksum);
     }
 }

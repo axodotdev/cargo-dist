@@ -125,10 +125,10 @@ impl DistMetadata {
             || msvc_crt_static.is_some();
         let build_layer = needs_build_layer.then_some(BuildLayer {
             common: CommonBuildLayer {
-                system_dependencies,
                 ssldotcom_windows_sign,
                 msvc_crt_static,
             },
+            system_dependencies,
             cargo: cargo_layer,
             generic: None,
         });

@@ -15,6 +15,8 @@ stdout:
     {
       "app_name": "cargo-dist-schema",
       "app_version": "1.0.0-FAKEVERSION",
+      "display_name": "cargo-dist-schema",
+      "display": true,
       "hosting": {
         "github": {
           "artifact_download_url": "https://github.com/axodotdev/cargo-dist/releases/download/cargo-dist-schema/v1.0.0-FAKEVERSION",

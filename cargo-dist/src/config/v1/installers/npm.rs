@@ -43,7 +43,7 @@ impl NpmInstallerConfig {
         Self {
             common: common.clone(),
             package: pkg.name.clone(),
-            scope: None,
+            scope: pkg.npm_scope.clone(),
         }
     }
 }
