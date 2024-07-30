@@ -256,15 +256,21 @@ pub struct TomlLayer {
     pub targets: Option<Vec<String>>,
 
     /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub artifacts: Option<ArtifactLayer>,
     /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub builds: Option<BuildLayer>,
     /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<CiLayer>,
     /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hosts: Option<HostLayer>,
     /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<InstallerLayer>,
     /// TODO
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub publishers: Option<PublisherLayer>,
 }

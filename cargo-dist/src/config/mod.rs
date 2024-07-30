@@ -309,8 +309,7 @@ impl std::fmt::Display for PublishStyle {
 }
 
 /// Extra CI jobs we should run
-#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum JobStyle {
     /// User-supplied value
     User(String),
@@ -326,6 +325,16 @@ impl std::str::FromStr for JobStyle {
                 style: s.to_owned(),
             })
         }
+    }
+}
+
+impl serde::Serialize for JobStyle {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let s = self.to_string();
+        s.serialize(serializer)
     }
 }
 

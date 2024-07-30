@@ -857,7 +857,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             )?;
 
         workspace_metadata.make_relative_to(&root_workspace.workspace_dir);
-        let workspace_layer = workspace_metadata.to_toml_layer();
+        let workspace_layer = workspace_metadata.to_toml_layer(true);
         let config = workspace_config(workspaces, workspace_layer.clone());
 
         // This is intentionally written awkwardly to make you update this
@@ -984,7 +984,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 workspaces,
                 pkg_idx,
                 workspace_layer.clone(),
-                package_metadata.to_toml_layer(),
+                package_metadata.to_toml_layer(false),
             ));
             package_metadata.merge_workspace_config(&workspace_metadata, &package.manifest_path);
             package_metadata.validate_install_paths()?;
@@ -2600,9 +2600,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 &[
                     InstallerStyle::Shell,
                     InstallerStyle::Powershell,
+                    InstallerStyle::Npm,
                     InstallerStyle::Homebrew,
                     InstallerStyle::Msi,
-                    InstallerStyle::Npm,
                 ]
             } else {
                 &cfg.installers[..]

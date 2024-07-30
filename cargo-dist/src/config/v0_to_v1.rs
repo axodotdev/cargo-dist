@@ -19,7 +19,7 @@ use super::{v1::*, CiStyle, HostingStyle, InstallerStyle, JobStyle, PublishStyle
 
 impl DistMetadata {
     /// Convert the v0 config format to v1
-    pub fn to_toml_layer(&self) -> TomlLayer {
+    pub fn to_toml_layer(&self, is_global: bool) -> TomlLayer {
         let DistMetadata {
             cargo_dist_version,
             rust_toolchain_version,
@@ -134,7 +134,7 @@ impl DistMetadata {
         });
 
         // CI
-        let github_ci_layer = list_to_bool_layer(&ci, CiStyle::Github, || {
+        let github_ci_layer = list_to_bool_layer(is_global, &ci, CiStyle::Github, || {
             if github_custom_runners.is_some()
                 || github_custom_job_permissions.is_some()
                 || github_build_setup.is_some()
@@ -204,26 +204,28 @@ impl DistMetadata {
         });
 
         // hosts
-        let github_host_layer = list_to_bool_layer(&hosting, HostingStyle::Github, || {
-            if create_release.is_some()
-                || github_releases_repo.is_some()
-                || github_releases_submodule_path.is_some()
-                || github_release.is_some()
-                || github_attestations.is_some()
-            {
-                Some(GithubHostLayer {
-                    common: CommonHostLayer::default(),
-                    create: create_release,
-                    repo: github_releases_repo,
-                    submodule_path: github_releases_submodule_path,
-                    during: github_release,
-                    attestations: github_attestations,
-                })
-            } else {
-                None
-            }
-        });
-        let axodotdev_host_layer = list_to_bool_layer(&hosting, HostingStyle::Axodotdev, || None);
+        let github_host_layer =
+            list_to_bool_layer(is_global, &hosting, HostingStyle::Github, || {
+                if create_release.is_some()
+                    || github_releases_repo.is_some()
+                    || github_releases_submodule_path.is_some()
+                    || github_release.is_some()
+                    || github_attestations.is_some()
+                {
+                    Some(GithubHostLayer {
+                        common: CommonHostLayer::default(),
+                        create: create_release,
+                        repo: github_releases_repo,
+                        submodule_path: github_releases_submodule_path,
+                        during: github_release,
+                        attestations: github_attestations,
+                    })
+                } else {
+                    None
+                }
+            });
+        let axodotdev_host_layer =
+            list_to_bool_layer(is_global, &hosting, HostingStyle::Axodotdev, || None);
         let needs_host_layer = github_host_layer.is_some()
             || axodotdev_host_layer.is_some()
             || force_latest.is_some()
@@ -241,7 +243,7 @@ impl DistMetadata {
 
         // installers
         let homebrew_installer_layer =
-            list_to_bool_layer(&installers, InstallerStyle::Homebrew, || {
+            list_to_bool_layer(is_global, &installers, InstallerStyle::Homebrew, || {
                 if tap.is_some() || formula.is_some() {
                     Some(HomebrewInstallerLayer {
                         common: CommonInstallerLayer::default(),
@@ -252,21 +254,24 @@ impl DistMetadata {
                     None
                 }
             });
-        let npm_installer_layer = list_to_bool_layer(&installers, InstallerStyle::Npm, || {
-            if npm_package.is_some() || npm_scope.is_some() {
-                Some(NpmInstallerLayer {
-                    common: CommonInstallerLayer::default(),
-                    package: npm_package,
-                    scope: npm_scope,
-                })
-            } else {
-                None
-            }
-        });
-        let msi_installer_layer = list_to_bool_layer(&installers, InstallerStyle::Msi, || None);
+        let npm_installer_layer =
+            list_to_bool_layer(is_global, &installers, InstallerStyle::Npm, || {
+                if npm_package.is_some() || npm_scope.is_some() {
+                    Some(NpmInstallerLayer {
+                        common: CommonInstallerLayer::default(),
+                        package: npm_package,
+                        scope: npm_scope,
+                    })
+                } else {
+                    None
+                }
+            });
+        let msi_installer_layer =
+            list_to_bool_layer(is_global, &installers, InstallerStyle::Msi, || None);
         let powershell_installer_layer =
-            list_to_bool_layer(&installers, InstallerStyle::Powershell, || None);
-        let shell_installer_layer = list_to_bool_layer(&installers, InstallerStyle::Shell, || None);
+            list_to_bool_layer(is_global, &installers, InstallerStyle::Powershell, || None);
+        let shell_installer_layer =
+            list_to_bool_layer(is_global, &installers, InstallerStyle::Shell, || None);
         let needs_installer_layer = homebrew_installer_layer.is_some()
             || npm_installer_layer.is_some()
             || msi_installer_layer.is_some()
@@ -294,8 +299,9 @@ impl DistMetadata {
 
         // publish
         let homebrew_publisher_layer =
-            list_to_bool_layer(&publish_jobs, PublishStyle::Homebrew, || None);
-        let npm_publisher_layer = list_to_bool_layer(&publish_jobs, PublishStyle::Npm, || None);
+            list_to_bool_layer(is_global, &publish_jobs, PublishStyle::Homebrew, || None);
+        let npm_publisher_layer =
+            list_to_bool_layer(is_global, &publish_jobs, PublishStyle::Npm, || None);
         let needs_publisher_layer = homebrew_publisher_layer.is_some()
             || npm_publisher_layer.is_some()
             || publish_prereleases.is_some();
@@ -308,7 +314,7 @@ impl DistMetadata {
         });
 
         // done!
-        TomlLayer {
+        let layer = TomlLayer {
             dist_version: cargo_dist_version,
             dist,
             allow_dirty,
@@ -319,11 +325,31 @@ impl DistMetadata {
             hosts: host_layer,
             installers: installer_layer,
             publishers: publisher_layer,
-        }
+        };
+
+        // TODO: remove this debug code
+        eprintln!("!!!!!!");
+        eprintln!("{}", axoasset::toml::to_string_pretty(&layer).unwrap());
+        eprintln!("------");
+        let layer2: TomlLayer = match axoasset::SourceFile::new(
+            "temp.toml",
+            axoasset::toml::to_string_pretty(&layer).unwrap(),
+        )
+        .deserialize_toml()
+        {
+            Ok(l) => l,
+            Err(e) => {
+                eprintln!("{:?}", miette::Report::new(e));
+                panic!("aaa");
+            }
+        };
+        eprintln!("{}", axoasset::toml::to_string_pretty(&layer2).unwrap());
+        layer
     }
 }
 
 fn list_to_bool_layer<I, T>(
+    is_global: bool,
     list: &Option<Vec<I>>,
     item: I,
     val: impl FnOnce() -> Option<T>,
@@ -338,5 +364,13 @@ where
     // If the list doesn't exist, don't mention it
     let list = list.as_ref()?;
     // Otherwise treat "is in the list" as a simple boolean
-    Some(BoolOr::Bool(list.contains(&item)))
+    let is_in_list = list.contains(&item);
+    if is_global && !is_in_list {
+        // ... with the exception of an omited value in the global list.
+        // here None and Some(false) are the same, so Some(false) is Noise
+        // we want to hide.
+        None
+    } else {
+        Some(BoolOr::Bool(is_in_list))
+    }
 }
