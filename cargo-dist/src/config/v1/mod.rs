@@ -22,7 +22,13 @@ use installers::*;
 use publishers::*;
 
 /// Compute the workspace-level config
-pub fn workspace_config(workspaces: &WorkspaceGraph, global_config: TomlLayer) -> WorkspaceConfig {
+pub fn workspace_config(
+    workspaces: &WorkspaceGraph,
+    mut global_config: TomlLayer,
+) -> WorkspaceConfig {
+    // Rewrite config-file-relative paths
+    global_config.make_relative_to(&workspaces.root_workspace().workspace_dir);
+
     let mut config = WorkspaceConfigInheritable::defaults_for_workspace(workspaces);
     config.apply_layer(global_config);
     config.apply_inheritance_for_workspace(workspaces)
@@ -32,9 +38,14 @@ pub fn workspace_config(workspaces: &WorkspaceGraph, global_config: TomlLayer) -
 pub fn app_config(
     workspaces: &WorkspaceGraph,
     pkg_idx: PackageIdx,
-    global_config: TomlLayer,
-    local_config: TomlLayer,
+    mut global_config: TomlLayer,
+    mut local_config: TomlLayer,
 ) -> AppConfig {
+    // Rewrite config-file-relative paths
+    let package = workspaces.package(pkg_idx);
+    global_config.make_relative_to(&workspaces.root_workspace().workspace_dir);
+    local_config.make_relative_to(&package.package_root);
+
     let mut config = AppConfigInheritable::defaults_for_package(workspaces, pkg_idx);
     config.apply_layer(global_config);
     config.apply_layer(local_config);
@@ -273,4 +284,36 @@ pub struct TomlLayer {
     /// TODO
     #[serde(skip_serializing_if = "Option::is_none")]
     pub publishers: Option<PublisherLayer>,
+}
+
+impl TomlLayer {
+    /// TODO
+    fn make_relative_to(&mut self, base_path: &Utf8Path) {
+        // It's kind of unfortunate that we don't exhaustively match this to
+        // force you to update it BUT almost no config is ever applicable for
+        // this so even when we used to, everyone just skimmed over this so
+        // whatever just Get Good and remember this transform is necessary
+        // if you every add another config-file-relative path to the config
+        if let Some(artifacts) = &mut self.artifacts {
+            if let Some(archives) = &mut artifacts.archives {
+                if let Some(include) = &mut archives.include {
+                    for path in include {
+                        make_path_relative_to(path, base_path);
+                    }
+                }
+            }
+            if let Some(extras) = &mut artifacts.extra {
+                for extra in extras {
+                    make_path_relative_to(&mut extra.working_dir, base_path);
+                }
+            }
+        }
+    }
+}
+
+fn make_path_relative_to(path: &mut Utf8PathBuf, base_path: &Utf8Path) {
+    // TODO: should absolute paths be a hard error? Or should we force them relative?
+    if !path.is_absolute() {
+        *path = base_path.join(&path);
+    }
 }
