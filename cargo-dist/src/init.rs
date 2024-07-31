@@ -188,11 +188,21 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     eprintln!();
 
-    let filename = match desired_workspace_kind {
-        WorkspaceKind::Rust => "Cargo.toml",
-        WorkspaceKind::Generic | WorkspaceKind::Javascript => "dist-workspace.toml",
+    let filename;
+    let destination;
+    if is_migrating {
+        filename = match desired_workspace_kind {
+            WorkspaceKind::Rust => "Cargo.toml",
+            WorkspaceKind::Generic | WorkspaceKind::Javascript => "dist-workspace.toml",
+        };
+        destination = root_workspace.workspace_dir.join(filename);
+    } else {
+        filename = root_workspace
+            .manifest_path
+            .file_name()
+            .expect("no filename!?");
+        destination = root_workspace.manifest_path.to_owned();
     };
-    let destination = root_workspace.workspace_dir.join(filename);
 
     // Save the workspace toml (potentially an effective no-op if we made no edits)
     config::save_cargo_toml(&destination, workspace_toml)?;
