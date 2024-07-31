@@ -578,7 +578,7 @@ fn do_generate_preflight_checks(dist: &DistGraph) -> DistResult<()> {
     //   should be irrelevant (so sayeth the person who made and uses this feature).
     //
     // * The user passed --allow-dirty to the CLI (probably means it's our own tests)
-    if let Some(desired_version) = &dist.desired_cargo_dist_version {
+    if let Some(desired_version) = &dist.config.dist_version {
         let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
         if desired_version != &current_version
             && !desired_version.pre.starts_with("github-")

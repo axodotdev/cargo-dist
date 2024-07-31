@@ -18,10 +18,7 @@ pub struct AxodotdevHostConfig {
 
 impl AxodotdevHostConfig {
     /// Get defaults for the given package
-    pub fn defaults_for_workspace(
-        _workspaces: &WorkspaceGraph,
-        common: &CommonHostConfig,
-    ) -> Self {
+    pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph, common: &CommonHostConfig) -> Self {
         Self {
             common: common.clone(),
         }

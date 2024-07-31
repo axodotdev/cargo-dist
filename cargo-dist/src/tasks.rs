@@ -66,12 +66,10 @@ use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::backend::installer::homebrew::to_homebrew_license_format;
+use crate::config::v1::ci::CiConfig;
 use crate::config::v1::installers::CommonInstallerConfig;
 use crate::config::v1::{app_config, workspace_config, AppConfig, WorkspaceConfig};
-use crate::config::{
-    DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
-    LibraryStyle, ProductionMode,
-};
+use crate::config::{DependencyKind, DirtyMode, LibraryStyle};
 use crate::linkage::determine_build_environment;
 use crate::net::ClientSettings;
 use crate::platform::{PlatformSupport, RuntimeConditions};
@@ -87,7 +85,7 @@ use crate::{
         templates::Templates,
     },
     config::{
-        self, ArtifactMode, ChecksumStyle, CiStyle, CompressionImpl, Config, DistMetadata,
+        self, ArtifactMode, ChecksumStyle, CompressionImpl, Config, DistMetadata,
         HostingStyle, InstallerStyle, PublishStyle, ZipStyle,
     },
     errors::{DistError, DistResult},
@@ -209,43 +207,6 @@ pub struct DistGraph {
     pub dist_dir: Utf8PathBuf,
     /// misc workspace-global config
     pub config: WorkspaceConfig,
-
-    /// Whether to bother using --package instead of --workspace when building apps
-    pub precise_builds: bool,
-    /// Whether to try to merge otherwise-parallelizable tasks the same machine
-    pub merge_tasks: bool,
-    /// Whether failing tasks should make us give up on all other tasks
-    pub fail_fast: bool,
-    /// Whether to cache builds in CI
-    pub cache_builds: bool,
-    /// Whether CI should include auto-generated local artifacts tasks
-    pub build_local_artifacts: bool,
-    /// Whether releases should be triggered by explicit dispatch, instead of tags
-    pub dispatch_releases: bool,
-    /// Whether to create a github release or edit an existing draft
-    pub create_release: bool,
-    /// Trigger releases with pushes to this branch, instead of tags
-    pub release_branch: Option<String>,
-    /// \[unstable\] if Some, sign binaries with ssl.com
-    pub ssldotcom_windows_sign: Option<ProductionMode>,
-    /// Whether to enable GitHub Attestations
-    pub github_attestations: bool,
-    /// Path relative to the github-ci-dir for steps to include
-    pub github_build_setup: Option<String>,
-    /// The desired cargo-dist version for handling this project
-    pub desired_cargo_dist_version: Option<Version>,
-    /// The desired rust toolchain for handling this project
-    pub desired_rust_toolchain: Option<String>,
-    /// Styles of CI we want to support
-    pub ci_style: Vec<CiStyle>,
-    /// Which actions to run on pull requests.
-    ///
-    /// "upload" will build and upload release artifacts, while "plan" will
-    /// only plan out the release without running builds and "skip" will disable
-    /// pull request runs entirely.
-    pub pr_run_mode: cargo_dist_schema::PrRunMode,
-    /// Generate targets to skip configuration up to date checks for
-    pub allow_dirty: DirtyMode,
     /// Targets we need to build (local artifacts)
     pub local_build_steps: Vec<BuildStep>,
     /// Targets we need to build (global artifacts)
@@ -260,44 +221,10 @@ pub struct DistGraph {
     pub releases: Vec<Release>,
     /// Info about CI backends
     pub ci: CiInfo,
-    /// List of plan jobs to run
-    pub plan_jobs: Vec<String>,
-    /// List of local artifacts jobs to run
-    pub local_artifacts_jobs: Vec<String>,
-    /// List of global artifacts jobs to run
-    pub global_artifacts_jobs: Vec<String>,
-    /// List of host jobs to run
-    pub host_jobs: Vec<String>,
-    /// List of publish jobs to run
-    pub publish_jobs: Vec<PublishStyle>,
-    /// Extra user-specified publish jobs to run
-    pub user_publish_jobs: Vec<String>,
-    /// List of post-announce jobs to run
-    pub post_announce_jobs: Vec<String>,
-    /// A GitHub repo to publish the Homebrew formula to
-    pub tap: Option<String>,
-    /// Whether msvc targets should statically link the crt
-    pub msvc_crt_static: bool,
     /// List of hosting providers to use
     pub hosting: Option<HostingInfo>,
-    /// Additional artifacts to build and upload
-    pub extra_artifacts: Vec<ExtraArtifact>,
-    /// Custom GitHub runners, mapped by triple target
-    pub github_custom_runners: BTreeMap<String, String>,
-    /// Permissions each custom job has
-    pub github_custom_job_permissions: BTreeMap<String, GithubPermissionMap>,
     /// LIES ALL LIES
     pub local_builds_are_lies: bool,
-    /// Prefix git tags must include to be picked up (also renames release.yml)
-    pub tag_namespace: Option<String>,
-    /// Whether to install updaters alongside with binaries
-    pub install_updater: bool,
-    /// Publish GitHub Releases to this other repo
-    pub github_releases_repo: Option<config::GithubRepoPair>,
-    /// Read the commit to be tagged from the submodule at this path
-    pub github_releases_submodule_path: Option<String>,
-    /// Which phase to create a GitHub release at
-    pub github_release: GithubReleasePhase,
     /// HTTP client settings
     pub client_settings: ClientSettings,
     /// A reusable client for basic http fetches
@@ -860,114 +787,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let config = workspace_config(workspaces, workspace_layer.clone());
         workspace_metadata.make_relative_to(&root_workspace.workspace_dir);
 
-        // This is intentionally written awkwardly to make you update this
-        //
-        // This is the ideal place in the code to map/check global config once.
-        // It's fine to just lower it to an identical field on DistGraph, but you might
-        // want to e.g. `unwrap_or(false)` an `Option<bool>` here.
-        let DistMetadata {
-            cargo_dist_version,
-            rust_toolchain_version,
-            precise_builds,
-            merge_tasks,
-            fail_fast,
-            cache_builds,
-            build_local_artifacts,
-            dispatch_releases,
-            release_branch,
-            ssldotcom_windows_sign,
-            github_attestations,
-            tag_namespace,
-            install_updater,
-            publish_prereleases,
-            force_latest,
-            features,
-            default_features,
-            all_features,
-            create_release,
-            github_releases_repo,
-            github_releases_submodule_path,
-            github_release,
-            github_custom_runners,
-            github_custom_job_permissions,
-            plan_jobs,
-            local_artifacts_jobs,
-            global_artifacts_jobs,
-            host_jobs,
-            publish_jobs,
-            post_announce_jobs,
-            allow_dirty,
-            msvc_crt_static,
-            extra_artifacts,
-            pr_run_mode,
-            tap,
-            github_build_setup,
-            // Partially Processed elsewhere
-            //
-            // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
-            // after this function, seems like we should finish the job..? (Doing a big
-            // refactor already, don't want to mess with this right now.)
-            ci: _,
-            hosting: _,
-            // Only the final value merged into a package_config matters
-            //
-            // Note that we do *use* an auto-include from the workspace when doing
-            // changelogs, but we don't consult this config, and just unconditionally use it.
-            // That seems *fine*, but I wanted to note that here.
-            auto_includes: _,
-            // For the rest of these, only the final value merged into a package_config matters
-            targets: _,
-            dist: _,
-            installers: _,
-            formula: _,
-            system_dependencies: _,
-            windows_archive: _,
-            unix_archive: _,
-            include: _,
-            npm_package: _,
-            npm_scope: _,
-            checksum: _,
-            install_path: _,
-            install_success_msg: _,
-            source_tarball: _,
-            bin_aliases: _,
-            display: _,
-            display_name: _,
-            package_libraries: _,
-            install_libraries: _,
-        } = &workspace_metadata;
-
-        let desired_cargo_dist_version = cargo_dist_version.clone();
-        let desired_rust_toolchain = rust_toolchain_version.clone();
-        if desired_rust_toolchain.is_some() {
+        if config.builds.cargo.rust_toolchain_version.is_some() {
             warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
         }
 
-        let merge_tasks = merge_tasks.unwrap_or(false);
-        let fail_fast = fail_fast.unwrap_or(false);
-        let pr_run_mode = pr_run_mode.unwrap_or_default();
-        let create_release = create_release.unwrap_or(true);
-        let build_local_artifacts = build_local_artifacts.unwrap_or(true);
-        let dispatch_releases = dispatch_releases.unwrap_or(false);
-        let release_branch = release_branch.clone();
-        let msvc_crt_static = msvc_crt_static.unwrap_or(true);
         let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
-        let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
-        let github_attestations = github_attestations.unwrap_or(false);
-        let tag_namespace = tag_namespace.clone();
-        let github_releases_repo = github_releases_repo.clone();
-        let github_releases_submodule_path = github_releases_submodule_path.clone();
-        let github_release = github_release.unwrap_or_default();
-        let github_custom_runners = github_custom_runners.clone().unwrap_or_default();
-        let github_custom_job_permissions =
-            github_custom_job_permissions.clone().unwrap_or_default();
-        let github_build_setup = github_build_setup.clone();
-        let extra_artifacts = extra_artifacts.clone().unwrap_or_default();
-        let install_updater = install_updater.unwrap_or(false);
-
-        let caching_could_be_profitable =
-            release_branch.is_some() || pr_run_mode == cargo_dist_schema::PrRunMode::Upload;
-        let cache_builds = cache_builds.unwrap_or(caching_could_be_profitable);
 
         let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
@@ -1014,98 +838,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             requires_precise
         };
 
-        let plan_jobs = plan_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
-
-        let local_artifacts_jobs = local_artifacts_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
-
-        let global_artifacts_jobs = global_artifacts_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
-
-        let host_jobs = host_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
-
-        let post_announce_jobs = post_announce_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
 
         let templates = Templates::new()?;
-        let (publish_jobs, user_publish_jobs): (Vec<_>, Vec<_>) = publish_jobs
-            .clone()
-            .unwrap_or(vec![])
-            .into_iter()
-            .partition(|s| !matches!(s, PublishStyle::User(_)));
-        let user_publish_jobs = user_publish_jobs
-            .into_iter()
-            // Remove the ./ suffix for later; we only have user jobs at this
-            // point so we no longer need to distinguish
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
-        let publish_prereleases = publish_prereleases.unwrap_or(false);
-        let force_latest = force_latest.unwrap_or(false);
-
         let allow_dirty = if allow_all_dirty {
             DirtyMode::AllowAll
         } else {
@@ -1132,39 +866,21 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             &axoclient,
             &tools.cargo.host_target,
             &dist_dir,
-            ssldotcom_windows_sign.clone(),
+            config.builds.ssldotcom_windows_sign.clone(),
         )?;
         Ok(Self {
             inner: DistGraph {
                 system_id,
-                is_init: desired_cargo_dist_version.is_some(),
+                is_init: config.dist_version.is_some(),
                 target_dir,
                 repo_dir,
                 workspace_dir,
                 dist_dir,
                 config,
-                precise_builds,
-                fail_fast,
-                cache_builds,
-                merge_tasks,
-                build_local_artifacts,
-                dispatch_releases,
-                release_branch,
-                create_release,
-                github_releases_repo,
-                github_releases_submodule_path,
-                github_release,
-                github_build_setup,
-                ssldotcom_windows_sign,
-                github_attestations,
-                desired_cargo_dist_version,
-                desired_rust_toolchain,
-                tag_namespace,
                 signer,
                 tools,
                 local_builds_are_lies,
                 templates,
-                ci_style: vec![],
                 local_build_steps: vec![],
                 global_build_steps: vec![],
                 artifacts: vec![],
@@ -1172,22 +888,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 variants: vec![],
                 releases: vec![],
                 ci: CiInfo::default(),
-                pr_run_mode,
-                tap: tap.clone(),
-                plan_jobs,
-                local_artifacts_jobs,
-                global_artifacts_jobs,
-                host_jobs,
-                publish_jobs,
-                user_publish_jobs,
-                post_announce_jobs,
-                allow_dirty,
-                msvc_crt_static,
                 hosting: None,
-                extra_artifacts,
-                github_custom_runners,
-                github_custom_job_permissions,
-                install_updater,
                 client_settings,
                 axoclient,
             },
@@ -1204,12 +905,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 artifacts: Default::default(),
                 systems,
                 assets: Default::default(),
-                publish_prereleases,
-                force_latest,
+                publish_prereleases: todo!(),
+                force_latest: config.hosts.force_latest,
                 ci: None,
                 linkage: vec![],
                 upload_files: vec![],
-                github_attestations,
+                github_attestations: config.hosts.github.as_ref().map(|g| g.attestations).unwrap_or(false),
             },
             package_configs,
             workspace_metadata,
@@ -1217,10 +918,6 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             binaries_by_id: FastMap::new(),
             artifact_mode,
         })
-    }
-
-    fn set_ci_style(&mut self, style: Vec<CiStyle>) {
-        self.inner.ci_style = style;
     }
 
     fn add_release(&mut self, pkg_idx: PackageIdx) -> ReleaseIdx {
@@ -1363,20 +1060,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 idx
             } else {
                 // Compute the rest of the details and add the binary
-                let features = if let Some(cargo_build) = &package_config.builds.cargo {
-                    CargoTargetFeatures {
-                        default_features: cargo_build.default_features,
-                        features: if cargo_build.all_features {
-                            CargoTargetFeatureList::All
-                        } else {
-                            CargoTargetFeatureList::List(cargo_build.features.clone())
-                        },
-                    }
-                } else {
-                    CargoTargetFeatures {
-                        default_features: true,
-                        features: CargoTargetFeatureList::List(vec![]),
-                    }
+                let features = CargoTargetFeatures {
+                    default_features: package_config.builds.cargo.default_features,
+                    features: if package_config.builds.cargo.all_features {
+                        CargoTargetFeatureList::All
+                    } else {
+                        CargoTargetFeatureList::List(package_config.builds.cargo.features.clone())
+                    },
                 };
 
                 let target_is_windows = target.contains("windows");
@@ -2010,10 +1700,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let tap = config.tap.clone();
 
-        if tap.is_some() && !self.inner.publish_jobs.contains(&PublishStyle::Homebrew) {
+        if tap.is_some() && !release.config.publishers.homebrew.is_some() {
             warn!("A Homebrew tap was specified but the Homebrew publish job is disabled\n  consider adding \"homebrew\" to publish-jobs in Cargo.toml");
         }
-        if self.inner.publish_jobs.contains(&PublishStyle::Homebrew) && tap.is_none() {
+        if release.config.publishers.homebrew.is_some() && tap.is_none() {
             warn!("The Homebrew publish job is enabled but no tap was specified\n  consider setting the tap field in Cargo.toml");
         }
 
@@ -2579,7 +2269,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 // Create the variant
                 let variant = self.add_variant(release, target.clone())?;
 
-                if self.inner.install_updater {
+                if self.inner.config.installers.updater {
                     self.add_updater(variant);
                 }
             }
@@ -2627,29 +2317,26 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn compute_ci(&mut self) -> DistResult<()> {
-        for ci in &self.inner.ci_style {
-            match ci {
-                CiStyle::Github => {
-                    self.inner.ci.github = Some(GithubCiInfo::new(&self.inner)?);
-                }
-            }
+        let CiConfig {
+            github,
+        } = &self.inner.config.ci;
+
+        let mut has_ci = false;
+        if let Some(github_config) = github {
+            has_ci = true;
+            self.inner.ci.github = Some(GithubCiInfo::new(&self.inner, github_config)?);
         }
 
-        let external_repo_commit = self
-            .inner
-            .github_releases_submodule_path
-            .as_ref()
-            .map(|path| submodule_head(&self.inner.workspace_dir.join(path)))
-            .transpose()?
-            .flatten();
-
         // apply to manifest
-        if !self.inner.ci_style.is_empty() {
+        if has_ci {
             let CiInfo { github } = &self.inner.ci;
-            let github = github.as_ref().map(|info| cargo_dist_schema::GithubCiInfo {
-                artifacts_matrix: Some(info.artifacts_matrix.clone()),
-                pr_run_mode: Some(info.pr_run_mode),
-                external_repo_commit,
+            let github = github.as_ref().map(|info|{
+                let external_repo_commit = info.github_release.as_ref().and_then(|r| r.external_repo_commit.clone());
+                cargo_dist_schema::GithubCiInfo {
+                    artifacts_matrix: Some(info.artifacts_matrix.clone()),
+                    pr_run_mode: Some(info.pr_run_mode),
+                    external_repo_commit,
+                }
             });
 
             self.manifest.ci = Some(cargo_dist_schema::CiInfo { github });
@@ -2749,18 +2436,6 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
         cfg.allow_all_dirty,
         matches!(cfg.tag_settings.tag, TagMode::Infer),
     )?;
-
-    // Prefer the CLI (cfg) if it's non-empty, but only select a subset
-    // of what the workspace supports if it's non-empty
-    let workspace_ci = graph.workspace_metadata.ci.clone().unwrap_or_default();
-    if cfg.ci.is_empty() {
-        graph.set_ci_style(workspace_ci);
-    } else {
-        let cfg_ci = SortedSet::from_iter(cfg.ci.clone());
-        let workspace_ci = SortedSet::from_iter(workspace_ci);
-        let shared_ci = cfg_ci.intersection(&workspace_ci).cloned().collect();
-        graph.set_ci_style(shared_ci);
-    }
 
     // If no targets were specified, just use the host target
     let host_target_triple = [graph.inner.tools.cargo.host_target.clone()];
@@ -3010,37 +2685,6 @@ impl InstallReceipt {
             },
             binary_aliases: BTreeMap::default(),
         })
-    }
-}
-
-// Determines the *cached* HEAD for a submodule within the workspace.
-// Note that any unstaged commits, and any local changes to commit
-// history that aren't reflected by the submodule commit history,
-// won't be reflected here.
-fn submodule_head(submodule_path: &Utf8PathBuf) -> DistResult<Option<String>> {
-    let output = Cmd::new("git", "fetch cached commit for a submodule")
-        .arg("submodule")
-        .arg("status")
-        .arg("--cached")
-        .arg(submodule_path)
-        .output()
-        .map_err(|_| DistError::GitSubmoduleCommitError {
-            path: submodule_path.to_string(),
-        })?;
-
-    let line = String::from_utf8_lossy(&output.stdout);
-    // Format: one status character, commit, a space, repo name
-    let line = line.trim_start_matches([' ', '-', '+']);
-    let Some((commit, _)) = line.split_once(' ') else {
-        return Err(DistError::GitSubmoduleCommitError {
-            path: submodule_path.to_string(),
-        });
-    };
-
-    if commit.is_empty() {
-        Ok(None)
-    } else {
-        Ok(Some(commit.to_owned()))
     }
 }
 

@@ -30,7 +30,7 @@ pub struct GithubHostLayer {
     /// If `repo` is used, the commit ref to used will
     /// be read from the HEAD of the submodule at this path
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub submodule_path: Option<String>,
+    pub submodule_path: Option<Utf8PathBuf>,
 
     /// Which phase to create the github release in
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -51,7 +51,7 @@ pub struct GithubHostConfig {
     pub repo: Option<GithubRepoPair>,
     /// If github-releases-repo is used, the commit ref to used will
     /// be read from the HEAD of the submodule at this path
-    pub submodule_path: Option<String>,
+    pub submodule_path: Option<Utf8PathBuf>,
     /// Which phase to create the github release in
     pub during: GithubReleasePhase,
     /// Whether GitHub Attestations is enabled (default false)
@@ -60,10 +60,7 @@ pub struct GithubHostConfig {
 
 impl GithubHostConfig {
     /// Get defaults for the given package
-    pub fn defaults_for_workspace(
-        _workspaces: &WorkspaceGraph,
-        common: &CommonHostConfig,
-    ) -> Self {
+    pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph, common: &CommonHostConfig) -> Self {
         Self {
             common: common.clone(),
             create: true,

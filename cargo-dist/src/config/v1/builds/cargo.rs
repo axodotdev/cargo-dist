@@ -4,9 +4,9 @@ use super::*;
 
 /// TODO
 #[derive(Debug, Clone)]
-pub struct CargoBuildConfig {
-    /// TODO
-    pub common: CommonBuildConfig,
+pub struct WorkspaceCargoBuildConfig {
+    /// Whether msvc targets should statically link the crt
+    pub msvc_crt_static: bool,
 
     /// (deprecated) The intended version of Rust/Cargo to build with (rustup toolchain syntax)
     ///
@@ -15,6 +15,13 @@ pub struct CargoBuildConfig {
 
     /// Build only the required packages, and individually
     pub precise_builds: Option<bool>,
+}
+
+/// TODO
+#[derive(Debug, Clone)]
+pub struct AppCargoBuildConfig {
+    /// TODO
+    pub common: CommonBuildConfig,
 
     /// A list of features to enable when building a package with cargo-dist
     pub features: Vec<String>,
@@ -41,6 +48,12 @@ pub struct CargoBuildLayer {
     /// When generating full tasks graphs (such as CI scripts) we will pick this version.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rust_toolchain_version: Option<String>,
+
+    /// Whether msvc targets should statically link the crt
+    ///
+    /// Defaults to true.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub msvc_crt_static: Option<bool>,
 
     /// Build only the required packages, and individually (since 0.1.0) (default: false)
     ///
@@ -84,7 +97,21 @@ pub struct CargoBuildLayer {
     pub all_features: Option<bool>,
 }
 
-impl CargoBuildConfig {
+impl WorkspaceCargoBuildConfig {
+    /// Get defaults for the given package
+    pub fn defaults_for_workspace(
+        _workspaces: &WorkspaceGraph,
+        _common: &CommonBuildConfig,
+    ) -> Self {
+        Self {
+            rust_toolchain_version: None,
+            precise_builds: None,
+            msvc_crt_static: true,
+        }
+    }
+}
+
+impl AppCargoBuildConfig {
     /// Get defaults for the given package
     pub fn defaults_for_package(
         _workspaces: &WorkspaceGraph,
@@ -93,8 +120,6 @@ impl CargoBuildConfig {
     ) -> Self {
         Self {
             common: common.clone(),
-            rust_toolchain_version: None,
-            precise_builds: None,
             features: vec![],
             default_features: true,
             all_features: false,
@@ -102,23 +127,43 @@ impl CargoBuildConfig {
     }
 }
 
-impl ApplyLayer for CargoBuildConfig {
+impl ApplyLayer for WorkspaceCargoBuildConfig {
+    type Layer = CargoBuildLayer;
+    fn apply_layer(
+        &mut self,
+        Self::Layer {
+            rust_toolchain_version,
+            precise_builds,
+            // local-only
+            common: _,
+            msvc_crt_static: _,
+            features: _,
+            default_features: _,
+            all_features: _,
+        }: Self::Layer,
+    ) {
+        self.rust_toolchain_version
+            .apply_opt(rust_toolchain_version);
+        self.precise_builds.apply_opt(precise_builds);
+    }
+}
+impl ApplyLayer for AppCargoBuildConfig {
     type Layer = CargoBuildLayer;
     fn apply_layer(
         &mut self,
         Self::Layer {
             common,
-            rust_toolchain_version,
-            precise_builds,
             features,
             default_features,
             all_features,
+
+            // global-only
+            rust_toolchain_version: _,
+            precise_builds: _,
+            msvc_crt_static: _,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
-        self.rust_toolchain_version
-            .apply_opt(rust_toolchain_version);
-        self.precise_builds.apply_opt(precise_builds);
         self.features.apply_val(features);
         self.default_features.apply_val(default_features);
         self.all_features.apply_val(all_features);
@@ -132,6 +177,7 @@ impl ApplyLayer for CargoBuildLayer {
             common,
             rust_toolchain_version,
             precise_builds,
+            msvc_crt_static,
             features,
             default_features,
             all_features,
@@ -140,6 +186,7 @@ impl ApplyLayer for CargoBuildLayer {
         self.common.apply_layer(common);
         self.rust_toolchain_version
             .apply_opt(rust_toolchain_version);
+        self.msvc_crt_static.apply_opt(msvc_crt_static);
         self.precise_builds.apply_opt(precise_builds);
         self.features.apply_opt(features);
         self.default_features.apply_opt(default_features);
@@ -147,7 +194,7 @@ impl ApplyLayer for CargoBuildLayer {
     }
 }
 
-impl std::ops::Deref for CargoBuildConfig {
+impl std::ops::Deref for AppCargoBuildConfig {
     type Target = CommonBuildConfig;
     fn deref(&self) -> &Self::Target {
         &self.common

@@ -61,22 +61,37 @@ pub struct WorkspaceConfig {
     pub allow_dirty: Vec<GenerateMode>,
     /// TODO
     pub ci: CiConfig,
+    /// TODO
+    pub hosts: WorkspaceHostConfig,
+    /// TODO
+    pub builds: WorkspaceBuildConfig,
+    /// TODO
+    pub installers: WorkspaceInstallerConfig,
 }
 /// TODO
 #[derive(Debug, Clone)]
 pub struct WorkspaceConfigInheritable {
-    /// TODO
-    pub ci: CiConfigInheritable,
     /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
     pub dist_version: Option<Version>,
     /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
+    /// TODO
+    pub ci: CiConfigInheritable,
+    /// TODO
+    pub hosts: HostConfigInheritable,
+    /// TODO
+    pub builds: BuildConfigInheritable,
+    /// TODO
+    pub installers: InstallerConfigInheritable,
 }
 impl WorkspaceConfigInheritable {
     /// TODO
     pub fn defaults_for_workspace(workspaces: &WorkspaceGraph) -> Self {
         Self {
             ci: CiConfigInheritable::defaults_for_workspace(workspaces),
+            hosts: HostConfigInheritable::defaults_for_workspace(workspaces),
+            builds: BuildConfigInheritable::defaults_for_workspace(workspaces),
+            installers: InstallerConfigInheritable::defaults_for_workspace(workspaces),
             dist_version: None,
             allow_dirty: vec![],
         }
@@ -85,11 +100,17 @@ impl WorkspaceConfigInheritable {
     pub fn apply_inheritance_for_workspace(self, workspaces: &WorkspaceGraph) -> WorkspaceConfig {
         let Self {
             ci,
+            hosts,
+            builds,
+            installers,
             dist_version,
             allow_dirty,
         } = self;
         WorkspaceConfig {
             ci: ci.apply_inheritance_for_workspace(workspaces),
+            hosts: hosts.apply_inheritance_for_workspace(workspaces),
+            builds: builds.apply_inheritance_for_workspace(workspaces),
+            installers: installers.apply_inheritance_for_workspace(workspaces),
             dist_version,
             allow_dirty,
         }
@@ -125,11 +146,11 @@ pub struct AppConfig {
     /// TODO
     pub artifacts: ArtifactConfig,
     /// TODO
-    pub builds: BuildConfig,
+    pub builds: AppBuildConfig,
     /// TODO
     pub hosts: AppHostConfig,
     /// TODO
-    pub installers: InstallerConfig,
+    pub installers: AppInstallerConfig,
     /// TODO
     pub publishers: PublisherConfig,
     /// Whether the package should be distributed/built by cargo-dist
@@ -305,6 +326,13 @@ impl TomlLayer {
             if let Some(extras) = &mut artifacts.extra {
                 for extra in extras {
                     make_path_relative_to(&mut extra.working_dir, base_path);
+                }
+            }
+        }
+        if let Some(hosts) = &mut self.hosts {
+            if let Some(BoolOr::Val(github)) = &mut hosts.github {
+                if let Some(path) = &mut github.submodule_path {
+                    make_path_relative_to(path, base_path);
                 }
             }
         }

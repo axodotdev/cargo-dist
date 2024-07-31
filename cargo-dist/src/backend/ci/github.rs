@@ -5,6 +5,7 @@
 use std::collections::BTreeMap;
 
 use axoasset::{LocalAsset, SourceFile};
+use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
 use serde::{Deserialize, Serialize};
@@ -13,8 +14,7 @@ use tracing::warn;
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
     config::{
-        DependencyKind, GithubPermission, GithubPermissionMap, GithubReleasePhase, HostingStyle,
-        JinjaGithubRepoPair, ProductionMode, SystemDependencies,
+        v1::ci::github::GithubCiConfig, DependencyKind, GithubPermission, GithubPermissionMap, GithubReleasePhase, HostingStyle, JinjaGithubRepoPair, JobStyle, ProductionMode, SystemDependencies
     },
     errors::DistResult,
     DistError, DistGraph, SortedMap, SortedSet, TargetTriple,
@@ -67,26 +67,35 @@ pub struct GithubCiInfo {
     pub user_publish_jobs: Vec<GithubCiJob>,
     /// post-announce jobs
     pub post_announce_jobs: Vec<GithubCiJob>,
-    /// whether to create the release or assume an existing one
-    pub create_release: bool,
-    /// external repo to release to
-    pub github_releases_repo: Option<JinjaGithubRepoPair>,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,
-    /// Whether to enable GitHub Attestations
-    pub github_attestations: bool,
     /// what hosting provider we're using
     pub hosting_providers: Vec<HostingStyle>,
     /// whether to prefix release.yml and the tag pattern
     pub tag_namespace: Option<String>,
-    /// `gh` command to run to create the release
-    pub release_command: String,
-    /// Which phase to create the release at
-    pub release_phase: GithubReleasePhase,
     /// Extra permissions the workflow file should have
     pub root_permissions: Option<GithubPermissionMap>,
     /// Extra build steps
     pub github_build_setup: Vec<GithubJobStep>,
+    /// Info about making a GitHub Release (if we're making one)
+    #[serde(flatten)]
+    pub github_release: Option<GithubReleaseInfo>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GithubReleaseInfo {
+    /// whether to create the release or assume an existing one
+    pub create_release: bool,
+    /// external repo to release to
+    pub github_releases_repo: Option<JinjaGithubRepoPair>,
+    /// commit to use for github_release_repo
+    pub external_repo_commit: Option<String>,
+    /// Whether to enable GitHub Attestations
+    pub github_attestations: bool,
+    /// `gh` command to run to create the release
+    pub release_command: String,
+    /// Which phase to create the release at
+    pub release_phase: GithubReleasePhase,
 }
 
 /// A github action workflow step
@@ -159,27 +168,30 @@ pub struct GithubCiJob {
 
 impl GithubCiInfo {
     /// Compute the Github CI stuff
-    pub fn new(dist: &DistGraph) -> DistResult<GithubCiInfo> {
+    pub fn new(dist: &DistGraph, ci_config: &GithubCiConfig) -> DistResult<GithubCiInfo> {
         // Legacy deprecated support
-        let rust_version = dist.desired_rust_toolchain.clone();
+        let rust_version = dist.config.builds.cargo.rust_toolchain_version.clone();
 
         // If they don't specify a cargo-dist version, use this one
         let self_dist_version = super::SELF_DIST_VERSION.parse().unwrap();
-        let dist_version = dist
-            .desired_cargo_dist_version
+        let dist_version = dist.config.dist_version
             .as_ref()
             .unwrap_or(&self_dist_version);
-        let fail_fast = dist.fail_fast;
-        let cache_builds = dist.cache_builds;
-        let build_local_artifacts = dist.build_local_artifacts;
-        let dispatch_releases = dist.dispatch_releases;
-        let release_branch = dist.release_branch.clone();
-        let create_release = dist.create_release;
-        let github_releases_repo = dist.github_releases_repo.clone().map(|r| r.into_jinja());
-        let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
-        let github_attestations = dist.github_attestations;
-        let tag_namespace = dist.tag_namespace.clone();
+        let fail_fast = ci_config.fail_fast;
+        let cache_builds = ci_config.cache_builds;
+        let build_local_artifacts = ci_config.build_local_artifacts;
+        let dispatch_releases = ci_config.dispatch_releases;
+        let release_branch = ci_config.release_branch.clone();
+        let ssldotcom_windows_sign = dist.config.builds.ssldotcom_windows_sign.clone();
+        let tag_namespace = ci_config.tag_namespace.clone();
+        let pr_run_mode = ci_config.pr_run_mode;
+
+        let github_release = GithubReleaseInfo::new(dist)?;
         let mut dependencies = SystemDependencies::default();
+
+        let caching_could_be_profitable =
+            release_branch.is_some() || pr_run_mode == cargo_dist_schema::PrRunMode::Upload;
+        let cache_builds = cache_builds.unwrap_or(caching_could_be_profitable);
 
         // Figure out what builds we need to do
         let mut local_targets = SortedSet::new();
@@ -198,24 +210,6 @@ impl GithubCiInfo {
             .hosts
             .clone();
 
-        let release_phase = if dist.github_release == GithubReleasePhase::Auto {
-            // We typically prefer to release in announce.
-            // If Axo is in use, we also want the release to come late
-            // because the release body will contain links to Axo URLs
-            // that won't become live until the announce phase.
-            if hosting_providers.contains(&HostingStyle::Axodotdev) {
-                GithubReleasePhase::Announce
-            // Otherwise, if Axo isn't present, we lean on host for
-            // safety reasons - because npm/Homebrew contain links to
-            // URLs that won't exist until the GitHub release happens.
-            } else {
-                GithubReleasePhase::Host
-            }
-        // If the user chose a non-auto option, respect that.
-        } else {
-            dist.github_release
-        };
-
         // Build up the task matrix for building Artifacts
         let mut tasks = vec![];
 
@@ -226,8 +220,8 @@ impl GithubCiInfo {
         //
         // If we've done a Good Job, then these artifacts should be possible to build on *any*
         // platform. Linux is usually fast/cheap, so that's a reasonable choice.
-        let global_runner = dist
-            .github_custom_runners
+        let global_runner = ci_config
+            .runners
             .get("global")
             .map(|s| s.as_str())
             .unwrap_or(GITHUB_LINUX_RUNNER);
@@ -240,13 +234,12 @@ impl GithubCiInfo {
             packages_install: None,
         };
 
-        let pr_run_mode = dist.pr_run_mode;
 
         let tap = dist.tap.clone();
 
-        let mut job_permissions = dist.github_custom_job_permissions.clone();
+        let mut job_permissions = ci_config.permissions.clone();
         // user publish jobs default to elevated priviledges
-        for name in &dist.user_publish_jobs {
+        for JobStyle::User(name) in &ci_config.publish_jobs {
             job_permissions.entry(name.clone()).or_insert_with(|| {
                 GithubPermissionMap::from_iter([
                     ("id-token".to_owned(), GithubPermission::Write),
@@ -257,26 +250,27 @@ impl GithubCiInfo {
 
         let mut root_permissions = GithubPermissionMap::new();
         root_permissions.insert("contents".to_owned(), GithubPermission::Write);
-        if github_attestations {
+        let has_attestations = github_release.as_ref().map(|g| g.github_attestations).unwrap_or(false);
+        if has_attestations {
             root_permissions.insert("id-token".to_owned(), GithubPermission::Write);
             root_permissions.insert("attestations".to_owned(), GithubPermission::Write);
         }
 
-        let plan_jobs = build_jobs(&dist.plan_jobs, &job_permissions)?;
-        let local_artifacts_jobs = build_jobs(&dist.local_artifacts_jobs, &job_permissions)?;
-        let global_artifacts_jobs = build_jobs(&dist.global_artifacts_jobs, &job_permissions)?;
-        let host_jobs = build_jobs(&dist.host_jobs, &job_permissions)?;
-        let publish_jobs = dist.publish_jobs.iter().map(|j| j.to_string()).collect();
-        let user_publish_jobs = build_jobs(&dist.user_publish_jobs, &job_permissions)?;
-        let post_announce_jobs = build_jobs(&dist.post_announce_jobs, &job_permissions)?;
+        let plan_jobs = build_jobs(&ci_config.plan_jobs, &job_permissions)?;
+        let local_artifacts_jobs = build_jobs(&ci_config.build_local_jobs, &job_permissions)?;
+        let global_artifacts_jobs = build_jobs(&ci_config.build_global_jobs, &job_permissions)?;
+        let host_jobs = build_jobs(&ci_config.host_jobs, &job_permissions)?;
+        let publish_jobs = ci_config.builtin_publish_jobs.iter().map(|j| j.to_string()).collect();
+        let user_publish_jobs = build_jobs(&ci_config.publish_jobs, &job_permissions)?;
+        let post_announce_jobs = build_jobs(&ci_config.post_announce_jobs, &job_permissions)?;
 
         let root_permissions = (!root_permissions.is_empty()).then_some(root_permissions);
 
         // Figure out what Local Artifact tasks we need
-        let local_runs = if dist.merge_tasks {
-            distribute_targets_to_runners_merged(local_targets, &dist.github_custom_runners)
+        let local_runs = if ci_config.merge_tasks {
+            distribute_targets_to_runners_merged(local_targets, &ci_config.runners)
         } else {
-            distribute_targets_to_runners_split(local_targets, &dist.github_custom_runners)
+            distribute_targets_to_runners_split(local_targets, &ci_config.runners)
         };
         for (runner, targets) in local_runs {
             use std::fmt::Write;
@@ -296,36 +290,10 @@ impl GithubCiInfo {
             });
         }
 
-        let mut release_args = vec![];
-        let action;
-        // Always need to use the tag flag
-        release_args.push("\"${{ needs.plan.outputs.tag }}\"");
-
-        // If using remote repos, specify the repo
-        if github_releases_repo.is_some() {
-            release_args.push("--repo");
-            release_args.push("\"$REPO\"")
-        }
-        release_args.push("--target");
-        release_args.push("\"$RELEASE_COMMIT\"");
-        release_args.push("$PRERELEASE_FLAG");
-        if dist.create_release {
-            action = "create";
-            release_args.push("--title");
-            release_args.push("\"$ANNOUNCEMENT_TITLE\"");
-            release_args.push("--notes-file");
-            release_args.push("\"$RUNNER_TEMP/notes.txt\"");
-            // When creating release, upload artifacts transactionally
-            release_args.push("artifacts/*");
-        } else {
-            action = "edit";
-            release_args.push("--draft=false");
-        }
-        let release_command = format!("gh release {action} {}", release_args.join(" "));
 
         let github_ci_workflow_dir = dist.repo_dir.join(GITHUB_CI_DIR);
-        let github_build_setup = dist
-            .github_build_setup
+        let github_build_setup = ci_config
+            .build_setup
             .as_ref()
             .map(|local| {
                 crate::backend::ci::github::GithubJobStepsBuilder::new(
@@ -359,15 +327,11 @@ impl GithubCiInfo {
             artifacts_matrix: GithubMatrix { include: tasks },
             pr_run_mode,
             global_task,
-            create_release,
-            github_releases_repo,
             ssldotcom_windows_sign,
-            github_attestations,
             hosting_providers,
-            release_command,
-            release_phase,
             root_permissions,
             github_build_setup,
+            github_release,
         })
     }
 
@@ -413,12 +377,118 @@ impl GithubCiInfo {
     }
 }
 
+impl GithubReleaseInfo {
+    fn new(dist: &DistGraph) -> DistResult<Option<Self>> {
+        let Some(host_config) = &dist.config.hosts.github else {
+            return Ok(None);
+        };
+
+        let create_release = host_config.create;
+        let github_releases_repo = host_config.repo.clone().map(|r| r.into_jinja());
+        let github_attestations =  host_config.attestations;
+
+        let github_releases_submodule_path = host_config.submodule_path.clone();
+        let external_repo_commit = github_releases_submodule_path
+            .as_ref()
+            .map(|path| submodule_head(path))
+            .transpose()?
+            .flatten();
+
+
+        let release_phase = if host_config.during == GithubReleasePhase::Auto {
+            // We typically prefer to release in announce.
+            // If Axo is in use, we also want the release to come late
+            // because the release body will contain links to Axo URLs
+            // that won't become live until the announce phase.
+            if dist.config.hosts.axodotdev.is_some() {
+                GithubReleasePhase::Announce
+            // Otherwise, if Axo isn't present, we lean on host for
+            // safety reasons - because npm/Homebrew contain links to
+            // URLs that won't exist until the GitHub release happens.
+            } else {
+                GithubReleasePhase::Host
+            }
+        // If the user chose a non-auto option, respect that.
+        } else {
+            host_config.during
+        };
+
+
+        let mut release_args = vec![];
+        let action;
+        // Always need to use the tag flag
+        release_args.push("\"${{ needs.plan.outputs.tag }}\"");
+
+        // If using remote repos, specify the repo
+        if github_releases_repo.is_some() {
+            release_args.push("--repo");
+            release_args.push("\"$REPO\"")
+        }
+        release_args.push("--target");
+        release_args.push("\"$RELEASE_COMMIT\"");
+        release_args.push("$PRERELEASE_FLAG");
+        if host_config.create {
+            action = "create";
+            release_args.push("--title");
+            release_args.push("\"$ANNOUNCEMENT_TITLE\"");
+            release_args.push("--notes-file");
+            release_args.push("\"$RUNNER_TEMP/notes.txt\"");
+            // When creating release, upload artifacts transactionally
+            release_args.push("artifacts/*");
+        } else {
+            action = "edit";
+            release_args.push("--draft=false");
+        }
+        let release_command = format!("gh release {action} {}", release_args.join(" "));
+
+        Ok(Some(Self {
+            create_release,
+            github_releases_repo,
+            external_repo_commit,
+            github_attestations,
+            release_command,
+            release_phase,
+        }))
+    }
+}
+
+// Determines the *cached* HEAD for a submodule within the workspace.
+// Note that any unstaged commits, and any local changes to commit
+// history that aren't reflected by the submodule commit history,
+// won't be reflected here.
+fn submodule_head(submodule_path: &Utf8PathBuf) -> DistResult<Option<String>> {
+    let output = Cmd::new("git", "fetch cached commit for a submodule")
+        .arg("submodule")
+        .arg("status")
+        .arg("--cached")
+        .arg(submodule_path)
+        .output()
+        .map_err(|_| DistError::GitSubmoduleCommitError {
+            path: submodule_path.to_string(),
+        })?;
+
+    let line = String::from_utf8_lossy(&output.stdout);
+    // Format: one status character, commit, a space, repo name
+    let line = line.trim_start_matches([' ', '-', '+']);
+    let Some((commit, _)) = line.split_once(' ') else {
+        return Err(DistError::GitSubmoduleCommitError {
+            path: submodule_path.to_string(),
+        });
+    };
+
+    if commit.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(commit.to_owned()))
+    }
+}
+
 fn build_jobs(
-    jobs: &[String],
+    jobs: &[JobStyle],
     perms: &SortedMap<String, GithubPermissionMap>,
 ) -> DistResult<Vec<GithubCiJob>> {
     let mut output = vec![];
-    for name in jobs {
+    for JobStyle::User(name) in jobs {
         let perms_for_job = perms.get(name);
 
         // Create the job

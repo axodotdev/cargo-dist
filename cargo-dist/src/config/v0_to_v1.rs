@@ -118,16 +118,15 @@ impl DistMetadata {
             features,
             default_features,
             all_features,
+            msvc_crt_static,
         }));
         let needs_build_layer = cargo_layer.is_some()
             || system_dependencies.is_some()
             || ssldotcom_windows_sign.is_some()
             || msvc_crt_static.is_some();
         let build_layer = needs_build_layer.then_some(BuildLayer {
-            common: CommonBuildLayer {
-                ssldotcom_windows_sign,
-                msvc_crt_static,
-            },
+            common: CommonBuildLayer {},
+            ssldotcom_windows_sign,
             system_dependencies,
             cargo: cargo_layer,
             generic: None,
@@ -216,7 +215,7 @@ impl DistMetadata {
                         common: CommonHostLayer::default(),
                         create: create_release,
                         repo: github_releases_repo,
-                        submodule_path: github_releases_submodule_path,
+                        submodule_path: github_releases_submodule_path.map(|p| p.into()),
                         during: github_release,
                         attestations: github_attestations,
                     })
@@ -232,8 +231,7 @@ impl DistMetadata {
             || display.is_some()
             || display_name.is_some();
         let host_layer = needs_host_layer.then_some(HostLayer {
-            common: CommonHostLayer {
-            },
+            common: CommonHostLayer {},
             github: github_host_layer,
             axodotdev: axodotdev_host_layer,
             force_latest,
@@ -288,13 +286,13 @@ impl DistMetadata {
                 install_success_msg,
                 install_libraries,
                 bin_aliases,
-                install_updater,
             },
             homebrew: homebrew_installer_layer,
             msi: msi_installer_layer,
             npm: npm_installer_layer,
             powershell: powershell_installer_layer,
             shell: shell_installer_layer,
+            updater: install_updater,
         });
 
         // publish

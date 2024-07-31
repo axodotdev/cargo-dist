@@ -78,13 +78,23 @@ pub struct HostLayer {
     pub github: Option<BoolOr<GithubHostLayer>>,
     /// TODO
     pub axodotdev: Option<BoolOr<AxodotdevHostLayer>>,
-
 }
 impl HostConfigInheritable {
     /// TODO
     pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
         Self {
             common: CommonHostConfig::defaults_for_package(workspaces, pkg_idx),
+            github: None,
+            axodotdev: None,
+            force_latest: None,
+            display: None,
+            display_name: None,
+        }
+    }
+    /// TODO
+    pub fn defaults_for_workspace(workspaces: &WorkspaceGraph) -> Self {
+        Self {
+            common: CommonHostConfig::defaults_for_workspace(workspaces),
             github: None,
             axodotdev: None,
             force_latest: None,
@@ -109,7 +119,7 @@ impl HostConfigInheritable {
         let package = workspaces.package(pkg_idx);
         AppHostConfig {
             display: display.unwrap_or(true),
-            display_name: display_name.unwrap_or_else(|| package.name.clone())
+            display_name: display_name.unwrap_or_else(|| package.name.clone()),
         }
     }
 
@@ -117,7 +127,6 @@ impl HostConfigInheritable {
     pub fn apply_inheritance_for_workspace(
         self,
         workspaces: &WorkspaceGraph,
-        _pkg_idx: PackageIdx,
     ) -> WorkspaceHostConfig {
         let Self {
             common,
@@ -133,12 +142,15 @@ impl HostConfigInheritable {
             default
         });
         let axodotdev = axodotdev.map(|axodotdev| {
-            let mut default =
-                AxodotdevHostConfig::defaults_for_workspace(workspaces, &common);
+            let mut default = AxodotdevHostConfig::defaults_for_workspace(workspaces, &common);
             default.apply_layer(axodotdev);
             default
         });
-        WorkspaceHostConfig { github, axodotdev, force_latest: force_latest.unwrap_or(false) }
+        WorkspaceHostConfig {
+            github,
+            axodotdev,
+            force_latest: force_latest.unwrap_or(false),
+        }
     }
 }
 impl ApplyLayer for HostConfigInheritable {
@@ -166,33 +178,25 @@ impl ApplyLayer for HostConfigInheritable {
 /// TODO
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct CommonHostLayer {
-
-}
+pub struct CommonHostLayer {}
 /// TODO
 #[derive(Debug, Default, Clone)]
-pub struct CommonHostConfig {
-}
+pub struct CommonHostConfig {}
 impl CommonHostConfig {
     /// TODO
     pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
-        Self { }
+        Self {}
+    }
+    /// TODO
+    pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
+        Self {}
     }
 }
 impl ApplyLayer for CommonHostConfig {
     type Layer = CommonHostLayer;
-    fn apply_layer(
-        &mut self,
-        Self::Layer { }: Self::Layer,
-    ) {
-    }
+    fn apply_layer(&mut self, Self::Layer {}: Self::Layer) {}
 }
 impl ApplyLayer for CommonHostLayer {
     type Layer = CommonHostLayer;
-    fn apply_layer(
-        &mut self,
-        Self::Layer {
-        }: Self::Layer,
-    ) {
-    }
+    fn apply_layer(&mut self, Self::Layer {}: Self::Layer) {}
 }

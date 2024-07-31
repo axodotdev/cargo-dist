@@ -16,7 +16,13 @@ use shell::*;
 
 /// TODO
 #[derive(Debug, Default, Clone)]
-pub struct InstallerConfig {
+pub struct WorkspaceInstallerConfig {
+    /// Whether to install an updater program alongside the software
+    pub updater: bool,
+}
+/// TODO
+#[derive(Debug, Default, Clone)]
+pub struct AppInstallerConfig {
     /// TODO
     pub homebrew: Option<HomebrewInstallerConfig>,
     /// TODO
@@ -44,6 +50,8 @@ pub struct InstallerConfigInheritable {
     pub powershell: Option<PowershellInstallerLayer>,
     /// TODO
     pub shell: Option<ShellInstallerLayer>,
+    /// Whether to install an updater program alongside the software
+    pub updater: bool,
 }
 
 /// TODO
@@ -63,17 +71,48 @@ pub struct InstallerLayer {
     pub powershell: Option<BoolOr<PowershellInstallerLayer>>,
     /// TODO
     pub shell: Option<BoolOr<ShellInstallerLayer>>,
+    /// Whether to install an updater program alongside the software
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub updater: Option<bool>,
 }
 impl InstallerConfigInheritable {
     /// TODO
-    pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
+    pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
+        Self::defaults()
+    }
+    pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
+        Self::defaults()
+    }
+    pub fn defaults() -> Self {
         Self {
-            common: CommonInstallerConfig::defaults_for_package(workspaces, pkg_idx),
+            common: CommonInstallerConfig::defaults(),
             homebrew: None,
             msi: None,
             npm: None,
             powershell: None,
             shell: None,
+            updater: false,
+        }
+    }
+    /// TODO
+    pub fn apply_inheritance_for_workspace(
+        self,
+        _workspaces: &WorkspaceGraph,
+    ) -> WorkspaceInstallerConfig {
+        let Self {
+            // global
+            updater,
+            // local-only
+            common: _,
+            homebrew: _,
+            msi: _,
+            npm: _,
+            powershell: _,
+            shell: _,
+        } = self;
+
+        WorkspaceInstallerConfig {
+            updater,
         }
     }
     /// TODO
@@ -81,7 +120,7 @@ impl InstallerConfigInheritable {
         self,
         workspaces: &WorkspaceGraph,
         pkg_idx: PackageIdx,
-    ) -> InstallerConfig {
+    ) -> AppInstallerConfig {
         let Self {
             common,
             homebrew,
@@ -89,6 +128,8 @@ impl InstallerConfigInheritable {
             npm,
             powershell,
             shell,
+            // global-only
+            updater: _,
         } = self;
         let homebrew = homebrew.map(|homebrew| {
             let mut default =
@@ -120,7 +161,7 @@ impl InstallerConfigInheritable {
             default.apply_layer(shell);
             default
         });
-        InstallerConfig {
+        AppInstallerConfig {
             homebrew,
             msi,
             npm,
@@ -140,6 +181,7 @@ impl ApplyLayer for InstallerConfigInheritable {
             npm,
             powershell,
             shell,
+            updater,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -148,6 +190,7 @@ impl ApplyLayer for InstallerConfigInheritable {
         self.npm.apply_bool_layer(npm);
         self.powershell.apply_bool_layer(powershell);
         self.shell.apply_bool_layer(shell);
+        self.updater.apply_val(updater);
     }
 }
 
@@ -184,10 +227,6 @@ pub struct CommonInstallerLayer {
     /// Aliases to install binaries as
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bin_aliases: Option<SortedMap<String, Vec<String>>>,
-
-    /// Whether to install an updater program alongside the software
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub install_updater: Option<bool>,
 }
 /// TODO
 #[derive(Debug, Default, Clone)]
@@ -221,7 +260,7 @@ pub struct CommonInstallerConfig {
 }
 impl CommonInstallerConfig {
     /// TODO
-    pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
+    pub fn defaults() -> Self {
         Self {
             install_path: InstallPathStrategy::default_list(),
             install_success_msg: "everything's installed!".to_owned(),
@@ -240,14 +279,12 @@ impl ApplyLayer for CommonInstallerConfig {
             install_success_msg,
             install_libraries,
             bin_aliases,
-            install_updater,
         }: Self::Layer,
     ) {
         self.install_path.apply_val(install_path);
         self.install_success_msg.apply_val(install_success_msg);
         self.install_libraries.apply_val(install_libraries);
         self.bin_aliases.apply_val(bin_aliases);
-        self.install_updater.apply_val(install_updater);
     }
 }
 impl ApplyLayer for CommonInstallerLayer {
@@ -259,13 +296,11 @@ impl ApplyLayer for CommonInstallerLayer {
             install_success_msg,
             install_libraries,
             bin_aliases,
-            install_updater,
         }: Self::Layer,
     ) {
         self.install_path.apply_opt(install_path);
         self.install_success_msg.apply_opt(install_success_msg);
         self.install_libraries.apply_opt(install_libraries);
         self.bin_aliases.apply_opt(bin_aliases);
-        self.install_updater.apply_opt(install_updater);
     }
 }
