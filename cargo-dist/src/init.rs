@@ -219,12 +219,6 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
                     .and_then(|t| t.get("dist"))
                 {
                     let mut new_doc = toml_edit::DocumentMut::new();
-
-                    // axoproject expects there to at least be a
-                    // [package] key here, which can be left empty
-                    // to avoid duplicating the content of Cargo.toml
-                    let stub_package = toml_edit::table();
-                    new_doc.insert("package", stub_package);
                     new_doc.insert("dist", dist.to_owned());
 
                     let new_path = package

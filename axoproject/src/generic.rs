@@ -99,10 +99,10 @@ impl<'de> serde::Deserialize<'de> for WorkspaceMember {
 
 #[derive(Deserialize, Debug)]
 struct PackageManifest {
-    package: Package,
+    package: Option<Package>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case")]
 struct Package {
     name: Option<String>,
@@ -243,7 +243,7 @@ fn single_package_workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceSt
 
 fn raw_package_from(manifest_path: &Utf8Path) -> Result<Package> {
     let manifest = load_package_dist_toml(manifest_path)?;
-    Ok(manifest.package)
+    Ok(manifest.package.unwrap_or_default())
 }
 
 // Load and process a dist.toml
