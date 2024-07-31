@@ -219,7 +219,20 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
                     .and_then(|t| t.get("dist"))
                 {
                     let mut new_doc = toml_edit::DocumentMut::new();
-                    new_doc.insert("dist", dist.to_owned());
+                    let mut dist = dist.clone();
+                    // Remove leading/trailing whitespace, if any
+                    if let Some(table) = dist.as_table_mut() {
+                        if let Some(leader) = table.decor_mut().prefix().and_then(|p| p.as_str()) {
+                            // Preserve the comment, if any; it has to
+                            // end with a trailing newline.
+                            let mut trimmed = leader.trim().to_owned();
+                            if !trimmed.is_empty() {
+                                trimmed = format!("{trimmed}\n");
+                            }
+                            table.decor_mut().set_prefix(trimmed);
+                        }
+                    }
+                    new_doc.insert("dist", dist);
 
                     let new_path = package
                         .manifest_path
