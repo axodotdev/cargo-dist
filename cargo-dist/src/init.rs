@@ -90,21 +90,20 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         WorkspaceKind::Generic
     // Already-initted users should be asked whether to migrate.
     } else if root_workspace.kind == WorkspaceKind::Rust {
-        let prompt = r#"Would you like to keep your configuration in Cargo.toml?
+        let prompt = r#"Would you like to opt in to the new configuration format?
     Future versions of cargo-dist will feature major changes to the
-    configuration format, including a new cargo-dist-specific configuration file.
-    Answering "no" here will opt you into the new format early."#;
+    configuration format, including a new cargo-dist-specific configuration file."#;
         let res = if args.yes {
             // We want to avoid --yes pulling it in at this point.
-            true
+            false
         } else {
             dialoguer::Confirm::with_theme(&theme())
                 .with_prompt(prompt)
-                .default(true)
+                .default(false)
                 .interact()?
         };
 
-        if !res {
+        if res {
             is_migrating = true;
             WorkspaceKind::Generic
         } else {
