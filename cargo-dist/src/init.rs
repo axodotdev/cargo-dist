@@ -67,7 +67,12 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
         // Immediately re-exit the process with the same
         // exit code the unhandled ctrl-c would have used
-        std::process::exit(130);
+        let exitstatus = if cfg!(windows) {
+            0xc000013a_u32 as i32
+        } else {
+            130
+        };
+        std::process::exit(exitstatus);
     });
 
     let workspaces = config::get_project()?;
