@@ -127,7 +127,7 @@ pub struct AppConfig {
     /// TODO
     pub builds: BuildConfig,
     /// TODO
-    pub hosts: HostConfig,
+    pub hosts: AppHostConfig,
     /// TODO
     pub installers: InstallerConfig,
     /// TODO

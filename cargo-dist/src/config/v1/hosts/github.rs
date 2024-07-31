@@ -60,9 +60,8 @@ pub struct GithubHostConfig {
 
 impl GithubHostConfig {
     /// Get defaults for the given package
-    pub fn defaults_for_package(
+    pub fn defaults_for_workspace(
         _workspaces: &WorkspaceGraph,
-        _pkg_idx: PackageIdx,
         common: &CommonHostConfig,
     ) -> Self {
         Self {

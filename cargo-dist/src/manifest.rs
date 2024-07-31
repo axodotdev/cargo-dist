@@ -225,17 +225,8 @@ pub(crate) fn add_releases_to_manifest(
             manifest.ensure_release(release.app_name.clone(), release.version.to_string());
 
         // TODO: this is bad, this config is defacto global but we let you override it per-host...
-        if let Some(host) = release
-            .config
-            .hosts
-            .github
-            .as_ref()
-            .map(|r| &r.common)
-            .or(release.config.hosts.axodotdev.as_ref().map(|r| &r.common))
-        {
-            out_release.display = Some(host.display);
-            out_release.display_name = Some(host.display_name.clone());
-        }
+        out_release.display = Some(release.config.hosts.display);
+        out_release.display_name = Some(release.config.hosts.display_name.clone());
     }
 
     Ok(())

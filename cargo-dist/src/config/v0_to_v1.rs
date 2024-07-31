@@ -233,12 +233,12 @@ impl DistMetadata {
             || display_name.is_some();
         let host_layer = needs_host_layer.then_some(HostLayer {
             common: CommonHostLayer {
-                force_latest,
-                display,
-                display_name,
             },
             github: github_host_layer,
             axodotdev: axodotdev_host_layer,
+            force_latest,
+            display,
+            display_name,
         });
 
         // installers
