@@ -7,8 +7,8 @@ Shippable packaging for Rust.
 
 See 'init', 'build' and 'plan' for the 3 most important subcommands.
 
-Usage: cargo dist [OPTIONS]
-       cargo dist <COMMAND>
+Usage: dist [OPTIONS]
+       dist <COMMAND>
 
 Commands:
   build       Build artifacts

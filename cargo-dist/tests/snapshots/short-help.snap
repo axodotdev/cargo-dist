@@ -5,8 +5,8 @@ expression: format_outputs(&output)
 stdout:
 Shippable packaging for Rust
 
-Usage: cargo dist [OPTIONS]
-       cargo dist <COMMAND>
+Usage: dist [OPTIONS]
+       dist <COMMAND>
 
 Commands:
   build       Build artifacts
