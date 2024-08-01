@@ -155,29 +155,28 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // If we're migrating, the configuration will be missing the
     // generic workspace specification, and will have some
     // extraneous cargo-specific stuff that we don't want.
-    let mut workspace_toml = if is_migrating {
+    let mut workspace_toml = if is_migrating || !initted {
+        // Always generate a new workspace here for the !initted case
+        let mut new_workspace = toml_edit::DocumentMut::new();
+
+        // Write generic workspace config
+        let mut table = toml_edit::table();
+        if let Some(t) = table.as_table_mut() {
+            let mut array = toml_edit::Array::new();
+            array.push("cargo:.");
+            t["members"] = toml_edit::value(array);
+        }
+        new_workspace.insert("workspace", table);
+
         if let Some(dist) = workspace_toml
             .get("workspace")
             .and_then(|t| t.get("metadata"))
             .and_then(|t| t.get("dist"))
         {
-            let mut new_workspace = toml_edit::DocumentMut::new();
-
-            // Write generic workspace config
-            let mut table = toml_edit::table();
-            if let Some(t) = table.as_table_mut() {
-                let mut array = toml_edit::Array::new();
-                array.push("cargo:.");
-                t["members"] = toml_edit::value(array);
-            }
-            new_workspace.insert("workspace", table);
-
             new_workspace.insert("dist", dist.to_owned());
-
-            new_workspace
-        } else {
-            workspace_toml
         }
+
+        new_workspace
     } else {
         workspace_toml
     };
@@ -190,7 +189,9 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     let filename;
     let destination;
-    if is_migrating {
+    // If we're migrating, *or* if we're doing a first-time init,
+    // calculate the filename to write to
+    if is_migrating || !initted {
         filename = match desired_workspace_kind {
             WorkspaceKind::Rust => "Cargo.toml",
             WorkspaceKind::Generic | WorkspaceKind::Javascript => "dist-workspace.toml",
