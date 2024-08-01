@@ -1,6 +1,5 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
-assertion_line: 92
 expression: self.payload
 ---
 ================ akaikatana-repack-installer.sh ================
@@ -509,6 +508,12 @@ install() {
     done
 
     say "everything's installed!"
+
+    # Avoid modifying the users PATH if they are managing their PATH manually
+    case :$PATH:
+      in *:$_install_dir:*) NO_MODIFY_PATH=1 ;;
+         *) ;;
+    esac
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_ci_path "$_install_dir"

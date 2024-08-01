@@ -479,6 +479,12 @@ install() {
 
     say "{{ install_success_msg }}"
 
+    # Avoid modifying the users PATH if they are managing their PATH manually
+    case :$PATH:
+      in *:$_install_dir:*) NO_MODIFY_PATH=1 ;;
+         *) ;;
+    esac
+
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_ci_path "$_install_dir"
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile" "sh"
