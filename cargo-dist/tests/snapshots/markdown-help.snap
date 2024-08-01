@@ -14,9 +14,9 @@ See 'init', 'build' and 'plan' for the 3 most important subcommands.
 ### Usage
 
 ```text
-cargo dist [OPTIONS]
+dist [OPTIONS]
 ```
-cargo dist <COMMAND>
+dist <COMMAND>
 
 ### Commands
 * [build](#cargo-dist-build): Build artifacts
@@ -105,7 +105,7 @@ Build artifacts
 ### Usage
 
 ```text
-cargo dist build [OPTIONS]
+dist build [OPTIONS]
 ```
 
 ### Options
@@ -149,7 +149,7 @@ This will interactively guide you through the process of selecting configuration
 ### Usage
 
 ```text
-cargo dist init [OPTIONS]
+dist init [OPTIONS]
 ```
 
 ### Options
@@ -188,7 +188,7 @@ Generate one or more pieces of configuration
 ### Usage
 
 ```text
-cargo dist generate [OPTIONS]
+dist generate [OPTIONS]
 ```
 
 ### Options
@@ -215,7 +215,7 @@ Report on the dynamic libraries used by the built artifacts
 ### Usage
 
 ```text
-cargo dist linkage [OPTIONS]
+dist linkage [OPTIONS]
 ```
 
 ### Options
@@ -247,7 +247,7 @@ Notably it will default to only talking about artifacts for the host system, and
 ### Usage
 
 ```text
-cargo dist manifest [OPTIONS]
+dist manifest [OPTIONS]
 ```
 
 ### Options
@@ -295,7 +295,7 @@ cargo dist manifest --artifacts=all --no-local-paths
 ### Usage
 
 ```text
-cargo dist plan [OPTIONS]
+dist plan [OPTIONS]
 ```
 
 ### Options
@@ -312,7 +312,7 @@ Host artifacts
 ### Usage
 
 ```text
-cargo dist host [OPTIONS]
+dist host [OPTIONS]
 ```
 
 ### Options
@@ -339,7 +339,7 @@ Performs a self-update, if a new version is available, and then 'init'
 ### Usage
 
 ```text
-cargo dist selfupdate [OPTIONS]
+dist selfupdate [OPTIONS]
 ```
 
 ### Options
@@ -387,7 +387,7 @@ Print this message or the help of the given subcommand(s)
 ### Usage
 
 ```text
-cargo dist help [COMMAND]
+dist help [COMMAND]
 ```
 
 ### Commands

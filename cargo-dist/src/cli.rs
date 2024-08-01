@@ -8,18 +8,9 @@ use clap::{
 };
 use tracing::level_filters::LevelFilter;
 
-#[derive(Parser)]
-#[clap(version, about, long_about = None)]
-#[clap(propagate_version = true)]
-#[command(name = "cargo")]
-#[command(bin_name = "cargo")]
-pub enum FakeCli {
-    Dist(Cli),
-}
-
-#[derive(Args, Clone, Debug)]
+#[derive(Parser, Clone, Debug)]
 #[clap(version)]
-#[clap(bin_name = "cargo dist")]
+#[clap(bin_name = "dist")]
 #[clap(args_conflicts_with_subcommands = true)]
 /// Shippable packaging for Rust.
 ///
