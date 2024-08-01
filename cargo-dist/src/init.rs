@@ -2,7 +2,6 @@ use axoasset::toml_edit;
 use axoproject::platforms::triple_to_display_name;
 use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::PrRunMode;
 use semver::Version;
 use serde::Deserialize;
 
@@ -400,7 +399,7 @@ fn get_new_dist_metadata(
     args: &InitArgs,
     workspaces: &WorkspaceGraph,
 ) -> DistResult<DistMetadata> {
-    use dialoguer::{Confirm, Input, MultiSelect, Select};
+    use dialoguer::{Confirm, Input, MultiSelect};
     let root_workspace = workspaces.root_workspace();
     let has_config = has_metadata_table(root_workspace);
 
@@ -626,15 +625,12 @@ fn get_new_dist_metadata(
                 .unwrap_or(false)
                 || cfg.ci.contains(item);
 
-            // If they have a well-defined repo url and it's github, default enable it
+            // Currently default to enabling github CI because we don't
+            // support anything else and we can give a good error later
             #[allow(irrefutable_let_patterns)]
             if let CiStyle::Github = item {
                 github_key = 0;
-                if let Some(repo_url) = &workspaces.repository_url(None).unwrap_or_default() {
-                    if repo_url.contains("github.com") {
-                        default = true;
-                    }
-                }
+                default = true;
             }
             defaults.push(default);
             // This match is here to remind you to add new CiStyles
@@ -668,47 +664,6 @@ fn get_new_dist_metadata(
         // Apply the results
         let ci: Vec<_> = selected.into_iter().map(|i| known[i]).collect();
         meta.ci = if ci.is_empty() { None } else { Some(ci) };
-    }
-
-    // Enforce repository url right away
-    let has_github_ci = meta
-        .ci
-        .as_ref()
-        .map(|ci| ci.contains(&CiStyle::Github))
-        .unwrap_or(false);
-
-    if has_github_ci && meta.pr_run_mode.is_none() {
-        let default_val = PrRunMode::default();
-        let cur_val = meta.pr_run_mode.unwrap_or(default_val);
-
-        // This is intentionally written awkwardly to make you update this!
-        //
-        // don't forget to add it to 'items' below!
-        let desc = |val| match val {
-            PrRunMode::Skip => "skip - don't check the release process in PRs",
-            PrRunMode::Plan => "plan - run 'cargo dist plan' on PRs (recommended)",
-            PrRunMode::Upload => "upload - build and upload an artifacts.zip to the PR (expensive)",
-        };
-        let items = [PrRunMode::Skip, PrRunMode::Plan, PrRunMode::Upload];
-
-        // Get the index of the current value
-        let default = items
-            .iter()
-            .position(|val| val == &cur_val)
-            .expect("someone added a pr_run_mode but forgot to add it to 'init'");
-
-        let prompt = r#"check your release process in pull requests?"#;
-        let selection = Select::with_theme(&theme)
-            .with_prompt(prompt)
-            .items(&items.iter().map(|mode| desc(*mode)).collect::<Vec<_>>())
-            .default(default)
-            .interact()?;
-        eprintln!();
-
-        let result = items[selection];
-
-        // Record that the user made a concrete decision so we don't prompt over and over
-        meta.pr_run_mode = Some(result);
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
