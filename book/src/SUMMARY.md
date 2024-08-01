@@ -2,7 +2,11 @@
 
 - [Introduction](./introduction.md)
 - [Install](./install.md)
-- [Way Too Quick Start](./way-too-quickstart.md)
+- [Quickstart](./quickstart/index.md)
+  - [Rust](./quickstart/rust.md)
+  - [JavaScript](./quickstart/javascript.md)
+  - [Everyone Else](./quickstart/generic.md)
+  - [All Of The Above!!!](./quickstart/hybrid.md)
 - [Updating](./updating.md)
 - [Troubleshooting](./troubleshooting.md)
 - [Generic Builds](./generic-builds.md)

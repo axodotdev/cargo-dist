@@ -1,8 +1,8 @@
-# Way-Too-Quickstart
+# Rust Quickstart
 
 <!-- toc -->
 
-> TLDR: cargo-dist is a souped up version of `cargo build` which handles building [tarballs][] and [installers][installer]. It also knows how to generate Github CI for orchestrating itself and uploading its output to a new GitHub Release. You can use cargo-dist if you don't care about that CI stuff, but this guide assumes that you do.
+> TLDR: cargo-dist is a souped up version of `cargo build` which handles building [tarballs][] and [installers][installer]. It also knows how to generate Github CI for orchestrating itself and uploading its output to a new GitHub Release.
 >
 > This quickstart is a bit *too* quick because there's some important nuances to "announcing and building releases" that depend on the way you like to structure and version your workspace. We will blatantly ignore those nuances and show you the Happiest Happy Path (a workspace with one crate that defines a binary). Checkout [the workspace guide][guide] for more details on what you should *actually* do.
 
@@ -12,25 +12,28 @@
 
 Setting up just requires you to [install cargo-dist][install] and then run `cargo dist init` in your [Cargo workspace][workspace]. This command interactively walks you through configuration options, **and should be run again whenever you want to change your settings or want to update cargo-dist**.
 
-Just to really emphasize that: `cargo dist init` is designed to be rerun over and over, and will preserve your settings while handling any necessary updates and migrations. Always Be Initing.
+Just to really emphasize that: [`cargo dist init` is designed to be rerun over and over, and will preserve your settings while handling any necessary updates and migrations. Always Be Initing](../updating.md).
 
 
 
 ### Initial Setup
 
-Since this is the *way-too*-quickstart, we pass `--yes` to auto-accept all defaults on our first setup!
+Since this is a quickstart, we'll pass `--yes` to auto-accept all defaults on our first setup!
 
 ```sh
-# install tools (build from source is the most portable option)
-cargo install cargo-dist
-
 # setup cargo-dist in your project (--yes to accept defaults)
 cargo dist init --yes
 git add .
 git commit -am "chore: wow shiny new cargo-dist CI!"
 ```
 
-The one-time setup will add a decent default configuration to your root Cargo.toml and generate CI for orchestrating itself in `.github/workflows/release.yml`. If the CI file isn't created, this probably means you don't have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s).
+**It's very common for `cargo dist init` to return an error about the "repository" URLs set in your Cargo.toml. If this happens, no work will be lost.** You can just follow the instructions in the error and rerun `cargo dist init` again and it will pick up where you left off.**
+
+This one-time setup will:
+
+* create your dist config in `dist-workspace.toml`
+* add a shippable build profile to your `Cargo.toml`
+* generate CI for orchestrating itself in `.github/workflows/release.yml`
 
 
 ### Adding Installers
@@ -85,7 +88,7 @@ The [plan command][plan] should be running the exact same logic that cargo-dist'
 
 ### Check The Release Process On Pull-Requests
 
-As of cargo-dist 0.3.0, we now by default run the "plan" step of your release CI on every pull-request so that we can catch breakage to your release process as early as possible. This will work even for a pull-request that sets up cargo-dist for the first time, so you can be confident you're landing something that works.
+By default we run the "plan" step of your release CI on every pull-request so that we can catch breakage to your release process as early as possible. This will work even for a pull-request that sets up cargo-dist for the first time, so you can be confident you're landing something that works.
 
 You can also crank this up by setting `pr-run-mode = "upload"`, which will run all the build steps as well, and upload the results to the PR's Workflow Summary as an "artifacts.zip". This is great for making sure the windows build works even if you only have a linux machine, or vice-versa. Although you should probably only keep it on temporarily, as it's very slow and wasteful to build all those shippable artifacts for every PR.
 
@@ -117,17 +120,17 @@ At this point you're done! The generated CI script should pick up the ball and c
 
 
 
-[quickstart-build]: ./img/quickstart-build.png
-[quickstart-plan]: ./img/quickstart-plan.png
+[quickstart-build]: ../img/quickstart-build.png
+[quickstart-plan]: ../img/quickstart-plan.png
 
-[guide]: ./workspaces/index.md
-[install]: ./install.md
-[cargo-release-guide]: ./workspaces/cargo-release-guide.md
-[artifact-modes]: ./reference/concepts.md#artifact-modes-selecting-artifacts
-[installer]: ./installers/index.md
-[tarballs]: ./artifacts/archives.md
-[build]: ./reference/cli.md#cargo-dist-build
-[plan]: ./reference/cli.md#cargo-dist-plan
+[guide]: ../workspaces/index.md
+[install]: ../install.md
+[cargo-release-guide]: ../workspaces/cargo-release-guide.md
+[artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
+[installer]: ../installers/index.md
+[tarballs]: ../artifacts/archives.md
+[build]: ../reference/cli.md#cargo-dist-build
+[plan]: ../reference/cli.md#cargo-dist-plan
 
 [cargo-release]: https://github.com/crate-ci/cargo-release
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
