@@ -9,7 +9,7 @@ Currently artifact URLs are derived from [hosting providers](./config.md#hosting
 
 ## github
 
-This host uploads your artifacts to a GitHub Release. Currently this functionality is restricted to [the "github" CI backend](../ci/github.md). Because cargo-dist is fully in control of the uploading of your artifacts, it can automatically compute the Artifact URL for you, as:
+This host uploads your artifacts to a GitHub Release. Currently this functionality is restricted to [the "github" CI backend](../ci/index.md). Because cargo-dist is fully in control of the uploading of your artifacts, it can automatically compute the Artifact URL for you, as:
 
 ```text
 {repo_url}/releases/download/{tag}
