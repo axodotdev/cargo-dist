@@ -275,6 +275,9 @@ pub struct InitArgs {
     /// `cargo dist init` will persist the values you pass to that location.
     #[clap(long, value_delimiter(','))]
     pub hosting: Vec<HostingStyle>,
+    /// Opts into the new configuration format
+    #[clap(long, hide = true)]
+    pub opt_in_migrate: bool,
 }
 
 /// Which style(s) of configuration to generate
@@ -377,6 +380,9 @@ pub struct UpdateArgs {
     /// `cargo dist init` will persist the values you pass to that location.
     #[clap(long, value_delimiter(','))]
     pub hosting: Vec<HostingStyle>,
+    /// Opts into the new configuration format
+    #[clap(long, hide = true)]
+    pub opt_in_migrate: bool,
 }
 
 /// A style of CI to generate
