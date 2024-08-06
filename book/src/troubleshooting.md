@@ -9,7 +9,7 @@ Having an issue with cargo-dist? Here's some of the common issues and solutions!
 
 Regardless of the issue, these are the "default" troubleshooting steps that are good to keep in mind:
 
-1. diagnose: [run `cargo dist plan`](./way-too-quickstart.md#check-what-ci-will-build)
+1. diagnose: [run `cargo dist plan`](./quickstart/rust.md#check-what-ci-will-build)
 2. update and repair: [run `cargo dist init` again](./updating.md)
 3. test your process: [try `pr-run-mode = "upload"`](./ci/github.md#build-and-upload-artifacts-on-every-pull-request)
 

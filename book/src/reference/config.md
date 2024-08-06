@@ -111,6 +111,7 @@
 ### `workspace.members`
 
 > <span style="float:right">since 0.20.0<br>[global-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `[]`
 >
 > example
@@ -137,8 +138,8 @@ be managed by cargo-dist. Each member is of the format `<project-type>:<relative
 
 ## `package.name`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -149,15 +150,15 @@ be managed by cargo-dist. Each member is of the format `<project-type>:<relative
 
 The name of the package.
 
-All packages must have a name, either sourced from a dist.toml or inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+All packages must have a name, either sourced from a dist.toml or inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 The name is used in a myriad of places to refer to your application and its releases.
 
 
 ## `package.version`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -168,15 +169,15 @@ The name is used in a myriad of places to refer to your application and its rele
 
 The version of the package. Syntax must be a valid [Cargo SemVer Version][semver-version].
 
-All packages must have a version, either sourced from a dist.toml or inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+All packages must have a version, either sourced from a dist.toml or inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 The version is used in a myriad of places to refer to your application and its releases.
 
 
 ## `package.description`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -187,15 +188,15 @@ The version is used in a myriad of places to refer to your application and its r
 
 A brief description of the package.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 This may be used in the metadata of various [installers][].
 
 
 ## `package.authors`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -206,14 +207,14 @@ This may be used in the metadata of various [installers][].
 
 The authors of the package.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 This may be used in the metadata of various [installers][]. We recommend keeping it fairly generic to avoid needless hassles from people changing their names.
 
 ## `package.repository`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -230,15 +231,15 @@ The following formats are all supported and treated as equivalent:
 * `"https://github.com/axodotdev/axolotolsay.git"`
 * `"git@github.com:axodotdev/axolotlsay.git"`
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 This is *essentially* required as almost all cargo-dist features are blocked behind knowing where your project is hosted. All [distable](#dist) packages must agree on this value.
 
 
 ## `package.homepage`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -249,15 +250,15 @@ This is *essentially* required as almost all cargo-dist features are blocked beh
 
 A URL to the homepage of the package.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 This may be used in the metadata of various [installers][].
 
 
 ## `package.documentation`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -268,15 +269,15 @@ This may be used in the metadata of various [installers][].
 
 A URL to the documentation of the package.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 This may be used in the metadata of various [installers][].
 
 
 ## `package.changelog`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -287,15 +288,15 @@ This may be used in the metadata of various [installers][].
 
 A relative path to the changelog file for your package.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
-This can be used by various cargo-dist features that use your changelog, such as [auto-includes](#auto-includes) and [release-bodies][TODO]. We will often [autodetect this for you][TODO], so this setting is only needed if your changelog has a special name/location/format we can't find.
+This can be used by various cargo-dist features that use your changelog, such as [auto-includes](#auto-includes) and [release-bodies][github-releases-guide]. We will often [autodetect this for you][archives], so this setting is only needed if your changelog has a special name/location/format we can't find.
 
 
 ## `package.readme`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -306,15 +307,15 @@ This can be used by various cargo-dist features that use your changelog, such as
 
 A relative path to the readme file for your package.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
-This can be used by various cargo-dist features that use your readme, such as [auto-includes](#auto-includes). We will often [autodetect this for you][TODO], so this setting is only needed if your readme has a special name/location/format we can't find.
+This can be used by various cargo-dist features that use your readme, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your readme has a special name/location/format we can't find.
 
 
 ## `package.license`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -323,17 +324,17 @@ This can be used by various cargo-dist features that use your readme, such as [a
 > license = "MIT OR Apache-2.0"
 > ```
 
-The license(s) of your package, in [SPDX format](https://spdx.github.io/spdx-spec/v3.0/).
+The license(s) of your package, in [SPDX format](https://spdx.org/licenses).
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 This may be used in the metadata of various [installers][].
 
 
 ## `package.license-files`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -344,15 +345,15 @@ This may be used in the metadata of various [installers][].
 
 Relative paths to the license files for your package.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
-This can be used by various cargo-dist features that use your license files, such as [auto-includes](#auto-includes). We will often [autodetect this for you][TODO], so this setting is only needed if your licenses have a special name/location/format we can't find.
+This can be used by various cargo-dist features that use your license files, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your licenses have a special name/location/format we can't find.
 
 
 ## `package.binaries`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -363,7 +364,7 @@ This can be used by various cargo-dist features that use your license files, suc
 
 Names of binaries (without the extension) your package is expected to build and distribute.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 Including binaries by default opts your package into being [distable](#dist).
 
@@ -372,8 +373,8 @@ See also: [bin-aliases](#bin-aliases), [cstaticlibs](#packagecstaticlibs), [cdyl
 
 ## `package.cstaticlibs`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -384,7 +385,7 @@ See also: [bin-aliases](#bin-aliases), [cstaticlibs](#packagecstaticlibs), [cdyl
 
 Names of c-style static libraries (without the extension) your package is expected to build and distribute.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 Including cstaticlibs opts your package into being [distable](#dist) if [`package-libraries = ["cstaticlibs"]`](#package-libraries) is set.
 
@@ -393,8 +394,8 @@ See also: [binaries](#packagebinaries), [cdylibs](#packagecdylibs)
 
 ## `package.cdylibs`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -405,7 +406,7 @@ See also: [binaries](#packagebinaries), [cdylibs](#packagecdylibs)
 
 Names of c-style dynamic libraries (without the extension) your package is expected to build and distribute.
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc.
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
 Including cdylibs opts your package into being [distable](#dist) if [`package-libraries = ["cdylibs"]`](#package-libraries) is set.
 
@@ -414,9 +415,9 @@ See also: [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs)
 
 ## `package.build-command`
 
-> <span style="float:right">since 0.12.0<br>[package-local][]</span>
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
 > 🔧 this is an experimental feature! \
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
 > example
@@ -427,17 +428,17 @@ See also: [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs)
 
 A command to run in your package's root directory to build its [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs), and [cdylibs](#packagecdylibs).
 
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][cargotoml], [package.json][packagejson], etc. (This is often preferred since we can natively understand e.g. [Cargo builds](#cargo-build-settings)).
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc. (This is often preferred since we can natively understand e.g. [Cargo builds](#cargo-build-settings)).
 
 
 # the `[dist]` section
 
-TODO
+This section represents all the configuration for how cargo-dist should build and publish your applications. The `[dist]` section is a temporary placeholder which will soon be replaced (and automatically migrated) to a new hierarchy in [Config 1.0](https://github.com/axodotdev/cargo-dist/pull/1247).
+
 
 ## `allow-dirty`
 
 > <span style="float:right">since 0.3.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
 > default = `[]`
 >
 > example
@@ -446,7 +447,7 @@ TODO
 > allow-dirty = ["ci", "msi"]
 > ```
 
-This is a list of [`generate`][] tasks for cargo-dist to ignore when checking if generated configuration is up to date.
+This is a list of [`generate`][generate] tasks for cargo-dist to ignore when checking if generated configuration is up to date.
 
 **We recommend avoiding setting this, as it prevents cargo-dist from updating these files for you whenever you update or change your configuation. If you think you need this, please [do file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or ask us about it, so we know what settings we're missing that necessitates this (or ideally, can point you to the existing settings).**
 
@@ -460,7 +461,6 @@ Possible values are:
 ## `cargo-dist-version`
 
 > <span style="float:right">since 0.3.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
 > default = `<none>` (this is mandatory!)
 >
 > example
@@ -469,9 +469,9 @@ Possible values are:
 > cargo-dist-version = "0.10.0"
 > ```
 
-This is added automatically by [`cargo dist init`][`init`], and is a recording of its own version for the sake of reproducibility and documentation.
+This is added automatically by [`cargo dist init`][init], and is a recording of its own version for the sake of reproducibility and documentation.
 
-Your [release CI][] will fetch and use the given version of cargo-dist to build and publish your project.
+Your [release CI][github-ci] will fetch and use the given version of cargo-dist to build and publish your project.
 
 The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a VersionReq!).
 
@@ -479,7 +479,7 @@ The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a V
 ## `dist`
 
 > <span style="float:right">since 0.3.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the guide for this feature!][distribute] \
 > default = `<none>` (infer it)
 >
 > example
@@ -500,7 +500,7 @@ There are 3 major cases where you might use this:
 ## `targets`
 
 > <span style="float:right">since 0.0.3<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the guide for this feature!][build-guide] \
 > default = `<none>`
 >
 > example
@@ -537,7 +537,7 @@ By default all runs of `cargo-dist` will be trying to handle all platforms speci
 ### `checksum`
 
 > <span style="float:right">since 0.1.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the checksum guide!](../artifacts/checksums.md) \
 > default = `"sha256"`
 >
 > example
@@ -564,7 +564,7 @@ Future work is planned to [support more robust signed checksums][issue-sigstore]
 ### `extra-artifacts`
 
 > <span style="float:right">since 0.6.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the artifacts guide!][artifacts] \
 > default = `<none>`
 >
 > example
@@ -593,7 +593,7 @@ cargo-dist uses this feature to distribute its [`dist-manifest-schema.json`](./s
 ### `source-tarball`
 
 > <span style="float:right">since 0.14.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the artifacts guide!][artifacts] \
 > default = `true`
 >
 > example
@@ -608,7 +608,7 @@ By default, cargo-dist creates and uploads source tarballs from your repository.
 ### `ssldotcom-windows-sign`
 
 > <span style="float:right">since 0.14.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!](../signing-and-attestation.md#windows-artifact-signing-with-sslcom-certificates) \
+> [📖 read the windows signing guide!](../supplychain-security/signing/windows.md) \
 > default = `<none>` (disabled)
 >
 > example
@@ -617,7 +617,7 @@ By default, cargo-dist creates and uploads source tarballs from your repository.
 > ssldotcom-windows-sign = "prod"
 > ```
 
-If you wish to sign your Windows artifacts (EXEs and [MSIs](../installers/msi.md)) such that Windows SmartScreen won't complain about them, this is the feature for you.
+If you wish to sign your Windows artifacts ([EXEs][binaries] and [MSIs](../installers/msi.md)) such that Windows SmartScreen won't complain about them, this is the feature for you.
 
 This setting takes one of two values:
 
@@ -632,7 +632,7 @@ These strings match the [environment_name setting](https://github.com/SSLcom/esi
 #### `auto-includes`
 
 > <span style="float:right">since 0.0.3<br>[package-local][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `true`
 >
 > example
@@ -649,7 +649,7 @@ See also: [`include`](#include)
 #### `include`
 
 > <span style="float:right">since 0.0.3<br>[package-local][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `[]`
 >
 > example
@@ -673,7 +673,7 @@ See also: [`auto-includes`](#auto-includes)
 
 > <span style="float:right">since 0.20.0<br>[package-local][]</span>
 > 🔧 this is an experimental feature! \
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `[]`
 >
 > example
@@ -682,7 +682,7 @@ See also: [`auto-includes`](#auto-includes)
 > package-libraries = ["cdylib", "cstaticlib"]
 > ```
 
-Which kinds of [compiled libraries][] to include in [archives][]. By default only [binaries][] will be included in [archives][] and used to decide if a package should be [distributed][]. This feature allows you to opt into bundling static and dynamic libraries that your package builds.
+Which kinds of [compiled libraries][] to include in [archives][]. By default only [binaries][] will be included in [archives][] and used to decide if a package should be [distributed][distribute]. This feature allows you to opt into bundling static and dynamic libraries that your package builds.
 
 When enabled, libraries will be included in your [archives][] alongside your binaries, but [installers][] will still ignore them. That can be changed using the [`install-libraries`](#install-libraries) setting.
 
@@ -690,7 +690,7 @@ When enabled, libraries will be included in your [archives][] alongside your bin
 #### `unix-archive`
 
 > <span style="float:right">since 0.0.5<br>[package-local][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `".tar.xz"`
 >
 > example
@@ -707,7 +707,7 @@ See [windows-archive](#windows-archive) for a complete list of supported values.
 #### `windows-archive`
 
 > <span style="float:right">since 0.0.5<br>[package-local][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `".zip"`
 >
 > example
@@ -730,13 +730,13 @@ See also: [unix-archive](#unix-archive)
 
 ## build settings
 
-TODO
+These settings configure [your builds][build-guide].
 
 ### `dependencies`
 
 
 > <span style="float:right">since 0.4.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the guide for this feature!][build-guide] \
 > default = `<none>`
 >
 > example
@@ -773,12 +773,12 @@ Supported package managers:
 
 ### cargo build settings
 
-TODO
+These settings are specific to how we [build your Cargo projects][cargo-build-guide].
 
 #### `all-features`
 
 > <span style="float:right">since 0.2.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `false`
 >
 > example
@@ -793,7 +793,7 @@ Specifies that all features for a Cargo package should be enabled when building 
 #### `default-features`
 
 > <span style="float:right">since 0.2.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `true`
 >
 > example
@@ -807,7 +807,7 @@ Specifies that default features for a Cargo package should be enabled when build
 #### `features`
 
 > <span style="float:right">since 0.2.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `[]`
 >
 > example
@@ -823,7 +823,7 @@ For instance for packages that are a library and a CLI binary, some developers p
 #### `msvc-crt-static`
 
 > <span style="float:right">since 0.4.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `true`
 >
 > example
@@ -843,7 +843,7 @@ This config exists as a blunt way to return to the default Rust behaviour of dyn
 #### `precise-builds`
 
 > <span style="float:right">since 0.1.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `false`
 >
 > example
@@ -886,6 +886,7 @@ If we instead set `all-features = true` on the workspace, then we will just pass
 
 > <span style="float:right">since 0.0.3<br>[global-only][]</span>
 > ⚠️ deprecated in 0.1.0 \
+> [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `<none>`
 >
 > example
@@ -910,7 +911,7 @@ Installers [main installer docs][installers]!
 ### `installers`
 
 > <span style="float:right">since 0.0.3<br>[package-local][]</span>
-> [📖 read the guide for this feature!][installers] \
+> [📖 read the installer guides!][installers] \
 > default = `[]`
 >
 > example
@@ -939,7 +940,7 @@ Possible values:
 ### `bin-aliases`
 
 > <span style="float:right">since 0.14.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the guide for this feature!][build-guide] \
 > default = `<none>`
 >
 > example
@@ -962,7 +963,7 @@ This is a map of binary names to aliases that your [installers][] should create 
 
 > <span style="float:right">since 0.20.0<br>[package-local][]</span>
 > 🔧 this is an experimental feature! \
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the guide for this feature!][build-guide] \
 > default = `[]`
 >
 > example
@@ -975,16 +976,17 @@ This is a map of binary names to aliases that your [installers][] should create 
 
 Which kinds of [compiled libraries][] to unpack and installer with your [installers][].  When enabled, libraries will be installed alongside a package's [binaries][].
 
-When using [shell][] and [powershell][] installers The currently-supported [install-paths](#install-path) will place libraries alongside binaries. This means they may appear in the user's `$PATH`, which you may find undesirable, and we may change it.
+When using [shell][shell-installer] and [powershell][powershell-installer] installers The currently-supported [install-paths](#install-path) will place libraries alongside binaries. This means they may appear in the user's `$PATH`, which you may find undesirable, and we may change it.
 
 
 ### shell and powershell installer settings
 
-TODO
+These settings are specific to the [shell][shell-installer] and [powershell][powershell-installer] installers, which provide a `curl | sh` installer for unix, and the equivalent `irm | iex` for windows. The two largely support the same things and behave the same, and typically want to be configured and enabled together.
 
 #### `custom-success-msg`
 
 > <span style="float:right">since 0.15.0<br>[package-local][]</span>
+> 📖 read the [shell][shell-installer] and [powershell][powershell-installer] installer guides!\
 > default = `"everything's installed!"`
 >
 > example
@@ -999,7 +1001,7 @@ The message to display on success in the [shell][shell-installer] and [powershel
 #### `install-path`
 
 > <span style="float:right">since 0.1.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> 📖 read the [shell][shell-installer] and [powershell][powershell-installer] installer guides!\
 > default = `"CARGO_HOME"`
 >
 > examples
@@ -1045,7 +1047,7 @@ Future Improvements:
 #### `install-updater`
 
 > <span style="float:right">since 0.12.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][updater] \
+> [📖 read the updater guide!][updater] \
 > default = `false`
 >
 > example
@@ -1063,12 +1065,12 @@ This updater is the commandline tool contained in the open source [axoupdater][]
 
 ### npm installer settings
 
-TODO
+These settings are specific to the [npm installer][npm-installer].
 
 #### `npm-scope`
 
 > <span style="float:right">since 0.0.6<br>[package-local][]</span>
-> [📖 read the guide for this feature!][npm-installer] \
+> [📖 read the npm installer guide!][npm-installer] \
 > default = `<none>`
 >
 > example
@@ -1087,7 +1089,7 @@ See also: [npm-package](#npm-package)
 #### `npm-package`
 
 > <span style="float:right">since 0.14.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][npm-installer] \
+> [📖 read the npm installer guide!][npm-installer] \
 > default = [package.name](#packagename)
 >
 > example
@@ -1103,12 +1105,12 @@ This does not set the [scope][] the package is published under, for that see [np
 
 ### homebrew installer settings
 
-TODO
+These settings are specific to the [homebrew installer][homebrew-installer].
 
 #### `tap`
 
 > <span style="float:right">since 0.2.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][homebrew-installer] \
+> [📖 read the homebrew installer guide!][homebrew-installer] \
 > default = `<none>`
 >
 > example
@@ -1125,7 +1127,7 @@ It's conventional for the repo name to start with `homebrew-`.
 #### `formula`
 
 > <span style="float:right">since 0.11.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][homebrew-installer] \
+> [📖 read the homebrew installer guide!][homebrew-installer] \
 > default = [package.name](#packagename)
 >
 > example
@@ -1141,12 +1143,11 @@ This works well specifically for folks who are customizing their bin name and wo
 
 ## publisher settings
 
-TODO
+These settings are specific to how we publish your packages to package managers like [homebrew taps][homebrew-installer] and [npm][npm-installer].
 
 ### `publish-prereleases`
 
 > <span style="float:right">since 0.2.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
 > default = `false`
 >
 > example
@@ -1155,17 +1156,17 @@ TODO
 > publish-preleases = true
 > ```
 
-If you set `publish-prereleases = true`, cargo-dist will [publish](#publish-jobs) prerelease versions to package managers such as [Homebrew][]. By default, cargo-dist will only publish stable versions.
+If you set `publish-prereleases = true`, cargo-dist will [publish](#publish-jobs) prerelease versions to package managers such as [homebrew][homebrew-installer] and [npm][npm-installer]. By default, cargo-dist will only publish stable versions to avoid polluting your releases. This is especially important for things like Homebrew which don't really have a proper notion of "prereleases" or "literally having more than one published version of a package".
 
 
 ## hosting settings
 
-TODO
+hese settings govern how we host your files with platforms like [GitHub Releases][github-releases-guide] and axo Releases, and the text we tell them to display about your releases.
 
 ### `hosting`
 
 > <span style="float:right">since 0.5.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the releases guide!][github-releases-guide] \
 > default = `<none>` (infer based on [ci](#ci))
 >
 > example
@@ -1192,7 +1193,7 @@ a host to win for fetching installers, and if you're using axo Releases at all y
 ### `display`
 
 > <span style="float:right">since 0.16.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the releases guide!][github-releases-guide] \
 > default = `true`
 >
 > example
@@ -1207,7 +1208,7 @@ Specifies whether this package should be displayed in release bodies of [hosting
 ### `display-name`
 
 > <span style="float:right">since 0.16.0<br>[package-local][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the releases guide!][github-releases-guide] \
 > default = [package.name](#packagename)
 >
 > example
@@ -1222,7 +1223,7 @@ Specifies how to refer to the package in release bodies of [hosting providers](#
 ### `force-latest`
 
 > <span style="float:right">since 0.16.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the releases guide!][github-releases-guide] \
 > default = `false`
 >
 > example
@@ -1243,7 +1244,7 @@ See also: [`publish-prereleases`](#publish-prereleases)
 
 ### github hosting settings
 
-TODO
+hese settings govern how we host your files on [GitHub Releases][github-releases-guide] and the text we tell them to display.
 
 #### `github-attestations`
 
@@ -1264,7 +1265,7 @@ If you're using GitHub Releases, this will enable GitHub's experimental artifact
 #### `github-release`
 
 > <span style="float:right">since 0.17.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the releases guide!][github-releases-guide] \
 > default = "auto"
 >
 > example
@@ -1294,7 +1295,7 @@ However, if you're publishing only packages that don't reference hosted artifact
 #### `github-releases-repo`
 
 > <span style="float:right">since 0.14.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the releases guide!][github-releases-guide] \
 > default = `<none>` (use the project's own repository)
 >
 > example
@@ -1317,7 +1318,7 @@ GitHub Releases isn't really designed for this, so there's a few strange things 
 #### `github-releases-submodule-path`
 
 > <span style="float:right">since 0.15.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the releases guide!][github-releases-guide] \
 > default = `<none>` (use the project's root repository)
 >
 > example
@@ -1332,7 +1333,7 @@ Designed for use with [github-releases-repo](#github-releases-repo) setting. Whe
 #### `create-release`
 
 > <span style="float:right">since 0.2.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!](TODO) \
+> [📖 read the releases guide!][github-releases-guide] \
 > default = `true`
 >
 > example
@@ -1354,12 +1355,12 @@ See also: [`github-release`](#github-release)
 
 ## ci settings
 
-TODO
+These settings govern how [your CI should work][github-ci], including how to trigger the release process and custom tasks to run.
 
 ### `ci`
 
 > <span style="float:right">since 0.0.3<br>[global-only][]</span>
-> [📖 read the guide for this feature!][github-ci] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
 > example
@@ -1375,7 +1376,7 @@ This is a list of CI backends you want to support, allowing cargo-dist to know w
 ### `build-local-artifacts`
 
 > <span style="float:right">since 0.8.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `true`
 >
 > example
@@ -1405,7 +1406,7 @@ Also note that for legacy reasons a tarball is expected to have all the contents
 ### `cache-builds`
 
 > <span style="float:right">since 0.18.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `<none>` (inferred, probably `false`)
 >
 > example
@@ -1424,7 +1425,7 @@ The cases where we enable it by default are the only ones we know where you *mig
 ### `dispatch-releases`
 
 > <span style="float:right">since 0.8.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `false`
 >
 > example
@@ -1443,7 +1444,7 @@ By default the workflow dispatch form will have "dry-run" populated as the tag, 
 ### `fail-fast`
 
 > <span style="float:right">since 0.1.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `false`
 >
 > example
@@ -1462,7 +1463,7 @@ Either way, the global build task will refuse to run if any of these tasks fail,
 ### `pr-run-mode`
 
 > <span style="float:right">since 0.3.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `"plan"`
 >
 > example
@@ -1481,7 +1482,7 @@ This setting determines to what extent we run your Release CI on pull-requests:
 ### `tag-namespace`
 
 > <span style="float:right">since 0.10.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `<none>`
 >
 > example
@@ -1498,7 +1499,7 @@ Setting `tag-namespace = "owo"` will change the tag matching expression we put i
 ### `merge-tasks`
 
 > <span style="float:right">since 0.1.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `false`
 >
 > example
@@ -1517,15 +1518,13 @@ The default is `false`. Before 0.1.0 it was always `true` and couldn't be change
 
 ### github ci settings
 
-TODO
-
-
+These settings are specific to [your cargo-dist GitHub CI][github-ci].
 
 #### `github-build-setup`
 
 > <span style="float:right">since 0.20.0<br>[global-only][]</span>
 > 🔧 this is an experimental feature! \
-> [📖 read the guide for this feature!][github-build-setup] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `<none>`
 >
 > example
@@ -1542,7 +1541,7 @@ performed before we call `cargo dist build`.
 #### `github-custom-job-permissions`
 
 > <span style="float:right">since 0.18.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `<none>`
 >
 > example
@@ -1563,7 +1562,7 @@ All other custom jobs default to no special permissions.
 #### `github-custom-runners`
 
 > <span style="float:right">since 0.6.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `<none>`
 >
 > example
@@ -1580,12 +1579,19 @@ In addition to defining runners for a target, it's also possible to specify a ru
 
 ### custom ci jobs
 
-TODO
+These settings all similarly extend [your cargo-dist GitHub CI][github-ci] with custom jobs to run at specific steps of the release process, which looks like:
+
+1. plan: check settings, decide what we're releasing
+2. build-local: compile things for each platform
+3. build-global: combine things and generate installers
+4. host: upload files to hosting, make URLs live
+5. publish: publish to package managers
+6. announce: announce to the world that the release was a success
 
 #### `plan-jobs`
 
 > <span style="float:right">since 0.7.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
 > example
@@ -1600,7 +1606,7 @@ This setting determines which custom jobs to run during the "plan" phase, which 
 #### `local-artifacts-jobs`
 
 > <span style="float:right">since 0.7.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
 > example
@@ -1615,7 +1621,7 @@ This setting determines which custom jobs to run during the "build local artifac
 #### `global-artifacts-jobs`
 
 > <span style="float:right">since 0.7.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
 > example
@@ -1630,7 +1636,7 @@ This setting determines which custom jobs to run during the "build global artifa
 #### `host-jobs`
 
 > <span style="float:right">since 0.7.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
 > example
@@ -1645,7 +1651,7 @@ This setting determines which custom jobs to run during the "host" phase, during
 #### `publish-jobs`
 
 > <span style="float:right">since 0.2.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
 > example
@@ -1663,7 +1669,7 @@ This setting determines which publish jobs to run. It accepts 3 kinds of value:
 #### `post-announce-jobs`
 
 > <span style="float:right">since 0.7.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][TODO] \
+> [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
 > example
@@ -1680,10 +1686,13 @@ This setting determines which custom jobs to run after the "announce" phase. "An
 
 # setting availabilities
 
-TODO
+Throughout the above docs, different settings will have different rules for where they can be specified (root workspace config file or package config file), and how they'll be inherited.
 
-* global-only: TODO
-* package-local: TODO
+* global-only: this setting can only be set in the root workspace config
+* package-only: this setting can only be set in a a package config
+* package-local: this setting can be set in either, with the package overidding the workspace value if it provides one (and otherwise inheriting it).
+
+When you override a package-local setting, the workspace value will be discarded completely. So for instance if the workspace sets `features = ["feature1", "feature2"]` and a package sets `features = ["feature2", "feature3"]`, then that package will only get feature2 and feature3.
 
 
 [issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
@@ -1716,7 +1725,25 @@ TODO
 [github-workflow-step]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsid
 
 [global-only]: #availabilities
+[package-only]: #availabilities
 [package-local]: #availabilities
-[distribute]: #todo
-[artifacts]: #todo
-[hosting]: #todo
+
+[artifacts]: ../artifacts/index.md
+[hosting]: ../ci/github.md
+[github-ci]: ../ci/github.md
+[github-releases-guide]: ../ci/github.md
+[init]: ../updating.md
+
+# "how we select packages? what we distribute?"
+[distribute]: #TODO
+
+# lang guides
+[project-guide]: #TODO
+[js-guide]: #TODO
+[rust-guide]: #TODO
+
+# build guides
+[build-guide]: #TODO
+[cargo-build-guide]: #TODO
+[binaries]: #TODO
+[compiled libraries]: #TODO

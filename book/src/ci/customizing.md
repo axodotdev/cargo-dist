@@ -90,7 +90,7 @@ By default, cargo-dist uses the following runners:
 * macOS (Apple Silicon): `macos-12`
 * Windows (x86_64): `windows-2019`
 
-It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the [`github-custom-runners`](config-github-custom-runners) configuration setting in `Cargo.toml`. Here's an example which adds support for Linux (aarch64) using runners from [Buildjet](https://buildjet.com/for-github-actions):
+It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the [`github-custom-runners`][config-github-custom-runners] configuration setting in `Cargo.toml`. Here's an example which adds support for Linux (aarch64) using runners from [Buildjet](https://buildjet.com/for-github-actions):
 
 ```toml
 [workspace.metadata.dist.github-custom-runners]

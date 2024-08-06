@@ -4,7 +4,7 @@
 
 [Fetching installers](../installers/index.md) need to know where to download the [actual binaries](../artifacts/archives.md) from, so cargo-dist needs to be aware of a base Artifact URL that it can derive download URLs from when it builds those kinds of installers.
 
-Currently artifact URLs are derived from [hosting providers](./config#hosting) and [source hosts](#source-hosts). Both must be well-defined for fetching installers to be enabled. Here is the behaviour of each hosting provider in more excruciating detail:
+Currently artifact URLs are derived from [hosting providers](./config.md#hosting) and [source hosts](#source-hosts). Both must be well-defined for fetching installers to be enabled. Here is the behaviour of each hosting provider in more excruciating detail:
 
 
 ## github
@@ -88,7 +88,7 @@ Future releases [will expose a more general mechanism for specifying artifact do
 
 ## Source Hosts
 
-Regardless of what [hosting providers](./config#hosting) you ask for, cargo-dist will complain if you don't have a properly defined source host, which is a fancy way of saying we need a URL to your git repo. Currently the only supported Source Host is `github.com`, but we [would like to support more](https://github.com/axodotdev/cargo-dist/issues/48).
+Regardless of what [hosting providers](./config.md#hosting) you ask for, cargo-dist will complain if you don't have a properly defined source host, which is a fancy way of saying we need a URL to your git repo. Currently the only supported Source Host is `github.com`, but we [would like to support more](https://github.com/axodotdev/cargo-dist/issues/48).
 
 Most Cargo projects already set a Source Host: it's just [your `[package].repository` URL](./config.md#repository).
 

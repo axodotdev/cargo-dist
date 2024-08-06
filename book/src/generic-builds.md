@@ -66,7 +66,7 @@ These package fields are mandatory for cargo-dist to be able to build your packa
 
 ### Optional package fields
 
-All of these fields and their definitions are identical to the ones defined by [`Cargo.lock`][cargo-lock].
+All of these fields and their definitions are identical to the ones defined by [`Cargo.toml`][cargo-toml].
 
 * `cstaticlibs`: An array of one or more C static libraries (`.a` files) produced by your application's build.
 * `cdynamiclibs`: An array of one or more C dynamic libraries produced by your application's build.
@@ -79,7 +79,7 @@ All of these fields and their definitions are identical to the ones defined by [
 * `license-files`: An array containing a list of one or more license files within the source code.
 
 [cargo-toml]: https://doc.rust-lang.org/cargo/reference/manifest.html
-[quickstart]: ./way-too-quickstart.md
+[quickstart]: ./quickstart/index.md
 [spdx]: https://spdx.org/licenses
 [target-triple]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [toml]: https://en.wikipedia.org/wiki/TOML

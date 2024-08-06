@@ -227,5 +227,5 @@ multi-line strings.
 [config-pr-run-mode]: ../reference/config.md#pr-run-mode
 
 [artifact-url]: ../reference/artifact-url.md#github
-[quickstart]: ../way-too-quickstart.md
-[testing]: ../way-too-quickstart.md#test-it-out
+[quickstart]: ../quickstart/index.md
+[testing]: ../quickstart/rust.md#test-it-out
