@@ -40,6 +40,14 @@ Arch Linux users can install `cargo-dist` from the [extra repository](https://ar
 pacman -S cargo-dist
 ```
 
+#### Nix (NixOS, macOS)
+
+Nix users can install `cargo-dist` from the main nixpkgs repository:
+
+```sh
+nix-env -i cargo-dist
+```
+
 ### Other Options
 
 #### cargo-binstall
@@ -60,5 +68,3 @@ cargo install cargo-dist --locked
 [Rust]: https://rust-lang.org
 [cargo]: https://doc.rust-lang.org/cargo/index.html
 [installed the Rust toolchain (`rustup`)]: https://rustup.rs/
-
-
