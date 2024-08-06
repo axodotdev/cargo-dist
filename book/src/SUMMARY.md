@@ -25,7 +25,6 @@
   - [checksums](./artifacts/checksums.md)
   - [symbols](./artifacts/symbols.md)
 - [CI](./ci/index.md)
-  - [github](./ci/github.md)
   - [Customizing](./ci/customizing.md)
 - [Workspaces](./workspaces/index.md)
   - [A Simple Application](./workspaces/simple-guide.md)

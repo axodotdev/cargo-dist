@@ -1709,7 +1709,7 @@ When you override a package-local setting, the workspace value will be discarded
 [generate]: ../reference/cli.md#cargo-dist-generate
 [archives]: ../artifacts/archives.md
 [artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
-[github-build-setup]: ../ci/github.md#customizing-build-setup
+[github-build-setup]: ../ci/customizing.md#customizing-build-setup
 
 [workspace-metadata]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table
 [cargo-manifest]: https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -1729,9 +1729,9 @@ When you override a package-local setting, the workspace value will be discarded
 [package-local]: #availabilities
 
 [artifacts]: ../artifacts/index.md
-[hosting]: ../ci/github.md
-[github-ci]: ../ci/github.md
-[github-releases-guide]: ../ci/github.md
+[hosting]: ../ci/index.md
+[github-ci]: ../ci/index.md
+[github-releases-guide]: ../ci/index.md
 [init]: ../updating.md
 
 # "how we select packages? what we distribute?"
