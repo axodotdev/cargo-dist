@@ -11,6 +11,8 @@ cargo-dist's generated CI configuration can be extended in several ways: it can 
 
 Sometimes, you may need extra packages from the system package manager to be installed before in the builder before cargo-dist begins building your software. Cargo-dist can do this for you by adding the `dependencies` setting to your dist config. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them.
 
+By default, we run Apple silicon (aarch64) builds for macOS on the `macos-12` runner, which is Intel-based. If your build process needs to link against C libraries from Homebrew using the `dependencies` feature, you will need to switch to an Apple silicon-native runner to ensure that you have access to Apple silicon-native dependencies from Homebrew. You can do this using the [custom runners][custom-runners] feature. Currently, `macos-14` is the oldest (and only) GitHub-provided runner for Apple silicon.
+
 Sometimes, you may want to make sure your users also have these dependencies available when they install your software. If you use a package manager-based installer, cargo-dist has the ability to specify these dependencies. By default, cargo-dist will examine your program to try to detect which dependencies it thinks will be necessary. At the moment, [Homebrew][homebrew] is the only supported package manager installer. You can also specify these dependencies manually.
 
 For more information, see the [configuration syntax][config-dependencies].
@@ -228,6 +230,8 @@ By default cargo-dist lets all the build tasks keep running even if one of them 
 
 By default cargo-dist breaks build tasks onto more machines than strictly necessary to create the maximum opportunities for concurrency and to increase fault-tolerance. For instance if you want to build for both arm64 macOS and x64 macOS, that *could* be done on the same machine, but we put it on two machines so they can be in parallel and succeed/fail independently. [`merge-tasks = true` can be set to disable this][config-merge-tasks].
 
+
+[custom-runners]: #custom-runners
 
 [config-dependencies]: ../reference/config.md#dependencies
 [config-plan]: ../reference/config.md#plan-jobs
