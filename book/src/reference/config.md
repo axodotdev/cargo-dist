@@ -1,26 +1,6 @@
 # Config
 
 
-[`[workspace]`](#the-workspace-section)
-* [`members`](#workspacemembers)
-
-[`[package]`](#the-package-section)
-* [`name`](#packagename)
-* [`version`](#packageversion)
-* [`description`](#packagedescription)
-* [`authors`](#packageauthors)
-* [`repository`](#packagerepository)
-* [`homepage`](#packagehomepage)
-* [`documentation`](#packagedocumentation)
-* [`changelog`](#packagechangelog)
-* [`readme`](#packagereadme)
-* [`license`](#packagelicense)
-* [`license-files`](#packagelicense-files)
-* [`binaries`](#packagebinaries)
-* [`cstaticlibs`](#packagecstaticlibs)
-* [`cdylibs`](#packagecdylibs)
-* [`build-command`](#packagebuild-command)
-
 [`[dist]`](#the-dist-section)
 * [`allow-dirty`](#allow-dirty)
 * [`cargo-dist-version`](#cargo-dist-version)
@@ -101,334 +81,28 @@
     * [`publish-jobs`](#publish-jobs)
     * [`post-announce-jobs`](#post-announce-jobs)
 
+[`[workspace]`](#the-workspace-section)
+* [`members`](#workspacemembers)
+
+[`[package]`](#the-package-section)
+* [`name`](#packagename)
+* [`version`](#packageversion)
+* [`description`](#packagedescription)
+* [`authors`](#packageauthors)
+* [`repository`](#packagerepository)
+* [`homepage`](#packagehomepage)
+* [`documentation`](#packagedocumentation)
+* [`changelog`](#packagechangelog)
+* [`readme`](#packagereadme)
+* [`license`](#packagelicense)
+* [`license-files`](#packagelicense-files)
+* [`binaries`](#packagebinaries)
+* [`cstaticlibs`](#packagecstaticlibs)
+* [`cdylibs`](#packagecdylibs)
+* [`build-command`](#packagebuild-command)
+
 
 -----
-
-
-
-# the `[workspace]` section
-
-### `workspace.members`
-
-> <span style="float:right">since 0.20.0<br>[global-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `[]`
->
-> example
-> ```toml
-> [workspace]
-> members = [
->     "cargo:rel/path/to/rust/workspace",
->     "npm:some/js/project/",
->     "npm:some/other/js/project/",
->     "dist:a/generic/project/"
-> ]
-> ```
-
-In a dist-workspace.toml, this specifies the various projects/workspaces/packages that should
-be managed by cargo-dist. Each member is of the format `<project-type>:<relative-path>` where
-`relative-path` is a path relative to the dist-workspace.toml to a directory containing that type of project, and `project-type` can be one of:
-
-* cargo: expect a Cargo.toml for a cargo-based Rust project in that dir
-* npm: expect a package.json for an npm-based JavaScript project in that dir
-* dist: expect a dist.toml for a dist-based generic project in that dir
-
-
-# the `[package]` section
-
-## `package.name`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> name = "my-cool-app"
-> ```
-
-The name of the package.
-
-All packages must have a name, either sourced from a dist.toml or inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-The name is used in a myriad of places to refer to your application and its releases.
-
-
-## `package.version`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> version = "1.2.0-prerelease.2"
-> ```
-
-The version of the package. Syntax must be a valid [Cargo SemVer Version][semver-version].
-
-All packages must have a version, either sourced from a dist.toml or inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-The version is used in a myriad of places to refer to your application and its releases.
-
-
-## `package.description`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> version = "A cool application that solves all your problems!"
-> ```
-
-A brief description of the package.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This may be used in the metadata of various [installers][].
-
-
-## `package.authors`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> authors = ["axodotdev <hello@axo.dev>"]
-> ```
-
-The authors of the package.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This may be used in the metadata of various [installers][]. We recommend keeping it fairly generic to avoid needless hassles from people changing their names.
-
-## `package.repository`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> repository = "https://github.com/axodotdev/axolotolsay"
-> ```
-
-A URL to the repository hosting this package.
-
-The following formats are all supported and treated as equivalent:
-
-* `"https://github.com/axodotdev/axolotolsay"`
-* `"https://github.com/axodotdev/axolotolsay.git"`
-* `"git@github.com:axodotdev/axolotlsay.git"`
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This is *essentially* required as almost all cargo-dist features are blocked behind knowing where your project is hosted. All [distable](#dist) packages must agree on this value.
-
-
-## `package.homepage`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> homepage = "https://opensource.axo.dev/axolotlsay"
-> ```
-
-A URL to the homepage of the package.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This may be used in the metadata of various [installers][].
-
-
-## `package.documentation`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> documentation = "https://docs.rs/axolotlsay"
-> ```
-
-A URL to the documentation of the package.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This may be used in the metadata of various [installers][].
-
-
-## `package.changelog`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> changelog = "../CHANGELOG.md"
-> ```
-
-A relative path to the changelog file for your package.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This can be used by various cargo-dist features that use your changelog, such as [auto-includes](#auto-includes) and [release-bodies][github-releases-guide]. We will often [autodetect this for you][archives], so this setting is only needed if your changelog has a special name/location/format we can't find.
-
-
-## `package.readme`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> readme = "../README.md"
-> ```
-
-A relative path to the readme file for your package.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This can be used by various cargo-dist features that use your readme, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your readme has a special name/location/format we can't find.
-
-
-## `package.license`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> license = "MIT OR Apache-2.0"
-> ```
-
-The license(s) of your package, in [SPDX format](https://spdx.org/licenses).
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This may be used in the metadata of various [installers][].
-
-
-## `package.license-files`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> readme = ["../LICENSE-MIT", "../LICENSE-APACHE"]
-> ```
-
-Relative paths to the license files for your package.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-This can be used by various cargo-dist features that use your license files, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your licenses have a special name/location/format we can't find.
-
-
-## `package.binaries`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> binaries = ["my-app", "my-other-app"]
-> ```
-
-Names of binaries (without the extension) your package is expected to build and distribute.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-Including binaries by default opts your package into being [distable](#dist).
-
-See also: [bin-aliases](#bin-aliases), [cstaticlibs](#packagecstaticlibs), [cdylibs](#packagecdylibs)
-
-
-## `package.cstaticlibs`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> cstaticlibs = ["mystaticlib", "some-helper"]
-> ```
-
-Names of c-style static libraries (without the extension) your package is expected to build and distribute.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-Including cstaticlibs opts your package into being [distable](#dist) if [`package-libraries = ["cstaticlibs"]`](#package-libraries) is set.
-
-See also: [binaries](#packagebinaries), [cdylibs](#packagecdylibs)
-
-
-## `package.cdylibs`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> cdylibs = ["mydylib", "some-other-helper"]
-> ```
-
-Names of c-style dynamic libraries (without the extension) your package is expected to build and distribute.
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
-
-Including cdylibs opts your package into being [distable](#dist) if [`package-libraries = ["cdylibs"]`](#package-libraries) is set.
-
-See also: [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs)
-
-
-## `package.build-command`
-
-> <span style="float:right">since 0.12.0<br>[package-only][]</span>
-> 🔧 this is an experimental feature! \
-> [📖 read the project structure guide!][project-guide] \
-> default = `<none>`
->
-> example
-> ```toml
-> [package]
-> build-command = ["make", "dist"]
-> ```
-
-A command to run in your package's root directory to build its [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs), and [cdylibs](#packagecdylibs).
-
-If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc. (This is often preferred since we can natively understand e.g. [Cargo builds](#cargo-build-settings)).
 
 
 # the `[dist]` section
@@ -1693,6 +1367,335 @@ Throughout the above docs, different settings will have different rules for wher
 * package-local: this setting can be set in either, with the package overidding the workspace value if it provides one (and otherwise inheriting it).
 
 When you override a package-local setting, the workspace value will be discarded completely. So for instance if the workspace sets `features = ["feature1", "feature2"]` and a package sets `features = ["feature2", "feature3"]`, then that package will only get feature2 and feature3.
+
+
+# the `[workspace]` section
+
+This section is only available in `dist-workspace.toml` files.
+
+### `workspace.members`
+
+> <span style="float:right">since 0.20.0<br>[global-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `[]`
+>
+> example
+> ```toml
+> [workspace]
+> members = [
+>     "cargo:rel/path/to/rust/workspace",
+>     "npm:some/js/project/",
+>     "npm:some/other/js/project/",
+>     "dist:a/generic/project/"
+> ]
+> ```
+
+In a dist-workspace.toml, this specifies the various projects/workspaces/packages that should
+be managed by cargo-dist. Each member is of the format `<project-type>:<relative-path>` where
+`relative-path` is a path relative to the dist-workspace.toml to a directory containing that type of project, and `project-type` can be one of:
+
+* cargo: expect a Cargo.toml for a cargo-based Rust project in that dir
+* npm: expect a package.json for an npm-based JavaScript project in that dir
+* dist: expect a dist.toml for a dist-based generic project in that dir
+
+
+# the `[package]` section
+
+This section is available in `dist.toml` and `dist-workspace.toml` files.
+
+## `package.name`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> name = "my-cool-app"
+> ```
+
+The name of the package.
+
+All packages must have a name, either sourced from a dist.toml or inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+The name is used in a myriad of places to refer to your application and its releases.
+
+
+## `package.version`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> version = "1.2.0-prerelease.2"
+> ```
+
+The version of the package. Syntax must be a valid [Cargo SemVer Version][semver-version].
+
+All packages must have a version, either sourced from a dist.toml or inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+The version is used in a myriad of places to refer to your application and its releases.
+
+
+## `package.description`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> version = "A cool application that solves all your problems!"
+> ```
+
+A brief description of the package.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This may be used in the metadata of various [installers][].
+
+
+## `package.authors`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> authors = ["axodotdev <hello@axo.dev>"]
+> ```
+
+The authors of the package.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This may be used in the metadata of various [installers][]. We recommend keeping it fairly generic to avoid needless hassles from people changing their names.
+
+## `package.repository`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> repository = "https://github.com/axodotdev/axolotolsay"
+> ```
+
+A URL to the repository hosting this package.
+
+The following formats are all supported and treated as equivalent:
+
+* `"https://github.com/axodotdev/axolotolsay"`
+* `"https://github.com/axodotdev/axolotolsay.git"`
+* `"git@github.com:axodotdev/axolotlsay.git"`
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This is *essentially* required as almost all cargo-dist features are blocked behind knowing where your project is hosted. All [distable](#dist) packages must agree on this value.
+
+
+## `package.homepage`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> homepage = "https://opensource.axo.dev/axolotlsay"
+> ```
+
+A URL to the homepage of the package.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This may be used in the metadata of various [installers][].
+
+
+## `package.documentation`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> documentation = "https://docs.rs/axolotlsay"
+> ```
+
+A URL to the documentation of the package.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This may be used in the metadata of various [installers][].
+
+
+## `package.changelog`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> changelog = "../CHANGELOG.md"
+> ```
+
+A relative path to the changelog file for your package.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This can be used by various cargo-dist features that use your changelog, such as [auto-includes](#auto-includes) and [release-bodies][github-releases-guide]. We will often [autodetect this for you][archives], so this setting is only needed if your changelog has a special name/location/format we can't find.
+
+
+## `package.readme`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> readme = "../README.md"
+> ```
+
+A relative path to the readme file for your package.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This can be used by various cargo-dist features that use your readme, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your readme has a special name/location/format we can't find.
+
+
+## `package.license`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> license = "MIT OR Apache-2.0"
+> ```
+
+The license(s) of your package, in [SPDX format](https://spdx.org/licenses).
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This may be used in the metadata of various [installers][].
+
+
+## `package.license-files`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> readme = ["../LICENSE-MIT", "../LICENSE-APACHE"]
+> ```
+
+Relative paths to the license files for your package.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+This can be used by various cargo-dist features that use your license files, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your licenses have a special name/location/format we can't find.
+
+
+## `package.binaries`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> binaries = ["my-app", "my-other-app"]
+> ```
+
+Names of binaries (without the extension) your package is expected to build and distribute.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+Including binaries by default opts your package into being [distable](#dist).
+
+See also: [bin-aliases](#bin-aliases), [cstaticlibs](#packagecstaticlibs), [cdylibs](#packagecdylibs)
+
+
+## `package.cstaticlibs`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> cstaticlibs = ["mystaticlib", "some-helper"]
+> ```
+
+Names of c-style static libraries (without the extension) your package is expected to build and distribute.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+Including cstaticlibs opts your package into being [distable](#dist) if [`package-libraries = ["cstaticlibs"]`](#package-libraries) is set.
+
+See also: [binaries](#packagebinaries), [cdylibs](#packagecdylibs)
+
+
+## `package.cdylibs`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> cdylibs = ["mydylib", "some-other-helper"]
+> ```
+
+Names of c-style dynamic libraries (without the extension) your package is expected to build and distribute.
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
+
+Including cdylibs opts your package into being [distable](#dist) if [`package-libraries = ["cdylibs"]`](#package-libraries) is set.
+
+See also: [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs)
+
+
+## `package.build-command`
+
+> <span style="float:right">since 0.12.0<br>[package-only][]</span>
+> 🔧 this is an experimental feature! \
+> [📖 read the project structure guide!][project-guide] \
+> default = `<none>`
+>
+> example
+> ```toml
+> [package]
+> build-command = ["make", "dist"]
+> ```
+
+A command to run in your package's root directory to build its [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs), and [cdylibs](#packagecdylibs).
+
+If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc. (This is often preferred since we can natively understand e.g. [Cargo builds](#cargo-build-settings)).
 
 
 [issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
