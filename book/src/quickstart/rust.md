@@ -31,7 +31,7 @@ git commit -am "chore: wow shiny new cargo-dist CI!"
 
 This one-time setup will:
 
-* create your dist config in `dist-workspace.toml`
+* create your dist config in `Cargo.toml`
 * add a shippable build profile to your `Cargo.toml`
 * generate CI for orchestrating itself in `.github/workflows/release.yml`
 
