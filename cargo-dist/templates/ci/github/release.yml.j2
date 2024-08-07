@@ -210,6 +210,11 @@ jobs:
       SSLDOTCOM_CREDENTIAL_ID: ${{ secrets.SSLDOTCOM_CREDENTIAL_ID }}
       SSLDOTCOM_TOTP_SECRET: ${{ secrets.SSLDOTCOM_TOTP_SECRET }}
     {{%- endif %}}
+    {{%- if macos_sign %}}
+      CODESIGN_CERTIFICATE: ${{ secrets.CODESIGN_CERTIFICATE }}
+      CODESIGN_CERTIFICATE_PASSWORD: ${{ secrets.CODESIGN_CERTIFICATE_PASSWORD }}
+      CODESIGN_IDENTITY: ${{ secrets.CODESIGN_IDENTITY }}
+    {{%- endif %}}
     steps:
       - name: enable windows longpaths
         run: |

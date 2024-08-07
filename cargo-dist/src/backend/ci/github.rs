@@ -73,6 +73,8 @@ pub struct GithubCiInfo {
     pub github_releases_repo: Option<JinjaGithubRepoPair>,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// Whether to enable macOS codesigning
+    pub macos_sign: bool,
     /// Whether to enable GitHub Attestations
     pub github_attestations: bool,
     /// what hosting provider we're using
@@ -177,6 +179,7 @@ impl GithubCiInfo {
         let create_release = dist.create_release;
         let github_releases_repo = dist.github_releases_repo.clone().map(|r| r.into_jinja());
         let ssldotcom_windows_sign = dist.ssldotcom_windows_sign.clone();
+        let macos_sign = dist.macos_sign;
         let github_attestations = dist.github_attestations;
         let tag_namespace = dist.tag_namespace.clone();
         let mut dependencies = SystemDependencies::default();
@@ -362,6 +365,7 @@ impl GithubCiInfo {
             create_release,
             github_releases_repo,
             ssldotcom_windows_sign,
+            macos_sign,
             github_attestations,
             hosting_providers,
             release_command,

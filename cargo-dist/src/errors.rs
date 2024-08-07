@@ -520,6 +520,11 @@ pub enum DistError {
         /// path to manifest
         manifest: Utf8PathBuf,
     },
+
+    /// Failure to decode base64-encoded certificate
+    #[error("We failed to decode the certificate stored in the CODESIGN_CERTIFICATE environment variable.")]
+    #[diagnostic(help("Is the value of this envirionment variable valid base64?"))]
+    CertificateDecodeError {},
 }
 
 /// This error indicates we tried to deserialize some YAML with serde_yml
