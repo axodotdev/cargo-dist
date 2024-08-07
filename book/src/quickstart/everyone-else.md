@@ -124,7 +124,7 @@ At this point you're done! The generated CI script should pick up the ball and c
 
 ## More details
 
-For more details on configuring builds and other advanced features, see the [custom builds][custom-builds] page.
+For more details on configuring builds and other advanced features, see the [custom builds][custom-builds] page. For more details on all of the supported fields in `dist.toml`, see the [config][package-section] page.
 
 [quickstart-build]: ../img/quickstart-build.png
 [quickstart-plan]: ../img/quickstart-plan.png
@@ -133,6 +133,7 @@ For more details on configuring builds and other advanced features, see the [cus
 [custom-builds]: ../custom-builds.md
 [install]: ../install.md
 [installer]: ../installers/index.md
+[package-section]: ../reference/config.md#the-package-section
 [plan]: ../reference/cli.md#cargo-dist-plan
 [tarballs]: ../artifacts/archives.md
 [toml]: https://toml.io/en/
