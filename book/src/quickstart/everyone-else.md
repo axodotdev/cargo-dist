@@ -106,7 +106,8 @@ You can also crank this up by setting `pr-run-mode = "upload"`, which will run a
 cargo-dist largely doesn't care about the details of how you prepare your release, and doesn't yet provide tools to streamline it. All it cares about is you getting your release branch into the state you want, updating the version number in `dist.toml`, and then pushing a properly formatted git tag like "v0.1.0". Here's a super bare-bones release process where we're releasing by just pushing a bunch of stuff to main branch (but it would work just as well with PRs and release branches):
 
 ```sh
-# <manually update the version of your crate, run tests, etc>
+# <manually update the version of your package, run tests, etc>
+# <make sure to set the package version in dist.toml, too>
 
 # commit and push to main (can be done with a PR)
 git commit -am "release: version 0.1.0"
@@ -114,7 +115,6 @@ git push
 
 # actually push the tag up (this triggers cargo-dist's CI)
 git tag v0.1.0
-vim dist.toml # make sure you set your package's version here too
 git push --tags
 ```
 
