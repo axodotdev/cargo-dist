@@ -2,7 +2,7 @@
 
 //! CLI binary interface for cargo-dist
 
-use std::io::Write;
+use std::{ffi::OsString, io::Write};
 
 use axoasset::LocalAsset;
 use axoprocess::Cmd;
@@ -13,8 +13,7 @@ use cargo_dist::{linkage::LinkageDisplay, *};
 use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{
-    Cli, Commands, FakeCli, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat,
-    PlanArgs,
+    Cli, Commands, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat, PlanArgs,
 };
 use console::Term;
 use miette::{miette, IntoDiagnostic};
@@ -25,7 +24,12 @@ use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs}
 mod cli;
 
 fn main() {
-    let FakeCli::Dist(config) = FakeCli::parse();
+    // Pop extraneous "dist" argument that `cargo dist` passes to us
+    let mut args: Vec<OsString> = std::env::args_os().collect();
+    if args.get(1).map(|arg| arg == "dist").unwrap_or(false) {
+        args.remove(1);
+    }
+    let config = Cli::parse_from(args);
     axocli::CliAppBuilder::new("cargo dist")
         .verbose(config.verbose)
         .json_errors(config.output_format == OutputFormat::Json)
@@ -384,8 +388,8 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
     )?;
     writeln!(out)?;
 
-    let mut fake_cli = FakeCli::command().term_width(0);
-    let full_command = fake_cli.get_subcommands_mut().next().unwrap();
+    let mut fake_cli = Cli::command().term_width(0);
+    let full_command = &mut fake_cli;
     full_command.build();
     let mut work_stack = vec![full_command];
     let mut is_full_command = true;

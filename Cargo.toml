@@ -74,15 +74,17 @@ publish = false
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.20.0-prerelease.2"
+cargo-dist-version = "0.20.0-prerelease.7"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = ["shell", "powershell", "homebrew"]
+installers = ["shell", "powershell", "npm", "homebrew"]
 # A GitHub repo to push Homebrew formulas to
 tap = "axodotdev/homebrew-tap"
+# A namespace to use when publishing this package to the npm registry
+npm-scope = "@axodotdev"
 # Publish jobs to run in CI
-publish-jobs = ["homebrew", "./publish-crates"]
+publish-jobs = ["homebrew", "npm", "./publish-crates"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
 # Publish jobs to run in CI
@@ -95,6 +97,10 @@ install-updater = false
 github-attestations = true
 # Path that installers should place binaries in
 install-path = "CARGO_HOME"
+# The archive format to use for windows builds (defaults .zip)
+windows-archive = ".tar.gz"
+# The archive format to use for non-windows builds (defaults .tar.xz)
+unix-archive = ".tar.gz"
 
 [[workspace.metadata.dist.extra-artifacts]]
 artifacts = ["dist-manifest-schema.json"]
