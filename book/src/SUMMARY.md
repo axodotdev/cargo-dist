@@ -8,7 +8,7 @@
   - [Everyone Else](./quickstart/everyone-else.md)
 - [Updating](./updating.md)
 - [Troubleshooting](./troubleshooting.md)
-- [Generic Builds](./generic-builds.md)
+- [Custom Builds](./custom-builds.md)
 - [Supplychain Security](./supplychain-security/index.md)
   - [Windows Signing](./supplychain-security/signing/windows.md)
   - [GitHub Attestations](./supplychain-security/attestations/github.md)

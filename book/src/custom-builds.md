@@ -1,4 +1,4 @@
-# Generic Builds
+# Custom Builds
 
 > since 0.5.0
 
