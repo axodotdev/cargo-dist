@@ -4,5 +4,4 @@ What you need to do to setup your project with cargo-dist depends on the languag
 
 * [Rust Quickstart](./rust.md)
 * [JavaScript Quickstart](./javascript.md)
-* [Everyone Else](./generic.md)
-* [All Of The Above!!!](./hybrid.md)
+* [Everyone Else Quickstart](./everyone-else.md)
