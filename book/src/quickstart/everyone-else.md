@@ -122,10 +122,15 @@ The important parts are that you update the crates you want to release/announce 
 
 At this point you're done! The generated CI script should pick up the ball and create a Github Release with all your builds over the next few minutes!
 
+## More details
+
+For more details on configuring builds and other advanced features, see the [custom builds][custom-builds] page.
+
 [quickstart-build]: ../img/quickstart-build.png
 [quickstart-plan]: ../img/quickstart-plan.png
 
 [build]: ../reference/cli.md#cargo-dist-build
+[custom-builds]: ../custom-builds.md
 [install]: ../install.md
 [installer]: ../installers/index.md
 [plan]: ../reference/cli.md#cargo-dist-plan

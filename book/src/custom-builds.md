@@ -2,7 +2,9 @@
 
 > since 0.5.0
 
-Although cargo-dist was originally designed specifically for Cargo-based builds, we've introduced experimental features to allow you to use it to build and distribute any software written in any language. This feature is currently a *prerelease*: details may change before it becomes stable.
+When releasing software in languages other than Rust or JavaScript, you'll need to tell cargo-dist how to build it &mdash; there are more buildsystems than stars in the sky, and cargo-dist can't know how to run all of them (or how to figure out what to release from them).
+
+This guide assumes you've already initialized the cargo-dist config; check the [quickstart guide][quickstart-everyone-else] for how to get started.
 
 ## Examples
 
@@ -80,6 +82,7 @@ All of these fields and their definitions are identical to the ones defined by [
 
 [cargo-toml]: https://doc.rust-lang.org/cargo/reference/manifest.html
 [quickstart]: ./quickstart/index.md
+[quickstart-everyone-else]: ./quickstart/everyone-else.md
 [spdx]: https://spdx.org/licenses
 [target-triple]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 [toml]: https://en.wikipedia.org/wiki/TOML
