@@ -3,7 +3,7 @@
 Nothing Yet!
 
 
-# Version 0.20.0 (2024-08-01)
+# Version 0.20.0 (2024-08-08)
 
 This release contains several new features and bugfixes.
 
