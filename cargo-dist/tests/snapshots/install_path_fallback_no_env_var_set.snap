@@ -1835,7 +1835,7 @@ try {
             "targets": [
               "aarch64-apple-darwin"
             ],
-            "runner": "macos-12",
+            "runner": "macos-13",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "cache_provider": "github"
@@ -1844,7 +1844,7 @@ try {
             "targets": [
               "x86_64-apple-darwin"
             ],
-            "runner": "macos-12",
+            "runner": "macos-13",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "cache_provider": "github"
