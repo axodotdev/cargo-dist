@@ -11,8 +11,8 @@ edit-url-template = "https://github.com/axodotdev/cargo-dist/edit/main/book/{pat
 search.use-boolean-and = true
 
 # disabled due to bugginess (#337)
-[output.linkcheck]
-warning-policy = "error"
+# [output.linkcheck]
+# warning-policy = "error"
 
 [preprocessor.toc]
 command = "mdbook-toc"

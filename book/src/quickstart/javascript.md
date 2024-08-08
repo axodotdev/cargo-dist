@@ -9,15 +9,17 @@ So you've written a JavaScript CLI application and you'd like to distribute stan
 
 🔧 This feature requires some extra setup that will be builtin in the future, please let us know if it doesn't work for you!
 
-
+This is based on the [axolotlsay-bun example project](https://github.com/axodotdev/axolotlsay-bun).
 
 
 ### Preparing Your JS Project
 
-We will be using [bun build --compile](https://bun.sh/docs/bundler/executables) to generate standalone executables for an npm project. In the future this will be more builtin, but for now we're going to need to teach your npm package to install bun and build itself. To do this we're going to add bun as a dev-dependency of our application and add a "dist" [npm script](https://docs.npmjs.com/cli/v10/using-npm/scripts) that runs bun build on itself.
+We will be using [bun build --compile](https://bun.sh/docs/bundler/executables) to generate standalone executables for an npm project. In the future this will be more builtin, but for now we're going to need to teach your npm package to install bun and build itself. To do this we're going to add bun as a dev-dependency of our application and add a "dist" [npm script](https://docs.npmjs.com/cli/v10/using-npm/scripts) that runs `bun build` on itself.
+
+[Here's what the changes look like in axolotlsay-bun](https://github.com/axodotdev/axolotlsay-bun/commit/8aeebf8dfd91527352b5d9afe0146cd752028f19).
 
 
-#### Making Your Package Install Bun
+#### Adding Bun As A Dev Dependency
 
 To make it easy for anyone working on our package to get the Right version of bun and use it, we can install it as an npm dev-dependency like so:
 
@@ -125,6 +127,7 @@ Create a file named `dist-workspace.toml` in the root of your repository. These 
 members = ["npm:relative/path/to/your/package/"]
 ```
 
+(If your project is in the root, this may just be `members = ["npm:./"]`)
 
 
 ### First Init
@@ -219,7 +222,7 @@ You can also crank this up by setting `pr-run-mode = "upload"`, which will run a
 cargo-dist largely doesn't care about the details of how you prepare your release, and doesn't yet provide tools to streamline it. All it cares about is you getting your release branch into the state you want, and then pushing a properly formatted git tag like "v0.1.0". Here's a super bare-bones release process where we're releasing by just pushing a bunch of stuff to main branch (but it would work just as well with PRs and release branches):
 
 ```sh
-# <manually update the version of your crate, run tests, etc>
+# <manually update the version of your package, run tests, etc>
 
 # commit and push to main (can be done with a PR)
 git commit -am "release: version 0.1.0"
@@ -230,7 +233,7 @@ git tag v0.1.0
 git push --tags
 ```
 
-The important parts are that you update the crates you want to release/announce to the desired version and push a git tag with that version.
+The important parts are that you update the packages you want to release/announce to the desired version and push a git tag with that version.
 
 At this point you're done! The generated CI script should pick up the ball and create a Github Release with all your builds over the next few minutes!
 
