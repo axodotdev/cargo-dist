@@ -3,6 +3,56 @@
 Nothing Yet!
 
 
+# Version 0.20.0 (2024-08-08)
+
+This release contains several new features and bugfixes.
+
+## Support for packaging C libraries
+
+Historically, cargo-dist has been focused on building and distributing binaries. There's so many more kinds of software out there, however, and we've had requests to package more kinds of artifacts. This release introduces support for two new kinds of build artifacts: C dynamic libraries, and C static libraries. While these would always be built in the past, we wouldn't package or install them for you. Starting with this release, we've now added the option to include these in your release tarballs/ZIPs and to install them in your installers.
+
+We recognize that it may cause issues if existing binary-plus-library crates began unexpectedly installing libraries with this release, so we've introduced this feature as opt-in for the time being. It may be turned on by default in a future release. To enable packaging libraries in your tarballs/ZIPs, use the [package-libraries](https://opensource.axo.dev/cargo-dist/book/reference/config.html#package-libraries) configuration option. To enable installing libraries, use the [install-libraries](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-libraries) configuration option.
+
+In the current release, libraries will be installed to the same locations as binaries in the shell and PowerShell installers, while the Homebrew installer will install them to the Homebrew-standard library paths. In the future, as we introduce new forms of installation layouts, we'll provide ways for the shell and PowerShell installers to install libraries to separate locations.
+
+Rust users can produce these with the `cdylib` and `staticlib` crate types. For more information, see the [Rust documentation](https://doc.rust-lang.org/reference/linkage.html). Generic build users can specify which libraries to include using the `cdylibs` and `cstaticlibs` configuration fields in `dist.toml`.
+
+* impl @mistydemeo
+  * [Support cdylibs from Rust/generic projects](https://github.com/axodotdev/cargo-dist/pull/1182)
+  * [Build and install static libs](https://github.com/axodotdev/cargo-dist/pull/1214)
+
+## Custom pre-build actions in CI
+
+This release introduces an experimental feature which makes it possible to run arbitrary extra build steps before cargo-dist's own build step during GitHub Actions runs. This can be useful for users who have mandatory pre-build setup they want to perform which can't be satisfied using the system dependencies feature. For example, a build which requires a custom installation of lua could specify that these two extra steps should be performed before the build begins:
+
+```yaml
+- name: Install Lua
+  uses: xpol/setup-lua@v1
+  with:
+    lua-version: "5.3"
+- name: Check lua installation
+  run: lua -e "print('hello world!')"
+```
+
+For more information, [consult the documentation](https://opensource.axo.dev/cargo-dist/book/ci/github.html#customizing-build-setup).
+
+* impl @FreeMasen [ci: add github build setup configuration](https://github.com/axodotdev/cargo-dist/pull/1217)
+
+## The First Rumblings Of 1.0
+
+This release introduces the first steps in a major overhaul of cargo-dist that makes it more suitable for building and distributing apps that aren't written in Rust. This is something we've supported for a long time, but now we're making a big push to make it first-class and stabilizing all the parts.
+
+There is also now experimental support for natively understanding JS projects, to make it easier to use dist for standalone JS executables. [Read the new JS quickstart for details!](https://opensource.axo.dev/cargo-dist/book/quickstart/javascript.html)
+
+Several other pages of the docs have seen overhauls, and many more are to come.
+
+## Fixes
+
+* @mistydemeo [init: ensure terminal is restored when interrupted](https://github.com/axodotdev/cargo-dist/pull/1253)
+* @mistydemeo [fix: add missing triples to linkage check](https://github.com/axodotdev/cargo-dist/pull/1221)
+* @Colonial-Dev [fix: compatibility issues with Bash on certain distributions (Fedora, EL)](https://github.com/axodotdev/cargo-dist/pull/1189)
+
+
 # Version 0.19.1 (2024-07-12)
 
 This is a minor release that makes cargo-dist build with versions of rustc older than 1.79.0 (as of this writing, the latest release). The previous cargo-dist release accidentally relied on the rustc's [new temporary lifetime extension features](https://blog.rust-lang.org/2024/06/13/Rust-1.79.0.html#extending-automatic-temporary-lifetime-extension), making us suddenly require bleeding edge rustc for no good reason.
