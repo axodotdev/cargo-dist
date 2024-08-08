@@ -86,7 +86,7 @@ You can also crank the pull-request mode up to include the "build" step, in whic
 [workflow-artifacts]: ./img/workflow-artifacts.png
 [pr-fail]: ./img/pr-fail.png
 
-[github-ci]: ./ci/github.md
+[github-ci]: ./ci/index.md
 [ci-providers]: ./ci/index.md
 [installers]: ./installers/index.md
 [tarballs]: ./artifacts/archives.md

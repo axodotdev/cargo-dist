@@ -41,5 +41,5 @@ If you use the axoupdater crate to implement the updater yourself, instructions 
 [axoupdater-token-docs]: https://github.com/axodotdev/axoupdater?tab=readme-ov-file#github-actions-and-rate-limits-in-ci
 [cargo-dist-ci-config]: https://github.com/axodotdev/cargo-dist/blob/80f2e19e5aa79b7b1f64beb62ceb07aa71566707/.github/workflows/ci.yml#L82-L85
 [crate]: https://crates.io/crates/axoupdater
-[shell]: ../shell.md
-[PowerShell]: ../powershell.md
+[shell]: ./shell.md
+[PowerShell]: ./powershell.md

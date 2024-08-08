@@ -9,9 +9,9 @@ Having an issue with cargo-dist? Here's some of the common issues and solutions!
 
 Regardless of the issue, these are the "default" troubleshooting steps that are good to keep in mind:
 
-1. diagnose: [run `cargo dist plan`](./way-too-quickstart.md#check-what-ci-will-build)
+1. diagnose: [run `cargo dist plan`](./quickstart/rust.md#check-what-ci-will-build)
 2. update and repair: [run `cargo dist init` again](./updating.md)
-3. test your process: [try `pr-run-mode = "upload"`](./ci/github.md#build-and-upload-artifacts-on-every-pull-request)
+3. test your process: [try `pr-run-mode = "upload"`](./ci/customizing.md#build-and-upload-artifacts-on-every-pull-request)
 
 These are also great steps to follow proactively, if you're updating your cargo-dist config.
 
@@ -53,7 +53,7 @@ If this is the case then presumably your release process errored out before the 
 
 Well, one side-effect needs to be dealt with, but it's the one you did to kick off the release: [delete the git tag from github and your local machine](https://stackoverflow.com/questions/5480258/how-can-i-delete-a-remote-tag), get your build sorted out, and then tag the new release commit.
 
-"Get your build sorted out" is of course, eliding a lot of details. If the issue appears to be exclusive to cargo-dist CI, we recommend opening a PR against your project with [`pr-run-mode = "upload"`](./ci/github.md#build-and-upload-artifacts-on-every-pull-request) temporarily enabled. This will run all of the build steps for your release process without you needing to push a git tag, so you're free to experiment and rapidly iterate without *any* risk of side-effects.
+"Get your build sorted out" is of course, eliding a lot of details. If the issue appears to be exclusive to cargo-dist CI, we recommend opening a PR against your project with [`pr-run-mode = "upload"`](./ci/customizing.md#build-and-upload-artifacts-on-every-pull-request) temporarily enabled. This will run all of the build steps for your release process without you needing to push a git tag, so you're free to experiment and rapidly iterate without *any* risk of side-effects.
 
 
 
@@ -62,7 +62,7 @@ Well, one side-effect needs to be dealt with, but it's the one you did to kick o
 Changelogs are arguably the most important and challenging part of a release process. Although cargo-dist currently has no way to Do Changelogs For You, it does have several features for Using Your Changelogs:
 
 * [Having cargo-dist parse your RELEASES or CHANGELOG file](./workspaces/simple-guide.md#release-notes)
-* [Telling cargo-dist you're bringing your own changelogs with tools like release-drafter](./ci/github.md#bring-your-own-release)
+* [Telling cargo-dist you're bringing your own changelogs with tools like release-drafter](./ci/customizing.md#bring-your-own-release)
 
 The latter will just have cargo-dist not clobber the changelogs you upload to Github Releases, and is therefore easy to fix: just hand-edit your Github Release more.
 

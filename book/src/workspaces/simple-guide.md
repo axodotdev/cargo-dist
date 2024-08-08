@@ -2,7 +2,7 @@
 
 <!-- toc -->
 
-Let's start with the kind of simple [Cargo Workspace][workspace] you would get from `cargo new my-app` (or `cargo init my-app`): a single package that defines a [binary target][bin]. This is exactly the situation the [Way-Too-Quickstart][way-too-quickstart] should work perfectly for. Here we're going to take it a bit slower.
+Let's start with the kind of simple [Cargo Workspace][workspace] you would get from `cargo new my-app` (or `cargo init my-app`): a single package that defines a [binary target][bin]. This is exactly the situation the [quickstart][way-too-quickstart] should work perfectly for. Here we're going to take it a bit slower.
 
 Our goal will be to setup a Github CI workflow that announces a new release of our application with a Github Release. The workflow will also build our application for the 3 major desktop platforms, wrap the binaries in zips/tarballs, and upload them to the Github Release. The Github Release's text will also include the relevant release notes from our RELEASES.md file.
 
@@ -184,7 +184,7 @@ If none of the previous rules apply, "1.0.0-prerelease.1" will also match a spec
 
 [install]: ../install.md
 [concepts]: ../reference/concepts.md
-[way-too-quickstart]: ../way-too-quickstart.md
+[way-too-quickstart]: ../quickstart/index.md
 [init]:  ../reference/cli.md#cargo-dist-init
 [generate]:  ../reference/cli.md#cargo-dist-generate
 [plan]:  ../reference/cli.md#cargo-dist-plan
