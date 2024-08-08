@@ -18,6 +18,3 @@ If you haven't yet signed up, please join our discord
         --tag=v1.0.0-FAKEVERSION will Announce: cargo-dist
         
         you can also request any single package with --tag=cargo-dist-v1.0.0-FAKEVERSION
-        
-
-

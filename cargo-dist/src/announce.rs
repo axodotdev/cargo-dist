@@ -175,19 +175,25 @@ fn check_dist_package(
     pkg: &axoproject::PackageInfo,
     announcing: &PartialAnnouncementTag,
 ) -> Option<String> {
-    let package_libraries = graph
-        .package_metadata(pkg_id)
-        .package_libraries
-        .clone()
-        .unwrap_or_default();
+    let config = graph.package_config(pkg_id).clone();
 
     let mut package_empty = pkg.binaries.is_empty();
     let mut missing_categories = vec!["binaries"];
-    if package_libraries.contains(&LibraryStyle::CDynamic) {
+    if config
+        .artifacts
+        .archives
+        .package_libraries
+        .contains(&LibraryStyle::CDynamic)
+    {
         package_empty &= pkg.cdylibs.is_empty();
         missing_categories.push("cdylibs");
     }
-    if package_libraries.contains(&LibraryStyle::CStatic) {
+    if config
+        .artifacts
+        .archives
+        .package_libraries
+        .contains(&LibraryStyle::CStatic)
+    {
         package_empty &= pkg.cstaticlibs.is_empty();
         missing_categories.push("cstaticlibs");
     }
@@ -198,7 +204,7 @@ fn check_dist_package(
     }
 
     // If [metadata.dist].dist is explicitly set, respect it!
-    let override_publish = if let Some(do_dist) = graph.package_metadata(pkg_id).dist {
+    let override_publish = if let Some(do_dist) = config.dist {
         if !do_dist {
             return Some("dist = false".to_owned());
         } else {

@@ -185,7 +185,7 @@ impl GithubCiInfo {
         let mut local_targets = SortedSet::new();
         for release in &dist.releases {
             local_targets.extend(release.targets.iter());
-            dependencies.append(&mut release.system_dependencies.clone());
+            dependencies.append(&mut release.config.builds.system_dependencies.clone());
         }
 
         // Get the platform-specific installation methods
