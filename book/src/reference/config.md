@@ -1,5 +1,18 @@
 # Config
 
+These are the reference docs for configuring cargo-dist. [cargo dist init][init] manages the most important of these for you, but if you ever need advanced configuration, this is where to look!
+
+Configuration is currently read from the following sources, in increasing preference:
+
+1. Your language-specific project manifests like [Cargo.toml][rust-guide] or [package.json][js-guide]
+2. Your workspace dist config in [dist-workspace.toml][js-guide] or [dist.toml][project-guide]
+3. Your package dist config in [dist.toml][project-guide]
+
+We're currently in the middle of [a major config migration](https://github.com/axodotdev/cargo-dist/pull/1247). For [existing Rust users][rust-guide], all references to the `[dist]` section in dist-workspace.toml and dist.toml may also refer to `[workspace.metadata.dist]` or `[package.metadata.dist]` in your Cargo.toml.
+
+
+
+
 
 [`[dist]`](#the-dist-section)
 * [`allow-dirty`](#allow-dirty)
@@ -115,7 +128,7 @@ This section represents all the configuration for how cargo-dist should build an
 > <span style="float:right">since 0.3.0<br>[global-only][]</span>
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > allow-dirty = ["ci", "msi"]
@@ -137,7 +150,7 @@ Possible values are:
 > <span style="float:right">since 0.3.0<br>[global-only][]</span>
 > default = `<none>` (this is mandatory!)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > cargo-dist-version = "0.10.0"
@@ -156,7 +169,7 @@ The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a V
 > [📖 read the guide for this feature!][distribute] \
 > default = `<none>` (infer it)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > dist = true
@@ -177,7 +190,7 @@ There are 3 major cases where you might use this:
 > [📖 read the guide for this feature!][build-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > targets = [
@@ -214,7 +227,7 @@ By default all runs of `cargo-dist` will be trying to handle all platforms speci
 > [📖 read the checksum guide!](../artifacts/checksums.md) \
 > default = `"sha256"`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > checksum = "sha512"
@@ -241,7 +254,7 @@ Future work is planned to [support more robust signed checksums][issue-sigstore]
 > [📖 read the artifacts guide!][artifacts] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [[dist.extra-artifacts]]
 > artifacts = ["schema.json"]
@@ -270,7 +283,7 @@ cargo-dist uses this feature to distribute its [`dist-manifest-schema.json`](./s
 > [📖 read the artifacts guide!][artifacts] \
 > default = `true`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > source-tarball = false
@@ -285,7 +298,7 @@ By default, cargo-dist creates and uploads source tarballs from your repository.
 > [📖 read the windows signing guide!](../supplychain-security/signing/windows.md) \
 > default = `<none>` (disabled)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > ssldotcom-windows-sign = "prod"
@@ -309,7 +322,7 @@ These strings match the [environment_name setting](https://github.com/SSLcom/esi
 > [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `true`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > auto-includes = false
@@ -326,7 +339,7 @@ See also: [`include`](#include)
 > [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > include = [
@@ -350,7 +363,7 @@ See also: [`auto-includes`](#auto-includes)
 > [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > package-libraries = ["cdylib", "cstaticlib"]
@@ -367,7 +380,7 @@ When enabled, libraries will be included in your [archives][] alongside your bin
 > [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `".tar.xz"`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > unix-archive = ".tar.gz"
@@ -384,7 +397,7 @@ See [windows-archive](#windows-archive) for a complete list of supported values.
 > [📖 read the archives guide!](../artifacts/archives.md) \
 > default = `".zip"`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > windows-archive = ".tar.gz"
@@ -413,7 +426,7 @@ These settings configure [your builds][build-guide].
 > [📖 read the guide for this feature!][build-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist.dependencies.homebrew]
 > cmake = '*'
@@ -455,7 +468,7 @@ These settings are specific to how we [build your Cargo projects][cargo-build-gu
 > [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > all-features = true
@@ -470,7 +483,7 @@ Specifies that all features for a Cargo package should be enabled when building 
 > [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `true`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > default-features = false
@@ -484,7 +497,7 @@ Specifies that default features for a Cargo package should be enabled when build
 > [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > features = ["serde-support", "fancy-output"]
@@ -500,7 +513,7 @@ For instance for packages that are a library and a CLI binary, some developers p
 > [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `true`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > msvc-crt-static = false
@@ -520,7 +533,7 @@ This config exists as a blunt way to return to the default Rust behaviour of dyn
 > [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > precise-builds = true
@@ -563,7 +576,7 @@ If we instead set `all-features = true` on the workspace, then we will just pass
 > [📖 read the Cargo project guide!][cargo-build-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > rust-toolchain-version = "1.67.1"
@@ -588,7 +601,7 @@ Installers [main installer docs][installers]!
 > [📖 read the installer guides!][installers] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > installers = [
@@ -617,7 +630,7 @@ Possible values:
 > [📖 read the guide for this feature!][build-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist.bin-aliases]
 > mybin = ["somealias"]
@@ -640,7 +653,7 @@ This is a map of binary names to aliases that your [installers][] should create 
 > [📖 read the guide for this feature!][build-guide] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > install-libraries = ["cdylib", "cstaticlib"]
@@ -663,7 +676,7 @@ These settings are specific to the [shell][shell-installer] and [powershell][pow
 > 📖 read the [shell][shell-installer] and [powershell][powershell-installer] installer guides!\
 > default = `"everything's installed!"`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > custom-success-msg = "axolotlsay is ready to rumble! >o_o<"
@@ -678,7 +691,7 @@ The message to display on success in the [shell][shell-installer] and [powershel
 > 📖 read the [shell][shell-installer] and [powershell][powershell-installer] installer guides!\
 > default = `"CARGO_HOME"`
 >
-> examples
+> in your dist-workspace.toml or dist.tomls
 > ```toml
 > [dist]
 > install-path = "~/.my-app/"
@@ -724,7 +737,7 @@ Future Improvements:
 > [📖 read the updater guide!][updater] \
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > install-updater = true
@@ -747,7 +760,7 @@ These settings are specific to the [npm installer][npm-installer].
 > [📖 read the npm installer guide!][npm-installer] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > npm-scope = "@axodotdev"
@@ -766,7 +779,7 @@ See also: [npm-package](#npm-package)
 > [📖 read the npm installer guide!][npm-installer] \
 > default = [package.name](#packagename)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > npm-package = "mycoolapp"
@@ -787,7 +800,7 @@ These settings are specific to the [homebrew installer][homebrew-installer].
 > [📖 read the homebrew installer guide!][homebrew-installer] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > tap = "axodotdev/homebrew-tap"
@@ -804,7 +817,7 @@ It's conventional for the repo name to start with `homebrew-`.
 > [📖 read the homebrew installer guide!][homebrew-installer] \
 > default = [package.name](#packagename)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > formula = "axolotlbrew"
@@ -824,7 +837,7 @@ These settings are specific to how we publish your packages to package managers 
 > <span style="float:right">since 0.2.0<br>[global-only][]</span>
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > publish-preleases = true
@@ -843,7 +856,7 @@ hese settings govern how we host your files with platforms like [GitHub Releases
 > [📖 read the releases guide!][github-releases-guide] \
 > default = `<none>` (infer based on [ci](#ci))
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > hosting = ["axodotdev", "github"]
@@ -870,7 +883,7 @@ a host to win for fetching installers, and if you're using axo Releases at all y
 > [📖 read the releases guide!][github-releases-guide] \
 > default = `true`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > display = false
@@ -885,7 +898,7 @@ Specifies whether this package should be displayed in release bodies of [hosting
 > [📖 read the releases guide!][github-releases-guide] \
 > default = [package.name](#packagename)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > display-name = "my cool app"
@@ -900,7 +913,7 @@ Specifies how to refer to the package in release bodies of [hosting providers](#
 > [📖 read the releases guide!][github-releases-guide] \
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > force-latest = true
@@ -927,7 +940,7 @@ hese settings govern how we host your files on [GitHub Releases][github-releases
 > [📖 read the guide for this feature!](../supplychain-security/attestations/github.md) \
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > github-attestations = true
@@ -942,7 +955,7 @@ If you're using GitHub Releases, this will enable GitHub's experimental artifact
 > [📖 read the releases guide!][github-releases-guide] \
 > default = "auto"
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > github-release = "announce"
@@ -972,7 +985,7 @@ However, if you're publishing only packages that don't reference hosted artifact
 > [📖 read the releases guide!][github-releases-guide] \
 > default = `<none>` (use the project's own repository)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > github-releases-repo = "myorg/public"
@@ -995,7 +1008,7 @@ GitHub Releases isn't really designed for this, so there's a few strange things 
 > [📖 read the releases guide!][github-releases-guide] \
 > default = `<none>` (use the project's root repository)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > github-releases-submodule-path = "rel/path/to/submodule"
@@ -1010,7 +1023,7 @@ Designed for use with [github-releases-repo](#github-releases-repo) setting. Whe
 > [📖 read the releases guide!][github-releases-guide] \
 > default = `true`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > create-release = false
@@ -1037,7 +1050,7 @@ These settings govern how [your CI should work][github-ci], including how to tri
 > [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > ci = ["github"]
@@ -1053,7 +1066,7 @@ This is a list of CI backends you want to support, allowing cargo-dist to know w
 > [📖 read the ci customization guide!][github-ci] \
 > default = `true`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > build-local-artifacts = false
@@ -1083,7 +1096,7 @@ Also note that for legacy reasons a tarball is expected to have all the contents
 > [📖 read the ci customization guide!][github-ci] \
 > default = `<none>` (inferred, probably `false`)
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > cache-builds = true
@@ -1102,7 +1115,7 @@ The cases where we enable it by default are the only ones we know where you *mig
 > [📖 read the ci customization guide!][github-ci] \
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > dispatch-releases = true
@@ -1121,7 +1134,7 @@ By default the workflow dispatch form will have "dry-run" populated as the tag, 
 > [📖 read the ci customization guide!][github-ci] \
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > fail-fast = true
@@ -1140,7 +1153,7 @@ Either way, the global build task will refuse to run if any of these tasks fail,
 > [📖 read the ci customization guide!][github-ci] \
 > default = `"plan"`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > pr-run-mode = "upload"
@@ -1159,7 +1172,7 @@ This setting determines to what extent we run your Release CI on pull-requests:
 > [📖 read the ci customization guide!][github-ci] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > tag-namespace = "some-prefix"
@@ -1176,7 +1189,7 @@ Setting `tag-namespace = "owo"` will change the tag matching expression we put i
 > [📖 read the ci customization guide!][github-ci] \
 > default = `false`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > merge-tasks = true
@@ -1201,7 +1214,7 @@ These settings are specific to [your cargo-dist GitHub CI][github-ci].
 > [📖 read the ci customization guide!][github-ci] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > github-build-setup = "path/to/build-setup.yml"
@@ -1218,7 +1231,7 @@ performed before we call `cargo dist build`.
 > [📖 read the ci customization guide!][github-ci] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > publish-jobs = ["npm", "./my-custom-publish"]
@@ -1239,7 +1252,7 @@ All other custom jobs default to no special permissions.
 > [📖 read the ci customization guide!][github-ci] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist.github-custom-runners]
 > aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
@@ -1268,7 +1281,7 @@ These settings all similarly extend [your cargo-dist GitHub CI][github-ci] with 
 > [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > plan-jobs = ["./my-job"]
@@ -1283,7 +1296,7 @@ This setting determines which custom jobs to run during the "plan" phase, which 
 > [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > local-artifacts-jobs = ["./my-job"]
@@ -1298,7 +1311,7 @@ This setting determines which custom jobs to run during the "build local artifac
 > [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > global-artifacts-jobs = ["./my-job"]
@@ -1313,7 +1326,7 @@ This setting determines which custom jobs to run during the "build global artifa
 > [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > host-jobs = ["./my-job"]
@@ -1328,7 +1341,7 @@ This setting determines which custom jobs to run during the "host" phase, during
 > [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > publish-jobs = ["homebrew", "npm", "./my-custom-job"]
@@ -1346,7 +1359,7 @@ This setting determines which publish jobs to run. It accepts 3 kinds of value:
 > [📖 read the ci customization guide!][github-ci] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [dist]
 > post-announce-jobs = ["./my-job"]
@@ -1379,7 +1392,7 @@ This section is only available in `dist-workspace.toml` files.
 > [📖 read the project structure guide!][project-guide] \
 > default = `[]`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [workspace]
 > members = [
@@ -1409,7 +1422,7 @@ This section is available in `dist.toml` and `dist-workspace.toml` files.
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > name = "my-cool-app"
@@ -1428,7 +1441,7 @@ The name is used in a myriad of places to refer to your application and its rele
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > version = "1.2.0-prerelease.2"
@@ -1447,7 +1460,7 @@ The version is used in a myriad of places to refer to your application and its r
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > version = "A cool application that solves all your problems!"
@@ -1466,7 +1479,7 @@ This may be used in the metadata of various [installers][].
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > authors = ["axodotdev <hello@axo.dev>"]
@@ -1484,7 +1497,7 @@ This may be used in the metadata of various [installers][]. We recommend keeping
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > repository = "https://github.com/axodotdev/axolotolsay"
@@ -1509,7 +1522,7 @@ This is *essentially* required as almost all cargo-dist features are blocked beh
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > homepage = "https://opensource.axo.dev/axolotlsay"
@@ -1528,7 +1541,7 @@ This may be used in the metadata of various [installers][].
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > documentation = "https://docs.rs/axolotlsay"
@@ -1547,7 +1560,7 @@ This may be used in the metadata of various [installers][].
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > changelog = "../CHANGELOG.md"
@@ -1566,7 +1579,7 @@ This can be used by various cargo-dist features that use your changelog, such as
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > readme = "../README.md"
@@ -1585,7 +1598,7 @@ This can be used by various cargo-dist features that use your readme, such as [a
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > license = "MIT OR Apache-2.0"
@@ -1604,7 +1617,7 @@ This may be used in the metadata of various [installers][].
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > readme = ["../LICENSE-MIT", "../LICENSE-APACHE"]
@@ -1623,7 +1636,7 @@ This can be used by various cargo-dist features that use your license files, suc
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > binaries = ["my-app", "my-other-app"]
@@ -1644,7 +1657,7 @@ See also: [bin-aliases](#bin-aliases), [cstaticlibs](#packagecstaticlibs), [cdyl
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > cstaticlibs = ["mystaticlib", "some-helper"]
@@ -1665,7 +1678,7 @@ See also: [binaries](#packagebinaries), [cdylibs](#packagecdylibs)
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > cdylibs = ["mydylib", "some-other-helper"]
@@ -1687,7 +1700,7 @@ See also: [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs)
 > [📖 read the project structure guide!][project-guide] \
 > default = `<none>`
 >
-> example
+> in your dist-workspace.toml or dist.toml
 > ```toml
 > [package]
 > build-command = ["make", "dist"]
@@ -1696,6 +1709,18 @@ See also: [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs)
 A command to run in your package's root directory to build its [binaries](#packagebinaries), [cstaticlibs](#packagecstaticlibs), and [cdylibs](#packagecdylibs).
 
 If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc. (This is often preferred since we can natively understand e.g. [Cargo builds](#cargo-build-settings)).
+
+
+## setting availabilities
+
+Throughout the above docs, different settings will have different rules for where they can be specified (root workspace config file or package config file), and how they'll be inherited.
+
+* global-only: this setting can only be set in the root workspace config ([dist-workspace.toml][js-guide] or [dist.toml][project-guide])
+* package-only: this setting can only be set in a package config ([dist.toml][project-guide])
+* package-local: this setting can be set in either, with the package overidding the workspace value if it provides one (and otherwise inheriting it).
+
+When you override a package-local setting, the workspace value will be discarded completely. So for instance if the workspace sets `features = ["feature1", "feature2"]` and a package sets `features = ["feature2", "feature3"]`, then that package will only get feature2 and feature3.
+
 
 
 [issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
@@ -1727,9 +1752,9 @@ If not specified, this can be inherited from a language's native package format 
 [updater]: ../installers/updater.md
 [github-workflow-step]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsid
 
-[global-only]: #availabilities
-[package-only]: #availabilities
-[package-local]: #availabilities
+[global-only]: #setting-availabilities
+[package-only]: #setting-availabilities
+[package-local]: #setting-availabilities
 
 [artifacts]: ../artifacts/index.md
 [hosting]: ../ci/index.md
@@ -1737,16 +1762,13 @@ If not specified, this can be inherited from a language's native package format 
 [github-releases-guide]: ../ci/index.md
 [init]: ../updating.md
 
-# "how we select packages? what we distribute?"
-[distribute]: #TODO
+[distribute]: ../artifacts/index.md
 
-# lang guides
-[project-guide]: #TODO
-[js-guide]: #TODO
-[rust-guide]: #TODO
+[project-guide]: ../custom-builds.md
+[js-guide]: ../quickstart/javascript.md
+[rust-guide]: ../quickstart/rust.md
 
-# build guides
-[build-guide]: #TODO
-[cargo-build-guide]: #TODO
-[binaries]: #TODO
-[compiled libraries]: #TODO
+[build-guide]: ../artifacts/index.md
+[cargo-build-guide]: ../artifacts/index.md
+[binaries]: ../artifacts/index.md
+[compiled libraries]: ../artifacts/index.md
