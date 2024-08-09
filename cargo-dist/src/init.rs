@@ -1285,7 +1285,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     apply_optional_value(
         table,
         "pr-run-mode",
-        "# Publish jobs to run in CI\n",
+        "# Which actions to run on pull requests\n",
         pr_run_mode.as_ref().map(|m| m.to_string()),
     );
 
