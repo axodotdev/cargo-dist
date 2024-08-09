@@ -725,6 +725,7 @@ fn generate_installer(
             installer::homebrew::write_homebrew_formula(dist, info, manifest)?
         }
         InstallerImpl::Msi(info) => info.build(dist)?,
+        InstallerImpl::AppImage(info) => info.build(dist)?,
     }
     Ok(())
 }

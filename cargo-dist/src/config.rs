@@ -948,6 +948,8 @@ pub enum InstallerStyle {
     Homebrew,
     /// Generate an msi installer that embeds the binary
     Msi,
+    /// Generate an Appimage installer
+    AppImage
 }
 
 impl std::fmt::Display for InstallerStyle {
@@ -958,6 +960,7 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Npm => "npm",
             InstallerStyle::Homebrew => "homebrew",
             InstallerStyle::Msi => "msi",
+            InstallerStyle::AppImage => "app-image"
         };
         string.fmt(f)
     }
