@@ -355,10 +355,16 @@ pub struct WorkspaceInfo {
     pub workspace_dir: Utf8PathBuf,
     /// Path to the root manifest of the workspace
     ///
-    /// This can be either a Cargo.toml or package.json. In either case this manifest
-    /// may or may not represent a "real" package. Both systems have some notion of
-    /// "virtual" manifest which exists only to list the actual packages in the workspace.
+    /// This can be either a Cargo.toml, package.json, dist.toml, or dist-workspace.toml.
+    ///
+    /// In most cases this manifest may or may not represent a "real" package. Many systems
+    /// have some notion of "virtual" manifest which exists only to list the actual packages
+    /// in the workspace.
     pub manifest_path: Utf8PathBuf,
+    /// Path to the dist.toml or dist-workspace.toml for the workspace
+    ///
+    /// If this is ever set, then this will be the same as manifest_path.
+    pub dist_manifest_path: Option<Utf8PathBuf>,
     /// If the workspace root has some auto-includeable files, here they are!
     ///
     /// This is currently what is use for top-level Announcement contents.
@@ -443,8 +449,13 @@ pub struct PackageInfo {
     ///
     /// This may be needed when e.g. talking to cargo about the package.
     pub true_version: Option<Version>,
-    /// Path to the manifest for this package
+    /// Path to the primary manifest for this package
     pub manifest_path: Utf8PathBuf,
+    /// Path to a dist.toml overriding this package's contents
+    ///
+    /// NOTE: this WILL be the same path as the manifest_path for a pure dist.toml
+    /// package. Don't assume these are disjoint!
+    pub dist_manifest_path: Option<Utf8PathBuf>,
     /// Path to the root dir for this package
     pub package_root: Utf8PathBuf,
     /// Name of the package

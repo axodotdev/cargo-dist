@@ -93,6 +93,7 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
         name: name.to_owned(),
         version,
         manifest_path,
+        dist_manifest_path: None,
         package_root,
         description: Some(REPO_DESC.to_owned()),
         authors: vec![],
@@ -129,6 +130,7 @@ pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceGraph {
             target_dir,
             workspace_dir,
             manifest_path,
+            dist_manifest_path: None,
             root_auto_includes: AutoIncludes {
                 readme: None,
                 licenses: vec![],

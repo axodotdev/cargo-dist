@@ -387,8 +387,8 @@ fn has_metadata_table(workspace_info: &WorkspaceInfo) -> bool {
             .unwrap_or(false)
     } else {
         config::parse_metadata_table_or_manifest(
-            workspace_info.kind,
             &workspace_info.manifest_path,
+            workspace_info.dist_manifest_path.as_deref(),
             workspace_info.cargo_metadata_table.as_ref(),
         )
         .is_ok()
@@ -410,8 +410,8 @@ fn get_new_dist_metadata(
 
     let mut meta = if has_config {
         config::parse_metadata_table_or_manifest(
-            root_workspace.kind,
             &root_workspace.manifest_path,
+            root_workspace.dist_manifest_path.as_deref(),
             root_workspace.cargo_metadata_table.as_ref(),
         )?
     } else {

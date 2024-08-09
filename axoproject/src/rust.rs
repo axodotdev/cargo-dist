@@ -95,6 +95,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
             workspace_dir,
 
             manifest_path,
+            dist_manifest_path: None,
             root_auto_includes,
             cargo_metadata_table,
             cargo_profiles,
@@ -203,6 +204,7 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         name: package.name().to_owned(),
         version,
         manifest_path,
+        dist_manifest_path: None,
         package_root: package_root.clone(),
         description: package.description().map(ToOwned::to_owned),
         authors: package.authors().to_vec(),

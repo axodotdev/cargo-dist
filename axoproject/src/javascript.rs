@@ -123,6 +123,7 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
         name: package_name,
         version,
         manifest_path: manifest_path.to_owned(),
+        dist_manifest_path: None,
         package_root: root.clone(),
         description: manifest.description,
         authors,
@@ -164,6 +165,7 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
             workspace_dir: root,
 
             manifest_path: manifest_path.to_owned(),
+            dist_manifest_path: None,
             root_auto_includes,
             #[cfg(feature = "cargo-projects")]
             cargo_metadata_table: None,

@@ -465,6 +465,18 @@ pub enum DistError {
         /// Error messsage details
         message: String,
     },
+
+    /// Something has metadata.dist but shouldn't
+    #[error("The metadata.dist entry in this Cargo.toml isn't being used: {manifest_path}")]
+    #[diagnostic(help(
+        "You probably want to move them to the [dist] section in {dist_manifest_path}"
+    ))]
+    UnusedMetadata {
+        /// The manifest that had the metadata.dist
+        manifest_path: Utf8PathBuf,
+        /// The dist.toml/dist-workspace.toml that means it's ignored
+        dist_manifest_path: Utf8PathBuf,
+    },
 }
 
 /// This error indicates we tried to deserialize some YAML with serde_yml
