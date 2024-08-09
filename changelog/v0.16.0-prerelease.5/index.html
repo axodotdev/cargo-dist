@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.16.0-prerelease.5</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release pre-release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.16.0-prerelease.5
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jun 12 2024 at 20:27 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release introduces some new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html" rel="noopener noreferrer">supplychain security features</a>, and fixes some bugs.</p>
+<h2>GitHub Artifact Attestations</h2>
+<p>With the new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html" rel="noopener noreferrer"><code>github-attestations = true</code> setting</a> you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.</p>
+<ul>
+<li>@dunxen <a href="https://github.com/axodotdev/cargo-dist/pull/1012" rel="noopener noreferrer">feat: add support for github artifact attestations</a></li>
+</ul>
+<h2>Reducing Third-Party Actions</h2>
+<p>We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing <a href="https://github.com/ncipollo/release-action" rel="noopener noreferrer">ncipollo/release-action</a> with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.</p>
+<p>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1089" rel="noopener noreferrer">feat: use the raw github cli instead of an action for releases</a></p>
+<h2>Autodetect Buildjet Runners For Rust Cache</h2>
+<p>We use <a href="https://github.com/Swatinem/rust-cache" rel="noopener noreferrer">swatinem/rust-cache</a> to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">enable buildjet for arm linux builds</a>, so hopefully those should be faster now!</p>
+<p>@gankra + @arlyon <a href="https://github.com/axodotdev/cargo-dist/pull/1129" rel="noopener noreferrer">feat: autodetect buildjet runners to use their backend for rust cache</a></p>
+<h2>Path Flexibility For Extra Artifacts</h2>
+<p>Previously <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts" rel="noopener noreferrer">the extra-artifacts setting</a> didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.</p>
+<p>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1128" rel="noopener noreferrer">fix: rework extra_artifacts to properly use paths</a></p>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.17.0 (2024-06-27)</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.17.0
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jun 27 2024 at 14:00 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release is mostly several fixes to how we create GitHub Releases, as well as some internal improvements for future feature work.</p>
+<h2>GitHub Release Ordering</h2>
+<p>We now prefer creating your <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer">GitHub Release in the host step</a>, ensuring published npm and Homebrew packages never refer to URLs that don't yet exist.</p>
+<p>Conceptually the cargo-dist pipeline is as follow:</p>
+<ol>
+<li>plan the release</li>
+<li>build the artifacts</li>
+<li>host the artifacts</li>
+<li>publish the packages (these can fetch the hosted artifacts!)</li>
+<li>announce the release (this says to install the published packages!)</li>
+</ol>
+<p>GitHub Releases has always been a bit problematic as a hosting provider because it's both where we want to host our files, and creating it is also in some sense announcing the release. Ideally you would be able to draft the GitHub Release to host your files, publish everything that references those files, and then undraft it at the end to announce and tag the release. However the URLs of artifacts in a draft release are temporary, and go away when you undraft it, so this doesn't work.</p>
+<p>When we first created cargo-dist, we didn't support publishing packages, so we put GitHub Release at the end, since it was basically the only "side-effect" of running cargo-dist, and you want those at the end. Once we added publishing of things to npm and homebrew, the dual nature of GitHub releases became way more apparent.</p>
+<p>In fact, because the GitHub Release contains instructions to install from npm/homebrew, there was essentially a circular dependency between them, with no way to publish all of them in a non-racey way. At the time we opted for preserving existing behaviour of GitHub Last, resulting in a roughly 30 second period where npm/homebrew packages would be published but would error out on install because the artifacts aren't yet uploaded.</p>
+<p>We were of course frustrated with this and <a href="https://blog.axo.dev/2024/01/axo-releases-urls" rel="noopener noreferrer">had a lot of words to say about URLs, resulting in us making axo Releases, which solved the problem properly</a>.</p>
+<p>But pure GitHub users aren't going away, and this conflict still exists for them. Since then it's become increasingly clear that we made the wrong call here, and in fact the npm/homebrew package integrity is <em>way</em> more important than someone maybe getting an email about a GitHub Release referencing packages that don't yet exist. As such we've reversed the original decision and moved GitHub Releases to the host step.</p>
+<p>When using axo Releases together with GitHub Releases, GitHub remains in the announce step where it belongs, because it's more of a mirror/announcement, and not the canonical file host.</p>
+<p>If for whatever reason you need to get the old behaviour back, you can use the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer"><code>github-release = "announce"</code> config</a>.</p>
+<p>The only reason you might want to override this setting is if you're using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases" rel="noopener noreferrer"><code>dispatch-releases = true</code></a> and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist, and many organizations really don't like when you delete/change git tags). In this case setting <code>github-release = "announce"</code> will accomplish that, but the above race conditions would then apply.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer">docs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1171" rel="noopener noreferrer">fix: prefer creating github releases in host step</a></li>
+</ul>
+<h2>GitHub Release Reliability</h2>
+<p>GitHub Releases should once again be created transactionally, preventing a release from being created without its artifacts being uploaded, if uploading the artifacts fails for any reason. This fixes a regression from the previous release.</p>
+<p>When using the <code>dispatch-releases = true</code> setting, we now more strictly specify the commit that should be tagged, preventing any race conditions from changing it. This race potentially always existed, but only seemed to be observable if you retried a failed release.</p>
+<ul>
+<li>@gankra + @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1164" rel="noopener noreferrer">fix: make github releases more robust</a></li>
+</ul>
+<h2>Other Fixes</h2>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1116" rel="noopener noreferrer">feat: experimental generic workspaces</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1135" rel="noopener noreferrer">chore: move axoproject in tree</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1158" rel="noopener noreferrer">fix: clamp workspace search to current repo</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1157" rel="noopener noreferrer">fix: pass correct path to generic builds</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1150" rel="noopener noreferrer">fix: add generic workspace tests</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1139" rel="noopener noreferrer">fix: pipe working directory to more commands</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1165" rel="noopener noreferrer">feat: cache cargo-dist binary in global tasks</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>
