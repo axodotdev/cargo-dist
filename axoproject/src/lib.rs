@@ -412,6 +412,8 @@ impl RepositoryUrl {
                 if let Some(cur_url) = &repo_url {
                     if &normalized_new_url == cur_url {
                         // great! consensus!
+                    } else if cur_url.github_repo().ok() == normalized_new_url.github_repo().ok() {
+                        // good enough! consensus on the github repo!
                     } else {
                         return Err(AxoprojectError::InconsistentRepositoryKey {
                             file1: repo_url_origin.as_ref().unwrap().to_owned(),
