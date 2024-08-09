@@ -53,11 +53,18 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
     let root_auto_includes = crate::find_auto_includes(&root)?;
 
     // Not having a name is common for virtual manifests, but we don't handle those!
-    let Some(package_name) = manifest.name else {
+    let Some(true_package_name) = manifest.name else {
         return Err(crate::errors::AxoprojectError::NamelessNpmPackage {
             manifest: manifest_path.to_owned(),
         });
     };
+
+    let (package_scope, package_name) =
+        if let Some((scope, name)) = true_package_name.split_once('/') {
+            (Some(scope.to_owned()), name.to_owned())
+        } else {
+            (None, true_package_name.clone())
+        };
     let version = manifest.version.map(Version::Npm);
     let authors = manifest
         .author
@@ -118,9 +125,10 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
     };
 
     let mut info = PackageInfo {
-        true_name: package_name.clone(),
+        true_name: true_package_name,
         true_version: version.clone(),
         name: package_name,
+        npm_scope: package_scope,
         version,
         manifest_path: manifest_path.to_owned(),
         dist_manifest_path: None,

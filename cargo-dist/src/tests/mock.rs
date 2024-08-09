@@ -111,6 +111,7 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
         cdylibs: vec![],
         cargo_metadata_table: None,
         cargo_package_id: None,
+        npm_scope: None,
         build_command: None,
     }
 }

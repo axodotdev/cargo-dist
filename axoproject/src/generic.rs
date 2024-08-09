@@ -301,6 +301,7 @@ fn package_from(manifest_path: &Utf8Path) -> Result<PackageInfo> {
         cargo_metadata_table: None,
         #[cfg(feature = "cargo-projects")]
         cargo_package_id: None,
+        npm_scope: None,
     };
 
     // Load and apply auto-includes

@@ -558,6 +558,8 @@ pub struct PackageInfo {
     /// A unique id used by Cargo to refer to the package
     #[cfg(feature = "cargo-projects")]
     pub cargo_package_id: Option<PackageId>,
+    /// npm scope (with the @, like "@axodotdev")
+    pub npm_scope: Option<String>,
     /// Command to run to build this package
     pub build_command: Option<Vec<String>>,
 }

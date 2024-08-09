@@ -1313,7 +1313,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_homepage_url = package_info.homepage_url.clone();
         let app_keywords = package_info.keywords.clone();
         let npm_package = npm_package.clone();
-        let npm_scope = npm_scope.clone();
+        let npm_scope = npm_scope.clone().or_else(|| package_info.npm_scope.clone());
         let install_path = install_path
             .clone()
             .unwrap_or(InstallPathStrategy::default_list());
