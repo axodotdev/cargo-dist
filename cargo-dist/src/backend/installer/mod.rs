@@ -16,12 +16,14 @@ use crate::{
 use self::homebrew::HomebrewInstallerInfo;
 use self::msi::MsiInstallerInfo;
 use self::npm::NpmInstallerInfo;
+use self::appimage::AppImageInfo;
 
 pub mod homebrew;
 pub mod msi;
 pub mod npm;
 pub mod powershell;
 pub mod shell;
+pub mod appimage;
 
 /// A kind of an installer
 #[derive(Debug, Clone)]
@@ -37,6 +39,8 @@ pub enum InstallerImpl {
     Homebrew(HomebrewInstallerInfo),
     /// Windows msi installer
     Msi(MsiInstallerInfo),
+    /// Linux Appimage
+    AppImage(AppImageInfo),
 }
 
 /// Generic info about an installer

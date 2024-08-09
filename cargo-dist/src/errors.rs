@@ -263,6 +263,23 @@ pub enum DistError {
         keys: &'static [&'static str],
     },
 
+    /// appimage with too many packages
+    #[error("{artifact_name} depends on multiple packages, which isn't yet supported")]
+    #[diagnostic(help("depends on {spec1} and {spec2}"))]
+    MultiPackageAppImage {
+        /// Name of the appimage
+        artifact_name: String,
+        /// One of the pacakges
+        spec1: String,
+        /// A different package
+        spec2: String,
+    },
+
+    /// appimagetool missing
+    #[error("appimagetool not found")]
+    #[diagnostic(help("install appimagetool"))]
+    MissingAppImageTool,
+
     /// unrecognized job style
     #[error("{style} is not a recognized job value")]
     #[diagnostic(help("Jobs that do not come with cargo-dist should be prefixed with ./"))]

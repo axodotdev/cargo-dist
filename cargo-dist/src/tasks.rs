@@ -65,6 +65,7 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
+use crate::backend::installer::appimage::AppImageInfo;
 use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
     LibraryStyle, ProductionMode, SystemDependencies,
@@ -1946,6 +1947,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             InstallerStyle::Npm => self.add_npm_installer(to_release),
             InstallerStyle::Homebrew => self.add_homebrew_installer(to_release),
             InstallerStyle::Msi => self.add_msi_installer(to_release)?,
+            InstallerStyle::AppImage => self.add_appimage_installer(to_release)?,
         }
         Ok(())
     }
@@ -2443,6 +2445,94 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     variant_idx,
                     binary_idx,
                     dir_path.join(&binary.file_name),
+                );
+            }
+            if checksum != ChecksumStyle::False {
+                self.add_artifact_checksum(variant_idx, installer_idx, checksum);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn add_appimage_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
+        if !self.local_artifacts_enabled() {
+            return Ok(());
+        }
+
+        let release = self.release(to_release);
+        let variants = release.variants.clone();
+        let checksum = release.checksum;
+
+        for variant_idx in variants {
+            let variant = self.variant(variant_idx);
+            let binaries = variant.binaries.clone();
+            let target = &variant.target;
+            if !target.contains("linux") {
+                continue;
+            }
+
+            let variant_id = &variant.id;
+            let artifact_name = format!("{variant_id}.AppImage");
+            let artifact_path = self.inner.dist_dir.join(&artifact_name);
+            let appdir_name = format!("{variant_id}.AppDir");
+            let appdir_path = self.inner.dist_dir.join(&appdir_name);
+
+            // Compute which package we're actually building, based on the binaries
+            let mut package_info: Option<(String, PackageIdx)> = None;
+            for &binary_idx in &binaries {
+                let binary = self.binary(binary_idx);
+                if let Some((existing_spec, _)) = &package_info {
+                    // appimage doesn't clearly support multi-package, so bail
+                    if existing_spec != &binary.pkg_spec {
+                        return Err(DistError::MultiPackageMsi {
+                            artifact_name,
+                            spec1: existing_spec.clone(),
+                            spec2: binary.pkg_spec.clone(),
+                        })?;
+                    }
+                } else {
+                    package_info = Some((binary.pkg_spec.clone(), binary.pkg_idx));
+                }
+            }
+            let Some((pkg_spec, pkg_idx)) = package_info else {
+                return Err(DistError::NoPackageMsi { artifact_name })?;
+            };
+
+            let pkg_info = self.workspaces.package(pkg_idx);
+
+            // Gather up the bundles the installer supports
+            let installer_artifact = Artifact {
+                id: artifact_name,
+                target_triples: vec![target.clone()],
+                file_path: artifact_path.clone(),
+                required_binaries: FastMap::new(),
+                archive: Some(Archive {
+                    with_root: None,
+                    dir_path: appdir_path.clone(),
+                    zip_style: ZipStyle::TempDir,
+                    static_assets: vec![],
+                }),
+                checksum: None,
+                kind: ArtifactKind::Installer(InstallerImpl::AppImage(AppImageInfo {
+                    package_dir: appdir_path.clone(),
+                    pkg_spec,
+                    target: target.clone(),
+                    file_path: artifact_path.clone(),
+                    version: pkg_info.version.clone().unwrap(),
+                })),
+                is_global: false,
+            };
+
+            // Register the artifact to various things
+            let installer_idx = self.add_local_artifact(variant_idx, installer_artifact);
+            for binary_idx in binaries {
+                let binary = self.binary(binary_idx);
+                self.require_binary(
+                    installer_idx,
+                    variant_idx,
+                    binary_idx,
+                    appdir_path.join(&binary.file_name),
                 );
             }
             if checksum != ChecksumStyle::False {

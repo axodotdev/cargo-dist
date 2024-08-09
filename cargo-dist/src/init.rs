@@ -684,10 +684,11 @@ fn get_new_dist_metadata(
                 InstallerStyle::Npm,
                 InstallerStyle::Homebrew,
                 InstallerStyle::Msi,
+                InstallerStyle::AppImage
             ]
         } else {
             eprintln!("{notice} no CI backends enabled, most installers have been hidden");
-            &[InstallerStyle::Msi]
+            &[InstallerStyle::Msi, InstallerStyle::AppImage]
         };
         let mut defaults = vec![];
         let mut keys = vec![];
@@ -712,6 +713,7 @@ fn get_new_dist_metadata(
                 InstallerStyle::Npm => "npm",
                 InstallerStyle::Homebrew => "homebrew",
                 InstallerStyle::Msi => "msi",
+                InstallerStyle::AppImage => "app-image"
             });
         }
 
