@@ -234,11 +234,11 @@ pub enum DistError {
         generate_mode: crate::config::GenerateMode,
     },
 
-    /// msi with too many packages
+    /// msi/pkg with too many packages
     #[error("{artifact_name} depends on multiple packages, which isn't yet supported")]
     #[diagnostic(help("depends on {spec1} and {spec2}"))]
-    MultiPackageMsi {
-        /// Name of the msi
+    MultiPackage {
+        /// Name of the artifact
         artifact_name: String,
         /// One of the pacakges
         spec1: String,
@@ -246,10 +246,10 @@ pub enum DistError {
         spec2: String,
     },
 
-    /// msi with too few packages
+    /// msi/pkg with too few packages
     #[error("{artifact_name} has no binaries")]
     #[diagnostic(help("This should be impossible, you did nothing wrong, please file an issue!"))]
-    NoPackageMsi {
+    NoPackage {
         /// Name of the msi
         artifact_name: String,
     },
@@ -525,6 +525,16 @@ pub enum DistError {
     #[error("We failed to decode the certificate stored in the CODESIGN_CERTIFICATE environment variable.")]
     #[diagnostic(help("Is the value of this envirionment variable valid base64?"))]
     CertificateDecodeError {},
+
+    /// Missing configuration for a .pkg
+    #[error("A Mac .pkg installer was requested, but the config is missing")]
+    #[diagnostic(help("Please ensure a dist.mac-pkg-config section is present in your config. For more details see: https://example.com"))]
+    MacPkgConfigMissing {},
+
+    /// User left identifier empty in init
+    #[error("No bundle identifier was specified")]
+    #[diagnostic(help("Please either enter a bundle identifier, or disable the Mac .pkg"))]
+    MacPkgBundleIdentifierMissing {},
 }
 
 /// This error indicates we tried to deserialize some YAML with serde_yml
