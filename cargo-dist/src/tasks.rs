@@ -846,6 +846,22 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     ) -> DistResult<Self> {
         let root_workspace_idx = workspaces.root_workspace_idx();
         let root_workspace = workspaces.workspace(root_workspace_idx);
+
+        // Complain if someone still has [workspace.metadata.dist] in a dist-workspace.toml scenario
+        if let Some(dist_manifest_path) = root_workspace.dist_manifest_path.as_deref() {
+            for workspace_idx in workspaces.all_workspace_indices() {
+                if workspace_idx == root_workspace_idx {
+                    continue;
+                }
+                let workspace = workspaces.workspace(workspace_idx);
+                config::reject_metadata_table(
+                    &workspace.manifest_path,
+                    dist_manifest_path,
+                    workspace.cargo_metadata_table.as_ref(),
+                )?;
+            }
+        }
+
         let target_dir = root_workspace.target_dir.clone();
         let workspace_dir = root_workspace.workspace_dir.clone();
         let repo_dir = if let Some(repo) = &workspaces.repo {
@@ -859,8 +875,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut workspace_metadata =
             // Read the global config
             config::parse_metadata_table_or_manifest(
-                root_workspace.kind,
                 &root_workspace.manifest_path,
+                root_workspace.dist_manifest_path.as_deref(),
                 root_workspace.cargo_metadata_table.as_ref(),
             )?;
 
@@ -979,8 +995,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Compute/merge package configs
         let mut package_metadata = vec![];
         for (_idx, package) in workspaces.all_packages() {
-            let mut package_config = config::parse_metadata_table(
+            let mut package_config = config::parse_metadata_table_or_manifest(
                 &package.manifest_path,
+                package.dist_manifest_path.as_deref(),
                 package.cargo_metadata_table.as_ref(),
             )?;
             package_config.make_relative_to(&package.package_root);
@@ -1296,7 +1313,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_homepage_url = package_info.homepage_url.clone();
         let app_keywords = package_info.keywords.clone();
         let npm_package = npm_package.clone();
-        let npm_scope = npm_scope.clone();
+        let npm_scope = npm_scope.clone().or_else(|| package_info.npm_scope.clone());
         let install_path = install_path
             .clone()
             .unwrap_or(InstallPathStrategy::default_list());

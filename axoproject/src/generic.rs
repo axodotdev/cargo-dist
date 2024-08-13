@@ -195,7 +195,7 @@ fn workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
             let paired_manifest = package.package_root.join(DIST_PACKAGE_TOML);
             if paired_manifest.exists() {
                 let generic = raw_package_from(&paired_manifest)?;
-                merge_package_with_raw_generic(package, generic);
+                merge_package_with_raw_generic(package, generic, paired_manifest);
             }
 
             crate::merge_auto_includes(package, &root_auto_includes);
@@ -210,6 +210,7 @@ fn workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
             target_dir: workspace_dir.join(DIST_TARGET_DIR),
             workspace_dir,
             manifest_path: manifest_path.to_owned(),
+            dist_manifest_path: Some(manifest_path.to_owned()),
             root_auto_includes,
             #[cfg(feature = "cargo-projects")]
             cargo_metadata_table: None,
@@ -229,6 +230,7 @@ fn single_package_workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceSt
             target_dir: package.package_root.join(DIST_TARGET_DIR),
             workspace_dir: package.package_root.clone(),
             manifest_path: package.manifest_path.clone(),
+            dist_manifest_path: Some(package.manifest_path.clone()),
             root_auto_includes,
 
             #[cfg(feature = "cargo-projects")]
@@ -276,6 +278,7 @@ fn package_from(manifest_path: &Utf8Path) -> Result<PackageInfo> {
         true_name: name.clone(),
         true_version: version.clone(),
         manifest_path: manifest_path.clone(),
+        dist_manifest_path: Some(manifest_path.clone()),
         package_root: manifest_path.parent().unwrap().to_owned(),
         name,
         version,
@@ -298,6 +301,7 @@ fn package_from(manifest_path: &Utf8Path) -> Result<PackageInfo> {
         cargo_metadata_table: None,
         #[cfg(feature = "cargo-projects")]
         cargo_package_id: None,
+        npm_scope: None,
     };
 
     // Load and apply auto-includes
@@ -321,7 +325,11 @@ fn load_package_dist_toml(manifest_path: &Utf8Path) -> Result<PackageManifest> {
     Ok(manifest)
 }
 
-fn merge_package_with_raw_generic(package: &mut PackageInfo, generic: Package) {
+fn merge_package_with_raw_generic(
+    package: &mut PackageInfo,
+    generic: Package,
+    generic_manifest_path: Utf8PathBuf,
+) {
     let Package {
         name,
         repository,
@@ -339,6 +347,9 @@ fn merge_package_with_raw_generic(package: &mut PackageInfo, generic: Package) {
         build_command,
         version,
     } = generic;
+
+    package.dist_manifest_path = Some(generic_manifest_path);
+
     if let Some(val) = name {
         package.name = val;
     }

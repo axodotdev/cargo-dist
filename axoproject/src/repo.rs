@@ -11,7 +11,7 @@ pub enum GithubRepoInput {
 }
 
 /// Represents a GitHub repository that we can query things about.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GithubRepo {
     /// The repository owner.
     pub owner: String,
