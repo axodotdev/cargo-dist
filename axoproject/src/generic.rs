@@ -328,7 +328,7 @@ fn load_package_dist_toml(manifest_path: &Utf8Path) -> Result<PackageManifest> {
 fn merge_package_with_raw_generic(
     package: &mut PackageInfo,
     generic: Package,
-    generic_path: Utf8PathBuf,
+    generic_manifest_path: Utf8PathBuf,
 ) {
     let Package {
         name,
@@ -348,7 +348,7 @@ fn merge_package_with_raw_generic(
         version,
     } = generic;
 
-    package.dist_manifest_path = Some(generic_path);
+    package.dist_manifest_path = Some(generic_manifest_path);
 
     if let Some(val) = name {
         package.name = val;
