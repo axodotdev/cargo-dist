@@ -13,5 +13,8 @@ search.use-boolean-and = true
 [output.linkcheck]
 warning-policy = "error"
 
+[output.html.redirect]
+"/way-too-quickstart.html" = "./quickstart/rust.html"
+
 [preprocessor.toc]
 command = "mdbook-toc"
