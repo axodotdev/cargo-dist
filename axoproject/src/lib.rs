@@ -618,17 +618,6 @@ impl Display for Version {
 }
 
 impl Version {
-    /// Assume it's a cargo Version
-    #[cfg(feature = "cargo-projects")]
-    pub fn cargo(&self) -> &semver::Version {
-        #[allow(irrefutable_let_patterns)]
-        if let Version::Cargo(v) = self {
-            v
-        } else {
-            panic!("Version wasn't in the cargo format")
-        }
-    }
-
     /// Returns a semver-based Version
     #[cfg(any(feature = "generic-projects", feature = "cargo-projects"))]
     pub fn semver(&self) -> semver::Version {
