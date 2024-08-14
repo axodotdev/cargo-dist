@@ -3,6 +3,26 @@
 Nothing Yet!
 
 
+# Version 0.21.0 (2024-08-13)
+
+This release contains one major new feature and several bugfixes.
+
+## Improved glibc compatibility checking in installers
+
+Our installers perform some preflight compatibility checks before installing in order to ensure that your binaries are compatible with the user's system. In particular, we check to ensure that the user's glibc is compatible with the version that your software linked against during its build.
+
+In previous versions of cargo-dist, we hardcoded the version of glibc we expected your software to be built against based on the version used by our default Linux builders. Since the CI runners are configurable, however, it was possible for the actual glibc your package linked against to be different from the one we were expecting. This release adds new build environment tracking metadata, capturing information such as the system glibc/musl version your software linked against and the macOS version used to build. We use the real glibc information in your installers as of this release, and future versions of cargo-dist will make use of the other data we're now tracking.
+
+* impl
+  * @mistydemeo [Track glibc versions and other runtime requirements](https://github.com/axodotdev/cargo-dist/pull/1210)
+  * @Gankra [chore: rework RuntimeConditions](https://github.com/axodotdev/cargo-dist/pull/1215)
+
+## Fixes
+
+* @Gankra [fix: javascript workspace bugs](https://github.com/axodotdev/cargo-dist/pull/1309)
+* @mistydemeo [deps: update axios in npm installer](https://github.com/axodotdev/cargo-dist/pull/1313)
+
+
 # Version 0.20.0 (2024-08-08)
 
 This release contains several new features and bugfixes.
