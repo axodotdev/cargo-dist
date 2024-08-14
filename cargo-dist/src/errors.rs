@@ -105,7 +105,7 @@ pub enum DistError {
     },
 
     /// Error parsing metadata in Cargo.toml (json because it's from cargo-metadata)
-    #[error("Malformed metadata.dist in {manifest_path}")]
+    #[error("Malformed metadata.dist in\n{manifest_path}")]
     #[diagnostic(help("you can find a reference for the configuration schema at https://opensource.axo.dev/cargo-dist/book/reference/config.html"))]
     CargoTomlParse {
         /// path to file
@@ -320,7 +320,7 @@ pub enum DistError {
     GitArchiveError {},
 
     /// An error running `git -C path rev-parse HEAD`
-    #[error("We failed to query information about the git submodule at {path}")]
+    #[error("We failed to query information about the git submodule at\n{path}")]
     #[diagnostic(help("Does a submodule exist at that path? Has it been fetched with `git submodule update --init`?"))]
     GitSubmoduleCommitError {
         /// The path we failed to fetch
@@ -464,6 +464,18 @@ pub enum DistError {
         file_path: Utf8PathBuf,
         /// Error messsage details
         message: String,
+    },
+
+    /// Something has metadata.dist but shouldn't
+    #[error("The metadata.dist entry in this Cargo.toml isn't being used:\n{manifest_path}")]
+    #[diagnostic(help(
+        "You probably want to move them to the [dist] section in\n{dist_manifest_path}"
+    ))]
+    UnusedMetadata {
+        /// The manifest that had the metadata.dist
+        manifest_path: Utf8PathBuf,
+        /// The dist.toml/dist-workspace.toml that means it's ignored
+        dist_manifest_path: Utf8PathBuf,
     },
 }
 

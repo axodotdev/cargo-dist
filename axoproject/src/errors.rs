@@ -60,7 +60,7 @@ pub enum AxoprojectError {
 
     /// We found a package.json but it didn't have "name" set
     #[cfg(feature = "npm-projects")]
-    #[error("your package doesn't have a name: {manifest}")]
+    #[error("your package doesn't have a name:\n{manifest}")]
     #[diagnostic(help("is it a workspace? We don't support that yet."))]
     NamelessNpmPackage {
         /// path to the package.json
@@ -69,7 +69,7 @@ pub enum AxoprojectError {
 
     /// We tried to get the bins from a package.json but something went wrong
     #[cfg(feature = "npm-projects")]
-    #[error("Failed to read the binaries from your package.json: {manifest_path}")]
+    #[error("Failed to read the binaries from your package.json:\n{manifest_path}")]
     BuildInfoParse {
         /// Path to the package.json
         manifest_path: Utf8PathBuf,
@@ -79,7 +79,7 @@ pub enum AxoprojectError {
     },
 
     /// Your workspace gave several different values for "repository"
-    #[error("your workspace has inconsistent values for 'repository', refusing to select one:\n  {file1}: {url1}\n  {file2}: {url2}")]
+    #[error("your workspace has inconsistent values for 'repository', refusing to select one:\n  {file1}:\n    {url1}\n  {file2}:\n    {url2}")]
     #[diagnostic(severity("warning"))]
     InconsistentRepositoryKey {
         /// Path to the first manifest
@@ -93,7 +93,7 @@ pub enum AxoprojectError {
     },
 
     /// An error that occured while trying to find READMEs and whatnot in your project dir
-    #[error("couldn't search for files in {dir}")]
+    #[error("couldn't search for files in\n{dir}")]
     AutoIncludeSearch {
         /// path to the dir we were searching
         dir: Utf8PathBuf,

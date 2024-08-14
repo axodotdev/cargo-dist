@@ -2,9 +2,9 @@
 
 > since 0.15.0
 
-cargo-dist can automatically codesign Windows EXEs and [MSIs](installers/msi.md) using SSL.com's [eSigner cloud signing service](https://www.ssl.com/esigner/).
+cargo-dist can automatically codesign Windows EXEs and [MSIs](../../installers/msi.md) using SSL.com's [eSigner cloud signing service](https://www.ssl.com/esigner/).
 
-Although there are many ways to do code signing, this process is specifically concerned with ensuring [Windows SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who [downloads your application with a web browser](https://en.wikipedia.org/wiki/Mark_of_the_Web) will get a popup warning them against running it. (Alternative methods of downloading and installing, such as [cargo-dist's powershell installers](installers/powershell.md) do not trigger SmartScreen.)
+Although there are many ways to do code signing, this process is specifically concerned with ensuring [Windows SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who [downloads your application with a web browser](https://en.wikipedia.org/wiki/Mark_of_the_Web) will get a popup warning them against running it. (Alternative methods of downloading and installing, such as [cargo-dist's powershell installers](../../installers/powershell.md) do not trigger SmartScreen.)
 
 Windows code signing is done using essentially the same certificate infrastructure as HTTPS, just with stricter requirements on issuance and management of the private keys. In principle this means you can go to your favourite SSL/TLS Certificate vendor and ask for an EV Code Signing Certificate and follow the same process regardless of which vendor you picked. **However [as of July 2023](https://knowledge.digicert.com/alerts/code-signing-changes-in-2023), all the relevant kinds of code signing certificates can only be issued via hardware security modules (HSMs) like Yubikeys.** This poses a significant challenge for CI/CD pipelines, because you can't just plug a USB key into GitHub CI.
 
@@ -29,13 +29,13 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     **BE SURE TO SAVE THE TOTP SECRET CODE THAT APPEARS UNDER THE QR CODE FOR YOUR OTP APP, YOUR CI WILL NEED THIS.**
 
-    ![](./img/signing-totp.png)
+    ![](../../img/signing-totp.png)
 
 3. **Get your credential ID**
 
     On the same page as the previous step open "signing credentials" and copy the "eSigner credential ID". The credential ID will be used in CI to identify which certificate to use.
 
-    ![](./img/signing-cred-id.png)
+    ![](../../img/signing-cred-id.png)
 
 4. **(optional) Disable malware blocker**
 
@@ -80,4 +80,4 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     If you used a sandbox (test) certificate, SmartScreen won't acknowledge the code signing at all, but you should be able to see a "Digital Signatures" entry in the properties of the file:
 
-    ![](./img/signing-properties.png)
+    ![](../../img/signing-properties.png)

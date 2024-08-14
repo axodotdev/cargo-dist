@@ -1,6 +1,5 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
-assertion_line: 92
 expression: self.payload
 ---
 ================ axolotlsay-installer.sh ================
@@ -485,6 +484,12 @@ install() {
     done
 
     say "everything's installed!"
+
+    # Avoid modifying the users PATH if they are managing their PATH manually
+    case :$PATH:
+      in *:$_install_dir:*) NO_MODIFY_PATH=1 ;;
+         *) ;;
+    esac
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_ci_path "$_install_dir"
@@ -1787,7 +1792,7 @@ try {
             "targets": [
               "aarch64-apple-darwin"
             ],
-            "runner": "macos-12",
+            "runner": "macos-13",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "cache_provider": "github"
@@ -1796,7 +1801,7 @@ try {
             "targets": [
               "x86_64-apple-darwin"
             ],
-            "runner": "macos-12",
+            "runner": "macos-13",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "cache_provider": "github"

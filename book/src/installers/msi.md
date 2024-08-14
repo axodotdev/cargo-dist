@@ -93,8 +93,8 @@ See [WiX v3's docs][wix3] for all the things their format supports.
 
 
 
-[quickstart]: ../way-too-quickstart.md
-[testing]: ../way-too-quickstart.md#test-it-out
+[quickstart]: ../quickstart/index.md
+[testing]: ../quickstart/rust.md#test-it-out
 [bundling]: ./index.md#bundling-installers
 
 [cargo-wix]: https://volks73.github.io/cargo-wix/cargo_wix/

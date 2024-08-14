@@ -507,6 +507,12 @@ install() {
 
     say "everything's installed!"
 
+    # Avoid modifying the users PATH if they are managing their PATH manually
+    case :$PATH:
+      in *:$_install_dir:*) NO_MODIFY_PATH=1 ;;
+         *) ;;
+    esac
+
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_ci_path "$_install_dir"
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".profile" "sh"
@@ -1669,7 +1675,7 @@ install(false);
         "axolotlsay": "run-axolotlsay.js"
       },
       "dependencies": {
-        "axios": "^1.7.2",
+        "axios": "^1.7.4",
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
@@ -1763,10 +1769,9 @@ install(false);
         "form-data": "^4.0.0",
         "proxy-from-env": "^1.1.0"
       },
-      "integrity": "sha512-2A8QhOMrbomlDuiLeK9XibIBzuHeRcqqNOHp0Cyp5EoJ1IFDh+XZH3A6BkXtv0K4gFGCI0Y4BM7B1wOEi0Rmgw==",
-      "license": "MIT",
-      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.2.tgz",
-      "version": "1.7.2"
+      "integrity": "sha512-DukmaFRnY6AzAALSH4J2M3k6PkaC+MfaAGdEERRWcC9q3/TWQwLpHR8ZRLKTdQ3aBDL64EdluRDjJqKw+BPZEw==",
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.4.tgz",
+      "version": "1.7.4"
     },
     "node_modules/axios-proxy-builder": {
       "dependencies": {
@@ -2459,7 +2464,7 @@ install(false);
     "axolotlsay": "run-axolotlsay.js"
   },
   "dependencies": {
-    "axios": "^1.7.2",
+    "axios": "^1.7.4",
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
@@ -2811,7 +2816,7 @@ run("axolotlsay");
             "targets": [
               "aarch64-apple-darwin"
             ],
-            "runner": "macos-12",
+            "runner": "macos-13",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "cache_provider": "github"
@@ -2820,7 +2825,7 @@ run("axolotlsay");
             "targets": [
               "x86_64-apple-darwin"
             ],
-            "runner": "macos-12",
+            "runner": "macos-13",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "cache_provider": "github"

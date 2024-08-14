@@ -2,7 +2,6 @@ use axoasset::toml_edit;
 use axoproject::platforms::triple_to_display_name;
 use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::PrRunMode;
 use semver::Version;
 use serde::Deserialize;
 
@@ -27,6 +26,8 @@ pub struct InitArgs {
     pub with_json_config: Option<Utf8PathBuf>,
     /// Hosts to enable
     pub host: Vec<HostingStyle>,
+    /// Whether to migrate to the new config format
+    pub migrate_to_new_config: bool,
 }
 
 /// Input for --with-json-config
@@ -105,34 +106,37 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // If this is a Cargo.toml, offer to either write their config to
     // a dist-workspace.toml, or migrate existing config there
     let mut is_migrating = false;
+    let mut newly_initted_generic = false;
     // Users who haven't initted yet should be opted into the
     // new config format by default.
-    let desired_workspace_kind = if root_workspace.kind == WorkspaceKind::Rust && !initted {
-        WorkspaceKind::Generic
-    // Already-initted users should be asked whether to migrate.
-    } else if root_workspace.kind == WorkspaceKind::Rust {
-        let prompt = r#"Would you like to opt in to the new configuration format?
+    let desired_workspace_kind =
+        if root_workspace.kind == WorkspaceKind::Rust && !initted && args.migrate_to_new_config {
+            newly_initted_generic = true;
+            WorkspaceKind::Generic
+        // Already-initted users should be asked whether to migrate.
+        } else if root_workspace.kind == WorkspaceKind::Rust && args.migrate_to_new_config {
+            let prompt = r#"Would you like to opt in to the new configuration format?
     Future versions of cargo-dist will feature major changes to the
     configuration format, including a new cargo-dist-specific configuration file."#;
-        let res = if args.yes {
-            // We want to avoid --yes pulling it in at this point.
-            false
-        } else {
-            dialoguer::Confirm::with_theme(&theme())
-                .with_prompt(prompt)
-                .default(false)
-                .interact()?
-        };
+            let res = if args.yes {
+                // We want to avoid --yes pulling it in at this point.
+                false
+            } else {
+                dialoguer::Confirm::with_theme(&theme())
+                    .with_prompt(prompt)
+                    .default(args.migrate_to_new_config)
+                    .interact()?
+            };
 
-        if res {
-            is_migrating = true;
-            WorkspaceKind::Generic
+            if res {
+                is_migrating = true;
+                WorkspaceKind::Generic
+            } else {
+                root_workspace.kind
+            }
         } else {
             root_workspace.kind
-        }
-    } else {
-        root_workspace.kind
-    };
+        };
 
     let multi_meta = if let Some(json_path) = &args.with_json_config {
         // json update path, read from a file and apply all requested updates verbatim
@@ -155,29 +159,28 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // If we're migrating, the configuration will be missing the
     // generic workspace specification, and will have some
     // extraneous cargo-specific stuff that we don't want.
-    let mut workspace_toml = if is_migrating {
+    let mut workspace_toml = if is_migrating || newly_initted_generic {
+        // Always generate a new workspace here for the !initted case
+        let mut new_workspace = toml_edit::DocumentMut::new();
+
+        // Write generic workspace config
+        let mut table = toml_edit::table();
+        if let Some(t) = table.as_table_mut() {
+            let mut array = toml_edit::Array::new();
+            array.push("cargo:.");
+            t["members"] = toml_edit::value(array);
+        }
+        new_workspace.insert("workspace", table);
+
         if let Some(dist) = workspace_toml
             .get("workspace")
             .and_then(|t| t.get("metadata"))
             .and_then(|t| t.get("dist"))
         {
-            let mut new_workspace = toml_edit::DocumentMut::new();
-
-            // Write generic workspace config
-            let mut table = toml_edit::table();
-            if let Some(t) = table.as_table_mut() {
-                let mut array = toml_edit::Array::new();
-                array.push("cargo:.");
-                t["members"] = toml_edit::value(array);
-            }
-            new_workspace.insert("workspace", table);
-
             new_workspace.insert("dist", dist.to_owned());
-
-            new_workspace
-        } else {
-            workspace_toml
         }
+
+        new_workspace
     } else {
         workspace_toml
     };
@@ -190,7 +193,9 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     let filename;
     let destination;
-    if is_migrating {
+    // If we're migrating, *or* if we're doing a first-time init,
+    // calculate the filename to write to
+    if is_migrating || newly_initted_generic {
         filename = match desired_workspace_kind {
             WorkspaceKind::Rust => "Cargo.toml",
             WorkspaceKind::Generic | WorkspaceKind::Javascript => "dist-workspace.toml",
@@ -382,8 +387,8 @@ fn has_metadata_table(workspace_info: &WorkspaceInfo) -> bool {
             .unwrap_or(false)
     } else {
         config::parse_metadata_table_or_manifest(
-            workspace_info.kind,
             &workspace_info.manifest_path,
+            workspace_info.dist_manifest_path.as_deref(),
             workspace_info.cargo_metadata_table.as_ref(),
         )
         .is_ok()
@@ -399,14 +404,14 @@ fn get_new_dist_metadata(
     args: &InitArgs,
     workspaces: &WorkspaceGraph,
 ) -> DistResult<DistMetadata> {
-    use dialoguer::{Confirm, Input, MultiSelect, Select};
+    use dialoguer::{Confirm, Input, MultiSelect};
     let root_workspace = workspaces.root_workspace();
     let has_config = has_metadata_table(root_workspace);
 
     let mut meta = if has_config {
         config::parse_metadata_table_or_manifest(
-            root_workspace.kind,
             &root_workspace.manifest_path,
+            root_workspace.dist_manifest_path.as_deref(),
             root_workspace.cargo_metadata_table.as_ref(),
         )?
     } else {
@@ -625,15 +630,12 @@ fn get_new_dist_metadata(
                 .unwrap_or(false)
                 || cfg.ci.contains(item);
 
-            // If they have a well-defined repo url and it's github, default enable it
+            // Currently default to enabling github CI because we don't
+            // support anything else and we can give a good error later
             #[allow(irrefutable_let_patterns)]
             if let CiStyle::Github = item {
                 github_key = 0;
-                if let Some(repo_url) = &workspaces.repository_url(None).unwrap_or_default() {
-                    if repo_url.contains("github.com") {
-                        default = true;
-                    }
-                }
+                default = true;
             }
             defaults.push(default);
             // This match is here to remind you to add new CiStyles
@@ -667,47 +669,6 @@ fn get_new_dist_metadata(
         // Apply the results
         let ci: Vec<_> = selected.into_iter().map(|i| known[i]).collect();
         meta.ci = if ci.is_empty() { None } else { Some(ci) };
-    }
-
-    // Enforce repository url right away
-    let has_github_ci = meta
-        .ci
-        .as_ref()
-        .map(|ci| ci.contains(&CiStyle::Github))
-        .unwrap_or(false);
-
-    if has_github_ci && meta.pr_run_mode.is_none() {
-        let default_val = PrRunMode::default();
-        let cur_val = meta.pr_run_mode.unwrap_or(default_val);
-
-        // This is intentionally written awkwardly to make you update this!
-        //
-        // don't forget to add it to 'items' below!
-        let desc = |val| match val {
-            PrRunMode::Skip => "skip - don't check the release process in PRs",
-            PrRunMode::Plan => "plan - run 'cargo dist plan' on PRs (recommended)",
-            PrRunMode::Upload => "upload - build and upload an artifacts.zip to the PR (expensive)",
-        };
-        let items = [PrRunMode::Skip, PrRunMode::Plan, PrRunMode::Upload];
-
-        // Get the index of the current value
-        let default = items
-            .iter()
-            .position(|val| val == &cur_val)
-            .expect("someone added a pr_run_mode but forgot to add it to 'init'");
-
-        let prompt = r#"check your release process in pull requests?"#;
-        let selection = Select::with_theme(&theme)
-            .with_prompt(prompt)
-            .items(&items.iter().map(|mode| desc(*mode)).collect::<Vec<_>>())
-            .default(default)
-            .interact()?;
-        eprintln!();
-
-        let result = items[selection];
-
-        // Record that the user made a concrete decision so we don't prompt over and over
-        meta.pr_run_mode = Some(result);
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
@@ -1324,7 +1285,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     apply_optional_value(
         table,
         "pr-run-mode",
-        "# Publish jobs to run in CI\n",
+        "# Which actions to run on pull requests\n",
         pr_run_mode.as_ref().map(|m| m.to_string()),
     );
 
