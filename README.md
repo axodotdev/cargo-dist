@@ -10,7 +10,7 @@
 
 *cargo-dist distributes your binaries*
 
-The TL;DR is that with cargo-dist setup, just doing this:
+The TL;DR is that with cargo-dist set up, just doing this:
 
 ```sh
 git commit -am "release: 0.2.0"
