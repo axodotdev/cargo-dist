@@ -911,25 +911,40 @@ impl std::fmt::Display for ProductionMode {
 }
 
 pub(crate) fn parse_metadata_table_or_manifest(
-    workspace_type: WorkspaceKind,
     manifest_path: &Utf8Path,
+    dist_manifest_path: Option<&Utf8Path>,
     metadata_table: Option<&serde_json::Value>,
 ) -> DistResult<DistMetadata> {
-    match workspace_type {
-        WorkspaceKind::Javascript => unimplemented!("npm packages not yet supported here"),
-        // Pre-parsed Rust metadata table
-        WorkspaceKind::Rust => parse_metadata_table(manifest_path, metadata_table),
+    if let Some(dist_manifest_path) = dist_manifest_path {
+        reject_metadata_table(manifest_path, dist_manifest_path, metadata_table)?;
         // Generic dist.toml
-        WorkspaceKind::Generic => {
-            let src = SourceFile::load_local(manifest_path)?;
-            parse_generic_config(src)
-        }
+        let src = SourceFile::load_local(dist_manifest_path)?;
+        parse_generic_config(src)
+    } else {
+        // Pre-parsed Rust metadata table
+        parse_metadata_table(manifest_path, metadata_table)
     }
 }
 
 pub(crate) fn parse_generic_config(src: SourceFile) -> DistResult<DistMetadata> {
     let config: GenericConfig = src.deserialize_toml()?;
-    Ok(config.dist)
+    Ok(config.dist.unwrap_or_default())
+}
+
+pub(crate) fn reject_metadata_table(
+    manifest_path: &Utf8Path,
+    dist_manifest_path: &Utf8Path,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<()> {
+    let has_dist_metadata = metadata_table.and_then(|t| t.get(METADATA_DIST)).is_some();
+    if has_dist_metadata {
+        Err(DistError::UnusedMetadata {
+            manifest_path: manifest_path.to_owned(),
+            dist_manifest_path: dist_manifest_path.to_owned(),
+        })
+    } else {
+        Ok(())
+    }
 }
 
 pub(crate) fn parse_metadata_table(
