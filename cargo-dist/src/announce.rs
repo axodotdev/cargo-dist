@@ -591,9 +591,9 @@ fn maximum_version(
     packages
         .into_iter()
         .filter_map(|pkg_idx| graph.workspaces.package(pkg_idx).version.as_ref())
-        .map(|v| v.cargo())
+        .map(|v| v.semver())
         .max()
-        .cloned()
+        .clone()
 }
 
 /// Overwrite the versions of the given packages
