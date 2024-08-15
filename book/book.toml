@@ -14,6 +14,8 @@ search.use-boolean-and = true
 warning-policy = "error"
 
 [output.html.redirect]
+"/ci/github.html" = "./index.html"
+"/generic-builds.html" = "./custom-builds.html"
 "/way-too-quickstart.html" = "./quickstart/rust.html"
 
 [preprocessor.toc]
