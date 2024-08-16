@@ -787,6 +787,16 @@ fn get_new_dist_metadata(
                 );
             }
         }
+    } else {
+        let homebrew_toggled_off = orig_meta
+            .installers
+            .as_deref()
+            .unwrap_or_default()
+            .contains(&InstallerStyle::Homebrew);
+        if homebrew_toggled_off {
+            meta.tap = None;
+            publish_jobs.retain(|job| job != &PublishStyle::Homebrew);
+        }
     }
 
     meta.publish_jobs = if publish_jobs.is_empty() {
