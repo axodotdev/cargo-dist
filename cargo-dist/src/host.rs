@@ -3,7 +3,10 @@
 use crate::{
     announce::{announcement_axodotdev, announcement_github, AnnouncementTag},
     check_integrity,
-    config::{CiStyle, Config, HostArgs, HostStyle, HostingStyle},
+    config::{
+        v1::{ci::CiConfig, hosts::WorkspaceHostConfig},
+        CiStyle, Config, HostArgs, HostStyle, HostingStyle,
+    },
     errors::DistResult,
     gather_work,
     manifest::save_manifest,
@@ -75,10 +78,35 @@ impl<'a> DistGraphBuilder<'a> {
         &mut self,
         cfg: &Config,
         announcing: &AnnouncementTag,
-        hosting: Option<Vec<HostingStyle>>,
-        ci: Option<Vec<CiStyle>>,
     ) -> DistResult<()> {
-        self.inner.hosting = select_hosting(self.workspaces, announcing, hosting, ci.as_deref())?;
+        let mut ci = vec![];
+        {
+            let CiConfig { github } = &self.inner.config.ci;
+            if github.is_some() {
+                ci.push(CiStyle::Github);
+            }
+        }
+
+        let mut hosting = vec![];
+        {
+            let WorkspaceHostConfig {
+                github,
+                axodotdev,
+                force_latest: _,
+            } = &self.inner.config.hosts;
+            if github.is_some() {
+                hosting.push(HostingStyle::Github);
+            }
+            if axodotdev.is_some() {
+                hosting.push(HostingStyle::Axodotdev);
+            }
+        }
+        let hosting = if hosting.is_empty() {
+            None
+        } else {
+            Some(hosting)
+        };
+        self.inner.hosting = select_hosting(self.workspaces, announcing, hosting, Some(&ci))?;
         // If we don't think we can host things, don't bother
         let Some(hosting) = &self.inner.hosting else {
             return Ok(());

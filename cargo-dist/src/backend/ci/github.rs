@@ -14,7 +14,9 @@ use tracing::warn;
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
     config::{
-        v1::ci::github::GithubCiConfig, DependencyKind, GithubPermission, GithubPermissionMap, GithubReleasePhase, HostingStyle, JinjaGithubRepoPair, JobStyle, ProductionMode, SystemDependencies
+        v1::{ci::github::GithubCiConfig, publishers::PublisherConfig},
+        DependencyKind, GithubPermission, GithubPermissionMap, GithubReleasePhase, HostingStyle,
+        JinjaGithubRepoPair, JobStyle, ProductionMode, PublishStyle, SystemDependencies,
     },
     errors::DistResult,
     DistError, DistGraph, SortedMap, SortedSet, TargetTriple,
@@ -82,6 +84,7 @@ pub struct GithubCiInfo {
     pub github_release: Option<GithubReleaseInfo>,
 }
 
+/// Details for github releases
 #[derive(Debug, Serialize)]
 pub struct GithubReleaseInfo {
     /// whether to create the release or assume an existing one
@@ -174,7 +177,9 @@ impl GithubCiInfo {
 
         // If they don't specify a cargo-dist version, use this one
         let self_dist_version = super::SELF_DIST_VERSION.parse().unwrap();
-        let dist_version = dist.config.dist_version
+        let dist_version = dist
+            .config
+            .dist_version
             .as_ref()
             .unwrap_or(&self_dist_version);
         let fail_fast = ci_config.fail_fast;
@@ -234,8 +239,7 @@ impl GithubCiInfo {
             packages_install: None,
         };
 
-
-        let tap = dist.tap.clone();
+        let tap = dist.global_homebrew_tap.clone();
 
         let mut job_permissions = ci_config.permissions.clone();
         // user publish jobs default to elevated priviledges
@@ -250,17 +254,29 @@ impl GithubCiInfo {
 
         let mut root_permissions = GithubPermissionMap::new();
         root_permissions.insert("contents".to_owned(), GithubPermission::Write);
-        let has_attestations = github_release.as_ref().map(|g| g.github_attestations).unwrap_or(false);
+        let has_attestations = github_release
+            .as_ref()
+            .map(|g| g.github_attestations)
+            .unwrap_or(false);
         if has_attestations {
             root_permissions.insert("id-token".to_owned(), GithubPermission::Write);
             root_permissions.insert("attestations".to_owned(), GithubPermission::Write);
+        }
+
+        let mut publish_jobs = vec![];
+        if let Some(PublisherConfig { homebrew, npm }) = &dist.global_publishers {
+            if homebrew.is_some() {
+                publish_jobs.push(PublishStyle::Homebrew.to_string());
+            }
+            if npm.is_some() {
+                publish_jobs.push(PublishStyle::Npm.to_string());
+            }
         }
 
         let plan_jobs = build_jobs(&ci_config.plan_jobs, &job_permissions)?;
         let local_artifacts_jobs = build_jobs(&ci_config.build_local_jobs, &job_permissions)?;
         let global_artifacts_jobs = build_jobs(&ci_config.build_global_jobs, &job_permissions)?;
         let host_jobs = build_jobs(&ci_config.host_jobs, &job_permissions)?;
-        let publish_jobs = ci_config.builtin_publish_jobs.iter().map(|j| j.to_string()).collect();
         let user_publish_jobs = build_jobs(&ci_config.publish_jobs, &job_permissions)?;
         let post_announce_jobs = build_jobs(&ci_config.post_announce_jobs, &job_permissions)?;
 
@@ -289,7 +305,6 @@ impl GithubCiInfo {
                 packages_install: package_install_for_targets(&targets, &dependencies),
             });
         }
-
 
         let github_ci_workflow_dir = dist.repo_dir.join(GITHUB_CI_DIR);
         let github_build_setup = ci_config
@@ -385,15 +400,14 @@ impl GithubReleaseInfo {
 
         let create_release = host_config.create;
         let github_releases_repo = host_config.repo.clone().map(|r| r.into_jinja());
-        let github_attestations =  host_config.attestations;
+        let github_attestations = host_config.attestations;
 
         let github_releases_submodule_path = host_config.submodule_path.clone();
         let external_repo_commit = github_releases_submodule_path
             .as_ref()
-            .map(|path| submodule_head(path))
+            .map(submodule_head)
             .transpose()?
             .flatten();
-
 
         let release_phase = if host_config.during == GithubReleasePhase::Auto {
             // We typically prefer to release in announce.
@@ -412,7 +426,6 @@ impl GithubReleaseInfo {
         } else {
             host_config.during
         };
-
 
         let mut release_args = vec![];
         let action;

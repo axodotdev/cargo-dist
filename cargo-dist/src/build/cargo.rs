@@ -85,7 +85,7 @@ impl<'a> DistGraphBuilder<'a> {
                 }
             }
 
-            if self.precise_builds {
+            if self.inner.precise_cargo_builds {
                 // `(target, package, features)` uniquely identifies a build we need to do,
                 // so group all the binaries under those buckets and add a build for each one
                 // (targets is handled by the loop we're in)

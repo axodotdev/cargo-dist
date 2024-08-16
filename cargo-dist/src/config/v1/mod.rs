@@ -62,6 +62,8 @@ pub struct WorkspaceConfig {
     /// TODO
     pub ci: CiConfig,
     /// TODO
+    pub artifacts: WorkspaceArtifactConfig,
+    /// TODO
     pub hosts: WorkspaceHostConfig,
     /// TODO
     pub builds: WorkspaceBuildConfig,
@@ -76,6 +78,8 @@ pub struct WorkspaceConfigInheritable {
     /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
     /// TODO
+    pub artifacts: WorkspaceArtifactConfig,
+    /// TODO
     pub ci: CiConfigInheritable,
     /// TODO
     pub hosts: HostConfigInheritable,
@@ -88,6 +92,7 @@ impl WorkspaceConfigInheritable {
     /// TODO
     pub fn defaults_for_workspace(workspaces: &WorkspaceGraph) -> Self {
         Self {
+            artifacts: WorkspaceArtifactConfig::defaults_for_workspace(workspaces),
             ci: CiConfigInheritable::defaults_for_workspace(workspaces),
             hosts: HostConfigInheritable::defaults_for_workspace(workspaces),
             builds: BuildConfigInheritable::defaults_for_workspace(workspaces),
@@ -99,6 +104,7 @@ impl WorkspaceConfigInheritable {
     /// TODO
     pub fn apply_inheritance_for_workspace(self, workspaces: &WorkspaceGraph) -> WorkspaceConfig {
         let Self {
+            artifacts,
             ci,
             hosts,
             builds,
@@ -107,6 +113,7 @@ impl WorkspaceConfigInheritable {
             allow_dirty,
         } = self;
         WorkspaceConfig {
+            artifacts,
             ci: ci.apply_inheritance_for_workspace(workspaces),
             hosts: hosts.apply_inheritance_for_workspace(workspaces),
             builds: builds.apply_inheritance_for_workspace(workspaces),
@@ -121,19 +128,23 @@ impl ApplyLayer for WorkspaceConfigInheritable {
     fn apply_layer(
         &mut self,
         Self::Layer {
+            artifacts,
+            builds,
+            hosts,
+            installers,
             ci,
             allow_dirty,
             dist_version,
             // app-scope only
-            artifacts: _,
-            builds: _,
-            hosts: _,
-            installers: _,
-            publishers: _,
             dist: _,
             targets: _,
+            publishers: _,
         }: Self::Layer,
     ) {
+        self.artifacts.apply_val_layer(artifacts);
+        self.builds.apply_val_layer(builds);
+        self.hosts.apply_val_layer(hosts);
+        self.installers.apply_val_layer(installers);
         self.ci.apply_val_layer(ci);
         self.dist_version.apply_opt(dist_version);
         self.allow_dirty.apply_val(allow_dirty);
@@ -144,7 +155,7 @@ impl ApplyLayer for WorkspaceConfigInheritable {
 #[derive(Debug, Clone)]
 pub struct AppConfig {
     /// TODO
-    pub artifacts: ArtifactConfig,
+    pub artifacts: AppArtifactConfig,
     /// TODO
     pub builds: AppBuildConfig,
     /// TODO
@@ -162,7 +173,7 @@ pub struct AppConfig {
 #[derive(Debug, Clone)]
 pub struct AppConfigInheritable {
     /// TODO
-    pub artifacts: ArtifactConfig,
+    pub artifacts: AppArtifactConfig,
     /// TODO
     pub builds: BuildConfigInheritable,
     /// TODO
@@ -180,7 +191,7 @@ impl AppConfigInheritable {
     /// TODO
     pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
         Self {
-            artifacts: ArtifactConfig::defaults_for_package(workspaces, pkg_idx),
+            artifacts: AppArtifactConfig::defaults_for_package(workspaces, pkg_idx),
             builds: BuildConfigInheritable::defaults_for_package(workspaces, pkg_idx),
             hosts: HostConfigInheritable::defaults_for_package(workspaces, pkg_idx),
             installers: InstallerConfigInheritable::defaults_for_package(workspaces, pkg_idx),

@@ -9,7 +9,7 @@ pub struct NpmPublisherLayer {
     pub common: CommonPublisherLayer,
 }
 /// Options for npm publishes
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct NpmPublisherConfig {
     /// Common options
     pub common: CommonPublisherConfig,

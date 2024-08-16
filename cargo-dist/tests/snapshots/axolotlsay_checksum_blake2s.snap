@@ -1152,6 +1152,8 @@ download_binary_and_run_installer "$@" || exit 1
     {
       "app_name": "axolotlsay",
       "app_version": "0.2.2",
+      "display_name": "axolotlsay",
+      "display": true,
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.blake2s",

@@ -189,13 +189,33 @@ pub enum DistError {
         path: String,
     },
 
-    /// Use explicitly requested workspace builds, but had packages with custom feature settings
+    /// explicitly requested workspace builds, but had packages with custom feature settings
     #[error("precise-builds = false was set, but some packages have custom build features, making it impossible")]
-    #[diagnostic(help("these packages customized either features, no-default-features, or all-features: {packages:?}"))]
+    #[diagnostic(help("these packages customized either features, no-default-features, or all-features:\n{packages:#?}"))]
     PreciseImpossible {
-        /// names of problem packages
-        packages: Vec<String>,
+        /// paths of problem manifests
+        packages: Vec<camino::Utf8PathBuf>,
     },
+
+    /// packages disagreed on homebrew taps
+    #[error("different homebrew taps were set in your workspace, this is currently unsupported")]
+    #[diagnostic(help("these packages disagree:\n{packages:#?}"))]
+    MismatchedTaps {
+        /// paths of problem manifests
+        packages: Vec<camino::Utf8PathBuf>,
+    },
+
+    /// packages disagreed on publishers
+    #[error("different publisher setttings were in your workspace, this is currently unuspported")]
+    #[diagnostic(help("these packages disagree:\n{packages:#?}"))]
+    MismatchedPublishers {
+        /// paths of problem manifests
+        packages: Vec<camino::Utf8PathBuf>,
+    },
+
+    /// publishers disagreed on prereleases
+    #[error("different publisher 'prereleases' setttings were in your workspace, this is currently unsupported")]
+    MismatchedPrereleases,
 
     /// parse_tag concluded there was nothing to release
     #[error("This workspace doesn't have anything for cargo-dist to Release!")]

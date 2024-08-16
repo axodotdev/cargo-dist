@@ -148,6 +148,7 @@ impl DistMetadata {
                 None
             }
         });
+        let has_github_ci = github_ci_layer.is_some();
         let custom_publish_jobs = publish_jobs.as_ref().map(|jobs| {
             jobs.iter()
                 .filter_map(|p| {
@@ -203,7 +204,7 @@ impl DistMetadata {
         });
 
         // hosts
-        let github_host_layer =
+        let mut github_host_layer =
             list_to_bool_layer(is_global, &hosting, HostingStyle::Github, || {
                 if create_release.is_some()
                     || github_releases_repo.is_some()
@@ -225,6 +226,10 @@ impl DistMetadata {
             });
         let axodotdev_host_layer =
             list_to_bool_layer(is_global, &hosting, HostingStyle::Axodotdev, || None);
+        if github_host_layer.is_none() && axodotdev_host_layer.is_none() && has_github_ci {
+            github_host_layer = Some(BoolOr::Bool(true));
+        }
+
         let needs_host_layer = github_host_layer.is_some()
             || axodotdev_host_layer.is_some()
             || force_latest.is_some()

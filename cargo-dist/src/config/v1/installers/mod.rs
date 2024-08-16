@@ -80,9 +80,11 @@ impl InstallerConfigInheritable {
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
         Self::defaults()
     }
+    /// TODO
     pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
         Self::defaults()
     }
+    /// TODO
     pub fn defaults() -> Self {
         Self {
             common: CommonInstallerConfig::defaults(),
@@ -111,9 +113,7 @@ impl InstallerConfigInheritable {
             shell: _,
         } = self;
 
-        WorkspaceInstallerConfig {
-            updater,
-        }
+        WorkspaceInstallerConfig { updater }
     }
     /// TODO
     pub fn apply_inheritance_for_package(

@@ -9,7 +9,7 @@ pub struct HomebrewPublisherLayer {
     pub common: CommonPublisherLayer,
 }
 /// Options for homebrew publishes
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct HomebrewPublisherConfig {
     /// Common options
     pub common: CommonPublisherConfig,

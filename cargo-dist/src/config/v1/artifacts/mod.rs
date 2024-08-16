@@ -8,13 +8,17 @@ use archives::*;
 
 /// TODO
 #[derive(Debug, Clone)]
-pub struct ArtifactConfig {
+pub struct AppArtifactConfig {
     /// TODO
     pub archives: ArchiveConfig,
-    /// Whether to generate and dist a tarball containing your app's source code
-    pub source_tarball: bool,
     /// Any extra artifacts and their buildscripts
     pub extra: Vec<ExtraArtifact>,
+}
+/// TODO
+#[derive(Debug, Clone)]
+pub struct WorkspaceArtifactConfig {
+    /// Whether to generate and dist a tarball containing your app's source code
+    pub source_tarball: bool,
     /// How to checksum
     pub checksum: ChecksumStyle,
 }
@@ -40,31 +44,56 @@ pub struct ArtifactLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checksum: Option<ChecksumStyle>,
 }
-impl ArtifactConfig {
+impl AppArtifactConfig {
     /// TODO
     pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
         Self {
             archives: ArchiveConfig::defaults_for_package(workspaces, pkg_idx),
-            source_tarball: true,
             extra: vec![],
+        }
+    }
+}
+
+impl WorkspaceArtifactConfig {
+    /// TODO
+    pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
+        Self {
+            source_tarball: true,
             checksum: ChecksumStyle::Sha256,
         }
     }
 }
-impl ApplyLayer for ArtifactConfig {
+
+impl ApplyLayer for AppArtifactConfig {
     type Layer = ArtifactLayer;
     fn apply_layer(
         &mut self,
         Self::Layer {
             archives,
-            source_tarball,
             extra,
-            checksum,
+            // these are all workspace-only
+            source_tarball: _,
+            checksum: _,
         }: Self::Layer,
     ) {
         self.archives.apply_val_layer(archives);
-        self.source_tarball.apply_val(source_tarball);
         self.extra.apply_val(extra);
+    }
+}
+
+impl ApplyLayer for WorkspaceArtifactConfig {
+    type Layer = ArtifactLayer;
+    fn apply_layer(
+        &mut self,
+        Self::Layer {
+            source_tarball,
+            checksum,
+            // these are all app-only
+            archives: _,
+            extra: _,
+        }: Self::Layer,
+    ) {
+        self.source_tarball.apply_val(source_tarball);
         self.checksum.apply_val(checksum);
     }
 }

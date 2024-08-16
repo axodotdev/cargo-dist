@@ -126,7 +126,8 @@ impl BuildConfigInheritable {
         if let Some(cargo) = cargo {
             cargo_out.apply_layer(cargo);
         }
-        let mut generic_out = GenericBuildConfig::defaults_for_package(workspaces, pkg_idx, &common);
+        let mut generic_out =
+            GenericBuildConfig::defaults_for_package(workspaces, pkg_idx, &common);
         if let Some(generic) = generic {
             generic_out.apply_layer(generic);
         }

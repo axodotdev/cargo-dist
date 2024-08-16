@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 
 use axoasset::{toml_edit, SourceFile};
 use axoproject::local_repo::LocalRepo;
-use axoproject::WorkspaceKind;
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
 

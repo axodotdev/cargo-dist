@@ -11,7 +11,7 @@ use homebrew::*;
 use npm::*;
 
 /// TODO
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PublisherConfig {
     /// TODO
     pub homebrew: Option<HomebrewPublisherConfig>,
@@ -100,7 +100,7 @@ pub struct CommonPublisherLayer {
     pub prereleases: Option<bool>,
 }
 /// TODO
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct CommonPublisherConfig {
     /// Whether to publish prereleases (defaults to false)
     pub prereleases: bool,
