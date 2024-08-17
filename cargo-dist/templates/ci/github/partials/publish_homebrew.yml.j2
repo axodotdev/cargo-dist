@@ -24,6 +24,16 @@
           pattern: artifacts-*
           path: Formula/
           merge-multiple: true
+      # Set up and cache homebrew for formatting formulas
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Cache Homebrew Bundler RubyGems
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: rubygems-
       # This is extra complex because you can make your Formula name not match your app name
       # so we need to find releases with a *.rb file, and publish with that filename.
       - name: Commit formula files
@@ -35,6 +45,8 @@
             filename=$(echo "$release" | jq '.artifacts[] | select(endswith(".rb"))' --raw-output)
             name=$(echo "$filename" | sed "s/\.rb$//")
             version=$(echo "$release" | jq .app_version --raw-output)
+
+            brew style --fix "Formula/${filename}"
 
             git add "Formula/${filename}"
             git commit -m "${name} ${version}"
