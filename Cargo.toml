@@ -12,12 +12,12 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
 homepage = "https://opensource.axo.dev/cargo-dist/"
-version = "0.21.1-prerelease.1"
+version = "0.21.1-prerelease.6"
 
 [workspace.dependencies]
 # intra-workspace deps (you need to bump these versions when you cut releases too!
-cargo-dist-schema = { version = "=0.21.1-prerelease.1", path = "cargo-dist-schema" }
-axoproject = { version = "=0.21.1-prerelease.1", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
+cargo-dist-schema = { version = "=0.21.1-prerelease.6", path = "cargo-dist-schema" }
+axoproject = { version = "=0.21.1-prerelease.6", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
 
 # first-party deps
 axocli = { version = "0.2.0" }
@@ -28,17 +28,17 @@ axoprocess = { version = "0.2.0" }
 gazenot = { version = "0.3.3" }
 
 # third-party deps
-clap = { version = "4.5.15", features = ["derive"] }
+clap = { version = "4.5.16", features = ["derive"] }
 console = { version = "0.15.8" }
 clap-cargo = { version = "0.14.0" }
 comfy-table = "7.1.1"
 miette = { version = "7.2.0" }
 thiserror = "1.0.63"
 tracing = { version = "0.1.36", features = ["log"] }
-serde = { version = "1.0.207", features = ["derive"] }
+serde = { version = "1.0.208", features = ["derive"] }
 serde_json = { version = "1.0.125" }
 cargo_metadata = "0.18.1"
-camino = { version = "1.1.4", features = ["serde1"] }
+camino = { version = "1.1.9", features = ["serde1"] }
 semver = "1.0.23"
 newline-converter = "0.3.0"
 dialoguer = "0.11.0"
@@ -51,7 +51,7 @@ uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
 goblin = "0.8.2"
 similar = "2.6.0"
-tokio = { version = "1.39.2", features = ["full"] }
+tokio = { version = "1.39.3", features = ["full"] }
 temp-dir = "0.1.13"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
@@ -74,7 +74,7 @@ publish = false
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.20.0"
+cargo-dist-version = "0.21.1-prerelease.5"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
@@ -85,7 +85,7 @@ tap = "axodotdev/homebrew-tap"
 publish-jobs = ["homebrew", "./publish-crates"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
-# Publish jobs to run in CI
+# Which actions to run on pull requests
 pr-run-mode = "plan"
 # Where to host releases
 hosting = ["axodotdev", "github"]
