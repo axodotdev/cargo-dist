@@ -142,7 +142,7 @@ download_binary_and_run_installer() {
     # accepting the first one that matches, as it's the best match
     case "$_artifact_name" in {% for archive in platform_support.archives %}
         "{{ archive.id }}")
-            _arch="{{ archive.target_triples[0] }}"
+            _arch="{{ archive.target_triple }}"
             _zip_ext="{{ archive.zip_style }}"
             _bins="{% for bin in archive.executables %}{{ bin }}{{ " " if not loop.last else "" }}{% endfor %}"
             _bins_js_array='{% for bin in archive.executables %}"{{ bin }}"{{ "," if not loop.last else ""}}{% endfor %}'

@@ -124,6 +124,8 @@ pub struct FetchableArchive {
     ///
     /// (You can largely ignore these in favour of the runtime_conditions in PlatformEntry)
     pub native_runtime_conditions: RuntimeConditions,
+    /// "The" target triple to use
+    pub target_triple: TargetTriple,
     /// What target triples does this archive natively support
     pub target_triples: Vec<TargetTriple>,
     /// The sha256sum of the archive
@@ -217,6 +219,8 @@ impl PlatformSupport {
 
             let archive = FetchableArchive {
                 id: artifact.id,
+                // computed later
+                target_triple: String::new(),
                 target_triples: artifact.target_triples,
                 executables: executables
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
@@ -236,8 +240,14 @@ impl PlatformSupport {
         }
 
         // Compute what platforms each archive Really supports
-        for (archive_idx, archive) in archives.iter().enumerate() {
+        for (archive_idx, archive) in archives.iter_mut().enumerate() {
             let supports = supports(archive_idx, archive);
+            // FIXME: some places need us to pick a simple single target triple
+            // and it needs to have desugarrings that `supports` computes, so we
+            // just grab the first triple, which is always going to be a native one
+            if let Some((target, _)) = supports.first() {
+                archive.target_triple.clone_from(target);
+            }
             for (target, support) in supports {
                 platforms.entry(target).or_default().push(support);
             }

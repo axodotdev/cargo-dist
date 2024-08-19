@@ -162,7 +162,7 @@ download_binary_and_run_installer() {
             _updater_bin=""
             ;;
         "axolotlsay-x86_64-unknown-linux-musl.tar.gz")
-            _arch="x86_64-unknown-linux-musl"
+            _arch="x86_64-unknown-linux-musl-static"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'

@@ -174,7 +174,7 @@ download_binary_and_run_installer() {
             _updater_bin=""
             ;;
         "akaikatana-repack-x86_64-unknown-linux-musl.tar.xz")
-            _arch="x86_64-unknown-linux-musl"
+            _arch="x86_64-unknown-linux-musl-static"
             _zip_ext=".tar.xz"
             _bins="akextract akmetadata akrepack"
             _bins_js_array='"akextract","akmetadata","akrepack"'
