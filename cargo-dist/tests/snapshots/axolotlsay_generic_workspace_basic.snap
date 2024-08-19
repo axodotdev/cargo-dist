@@ -126,7 +126,6 @@ download_binary_and_run_installer() {
     local _true_arch="$RETVAL"
     assert_nz "$_true_arch" "arch"
     local _cur_arch="$_true_arch"
-    local _archive=""
 
     # Lookup what archives support this platform
     local _artifact_name
@@ -137,7 +136,7 @@ download_binary_and_run_installer() {
 
     # try each archive, checking runtime conditions like libc versions
     # accepting the first one that matches, as it's the best match
-    case "$_archive" in 
+    case "$_artifact_name" in 
         "axolotlsay-js-aarch64-apple-darwin.tar.xz")
             _arch="aarch64-apple-darwin"
             _zip_ext=".tar.xz"
@@ -187,7 +186,7 @@ download_binary_and_run_installer() {
             _updater_bin=""
             ;;
         *)
-            err "internal installer error: $_archive doesn't exist!?"
+            err "internal installer error: $_artifact_name doesn't exist!?"
             ;;
     esac
 
@@ -1762,7 +1761,6 @@ download_binary_and_run_installer() {
     local _true_arch="$RETVAL"
     assert_nz "$_true_arch" "arch"
     local _cur_arch="$_true_arch"
-    local _archive=""
 
     # Lookup what archives support this platform
     local _artifact_name
@@ -1773,7 +1771,7 @@ download_binary_and_run_installer() {
 
     # try each archive, checking runtime conditions like libc versions
     # accepting the first one that matches, as it's the best match
-    case "$_archive" in 
+    case "$_artifact_name" in 
         "axolotlsay-aarch64-apple-darwin.tar.xz")
             _arch="aarch64-apple-darwin"
             _zip_ext=".tar.xz"
@@ -1823,7 +1821,7 @@ download_binary_and_run_installer() {
             _updater_bin=""
             ;;
         *)
-            err "internal installer error: $_archive doesn't exist!?"
+            err "internal installer error: $_artifact_name doesn't exist!?"
             ;;
     esac
 
