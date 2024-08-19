@@ -239,6 +239,8 @@ pub fn to_homebrew_license_format(app_license: &str) -> Result<String, ParseErro
 
 #[cfg(test)]
 mod tests {
+    use spdx::ParseError;
+
     use super::{to_class_case, to_homebrew_license_format};
 
     fn run_comparison(in_str: &str, expected: &str) {
@@ -331,22 +333,32 @@ mod tests {
     }
 
     #[test]
-    fn spdx_single() {
+    fn spdx_single_license() {
         run_spdx_comparison("MIT", r#""MIT""#);
     }
 
     #[test]
-    fn spdx_or() {
-        run_spdx_comparison("MIT OR Apache-2.0", r#"any_of: ["MIT", "Apache-2.0"]"#);
+    fn spdx_single_license_with_plus() {
+        run_spdx_comparison("Apache-2.0+", r#""Apache-2.0+""#);
     }
 
     #[test]
-    fn spdx_and() {
-        run_spdx_comparison("MIT AND Apache-2.0", r#"all_of: ["MIT", "Apache-2.0"]"#);
+    fn spdx_two_licenses_any() {
+        run_spdx_comparison("MIT OR 0BSD", r#"any_of: ["MIT", "0BSD"]"#);
     }
 
     #[test]
-    fn spdx_three_reqs() {
+    fn spdx_two_licenses_all() {
+        run_spdx_comparison("MIT AND 0BSD", r#"all_of: ["MIT", "0BSD"]"#);
+    }
+
+    #[test]
+    fn spdx_two_licenses_with_plus() {
+        run_spdx_comparison("MIT OR EPL-1.0+", r#"any_of: ["MIT", "EPL-1.0+"]"#);
+    }
+
+    #[test]
+    fn spdx_three_licenses() {
         run_spdx_comparison(
             "MIT OR Apache-2.0 OR CC-BY-4.0",
             r#"any_of: ["MIT", "Apache-2.0", "CC-BY-4.0"]"#,
@@ -354,10 +366,59 @@ mod tests {
     }
 
     #[test]
-    fn spdx_or_and() {
+    fn spdx_three_licenses_or_and() {
         run_spdx_comparison(
             "MIT OR Apache-2.0 AND CC-BY-4.0",
             r#"any_of: ["MIT", { all_of: ["Apache-2.0", "CC-BY-4.0"] }]"#,
         );
+    }
+
+    #[test]
+    fn spdx_three_licenses_and_or() {
+        run_spdx_comparison(
+            "MIT AND Apache-2.0 OR CC-BY-4.0",
+            r#"any_of: [{ all_of: ["MIT", "Apache-2.0"] }, "CC-BY-4.0"]"#,
+        );
+    }
+
+    #[test]
+    fn spdx_parentheses() {
+        run_spdx_comparison(
+            "MIT OR (0BSD AND Zlib) OR curl",
+            r#"any_of: ["MIT", { all_of: ["0BSD", "Zlib"] }, "curl"]"#,
+        );
+    }
+
+    #[test]
+    fn spdx_nested_parentheses() {
+        run_spdx_comparison(
+            "MIT AND (Apache-2.0 OR (CC-BY-4.0 AND 0BSD))",
+            r#"all_of: ["MIT", { any_of: ["Apache-2.0", { all_of: ["CC-BY-4.0", "0BSD"] }] }]"#,
+        );
+    }
+
+    fn run_malformed_spdx(spdx_string: &str) {
+        let result = to_homebrew_license_format(spdx_string);
+        assert!(matches!(result, Err(ParseError { .. })));
+    }
+
+    #[test]
+    fn spdx_invalid_license_name() {
+        run_malformed_spdx("foo");
+    }
+
+    #[test]
+    fn spdx_invalid_just_operator() {
+        run_malformed_spdx("AND");
+    }
+
+    #[test]
+    fn spdx_invalid_dangling_operator() {
+        run_malformed_spdx("MIT OR");
+    }
+
+    #[test]
+    fn spdx_invalid_adjacent_operator() {
+        run_malformed_spdx("MIT AND OR Apache-2.0");
     }
 }
