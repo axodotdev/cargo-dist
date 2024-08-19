@@ -129,7 +129,7 @@ download_binary_and_run_installer() {
 
     # Lookup what archives support this platform
     local _artifact_name
-    _artifact_name="$(select_archive_for_arch "$_true_arch")"
+    _artifact_name="$(select_archive_for_arch "$_true_arch")" || return 1
     local _bins
     local _zip_ext
     local _arch
@@ -186,7 +186,7 @@ download_binary_and_run_installer() {
             _updater_bin=""
             ;;
         *)
-            err "internal installer error: $_artifact_name doesn't exist!?"
+            err "internal installer error: selected download $_artifact_name doesn't exist!?"
             ;;
     esac
 
@@ -199,11 +199,7 @@ download_binary_and_run_installer() {
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
     local _dir
-    if ! _dir="$(ensure mktemp -d)"; then
-        # Because the previous command ran in a subshell, we must manually
-        # propagate exit status.
-        exit 1
-    fi
+    _dir="$(ensure mktemp -d)" || return 1
     local _file="$_dir/input$_zip_ext"
 
     say "downloading $APP_NAME $APP_VERSION ${_arch}" 1>&2
@@ -300,6 +296,9 @@ json_binary_aliases() {
     "x86_64-unknown-linux-gnu")
         echo '{"akextract":["akextract-link"],"akmetadata":["akmetadata-link"]}'
         ;;
+    *)
+        echo '{}'
+        ;;
     esac
 }
 
@@ -310,11 +309,11 @@ aliases_for_binary() {
     case "$_arch" in 
     "aarch64-apple-darwin")
         case "$_bin" in
-            "akextract")
-                echo "akextract-link"
+        "akextract")
+            echo "akextract-link"
             ;;
-            "akmetadata")
-                echo "akmetadata-link"
+        "akmetadata")
+            echo "akmetadata-link"
             ;;
         *)
             echo ""
@@ -323,11 +322,11 @@ aliases_for_binary() {
         ;;
     "x86_64-apple-darwin")
         case "$_bin" in
-            "akextract")
-                echo "akextract-link"
+        "akextract")
+            echo "akextract-link"
             ;;
-            "akmetadata")
-                echo "akmetadata-link"
+        "akmetadata")
+            echo "akmetadata-link"
             ;;
         *)
             echo ""
@@ -336,11 +335,11 @@ aliases_for_binary() {
         ;;
     "x86_64-pc-windows-gnu")
         case "$_bin" in
-            "akextract.exe")
-                echo "akextract-link.exe"
+        "akextract.exe")
+            echo "akextract-link.exe"
             ;;
-            "akmetadata.exe")
-                echo "akmetadata-link.exe"
+        "akmetadata.exe")
+            echo "akmetadata-link.exe"
             ;;
         *)
             echo ""
@@ -349,16 +348,19 @@ aliases_for_binary() {
         ;;
     "x86_64-unknown-linux-gnu")
         case "$_bin" in
-            "akextract")
-                echo "akextract-link"
+        "akextract")
+            echo "akextract-link"
             ;;
-            "akmetadata")
-                echo "akmetadata-link"
+        "akmetadata")
+            echo "akmetadata-link"
             ;;
         *)
             echo ""
             ;;
         esac
+        ;;
+    *)
+        echo ""
         ;;
     esac
 }
@@ -418,10 +420,10 @@ select_archive_for_arch() {
             fi
             ;;
         *)
-            err "there isn't a package for $_true_arch"
+            err "there isn't a download for your platform $_true_arch"
             ;;
     esac
-    err "no compatible archives were found for $_true_arch"
+    err "no compatible downloads were found for your platform $_true_arch"
 }
 
 check_glibc() {
