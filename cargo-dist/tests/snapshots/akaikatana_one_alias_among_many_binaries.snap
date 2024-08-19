@@ -2212,6 +2212,9 @@ jobs:
             name=$(echo "$filename" | sed "s/\.rb$//")
             version=$(echo "$release" | jq .app_version --raw-output)
 
+            brew update
+            brew style --fix "Formula/${filename}"
+
             git add "Formula/${filename}"
             git commit -m "${name} ${version}"
           done
