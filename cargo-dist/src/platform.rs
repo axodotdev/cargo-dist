@@ -41,7 +41,7 @@ const LINUX_STATIC_REPLACEABLE_LIBCS: &[&str] = &["linux-gnu", "linux-musl-dynam
 const TARGET_MACOS_UNIVERSAL2: &str = "universal2-apple-darwin";
 
 /// The quality of support an archive provides for a given platform
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub enum SupportQuality {
     /// The archive natively supports this platform, there's no beating it
     HostNative,
@@ -102,7 +102,7 @@ pub struct RuntimeConditions {
 }
 
 /// Computed platform support details for a Release
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct PlatformSupport {
     /// The prebuilt archives for the Release
     pub archives: Vec<FetchableArchive>,
@@ -116,7 +116,7 @@ pub struct PlatformSupport {
 }
 
 /// An archive of the prebuilt binaries for an app that can be fetched
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FetchableArchive {
     /// The unique id (and filename) of the archive
     pub id: ArtifactId,
@@ -124,6 +124,8 @@ pub struct FetchableArchive {
     ///
     /// (You can largely ignore these in favour of the runtime_conditions in PlatformEntry)
     pub native_runtime_conditions: RuntimeConditions,
+    /// "The" target triple to use
+    pub target_triple: TargetTriple,
     /// What target triples does this archive natively support
     pub target_triples: Vec<TargetTriple>,
     /// The sha256sum of the archive
@@ -141,7 +143,7 @@ pub struct FetchableArchive {
 }
 
 /// An updater for an app that can be fetched
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FetchableUpdater {
     /// The unique id (and filename) of the updater
     pub id: ArtifactId,
@@ -155,7 +157,7 @@ pub type FetchableArchiveIdx = usize;
 pub type FetchableUpdaterIdx = usize;
 
 /// An entry describing how well an archive supports a platform
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct PlatformEntry {
     /// The quality of the support (prefer more "native" support over "emulated"/"fallback")
     pub quality: SupportQuality,
@@ -217,6 +219,8 @@ impl PlatformSupport {
 
             let archive = FetchableArchive {
                 id: artifact.id,
+                // computed later
+                target_triple: String::new(),
                 target_triples: artifact.target_triples,
                 executables: executables
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
@@ -236,8 +240,14 @@ impl PlatformSupport {
         }
 
         // Compute what platforms each archive Really supports
-        for (archive_idx, archive) in archives.iter().enumerate() {
+        for (archive_idx, archive) in archives.iter_mut().enumerate() {
             let supports = supports(archive_idx, archive);
+            // FIXME: some places need us to pick a simple single target triple
+            // and it needs to have desugarrings that `supports` computes, so we
+            // just grab the first triple, which is always going to be a native one
+            if let Some((target, _)) = supports.first() {
+                archive.target_triple.clone_from(target);
+            }
             for (target, support) in supports {
                 platforms.entry(target).or_default().push(support);
             }
@@ -511,16 +521,21 @@ fn native_runtime_conditions_for_artifact(
     artifact_id: &ArtifactId,
 ) -> RuntimeConditions {
     let manifest = &dist.manifest;
-    let Some(artifact) = manifest.artifacts.get(artifact_id) else {
-        return RuntimeConditions::default();
-    };
-
     let mut runtime_conditions = RuntimeConditions::default();
-    for asset in &artifact.assets {
-        let asset_conditions = native_runtime_conditions_for_asset(manifest, &asset.id);
-        runtime_conditions.merge(&asset_conditions);
+    if let Some(artifact) = manifest.artifacts.get(artifact_id) {
+        for asset in &artifact.assets {
+            let asset_conditions = native_runtime_conditions_for_asset(manifest, &asset.id);
+            runtime_conditions.merge(&asset_conditions);
+        }
+    };
+    // FIXME: in our test suite we're running bare artifacts=global so we're missing
+    // all artifact/linkage info, preventing basic glibc bounds
+    if artifact_id.contains("linux")
+        && artifact_id.contains("-gnu")
+        && runtime_conditions.min_glibc_version.is_none()
+    {
+        runtime_conditions.min_glibc_version = Some(LibcVersion::default_glibc());
     }
-
     runtime_conditions
 }
 

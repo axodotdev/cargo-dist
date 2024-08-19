@@ -33,10 +33,6 @@ EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/axolotlsay"
 
-# glibc provided by the system(s) which built these binaries
-BUILDER_GLIBC_MAJOR="2"
-BUILDER_GLIBC_SERIES="31"
-
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
     cat <<EOF
@@ -127,17 +123,22 @@ download_binary_and_run_installer() {
     done
 
     get_architecture || return 1
-    local _arch="$RETVAL"
-    assert_nz "$_arch" "arch"
+    local _true_arch="$RETVAL"
+    assert_nz "$_true_arch" "arch"
+    local _cur_arch="$_true_arch"
 
+    # Lookup what archives support this platform
+    local _artifact_name
+    _artifact_name="$(select_archive_for_arch "$_true_arch")"
     local _bins
     local _zip_ext
-    local _artifact_name
+    local _arch
 
-    # Lookup what to download/unpack based on platform
-    case "$_arch" in 
-        "aarch64-apple-darwin")
-            _artifact_name="axolotlsay-aarch64-apple-darwin.tar.gz"
+    # try each archive, checking runtime conditions like libc versions
+    # accepting the first one that matches, as it's the best match
+    case "$_artifact_name" in 
+        "axolotlsay-aarch64-apple-darwin.tar.gz")
+            _arch="aarch64-apple-darwin"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
@@ -148,8 +149,8 @@ download_binary_and_run_installer() {
             _updater_name=""
             _updater_bin=""
             ;;
-        "x86_64-apple-darwin")
-            _artifact_name="axolotlsay-x86_64-apple-darwin.tar.gz"
+        "axolotlsay-x86_64-apple-darwin.tar.gz")
+            _arch="x86_64-apple-darwin"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
@@ -160,32 +161,8 @@ download_binary_and_run_installer() {
             _updater_name=""
             _updater_bin=""
             ;;
-        "x86_64-unknown-linux-gnu")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
-            _bins_js_array='"axolotlsay"'
-            _libs=""
-            _libs_js_array=""
-            _staticlibs=""
-            _staticlibs_js_array=""
-            _updater_name=""
-            _updater_bin=""
-            ;;
-        "x86_64-unknown-linux-musl-dynamic")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
-            _zip_ext=".tar.gz"
-            _bins="axolotlsay"
-            _bins_js_array='"axolotlsay"'
-            _libs=""
-            _libs_js_array=""
-            _staticlibs=""
-            _staticlibs_js_array=""
-            _updater_name=""
-            _updater_bin=""
-            ;;
-        "x86_64-unknown-linux-musl-static")
-            _artifact_name="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
+        "axolotlsay-x86_64-unknown-linux-musl.tar.gz")
+            _arch="x86_64-unknown-linux-musl-static"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
@@ -197,9 +174,10 @@ download_binary_and_run_installer() {
             _updater_bin=""
             ;;
         *)
-            err "there isn't a package for $_arch"
+            err "internal installer error: $_artifact_name doesn't exist!?"
             ;;
     esac
+
 
     # Replace the placeholder binaries with the calculated array from above
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_BINS"'/"$_bins_js_array"/)"
@@ -357,6 +335,73 @@ aliases_for_binary() {
         esac
         ;;
     esac
+}
+
+select_archive_for_arch() {
+    local _true_arch="$1"
+    local _archive
+    case "$_true_arch" in 
+        "aarch64-apple-darwin")
+            _archive="axolotlsay-aarch64-apple-darwin.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            _archive="axolotlsay-x86_64-apple-darwin.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "x86_64-apple-darwin")
+            _archive="axolotlsay-x86_64-apple-darwin.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "x86_64-unknown-linux-gnu")
+            _archive="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "x86_64-unknown-linux-musl-dynamic")
+            _archive="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "x86_64-unknown-linux-musl-static")
+            _archive="axolotlsay-x86_64-unknown-linux-musl.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        *)
+            err "there isn't a package for $_true_arch"
+            ;;
+    esac
+    err "no compatible archives were found for $_true_arch"
+}
+
+check_glibc() {
+    local _min_glibc_major="$1"
+    local _min_glibc_series="$2"
+
+    # Parsing version out from line 1 like:
+    # ldd (Ubuntu GLIBC 2.35-0ubuntu3.1) 2.35
+    _local_glibc="$(ldd --version | awk -F' ' '{ if (FNR<=1) print $NF }')"
+
+    if [ "$(echo "${_local_glibc}" | awk -F. '{ print $1 }')" = "$_min_glibc_major" ] && [ "$(echo "${_local_glibc}" | awk -F. '{ print $2 }')" -ge "$_min_glibc_series" ]; then
+        return 0
+    else
+        say "System glibc version (\`${_local_glibc}') is too old; checking alternatives" >&2
+        return 1
+    fi
 }
 
 # See discussion of late-bound vs early-bound for why we use single-quotes with env vars
@@ -805,18 +850,9 @@ get_architecture() {
         fi
         if ldd --version 2>&1 | grep -q 'musl'; then
             _clibtype="musl-dynamic"
-        # glibc, but is it a compatible glibc?
         else
-            # Parsing version out from line 1 like:
-            # ldd (Ubuntu GLIBC 2.35-0ubuntu3.1) 2.35
-            _local_glibc="$(ldd --version | awk -F' ' '{ if (FNR<=1) print $NF }')"
-
-            if [ "$(echo "${_local_glibc}" | awk -F. '{ print $1 }')" = $BUILDER_GLIBC_MAJOR ] && [ "$(echo "${_local_glibc}" | awk -F. '{ print $2 }')" -ge $BUILDER_GLIBC_SERIES ]; then
-                _clibtype="gnu"
-            else
-                say "System glibc version (\`${_local_glibc}') is too old; using musl" >&2
-                _clibtype="musl-static"
-            fi
+            # Assume all other linuxes are glibc (even if wrong, static libc fallback will apply)
+            _clibtype="gnu"
         fi
     fi
 

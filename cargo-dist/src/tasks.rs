@@ -2015,6 +2015,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             required_binaries: FastMap::new(),
             checksum: None,
             kind: ArtifactKind::Installer(InstallerImpl::Shell(InstallerInfo {
+                release: to_release,
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
@@ -2032,6 +2033,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 bin_aliases,
                 install_libraries: release.install_libraries.clone(),
                 runtime_conditions,
+                platform_support: None,
             })),
             is_global: true,
         };
@@ -2164,6 +2166,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 tap,
                 dependencies,
                 inner: InstallerInfo {
+                    release: to_release,
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),
                     app_version: release.version.to_string(),
@@ -2181,6 +2184,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     bin_aliases,
                     install_libraries: release.install_libraries.clone(),
                     runtime_conditions,
+                    platform_support: None,
                 },
                 install_libraries: release.install_libraries.clone(),
             })),
@@ -2238,6 +2242,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             archive: None,
             checksum: None,
             kind: ArtifactKind::Installer(InstallerImpl::Powershell(InstallerInfo {
+                release: to_release,
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
@@ -2255,6 +2260,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 bin_aliases,
                 install_libraries: release.install_libraries.clone(),
                 runtime_conditions: RuntimeConditions::default(),
+                platform_support: None,
             })),
             is_global: true,
         };
@@ -2350,6 +2356,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 npm_package_keywords,
                 package_dir: dir_path,
                 inner: InstallerInfo {
+                    release: to_release,
                     dest_path: artifact_path,
                     app_name,
                     app_version: release.version.to_string(),
@@ -2367,6 +2374,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     bin_aliases,
                     install_libraries: release.install_libraries.clone(),
                     runtime_conditions,
+                    platform_support: None,
                 },
             })),
             is_global: true,

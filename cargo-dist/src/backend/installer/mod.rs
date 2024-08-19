@@ -9,8 +9,8 @@ use serde::Serialize;
 
 use crate::{
     config::{JinjaInstallPathStrategy, LibraryStyle, ZipStyle},
-    platform::RuntimeConditions,
-    InstallReceipt, TargetTriple,
+    platform::{PlatformSupport, RuntimeConditions},
+    InstallReceipt, ReleaseIdx, TargetTriple,
 };
 
 use self::homebrew::HomebrewInstallerInfo;
@@ -42,6 +42,9 @@ pub enum InstallerImpl {
 /// Generic info about an installer
 #[derive(Debug, Clone, Serialize)]
 pub struct InstallerInfo {
+    /// The parent release
+    #[serde(skip)]
+    pub release: ReleaseIdx,
     /// The path to generate the installer at
     pub dest_path: Utf8PathBuf,
     /// App name to use (display only)
@@ -68,6 +71,8 @@ pub struct InstallerInfo {
     pub install_libraries: Vec<LibraryStyle>,
     /// Platform-specific runtime conditions
     pub runtime_conditions: RuntimeConditions,
+    /// platform support matrix
+    pub platform_support: Option<PlatformSupport>,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers
