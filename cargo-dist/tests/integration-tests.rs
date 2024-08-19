@@ -716,7 +716,7 @@ npm-scope ="@axodotdev"
 }
 
 #[test]
-fn axolotlsay_musl_no_gnu() -> Result<(), miette::Report> {
+fn axolotlsay_msusl_no_gnu() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
