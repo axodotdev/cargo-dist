@@ -1157,7 +1157,7 @@ class Axolotlsay < Formula
       url "https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
     end
   end
-  license "MIT OR Apache-2.0"
+  license any_of: ["MIT", "Apache-2.0"]
 
   BINARY_ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-pc-windows-gnu": {}, "x86_64-unknown-linux-gnu": {}}
 

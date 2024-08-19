@@ -58,7 +58,7 @@ class {{ formula_class }} < Formula
   {%- endif %}
   {#- #}
   {%- if license %}
-  license "{{ license }}"
+  license {{ license }}
   {%- endif %}
   {%- if dependencies|length > 0 %}
   {% for dep in dependencies %}

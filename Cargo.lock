@@ -406,6 +406,7 @@ dependencies = [
  "sha2",
  "sha3",
  "similar",
+ "spdx",
  "tar",
  "temp-dir",
  "thiserror",
@@ -2539,6 +2540,15 @@ checksum = "ce305eb0b4296696835b71df73eb912e0f1ffd2556a501fcede6e0c50349191c"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "spdx"
+version = "0.10.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47317bbaf63785b53861e1ae2d11b80d6b624211d42cb20efcd210ee6f8a14bc"
+dependencies = [
+ "smallvec",
 ]
 
 [[package]]
