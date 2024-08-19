@@ -16,7 +16,7 @@ warning-policy = "error"
 [output.html.redirect]
 "/ci/github.html" = "./index.html"
 "/generic-builds.html" = "./custom-builds.html"
-"/way-too-quickstart.html" = "./quickstart/rust.html"
+"/way-too-quickstart.html" = "./quickstart/index.html"
 
 [preprocessor.toc]
 command = "mdbook-toc"
