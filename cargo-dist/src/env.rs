@@ -13,7 +13,7 @@ use camino::Utf8Path;
 pub fn fetch_brew_env(
     dist_graph: &DistGraph,
     working_dir: &Utf8Path,
-) -> DistResult<Option<String>> {
+) -> DistResult<Option<Vec<String>>> {
     if let Some(brew) = &dist_graph.tools.brew {
         if Utf8Path::new("Brewfile").exists() {
             // Uses `brew bundle exec` to just print its own environment,
@@ -24,24 +24,39 @@ pub fn fetch_brew_env(
                 .arg("exec")
                 .arg("--")
                 .arg("/usr/bin/env")
+                // Splits outputs by NUL bytes instead of newlines.
+                // Ensures we don't get confused about env vars which
+                // themselves contain newlines.
+                .arg("-0")
                 .current_dir(working_dir)
                 .output()?;
 
-            return Ok(Some(String::from_utf8_lossy(&result.stdout).to_string()));
+            let s = String::from_utf8_lossy(&result.stdout).to_string();
+            // Split into lines based on the \0 separator
+            let output = s
+                // Trim the newline first before trimming the last NUL
+                .trim_end()
+                // There's typically a trailing NUL, which we want gone too
+                .trim_end_matches('\0')
+                .split('\0')
+                .map(String::from)
+                .collect();
+
+            return Ok(Some(output));
         }
     }
 
     Ok(None)
 }
 
-/// Takes a string in KEY=value environment variable format and
+/// Takes a set of strings in KEY=value environment variable format and
 /// parses it into a BTreeMap. The string syntax is sh-compatible, and also the
 /// format returned by `env`.
-/// Note that we trust the parsed string to contain a given key only once;
+/// Note that we trust the set to contain a given key only once;
 /// if specified more than once, only the final occurrence will be included.
-pub fn parse_env(env_string: &str) -> DistResult<SortedMap<&str, &str>> {
+pub fn parse_env(env: &[String]) -> DistResult<SortedMap<&str, &str>> {
     let mut parsed = SortedMap::new();
-    for line in env_string.trim_end().split('\n') {
+    for line in env {
         let Some((key, value)) = line.split_once('=') else {
             return Err(DistError::EnvParseError {
                 line: line.to_owned(),
