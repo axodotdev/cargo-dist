@@ -8,7 +8,7 @@ This patch release fixes several bugs and provides some quality of life improvem
 * @ashleygwilliams [add generated note at top of workflow](https://github.com/axodotdev/cargo-dist/pull/1324)
 * @alexanderjophus [improved init when user unchecks homebrew installer](https://github.com/axodotdev/cargo-dist/pull/1329)
 * @sts10 [fix grammar in readme](https://github.com/axodotdev/cargo-dist/pull/1319)
-
+* @mistydemeo [fix installing sysdeps with Homebrew using Homebrew 4.3.17](https://github.com/axodotdev/cargo-dist/pull/1348)
 
 
 # Version 0.21.0 (2024-08-13)
