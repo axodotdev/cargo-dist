@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.21.1 (2024-08-20)
+
 This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.
 
 * @gankra [make glibc version reqs per-platform in shell installer](https://github.com/axodotdev/cargo-dist/pull/1346)
