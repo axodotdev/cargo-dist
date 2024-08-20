@@ -1,6 +1,14 @@
 # Unreleased
 
-Nothing Yet!
+This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.
+
+* @gankra [make glibc version reqs per-platform in shell installer](https://github.com/axodotdev/cargo-dist/pull/1346)
+* @gankra [cleanup error handling in shell installer](https://github.com/axodotdev/cargo-dist/pull/1347)
+* @gankra [remove overzealous cargo version check](https://github.com/axodotdev/cargo-dist/pull/1322)
+* @ashleygwilliams [add generated note at top of workflow](https://github.com/axodotdev/cargo-dist/pull/1324)
+* @alexanderjophus [improved init when user unchecks homebrew installer](https://github.com/axodotdev/cargo-dist/pull/1329)
+* @sts10 [fix grammar in readme](https://github.com/axodotdev/cargo-dist/pull/1319)
+
 
 
 # Version 0.21.0 (2024-08-13)
