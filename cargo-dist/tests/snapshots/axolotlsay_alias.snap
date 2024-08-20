@@ -1169,7 +1169,7 @@ class Axolotlsay < Formula
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
     end
   end
-  license "MIT OR Apache-2.0"
+  license any_of: ["MIT", "Apache-2.0"]
 
   BINARY_ALIASES = {"aarch64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-pc-windows-gnu": {"axolotlsay.exe": ["axolotlsay-link.exe"]}, "x86_64-unknown-linux-gnu": {"axolotlsay": ["axolotlsay-link"]}}
 

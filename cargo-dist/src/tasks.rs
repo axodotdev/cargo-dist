@@ -65,6 +65,7 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
+use crate::backend::installer::homebrew::to_homebrew_license_format;
 use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
     LibraryStyle, ProductionMode, SystemDependencies,
@@ -2116,6 +2117,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             release.app_desc.clone()
         };
         let app_license = release.app_license.clone();
+        let homebrew_dsl_license = app_license.as_ref().map(|app_license| {
+            // Parse SPDX license expression and convert to Homebrew's Ruby license DSL.
+            // If expression is malformed, fall back to plain input license string.
+            to_homebrew_license_format(app_license).unwrap_or(format!("\"{app_license}\""))
+        });
         let app_homepage_url = if release.app_homepage_url.is_none() {
             warn!("The Homebrew publish job is enabled but no homepage was specified\n  consider adding `homepage = ` to package in Cargo.toml");
             release.app_repository_url.clone()
@@ -2161,7 +2167,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 name: app_name,
                 formula_class: to_class_case(formula),
                 desc: app_desc,
-                license: app_license,
+                license: homebrew_dsl_license,
                 homepage: app_homepage_url,
                 tap,
                 dependencies,

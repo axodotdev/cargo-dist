@@ -3,6 +3,10 @@
 use axoasset::LocalAsset;
 use cargo_dist_schema::DistManifest;
 use serde::Serialize;
+use spdx::{
+    expression::{ExprNode, Operator},
+    Expression, ParseError,
+};
 
 use super::InstallerInfo;
 use crate::{
@@ -178,9 +182,66 @@ pub fn to_class_case(app_name: &str) -> String {
     chars.iter().collect()
 }
 
+/// Converts SPDX license string into Homebrew Ruby DSL
+// Homebrew DSL reference: https://docs.brew.sh/License-Guidelines
+pub fn to_homebrew_license_format(app_license: &str) -> Result<String, ParseError> {
+    let spdx = Expression::parse(app_license)?;
+    let mut spdx = spdx.iter().peekable();
+    let mut buffer: Vec<String> = vec![];
+
+    while let Some(token) = spdx.next() {
+        match token {
+            ExprNode::Req(req) => {
+                // If token is a license, push to the buffer as-is for next operator or end.
+                let requirement = format!("\"{}\"", req.req);
+                buffer.push(requirement);
+            }
+            ExprNode::Op(op) => {
+                // If token is an operation, group operands in buffer into all_of/any_of clause.
+                // Operations are postfix, so we pop off the previous two elements and combine.
+                let second_operand = buffer.pop().expect("Operator missing first operand.");
+                let first_operand = buffer.pop().expect("Operator missing second operand.");
+                let mut combined = format!("{}, {}", first_operand, second_operand);
+
+                // If the operations that immediately follow are the same as the current operation,
+                // squash their operands into the same all_of/any_of clause.
+                while let Some(ExprNode::Op(next_op)) = spdx.peek() {
+                    if next_op != op {
+                        break;
+                    }
+                    let _ = spdx.next();
+                    let operand = buffer.pop().expect("Operator missing first operand.");
+                    combined = format!("{}, {}", operand, combined);
+                }
+
+                // Use corresponding homebrew DSL keyword and square bracket the list of licenses.
+                let operation = match op {
+                    Operator::And => "all_of",
+                    Operator::Or => "any_of",
+                };
+                let mut enclosed = format!("{operation}: [{combined}]");
+
+                // Only wrap all_of/any_of clause in brackets if it is nested within an outer clause.
+                if spdx.peek().is_some() {
+                    enclosed = format!("{{ {enclosed} }}");
+                }
+
+                // Push clause back onto the buffer, as it might be an operand in another clause.
+                buffer.push(enclosed);
+            }
+        }
+    }
+
+    // After all tokens have been iterated through, if the SPDX expression is well-formed, there
+    // should only be a single element left in the buffer: a single license or outermost clause.
+    Ok(buffer[0].clone())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::to_class_case;
+    use spdx::ParseError;
+
+    use super::{to_class_case, to_homebrew_license_format};
 
     fn run_comparison(in_str: &str, expected: &str) {
         let out_str = to_class_case(in_str);
@@ -264,5 +325,100 @@ mod tests {
     #[test]
     fn ampersand_but_no_digit() {
         run_comparison("openssl@blah", "Openssl@blah");
+    }
+
+    fn run_spdx_comparison(spdx_string: &str, homebrew_dsl: &str) {
+        let result = to_homebrew_license_format(spdx_string).unwrap();
+        assert_eq!(result, homebrew_dsl);
+    }
+
+    #[test]
+    fn spdx_single_license() {
+        run_spdx_comparison("MIT", r#""MIT""#);
+    }
+
+    #[test]
+    fn spdx_single_license_with_plus() {
+        run_spdx_comparison("Apache-2.0+", r#""Apache-2.0+""#);
+    }
+
+    #[test]
+    fn spdx_two_licenses_any() {
+        run_spdx_comparison("MIT OR 0BSD", r#"any_of: ["MIT", "0BSD"]"#);
+    }
+
+    #[test]
+    fn spdx_two_licenses_all() {
+        run_spdx_comparison("MIT AND 0BSD", r#"all_of: ["MIT", "0BSD"]"#);
+    }
+
+    #[test]
+    fn spdx_two_licenses_with_plus() {
+        run_spdx_comparison("MIT OR EPL-1.0+", r#"any_of: ["MIT", "EPL-1.0+"]"#);
+    }
+
+    #[test]
+    fn spdx_three_licenses() {
+        run_spdx_comparison(
+            "MIT OR Apache-2.0 OR CC-BY-4.0",
+            r#"any_of: ["MIT", "Apache-2.0", "CC-BY-4.0"]"#,
+        );
+    }
+
+    #[test]
+    fn spdx_three_licenses_or_and() {
+        run_spdx_comparison(
+            "MIT OR Apache-2.0 AND CC-BY-4.0",
+            r#"any_of: ["MIT", { all_of: ["Apache-2.0", "CC-BY-4.0"] }]"#,
+        );
+    }
+
+    #[test]
+    fn spdx_three_licenses_and_or() {
+        run_spdx_comparison(
+            "MIT AND Apache-2.0 OR CC-BY-4.0",
+            r#"any_of: [{ all_of: ["MIT", "Apache-2.0"] }, "CC-BY-4.0"]"#,
+        );
+    }
+
+    #[test]
+    fn spdx_parentheses() {
+        run_spdx_comparison(
+            "MIT OR (0BSD AND Zlib) OR curl",
+            r#"any_of: ["MIT", { all_of: ["0BSD", "Zlib"] }, "curl"]"#,
+        );
+    }
+
+    #[test]
+    fn spdx_nested_parentheses() {
+        run_spdx_comparison(
+            "MIT AND (Apache-2.0 OR (CC-BY-4.0 AND 0BSD))",
+            r#"all_of: ["MIT", { any_of: ["Apache-2.0", { all_of: ["CC-BY-4.0", "0BSD"] }] }]"#,
+        );
+    }
+
+    fn run_malformed_spdx(spdx_string: &str) {
+        let result = to_homebrew_license_format(spdx_string);
+        assert!(matches!(result, Err(ParseError { .. })));
+    }
+
+    #[test]
+    fn spdx_invalid_license_name() {
+        run_malformed_spdx("foo");
+    }
+
+    #[test]
+    fn spdx_invalid_just_operator() {
+        run_malformed_spdx("AND");
+    }
+
+    #[test]
+    fn spdx_invalid_dangling_operator() {
+        run_malformed_spdx("MIT OR");
+    }
+
+    #[test]
+    fn spdx_invalid_adjacent_operator() {
+        run_malformed_spdx("MIT AND OR Apache-2.0");
     }
 }
