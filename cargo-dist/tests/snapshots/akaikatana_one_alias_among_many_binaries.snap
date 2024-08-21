@@ -1171,7 +1171,28 @@ class AkaikatanaRepack < Formula
   end
   license "GPL-2.0-or-later"
 
-  BINARY_ALIASES = {"aarch64-apple-darwin": {"akextract": ["akextract-link"]}, "x86_64-apple-darwin": {"akextract": ["akextract-link"]}, "x86_64-pc-windows-gnu": {"akextract.exe": ["akextract-link.exe"]}, "x86_64-unknown-linux-gnu": {"akextract": ["akextract-link"]}}
+  BINARY_ALIASES = {
+    "aarch64-apple-darwin": {
+      "akextract": [
+        "akextract-link"
+      ]
+    },
+    "x86_64-apple-darwin": {
+      "akextract": [
+        "akextract-link"
+      ]
+    },
+    "x86_64-pc-windows-gnu": {
+      "akextract.exe": [
+        "akextract-link.exe"
+      ]
+    },
+    "x86_64-unknown-linux-gnu": {
+      "akextract": [
+        "akextract-link"
+      ]
+    }
+  }
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"

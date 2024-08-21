@@ -346,6 +346,9 @@ impl DistResult {
             // If we have shellcheck, check our shell script
             app.shellcheck(ctx)?;
 
+            // If we have Homebrew, check our Homebrew installers
+            app.brew_style(ctx)?;
+
             // If we have PsScriptAnalyzer, check our powershell script
             app.psanalyzer(ctx)?;
         }
