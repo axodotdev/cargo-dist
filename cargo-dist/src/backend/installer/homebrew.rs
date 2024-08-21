@@ -370,8 +370,11 @@ mod tests {
         run_spdx_comparison(
             "MIT OR Apache-2.0 AND CC-BY-4.0",
             // NOTE: Homebrew parses this as {:all_of=>[{:any_of=>["MIT", "Apache-2.0"]}, "CC-BY-4.0"]}
-            // According to the spec, this seems to be wrong -
-            // the result produced here is correct.
+            // According to the SPDX v3 spec, this seems to be wrong, as operator precedence is specified
+            // as WITH > AND > OR (while Homebrew evaluates OR operators, then AND operators).
+            // The result produced in this test is correct.
+            //
+            // https://spdx.github.io/spdx-spec/v3.0/annexes/SPDX-license-expressions/#d45-order-of-precedence-and-parentheses
             r#"any_of: ["MIT", { all_of: ["Apache-2.0", "CC-BY-4.0"] }]"#,
         );
     }
