@@ -369,6 +369,9 @@ mod tests {
     fn spdx_three_licenses_or_and() {
         run_spdx_comparison(
             "MIT OR Apache-2.0 AND CC-BY-4.0",
+            // NOTE: Homebrew parses this as {:all_of=>[{:any_of=>["MIT", "Apache-2.0"]}, "CC-BY-4.0"]}
+            // According to the spec, this seems to be wrong -
+            // the result produced here is correct.
             r#"any_of: ["MIT", { all_of: ["Apache-2.0", "CC-BY-4.0"] }]"#,
         );
     }
@@ -377,6 +380,8 @@ mod tests {
     fn spdx_three_licenses_and_or() {
         run_spdx_comparison(
             "MIT AND Apache-2.0 OR CC-BY-4.0",
+            // Likewise, Homebrew parses this as {:all_of=>["MIT", {:any_of=>["Apache-2.0", "CC-BY-4.0"]}]}
+            // Which appears to be incorrect.
             r#"any_of: [{ all_of: ["MIT", "Apache-2.0"] }, "CC-BY-4.0"]"#,
         );
     }
