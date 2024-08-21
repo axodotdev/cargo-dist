@@ -1171,7 +1171,28 @@ class Axolotlsay < Formula
   end
   license any_of: ["MIT", "Apache-2.0"]
 
-  BINARY_ALIASES = {"aarch64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-pc-windows-gnu": {"axolotlsay.exe": ["axolotlsay-link.exe"]}, "x86_64-unknown-linux-gnu": {"axolotlsay": ["axolotlsay-link"]}}
+  BINARY_ALIASES = {
+    "aarch64-apple-darwin": {
+      "axolotlsay": [
+        "axolotlsay-link"
+      ]
+    },
+    "x86_64-apple-darwin": {
+      "axolotlsay": [
+        "axolotlsay-link"
+      ]
+    },
+    "x86_64-pc-windows-gnu": {
+      "axolotlsay.exe": [
+        "axolotlsay-link.exe"
+      ]
+    },
+    "x86_64-unknown-linux-gnu": {
+      "axolotlsay": [
+        "axolotlsay-link"
+      ]
+    }
+  }
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -3831,7 +3852,8 @@ jobs:
 
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
             brew update
-            brew style --fix "Formula/${filename}" || true
+            # We avoid reformatting user-provided data such as the app description and homepage.
+            brew style --except-cops FormulaAudit/Homepage,FormulaAudit/Desc,FormulaAuditStrict --fix "Formula/${filename}" || true
 
             git add "Formula/${filename}"
             git commit -m "${name} ${version}"

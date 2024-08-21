@@ -66,7 +66,7 @@ class {{ formula_class }} < Formula
   {%- endfor %}
   {%- endif %}
 
-  BINARY_ALIASES = {{ inner.bin_aliases }}
+  BINARY_ALIASES = {{ inner.bin_aliases | tojson(indent=2) | indent(2) }}
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
