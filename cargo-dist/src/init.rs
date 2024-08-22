@@ -525,29 +525,8 @@ fn get_new_dist_metadata(
             }
         }
     } else {
-        let prompt = format!(
-            r#"looks like you deleted the cargo-dist-version key, add it back?
-    this is the version of cargo-dist your releases should use
-    (you're currently running {})"#,
-            current_version
-        );
-        let default = true;
-
-        let response = if args.yes {
-            default
-        } else {
-            let res = Confirm::with_theme(&theme)
-                .with_prompt(prompt)
-                .default(default)
-                .interact()?;
-            eprintln!();
-            res
-        };
-        if response {
-            meta.cargo_dist_version = Some(current_version);
-        } else {
-            // Not recommended but technically ok...
-        }
+        // Really not allowed, so just force them onto the current version
+        meta.cargo_dist_version = Some(current_version);
     }
 
     {
