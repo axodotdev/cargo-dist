@@ -59,6 +59,7 @@ pub enum DistError {
 
     /// random axotag error
     #[error(transparent)]
+    #[diagnostic(transparent)]
     AxotagError(#[from] axotag::errors::TagError),
 
     /// Failure to deserialize yml
@@ -479,6 +480,45 @@ pub enum DistError {
         manifest_path: Utf8PathBuf,
         /// The dist.toml/dist-workspace.toml that means it's ignored
         dist_manifest_path: Utf8PathBuf,
+    },
+
+    /// Build command looks like they put args in same string as command
+    #[error("Your build-command's arguments need to be split up\n{manifest}\ncommand was: [\"{command}\"]")]
+    #[diagnostic(help("the command should be split [\"like\", \"--this\", \"--array=here\"]"))]
+    SusBuildCommand {
+        /// path to manifest
+        manifest: Utf8PathBuf,
+        /// what the command was
+        command: String,
+    },
+
+    /// missing "dist" script in a package.json
+    #[error("package.json was missing a \"dist\" script\n{manifest}")]
+    #[diagnostic(help(
+        "https://opensource.axo.dev/cargo-dist/book/quickstart/javascript.html#adding-a-dist-script"
+    ))]
+    NoDistScript {
+        /// path to package.json
+        manifest: Utf8PathBuf,
+    },
+
+    /// missing "build-command" for a package that needs one
+    #[error("dist package was missing a build-command\n{manifest}")]
+    #[diagnostic(help(
+        "https://opensource.axo.dev/cargo-dist/book/quickstart/everyone-else.html#setup"
+    ))]
+    NoBuildCommand {
+        /// path to manifest
+        manifest: Utf8PathBuf,
+    },
+
+    /// cargo package with build-command
+    #[error(
+        "cargo package was overriden with a build-command, which isn't supported yet\n{manifest}"
+    )]
+    UnexpectedBuildCommand {
+        /// path to manifest
+        manifest: Utf8PathBuf,
     },
 }
 

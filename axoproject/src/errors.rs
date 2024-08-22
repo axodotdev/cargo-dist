@@ -34,7 +34,7 @@ pub enum AxoprojectError {
     #[error(transparent)]
     ParseChangelog(#[from] parse_changelog::Error),
 
-    /// An error parsing a generic manifest
+    /// An error parsing a dist manifest
     #[error(transparent)]
     #[diagnostic(transparent)]
     Generic(#[from] GenericManifestParseError),
@@ -155,12 +155,12 @@ pub enum ProjectError {
     #[error("We encountered an issue trying to read your workspace")]
     ProjectBroken {
         /// The cause
-        #[source]
+        #[diagnostic_source]
         cause: AxoprojectError,
     },
 }
 
-/// Errors parsing a generic dist.toml or dist-workspaces.toml
+/// Errors parsing a dist.toml or dist-workspaces.toml
 #[derive(Debug, Error, Diagnostic)]
 pub enum GenericManifestParseError {
     /// No prefix in member

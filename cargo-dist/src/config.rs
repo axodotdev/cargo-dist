@@ -16,7 +16,7 @@ use crate::{
     TargetTriple, METADATA_DIST,
 };
 
-/// A container to assist deserializing metadata from generic, non-Cargo projects
+/// A container to assist deserializing metadata from dist(-workspace).tomls
 #[derive(Debug, Deserialize)]
 struct GenericConfig {
     /// The dist field within dist.toml
