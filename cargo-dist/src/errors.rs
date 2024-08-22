@@ -437,7 +437,7 @@ pub enum DistError {
     /// Installers requested despite having nothing to install
     #[error("Installers were requested, but app contains no installable binaries")]
     #[diagnostic(help(
-        "The only installable files are libraries, but `install-cdylibs` isn't enabled."
+        "The only installable files are libraries, but `install-libraries` isn't enabled."
     ))]
     EmptyInstaller {},
 
