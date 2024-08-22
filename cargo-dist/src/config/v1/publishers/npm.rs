@@ -1,4 +1,4 @@
-//! TODO
+//! npm publisher config
 
 use super::*;
 

@@ -1,4 +1,4 @@
-//! TODO
+//! homebrew installer config
 
 use super::*;
 

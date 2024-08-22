@@ -1,19 +1,19 @@
-//! TODO
+//! generic build config
 
 use super::*;
 
-/// TODO
+/// generic build config (final)
 #[derive(Debug, Clone)]
 pub struct GenericBuildConfig {
-    /// TODO
+    /// inheritable fields
     pub common: CommonBuildConfig,
 }
 
-/// TODO
+/// generic build config (raw from file)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct GenericBuildLayer {
-    /// TODO
+    /// inheritable fields
     #[serde(flatten)]
     pub common: CommonBuildLayer,
 }

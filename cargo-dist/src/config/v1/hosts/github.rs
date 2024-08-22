@@ -1,8 +1,8 @@
-//! TODO
+//! github host
 
 use super::*;
 
-/// TODO
+/// github host config (raw)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct GithubHostLayer {
@@ -40,7 +40,7 @@ pub struct GithubHostLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attestations: Option<bool>,
 }
-/// TODO
+/// github host config (final)
 #[derive(Debug, Default, Clone)]
 pub struct GithubHostConfig {
     /// Common options

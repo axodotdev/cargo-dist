@@ -1,4 +1,4 @@
-//! TODO
+//! installer config
 
 pub mod homebrew;
 pub mod msi;
@@ -14,77 +14,77 @@ use npm::*;
 use powershell::*;
 use shell::*;
 
-/// TODO
+/// workspace installer config (final)
 #[derive(Debug, Default, Clone)]
 pub struct WorkspaceInstallerConfig {
     /// Whether to install an updater program alongside the software
     pub updater: bool,
 }
-/// TODO
+/// package installer config (final)
 #[derive(Debug, Default, Clone)]
 pub struct AppInstallerConfig {
-    /// TODO
+    /// homebrew installer
     pub homebrew: Option<HomebrewInstallerConfig>,
-    /// TODO
+    /// msi installer
     pub msi: Option<MsiInstallerConfig>,
-    /// TODO
+    /// npm installer
     pub npm: Option<NpmInstallerConfig>,
-    /// TODO
+    /// powershell installer
     pub powershell: Option<PowershellInstallerConfig>,
-    /// TODO
+    /// shell installer
     pub shell: Option<ShellInstallerConfig>,
 }
 
-/// TODO
+/// installer config (inheritance not yet applied)
 #[derive(Debug, Clone)]
 pub struct InstallerConfigInheritable {
-    /// TODO
+    /// inheritable fields
     pub common: CommonInstallerConfig,
-    /// TODO
+    /// homebrew installer
     pub homebrew: Option<HomebrewInstallerLayer>,
-    /// TODO
+    /// msi installer
     pub msi: Option<MsiInstallerLayer>,
-    /// TODO
+    /// npm installer
     pub npm: Option<NpmInstallerLayer>,
-    /// TODO
+    /// powershell installer
     pub powershell: Option<PowershellInstallerLayer>,
-    /// TODO
+    /// shell installer
     pub shell: Option<ShellInstallerLayer>,
     /// Whether to install an updater program alongside the software
     pub updater: bool,
 }
 
-/// TODO
+/// installer config (raw from file)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct InstallerLayer {
-    /// TODO
+    /// inheritable fields
     #[serde(flatten)]
     pub common: CommonInstallerLayer,
-    /// TODO
+    /// homebrew installer
     pub homebrew: Option<BoolOr<HomebrewInstallerLayer>>,
-    /// TODO
+    /// msi installer
     pub msi: Option<BoolOr<MsiInstallerLayer>>,
-    /// TODO
+    /// npm installer
     pub npm: Option<BoolOr<NpmInstallerLayer>>,
-    /// TODO
+    /// powershell installer
     pub powershell: Option<BoolOr<PowershellInstallerLayer>>,
-    /// TODO
+    /// shell installer
     pub shell: Option<BoolOr<ShellInstallerLayer>>,
     /// Whether to install an updater program alongside the software
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updater: Option<bool>,
 }
 impl InstallerConfigInheritable {
-    /// TODO
+    /// defaults for a workspace
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
         Self::defaults()
     }
-    /// TODO
+    /// defaults for a package
     pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
         Self::defaults()
     }
-    /// TODO
+    /// defaults
     pub fn defaults() -> Self {
         Self {
             common: CommonInstallerConfig::defaults(),
@@ -96,7 +96,7 @@ impl InstallerConfigInheritable {
             updater: false,
         }
     }
-    /// TODO
+    /// apply inheritance to and get final workspace config
     pub fn apply_inheritance_for_workspace(
         self,
         _workspaces: &WorkspaceGraph,
@@ -115,7 +115,7 @@ impl InstallerConfigInheritable {
 
         WorkspaceInstallerConfig { updater }
     }
-    /// TODO
+    /// apply inheritance to get final package config
     pub fn apply_inheritance_for_package(
         self,
         workspaces: &WorkspaceGraph,
@@ -194,7 +194,7 @@ impl ApplyLayer for InstallerConfigInheritable {
     }
 }
 
-/// TODO
+/// inheritable installer fields (raw from file)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CommonInstallerLayer {
@@ -228,7 +228,7 @@ pub struct CommonInstallerLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bin_aliases: Option<SortedMap<String, Vec<String>>>,
 }
-/// TODO
+/// inheritable installer fields (final)
 #[derive(Debug, Default, Clone)]
 pub struct CommonInstallerConfig {
     /// The strategy to use for selecting a path to install things at:
@@ -259,7 +259,7 @@ pub struct CommonInstallerConfig {
     pub install_updater: bool,
 }
 impl CommonInstallerConfig {
-    /// TODO
+    /// defaults
     pub fn defaults() -> Self {
         Self {
             install_path: InstallPathStrategy::default_list(),

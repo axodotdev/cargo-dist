@@ -1,6 +1,4 @@
-//! TODO
-
-//! TODO
+//! publisher config
 
 pub mod homebrew;
 pub mod npm;
@@ -10,39 +8,41 @@ use super::*;
 use homebrew::*;
 use npm::*;
 
-/// TODO
+/// the final publisher config
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PublisherConfig {
-    /// TODO
+    /// homebrew publisher
     pub homebrew: Option<HomebrewPublisherConfig>,
-    /// TODO
+    /// npm publisher
     pub npm: Option<NpmPublisherConfig>,
 }
 
-/// TODO
+/// the publisher config
+///
+/// but with inheritance not yet folded in
 #[derive(Debug, Clone)]
 pub struct PublisherConfigInheritable {
-    /// TODO
+    /// common fields that each publisher inherits
     pub common: CommonPublisherConfig,
-    /// TODO
+    /// homebrew publisher
     pub homebrew: Option<HomebrewPublisherLayer>,
-    /// TODO
+    /// npm publisher
     pub npm: Option<NpmPublisherLayer>,
 }
 
-/// TODO
+/// "raw" publisher config from presum
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PublisherLayer {
-    /// TODO
+    /// common fields that each publisher inherits
     #[serde(flatten)]
     pub common: CommonPublisherLayer,
-    /// TODO
+    /// homebrew publisher
     pub homebrew: Option<BoolOr<HomebrewPublisherLayer>>,
-    /// TODO
+    /// npm publisher
     pub npm: Option<BoolOr<NpmPublisherLayer>>,
 }
 impl PublisherConfigInheritable {
-    /// TODO
+    /// get the defaults for a given package
     pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
         Self {
             common: CommonPublisherConfig::defaults_for_package(workspaces, pkg_idx),
@@ -50,7 +50,7 @@ impl PublisherConfigInheritable {
             npm: None,
         }
     }
-    /// TODO
+    /// fold the inherited fields in to get the final publisher config
     pub fn apply_inheritance_for_package(
         self,
         workspaces: &WorkspaceGraph,
@@ -92,21 +92,21 @@ impl ApplyLayer for PublisherConfigInheritable {
     }
 }
 
-/// TODO
+/// fields that each publisher inherits (raw)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct CommonPublisherLayer {
     /// Whether to publish prereleases (defaults to false)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prereleases: Option<bool>,
 }
-/// TODO
+/// fields that each publisher inherits (final)
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct CommonPublisherConfig {
     /// Whether to publish prereleases (defaults to false)
     pub prereleases: bool,
 }
 impl CommonPublisherConfig {
-    /// TODO
+    /// get the defaults for a given package
     pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
         Self { prereleases: false }
     }

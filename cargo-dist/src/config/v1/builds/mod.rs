@@ -1,4 +1,4 @@
-//! TODO
+//! build config
 
 pub mod cargo;
 pub mod generic;
@@ -7,57 +7,57 @@ use super::*;
 use cargo::*;
 use generic::*;
 
-/// TODO
+/// workspace build config
 #[derive(Debug, Clone)]
 pub struct WorkspaceBuildConfig {
-    /// TODO
+    /// cargo builds
     pub cargo: WorkspaceCargoBuildConfig,
-    /// TODO
+    /// whether to sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 }
 
-/// TODO
+/// app-scoped build config
 #[derive(Debug, Clone)]
 pub struct AppBuildConfig {
-    /// TODO
+    /// cargo builds
     pub cargo: AppCargoBuildConfig,
-    /// TODO
+    /// generic builds
     pub generic: GenericBuildConfig,
     /// A set of packages to install before building
     pub system_dependencies: SystemDependencies,
 }
 
-/// TODO
+/// build config (inheritance not yet folded)
 #[derive(Debug, Clone)]
 pub struct BuildConfigInheritable {
-    /// TODO
+    /// inheritable fields
     pub common: CommonBuildConfig,
-    /// TODO
+    /// whether to sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
-    /// TODO
+    /// cargo builds
     pub cargo: Option<CargoBuildLayer>,
-    /// TODO
+    /// generic builds
     pub generic: Option<GenericBuildLayer>,
     /// A set of packages to install before building
     pub system_dependencies: SystemDependencies,
 }
 
-/// TODO
+/// build config (raw from file)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct BuildLayer {
-    /// TODO
+    /// inheritable fields
     #[serde(flatten)]
     pub common: CommonBuildLayer,
 
-    /// \[unstable\] Whether we should sign windows binaries with ssl.com
+    /// Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 
-    /// TODO
+    /// cargo builds
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo: Option<BoolOr<CargoBuildLayer>>,
-    /// TODO
+    /// generic builds
     #[serde(skip_serializing_if = "Option::is_none")]
     pub generic: Option<BoolOr<GenericBuildLayer>>,
     /// A set of packages to install before building
@@ -66,7 +66,7 @@ pub struct BuildLayer {
     pub system_dependencies: Option<SystemDependencies>,
 }
 impl BuildConfigInheritable {
-    /// TODO
+    /// get defaults for a package
     pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
         Self {
             common: CommonBuildConfig::defaults_for_package(workspaces, pkg_idx),
@@ -76,7 +76,7 @@ impl BuildConfigInheritable {
             ssldotcom_windows_sign: None,
         }
     }
-    /// TODO
+    /// get defaults for a workspace
     pub fn defaults_for_workspace(workspaces: &WorkspaceGraph) -> Self {
         Self {
             common: CommonBuildConfig::defaults_for_workspace(workspaces),
@@ -86,7 +86,7 @@ impl BuildConfigInheritable {
             ssldotcom_windows_sign: None,
         }
     }
-    /// TODO
+    /// apply inheritance to get final workspace config
     pub fn apply_inheritance_for_workspace(
         self,
         workspaces: &WorkspaceGraph,
@@ -108,7 +108,7 @@ impl BuildConfigInheritable {
             ssldotcom_windows_sign,
         }
     }
-    /// TODO
+    /// apply inheritance to get final package config
     pub fn apply_inheritance_for_package(
         self,
         workspaces: &WorkspaceGraph,
@@ -160,20 +160,20 @@ impl ApplyLayer for BuildConfigInheritable {
     }
 }
 
-/// TODO
+/// inheritable build fields (final)
 #[derive(Debug, Clone)]
 pub struct CommonBuildConfig {}
-/// TODO
+/// inheritable build fields (raw from file)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CommonBuildLayer {}
 
 impl CommonBuildConfig {
-    /// TODO
+    /// defaults for a given package
     pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
         Self {}
     }
-    /// TODO
+    /// defaults for a given workspace
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
         Self {}
     }

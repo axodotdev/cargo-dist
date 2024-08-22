@@ -1,4 +1,4 @@
-//! TODO
+//! conversion layer from v0 config to v1 config
 
 use artifacts::archives::ArchiveLayer;
 use artifacts::ArtifactLayer;

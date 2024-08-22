@@ -1,20 +1,19 @@
-//! TODO
-//! TODO
+//! artifact config
 
 pub mod archives;
 
 use super::*;
 use archives::*;
 
-/// TODO
+/// artifact config (final)
 #[derive(Debug, Clone)]
 pub struct AppArtifactConfig {
-    /// TODO
+    /// archive config
     pub archives: ArchiveConfig,
     /// Any extra artifacts and their buildscripts
     pub extra: Vec<ExtraArtifact>,
 }
-/// TODO
+
 #[derive(Debug, Clone)]
 pub struct WorkspaceArtifactConfig {
     /// Whether to generate and dist a tarball containing your app's source code
@@ -22,11 +21,11 @@ pub struct WorkspaceArtifactConfig {
     /// How to checksum
     pub checksum: ChecksumStyle,
 }
-/// TODO
+/// artifact config (raw from file)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ArtifactLayer {
-    /// TODO
+    /// archive config
     #[serde(skip_serializing_if = "Option::is_none")]
     pub archives: Option<ArchiveLayer>,
 
@@ -45,7 +44,7 @@ pub struct ArtifactLayer {
     pub checksum: Option<ChecksumStyle>,
 }
 impl AppArtifactConfig {
-    /// TODO
+    /// get the defaults for a package
     pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
         Self {
             archives: ArchiveConfig::defaults_for_package(workspaces, pkg_idx),
@@ -55,7 +54,7 @@ impl AppArtifactConfig {
 }
 
 impl WorkspaceArtifactConfig {
-    /// TODO
+    /// get the defaults for a workspace
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
         Self {
             source_tarball: true,

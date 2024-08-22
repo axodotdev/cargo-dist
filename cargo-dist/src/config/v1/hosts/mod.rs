@@ -1,6 +1,4 @@
-//! TODO
-
-//! TODO
+//! host config
 
 pub mod axodotdev;
 pub mod github;
@@ -11,7 +9,7 @@ use axodotdev::*;
 use github::*;
 
 #[derive(Debug, Clone)]
-/// TODO
+/// package-specific host config (final)
 pub struct AppHostConfig {
     /// Whether artifacts/installers for this app should be displayed in release bodies
     pub display: bool,
@@ -20,19 +18,19 @@ pub struct AppHostConfig {
 }
 
 #[derive(Debug, Clone)]
-/// TODO
+/// workspace host config (final)
 pub struct WorkspaceHostConfig {
     /// Always regard releases as stable
     pub force_latest: bool,
-    /// TODO
+    /// github host config (github releases)
     pub github: Option<GithubHostConfig>,
-    /// TODO
+    /// axodotdev host config (axo releases)
     pub axodotdev: Option<AxodotdevHostConfig>,
 }
-/// TODO
+/// host config (inheritance not folded in yet)
 #[derive(Debug, Clone)]
 pub struct HostConfigInheritable {
-    /// TODO
+    /// inheritable fields
     pub common: CommonHostConfig,
     /// Always regard releases as stable
     pub force_latest: Option<bool>,
@@ -40,17 +38,17 @@ pub struct HostConfigInheritable {
     pub display: Option<bool>,
     /// How to refer to the app in release bodies
     pub display_name: Option<String>,
-    /// TODO
+    /// github hosting
     pub github: Option<GithubHostLayer>,
-    /// TODO
+    /// axodotdev hosting
     pub axodotdev: Option<AxodotdevHostLayer>,
 }
 
-/// TODO
+/// host config (raw from file)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct HostLayer {
-    /// TODO
+    /// inheritable fields
     #[serde(flatten)]
     pub common: CommonHostLayer,
 
@@ -74,13 +72,15 @@ pub struct HostLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
 
-    /// TODO
+    /// github hosting
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub github: Option<BoolOr<GithubHostLayer>>,
-    /// TODO
+    /// axodotdev hosting
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub axodotdev: Option<BoolOr<AxodotdevHostLayer>>,
 }
 impl HostConfigInheritable {
-    /// TODO
+    /// get defaults for a package
     pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
         Self {
             common: CommonHostConfig::defaults_for_package(workspaces, pkg_idx),
@@ -91,7 +91,7 @@ impl HostConfigInheritable {
             display_name: None,
         }
     }
-    /// TODO
+    /// get defaults for a workspace
     pub fn defaults_for_workspace(workspaces: &WorkspaceGraph) -> Self {
         Self {
             common: CommonHostConfig::defaults_for_workspace(workspaces),
@@ -102,7 +102,7 @@ impl HostConfigInheritable {
             display_name: None,
         }
     }
-    /// TODO
+    /// apply inheritance to get final package config
     pub fn apply_inheritance_for_package(
         self,
         workspaces: &WorkspaceGraph,
@@ -123,7 +123,7 @@ impl HostConfigInheritable {
         }
     }
 
-    /// TODO
+    /// apply inheritance to get final workspace config
     pub fn apply_inheritance_for_workspace(
         self,
         workspaces: &WorkspaceGraph,
@@ -153,6 +153,7 @@ impl HostConfigInheritable {
         }
     }
 }
+
 impl ApplyLayer for HostConfigInheritable {
     type Layer = HostLayer;
     fn apply_layer(
@@ -175,19 +176,20 @@ impl ApplyLayer for HostConfigInheritable {
     }
 }
 
-/// TODO
+/// inheritable hosting config
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CommonHostLayer {}
-/// TODO
+
+/// inheritable hosting config
 #[derive(Debug, Default, Clone)]
 pub struct CommonHostConfig {}
 impl CommonHostConfig {
-    /// TODO
+    /// defaults for package
     pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
         Self {}
     }
-    /// TODO
+    /// defaults for workspace
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
         Self {}
     }

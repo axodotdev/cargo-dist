@@ -1,3 +1,5 @@
+//! The cargo-dist 1.0 config format (as opposed to the old v0 format)
+//!
 //! TODO
 pub mod layer;
 
@@ -52,44 +54,46 @@ pub fn app_config(
     config.apply_inheritance_for_package(workspaces, pkg_idx)
 }
 
-/// TODO
+/// config that is global to the entire workspace
 #[derive(Debug, Clone)]
 pub struct WorkspaceConfig {
     /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
     pub dist_version: Option<Version>,
     /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
-    /// TODO
+    /// ci config
     pub ci: CiConfig,
-    /// TODO
+    /// artifact config
     pub artifacts: WorkspaceArtifactConfig,
-    /// TODO
+    /// host config
     pub hosts: WorkspaceHostConfig,
-    /// TODO
+    /// build config
     pub builds: WorkspaceBuildConfig,
-    /// TODO
+    /// installer config
     pub installers: WorkspaceInstallerConfig,
 }
-/// TODO
+/// config that is global to the entire workspace
+///
+/// but inheritance relationships haven't been folded in yet.
 #[derive(Debug, Clone)]
 pub struct WorkspaceConfigInheritable {
     /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
     pub dist_version: Option<Version>,
     /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
-    /// TODO
+    /// artifact config
     pub artifacts: WorkspaceArtifactConfig,
-    /// TODO
+    /// ci config
     pub ci: CiConfigInheritable,
-    /// TODO
+    /// host config
     pub hosts: HostConfigInheritable,
-    /// TODO
+    /// build config
     pub builds: BuildConfigInheritable,
-    /// TODO
+    /// installer config
     pub installers: InstallerConfigInheritable,
 }
 impl WorkspaceConfigInheritable {
-    /// TODO
+    /// Get the defaults for workspace-level config
     pub fn defaults_for_workspace(workspaces: &WorkspaceGraph) -> Self {
         Self {
             artifacts: WorkspaceArtifactConfig::defaults_for_workspace(workspaces),
@@ -101,7 +105,7 @@ impl WorkspaceConfigInheritable {
             allow_dirty: vec![],
         }
     }
-    /// TODO
+    /// Apply the inheritance to ge tthe final WorkspaceConfig
     pub fn apply_inheritance_for_workspace(self, workspaces: &WorkspaceGraph) -> WorkspaceConfig {
         let Self {
             artifacts,
@@ -151,36 +155,38 @@ impl ApplyLayer for WorkspaceConfigInheritable {
     }
 }
 
-/// TODO
+/// Config scoped to a particular App
 #[derive(Debug, Clone)]
 pub struct AppConfig {
-    /// TODO
+    /// artifact config
     pub artifacts: AppArtifactConfig,
-    /// TODO
+    /// build config
     pub builds: AppBuildConfig,
-    /// TODO
+    /// host config
     pub hosts: AppHostConfig,
-    /// TODO
+    /// installer config
     pub installers: AppInstallerConfig,
-    /// TODO
+    /// publisher config
     pub publishers: PublisherConfig,
     /// Whether the package should be distributed/built by cargo-dist
     pub dist: Option<bool>,
     /// The full set of target triples to build for.
     pub targets: Vec<String>,
 }
-/// TODO
+/// Config scoped to a particular App
+///
+/// but inheritance relationships haven't been folded in yet.
 #[derive(Debug, Clone)]
 pub struct AppConfigInheritable {
-    /// TODO
+    /// artifact config
     pub artifacts: AppArtifactConfig,
-    /// TODO
+    /// build config
     pub builds: BuildConfigInheritable,
-    /// TODO
+    /// host config
     pub hosts: HostConfigInheritable,
-    /// TODO
+    /// installer config
     pub installers: InstallerConfigInheritable,
-    /// TODO
+    /// publisher config
     pub publishers: PublisherConfigInheritable,
     /// Whether the package should be distributed/built by cargo-dist
     pub dist: Option<bool>,
@@ -188,7 +194,7 @@ pub struct AppConfigInheritable {
     pub targets: Vec<String>,
 }
 impl AppConfigInheritable {
-    /// TODO
+    /// Get the defaults for the given package
     pub fn defaults_for_package(workspaces: &WorkspaceGraph, pkg_idx: PackageIdx) -> Self {
         Self {
             artifacts: AppArtifactConfig::defaults_for_package(workspaces, pkg_idx),
@@ -200,7 +206,7 @@ impl AppConfigInheritable {
             targets: vec![],
         }
     }
-    /// TODO
+    /// Fold in inheritance relationships to get the final package config
     pub fn apply_inheritance_for_package(
         self,
         workspaces: &WorkspaceGraph,
@@ -254,7 +260,7 @@ impl ApplyLayer for AppConfigInheritable {
     }
 }
 
-/// TODO
+/// The "raw" input from a toml file containing config
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct TomlLayer {
@@ -298,28 +304,32 @@ pub struct TomlLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<String>>,
 
-    /// TODO
+    /// artifact config
     #[serde(skip_serializing_if = "Option::is_none")]
     pub artifacts: Option<ArtifactLayer>,
-    /// TODO
+    /// build config
     #[serde(skip_serializing_if = "Option::is_none")]
     pub builds: Option<BuildLayer>,
-    /// TODO
+    /// ci config
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci: Option<CiLayer>,
-    /// TODO
+    /// host config
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hosts: Option<HostLayer>,
-    /// TODO
+    /// installer config
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<InstallerLayer>,
-    /// TODO
+    /// publisher config
     #[serde(skip_serializing_if = "Option::is_none")]
     pub publishers: Option<PublisherLayer>,
 }
 
 impl TomlLayer {
-    /// TODO
+    /// Take any configs that contain paths that are *relative to the file they came from*
+    /// and make them relative to the given basepath.
+    ///
+    /// This is important to do eagerly, because once we start merging configs
+    /// we'll forget what file they came from!
     fn make_relative_to(&mut self, base_path: &Utf8Path) {
         // It's kind of unfortunate that we don't exhaustively match this to
         // force you to update it BUT almost no config is ever applicable for

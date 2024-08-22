@@ -1,4 +1,4 @@
-//! TODO
+//! npm installer config
 
 use super::*;
 

@@ -1,8 +1,8 @@
-//! TODO
+//! cargo build config
 
 use super::*;
 
-/// TODO
+/// cargo build config for the whole workspace
 #[derive(Debug, Clone)]
 pub struct WorkspaceCargoBuildConfig {
     /// Whether msvc targets should statically link the crt
@@ -17,10 +17,10 @@ pub struct WorkspaceCargoBuildConfig {
     pub precise_builds: Option<bool>,
 }
 
-/// TODO
+/// cargo build config for a specific app
 #[derive(Debug, Clone)]
 pub struct AppCargoBuildConfig {
-    /// TODO
+    /// common build config
     pub common: CommonBuildConfig,
 
     /// A list of features to enable when building a package with cargo-dist
@@ -35,11 +35,11 @@ pub struct AppCargoBuildConfig {
     pub all_features: bool,
 }
 
-/// TODO
+/// cargo build config (raw)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CargoBuildLayer {
-    /// TODO
+    /// inheritable cargo build config
     #[serde(flatten)]
     pub common: CommonBuildLayer,
 

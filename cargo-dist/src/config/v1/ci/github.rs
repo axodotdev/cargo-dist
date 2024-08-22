@@ -1,8 +1,8 @@
-//! TODO
+//! github ci config
 
 use super::*;
 
-/// TODO
+/// github ci config (raw from file)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct GithubCiLayer {
@@ -22,7 +22,7 @@ pub struct GithubCiLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build_setup: Option<String>,
 }
-/// TODO
+/// github ci config (final)
 #[derive(Debug, Default, Clone)]
 pub struct GithubCiConfig {
     /// Common options

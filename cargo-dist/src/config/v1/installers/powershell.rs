@@ -1,4 +1,4 @@
-//! TODO
+//! powershell installer config
 
 use super::*;
 

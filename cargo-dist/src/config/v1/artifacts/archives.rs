@@ -1,8 +1,8 @@
-//! TODO
+//! archive config
 
 use super::*;
 
-/// TODO
+/// archive config (final)
 #[derive(Debug, Clone)]
 pub struct ArchiveConfig {
     /// Include the following static files in bundles like archives.
@@ -17,7 +17,7 @@ pub struct ArchiveConfig {
     pub package_libraries: Vec<LibraryStyle>,
 }
 
-/// TODO
+/// archive config (raw from config file)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ArchiveLayer {

@@ -1,15 +1,15 @@
-//! TODO
+//! axodotdev host config
 
 use super::*;
 
-/// TODO
+/// axodotdev host (raw)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct AxodotdevHostLayer {
     /// Common options
     pub common: CommonHostLayer,
 }
-/// TODO
+/// axodotdev host (final)
 #[derive(Debug, Default, Clone)]
 pub struct AxodotdevHostConfig {
     /// Common options
@@ -17,7 +17,7 @@ pub struct AxodotdevHostConfig {
 }
 
 impl AxodotdevHostConfig {
-    /// Get defaults for the given package
+    /// Get defaults for the given workspace
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph, common: &CommonHostConfig) -> Self {
         Self {
             common: common.clone(),

@@ -1,4 +1,4 @@
-//! TODO
+//! shell installer config
 
 use super::*;
 

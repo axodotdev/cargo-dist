@@ -1,4 +1,4 @@
-//! TODO
+//! homebrew publisher config
 
 use super::*;
 

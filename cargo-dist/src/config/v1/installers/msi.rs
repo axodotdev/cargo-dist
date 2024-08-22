@@ -1,4 +1,4 @@
-//! TODO
+//! msi installer config
 
 use super::*;
 

@@ -1,6 +1,4 @@
-//! TODO
-
-//! TODO
+//! ci config
 
 pub mod github;
 
@@ -8,41 +6,41 @@ use super::*;
 
 use github::*;
 
-/// TODO
+/// ci config (final)
 #[derive(Debug, Default, Clone)]
 pub struct CiConfig {
-    /// TODO
+    /// github ci
     pub github: Option<GithubCiConfig>,
 }
 
-/// TODO
+/// ci config (inheritance not yet folded)
 #[derive(Debug, Clone)]
 pub struct CiConfigInheritable {
-    /// TODO
+    /// inheritable fields
     pub common: CommonCiConfig,
-    /// TODO
+    /// github ci
     pub github: Option<GithubCiLayer>,
 }
 
-/// TODO
+/// ci config (raw from file)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CiLayer {
-    /// TODO
+    /// inheritable fields
     #[serde(flatten)]
     pub common: CommonCiLayer,
-    /// TODO
+    /// github ci fields
     pub github: Option<BoolOr<GithubCiLayer>>,
 }
 impl CiConfigInheritable {
-    /// TODO
+    /// get defaults for workspace config
     pub fn defaults_for_workspace(workspaces: &WorkspaceGraph) -> Self {
         Self {
             common: CommonCiConfig::defaults_for_workspace(workspaces),
             github: None,
         }
     }
-    /// TODO
+    /// fold in inheritance and get final ci config
     pub fn apply_inheritance_for_workspace(self, workspaces: &WorkspaceGraph) -> CiConfig {
         let Self { common, github } = self;
         let github = github.map(|github| {
@@ -61,7 +59,7 @@ impl ApplyLayer for CiConfigInheritable {
     }
 }
 
-/// TODO
+/// inhertiable ci fields
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CommonCiLayer {
@@ -180,7 +178,7 @@ pub struct CommonCiLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub post_announce_jobs: Option<Vec<JobStyle>>,
 }
-/// TODO
+/// inheritable ci fields (final)
 #[derive(Debug, Default, Clone)]
 pub struct CommonCiConfig {
     /// Whether we should try to merge otherwise-parallelizable tasks onto the same machine,
@@ -230,7 +228,7 @@ pub struct CommonCiConfig {
     pub post_announce_jobs: Vec<JobStyle>,
 }
 impl CommonCiConfig {
-    /// TODO
+    /// get defaults for a workspace
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
         Self {
             merge_tasks: false,
