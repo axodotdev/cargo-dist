@@ -14,6 +14,7 @@ use cargo_dist_schema::{
 use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
+use tracing::warn;
 
 use crate::{config::Config, errors::*, gather_work, Artifact, DistGraph};
 
@@ -81,7 +82,27 @@ fn compute_linkage_assuming_local_build(
                 if !bin_path.exists() {
                     eprintln!("Binary {bin_path} missing; skipping check");
                 } else {
-                    let linkage = determine_linkage(&bin_path, target)?;
+                    let linkage = match determine_linkage(&bin_path, target) {
+                        Ok(linkage) => linkage,
+                        // We don't want to treat the primary linkage
+                        // failure check as a failure - instead, print
+                        // a warning and provide a default.
+                        Err(DistError::LinkageCheckUnsupportedBinary { file_name }) => {
+                            if let Some(file_name) = file_name {
+                                warn!("Unable to fetch linkage from {file_name}");
+                            } else {
+                                warn!("Unable to fetch linkage");
+                            }
+                            Linkage::default()
+                        }
+                        Err(e) => {
+                            warn!(
+                                "Encountered an issue trying to determine linkage: {:?}",
+                                miette::Report::new(e)
+                            );
+                            Linkage::default()
+                        }
+                    };
 
                     manifest.assets.insert(
                         bin.id.clone(),
@@ -371,7 +392,11 @@ fn do_pe(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
     let buf = std::fs::read(path)?;
     match Object::parse(&buf)? {
         Object::PE(pe) => Ok(pe.libraries.into_iter().map(|s| s.to_owned()).collect()),
-        _ => Err(DistError::LinkageCheckUnsupportedBinary {}),
+        // Static libraries link against nothing
+        Object::Archive(_) => Ok(vec![]),
+        _ => Err(DistError::LinkageCheckUnsupportedBinary {
+            file_name: path.file_name().map(String::from),
+        }),
     }
 }
 
@@ -402,7 +427,11 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage
         | "i686-pc-windows-gnu"
         | "x86_64-pc-windows-gnu"
         | "aarch64-pc-windows-gnu" => do_pe(path)?,
-        _ => return Err(DistError::LinkageCheckUnsupportedBinary {}),
+        _ => {
+            return Err(DistError::LinkageCheckUnsupportedBinary {
+                file_name: path.file_name().map(String::from),
+            })
+        }
     };
 
     let mut linkage = Linkage {
