@@ -1,6 +1,72 @@
 //! The cargo-dist 1.0 config format (as opposed to the old v0 format)
 //!
-//! TODO
+//! This is the config subsystem!
+//!
+//! # Concepts
+//!
+//! It's responsible for loading, merging, and auto-detecting all the various config
+//! sources. There are two closely related families of types:
+//!
+//! - `...Config` types are the "complete" values that will be passed around to the rest
+//!   of the program. All of these types get shoved into the top-level [`Config`][] type.
+//!
+//! - `...Layer` types are "partial" values that are loaded and parsed before being merged
+//!   into the final [`Config`][]. Notably the oranda.json is loaded as [`OrandaLayer`][] and
+//!   Cargo.toml/package.json gets loaded as [`AxoprojectLayer`][].
+//!
+//! Nested types like [`InstallerConifg`][] usually have a paired layer ([`InstallerLayer`][]),
+//! with an almost identical definition. The differences usually lie in the Layer having far more
+//! Options, because you don't need to specify it in your oranda.json but we want the rest of our
+//! code to have the final result fully resolved.
+//!
+//! The Big Idea is that:
+//!
+//! - a `...Config` type implements [`Default`][] manually to specify default values
+//! - a `...Config` type implements [`ApplyLayer`][] to specify how its `...Layer` gets combined
+//!
+//! Conveniences like [`ApplyValExt::apply_val`][] and [`ApplyOptExt::apply_opt`][]
+//! exist to help merge simple values like `bool <- Option<bool>` where overwriting the entire
+//! value is acceptable.
+//!
+//! [`ApplyBoolLayerExt::apply_bool_layer`][] exists to apply [`BoolOr`][] wrappers
+//! which lets config say things like `homebrew = false` when [`HomebrewInstallerConfig`][]
+//! is actually an entire struct.
+//!
+//!
+//! # Top-Level Layers
+//!
+//! TODO: rewrite for cargo-dist
+//!
+//! These are the current top-level """layers""" that get constructed and merged into
+//! the top-level [`Config`][]. They are merged more free-form, but try to quickly shell
+//! out to [`ApplyLayer`][] for consistency/reliability.
+//!
+//! The top-level layers are applied in the following order, with the later ones winning:
+//!
+//! - **The Default Layer** comes from [`Config::default`][] and the recursive [`Default`][]
+//!   impls on the other `...Config` structs.
+//!
+//! - **[`AxoprojectLayer`][]** comes from a project manifest file. We currently
+//!   support `Cargo.toml` and `package.json`, but could support any manifest
+//!   that provides information like `name`, `description`, `repository`...
+//!
+//! - **[`OrandaLayer`][]**, AKA "the custom layer", comes from an `oranda.json` file.
+//!   It's basically a complete replica of [`Config`][] but with way more Options.
+//!
+//! - **The Autodetect Layer** is just a convention where configs have an opportunity
+//!   to try to find missing values, erroring out if they fail while the user
+//!   was clearly trying to enable the feature.
+//!
+//! Note that several of these config merges are seemingly pedantic about preserving/merging
+//! old values when only one source sets it in practice. This is to make the code more reliable,
+//! consistent, and robust in the face of future config/layer additions without you having to
+//! know exactly all the ways a value can be set.
+
+
+// We very intentionally manually implement Default a lot in this submodule
+// to keep things very explicit and clear
+#![allow(clippy::derivable_impls)]
+
 pub mod layer;
 
 pub mod artifacts;
