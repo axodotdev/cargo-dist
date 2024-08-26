@@ -8,7 +8,7 @@ use serde::Deserialize;
 use crate::{
     config::{
         self, CiStyle, CompressionImpl, Config, DistMetadata, HostingStyle, InstallPathStrategy,
-        InstallerStyle, PublishStyle, ZipStyle,
+        InstallerStyle, MacPkgConfig, PublishStyle, ZipStyle,
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -665,7 +665,6 @@ fn get_new_dist_metadata(
                 InstallerStyle::Npm,
                 InstallerStyle::Homebrew,
                 InstallerStyle::Msi,
-                InstallerStyle::Pkg,
             ]
         } else {
             eprintln!("{notice} no CI backends enabled, most installers have been hidden");
@@ -779,66 +778,6 @@ fn get_new_dist_metadata(
         if homebrew_toggled_off {
             meta.tap = None;
             publish_jobs.retain(|job| job != &PublishStyle::Homebrew);
-        }
-    }
-
-    // Special handling of the pkg installer
-    if meta
-        .installers
-        .as_deref()
-        .unwrap_or_default()
-        .contains(&InstallerStyle::Pkg)
-    {
-        let pkg_is_new = !orig_meta
-            .installers
-            .as_deref()
-            .unwrap_or_default()
-            .contains(&InstallerStyle::Pkg);
-
-        if pkg_is_new && orig_meta.mac_pkg_config.is_none() {
-            let prompt = r#"you've enabled a Mac .pkg installer. This requires a unique bundle ID;
-    please enter one now. This is in reverse-domain name format.
-    For more information, consult the Apple documentation:
-    https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW1"#;
-            let default = "".to_string();
-
-            let identifier: String = if args.yes {
-                default
-            } else {
-                let res = Input::with_theme(&theme)
-                    .with_prompt(prompt)
-                    .allow_empty(true)
-                    .interact_text()?;
-                eprintln!();
-                res
-            };
-            let identifier = identifier.trim();
-            if identifier.is_empty() {
-                return Err(DistError::MacPkgBundleIdentifierMissing {});
-            }
-
-            let prompt = r#"Please enter the installation prefix this .pkg should use."#;
-            let prefix = if args.yes {
-                None
-            } else {
-                let res: String = Input::with_theme(&theme)
-                    .with_prompt(prompt)
-                    .allow_empty(true)
-                    .interact_text()?;
-                eprintln!();
-
-                let trimmed = res.trim();
-                if trimmed.is_empty() {
-                    None
-                } else {
-                    Some(trimmed.to_owned())
-                }
-            };
-
-            meta.mac_pkg_config = Some(config::MacPkgConfig {
-                identifier: identifier.to_owned(),
-                install_location: prefix,
-            })
         }
     }
 
@@ -1034,6 +973,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         github_release,
         package_libraries,
         install_libraries,
+        mac_pkg_config,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -1041,7 +981,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         bin_aliases: _,
         system_dependencies: _,
         github_build_setup: _,
-        mac_pkg_config: _,
     } = &meta;
 
     // Forcibly inline the default install_path if not specified,
@@ -1081,6 +1020,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "installers",
         "# The installers to generate for each app\n",
         installers.as_ref(),
+    );
+
+    apply_optional_mac_pkg(
+        table,
+        "mac-pkg-config",
+        "\n# Configuration for the Mac .pkg installer\n",
+        mac_pkg_config.as_ref(),
     );
 
     apply_optional_value(
@@ -1490,6 +1436,42 @@ where
         } else {
             apply_string_list(table, key, desc, Some(items))
         }
+    } else {
+        table.remove(key);
+    }
+}
+
+/// Similar to [`apply_optional_value`][] but specialized to `MacPkgConfig`, since we're not able to work with structs dynamically
+fn apply_optional_mac_pkg(
+    table: &mut toml_edit::Table,
+    key: &str,
+    desc: &str,
+    val: Option<&MacPkgConfig>,
+) {
+    if let Some(mac_pkg_config) = val {
+        let MacPkgConfig {
+            identifier,
+            install_location,
+        } = mac_pkg_config;
+
+        let new_item = &mut table[key];
+        let mut new_table = toml_edit::table();
+        if let Some(new_table) = new_table.as_table_mut() {
+            apply_optional_value(
+                new_table,
+                "identifier",
+                "# A unique identifier, in tld.domain.package format\n",
+                Some(identifier),
+            );
+            apply_optional_value(
+                new_table,
+                "install-location",
+                "# The location to which the software should be installed\n",
+                install_location.as_ref(),
+            );
+            new_table.decor_mut().set_prefix(desc);
+        }
+        new_item.or_insert(new_table);
     } else {
         table.remove(key);
     }
