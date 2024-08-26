@@ -18,29 +18,28 @@
 //! 5) Let the keychain be deleted when the temporary directory is dropped.
 //!
 //! In the future, this module will also support notarization.
-use std::path::PathBuf;
-
 use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use base64::Engine;
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use temp_dir::TempDir;
 use tracing::warn;
 
-use crate::{DistError, DistResult, TargetTriple};
+use crate::{create_tmp, DistError, DistResult, TargetTriple};
 
 struct Keychain {
-    root: TempDir,
+    _root: TempDir,
+    root_path: Utf8PathBuf,
     password: String,
-    pub path: PathBuf,
+    pub path: Utf8PathBuf,
 }
 
 impl Keychain {
     /// Creates a keychain in a temporary directory, secured
     /// with the provided password.
     pub fn create(password: String) -> DistResult<Self> {
-        let root = TempDir::new()?;
-        let path = root.path().join("signing.keychain-db");
+        let (root, root_path) = create_tmp()?;
+        let path = root_path.join("signing.keychain-db");
 
         let mut cmd = Cmd::new("/usr/bin/security", "create keychain");
         cmd.arg("create-keychain");
@@ -77,7 +76,8 @@ impl Keychain {
         cmd.status()?;
 
         Ok(Self {
-            root,
+            _root: root,
+            root_path,
             password,
             path,
         })
@@ -87,9 +87,8 @@ impl Keychain {
     /// into the keychain at `self`.
     pub fn import_certificate(&self, certificate: &[u8], passphrase: &str) -> DistResult<()> {
         // Temporarily write `certificate` into `path` for `security`
-        let root = Utf8Path::from_path(self.root.path()).unwrap();
-        let cert_path = root.join("cert.p12");
-        LocalAsset::new(&cert_path, certificate.to_owned())?.write_to_dir(root)?;
+        let cert_path = self.root_path.join("cert.p12");
+        LocalAsset::new(&cert_path, certificate.to_owned())?.write_to_dir(&self.root_path)?;
 
         let mut cmd = Cmd::new("/usr/bin/security", "import certificate");
         cmd.arg("import");
