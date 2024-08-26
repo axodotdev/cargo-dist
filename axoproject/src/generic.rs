@@ -197,7 +197,6 @@ fn workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
                 let generic = raw_package_from(&paired_manifest)?;
                 merge_package_with_raw_generic(package, generic, paired_manifest);
             }
-
             crate::merge_auto_includes(package, &root_auto_includes);
         }
     }
@@ -263,14 +262,14 @@ fn package_from(manifest_path: &Utf8Path) -> Result<PackageInfo> {
         return Err(AxoassetError::Toml {
             source,
             span,
-            details: axoasset::toml::de::Error::custom("missing field build-command"),
+            details: axoasset::toml::de::Error::custom("missing field 'build-command'"),
         })?;
     };
     let Some(name) = package.name else {
         return Err(AxoassetError::Toml {
             source,
             span,
-            details: axoasset::toml::de::Error::custom("missing field name"),
+            details: axoasset::toml::de::Error::custom("missing field 'name'"),
         })?;
     };
 

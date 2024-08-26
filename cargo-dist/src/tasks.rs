@@ -2635,6 +2635,63 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
     }
 
+    fn validate_distable_packages(&self, announcing: &AnnouncementTag) -> DistResult<()> {
+        for release in &announcing.rust_releases {
+            let package = self.workspaces.package(release.package_idx);
+            let workspace_idx = self.workspaces.workspace_for_package(release.package_idx);
+            let package_workspace = self.workspaces.workspace(workspace_idx);
+            let package_kind = package_workspace.kind;
+            if announcing.package.is_none() {
+                match package_kind {
+                    axoproject::WorkspaceKind::Generic | axoproject::WorkspaceKind::Javascript => {
+                        if let Some(build_command) = &package.build_command {
+                            if build_command.len() == 1
+                                && build_command.first().unwrap().contains(' ')
+                            {
+                                return Err(DistError::SusBuildCommand {
+                                    manifest: package
+                                        .dist_manifest_path
+                                        .clone()
+                                        .unwrap_or_else(|| package.manifest_path.clone()),
+                                    command: build_command[0].clone(),
+                                });
+                            } else if build_command.is_empty() {
+                                return Err(DistError::NoBuildCommand {
+                                    manifest: package
+                                        .dist_manifest_path
+                                        .clone()
+                                        .unwrap_or_else(|| package.manifest_path.clone()),
+                                });
+                            }
+                        } else if package_kind == axoproject::WorkspaceKind::Javascript {
+                            return Err(DistError::NoDistScript {
+                                manifest: package.manifest_path.clone(),
+                            });
+                        } else {
+                            return Err(DistError::NoBuildCommand {
+                                manifest: package
+                                    .dist_manifest_path
+                                    .clone()
+                                    .unwrap_or_else(|| package.manifest_path.clone()),
+                            });
+                        }
+                    }
+                    axoproject::WorkspaceKind::Rust => {
+                        if package.build_command.is_some() {
+                            return Err(DistError::UnexpectedBuildCommand {
+                                manifest: package
+                                    .dist_manifest_path
+                                    .clone()
+                                    .unwrap_or_else(|| package.manifest_path.clone()),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn compute_releases(
         &mut self,
         cfg: &Config,
@@ -2912,6 +2969,8 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
 
     // Figure out what packages we're announcing
     let announcing = announce::select_tag(&mut graph, &cfg.tag_settings)?;
+
+    graph.validate_distable_packages(&announcing)?;
 
     // Immediately check if there's other manifests kicking around that provide info
     // we don't want to recompute (lets us move towards more of an architecture where
