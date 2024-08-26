@@ -25,6 +25,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`extra-artifacts`](#extra-artifacts)
 * [`source-tarball`](#source-tarball)
 * [`ssldotcom-windows-sign`](#ssldotcom-windows-sign)
+* [`macos-sign`](#macos-sign)
 * [archive settings](#artifact-settings)
     * [`auto-includes`](#auto-includes)
     * [`include`](#include)
