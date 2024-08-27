@@ -9,7 +9,7 @@ use cargo_dist_schema::TripleNameRef;
 
 use crate::{config::ProductionMode, DistResult};
 
-mod macos;
+pub mod macos;
 mod ssldotcom;
 
 /// Code/artifact signing providers
