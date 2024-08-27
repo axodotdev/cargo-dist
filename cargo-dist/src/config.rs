@@ -380,6 +380,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 
+    /// Whether we should sign Mac binaries
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macos_sign: Option<bool>,
+
     /// Whether GitHub Attestations is enabled (default false)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_attestations: Option<bool>,
@@ -503,6 +507,7 @@ impl DistMetadata {
             allow_dirty: _,
             github_release: _,
             ssldotcom_windows_sign: _,
+            macos_sign: _,
             github_attestations: _,
             msvc_crt_static: _,
             hosting: _,
@@ -596,6 +601,7 @@ impl DistMetadata {
             allow_dirty,
             github_release,
             ssldotcom_windows_sign,
+            macos_sign,
             github_attestations,
             msvc_crt_static,
             hosting,
@@ -670,6 +676,9 @@ impl DistMetadata {
         }
         if ssldotcom_windows_sign.is_some() {
             warn!("package.metadata.dist.ssldotcom-windows-sign is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if macos_sign.is_some() {
+            warn!("package.metadata.dist.macos-sign is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if github_attestations.is_some() {
             warn!("package.metadata.dist.github-attestations is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

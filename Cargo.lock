@@ -384,6 +384,7 @@ dependencies = [
  "axoproject",
  "axotag",
  "axoupdater",
+ "base64",
  "blake2",
  "camino",
  "cargo-dist-schema",

@@ -228,7 +228,9 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
     Ok(())
 }
 
-fn create_tmp() -> DistResult<(TempDir, Utf8PathBuf)> {
+/// Creates a temporary directory, returning the directory and
+/// its path as a Utf8PathBuf.
+pub fn create_tmp() -> DistResult<(TempDir, Utf8PathBuf)> {
     let tmp_dir = TempDir::new()?;
     let tmp_root =
         Utf8PathBuf::from_path_buf(tmp_dir.path().to_owned()).expect("tempdir isn't utf8!?");

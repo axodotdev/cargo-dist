@@ -65,6 +65,7 @@ parse-changelog = "0.6.8"
 schemars = "0.8.21"
 serde_yml = "0.0.10"
 spdx = "0.10.6"
+base64 = "0.22.1"
 
 [workspace.metadata.release]
 shared-version = true
