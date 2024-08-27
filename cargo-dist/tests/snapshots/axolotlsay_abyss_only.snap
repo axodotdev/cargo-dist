@@ -3154,8 +3154,12 @@ run("axolotlsay");
         "axolotlsay-npm-package.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-aarch64-apple-darwin.pkg",
+        "axolotlsay-aarch64-apple-darwin.pkg.sha256",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-x86_64-apple-darwin.pkg",
+        "axolotlsay-x86_64-apple-darwin.pkg.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.msi",
@@ -3176,6 +3180,30 @@ run("axolotlsay");
     }
   ],
   "artifacts": {
+    "axolotlsay-aarch64-apple-darwin.pkg": {
+      "name": "axolotlsay-aarch64-apple-darwin.pkg",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "id": "axolotlsay-aarch64-apple-darwin-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "description": "install via pkg",
+      "checksum": "axolotlsay-aarch64-apple-darwin.pkg.sha256"
+    },
+    "axolotlsay-aarch64-apple-darwin.pkg.sha256": {
+      "name": "axolotlsay-aarch64-apple-darwin.pkg.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ]
+    },
     "axolotlsay-aarch64-apple-darwin.tar.gz": {
       "name": "axolotlsay-aarch64-apple-darwin.tar.gz",
       "kind": "executable-zip",
@@ -3311,6 +3339,30 @@ run("axolotlsay");
       ],
       "install_hint": "npm install @axodotdev/axolotlsay@0.2.2",
       "description": "Install prebuilt binaries into your npm project"
+    },
+    "axolotlsay-x86_64-apple-darwin.pkg": {
+      "name": "axolotlsay-x86_64-apple-darwin.pkg",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "id": "axolotlsay-x86_64-apple-darwin-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "description": "install via pkg",
+      "checksum": "axolotlsay-x86_64-apple-darwin.pkg.sha256"
+    },
+    "axolotlsay-x86_64-apple-darwin.pkg.sha256": {
+      "name": "axolotlsay-x86_64-apple-darwin.pkg.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ]
     },
     "axolotlsay-x86_64-apple-darwin.tar.gz": {
       "name": "axolotlsay-x86_64-apple-darwin.tar.gz",

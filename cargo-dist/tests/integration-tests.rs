@@ -34,7 +34,7 @@ fn axolotlsay_basic() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew", "npm"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -47,6 +47,9 @@ npm-scope ="@axodotdev"
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
 
 "#
         ))?;
@@ -71,7 +74,7 @@ fn axolotlsay_basic_lies() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -83,6 +86,10 @@ npm-scope ="@axodotdev"
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
+install-location = "/opt/axolotlsay"
 
 "#
         ))?;
@@ -148,7 +155,7 @@ fn axolotlsay_abyss() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 unix-archive = ".tar.gz"
@@ -160,6 +167,9 @@ github-attestations = true
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
 
 "#
         ))?;
@@ -185,7 +195,7 @@ fn axolotlsay_abyss_only() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 unix-archive = ".tar.gz"
@@ -196,6 +206,10 @@ hosting = ["axodotdev"]
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
+install-location = "/opt/axolotlsay"
 
 "#
         ))?;
@@ -461,7 +475,7 @@ fn axolotlsay_ssldotcom_windows_sign() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "msi"]
+installers = ["shell", "powershell", "msi", "pkg"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 ssldotcom-windows-sign = "test"
@@ -471,6 +485,10 @@ windows-archive = ".tar.gz"
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
+install-location = "/opt/axolotlsay"
 
 "#
         ))?;
@@ -495,7 +513,7 @@ fn axolotlsay_ssldotcom_windows_sign_prod() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "msi"]
+installers = ["shell", "powershell", "msi", "pkg"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ci = ["github"]
 ssldotcom-windows-sign = "prod"
@@ -505,6 +523,10 @@ windows-archive = ".tar.gz"
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
+install-location = "/opt/axolotlsay"
 
 "#
         ))?;
@@ -787,7 +809,7 @@ fn axolotlsay_updaters() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -800,6 +822,9 @@ install-updater = true
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
 
 "#
         ))?;
@@ -826,7 +851,7 @@ fn axolotlsay_homebrew_packages() -> Result<(), miette::Report> {
             r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -838,6 +863,9 @@ npm-scope ="@axodotdev"
 [workspace.metadata.dist.dependencies.homebrew]
 "homebrew/cask/macfuse" = "*"
 libcue = "2.3.0"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
 
 "#
         ))?;
@@ -862,7 +890,7 @@ fn axolotlsay_alias() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -877,6 +905,10 @@ path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
 [workspace.metadata.dist.bin-aliases]
 axolotlsay = ["axolotlsay-link"]
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
+install-location = "/opt/axolotlsay"
 
 "#
         ))?;
@@ -901,7 +933,7 @@ fn axolotlsay_several_aliases() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -916,6 +948,9 @@ path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
 [workspace.metadata.dist.bin-aliases]
 axolotlsay = ["axolotlsay-link1", "axolotlsay-link2"]
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
 
 "#
         ))?;
@@ -940,7 +975,7 @@ fn axolotlsay_alias_ignores_missing_bins() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -955,6 +990,9 @@ path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
 [workspace.metadata.dist.bin-aliases]
 nosuchbin = ["axolotlsay-link1", "axolotlsay-link2"]
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
 
 "#
         ))?;
@@ -1544,7 +1582,7 @@ fn axolotlsay_disable_source_tarball() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -1557,6 +1595,10 @@ source-tarball = false
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
+install-location = "/opt/axolotlsay"
 
 "#
         ))?;
@@ -1733,7 +1775,7 @@ fn axolotlsay_build_setup_steps() -> Result<(), miette::Report> {
         ctx.patch_cargo_toml(format!(r#"
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
-installers = ["shell", "powershell", "homebrew", "npm", "msi"]
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew", "npm"]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
@@ -1747,6 +1789,9 @@ github-build-setup = "build_setup.yml"
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
 path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
 
 "#
         ))?;
