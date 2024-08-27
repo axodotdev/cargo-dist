@@ -598,7 +598,7 @@ pub enum DistError {
 
     /// Missing configuration for a .pkg
     #[error("A Mac .pkg installer was requested, but the config is missing")]
-    #[diagnostic(help("Please ensure a dist.mac-pkg-config section is present in your config. For more details see: https://example.com"))]
+    #[diagnostic(help("Please ensure a dist.mac-pkg-config section is present in your config. For more details see: https://opensource.axo.dev/cargo-dist/book/installers/pkg.html"))]
     MacPkgConfigMissing {},
 
     /// User left identifier empty in init
