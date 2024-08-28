@@ -69,7 +69,6 @@ spdx.workspace = true
 base64.workspace = true
 
 [dev-dependencies]
-homedir.workspace = true
 insta.workspace = true
 tar.workspace = true
 flate2.workspace = true
