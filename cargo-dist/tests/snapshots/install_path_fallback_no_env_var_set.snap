@@ -1544,7 +1544,8 @@ $dest_dir = $force_install_dir
         Write-Information ""
         Write-Information "To add $dest_dir to your PATH, either restart your system or run:"
         Write-Information ""
-        Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`""
+        Write-Information "    set Path=$dest_dir;%Path%   (cmd)"
+        Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`"   (powershell)"
     }
   }
 }

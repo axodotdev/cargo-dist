@@ -1548,7 +1548,8 @@ function Invoke-Installer($artifacts, $platforms) {
         Write-Information ""
         Write-Information "To add $dest_dir to your PATH, either restart your system or run:"
         Write-Information ""
-        Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`""
+        Write-Information "    set Path=$dest_dir;%Path%   (cmd)"
+        Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`"   (powershell)"
     }
   }
 }
