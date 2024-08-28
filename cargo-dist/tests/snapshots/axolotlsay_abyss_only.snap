@@ -1521,7 +1521,9 @@ function Invoke-Installer($artifacts, $platforms) {
     Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {
         Write-Information ""
-        Write-Information "$dest_dir was added to your PATH, you may need to restart your shell for that to take effect."
+        Write-Information "To add $dest_dir to your PATH, either restart your system or run:"
+        Write-Information ""
+        Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`""
     }
   }
 }
@@ -3198,7 +3200,7 @@ run("axolotlsay");
         "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -c \"irm https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-installer.ps1 | iex\"",
+      "install_hint": "powershell -ExecutionPolicy ByPass -c \"irm https://fake.axo.dev/faker/axolotlsay/fake-id-do-not-upload/axolotlsay-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "axolotlsay-installer.sh": {

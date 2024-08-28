@@ -364,7 +364,9 @@ function Invoke-Installer($artifacts, $platforms) {
     Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {
         Write-Information ""
-        Write-Information "$dest_dir was added to your PATH, you may need to restart your shell for that to take effect."
+        Write-Information "To add $dest_dir to your PATH, either restart your system or run:"
+        Write-Information ""
+        Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`""
     }
   }
 }
