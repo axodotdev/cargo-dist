@@ -1437,7 +1437,7 @@ function Invoke-Installer($artifacts, $platforms) {
   $info = $platforms[$arch]
 
   # Forces the install to occur at this path, not the default
-  $force_install_dir = null
+  $force_install_dir = $null
   # Check the newer app-specific variable before falling back
   # to the older generic one
   if (($env:AXOLOTLSAY_JS_FORCE_INSTALL_DIR)) {
@@ -3100,7 +3100,7 @@ function Invoke-Installer($artifacts, $platforms) {
   $info = $platforms[$arch]
 
   # Forces the install to occur at this path, not the default
-  $force_install_dir = null
+  $force_install_dir = $null
   # Check the newer app-specific variable before falling back
   # to the older generic one
   if (($env:AXOLOTLSAY_FORCE_INSTALL_DIR)) {
