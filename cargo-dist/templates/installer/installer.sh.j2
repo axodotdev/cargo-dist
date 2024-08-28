@@ -399,8 +399,8 @@ install() {
 
     # Check the newer app-specific variable before falling back
     # to the older generic one
-    if [ -n "{{ '${' }}{{ app_name|upper|replace("-", "_") }}_FORCE_INSTALL_DIR:-}" ]; then
-        _force_install_dir="${{ app_name|upper|replace("-", "_") }}_FORCE_INSTALL_DIR"
+    if [ -n "{{ '${' }}{{ app_name|upper|replace("-", "_") }}_INSTALL_DIR:-}" ]; then
+        _force_install_dir="${{ app_name|upper|replace("-", "_") }}_INSTALL_DIR"
     elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
     fi

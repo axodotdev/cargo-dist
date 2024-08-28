@@ -478,8 +478,8 @@ install() {
 
     # Check the newer app-specific variable before falling back
     # to the older generic one
-    if [ -n "${AXOLOTLSAY_FORCE_INSTALL_DIR:-}" ]; then
-        _force_install_dir="$AXOLOTLSAY_FORCE_INSTALL_DIR"
+    if [ -n "${AXOLOTLSAY_INSTALL_DIR:-}" ]; then
+        _force_install_dir="$AXOLOTLSAY_INSTALL_DIR"
     elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
     fi
@@ -1376,8 +1376,8 @@ function Invoke-Installer($artifacts, $platforms) {
   $force_install_dir = $null
   # Check the newer app-specific variable before falling back
   # to the older generic one
-  if (($env:AXOLOTLSAY_FORCE_INSTALL_DIR)) {
-    $force_install_dir = $env:AXOLOTLSAY_FORCE_INSTALL_DIR
+  if (($env:AXOLOTLSAY_INSTALL_DIR)) {
+    $force_install_dir = $env:AXOLOTLSAY_INSTALL_DIR
   } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }

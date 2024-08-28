@@ -502,8 +502,8 @@ install() {
 
     # Check the newer app-specific variable before falling back
     # to the older generic one
-    if [ -n "${AKAIKATANA_REPACK_FORCE_INSTALL_DIR:-}" ]; then
-        _force_install_dir="$AKAIKATANA_REPACK_FORCE_INSTALL_DIR"
+    if [ -n "${AKAIKATANA_REPACK_INSTALL_DIR:-}" ]; then
+        _force_install_dir="$AKAIKATANA_REPACK_INSTALL_DIR"
     elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
     fi
@@ -1497,8 +1497,8 @@ function Invoke-Installer($artifacts, $platforms) {
   $force_install_dir = $null
   # Check the newer app-specific variable before falling back
   # to the older generic one
-  if (($env:AKAIKATANA_REPACK_FORCE_INSTALL_DIR)) {
-    $force_install_dir = $env:AKAIKATANA_REPACK_FORCE_INSTALL_DIR
+  if (($env:AKAIKATANA_REPACK_INSTALL_DIR)) {
+    $force_install_dir = $env:AKAIKATANA_REPACK_INSTALL_DIR
   } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }
