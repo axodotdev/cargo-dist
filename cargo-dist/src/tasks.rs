@@ -1981,14 +1981,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self
+        let schema_release = self
             .manifest
             .release_by_name(&release.app_name)
-            .and_then(|r| r.artifact_download_url())
-        else {
-            warn!("skipping shell installer: couldn't compute a URL to download artifacts from");
-            return;
-        };
+            .expect("couldn't find the release!?");
+        let install_dir_env_var = schema_release
+            .install_dir_env_var
+            .to_owned()
+            .expect("couldn't determine app-specific environment variable!?");
+        let download_url = schema_release
+            .artifact_download_url()
+            .expect("couldn't compute a URL to download artifacts from!?");
         let artifact_name = format!("{release_id}-installer.sh");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
@@ -2042,6 +2045,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: release.install_libraries.clone(),
                 runtime_conditions,
                 platform_support: None,
+                install_dir_env_var,
             })),
             is_global: true,
         };
@@ -2059,14 +2063,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             &release.id
         };
-        let Some(download_url) = self
+        let download_url = self
             .manifest
             .release_by_name(&release.id)
             .and_then(|r| r.artifact_download_url())
-        else {
-            warn!("skipping Homebrew formula: couldn't compute a URL to download artifacts from");
-            return;
-        };
+            .expect("couldn't compute a URL to download artifacts from!?");
 
         let artifact_name = format!("{formula}.rb");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
@@ -2198,6 +2199,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_libraries: release.install_libraries.clone(),
                     runtime_conditions,
                     platform_support: None,
+                    // Not actually needed for this installer type
+                    install_dir_env_var: String::new(),
                 },
                 install_libraries: release.install_libraries.clone(),
             })),
@@ -2215,16 +2218,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Get the basic info about the installer
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self
+        let schema_release = self
             .manifest
             .release_by_name(&release.app_name)
-            .and_then(|r| r.artifact_download_url())
-        else {
-            warn!(
-                "skipping powershell installer: couldn't compute a URL to download artifacts from"
-            );
-            return;
-        };
+            .expect("couldn't find the release!?");
+        let install_dir_env_var = schema_release
+            .install_dir_env_var
+            .to_owned()
+            .expect("couldn't determine app-specific environment variable!?");
+        let download_url = schema_release
+            .artifact_download_url()
+            .expect("couldn't compute a URL to download artifacts from!?");
         let artifact_name = format!("{release_id}-installer.ps1");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
@@ -2274,6 +2278,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: release.install_libraries.clone(),
                 runtime_conditions: RuntimeConditions::default(),
                 platform_support: None,
+                install_dir_env_var,
             })),
             is_global: true,
         };
@@ -2287,14 +2292,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self
+        let download_url = self
             .manifest
             .release_by_name(&release.app_name)
             .and_then(|r| r.artifact_download_url())
-        else {
-            warn!("skipping npm installer: couldn't compute a URL to download artifacts from");
-            return;
-        };
+            .expect("couldn't compute a URL to download artifacts from!?");
 
         let app_name = if let Some(name) = &release.npm_package {
             name.clone()
@@ -2388,6 +2390,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_libraries: release.install_libraries.clone(),
                     runtime_conditions,
                     platform_support: None,
+                    // Not actually needed for this installer type
+                    install_dir_env_var: String::new(),
                 },
             })),
             is_global: true,

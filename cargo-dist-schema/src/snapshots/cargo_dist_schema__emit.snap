@@ -977,6 +977,13 @@ expression: json_schema
               "$ref": "#/definitions/Hosting"
             }
           ]
+        },
+        "install_dir_env_var": {
+          "description": "Environment variable to force an install location",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

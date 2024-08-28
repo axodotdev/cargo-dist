@@ -73,6 +73,8 @@ pub struct InstallerInfo {
     pub runtime_conditions: RuntimeConditions,
     /// platform support matrix
     pub platform_support: Option<PlatformSupport>,
+    /// Environment variable to force an install location
+    pub install_dir_env_var: String,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers
