@@ -1981,11 +1981,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self
-            .manifest
-            .release_by_name(&release.app_name)
-            .and_then(|r| r.artifact_download_url())
-        else {
+        let Some(schema_release) = self.manifest.release_by_name(&release.app_name) else {
+            warn!("skipping shell installer: couldn't find the release");
+            return;
+        };
+        let Some(install_dir_env_var) = schema_release.install_dir_env_var.to_owned() else {
+            warn!("skipping shell installer: couldn't determine app-specific environment variable");
+            return;
+        };
+        let Some(download_url) = schema_release.artifact_download_url() else {
             warn!("skipping shell installer: couldn't compute a URL to download artifacts from");
             return;
         };
@@ -2042,6 +2046,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: release.install_libraries.clone(),
                 runtime_conditions,
                 platform_support: None,
+                install_dir_env_var,
             })),
             is_global: true,
         };
@@ -2198,6 +2203,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_libraries: release.install_libraries.clone(),
                     runtime_conditions,
                     platform_support: None,
+                    // Not actually needed for this installer type
+                    install_dir_env_var: String::new(),
                 },
                 install_libraries: release.install_libraries.clone(),
             })),
@@ -2215,11 +2222,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Get the basic info about the installer
         let release = self.release(to_release);
         let release_id = &release.id;
-        let Some(download_url) = self
-            .manifest
-            .release_by_name(&release.app_name)
-            .and_then(|r| r.artifact_download_url())
-        else {
+        let Some(schema_release) = self.manifest.release_by_name(&release.app_name) else {
+            warn!("skipping powershell installer: couldn't find the release");
+            return;
+        };
+        let Some(install_dir_env_var) = schema_release.install_dir_env_var.to_owned() else {
+            warn!("skipping shell installer: couldn't determine app-specific environment variable");
+            return;
+        };
+        let Some(download_url) = schema_release.artifact_download_url() else {
             warn!(
                 "skipping powershell installer: couldn't compute a URL to download artifacts from"
             );
@@ -2274,6 +2285,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: release.install_libraries.clone(),
                 runtime_conditions: RuntimeConditions::default(),
                 platform_support: None,
+                install_dir_env_var,
             })),
             is_global: true,
         };
@@ -2388,6 +2400,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_libraries: release.install_libraries.clone(),
                     runtime_conditions,
                     platform_support: None,
+                    // Not actually needed for this installer type
+                    install_dir_env_var: String::new(),
                 },
             })),
             is_global: true,

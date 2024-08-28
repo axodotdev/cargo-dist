@@ -250,8 +250,8 @@ function Invoke-Installer($artifacts, $platforms) {
   $force_install_dir = $null
   # Check the newer app-specific variable before falling back
   # to the older generic one
-  if (($env:{{ app_name|upper|replace("-", "_") }}_INSTALL_DIR)) {
-    $force_install_dir = $env:{{ app_name|upper|replace("-", "_")}}_INSTALL_DIR
+  if (($env:{{ install_dir_env_var }})) {
+    $force_install_dir = $env:{{ install_dir_env_var }}
   } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
   }

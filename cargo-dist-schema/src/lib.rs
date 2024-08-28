@@ -291,6 +291,10 @@ pub struct Release {
     /// The version of the app
     // FIXME: should be a Version but JsonSchema doesn't support (yet?)
     pub app_version: String,
+    /// Environment variable to force an install location
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_dir_env_var: Option<String>,
     /// Alternative display name that can be prettier
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -606,9 +610,12 @@ impl DistManifest {
         if let Some(position) = self.releases.iter().position(|r| r.app_name == name) {
             &mut self.releases[position]
         } else {
+            let install_dir_env_var =
+                Some(name.to_ascii_uppercase().replace('-', "_") + "_INSTALL_DIR");
             self.releases.push(Release {
                 app_name: name,
                 app_version: version,
+                install_dir_env_var,
                 artifacts: vec![],
                 hosting: Hosting::default(),
                 display: None,
