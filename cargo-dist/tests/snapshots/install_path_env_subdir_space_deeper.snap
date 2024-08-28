@@ -473,16 +473,26 @@ install() {
     local _install_dir_expr
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
+    # Forces the install to occur at this path, not the default
+    local _force_install_dir
+
+    # Check the newer app-specific variable before falling back
+    # to the older generic one
+    if [ -n "${AXOLOTLSAY_FORCE_INSTALL_DIR:-}" ]; then
+        _force_install_dir="$AXOLOTLSAY_FORCE_INSTALL_DIR"
+    elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+    fi
 
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
-    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _lib_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+    if [ -n "${_force_install_dir:-}" ]; then
+        _install_dir="$_force_install_dir"
+        _lib_install_dir="$_force_install_dir"
         _receipt_install_dir="$_install_dir"
-        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR")"
-        _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
+        _env_script_path="$_force_install_dir/env"
+        _install_dir_expr="$(replace_home "$_force_install_dir")"
+        _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
     fi
     if [ -z "${_install_dir:-}" ]; then
         # Install to $MY_ENV_VAR/My Axolotlsay Documents/bin
@@ -1410,6 +1420,16 @@ function Invoke-Installer($artifacts, $platforms) {
 
   $info = $platforms[$arch]
 
+  # Forces the install to occur at this path, not the default
+  $force_install_dir = null
+  # Check the newer app-specific variable before falling back
+  # to the older generic one
+  if (($env:AXOLOTLSAY_FORCE_INSTALL_DIR)) {
+    $force_install_dir = $env:AXOLOTLSAY_FORCE_INSTALL_DIR
+  } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+    $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+  }
+
   # The actual path we're going to install to
   $dest_dir = $null
   $dest_dir_lib = $null
@@ -1420,10 +1440,10 @@ function Invoke-Installer($artifacts, $platforms) {
   $receipt_dest_dir = $null
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
-  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
-$dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+  if (($force_install_dir)) {
+$dest_dir = $force_install_dir
     $dest_dir_lib = $dest_dir
-    $receipt_dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    $receipt_dest_dir = $force_install_dir
   }
   if (-Not $dest_dir) {
     # Install to $env:MY_ENV_VAR/My Axolotlsay Documents/bin
