@@ -359,6 +359,11 @@ function Invoke-Installer($artifacts, $platforms) {
   $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
   [IO.File]::WriteAllLines("$receipt_home/{{ app_name }}-receipt.json", "$receipt", $Utf8NoBomEncoding)
 
+  # Respect the environment, but CLI takes precedence
+  if ($null -eq $NoModifyPath) {
+    $NoModifyPath = $env:INSTALLER_NO_MODIFY_PATH
+  }
+
   Write-Information "{{ install_success_msg }}"
   if (-not $NoModifyPath) {
     Add-Ci-Path $dest_dir
