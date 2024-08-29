@@ -1,6 +1,46 @@
 # Unreleased
 
-Nothing Yet!
+# Version 0.22.0 (2024-08-28)
+
+This patch release fixes several bugs and provides some nice quality of life improvements. These fixes are largely related to our installers, shell, powershell, and homebrew as well as managing some papercuts in the `dist init` command and error handling.
+
+## App-branded installer environment variables
+
+We generate installers for our users- and then our *users' users* use those installers. Those users don't know they are using `dist` and, if we do our job right, should never have to.
+
+While we had implemented some environment variables that enable users to control the behavior of installers, previously they were largely designed for internal use, and therefore namespaced with `DIST`. However, we quickly realized that this isn't suitable for having our users communicate with their users- so we've enabled the generation of app-branded installer customization environment variables- so that installer users can leverage environment variables that are branded to the application they are trying to install.
+
+Right now, the only customization we allow for installers is the install directory- so instead of `CARGO_DIST_FORCE_INSTALL_DIR`, you can tell your users to use `AXOLOTLSAY_INSTALL_DIR` (if your app is named `axolotlsay`). If you have a name with hypens or other characters, we normalize it for you, and you can find this value at the `install_dir_env_var` field in the `dist-manifest.json` that is generated with each of your releases.
+
+* impl @mistydemeo [add app branded env var for custom dir to installers](https://github.com/axodotdev/cargo-dist/pull/1377) 
+
+## Homebrew license metadata
+
+Currently, when publishing to a Homebrew tap, whatever string is in the project's license field (usually a SPDX license expression) gets passed into license in the Homebrew formula. However, rather than using SPDX syntax, Homebrew has its own ruby syntax for specifying licenses. So, when passed an SPDX expression, Homebrew:
+
+- Cannot provide as detailed information about the package's licensing.
+- Throws errors when linting the formula with brew audit/brew test-bot.
+
+This PR translates the SPDX expression to the Homebrew license DSL.
+
+* impl @cxreiff [translate SPDX expressions to Homebrew license DSL to produce better Homebrew package metadata](https://github.com/axodotdev/cargo-dist/pull/1345)
+
+## Homebrew compliance (`brew style`)
+
+Creating a personal tap with brew tap-new creates a default Github Actions workflow that runs a homebrew-specific style check (brew style <TAPNAME>) on the repo. Cargo-dist's generated homebrew formulas fail this style check. This does not block the core functionality of cargo-dist's homebrew publishing functionality (formula still functions), but does mean that users whorun `brew style` (which is a side effect of creating a tap with `brew tap-new`) would get frustrating errors.
+
+Rather than separately chasing formatting issues as they come up, this PR updates the homebrew publish workflow to install and run `brew style --fix` on each formula before commiting it.
+
+* impl
+  * @cxreiff [format homebrew formulas with brew style --fix](https://github.com/axodotdev/cargo-dist/pull/1340)
+  * @mistydemeo [enable brew style linters in tests](https://github.com/axodotdev/cargo-dist/pull/1354)
+
+## Fixes
+* @mistydemeo [enable powershell installer to respect NoModifyPath from env](https://github.com/axodotdev/cargo-dist/pull/1379)
+* @gankra [improve powershell installer portability by updating ExecutionPolicy flag and offering better hints](https://github.com/axodotdev/cargo-dist/pull/1373)
+* @mistydemeo [handle `ar` archives when parsing Windows objects, ensure unsupported binary linkage checks are non-fatal, and improve linkage checker errors](https://github.com/axodotdev/cargo-dist/pull/1357)
+* @gankra [improve `init` errors for custom projects, and ensure prompts are more contextual](https://github.com/axodotdev/cargo-dist/pull/1360)
+* @mistydemeo [update reference to renamed config in error message](https://github.com/axodotdev/cargo-dist/pull/1358)
 
 
 # Version 0.21.1 (2024-08-20)
