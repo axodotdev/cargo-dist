@@ -82,28 +82,7 @@ fn compute_linkage_assuming_local_build(
                 if !bin_path.exists() {
                     eprintln!("Binary {bin_path} missing; skipping check");
                 } else {
-                    let linkage = match determine_linkage(&bin_path, target) {
-                        Ok(linkage) => linkage,
-                        // We don't want to treat the primary linkage
-                        // failure check as a failure - instead, print
-                        // a warning and provide a default.
-                        Err(DistError::LinkageCheckUnsupportedBinary { file_name }) => {
-                            if let Some(file_name) = file_name {
-                                warn!("Unable to fetch linkage from {file_name}");
-                            } else {
-                                warn!("Unable to fetch linkage");
-                            }
-                            Linkage::default()
-                        }
-                        Err(e) => {
-                            warn!(
-                                "Encountered an issue trying to determine linkage: {:?}",
-                                miette::Report::new(e)
-                            );
-                            Linkage::default()
-                        }
-                    };
-
+                    let linkage = determine_linkage(&bin_path, target);
                     manifest.assets.insert(
                         bin.id.clone(),
                         AssetInfo {
@@ -394,14 +373,25 @@ fn do_pe(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
         Object::PE(pe) => Ok(pe.libraries.into_iter().map(|s| s.to_owned()).collect()),
         // Static libraries link against nothing
         Object::Archive(_) => Ok(vec![]),
-        _ => Err(DistError::LinkageCheckUnsupportedBinary {
-            file_name: path.file_name().map(String::from),
-        }),
+        _ => Err(DistError::LinkageCheckUnsupportedBinary),
     }
 }
 
 /// Get the linkage for a single binary
-pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage> {
+///
+/// If linkage fails for any reason we warn and return the default empty linkage
+pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> Linkage {
+    match try_determine_linkage(path, target) {
+        Ok(linkage) => linkage,
+        Err(e) => {
+            warn!("Skipping linkage for {path}:\n{:?}", miette::Report::new(e));
+            Linkage::default()
+        }
+    }
+}
+
+/// Get the linkage for a single binary
+fn try_determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage> {
     let libraries = match target {
         // Can be run on any OS
         "i686-apple-darwin" | "x86_64-apple-darwin" | "aarch64-apple-darwin" => do_otool(path)?,
@@ -427,11 +417,7 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage
         | "i686-pc-windows-gnu"
         | "x86_64-pc-windows-gnu"
         | "aarch64-pc-windows-gnu" => do_pe(path)?,
-        _ => {
-            return Err(DistError::LinkageCheckUnsupportedBinary {
-                file_name: path.file_name().map(String::from),
-            })
-        }
+        _ => return Err(DistError::LinkageCheckUnsupportedBinary),
     };
 
     let mut linkage = Linkage {

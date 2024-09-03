@@ -303,11 +303,8 @@ pub enum DistError {
     },
 
     /// Linkage report can't be run for this target
-    #[error("unable to run linkage report for this type of binary; file was: {file_name:?}")]
-    LinkageCheckUnsupportedBinary {
-        /// The object's file name
-        file_name: Option<String>,
-    },
+    #[error("unable to run linkage report for this type of binary")]
+    LinkageCheckUnsupportedBinary,
 
     /// Error parsing a string containing an environment variable
     /// in VAR=value syntax
