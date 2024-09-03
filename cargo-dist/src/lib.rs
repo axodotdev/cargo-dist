@@ -17,7 +17,7 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use backend::{
     ci::CiInfo,
-    installer::{self, msi::MsiInstallerInfo, InstallerImpl},
+    installer::{self, macpkg::PkgInstallerInfo, msi::MsiInstallerInfo, InstallerImpl},
 };
 use build::generic::{build_generic_target, run_extra_artifacts_build};
 use build::{
@@ -312,8 +312,9 @@ fn build_fake(
             with_root,
         }) => zip_dir(src_path, dest_path, zip_style, with_root.as_deref())?,
         BuildStep::GenerateInstaller(installer) => match installer {
-            // MSI, unlike other installers, isn't safe to generate on any platform
+            // MSI and pkg, unlike other installers, aren't safe to generate on any platform
             InstallerImpl::Msi(msi) => generate_fake_msi(dist_graph, msi, manifest)?,
+            InstallerImpl::Pkg(pkg) => generate_fake_pkg(dist_graph, pkg, manifest)?,
             _ => generate_installer(dist_graph, installer, manifest)?,
         },
         BuildStep::Checksum(ChecksumImpl {
@@ -363,6 +364,16 @@ fn generate_fake_msi(
     _manifest: &DistManifest,
 ) -> DistResult<()> {
     LocalAsset::write_new_all("", &msi.file_path)?;
+
+    Ok(())
+}
+
+fn generate_fake_pkg(
+    _dist: &DistGraph,
+    pkg: &PkgInstallerInfo,
+    _manifest: &DistManifest,
+) -> DistResult<()> {
+    LocalAsset::write_new_all("", &pkg.file_path)?;
 
     Ok(())
 }
@@ -727,6 +738,7 @@ fn generate_installer(
             installer::homebrew::write_homebrew_formula(dist, info, manifest)?
         }
         InstallerImpl::Msi(info) => info.build(dist)?,
+        InstallerImpl::Pkg(info) => info.build()?,
     }
     Ok(())
 }

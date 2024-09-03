@@ -355,6 +355,11 @@ fn add_manifest_artifact(
             description = Some("install via msi".to_owned());
             kind = cargo_dist_schema::ArtifactKind::Installer;
         }
+        ArtifactKind::Installer(InstallerImpl::Pkg(..)) => {
+            install_hint = None;
+            description = Some("install via pkg".to_owned());
+            kind = cargo_dist_schema::ArtifactKind::Installer;
+        }
         ArtifactKind::Checksum(_) => {
             install_hint = None;
             description = None;

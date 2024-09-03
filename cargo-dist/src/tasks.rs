@@ -65,7 +65,7 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::backend::installer::homebrew::to_homebrew_license_format;
+use crate::backend::installer::{homebrew::to_homebrew_license_format, macpkg::PkgInstallerInfo};
 use crate::config::{
     DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
     LibraryStyle, ProductionMode, SystemDependencies,
@@ -961,6 +961,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             display_name: _,
             package_libraries: _,
             install_libraries: _,
+            mac_pkg_config: _,
         } = &workspace_metadata;
 
         let desired_cargo_dist_version = cargo_dist_version.clone();
@@ -1267,6 +1268,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             display_name,
             package_libraries,
             install_libraries,
+            // We fetch this elsewhere
+            mac_pkg_config: _,
             // The rest of these are workspace-only
             precise_builds: _,
             merge_tasks: _,
@@ -1971,6 +1974,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             InstallerStyle::Npm => self.add_npm_installer(to_release),
             InstallerStyle::Homebrew => self.add_homebrew_installer(to_release),
             InstallerStyle::Msi => self.add_msi_installer(to_release)?,
+            InstallerStyle::Pkg => self.add_pkg_installer(to_release)?,
         }
         Ok(())
     }
@@ -2432,7 +2436,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 if let Some((existing_spec, _)) = &package_info {
                     // cargo-wix doesn't clearly support multi-package, so bail
                     if existing_spec != &binary.pkg_spec {
-                        return Err(DistError::MultiPackageMsi {
+                        return Err(DistError::MultiPackage {
                             artifact_name,
                             spec1: existing_spec.clone(),
                             spec2: binary.pkg_spec.clone(),
@@ -2443,7 +2447,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
             }
             let Some((pkg_spec, pkg_idx)) = package_info else {
-                return Err(DistError::NoPackageMsi { artifact_name })?;
+                return Err(DistError::NoPackage { artifact_name })?;
             };
             let manifest_path = self.workspaces.package(pkg_idx).manifest_path.clone();
             let wxs_path = manifest_path
@@ -2472,6 +2476,115 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     file_path: artifact_path.clone(),
                     wxs_path,
                     manifest_path,
+                })),
+                is_global: false,
+            };
+
+            // Register the artifact to various things
+            let installer_idx = self.add_local_artifact(variant_idx, installer_artifact);
+            for binary_idx in binaries {
+                let binary = self.binary(binary_idx);
+                self.require_binary(
+                    installer_idx,
+                    variant_idx,
+                    binary_idx,
+                    dir_path.join(&binary.file_name),
+                );
+            }
+            if checksum != ChecksumStyle::False {
+                self.add_artifact_checksum(variant_idx, installer_idx, checksum);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn add_pkg_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
+        if !self.local_artifacts_enabled() {
+            return Ok(());
+        }
+
+        // Clone info we need from the release to avoid borrowing across the loop
+        let release = self.release(to_release).clone();
+        let variants = release.variants.clone();
+        let bin_aliases = release.bin_aliases.clone();
+        let checksum = release.checksum;
+
+        // Make a pkg for every darwin platform
+        for variant_idx in variants {
+            let variant = self.variant(variant_idx);
+            let binaries = variant.binaries.clone();
+            let target = &variant.target;
+            if !target.contains("darwin") {
+                continue;
+            }
+
+            let variant_id = &variant.id;
+            let artifact_name = format!("{variant_id}.pkg");
+            let artifact_path = self.inner.dist_dir.join(&artifact_name);
+            let dir_name = format!("{variant_id}_pkg");
+            let dir_path = self.inner.dist_dir.join(&dir_name);
+
+            // Compute which package we're actually building, based on the binaries
+            let mut package_info: Option<(String, PackageIdx)> = None;
+            for &binary_idx in &binaries {
+                let binary = self.binary(binary_idx);
+                if let Some((existing_spec, _)) = &package_info {
+                    // we haven't set ourselves up to bundle multiple packages yet
+                    if existing_spec != &binary.pkg_spec {
+                        return Err(DistError::MultiPackage {
+                            artifact_name,
+                            spec1: existing_spec.clone(),
+                            spec2: binary.pkg_spec.clone(),
+                        })?;
+                    }
+                } else {
+                    package_info = Some((binary.pkg_spec.clone(), binary.pkg_idx));
+                }
+            }
+            let Some((_, pkg_idx)) = package_info else {
+                return Err(DistError::NoPackage { artifact_name })?;
+            };
+            let package = self.package_metadata(pkg_idx);
+            let Some(mac_pkg_config) = package.mac_pkg_config.clone() else {
+                return Err(DistError::MacPkgConfigMissing {});
+            };
+
+            let Some(artifact) = release
+                .platform_support
+                .fragments()
+                .into_iter()
+                .find(|a| a.target_triple == variant.target)
+            else {
+                return Err(DistError::NoPackage { artifact_name })?;
+            };
+
+            let bin_aliases = bin_aliases.for_target(&variant.target);
+
+            // Gather up the bundles the installer supports
+            let installer_artifact = Artifact {
+                id: artifact_name,
+                target_triples: vec![target.clone()],
+                file_path: artifact_path.clone(),
+                required_binaries: FastMap::new(),
+                archive: Some(Archive {
+                    with_root: None,
+                    dir_path: dir_path.clone(),
+                    zip_style: ZipStyle::TempDir,
+                    static_assets: vec![],
+                }),
+                checksum: None,
+                kind: ArtifactKind::Installer(InstallerImpl::Pkg(PkgInstallerInfo {
+                    file_path: artifact_path.clone(),
+                    artifact,
+                    package_dir: dir_path.clone(),
+                    // Un-hardcode this
+                    identifier: mac_pkg_config.identifier,
+                    install_location: mac_pkg_config
+                        .install_location
+                        .unwrap_or("/usr/local".to_owned()),
+                    version: release.version.to_string(),
+                    bin_aliases,
                 })),
                 is_global: false,
             };

@@ -439,6 +439,11 @@ pub struct DistMetadata {
     /// Any additional steps that need to be performed before building local artifacts
     #[serde(default)]
     pub github_build_setup: Option<String>,
+
+    /// Configuration specific to Mac .pkg installers
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub mac_pkg_config: Option<MacPkgConfig>,
 }
 
 /// values of the form `permission-name: read`
@@ -523,6 +528,7 @@ impl DistMetadata {
             package_libraries: _,
             install_libraries: _,
             github_build_setup: _,
+            mac_pkg_config: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -618,6 +624,7 @@ impl DistMetadata {
             package_libraries,
             install_libraries,
             github_build_setup,
+            mac_pkg_config,
         } = self;
 
         // Check for global settings on local packages
@@ -799,6 +806,9 @@ impl DistMetadata {
         if install_libraries.is_none() {
             install_libraries.clone_from(&workspace_config.install_libraries);
         }
+        if mac_pkg_config.is_none() {
+            mac_pkg_config.clone_from(&workspace_config.mac_pkg_config);
+        }
 
         // This was historically implemented as extend, but I'm not convinced the
         // inconsistency is worth the inconvenience...
@@ -956,6 +966,8 @@ pub enum InstallerStyle {
     Homebrew,
     /// Generate an msi installer that embeds the binary
     Msi,
+    /// Generate an Apple pkg installer that embeds the binary
+    Pkg,
 }
 
 impl std::fmt::Display for InstallerStyle {
@@ -966,6 +978,7 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Npm => "npm",
             InstallerStyle::Homebrew => "homebrew",
             InstallerStyle::Msi => "msi",
+            InstallerStyle::Pkg => "pkg",
         };
         string.fmt(f)
     }
@@ -1673,6 +1686,18 @@ impl std::fmt::Display for ProductionMode {
             ProductionMode::Prod => "prod".fmt(f),
         }
     }
+}
+
+/// Configuration for Mac .pkg installers
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct MacPkgConfig {
+    /// A unique identifier, in tld.domain.package format
+    pub identifier: String,
+    /// The location to which the software should be installed.
+    /// If not specified, /usr/local will be used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_location: Option<String>,
 }
 
 pub(crate) fn parse_metadata_table_or_manifest(
