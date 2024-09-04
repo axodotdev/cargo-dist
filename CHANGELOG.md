@@ -1,5 +1,12 @@
 # Unreleased
 
+This is a small patch release that incidentally includes some initial groundwork for a new feature.
+
+* @gankra [fix: give PATH update instructions for cmd too](https://github.com/axodotdev/cargo-dist/pull/1382)
+* @gankra [fix: make linkage truly infallible](https://github.com/axodotdev/cargo-dist/pull/1390)
+* @mistydemeo [feat: intial impl of Mac .pkg installer](https://github.com/axodotdev/cargo-dist/pull/1312)
+
+
 # Version 0.22.0 (2024-08-28)
 
 This patch release fixes several bugs and provides some nice quality of life improvements. These fixes are largely related to our installers, shell, powershell, and homebrew as well as managing some papercuts in the `dist init` command and error handling.
@@ -12,7 +19,7 @@ While we had implemented some environment variables that enable users to control
 
 Right now, the only customization we allow for installers is the install directory- so instead of `CARGO_DIST_FORCE_INSTALL_DIR`, you can tell your users to use `AXOLOTLSAY_INSTALL_DIR` (if your app is named `axolotlsay`). If you have a name with hypens or other characters, we normalize it for you, and you can find this value at the `install_dir_env_var` field in the `dist-manifest.json` that is generated with each of your releases.
 
-* impl @mistydemeo [add app branded env var for custom dir to installers](https://github.com/axodotdev/cargo-dist/pull/1377) 
+* impl @mistydemeo [add app branded env var for custom dir to installers](https://github.com/axodotdev/cargo-dist/pull/1377)
 
 ## Homebrew license metadata
 
