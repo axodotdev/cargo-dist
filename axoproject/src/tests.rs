@@ -169,6 +169,10 @@ fn test_npm_init_legacy() {
 
     let package = &project.packages[0];
     assert_eq!(package.name, "npm-init-legacy");
+    assert_eq!(
+        package.homepage_url.as_deref().unwrap(),
+        "https://workspace.metadata.dist"
+    );
 
     // NOTE: we provide a path for this binary that doesn't exist, so if we
     // get more rigorous this test will fail. That's fine, the test can be
@@ -244,6 +248,10 @@ fn test_rooted_npm_good() {
 
     let package = &project.packages[0];
     assert_eq!(package.name, "npm-init-legacy");
+    assert_eq!(
+        package.homepage_url.as_deref().unwrap(),
+        "https://workspace.metadata.dist"
+    );
 
     // NOTE: we provide a path for this binary that doesn't exist, so if we
     // get more rigorous this test will fail. That's fine, the test can be
@@ -757,7 +765,10 @@ fn shared_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         let binary = &package.binaries[0];
         assert_eq!(binary, "npm-init-legacy");
         assert_eq!(package.description.as_deref().unwrap(), "a legacy project");
-        assert_eq!(package.homepage_url.as_deref().unwrap(), "https://axo.dev/");
+        assert_eq!(
+            package.homepage_url.as_deref().unwrap(),
+            "https://package.axo.dev/"
+        );
         assert!(package.manifest_path.exists());
         assert!(package.manifest_path != project.manifest_path);
         // Inner package inherits root auto_includes

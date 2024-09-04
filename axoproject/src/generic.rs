@@ -21,7 +21,8 @@ const MEMBER_NPM: &str = "npm";
 
 #[derive(Deserialize, Debug)]
 struct WorkspaceManifest {
-    workspace: Workspace,
+    workspace: Option<Workspace>,
+    package: Option<Package>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -153,13 +154,48 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
 
 // Load and process a dist-workspace.toml, and its child packages
 fn workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
+    use serde::de::Error;
+
     let manifest = load_workspace_dist_toml(manifest_path)?;
+
+    // Create dummy src and span for field errors
+    let source = SourceFile::new(manifest_path.as_str(), String::new());
+    let span = source.span_for_line_col(1, 1);
+
+    if manifest.workspace.is_some() && manifest.package.is_some() {
+        Err(AxoassetError::Toml {
+            source,
+            span,
+            details: axoasset::toml::de::Error::custom(
+                "dist-workspace.toml can't have both [workspace] and [package]",
+            ),
+        })?
+    } else if let Some(workspace) = manifest.workspace {
+        process_virtual_workspace(manifest_path, workspace)
+    } else if let Some(package) = manifest.package {
+        let package = process_package(manifest_path, package)?;
+        upgrade_package_to_workspace(package)
+    } else {
+        Err(AxoassetError::Toml {
+            source,
+            span,
+            details: axoasset::toml::de::Error::custom(
+                "dist-workspace.toml must have one of [workspace] or [package]",
+            ),
+        })?
+    }
+}
+
+fn process_virtual_workspace(
+    manifest_path: &Utf8Path,
+    workspace: Workspace,
+) -> Result<WorkspaceStructure> {
     let workspace_dir = manifest_path.parent().unwrap().to_path_buf();
     let root_auto_includes = crate::find_auto_includes(&workspace_dir)?;
 
     let mut package_info = vec![];
     let mut sub_workspaces = vec![];
-    for member in &manifest.workspace.members {
+    for member in &workspace.members {
         match member {
             WorkspaceMember::Generic(member_reldir) => {
                 let member_dir = workspace_dir.join(member_reldir);
@@ -220,8 +256,41 @@ fn workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
 }
 
 // Load and process a dist.toml, and treat it as an entire workspace
+//
+// This is slated to be deprecated! (we'll auto-migrate these to dist-workspace.toml)
 fn single_package_workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
-    let package = package_from(manifest_path)?;
+    use serde::de::Error;
+
+    // Pretend this is a dist-workspace.toml so that we can notice if `[workspace]` is set
+    // and then error because that's not supported
+    let manifest = load_workspace_dist_toml(manifest_path)?;
+
+    // Create dummy src and span for field errors
+    let source = SourceFile::new(manifest_path.as_str(), String::new());
+    let span = source.span_for_line_col(1, 1);
+
+    if manifest.workspace.is_some() {
+        Err(AxoassetError::Toml {
+            source,
+            span,
+            details: axoasset::toml::de::Error::custom(
+                "dist.toml can't have a [workspace], only dist-workspace.toml can",
+            ),
+        })?
+    } else if let Some(package) = manifest.package {
+        let package = process_package(manifest_path, package)?;
+        upgrade_package_to_workspace(package)
+    } else {
+        Err(AxoassetError::Toml {
+            source,
+            span,
+            details: axoasset::toml::de::Error::custom("standalone dist.toml must have [package]\n(we think this is a workspace dist.toml, which is deprecated -- rename it to dist-workspace.toml?)"),
+        })?
+    }
+}
+
+/// Given a package, upgrade it to a workspace
+fn upgrade_package_to_workspace(package: PackageInfo) -> Result<WorkspaceStructure> {
     let root_auto_includes = crate::find_auto_includes(&package.package_root)?;
     Ok(WorkspaceStructure {
         workspace: WorkspaceInfo {
@@ -249,8 +318,13 @@ fn raw_package_from(manifest_path: &Utf8Path) -> Result<Package> {
 
 // Load and process a dist.toml
 fn package_from(manifest_path: &Utf8Path) -> Result<PackageInfo> {
-    use serde::de::Error;
     let package = raw_package_from(manifest_path)?;
+    process_package(manifest_path, package)
+}
+
+fn process_package(manifest_path: &Utf8Path, package: Package) -> Result<PackageInfo> {
+    use serde::de::Error;
+
     let version = package.version.map(Version::Generic);
 
     let manifest_path = manifest_path.to_path_buf();
