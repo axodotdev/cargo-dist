@@ -1723,7 +1723,7 @@ install(false);
         "axolotlsay": "run-axolotlsay.js"
       },
       "dependencies": {
-        "axios": "^1.7.5",
+        "axios": "^1.7.7",
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
@@ -1817,9 +1817,9 @@ install(false);
         "form-data": "^4.0.0",
         "proxy-from-env": "^1.1.0"
       },
-      "integrity": "sha512-fZu86yCo+svH3uqJ/yTdQ0QHpQu5oL+/QE+QPSv6BZSkDAoky9vytxp7u5qk83OJFS3kEBcesWni9WTZAv3tSw==",
-      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.5.tgz",
-      "version": "1.7.5"
+      "integrity": "sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==",
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.7.tgz",
+      "version": "1.7.7"
     },
     "node_modules/axios-proxy-builder": {
       "dependencies": {
@@ -2512,7 +2512,7 @@ install(false);
     "axolotlsay": "run-axolotlsay.js"
   },
   "dependencies": {
-    "axios": "^1.7.5",
+    "axios": "^1.7.7",
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
