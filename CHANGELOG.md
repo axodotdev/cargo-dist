@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.22.1 (2024-09-04)
+
 This is a small patch release that incidentally includes some initial groundwork for a new feature.
 
 * @gankra [fix: give PATH update instructions for cmd too](https://github.com/axodotdev/cargo-dist/pull/1382)
