@@ -1,7 +1,7 @@
 //! Shared code for gathering up information about a workspace, used by various axo.dev tools
 //! like cargo-dist and oranda.
 //!
-//! The main entry point is [`get_workspaces`][].
+//! The main entry point is [`WorkspaceGraph::find`][].
 
 #![deny(missing_docs)]
 #![allow(clippy::result_large_err)]
@@ -243,19 +243,6 @@ impl WorkspaceGraph {
         };
         RepositoryUrl::from_packages(package_list)
     }
-}
-
-/// Information about various kinds of workspaces
-pub struct Workspaces {
-    /// Info about the generic workspace
-    #[cfg(feature = "generic-projects")]
-    pub generic: WorkspaceSearch,
-    /// Info about the cargo/rust workspace
-    #[cfg(feature = "cargo-projects")]
-    pub rust: WorkspaceSearch,
-    /// Info about the npm/js workspace
-    #[cfg(feature = "npm-projects")]
-    pub javascript: WorkspaceSearch,
 }
 
 /// Result of searching for a particular kind of workspace
@@ -661,34 +648,6 @@ pub struct AutoIncludes {
     pub licenses: Vec<Utf8PathBuf>,
     /// CHANGELOG/RELEASES
     pub changelog: Option<Utf8PathBuf>,
-}
-
-/// Tries to find information about the workspace at start_dir, walking up
-/// ancestors as necessary until we reach clamp_to_dir (or run out of ancestors).
-///
-/// Behaviour is unspecified if only part of the workspace is nested in clamp_to_dir.
-///
-/// In the future setting clamp_to_dir may cause the output's paths to be relative
-/// to that directory, but for now they're always absolute. The cli does this
-/// relativizing, but not the library.
-///
-/// This can be either a cargo project or an npm project. Support for each
-/// one is behind feature flags:
-///
-/// * cargo-projects
-/// * npm-projects
-///
-/// Concepts of both will largely be conflated, the only distinction will be
-/// the top level [`WorkspaceKind`][].
-pub fn get_workspaces(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> Workspaces {
-    Workspaces {
-        #[cfg(feature = "generic-projects")]
-        generic: generic::get_workspace(start_dir, clamp_to_dir),
-        #[cfg(feature = "cargo-projects")]
-        rust: rust::get_workspace(start_dir, clamp_to_dir),
-        #[cfg(feature = "npm-projects")]
-        javascript: javascript::get_workspace(start_dir, clamp_to_dir),
-    }
 }
 
 /// Find auto-includeable files in a dir

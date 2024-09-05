@@ -123,9 +123,12 @@ struct Package {
     version: Option<semver::Version>,
 }
 
-/// Try to find a generic workspace at the given path
+/// Try to find a generic workspace at start_dir, walking up
+/// ancestors as necessary until we reach clamp_to_dir (or run out of ancestors).
 ///
-/// See [`crate::get_workspaces`][] for the semantics.
+/// Behaviour is unspecified if only part of the workspace is nested in clamp_to_dir
+/// We might find the workspace, or we might not. This is generally assumed to be fine,
+/// since we typically clamp to a git repo, if at all.
 pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> WorkspaceSearch {
     // First search for a workspace file
     match crate::find_file(DIST_WORKSPACE_TOML, start_dir, clamp_to_dir) {
