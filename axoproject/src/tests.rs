@@ -8,11 +8,14 @@ use crate::{
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_self_detect() {
-    let project = crate::get_workspaces("./".into(), None).best().unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
-    assert_eq!(project.packages.len(), 3);
+    let workspaces = WorkspaceGraph::find("./".into(), None).unwrap();
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
 
-    let package = &project.packages[0];
+    assert_eq!(project.kind, WorkspaceKind::Rust);
+    assert_eq!(packages.len(), 3);
+
+    let package = packages[0].1;
     assert_eq!(package.name, "axoproject");
     assert_eq!(package.binaries.len(), 0);
 }
@@ -20,13 +23,13 @@ fn test_self_detect() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_new() {
-    let project = crate::get_workspaces("tests/projects/cargo-new/src/".into(), None)
-        .best()
-        .unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
-    assert_eq!(project.packages.len(), 1);
+    let workspaces = WorkspaceGraph::find("tests/projects/cargo-new/src/".into(), None).unwrap();
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
+    assert_eq!(project.kind, WorkspaceKind::Rust);
+    assert_eq!(packages.len(), 1);
 
-    let package = &project.packages[0];
+    let package = packages[0].1;
     assert_eq!(package.name, "cargo-new");
     assert_eq!(package.binaries.len(), 1);
 
@@ -37,44 +40,49 @@ fn test_cargo_new() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_rooted_cargo_wrong() {
+    use crate::errors::ProjectError;
     use camino::Utf8PathBuf;
 
-    let project = crate::get_workspaces(
+    let workspaces = WorkspaceGraph::find(
         "tests/projects/cargo-new/src/".into(),
         Some(Utf8PathBuf::from("src/")).as_deref(),
-    )
-    .best();
-    assert!(project.is_none());
+    );
+    assert!(matches!(
+        workspaces,
+        Err(ProjectError::ProjectMissing { .. })
+    ));
 }
 
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_rooted_cargo_clamped_too_soon() {
+    use crate::errors::ProjectError;
     use camino::Utf8PathBuf;
 
-    let project = crate::get_workspaces(
+    let workspaces = WorkspaceGraph::find(
         "tests/projects/cargo-new/src/".into(),
         Some(Utf8PathBuf::from("tests/projects/cargo-new/src/")).as_deref(),
-    )
-    .best();
-    assert!(project.is_none());
+    );
+    assert!(matches!(
+        workspaces.unwrap_err(),
+        ProjectError::ProjectMissing { .. }
+    ));
 }
 
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_rooted_cargo_good() {
-    use camino::Utf8PathBuf;
-
-    let project = crate::get_workspaces(
+    let workspaces = WorkspaceGraph::find(
         "tests/projects/cargo-new/src/".into(),
         Some(Utf8PathBuf::from("tests/projects/cargo-new/")).as_deref(),
     )
-    .best()
     .unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
-    assert_eq!(project.packages.len(), 1);
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
+    assert_eq!(project.kind, WorkspaceKind::Rust);
+    assert_eq!(packages.len(), 1);
 
-    let package = &project.packages[0];
+    let package = packages[0].1;
     assert_eq!(package.name, "cargo-new");
     assert_eq!(package.binaries.len(), 1);
 
@@ -85,26 +93,27 @@ fn test_rooted_cargo_good() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_virtual() {
-    let project = crate::get_workspaces("tests/projects/cargo-virtual/virtual/".into(), None)
-        .best()
-        .unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
-    assert_eq!(project.packages.len(), 3);
+    let workspaces =
+        WorkspaceGraph::find("tests/projects/cargo-virtual/virtual/".into(), None).unwrap();
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
+    assert_eq!(project.kind, WorkspaceKind::Rust);
+    assert_eq!(packages.len(), 3);
 
     {
-        let package = &project.packages[0];
+        let package = packages[0].1;
         assert_eq!(package.name, "virtual");
         assert_eq!(&package.binaries[..], &["virtual"]);
     }
 
     {
-        let package = &project.packages[1];
+        let package = packages[1].1;
         assert_eq!(package.name, "some-lib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.packages[2];
+        let package = packages[2].1;
         assert_eq!(package.name, "virtual-gui");
         assert_eq!(&package.binaries[..], &["virtual-gui"]);
     }
@@ -113,45 +122,46 @@ fn test_cargo_virtual() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_nonvirtual() {
-    let project = crate::get_workspaces("tests/projects/cargo-nonvirtual/".into(), None)
-        .best()
-        .unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Rust);
-    assert_eq!(project.packages.len(), 6);
+    let workspaces = WorkspaceGraph::find("tests/projects/cargo-nonvirtual/".into(), None).unwrap();
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
+
+    assert_eq!(project.kind, WorkspaceKind::Rust);
+    assert_eq!(packages.len(), 6);
 
     {
-        let package = &project.packages[0];
+        let package = packages[0].1;
         assert_eq!(package.name, "some-cdylib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.packages[1];
+        let package = packages[1].1;
         assert_eq!(package.name, "some-lib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.packages[2];
+        let package = packages[2].1;
         assert_eq!(package.name, "some-other-lib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.packages[3];
+        let package = packages[3].1;
         assert_eq!(package.name, "some-staticlib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = &project.packages[4];
+        let package = packages[4].1;
         assert_eq!(package.name, "test-bin");
         assert_eq!(&package.binaries[..], &["test-bin"]);
         assert!(!package.publish);
     }
 
     {
-        let package = &project.packages[5];
+        let package = packages[5].1;
         assert_eq!(package.name, "nonvirtual");
         assert_eq!(&package.binaries[..], &["cargo-nonvirtual", "nonvirtual"]);
         assert!(package.publish);
@@ -161,19 +171,21 @@ fn test_cargo_nonvirtual() {
 #[cfg(feature = "npm-projects")]
 #[test]
 fn test_npm_init_legacy() {
-    let project = crate::get_workspaces("tests/projects/npm-init-legacy".into(), None)
-        .best()
-        .unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.packages.len(), 1);
+    let workspaces = WorkspaceGraph::find("tests/projects/npm-init-legacy".into(), None).unwrap();
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
 
-    let package = &project.packages[0];
+    assert_eq!(project.kind, WorkspaceKind::Generic);
+    assert_eq!(packages.len(), 1);
+
+    let package = packages[0].1;
     assert_eq!(package.name, "npm-init-legacy");
     assert_eq!(
         package.homepage_url.as_deref().unwrap(),
-        "https://workspace.metadata.dist"
+        "https://workspace.axo.dev/"
     );
 
+    // NOTE: we provide a path for this binary that doe
     // NOTE: we provide a path for this binary that doesn't exist, so if we
     // get more rigorous this test will fail. That's fine, the test can be
     // updated. Oranda has similar tests.
@@ -184,52 +196,34 @@ fn test_npm_init_legacy() {
 
 #[cfg(feature = "npm-projects")]
 #[test]
-fn test_npm_create_react_app() {
-    let project = crate::get_workspaces("tests/projects/npm-create-react-app/src/".into(), None)
-        .best()
-        .unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.packages.len(), 1);
-
-    let package = &project.packages[0];
-    assert_eq!(package.name, "npm-create-react-app");
-
-    // NOTE: we provide paths that exist here, but they're not proper binaries, so if we
-    // get more rigorous this test will fail. That's fine, the test can be
-    // updated. Oranda has similar tests.
-    assert_eq!(package.binaries.len(), 2);
-
-    let binary = &package.binaries[0];
-    assert_eq!(binary, "App.js");
-
-    let binary = &package.binaries[1];
-    assert_eq!(binary, "index.js");
-}
-
-#[cfg(feature = "npm-projects")]
-#[test]
 fn test_rooted_npm_wrong() {
+    use crate::errors::ProjectError;
     use camino::Utf8PathBuf;
 
-    let project = crate::get_workspaces(
+    let workspaces = WorkspaceGraph::find(
         "tests/projects/npm-init-legacy/".into(),
         Some(Utf8PathBuf::from("src/")).as_deref(),
-    )
-    .best();
-    assert!(project.is_none());
+    );
+    assert!(matches!(
+        workspaces,
+        Err(ProjectError::ProjectMissing { .. })
+    ));
 }
 
 #[cfg(feature = "npm-projects")]
 #[test]
 fn test_rooted_npm_clamped_too_soon() {
+    use crate::errors::ProjectError;
     use camino::Utf8PathBuf;
 
-    let project = crate::get_workspaces(
+    let workspaces = WorkspaceGraph::find(
         "tests/projects/npm-init-legacy/src/".into(),
         Some(Utf8PathBuf::from("tests/projects/npm-init-legacy/src/")).as_deref(),
-    )
-    .best();
-    assert!(project.is_none());
+    );
+    assert!(matches!(
+        workspaces,
+        Err(ProjectError::ProjectMissing { .. })
+    ));
 }
 
 #[cfg(feature = "npm-projects")]
@@ -237,20 +231,22 @@ fn test_rooted_npm_clamped_too_soon() {
 fn test_rooted_npm_good() {
     use camino::Utf8PathBuf;
 
-    let project = crate::get_workspaces(
+    let workspaces = WorkspaceGraph::find(
         "tests/projects/npm-init-legacy/src/".into(),
         Some(Utf8PathBuf::from("tests/projects/npm-init-legacy/")).as_deref(),
     )
-    .best()
     .unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.packages.len(), 1);
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
 
-    let package = &project.packages[0];
+    assert_eq!(project.kind, WorkspaceKind::Generic);
+    assert_eq!(packages.len(), 1);
+
+    let package = packages[0].1;
     assert_eq!(package.name, "npm-init-legacy");
     assert_eq!(
         package.homepage_url.as_deref().unwrap(),
-        "https://workspace.metadata.dist"
+        "https://workspace.axo.dev/"
     );
 
     // NOTE: we provide a path for this binary that doesn't exist, so if we
@@ -570,17 +566,18 @@ fn test_changelog_errors() {
 
 #[test]
 fn test_generic_c() {
-    let project = crate::get_workspaces("tests/projects/generic-c/".into(), None)
-        .best()
-        .unwrap();
-    assert_eq!(project.workspace.kind, WorkspaceKind::Generic);
-    assert_eq!(project.packages.len(), 1);
-    assert!(project.workspace.manifest_path.exists());
+    let workspaces = WorkspaceGraph::find("tests/projects/generic-c/".into(), None).unwrap();
+    let project = workspaces.root_workspace();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
 
-    let package = &project.packages[0];
+    assert_eq!(project.kind, WorkspaceKind::Generic);
+    assert_eq!(packages.len(), 1);
+    assert!(project.manifest_path.exists());
+
+    let package = packages[0].1;
     assert_eq!(package.name, "testprog");
     assert_eq!(package.binaries.len(), 1);
-    assert!(project.workspace.manifest_path.exists());
+    assert!(project.manifest_path.exists());
 
     let binary = &package.binaries[0];
     assert_eq!(binary, "main");

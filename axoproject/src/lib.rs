@@ -65,7 +65,7 @@ impl WorkspaceGraph {
             None
         };
 
-        WorkspaceGraph::find_from_git(start_dir, local_repo)
+        Self::find_from_git_clamped(start_dir, local_repo, clamp_to_dir)
     }
 
     /// Create WorkspaceGraph from a local git repo
@@ -73,8 +73,17 @@ impl WorkspaceGraph {
         start_dir: &Utf8Path,
         local_repo: Option<LocalRepo>,
     ) -> std::result::Result<Self, ProjectError> {
+        let clamp_to_dir = local_repo.as_ref().map(|r| r.path.clone());
+        Self::find_from_git_clamped(start_dir, local_repo, clamp_to_dir.as_deref())
+    }
+
+    /// Create WorkspaceGraph from a local git repo
+    fn find_from_git_clamped(
+        start_dir: &Utf8Path,
+        local_repo: Option<LocalRepo>,
+        clamp_to_dir: Option<&Utf8Path>,
+    ) -> std::result::Result<Self, ProjectError> {
         let mut missing = vec![];
-        let clamp_to_dir = local_repo.as_ref().map(|r| r.path.as_path());
 
         // Prefer generic workspace, then use rust workspace.
         // JS is currently not allowed to be a root workspace, only a child
@@ -247,42 +256,6 @@ pub struct Workspaces {
     /// Info about the npm/js workspace
     #[cfg(feature = "npm-projects")]
     pub javascript: WorkspaceSearch,
-}
-
-impl Workspaces {
-    #[cfg(test)]
-    pub(crate) fn best(self) -> Option<WorkspaceStructure> {
-        #![allow(clippy::vec_init_then_push)]
-
-        let mut best_project = None;
-        let mut max_depth = 0;
-        let mut projects = vec![];
-
-        #[cfg(feature = "generic-projects")]
-        projects.push(self.generic);
-
-        // FIXME: should we provide feedback/logging here?
-        #[cfg(feature = "cargo-projects")]
-        projects.push(self.rust);
-
-        #[cfg(feature = "npm-projects")]
-        projects.push(self.javascript);
-
-        // If we find multiple projects, prefer the one deeper in the file system
-        // (the one closer to the start_dir).
-        for project in projects {
-            let WorkspaceSearch::Found(project) = project else {
-                continue;
-            };
-            let depth = project.workspace.workspace_dir.ancestors().count();
-            if depth > max_depth {
-                best_project = Some(project);
-                max_depth = depth;
-            }
-        }
-
-        best_project
-    }
 }
 
 /// Result of searching for a particular kind of workspace

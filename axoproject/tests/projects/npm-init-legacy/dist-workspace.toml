@@ -1,2 +1,6 @@
 [package]
+name = "npm-init-legacy"
+version = "1.0.0"
 homepage = "https://workspace.axo.dev/"
+build-command = ["fake-command"]
+binaries = ["npm-init-legacy"]
