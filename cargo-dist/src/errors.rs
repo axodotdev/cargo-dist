@@ -59,6 +59,7 @@ pub enum DistError {
 
     /// random axotag error
     #[error(transparent)]
+    #[diagnostic(transparent)]
     AxotagError(#[from] axotag::errors::TagError),
 
     /// Failure to deserialize yml
@@ -253,11 +254,11 @@ pub enum DistError {
         generate_mode: crate::config::GenerateMode,
     },
 
-    /// msi with too many packages
+    /// msi/pkg with too many packages
     #[error("{artifact_name} depends on multiple packages, which isn't yet supported")]
     #[diagnostic(help("depends on {spec1} and {spec2}"))]
-    MultiPackageMsi {
-        /// Name of the msi
+    MultiPackage {
+        /// Name of the artifact
         artifact_name: String,
         /// One of the pacakges
         spec1: String,
@@ -265,10 +266,10 @@ pub enum DistError {
         spec2: String,
     },
 
-    /// msi with too few packages
+    /// msi/pkg with too few packages
     #[error("{artifact_name} has no binaries")]
     #[diagnostic(help("This should be impossible, you did nothing wrong, please file an issue!"))]
-    NoPackageMsi {
+    NoPackage {
         /// Name of the msi
         artifact_name: String,
     },
@@ -323,7 +324,7 @@ pub enum DistError {
 
     /// Linkage report can't be run for this target
     #[error("unable to run linkage report for this type of binary")]
-    LinkageCheckUnsupportedBinary {},
+    LinkageCheckUnsupportedBinary,
 
     /// Error parsing a string containing an environment variable
     /// in VAR=value syntax
@@ -454,7 +455,7 @@ pub enum DistError {
     /// Installers requested despite having nothing to install
     #[error("Installers were requested, but app contains no installable binaries")]
     #[diagnostic(help(
-        "The only installable files are libraries, but `install-cdylibs` isn't enabled."
+        "The only installable files are libraries, but `install-libraries` isn't enabled."
     ))]
     EmptyInstaller {},
 
@@ -497,6 +498,60 @@ pub enum DistError {
         /// The dist.toml/dist-workspace.toml that means it's ignored
         dist_manifest_path: Utf8PathBuf,
     },
+
+    /// Build command looks like they put args in same string as command
+    #[error("Your build-command's arguments need to be split up\n{manifest}\ncommand was: [\"{command}\"]")]
+    #[diagnostic(help("the command should be split [\"like\", \"--this\", \"--array=here\"]"))]
+    SusBuildCommand {
+        /// path to manifest
+        manifest: Utf8PathBuf,
+        /// what the command was
+        command: String,
+    },
+
+    /// missing "dist" script in a package.json
+    #[error("package.json was missing a \"dist\" script\n{manifest}")]
+    #[diagnostic(help(
+        "https://opensource.axo.dev/cargo-dist/book/quickstart/javascript.html#adding-a-dist-script"
+    ))]
+    NoDistScript {
+        /// path to package.json
+        manifest: Utf8PathBuf,
+    },
+
+    /// missing "build-command" for a package that needs one
+    #[error("dist package was missing a build-command\n{manifest}")]
+    #[diagnostic(help(
+        "https://opensource.axo.dev/cargo-dist/book/quickstart/everyone-else.html#setup"
+    ))]
+    NoBuildCommand {
+        /// path to manifest
+        manifest: Utf8PathBuf,
+    },
+
+    /// cargo package with build-command
+    #[error(
+        "cargo package was overriden with a build-command, which isn't supported yet\n{manifest}"
+    )]
+    UnexpectedBuildCommand {
+        /// path to manifest
+        manifest: Utf8PathBuf,
+    },
+
+    /// Failure to decode base64-encoded certificate
+    #[error("We failed to decode the certificate stored in the CODESIGN_CERTIFICATE environment variable.")]
+    #[diagnostic(help("Is the value of this envirionment variable valid base64?"))]
+    CertificateDecodeError {},
+
+    /// Missing configuration for a .pkg
+    #[error("A Mac .pkg installer was requested, but the config is missing")]
+    #[diagnostic(help("Please ensure a dist.mac-pkg-config section is present in your config. For more details see: https://example.com"))]
+    MacPkgConfigMissing {},
+
+    /// User left identifier empty in init
+    #[error("No bundle identifier was specified")]
+    #[diagnostic(help("Please either enter a bundle identifier, or disable the Mac .pkg"))]
+    MacPkgBundleIdentifierMissing {},
 }
 
 /// This error indicates we tried to deserialize some YAML with serde_yml

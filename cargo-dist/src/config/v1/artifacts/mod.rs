@@ -5,7 +5,7 @@ pub mod archives;
 use super::*;
 use archives::*;
 
-/// artifact config (final)
+/// app-specific artifact config (final)
 #[derive(Debug, Clone)]
 pub struct AppArtifactConfig {
     /// archive config
@@ -14,6 +14,7 @@ pub struct AppArtifactConfig {
     pub extra: Vec<ExtraArtifact>,
 }
 
+/// workspace artifact config (final)
 #[derive(Debug, Clone)]
 pub struct WorkspaceArtifactConfig {
     /// Whether to generate and dist a tarball containing your app's source code

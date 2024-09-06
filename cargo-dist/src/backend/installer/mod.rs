@@ -5,6 +5,7 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
+use macpkg::PkgInstallerInfo;
 use serde::Serialize;
 
 use crate::{
@@ -18,6 +19,7 @@ use self::msi::MsiInstallerInfo;
 use self::npm::NpmInstallerInfo;
 
 pub mod homebrew;
+pub mod macpkg;
 pub mod msi;
 pub mod npm;
 pub mod powershell;
@@ -37,6 +39,8 @@ pub enum InstallerImpl {
     Homebrew(HomebrewInstallerInfo),
     /// Windows msi installer
     Msi(MsiInstallerInfo),
+    /// Mac pkg installer
+    Pkg(PkgInstallerInfo),
 }
 
 /// Generic info about an installer
@@ -73,6 +77,8 @@ pub struct InstallerInfo {
     pub runtime_conditions: RuntimeConditions,
     /// platform support matrix
     pub platform_support: Option<PlatformSupport>,
+    /// Environment variable to force an install location
+    pub install_dir_env_var: String,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

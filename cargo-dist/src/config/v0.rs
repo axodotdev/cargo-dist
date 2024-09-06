@@ -8,7 +8,7 @@ use tracing::log::warn;
 use super::*;
 use crate::SortedMap;
 
-/// A container to assist deserializing metadata from generic, non-Cargo projects
+/// A container to assist deserializing metadata from dist(-workspace).tomls
 #[derive(Debug, Deserialize)]
 pub struct GenericConfig {
     /// The dist field within dist.toml
@@ -372,6 +372,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 
+    /// Whether we should sign Mac binaries
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macos_sign: Option<bool>,
+
     /// Whether GitHub Attestations is enabled (default false)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_attestations: Option<bool>,
@@ -427,6 +431,11 @@ pub struct DistMetadata {
     /// Any additional steps that need to be performed before building local artifacts
     #[serde(default)]
     pub github_build_setup: Option<String>,
+
+    /// Configuration specific to Mac .pkg installers
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub mac_pkg_config: Option<MacPkgConfig>,
 }
 
 impl DistMetadata {
@@ -478,6 +487,7 @@ impl DistMetadata {
             allow_dirty: _,
             github_release: _,
             ssldotcom_windows_sign: _,
+            macos_sign: _,
             github_attestations: _,
             msvc_crt_static: _,
             hosting: _,
@@ -493,6 +503,7 @@ impl DistMetadata {
             package_libraries: _,
             install_libraries: _,
             github_build_setup: _,
+            mac_pkg_config: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -571,6 +582,7 @@ impl DistMetadata {
             allow_dirty,
             github_release,
             ssldotcom_windows_sign,
+            macos_sign,
             github_attestations,
             msvc_crt_static,
             hosting,
@@ -587,6 +599,7 @@ impl DistMetadata {
             package_libraries,
             install_libraries,
             github_build_setup,
+            mac_pkg_config,
         } = self;
 
         // Check for global settings on local packages
@@ -645,6 +658,9 @@ impl DistMetadata {
         }
         if ssldotcom_windows_sign.is_some() {
             warn!("package.metadata.dist.ssldotcom-windows-sign is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if macos_sign.is_some() {
+            warn!("package.metadata.dist.macos-sign is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if github_attestations.is_some() {
             warn!("package.metadata.dist.github-attestations is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
@@ -764,6 +780,9 @@ impl DistMetadata {
         }
         if install_libraries.is_none() {
             install_libraries.clone_from(&workspace_config.install_libraries);
+        }
+        if mac_pkg_config.is_none() {
+            mac_pkg_config.clone_from(&workspace_config.mac_pkg_config);
         }
 
         // This was historically implemented as extend, but I'm not convinced the

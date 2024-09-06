@@ -71,6 +71,8 @@ pub struct GithubCiInfo {
     pub post_announce_jobs: Vec<GithubCiJob>,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// Whether to enable macOS codesigning
+    pub macos_sign: bool,
     /// what hosting provider we're using
     pub hosting_providers: Vec<HostingStyle>,
     /// whether to prefix release.yml and the tag pattern
@@ -188,6 +190,7 @@ impl GithubCiInfo {
         let dispatch_releases = ci_config.dispatch_releases;
         let release_branch = ci_config.release_branch.clone();
         let ssldotcom_windows_sign = dist.config.builds.ssldotcom_windows_sign.clone();
+        let macos_sign = dist.config.builds.macos_sign;
         let tag_namespace = ci_config.tag_namespace.clone();
         let pr_run_mode = ci_config.pr_run_mode;
 
@@ -343,6 +346,7 @@ impl GithubCiInfo {
             pr_run_mode,
             global_task,
             ssldotcom_windows_sign,
+            macos_sign,
             hosting_providers,
             root_permissions,
             github_build_setup,

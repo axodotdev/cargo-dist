@@ -485,16 +485,26 @@ install() {
     local _install_dir_expr
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
+    # Forces the install to occur at this path, not the default
+    local _force_install_dir
+
+    # Check the newer app-specific variable before falling back
+    # to the older generic one
+    if [ -n "${AXOLOTLSAY_INSTALL_DIR:-}" ]; then
+        _force_install_dir="$AXOLOTLSAY_INSTALL_DIR"
+    elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+    fi
 
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
-    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
-        _lib_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
-        _receipt_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
-        _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
+    if [ -n "${_force_install_dir:-}" ]; then
+        _install_dir="$_force_install_dir/bin"
+        _lib_install_dir="$_force_install_dir/bin"
+        _receipt_install_dir="$_force_install_dir"
+        _env_script_path="$_force_install_dir/env"
+        _install_dir_expr="$(replace_home "$_force_install_dir/bin")"
+        _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
     fi
     if [ -z "${_install_dir:-}" ]; then
         # first try $CARGO_HOME, then fallback to $HOME/.cargo
@@ -1171,7 +1181,28 @@ class Axolotlsay < Formula
   end
   license any_of: ["MIT", "Apache-2.0"]
 
-  BINARY_ALIASES = {"aarch64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-apple-darwin": {"axolotlsay": ["axolotlsay-link"]}, "x86_64-pc-windows-gnu": {"axolotlsay.exe": ["axolotlsay-link.exe"]}, "x86_64-unknown-linux-gnu": {"axolotlsay": ["axolotlsay-link"]}}
+  BINARY_ALIASES = {
+    "aarch64-apple-darwin": {
+      "axolotlsay": [
+        "axolotlsay-link"
+      ]
+    },
+    "x86_64-apple-darwin": {
+      "axolotlsay": [
+        "axolotlsay-link"
+      ]
+    },
+    "x86_64-pc-windows-gnu": {
+      "axolotlsay.exe": [
+        "axolotlsay-link.exe"
+      ]
+    },
+    "x86_64-unknown-linux-gnu": {
+      "axolotlsay": [
+        "axolotlsay-link"
+      ]
+    }
+  }
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -1436,6 +1467,16 @@ function Invoke-Installer($artifacts, $platforms) {
 
   $info = $platforms[$arch]
 
+  # Forces the install to occur at this path, not the default
+  $force_install_dir = $null
+  # Check the newer app-specific variable before falling back
+  # to the older generic one
+  if (($env:AXOLOTLSAY_INSTALL_DIR)) {
+    $force_install_dir = $env:AXOLOTLSAY_INSTALL_DIR
+  } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+    $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+  }
+
   # The actual path we're going to install to
   $dest_dir = $null
   $dest_dir_lib = $null
@@ -1446,11 +1487,11 @@ function Invoke-Installer($artifacts, $platforms) {
   $receipt_dest_dir = $null
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
-  if (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+  if (($force_install_dir)) {
 
-    $dest_dir = Join-Path $env:CARGO_DIST_FORCE_INSTALL_DIR "bin"
+    $dest_dir = Join-Path $force_install_dir "bin"
     $dest_dir_lib = $dest_dir
-    $receipt_dest_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    $receipt_dest_dir = $force_install_dir
   }
   if (-Not $dest_dir) {
     # first try $env:CARGO_HOME, then fallback to $HOME
@@ -1525,12 +1566,20 @@ function Invoke-Installer($artifacts, $platforms) {
   $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
   [IO.File]::WriteAllLines("$receipt_home/axolotlsay-receipt.json", "$receipt", $Utf8NoBomEncoding)
 
+  # Respect the environment, but CLI takes precedence
+  if ($null -eq $NoModifyPath) {
+    $NoModifyPath = $env:INSTALLER_NO_MODIFY_PATH
+  }
+
   Write-Information "everything's installed!"
   if (-not $NoModifyPath) {
     Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {
         Write-Information ""
-        Write-Information "$dest_dir was added to your PATH, you may need to restart your shell for that to take effect."
+        Write-Information "To add $dest_dir to your PATH, either restart your system or run:"
+        Write-Information ""
+        Write-Information "    set Path=$dest_dir;%Path%   (cmd)"
+        Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`"   (powershell)"
     }
   }
 }
@@ -2241,7 +2290,7 @@ install(false);
         "axolotlsay-link": "run-axolotlsay.js"
       },
       "dependencies": {
-        "axios": "^1.7.4",
+        "axios": "^1.7.7",
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
@@ -2335,9 +2384,9 @@ install(false);
         "form-data": "^4.0.0",
         "proxy-from-env": "^1.1.0"
       },
-      "integrity": "sha512-DukmaFRnY6AzAALSH4J2M3k6PkaC+MfaAGdEERRWcC9q3/TWQwLpHR8ZRLKTdQ3aBDL64EdluRDjJqKw+BPZEw==",
-      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.4.tgz",
-      "version": "1.7.4"
+      "integrity": "sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==",
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.7.tgz",
+      "version": "1.7.7"
     },
     "node_modules/axios-proxy-builder": {
       "dependencies": {
@@ -3031,7 +3080,7 @@ install(false);
     "axolotlsay-link": "run-axolotlsay.js"
   },
   "dependencies": {
-    "axios": "^1.7.4",
+    "axios": "^1.7.7",
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
@@ -3124,11 +3173,12 @@ run("axolotlsay");
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.2",
   "announcement_changelog": "```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy ByPass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-aarch64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "axolotlsay",
       "app_version": "0.2.2",
+      "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
       "display_name": "axolotlsay",
       "display": true,
       "artifacts": [
@@ -3140,8 +3190,12 @@ run("axolotlsay");
         "axolotlsay-npm-package.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-aarch64-apple-darwin.pkg",
+        "axolotlsay-aarch64-apple-darwin.pkg.sha256",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-x86_64-apple-darwin.pkg",
+        "axolotlsay-x86_64-apple-darwin.pkg.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.msi",
@@ -3159,6 +3213,30 @@ run("axolotlsay");
     }
   ],
   "artifacts": {
+    "axolotlsay-aarch64-apple-darwin.pkg": {
+      "name": "axolotlsay-aarch64-apple-darwin.pkg",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "id": "axolotlsay-aarch64-apple-darwin-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "description": "install via pkg",
+      "checksum": "axolotlsay-aarch64-apple-darwin.pkg.sha256"
+    },
+    "axolotlsay-aarch64-apple-darwin.pkg.sha256": {
+      "name": "axolotlsay-aarch64-apple-darwin.pkg.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ]
+    },
     "axolotlsay-aarch64-apple-darwin.tar.gz": {
       "name": "axolotlsay-aarch64-apple-darwin.tar.gz",
       "kind": "executable-zip",
@@ -3209,7 +3287,7 @@ run("axolotlsay");
         "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"",
+      "install_hint": "powershell -ExecutionPolicy ByPass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "axolotlsay-installer.sh": {
@@ -3294,6 +3372,30 @@ run("axolotlsay");
       ],
       "install_hint": "npm install @axodotdev/axolotlsay@0.2.2",
       "description": "Install prebuilt binaries into your npm project"
+    },
+    "axolotlsay-x86_64-apple-darwin.pkg": {
+      "name": "axolotlsay-x86_64-apple-darwin.pkg",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "id": "axolotlsay-x86_64-apple-darwin-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "description": "install via pkg",
+      "checksum": "axolotlsay-x86_64-apple-darwin.pkg.sha256"
+    },
+    "axolotlsay-x86_64-apple-darwin.pkg.sha256": {
+      "name": "axolotlsay-x86_64-apple-darwin.pkg.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ]
     },
     "axolotlsay-x86_64-apple-darwin.tar.gz": {
       "name": "axolotlsay-x86_64-apple-darwin.tar.gz",
@@ -3833,7 +3935,8 @@ jobs:
 
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
             brew update
-            brew style --fix "Formula/${filename}" || true
+            # We avoid reformatting user-provided data such as the app description and homepage.
+            brew style --except-cops FormulaAudit/Homepage,FormulaAudit/Desc,FormulaAuditStrict --fix "Formula/${filename}" || true
 
             git add "Formula/${filename}"
             git commit -m "${name} ${version}"

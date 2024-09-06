@@ -280,6 +280,7 @@ impl<'a> TestContext<'a, Tools> {
         }
 
         let toml_out = toml.to_string();
+        eprintln!("new toml:\n{toml_out}");
         eprintln!("writing Cargo.toml...");
         axoasset::LocalAsset::write_new(&toml_out, "Cargo.toml")?;
 

@@ -62,7 +62,6 @@
 //! consistent, and robust in the face of future config/layer additions without you having to
 //! know exactly all the ways a value can be set.
 
-
 // We very intentionally manually implement Default a lot in this submodule
 // to keep things very explicit and clear
 #![allow(clippy::derivable_impls)]

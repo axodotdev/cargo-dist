@@ -181,6 +181,8 @@ pub enum InstallerStyle {
     Homebrew,
     /// Generate an msi installer that embeds the binary
     Msi,
+    /// Generate an Apple pkg installer that embeds the binary
+    Pkg,
 }
 
 impl std::fmt::Display for InstallerStyle {
@@ -191,6 +193,7 @@ impl std::fmt::Display for InstallerStyle {
             InstallerStyle::Npm => "npm",
             InstallerStyle::Homebrew => "homebrew",
             InstallerStyle::Msi => "msi",
+            InstallerStyle::Pkg => "pkg",
         };
         string.fmt(f)
     }
@@ -724,6 +727,18 @@ impl std::fmt::Display for HostStyle {
         };
         string.fmt(f)
     }
+}
+
+/// Configuration for Mac .pkg installers
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct MacPkgConfig {
+    /// A unique identifier, in tld.domain.package format
+    pub identifier: String,
+    /// The location to which the software should be installed.
+    /// If not specified, /usr/local will be used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_location: Option<String>,
 }
 
 /// Packages to install before build from the system package manager

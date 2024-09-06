@@ -3,6 +3,7 @@
 pub mod homebrew;
 pub mod msi;
 pub mod npm;
+pub mod pkg;
 pub mod powershell;
 pub mod shell;
 
@@ -11,6 +12,7 @@ use super::*;
 use homebrew::*;
 use msi::*;
 use npm::*;
+use pkg::*;
 use powershell::*;
 use shell::*;
 
@@ -33,6 +35,8 @@ pub struct AppInstallerConfig {
     pub powershell: Option<PowershellInstallerConfig>,
     /// shell installer
     pub shell: Option<ShellInstallerConfig>,
+    /// shell installer
+    pub pkg: Option<PkgInstallerConfig>,
 }
 
 /// installer config (inheritance not yet applied)
@@ -50,6 +54,8 @@ pub struct InstallerConfigInheritable {
     pub powershell: Option<PowershellInstallerLayer>,
     /// shell installer
     pub shell: Option<ShellInstallerLayer>,
+    /// pkg installer
+    pub pkg: Option<PkgInstallerLayer>,
     /// Whether to install an updater program alongside the software
     pub updater: bool,
 }
@@ -71,6 +77,8 @@ pub struct InstallerLayer {
     pub powershell: Option<BoolOr<PowershellInstallerLayer>>,
     /// shell installer
     pub shell: Option<BoolOr<ShellInstallerLayer>>,
+    /// pkg installer
+    pub pkg: Option<BoolOr<PkgInstallerLayer>>,
     /// Whether to install an updater program alongside the software
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updater: Option<bool>,
@@ -93,6 +101,7 @@ impl InstallerConfigInheritable {
             npm: None,
             powershell: None,
             shell: None,
+            pkg: None,
             updater: false,
         }
     }
@@ -111,6 +120,7 @@ impl InstallerConfigInheritable {
             npm: _,
             powershell: _,
             shell: _,
+            pkg: _,
         } = self;
 
         WorkspaceInstallerConfig { updater }
@@ -128,6 +138,7 @@ impl InstallerConfigInheritable {
             npm,
             powershell,
             shell,
+            pkg,
             // global-only
             updater: _,
         } = self;
@@ -161,12 +172,19 @@ impl InstallerConfigInheritable {
             default.apply_layer(shell);
             default
         });
+        let pkg = pkg.map(|pkg| {
+            let mut default =
+                PkgInstallerConfig::defaults_for_package(workspaces, pkg_idx, &common);
+            default.apply_layer(pkg);
+            default
+        });
         AppInstallerConfig {
             homebrew,
             msi,
             npm,
             powershell,
             shell,
+            pkg,
         }
     }
 }
@@ -181,6 +199,7 @@ impl ApplyLayer for InstallerConfigInheritable {
             npm,
             powershell,
             shell,
+            pkg,
             updater,
         }: Self::Layer,
     ) {
@@ -190,6 +209,7 @@ impl ApplyLayer for InstallerConfigInheritable {
         self.npm.apply_bool_layer(npm);
         self.powershell.apply_bool_layer(powershell);
         self.shell.apply_bool_layer(shell);
+        self.pkg.apply_bool_layer(pkg);
         self.updater.apply_val(updater);
     }
 }

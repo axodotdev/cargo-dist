@@ -173,7 +173,7 @@ impl BuildExpectations {
                 let bin = dist.binary(result_bin.idx);
 
                 // compute linkage for the binary
-                self.compute_linkage(dist, manifest, result_bin, &bin.target)?;
+                self.compute_linkage_and_sign(dist, manifest, result_bin, &bin.target)?;
 
                 // copy files to their final homes
                 self.copy_assets(result_bin, bin)?;
@@ -189,8 +189,8 @@ impl BuildExpectations {
         Ok(())
     }
 
-    // Compute the linkage info for this binary
-    fn compute_linkage(
+    // Compute the linkage info for this binary and sign it
+    fn compute_linkage_and_sign(
         &self,
         dist: &DistGraph,
         manifest: &mut DistManifest,
@@ -215,7 +215,7 @@ impl BuildExpectations {
             });
             linkage
         } else {
-            determine_linkage(src_path, target)?
+            determine_linkage(src_path, target)
         };
 
         let bin = dist.binary(src.idx);

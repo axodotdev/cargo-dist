@@ -8,7 +8,7 @@ use serde::Deserialize;
 use crate::{
     config::{
         self, CiStyle, CompressionImpl, Config, DistMetadata, HostingStyle, InstallPathStrategy,
-        InstallerStyle, PublishStyle, ZipStyle,
+        InstallerStyle, MacPkgConfig, PublishStyle, ZipStyle,
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -462,6 +462,7 @@ fn get_new_dist_metadata(
             pr_run_mode: None,
             allow_dirty: None,
             ssldotcom_windows_sign: None,
+            macos_sign: None,
             github_attestations: None,
             msvc_crt_static: None,
             hosting: None,
@@ -476,6 +477,7 @@ fn get_new_dist_metadata(
             package_libraries: None,
             install_libraries: None,
             github_build_setup: None,
+            mac_pkg_config: None,
         }
     };
 
@@ -525,29 +527,8 @@ fn get_new_dist_metadata(
             }
         }
     } else {
-        let prompt = format!(
-            r#"looks like you deleted the cargo-dist-version key, add it back?
-    this is the version of cargo-dist your releases should use
-    (you're currently running {})"#,
-            current_version
-        );
-        let default = true;
-
-        let response = if args.yes {
-            default
-        } else {
-            let res = Confirm::with_theme(&theme)
-                .with_prompt(prompt)
-                .default(default)
-                .interact()?;
-            eprintln!();
-            res
-        };
-        if response {
-            meta.cargo_dist_version = Some(current_version);
-        } else {
-            // Not recommended but technically ok...
-        }
+        // Really not allowed, so just force them onto the current version
+        meta.cargo_dist_version = Some(current_version);
     }
 
     {
@@ -712,6 +693,7 @@ fn get_new_dist_metadata(
                 InstallerStyle::Npm => "npm",
                 InstallerStyle::Homebrew => "homebrew",
                 InstallerStyle::Msi => "msi",
+                InstallerStyle::Pkg => "pkg",
             });
         }
 
@@ -980,6 +962,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         pr_run_mode,
         allow_dirty,
         ssldotcom_windows_sign,
+        macos_sign,
         github_attestations,
         msvc_crt_static,
         hosting,
@@ -990,6 +973,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         github_release,
         package_libraries,
         install_libraries,
+        mac_pkg_config,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -1036,6 +1020,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "installers",
         "# The installers to generate for each app\n",
         installers.as_ref(),
+    );
+
+    apply_optional_mac_pkg(
+        table,
+        "mac-pkg-config",
+        "\n# Configuration for the Mac .pkg installer\n",
+        mac_pkg_config.as_ref(),
     );
 
     apply_optional_value(
@@ -1322,6 +1313,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_optional_value(
         table,
+        "macos-sign",
+        "# Whether to sign macOS executables\n",
+        *macos_sign,
+    );
+
+    apply_optional_value(
+        table,
         "github-attestations",
         "# Whether to enable GitHub Attestations\n",
         *github_attestations,
@@ -1438,6 +1436,42 @@ where
         } else {
             apply_string_list(table, key, desc, Some(items))
         }
+    } else {
+        table.remove(key);
+    }
+}
+
+/// Similar to [`apply_optional_value`][] but specialized to `MacPkgConfig`, since we're not able to work with structs dynamically
+fn apply_optional_mac_pkg(
+    table: &mut toml_edit::Table,
+    key: &str,
+    desc: &str,
+    val: Option<&MacPkgConfig>,
+) {
+    if let Some(mac_pkg_config) = val {
+        let MacPkgConfig {
+            identifier,
+            install_location,
+        } = mac_pkg_config;
+
+        let new_item = &mut table[key];
+        let mut new_table = toml_edit::table();
+        if let Some(new_table) = new_table.as_table_mut() {
+            apply_optional_value(
+                new_table,
+                "identifier",
+                "# A unique identifier, in tld.domain.package format\n",
+                Some(identifier),
+            );
+            apply_optional_value(
+                new_table,
+                "install-location",
+                "# The location to which the software should be installed\n",
+                install_location.as_ref(),
+            );
+            new_table.decor_mut().set_prefix(desc);
+        }
+        new_item.or_insert(new_table);
     } else {
         table.remove(key);
     }

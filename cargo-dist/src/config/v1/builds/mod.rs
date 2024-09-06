@@ -14,6 +14,8 @@ pub struct WorkspaceBuildConfig {
     pub cargo: WorkspaceCargoBuildConfig,
     /// whether to sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// whether to sign macos binaries with apple
+    pub macos_sign: bool,
 }
 
 /// app-scoped build config
@@ -34,6 +36,8 @@ pub struct BuildConfigInheritable {
     pub common: CommonBuildConfig,
     /// whether to sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// whether to sign macos binaries with apple
+    pub macos_sign: Option<bool>,
     /// cargo builds
     pub cargo: Option<CargoBuildLayer>,
     /// generic builds
@@ -53,6 +57,10 @@ pub struct BuildLayer {
     /// Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+
+    /// whether to sign macos binaries with apple
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macos_sign: Option<bool>,
 
     /// cargo builds
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -74,6 +82,7 @@ impl BuildConfigInheritable {
             generic: None,
             system_dependencies: Default::default(),
             ssldotcom_windows_sign: None,
+            macos_sign: None,
         }
     }
     /// get defaults for a workspace
@@ -84,6 +93,7 @@ impl BuildConfigInheritable {
             generic: None,
             system_dependencies: Default::default(),
             ssldotcom_windows_sign: None,
+            macos_sign: None,
         }
     }
     /// apply inheritance to get final workspace config
@@ -95,6 +105,7 @@ impl BuildConfigInheritable {
             common,
             cargo,
             ssldotcom_windows_sign,
+            macos_sign,
             // local-only
             generic: _,
             system_dependencies: _,
@@ -105,6 +116,7 @@ impl BuildConfigInheritable {
         }
         WorkspaceBuildConfig {
             cargo: cargo_out,
+            macos_sign: macos_sign.unwrap_or(false),
             ssldotcom_windows_sign,
         }
     }
@@ -121,6 +133,7 @@ impl BuildConfigInheritable {
             system_dependencies,
             // local-only
             ssldotcom_windows_sign: _,
+            macos_sign: _,
         } = self;
         let mut cargo_out = AppCargoBuildConfig::defaults_for_package(workspaces, pkg_idx, &common);
         if let Some(cargo) = cargo {
@@ -149,6 +162,7 @@ impl ApplyLayer for BuildConfigInheritable {
             generic,
             system_dependencies,
             ssldotcom_windows_sign,
+            macos_sign,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -157,6 +171,7 @@ impl ApplyLayer for BuildConfigInheritable {
         self.system_dependencies.apply_val(system_dependencies);
         self.ssldotcom_windows_sign
             .apply_opt(ssldotcom_windows_sign);
+        self.macos_sign.apply_opt(macos_sign);
     }
 }
 

@@ -10,12 +10,13 @@ use hosts::github::GithubHostLayer;
 use hosts::{CommonHostLayer, HostLayer};
 use installers::homebrew::HomebrewInstallerLayer;
 use installers::npm::NpmInstallerLayer;
+use installers::pkg::PkgInstallerLayer;
 use installers::{CommonInstallerLayer, InstallerLayer};
 use layer::BoolOr;
 use publishers::{CommonPublisherLayer, PublisherLayer};
 
 use super::v0::DistMetadata;
-use super::{v1::*, CiStyle, HostingStyle, InstallerStyle, JobStyle, PublishStyle};
+use super::{v1::*, CiStyle, HostingStyle, InstallerStyle, JobStyle, MacPkgConfig, PublishStyle};
 
 impl DistMetadata {
     /// Convert the v0 config format to v1
@@ -66,6 +67,8 @@ impl DistMetadata {
             github_releases_submodule_path,
             github_release,
             ssldotcom_windows_sign,
+            macos_sign,
+            mac_pkg_config,
             github_attestations,
             hosting,
             extra_artifacts,
@@ -127,6 +130,7 @@ impl DistMetadata {
         let build_layer = needs_build_layer.then_some(BuildLayer {
             common: CommonBuildLayer {},
             ssldotcom_windows_sign,
+            macos_sign,
             system_dependencies,
             cargo: cargo_layer,
             generic: None,
@@ -271,6 +275,18 @@ impl DistMetadata {
             });
         let msi_installer_layer =
             list_to_bool_layer(is_global, &installers, InstallerStyle::Msi, || None);
+        let pkg_installer_layer =
+            list_to_bool_layer(is_global, &installers, InstallerStyle::Pkg, || {
+                let MacPkgConfig {
+                    identifier,
+                    install_location,
+                } = mac_pkg_config?;
+                Some(PkgInstallerLayer {
+                    common: CommonInstallerLayer::default(),
+                    identifier: Some(identifier),
+                    install_location,
+                })
+            });
         let powershell_installer_layer =
             list_to_bool_layer(is_global, &installers, InstallerStyle::Powershell, || None);
         let shell_installer_layer =
@@ -280,6 +296,7 @@ impl DistMetadata {
             || msi_installer_layer.is_some()
             || powershell_installer_layer.is_some()
             || shell_installer_layer.is_some()
+            || pkg_installer_layer.is_some()
             || install_path.is_some()
             || install_success_msg.is_some()
             || install_libraries.is_some()
@@ -297,6 +314,7 @@ impl DistMetadata {
             npm: npm_installer_layer,
             powershell: powershell_installer_layer,
             shell: shell_installer_layer,
+            pkg: pkg_installer_layer,
             updater: install_updater,
         });
 

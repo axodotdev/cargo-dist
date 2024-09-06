@@ -56,7 +56,7 @@ impl<'a> DistGraphBuilder<'a> {
                     build_command: package
                         .build_command
                         .clone()
-                        .expect("A build command is mandatory for generic builds"),
+                        .expect("A build command is mandatory for non-cargo builds"),
                 }));
             }
         }
@@ -144,7 +144,7 @@ fn run_build(
     let command_name = command_string
         .first()
         .expect("The build command must contain at least one entry");
-    let mut command = Cmd::new(command_name, format!("exec generic build: {command_name}"));
+    let mut command = Cmd::new(command_name, format!("exec build: {command_name}"));
     command.current_dir(working_dir);
     command.stdout_to_stderr();
     for arg in args {
@@ -187,7 +187,7 @@ pub fn build_generic_target(
     target: &GenericBuildStep,
 ) -> DistResult<()> {
     eprintln!(
-        "building generic target ({} via {})",
+        "building target ({} via {})",
         target.target_triple,
         target.build_command.join(" ")
     );

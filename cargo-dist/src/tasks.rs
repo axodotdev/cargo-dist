@@ -66,6 +66,7 @@ use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
 use crate::backend::installer::homebrew::to_homebrew_license_format;
+use crate::backend::installer::macpkg::PkgInstallerInfo;
 use crate::config::v1::builds::cargo::AppCargoBuildConfig;
 use crate::config::v1::ci::CiConfig;
 use crate::config::v1::installers::CommonInstallerConfig;
@@ -996,6 +997,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             &tools.cargo.host_target,
             &dist_dir,
             config.builds.ssldotcom_windows_sign.clone(),
+            config.builds.macos_sign,
         )?;
         let github_attestations = config
             .hosts
@@ -1678,14 +1680,17 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         require_nonempty_installer(release, config)?;
         let release_id = &release.id;
-        let Some(download_url) = self
+        let schema_release = self
             .manifest
             .release_by_name(&release.app_name)
-            .and_then(|r| r.artifact_download_url())
-        else {
-            warn!("skipping shell installer: couldn't compute a URL to download artifacts from");
-            return Ok(());
-        };
+            .expect("couldn't find the release!?");
+        let install_dir_env_var = schema_release
+            .install_dir_env_var
+            .to_owned()
+            .expect("couldn't determine app-specific environment variable!?");
+        let download_url = schema_release
+            .artifact_download_url()
+            .expect("couldn't compute a URL to download artifacts from!?");
         let artifact_name = format!("{release_id}-installer.sh");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
@@ -1739,6 +1744,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: config.install_libraries.clone(),
                 runtime_conditions,
                 platform_support: None,
+                install_dir_env_var,
             })),
             is_global: true,
         };
@@ -1761,14 +1767,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             &release.id
         };
-        let Some(download_url) = self
+        let download_url = self
             .manifest
             .release_by_name(&release.id)
             .and_then(|r| r.artifact_download_url())
-        else {
-            warn!("skipping Homebrew formula: couldn't compute a URL to download artifacts from");
-            return Ok(());
-        };
+            .expect("couldn't compute a URL to download artifacts from!?");
 
         let artifact_name = format!("{formula}.rb");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
@@ -1902,6 +1905,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_libraries: config.install_libraries.clone(),
                     runtime_conditions,
                     platform_support: None,
+                    // Not actually needed for this installer type
+                    install_dir_env_var: String::new(),
                 },
                 install_libraries: config.install_libraries.clone(),
             })),
@@ -1924,20 +1929,21 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         require_nonempty_installer(release, config)?;
         let release_id = &release.id;
-        let Some(download_url) = self
+        let schema_release = self
             .manifest
             .release_by_name(&release.app_name)
-            .and_then(|r| r.artifact_download_url())
-        else {
-            warn!(
-                "skipping powershell installer: couldn't compute a URL to download artifacts from"
-            );
-            return Ok(());
-        };
+            .expect("couldn't find the release!?");
+        let install_dir_env_var = schema_release
+            .install_dir_env_var
+            .to_owned()
+            .expect("couldn't determine app-specific environment variable!?");
+        let download_url = schema_release
+            .artifact_download_url()
+            .expect("couldn't compute a URL to download artifacts from!?");
         let artifact_name = format!("{release_id}-installer.ps1");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
-        let hint = format!(r#"powershell -c "irm {installer_url} | iex""#);
+        let hint = format!(r#"powershell -ExecutionPolicy ByPass -c "irm {installer_url} | iex""#);
         let desc = "Install prebuilt binaries via powershell script".to_owned();
 
         // Gather up the bundles the installer supports
@@ -1983,6 +1989,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: config.install_libraries.clone(),
                 runtime_conditions: RuntimeConditions::default(),
                 platform_support: None,
+                install_dir_env_var,
             })),
             is_global: true,
         };
@@ -2001,14 +2008,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         require_nonempty_installer(release, config)?;
         let release_id = &release.id;
-        let Some(download_url) = self
+        let download_url = self
             .manifest
             .release_by_name(&release.app_name)
             .and_then(|r| r.artifact_download_url())
-        else {
-            warn!("skipping npm installer: couldn't compute a URL to download artifacts from");
-            return Ok(());
-        };
+            .expect("couldn't compute a URL to download artifacts from!?");
 
         let app_name = config.package.clone();
         let npm_package_name = if let Some(scope) = &config.scope {
@@ -2098,6 +2102,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_libraries: config.install_libraries.clone(),
                     runtime_conditions,
                     platform_support: None,
+                    // Not actually needed for this installer type
+                    install_dir_env_var: String::new(),
                 },
             })),
             is_global: true,
@@ -2145,7 +2151,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 if let Some((existing_spec, _)) = &package_info {
                     // cargo-wix doesn't clearly support multi-package, so bail
                     if existing_spec != &binary.pkg_spec {
-                        return Err(DistError::MultiPackageMsi {
+                        return Err(DistError::MultiPackage {
                             artifact_name,
                             spec1: existing_spec.clone(),
                             spec2: binary.pkg_spec.clone(),
@@ -2156,7 +2162,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 }
             }
             let Some((pkg_spec, pkg_idx)) = package_info else {
-                return Err(DistError::NoPackageMsi { artifact_name })?;
+                return Err(DistError::NoPackage { artifact_name })?;
             };
             let manifest_path = self.workspaces.package(pkg_idx).manifest_path.clone();
             let wxs_path = manifest_path
@@ -2185,6 +2191,112 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     file_path: artifact_path.clone(),
                     wxs_path,
                     manifest_path,
+                })),
+                is_global: false,
+            };
+
+            // Register the artifact to various things
+            let installer_idx = self.add_local_artifact(variant_idx, installer_artifact);
+            for binary_idx in binaries {
+                let binary = self.binary(binary_idx);
+                self.require_binary(
+                    installer_idx,
+                    variant_idx,
+                    binary_idx,
+                    dir_path.join(&binary.file_name),
+                );
+            }
+            if checksum != ChecksumStyle::False {
+                self.add_artifact_checksum(variant_idx, installer_idx, checksum);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn add_pkg_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
+        if !self.local_artifacts_enabled() {
+            return Ok(());
+        }
+
+        // Clone info we need from the release to avoid borrowing across the loop
+        let release = self.release(to_release);
+        let Some(config) = release.config.installers.pkg.clone() else {
+            return Ok(());
+        };
+        require_nonempty_installer(release, &config)?;
+        let version = release.version.clone();
+        let fragments = release.platform_support.fragments();
+
+        let variants = release.variants.clone();
+        let checksum = self.inner.config.artifacts.checksum;
+
+        // Make a pkg for every darwin platform
+        for variant_idx in variants {
+            let variant = self.variant(variant_idx);
+            let binaries = variant.binaries.clone();
+            let bin_aliases = BinaryAliases(config.bin_aliases.clone());
+            let target = &variant.target;
+            if !target.contains("darwin") {
+                continue;
+            }
+
+            let variant_id = &variant.id;
+            let artifact_name = format!("{variant_id}.pkg");
+            let artifact_path = self.inner.dist_dir.join(&artifact_name);
+            let dir_name = format!("{variant_id}_pkg");
+            let dir_path = self.inner.dist_dir.join(&dir_name);
+
+            // Compute which package we're actually building, based on the binaries
+            let mut package_info: Option<(String, PackageIdx)> = None;
+            for &binary_idx in &binaries {
+                let binary = self.binary(binary_idx);
+                if let Some((existing_spec, _)) = &package_info {
+                    // we haven't set ourselves up to bundle multiple packages yet
+                    if existing_spec != &binary.pkg_spec {
+                        return Err(DistError::MultiPackage {
+                            artifact_name,
+                            spec1: existing_spec.clone(),
+                            spec2: binary.pkg_spec.clone(),
+                        })?;
+                    }
+                } else {
+                    package_info = Some((binary.pkg_spec.clone(), binary.pkg_idx));
+                }
+            }
+
+            let Some(artifact) = fragments
+                .clone()
+                .into_iter()
+                .find(|a| a.target_triple == variant.target)
+            else {
+                return Err(DistError::NoPackage { artifact_name })?;
+            };
+
+            let bin_aliases = bin_aliases.for_target(&variant.target);
+
+            // Gather up the bundles the installer supports
+            let installer_artifact = Artifact {
+                id: artifact_name,
+                target_triples: vec![target.clone()],
+                file_path: artifact_path.clone(),
+                required_binaries: FastMap::new(),
+                archive: Some(Archive {
+                    with_root: None,
+                    dir_path: dir_path.clone(),
+                    zip_style: ZipStyle::TempDir,
+                    static_assets: vec![],
+                }),
+                checksum: None,
+                kind: ArtifactKind::Installer(InstallerImpl::Pkg(PkgInstallerInfo {
+                    file_path: artifact_path.clone(),
+                    artifact,
+                    package_dir: dir_path.clone(),
+                    // Un-hardcode this
+                    identifier: config.identifier.clone(),
+                    install_location: config.install_location.clone(),
+                    version: version.to_string(),
+                    bin_aliases,
                 })),
                 is_global: false,
             };
@@ -2359,6 +2471,63 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
     }
 
+    fn validate_distable_packages(&self, announcing: &AnnouncementTag) -> DistResult<()> {
+        for release in &announcing.rust_releases {
+            let package = self.workspaces.package(release.package_idx);
+            let workspace_idx = self.workspaces.workspace_for_package(release.package_idx);
+            let package_workspace = self.workspaces.workspace(workspace_idx);
+            let package_kind = package_workspace.kind;
+            if announcing.package.is_none() {
+                match package_kind {
+                    axoproject::WorkspaceKind::Generic | axoproject::WorkspaceKind::Javascript => {
+                        if let Some(build_command) = &package.build_command {
+                            if build_command.len() == 1
+                                && build_command.first().unwrap().contains(' ')
+                            {
+                                return Err(DistError::SusBuildCommand {
+                                    manifest: package
+                                        .dist_manifest_path
+                                        .clone()
+                                        .unwrap_or_else(|| package.manifest_path.clone()),
+                                    command: build_command[0].clone(),
+                                });
+                            } else if build_command.is_empty() {
+                                return Err(DistError::NoBuildCommand {
+                                    manifest: package
+                                        .dist_manifest_path
+                                        .clone()
+                                        .unwrap_or_else(|| package.manifest_path.clone()),
+                                });
+                            }
+                        } else if package_kind == axoproject::WorkspaceKind::Javascript {
+                            return Err(DistError::NoDistScript {
+                                manifest: package.manifest_path.clone(),
+                            });
+                        } else {
+                            return Err(DistError::NoBuildCommand {
+                                manifest: package
+                                    .dist_manifest_path
+                                    .clone()
+                                    .unwrap_or_else(|| package.manifest_path.clone()),
+                            });
+                        }
+                    }
+                    axoproject::WorkspaceKind::Rust => {
+                        if package.build_command.is_some() {
+                            return Err(DistError::UnexpectedBuildCommand {
+                                manifest: package
+                                    .dist_manifest_path
+                                    .clone()
+                                    .unwrap_or_else(|| package.manifest_path.clone()),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn compute_releases(
         &mut self,
         cfg: &Config,
@@ -2433,6 +2602,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     InstallerStyle::Homebrew,
                     InstallerStyle::Npm,
                     InstallerStyle::Msi,
+                    InstallerStyle::Pkg,
                 ]
             } else {
                 &cfg.installers[..]
@@ -2445,6 +2615,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     InstallerStyle::Homebrew => self.add_homebrew_installer(release)?,
                     InstallerStyle::Npm => self.add_npm_installer(release)?,
                     InstallerStyle::Msi => self.add_msi_installer(release)?,
+                    InstallerStyle::Pkg => self.add_pkg_installer(release)?,
                 }
             }
         }
@@ -2620,6 +2791,8 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
 
     // Figure out what packages we're announcing
     let announcing = announce::select_tag(&mut graph, &cfg.tag_settings)?;
+
+    graph.validate_distable_packages(&announcing)?;
 
     // Immediately check if there's other manifests kicking around that provide info
     // we don't want to recompute (lets us move towards more of an architecture where

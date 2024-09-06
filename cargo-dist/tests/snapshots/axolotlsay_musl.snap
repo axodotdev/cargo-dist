@@ -481,16 +481,26 @@ install() {
     local _install_dir_expr
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
+    # Forces the install to occur at this path, not the default
+    local _force_install_dir
+
+    # Check the newer app-specific variable before falling back
+    # to the older generic one
+    if [ -n "${AXOLOTLSAY_INSTALL_DIR:-}" ]; then
+        _force_install_dir="$AXOLOTLSAY_INSTALL_DIR"
+    elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
+        _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+    fi
 
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
-    if [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
-        _install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
-        _lib_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR/bin"
-        _receipt_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _env_script_path="$CARGO_DIST_FORCE_INSTALL_DIR/env"
-        _install_dir_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/bin")"
-        _env_script_path_expr="$(replace_home "$CARGO_DIST_FORCE_INSTALL_DIR/env")"
+    if [ -n "${_force_install_dir:-}" ]; then
+        _install_dir="$_force_install_dir/bin"
+        _lib_install_dir="$_force_install_dir/bin"
+        _receipt_install_dir="$_force_install_dir"
+        _env_script_path="$_force_install_dir/env"
+        _install_dir_expr="$(replace_home "$_force_install_dir/bin")"
+        _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
     fi
     if [ -z "${_install_dir:-}" ]; then
         # first try $CARGO_HOME, then fallback to $HOME/.cargo
@@ -1733,7 +1743,7 @@ install(false);
         "axolotlsay": "run-axolotlsay.js"
       },
       "dependencies": {
-        "axios": "^1.7.4",
+        "axios": "^1.7.7",
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
         "detect-libc": "^2.0.3",
@@ -1827,9 +1837,9 @@ install(false);
         "form-data": "^4.0.0",
         "proxy-from-env": "^1.1.0"
       },
-      "integrity": "sha512-DukmaFRnY6AzAALSH4J2M3k6PkaC+MfaAGdEERRWcC9q3/TWQwLpHR8ZRLKTdQ3aBDL64EdluRDjJqKw+BPZEw==",
-      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.4.tgz",
-      "version": "1.7.4"
+      "integrity": "sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==",
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.7.tgz",
+      "version": "1.7.7"
     },
     "node_modules/axios-proxy-builder": {
       "dependencies": {
@@ -2522,7 +2532,7 @@ install(false);
     "axolotlsay": "run-axolotlsay.js"
   },
   "dependencies": {
-    "axios": "^1.7.4",
+    "axios": "^1.7.7",
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
     "detect-libc": "^2.0.3",
@@ -2613,6 +2623,7 @@ run("axolotlsay");
     {
       "app_name": "axolotlsay",
       "app_version": "0.2.2",
+      "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
       "display_name": "axolotlsay",
       "display": true,
       "artifacts": [

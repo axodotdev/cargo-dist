@@ -22,7 +22,12 @@ class AxolotlBrew < Formula
   end
   license any_of: ["MIT", "Apache-2.0"]
 
-  BINARY_ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-pc-windows-gnu": {}, "x86_64-unknown-linux-gnu": {}}
+  BINARY_ALIASES = {
+    "aarch64-apple-darwin": {},
+    "x86_64-apple-darwin": {},
+    "x86_64-pc-windows-gnu": {},
+    "x86_64-unknown-linux-gnu": {}
+  }
 
   def target_triple
     cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
@@ -75,6 +80,7 @@ end
     {
       "app_name": "axolotlsay",
       "app_version": "0.2.2",
+      "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
       "display_name": "axolotlsay",
       "display": true,
       "artifacts": [
@@ -647,7 +653,8 @@ jobs:
 
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
             brew update
-            brew style --fix "Formula/${filename}" || true
+            # We avoid reformatting user-provided data such as the app description and homepage.
+            brew style --except-cops FormulaAudit/Homepage,FormulaAudit/Desc,FormulaAuditStrict --fix "Formula/${filename}" || true
 
             git add "Formula/${filename}"
             git commit -m "${name} ${version}"
