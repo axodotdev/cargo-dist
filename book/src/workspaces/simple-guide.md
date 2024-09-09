@@ -85,7 +85,7 @@ Now that we've run `cargo dist init`, all we need to do is commit the results an
 
 ```sh
 git add .
-git commit -am "wow cool new cargo-dist CI!"
+git commit -am 'wow cool new cargo-dist CI!'
 git push
 ```
 

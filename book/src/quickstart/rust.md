@@ -24,7 +24,7 @@ Since this is a quickstart, we'll pass `--yes` to auto-accept all defaults on ou
 # setup cargo-dist in your project (--yes to accept defaults)
 cargo dist init --yes
 git add .
-git commit -am "chore: wow shiny new cargo-dist CI!"
+git commit -am 'chore: wow shiny new cargo-dist CI!'
 ```
 
 **It's very common for `cargo dist init` to return an error about the "repository" URLs set in your Cargo.toml. If this happens, no work will be lost.** You can just follow the instructions in the error and rerun `cargo dist init` again and it will pick up where you left off.**
