@@ -497,7 +497,7 @@ fn distribute_targets_to_runners_split<'a>(
 /// A string representing a Github Runner
 type GithubRunner = String;
 /// The Github Runner to use for Linux
-const GITHUB_LINUX_RUNNER: &str = "ubuntu-20.04";
+const GITHUB_LINUX_RUNNER: &str = "ubuntu-24.04";
 /// The Github Runner to use for Intel macos
 const GITHUB_MACOS_INTEL_RUNNER: &str = "macos-13";
 /// The Github Runner to use for Apple Silicon macos
