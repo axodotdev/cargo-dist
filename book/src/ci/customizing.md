@@ -11,7 +11,7 @@ cargo-dist's generated CI configuration can be extended in several ways: it can 
 
 Sometimes, you may need extra packages from the system package manager to be installed before in the builder before cargo-dist begins building your software. Cargo-dist can do this for you by adding the `dependencies` setting to your dist config. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them.
 
-By default, we run Apple silicon (aarch64) builds for macOS on the `macos-12` runner, which is Intel-based. If your build process needs to link against C libraries from Homebrew using the `dependencies` feature, you will need to switch to an Apple silicon-native runner to ensure that you have access to Apple silicon-native dependencies from Homebrew. You can do this using the [custom runners][custom-runners] feature. Currently, `macos-14` is the oldest (and only) GitHub-provided runner for Apple silicon.
+By default, we run Apple silicon (aarch64) builds for macOS on the `macos-13` runner, which is Intel-based. If your build process needs to link against C libraries from Homebrew using the `dependencies` feature, you will need to switch to an Apple silicon-native runner to ensure that you have access to Apple silicon-native dependencies from Homebrew. You can do this using the [custom runners][custom-runners] feature. Currently, `macos-14` is the oldest (and only) GitHub-provided runner for Apple silicon.
 
 Sometimes, you may want to make sure your users also have these dependencies available when they install your software. If you use a package manager-based installer, cargo-dist has the ability to specify these dependencies. By default, cargo-dist will examine your program to try to detect which dependencies it thinks will be necessary. At the moment, [Homebrew][homebrew] is the only supported package manager installer. You can also specify these dependencies manually.
 
@@ -89,8 +89,8 @@ Running `cargo-dist init` for your tool will update your GitHub Actions configur
 By default, cargo-dist uses the following runners:
 
 * Linux (x86_64): `ubuntu-20.04`
-* macOS (x86_64): `macos-12`
-* macOS (Apple Silicon): `macos-12`
+* macOS (x86_64): `macos-13`
+* macOS (Apple Silicon): `macos-13`
 * Windows (x86_64): `windows-2019`
 
 It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the [`github-custom-runners`][config-github-custom-runners] configuration setting in your dist config. Here's an example which adds support for Linux (aarch64) using runners from [Buildjet](https://buildjet.com/for-github-actions):
