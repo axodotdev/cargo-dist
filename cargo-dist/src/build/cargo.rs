@@ -61,7 +61,7 @@ impl<'a> DistGraphBuilder<'a> {
             // on. Not doing that is basically rolling some dice and hoping the user already
             // has it installed, which isn't great. We should support redists eventually,
             // but for now this hacky global flag is here to let you roll dice.
-            if self.inner.msvc_crt_static && target.contains("windows-msvc") {
+            if self.inner.config.builds.cargo.msvc_crt_static && target.contains("windows-msvc") {
                 rustflags.push_str(" -Ctarget-feature=+crt-static");
             }
 
@@ -85,7 +85,7 @@ impl<'a> DistGraphBuilder<'a> {
                 }
             }
 
-            if self.inner.precise_builds {
+            if self.inner.precise_cargo_builds {
                 // `(target, package, features)` uniquely identifies a build we need to do,
                 // so group all the binaries under those buckets and add a build for each one
                 // (targets is handled by the loop we're in)

@@ -1716,6 +1716,8 @@ try {
       "app_name": "akaikatana-repack",
       "app_version": "0.2.0",
       "install_dir_env_var": "AKAIKATANA_REPACK_INSTALL_DIR",
+      "display_name": "akaikatana-repack",
+      "display": true,
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",

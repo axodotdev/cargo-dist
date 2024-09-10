@@ -1662,6 +1662,8 @@ try {
       "app_name": "axolotlsay",
       "app_version": "0.2.2",
       "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
+      "display_name": "axolotlsay",
+      "display": true,
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",

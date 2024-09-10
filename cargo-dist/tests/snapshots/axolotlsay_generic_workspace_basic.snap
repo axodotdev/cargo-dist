@@ -3356,6 +3356,8 @@ try {
       "app_name": "axolotlsay",
       "app_version": "0.10.2",
       "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
+      "display_name": "axolotlsay",
+      "display": true,
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",
@@ -3383,6 +3385,8 @@ try {
       "app_name": "axolotlsay-js",
       "app_version": "0.10.2",
       "install_dir_env_var": "AXOLOTLSAY_JS_INSTALL_DIR",
+      "display_name": "axolotlsay-js",
+      "display": true,
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",

@@ -185,7 +185,7 @@ impl PlatformSupport {
         // Gather up all the fetchable archives
         for &variant_idx in &release.variants {
             // Compute the updater this variant *would* make *if* it were built
-            let updater_idx = if dist.inner.install_updater {
+            let updater_idx = if dist.inner.config.installers.updater {
                 let updater_artifact = dist.make_updater_for_variant(variant_idx);
                 let updater = FetchableUpdater {
                     id: updater_artifact.id.clone(),

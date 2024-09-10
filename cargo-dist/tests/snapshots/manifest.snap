@@ -16,6 +16,8 @@ stdout:
       "app_name": "cargo-dist",
       "app_version": "1.0.0-FAKEVERSION",
       "install_dir_env_var": "CARGO_DIST_INSTALL_DIR",
+      "display_name": "cargo-dist",
+      "display": true,
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",

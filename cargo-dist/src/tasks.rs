@@ -65,11 +65,14 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::backend::installer::{homebrew::to_homebrew_license_format, macpkg::PkgInstallerInfo};
-use crate::config::{
-    DependencyKind, DirtyMode, ExtraArtifact, GithubPermissionMap, GithubReleasePhase,
-    LibraryStyle, ProductionMode, SystemDependencies,
-};
+use crate::backend::installer::homebrew::to_homebrew_license_format;
+use crate::backend::installer::macpkg::PkgInstallerInfo;
+use crate::config::v1::builds::cargo::AppCargoBuildConfig;
+use crate::config::v1::ci::CiConfig;
+use crate::config::v1::installers::CommonInstallerConfig;
+use crate::config::v1::publishers::PublisherConfig;
+use crate::config::v1::{app_config, workspace_config, AppConfig, WorkspaceConfig};
+use crate::config::{DependencyKind, DirtyMode, LibraryStyle};
 use crate::linkage::determine_build_environment;
 use crate::net::ClientSettings;
 use crate::platform::{PlatformSupport, RuntimeConditions};
@@ -85,8 +88,8 @@ use crate::{
         templates::Templates,
     },
     config::{
-        self, ArtifactMode, ChecksumStyle, CiStyle, CompressionImpl, Config, DistMetadata,
-        HostingStyle, InstallPathStrategy, InstallerStyle, PublishStyle, ZipStyle,
+        self, ArtifactMode, ChecksumStyle, CompressionImpl, Config, HostingStyle, InstallerStyle,
+        ZipStyle,
     },
     errors::{DistError, DistResult},
 };
@@ -189,6 +192,14 @@ pub struct DistGraph {
     pub system_id: SystemId,
     /// Whether it looks like `cargo dist init` has been run
     pub is_init: bool,
+    /// What to allow to be dirty
+    pub allow_dirty: DirtyMode,
+    /// Homebrew tap all packages agree on
+    pub global_homebrew_tap: Option<String>,
+    /// builtin publish jobs all packages agree on
+    pub global_publishers: Option<PublisherConfig>,
+    /// Whether we can just build the workspace or need to build each package
+    pub precise_cargo_builds: bool,
 
     /// Info about the tools we're using to build
     pub tools: Tools,
@@ -205,44 +216,8 @@ pub struct DistGraph {
     pub workspace_dir: Utf8PathBuf,
     /// cargo-dist's target dir (generally nested under `target_dir`).
     pub dist_dir: Utf8PathBuf,
-    /// Whether to bother using --package instead of --workspace when building apps
-    pub precise_builds: bool,
-    /// Whether to try to merge otherwise-parallelizable tasks the same machine
-    pub merge_tasks: bool,
-    /// Whether failing tasks should make us give up on all other tasks
-    pub fail_fast: bool,
-    /// Whether to cache builds in CI
-    pub cache_builds: bool,
-    /// Whether CI should include auto-generated local artifacts tasks
-    pub build_local_artifacts: bool,
-    /// Whether releases should be triggered by explicit dispatch, instead of tags
-    pub dispatch_releases: bool,
-    /// Whether to create a github release or edit an existing draft
-    pub create_release: bool,
-    /// Trigger releases with pushes to this branch, instead of tags
-    pub release_branch: Option<String>,
-    /// \[unstable\] if Some, sign binaries with ssl.com
-    pub ssldotcom_windows_sign: Option<ProductionMode>,
-    /// Whether to enable macOS codesigning
-    pub macos_sign: bool,
-    /// Whether to enable GitHub Attestations
-    pub github_attestations: bool,
-    /// Path relative to the github-ci-dir for steps to include
-    pub github_build_setup: Option<String>,
-    /// The desired cargo-dist version for handling this project
-    pub desired_cargo_dist_version: Option<Version>,
-    /// The desired rust toolchain for handling this project
-    pub desired_rust_toolchain: Option<String>,
-    /// Styles of CI we want to support
-    pub ci_style: Vec<CiStyle>,
-    /// Which actions to run on pull requests.
-    ///
-    /// "upload" will build and upload release artifacts, while "plan" will
-    /// only plan out the release without running builds and "skip" will disable
-    /// pull request runs entirely.
-    pub pr_run_mode: cargo_dist_schema::PrRunMode,
-    /// Generate targets to skip configuration up to date checks for
-    pub allow_dirty: DirtyMode,
+    /// misc workspace-global config
+    pub config: WorkspaceConfig,
     /// Targets we need to build (local artifacts)
     pub local_build_steps: Vec<BuildStep>,
     /// Targets we need to build (global artifacts)
@@ -257,44 +232,10 @@ pub struct DistGraph {
     pub releases: Vec<Release>,
     /// Info about CI backends
     pub ci: CiInfo,
-    /// List of plan jobs to run
-    pub plan_jobs: Vec<String>,
-    /// List of local artifacts jobs to run
-    pub local_artifacts_jobs: Vec<String>,
-    /// List of global artifacts jobs to run
-    pub global_artifacts_jobs: Vec<String>,
-    /// List of host jobs to run
-    pub host_jobs: Vec<String>,
-    /// List of publish jobs to run
-    pub publish_jobs: Vec<PublishStyle>,
-    /// Extra user-specified publish jobs to run
-    pub user_publish_jobs: Vec<String>,
-    /// List of post-announce jobs to run
-    pub post_announce_jobs: Vec<String>,
-    /// A GitHub repo to publish the Homebrew formula to
-    pub tap: Option<String>,
-    /// Whether msvc targets should statically link the crt
-    pub msvc_crt_static: bool,
     /// List of hosting providers to use
     pub hosting: Option<HostingInfo>,
-    /// Additional artifacts to build and upload
-    pub extra_artifacts: Vec<ExtraArtifact>,
-    /// Custom GitHub runners, mapped by triple target
-    pub github_custom_runners: BTreeMap<String, String>,
-    /// Permissions each custom job has
-    pub github_custom_job_permissions: BTreeMap<String, GithubPermissionMap>,
     /// LIES ALL LIES
     pub local_builds_are_lies: bool,
-    /// Prefix git tags must include to be picked up (also renames release.yml)
-    pub tag_namespace: Option<String>,
-    /// Whether to install updaters alongside with binaries
-    pub install_updater: bool,
-    /// Publish GitHub Releases to this other repo
-    pub github_releases_repo: Option<config::GithubRepoPair>,
-    /// Read the commit to be tagged from the submodule at this path
-    pub github_releases_submodule_path: Option<String>,
-    /// Which phase to create a GitHub release at
-    pub github_release: GithubReleasePhase,
     /// HTTP client settings
     pub client_settings: ClientSettings,
     /// A reusable client for basic http fetches
@@ -700,6 +641,8 @@ pub struct Release {
     pub version: Version,
     /// The unique id of the release (e.g. "my-app-v1.0.0")
     pub id: String,
+    /// misc app-specific config
+    pub config: AppConfig,
     /// Targets this Release has artifacts for
     pub targets: Vec<TargetTriple>,
     /// Binaries that every variant should ostensibly provide
@@ -716,12 +659,6 @@ pub struct Release {
     /// The string is the name of the library, without lib prefix, and without platform-specific suffix (.a, .lib)
     /// Note: Windows won't include lib prefix in the final lib.
     pub cstaticlibs: Vec<(PackageIdx, String)>,
-    /// Whether to package C dynamic libraries in the final archive
-    pub package_libraries: Vec<LibraryStyle>,
-    /// Whether to install packaged C dynamic libraries
-    pub install_libraries: Vec<LibraryStyle>,
-    /// Artifacts that are shared "globally" across all variants (shell-installer, metadata...)
-    ///
     /// They might still be limited to some subset of the targets (e.g. powershell scripts are
     /// windows-only), but conceptually there's only "one" for the Release.
     pub global_artifacts: Vec<ArtifactIdx>,
@@ -731,37 +668,11 @@ pub struct Release {
     pub changelog_body: Option<String>,
     /// The title of the changelog for this release
     pub changelog_title: Option<String>,
-    /// Archive format to use on windows
-    pub windows_archive: ZipStyle,
-    /// Archive format to use on non-windows
-    pub unix_archive: ZipStyle,
-    /// Style of checksum to produce
-    pub checksum: ChecksumStyle,
-    /// Customize the name of the npm package
-    pub npm_package: Option<String>,
-    /// The @scope to include in NPM packages
-    pub npm_scope: Option<String>,
     /// Static assets that should be included in bundles like archives
     pub static_assets: Vec<(StaticAssetKind, Utf8PathBuf)>,
-    /// Strategy for selecting paths to install to
-    pub install_path: Vec<InstallPathStrategy>,
-    /// Custom message to display on installer success
-    pub install_success_msg: String,
-    /// GitHub repository to push the Homebrew formula to, if built
-    pub tap: Option<String>,
-    /// Customize the name of the Homebrew formula
-    pub formula: Option<String>,
-    /// Packages to install from a system package manager
-    pub system_dependencies: SystemDependencies,
     /// Computed support for platforms, gets iteratively refined over time, so check details
     /// as late as possible, if you can!
     pub platform_support: PlatformSupport,
-    /// Aliases to publish binaries under, mapped source to target (ln style)
-    pub bin_aliases: BinaryAliases,
-    /// Whether to advertise the intallers/artifacts for this app in an announcement body
-    pub display: Option<bool>,
-    /// Custom name to use for the app in announcement bodies
-    pub display_name: Option<String>,
 }
 
 /// A particular variant of a Release (e.g. "the macos build")
@@ -834,8 +745,7 @@ pub(crate) struct DistGraphBuilder<'pkg_graph> {
     pub(crate) workspaces: &'pkg_graph mut WorkspaceGraph,
     artifact_mode: ArtifactMode,
     binaries_by_id: FastMap<String, BinaryIdx>,
-    workspace_metadata: DistMetadata,
-    package_metadata: Vec<DistMetadata>,
+    package_configs: Vec<AppConfig>,
 }
 
 impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
@@ -883,146 +793,74 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 root_workspace.cargo_metadata_table.as_ref(),
             )?;
 
+        let workspace_layer = workspace_metadata.to_toml_layer(true);
         workspace_metadata.make_relative_to(&root_workspace.workspace_dir);
 
-        // This is intentionally written awkwardly to make you update this
-        //
-        // This is the ideal place in the code to map/check global config once.
-        // It's fine to just lower it to an identical field on DistGraph, but you might
-        // want to e.g. `unwrap_or(false)` an `Option<bool>` here.
-        let DistMetadata {
-            cargo_dist_version,
-            rust_toolchain_version,
-            precise_builds,
-            merge_tasks,
-            fail_fast,
-            cache_builds,
-            build_local_artifacts,
-            dispatch_releases,
-            release_branch,
-            ssldotcom_windows_sign,
-            macos_sign,
-            github_attestations,
-            tag_namespace,
-            install_updater,
-            publish_prereleases,
-            force_latest,
-            features,
-            default_features,
-            all_features,
-            create_release,
-            github_releases_repo,
-            github_releases_submodule_path,
-            github_release,
-            github_custom_runners,
-            github_custom_job_permissions,
-            plan_jobs,
-            local_artifacts_jobs,
-            global_artifacts_jobs,
-            host_jobs,
-            publish_jobs,
-            post_announce_jobs,
-            allow_dirty,
-            msvc_crt_static,
-            extra_artifacts,
-            pr_run_mode,
-            tap,
-            github_build_setup,
-            // Partially Processed elsewhere
-            //
-            // FIXME?: this is the last vestige of us actually needing to keep workspace_metadata
-            // after this function, seems like we should finish the job..? (Doing a big
-            // refactor already, don't want to mess with this right now.)
-            ci: _,
-            hosting: _,
-            // Only the final value merged into a package_config matters
-            //
-            // Note that we do *use* an auto-include from the workspace when doing
-            // changelogs, but we don't consult this config, and just unconditionally use it.
-            // That seems *fine*, but I wanted to note that here.
-            auto_includes: _,
-            // For the rest of these, only the final value merged into a package_config matters
-            targets: _,
-            dist: _,
-            installers: _,
-            formula: _,
-            system_dependencies: _,
-            windows_archive: _,
-            unix_archive: _,
-            include: _,
-            npm_package: _,
-            npm_scope: _,
-            checksum: _,
-            install_path: _,
-            install_success_msg: _,
-            source_tarball: _,
-            bin_aliases: _,
-            display: _,
-            display_name: _,
-            package_libraries: _,
-            install_libraries: _,
-            mac_pkg_config: _,
-        } = &workspace_metadata;
+        let config = workspace_config(workspaces, workspace_layer.clone());
 
-        let desired_cargo_dist_version = cargo_dist_version.clone();
-        let desired_rust_toolchain = rust_toolchain_version.clone();
-        if desired_rust_toolchain.is_some() {
+        if config.builds.cargo.rust_toolchain_version.is_some() {
             warn!("rust-toolchain-version is deprecated, use rust-toolchain.toml if you want pinned toolchains");
         }
 
-        let merge_tasks = merge_tasks.unwrap_or(false);
-        let fail_fast = fail_fast.unwrap_or(false);
-        let pr_run_mode = pr_run_mode.unwrap_or_default();
-        let create_release = create_release.unwrap_or(true);
-        let build_local_artifacts = build_local_artifacts.unwrap_or(true);
-        let dispatch_releases = dispatch_releases.unwrap_or(false);
-        let release_branch = release_branch.clone();
-        let msvc_crt_static = msvc_crt_static.unwrap_or(true);
         let local_builds_are_lies = artifact_mode == ArtifactMode::Lies;
-        let ssldotcom_windows_sign = ssldotcom_windows_sign.clone();
-        let macos_sign = macos_sign.unwrap_or(false);
-        let github_attestations = github_attestations.unwrap_or(false);
-        let tag_namespace = tag_namespace.clone();
-        let github_releases_repo = github_releases_repo.clone();
-        let github_releases_submodule_path = github_releases_submodule_path.clone();
-        let github_release = github_release.unwrap_or_default();
-        let github_custom_runners = github_custom_runners.clone().unwrap_or_default();
-        let github_custom_job_permissions =
-            github_custom_job_permissions.clone().unwrap_or_default();
-        let github_build_setup = github_build_setup.clone();
-        let extra_artifacts = extra_artifacts.clone().unwrap_or_default();
-        let install_updater = install_updater.unwrap_or(false);
 
-        let caching_could_be_profitable =
-            release_branch.is_some() || pr_run_mode == cargo_dist_schema::PrRunMode::Upload;
-        let cache_builds = cache_builds.unwrap_or(caching_could_be_profitable);
-
-        let mut packages_with_mismatched_features = vec![];
         // Compute/merge package configs
-        let mut package_metadata = vec![];
-        for (_idx, package) in workspaces.all_packages() {
-            let mut package_config = config::parse_metadata_table_or_manifest(
+        let mut package_metadatas = vec![];
+        let mut package_configs = vec![];
+
+        for (pkg_idx, package) in workspaces.all_packages() {
+            let mut package_metadata = config::parse_metadata_table_or_manifest(
                 &package.manifest_path,
                 package.dist_manifest_path.as_deref(),
                 package.cargo_metadata_table.as_ref(),
             )?;
-            package_config.make_relative_to(&package.package_root);
-            package_config.merge_workspace_config(&workspace_metadata, &package.manifest_path);
-            package_config.validate_install_paths()?;
+            package_configs.push(app_config(
+                workspaces,
+                pkg_idx,
+                workspace_layer.clone(),
+                package_metadata.to_toml_layer(false),
+            ));
 
-            // Only do workspace builds if all the packages agree with the workspace feature settings
-            if &package_config.features != features
-                || &package_config.all_features != all_features
-                || &package_config.default_features != default_features
-            {
-                packages_with_mismatched_features.push(package.name.clone());
-            }
-
-            package_metadata.push(package_config);
+            package_metadata.make_relative_to(&package.package_root);
+            package_metadata.merge_workspace_config(&workspace_metadata, &package.manifest_path);
+            package_metadata.validate_install_paths()?;
+            package_metadatas.push(package_metadata);
         }
 
-        let requires_precise = !packages_with_mismatched_features.is_empty();
-        let precise_builds = if let Some(precise_builds) = *precise_builds {
+        // check cargo build settings for precise-builds
+        let mut global_cargo_build_config = None::<AppCargoBuildConfig>;
+        let mut packages_with_mismatched_features = vec![];
+        for ((_idx, package), package_config) in workspaces.all_packages().zip(&package_configs) {
+            if let Some(cargo_build_config) = &global_cargo_build_config {
+                if package_config.builds.cargo.features != cargo_build_config.features
+                    || package_config.builds.cargo.all_features != cargo_build_config.all_features
+                    || package_config.builds.cargo.default_features
+                        != cargo_build_config.default_features
+                {
+                    packages_with_mismatched_features.push(
+                        package
+                            .dist_manifest_path
+                            .clone()
+                            .unwrap_or(package.manifest_path.clone()),
+                    );
+                }
+            } else {
+                global_cargo_build_config = Some(package_config.builds.cargo.clone());
+                // This package gets to be the archetype, so if there's a mismatch it will
+                // always be implicated. So push it to the error list, and only say there's an
+                // error if there's two entries in this at the end.
+                packages_with_mismatched_features.push(
+                    package
+                        .dist_manifest_path
+                        .clone()
+                        .unwrap_or(package.manifest_path.clone()),
+                );
+            };
+        }
+        // Only do workspace builds if all the packages agree with the workspace feature settings
+        let requires_precise = packages_with_mismatched_features.len() > 1;
+        let precise_cargo_builds = if let Some(precise_builds) = config.builds.cargo.precise_builds
+        {
             if !precise_builds && requires_precise {
                 return Err(DistError::PreciseImpossible {
                     packages: packages_with_mismatched_features,
@@ -1034,102 +872,108 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             requires_precise
         };
 
-        let plan_jobs = plan_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
+        // check homebrew taps for global publish jobs
+        // FIXME: when we add `cargo dist publish` we can drop this,
+        // as we can support granular publish settings
+        let mut global_homebrew_tap = None;
+        let mut packages_with_mismatched_taps = vec![];
+        for ((_idx, package), package_config) in workspaces.all_packages().zip(&package_configs) {
+            if let Some(homebrew) = &package_config.installers.homebrew {
+                if let Some(new_tap) = &homebrew.tap {
+                    if let Some(current_tap) = &global_homebrew_tap {
+                        if current_tap != new_tap {
+                            packages_with_mismatched_taps.push(
+                                package
+                                    .dist_manifest_path
+                                    .clone()
+                                    .unwrap_or(package.manifest_path.clone()),
+                            );
+                        }
+                    } else {
+                        // This package gets to be the archetype, so if there's a mismatch it will
+                        // always be implicated. So push it to the error list, and only say there's an
+                        // error if there's two entries in this at the end.
+                        packages_with_mismatched_taps.push(
+                            package
+                                .dist_manifest_path
+                                .clone()
+                                .unwrap_or(package.manifest_path.clone()),
+                        );
+                        global_homebrew_tap = Some(new_tap.clone());
+                    }
                 }
-            })
-            .collect();
+            }
+        }
+        if packages_with_mismatched_taps.len() > 1 {
+            return Err(DistError::MismatchedTaps {
+                packages: packages_with_mismatched_taps,
+            });
+        }
 
-        let local_artifacts_jobs = local_artifacts_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
+        // check publish jobs for global publish jobs
+        // FIXME: when we add `cargo dist publish` we can drop this,
+        // as we can support granular publish settings
+        let mut global_publishers = None;
+        let mut packages_with_mismatched_publishers = vec![];
+        for ((_idx, package), package_config) in workspaces.all_packages().zip(&package_configs) {
+            if let Some(cur_publishers) = &global_publishers {
+                if cur_publishers != &package_config.publishers {
+                    packages_with_mismatched_publishers.push(
+                        package
+                            .dist_manifest_path
+                            .clone()
+                            .unwrap_or(package.manifest_path.clone()),
+                    );
                 }
-            })
-            .collect();
-
-        let global_artifacts_jobs = global_artifacts_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
+            } else {
+                // This package gets to be the archetype, so if there's a mismatch it will
+                // always be implicated. So push it to the error list, and only say there's an
+                // error if there's two entries in this at the end.
+                packages_with_mismatched_publishers.push(
+                    package
+                        .dist_manifest_path
+                        .clone()
+                        .unwrap_or(package.manifest_path.clone()),
+                );
+                global_publishers = Some(package_config.publishers.clone());
+            }
+        }
+        if packages_with_mismatched_publishers.len() > 1 {
+            return Err(DistError::MismatchedPublishers {
+                packages: packages_with_mismatched_publishers,
+            });
+        }
+        let global_publish_prereleases = global_publishers
+            .as_ref()
+            .map(|p| {
+                // until we have `cargo dist publish` we need to enforce everyone agreeing on `prereleases`
+                let PublisherConfig { homebrew, npm } = p;
+                let h_pre = homebrew.as_ref().map(|p| p.prereleases);
+                let npm_pre = npm.as_ref().map(|p| p.prereleases);
+                let choices = [h_pre, npm_pre];
+                let mut global_choice = None;
+                #[allow(clippy::manual_flatten)]
+                for choice in choices {
+                    if let Some(choice) = choice {
+                        if let Some(cur_choice) = global_choice {
+                            if cur_choice != choice {
+                                return Err(DistError::MismatchedPrereleases);
+                            }
+                        } else {
+                            global_choice = Some(choice);
+                        }
+                    }
                 }
+                Ok(global_choice.unwrap_or(false))
             })
-            .collect();
-
-        let host_jobs = host_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
-
-        let post_announce_jobs = post_announce_jobs
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
+            .transpose()?
+            .unwrap_or(false);
 
         let templates = Templates::new()?;
-        let (publish_jobs, user_publish_jobs): (Vec<_>, Vec<_>) = publish_jobs
-            .clone()
-            .unwrap_or(vec![])
-            .into_iter()
-            .partition(|s| !matches!(s, PublishStyle::User(_)));
-        let user_publish_jobs = user_publish_jobs
-            .into_iter()
-            // Remove the ./ suffix for later; we only have user jobs at this
-            // point so we no longer need to distinguish
-            .map(|s| {
-                let string = s.to_string();
-                if let Some(stripped) = string.strip_prefix("./") {
-                    stripped.to_owned()
-                } else {
-                    string
-                }
-            })
-            .collect();
-        let publish_prereleases = publish_prereleases.unwrap_or(false);
-        let force_latest = force_latest.unwrap_or(false);
-
         let allow_dirty = if allow_all_dirty {
             DirtyMode::AllowAll
         } else {
-            DirtyMode::AllowList(allow_dirty.clone().unwrap_or(vec![]))
+            DirtyMode::AllowList(config.allow_dirty.clone())
         };
         let cargo_version_line = tools.cargo.version_line.clone();
         let build_environment = if local_builds_are_lies {
@@ -1152,40 +996,33 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             &axoclient,
             &tools.cargo.host_target,
             &dist_dir,
-            ssldotcom_windows_sign.clone(),
-            macos_sign,
+            config.builds.ssldotcom_windows_sign.clone(),
+            config.builds.macos_sign,
         )?;
+        let github_attestations = config
+            .hosts
+            .github
+            .as_ref()
+            .map(|g| g.attestations)
+            .unwrap_or(false);
+        let force_latest = config.hosts.force_latest;
         Ok(Self {
             inner: DistGraph {
                 system_id,
-                is_init: desired_cargo_dist_version.is_some(),
+                is_init: config.dist_version.is_some(),
+                allow_dirty,
+                global_homebrew_tap,
+                global_publishers,
+                precise_cargo_builds,
                 target_dir,
                 repo_dir,
                 workspace_dir,
                 dist_dir,
-                precise_builds,
-                fail_fast,
-                cache_builds,
-                merge_tasks,
-                build_local_artifacts,
-                dispatch_releases,
-                release_branch,
-                create_release,
-                github_releases_repo,
-                github_releases_submodule_path,
-                github_release,
-                github_build_setup,
-                ssldotcom_windows_sign,
-                macos_sign,
-                github_attestations,
-                desired_cargo_dist_version,
-                desired_rust_toolchain,
-                tag_namespace,
+                config,
                 signer,
                 tools,
                 local_builds_are_lies,
                 templates,
-                ci_style: vec![],
                 local_build_steps: vec![],
                 global_build_steps: vec![],
                 artifacts: vec![],
@@ -1193,22 +1030,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 variants: vec![],
                 releases: vec![],
                 ci: CiInfo::default(),
-                pr_run_mode,
-                tap: tap.clone(),
-                plan_jobs,
-                local_artifacts_jobs,
-                global_artifacts_jobs,
-                host_jobs,
-                publish_jobs,
-                user_publish_jobs,
-                post_announce_jobs,
-                allow_dirty,
-                msvc_crt_static,
                 hosting: None,
-                extra_artifacts,
-                github_custom_runners,
-                github_custom_job_permissions,
-                install_updater,
                 client_settings,
                 axoclient,
             },
@@ -1225,95 +1047,23 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 artifacts: Default::default(),
                 systems,
                 assets: Default::default(),
-                publish_prereleases,
+                publish_prereleases: global_publish_prereleases,
                 force_latest,
                 ci: None,
                 linkage: vec![],
                 upload_files: vec![],
                 github_attestations,
             },
-            package_metadata,
-            workspace_metadata,
+            package_configs,
             workspaces,
             binaries_by_id: FastMap::new(),
             artifact_mode,
         })
     }
 
-    pub(crate) fn package_metadata(&self, idx: PackageIdx) -> &DistMetadata {
-        &self.package_metadata[idx.0]
-    }
-
-    fn set_ci_style(&mut self, style: Vec<CiStyle>) {
-        self.inner.ci_style = style;
-    }
-
     fn add_release(&mut self, pkg_idx: PackageIdx) -> ReleaseIdx {
         let package_info = self.workspaces.package(pkg_idx);
-        let DistMetadata {
-            tap,
-            formula,
-            system_dependencies,
-            include,
-            auto_includes,
-            windows_archive,
-            unix_archive,
-            npm_package,
-            npm_scope,
-            checksum,
-            install_path,
-            install_success_msg,
-            bin_aliases,
-            display,
-            display_name,
-            package_libraries,
-            install_libraries,
-            // We fetch this elsewhere
-            mac_pkg_config: _,
-            // The rest of these are workspace-only
-            precise_builds: _,
-            merge_tasks: _,
-            fail_fast: _,
-            cache_builds: _,
-            build_local_artifacts: _,
-            dispatch_releases: _,
-            release_branch: _,
-            features: _,
-            default_features: _,
-            all_features: _,
-            plan_jobs: _,
-            local_artifacts_jobs: _,
-            global_artifacts_jobs: _,
-            source_tarball: _,
-            host_jobs: _,
-            publish_jobs: _,
-            post_announce_jobs: _,
-            publish_prereleases: _,
-            force_latest: _,
-            create_release: _,
-            github_releases_repo: _,
-            github_releases_submodule_path: _,
-            ssldotcom_windows_sign: _,
-            macos_sign: _,
-            hosting: _,
-            extra_artifacts: _,
-            github_custom_runners: _,
-            github_custom_job_permissions: _,
-            tag_namespace: _,
-            install_updater: _,
-            cargo_dist_version: _,
-            rust_toolchain_version: _,
-            dist: _,
-            ci: _,
-            pr_run_mode: _,
-            allow_dirty: _,
-            installers: _,
-            targets: _,
-            msvc_crt_static: _,
-            github_attestations: _,
-            github_release: _,
-            github_build_setup: _,
-        } = self.package_metadata(pkg_idx);
+        let config = self.package_config(pkg_idx).clone();
 
         let version = package_info.version.as_ref().unwrap().semver().clone();
         let app_name = package_info.name.clone();
@@ -1323,35 +1073,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let app_repository_url = package_info.repository_url.clone();
         let app_homepage_url = package_info.homepage_url.clone();
         let app_keywords = package_info.keywords.clone();
-        let npm_package = npm_package.clone();
-        let npm_scope = npm_scope.clone().or_else(|| package_info.npm_scope.clone());
-        let install_path = install_path
-            .clone()
-            .unwrap_or(InstallPathStrategy::default_list());
-        let install_success_msg = install_success_msg
-            .as_deref()
-            .unwrap_or("everything's installed!")
-            .to_owned();
-        let tap = tap.clone();
-        let formula = formula.clone();
-        let display = *display;
-        let display_name = display_name.clone();
-
-        let windows_archive = windows_archive.unwrap_or(ZipStyle::Zip);
-        let unix_archive = unix_archive.unwrap_or(ZipStyle::Tar(CompressionImpl::Xzip));
-        let checksum = checksum.unwrap_or(ChecksumStyle::Sha256);
-
-        let package_libraries = package_libraries.clone().unwrap_or(vec![]);
-        let install_libraries = if package_libraries.is_empty() {
-            vec![]
-        } else {
-            install_libraries.clone().unwrap_or_default()
-        };
 
         // Add static assets
         let mut static_assets = vec![];
-        let auto_includes_enabled = auto_includes.unwrap_or(true);
-        if auto_includes_enabled {
+        if config.artifacts.archives.auto_includes {
             if let Some(readme) = &package_info.readme_file {
                 static_assets.push((StaticAssetKind::Readme, readme.clone()));
             }
@@ -1362,15 +1087,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 static_assets.push((StaticAssetKind::License, license.clone()));
             }
         }
-        if let Some(include) = &include {
-            for static_asset in include {
-                static_assets.push((StaticAssetKind::Other, static_asset.clone()));
-            }
+        for static_asset in &config.artifacts.archives.include {
+            static_assets.push((StaticAssetKind::Other, static_asset.clone()));
         }
-
-        let system_dependencies = system_dependencies.clone().unwrap_or_default();
-
-        let bin_aliases = BinaryAliases(bin_aliases.clone().unwrap_or_default());
 
         let platform_support = PlatformSupport::default();
         let idx = ReleaseIdx(self.inner.releases.len());
@@ -1394,23 +1113,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             variants: vec![],
             changelog_body: None,
             changelog_title: None,
-            windows_archive,
-            unix_archive,
+            config,
             static_assets,
-            checksum,
-            npm_package,
-            npm_scope,
-            install_path,
-            install_success_msg,
-            tap,
-            formula,
-            system_dependencies,
             platform_support,
-            bin_aliases,
-            display,
-            display_name,
-            package_libraries,
-            install_libraries,
         });
         idx
     }
@@ -1429,7 +1134,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             bins,
             cdylibs,
             cstaticlibs,
-            package_libraries,
+            config,
             ..
         } = self.release_mut(to_release);
         let static_assets = static_assets.clone();
@@ -1447,14 +1152,24 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         // If we're not packaging libraries here, avoid chaining them
         // into the list we're iterating over
-        if package_libraries.contains(&LibraryStyle::CDynamic) {
+        if config
+            .artifacts
+            .archives
+            .package_libraries
+            .contains(&LibraryStyle::CDynamic)
+        {
             let all_dylibs = cdylibs
                 .clone()
                 .into_iter()
                 .map(|(idx, l)| (idx, l, BinaryKind::DynamicLibrary));
             packageables = packageables.into_iter().chain(all_dylibs).collect();
         }
-        if package_libraries.contains(&LibraryStyle::CStatic) {
+        if config
+            .artifacts
+            .archives
+            .package_libraries
+            .contains(&LibraryStyle::CStatic)
+        {
             let all_cstaticlibs = cstaticlibs
                 .clone()
                 .into_iter()
@@ -1466,7 +1181,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut binaries = vec![];
         for (pkg_idx, binary_name, kind) in packageables {
             let package = self.workspaces.package(pkg_idx);
-            let package_metadata = self.package_metadata(pkg_idx);
+            let package_config = self.package_config(pkg_idx);
             let pkg_id = package.cargo_package_id.clone();
             // For now we just use the name of the package as its package_spec.
             // I'm not sure if there are situations where this is ambiguous when
@@ -1487,13 +1202,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             } else {
                 // Compute the rest of the details and add the binary
                 let features = CargoTargetFeatures {
-                    default_features: package_metadata.default_features.unwrap_or(true),
-                    features: if let Some(true) = package_metadata.all_features {
+                    default_features: package_config.builds.cargo.default_features,
+                    features: if package_config.builds.cargo.all_features {
                         CargoTargetFeatureList::All
                     } else {
-                        CargoTargetFeatureList::List(
-                            package_metadata.features.clone().unwrap_or_default(),
-                        )
+                        CargoTargetFeatureList::List(package_config.builds.cargo.features.clone())
                     },
                 };
 
@@ -1599,7 +1312,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Create an archive for each Variant
         let release = self.release(to_release);
         let variants = release.variants.clone();
-        let checksum = release.checksum;
+        let checksum = self.inner.config.artifacts.checksum;
         for variant_idx in variants {
             let (zip_artifact, built_assets) =
                 self.make_executable_zip_for_variant(to_release, variant_idx);
@@ -1615,12 +1328,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
     }
 
-    fn add_extra_artifacts(&mut self, dist_metadata: &DistMetadata, to_release: ReleaseIdx) {
+    fn add_extra_artifacts(&mut self, app_config: &AppConfig, to_release: ReleaseIdx) {
         if !self.global_artifacts_enabled() {
             return;
         }
         let dist_dir = &self.inner.dist_dir.to_owned();
-        let artifacts = dist_metadata.extra_artifacts.to_owned().unwrap_or_default();
+        let artifacts = app_config.artifacts.extra.clone();
 
         for extra in artifacts {
             for artifact_relpath in extra.artifact_relpaths {
@@ -1654,7 +1367,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return;
         }
 
-        if !self.workspace_metadata.source_tarball.unwrap_or(true) {
+        if !self.inner.config.artifacts.source_tarball {
             return;
         }
 
@@ -1699,7 +1412,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
 
         let release = self.release(to_release);
-        let checksum = release.checksum;
+        let checksum = self.inner.config.artifacts.checksum;
         info!("adding source tarball to release {}", release.id);
 
         let dist_dir = &self.inner.dist_dir.to_owned();
@@ -1834,9 +1547,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let target_is_windows = variant.target.contains("windows");
         let zip_style = if target_is_windows {
-            release.windows_archive
+            release.config.artifacts.archives.windows_archive
         } else {
-            release.unix_archive
+            release.config.artifacts.archives.unix_archive
         };
 
         let artifact_dir_name = variant.id.clone();
@@ -1957,33 +1670,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .insert(binary_idx, dest_path);
     }
 
-    fn add_installer(
-        &mut self,
-        to_release: ReleaseIdx,
-        installer: &InstallerStyle,
-    ) -> DistResult<()> {
-        let release = self.release(to_release);
-        // This package consists solely of non-installable cdylibs
-        if release.install_libraries.is_empty() && release.bins.is_empty() {
-            return Err(DistError::EmptyInstaller {});
-        }
-
-        match installer {
-            InstallerStyle::Shell => self.add_shell_installer(to_release),
-            InstallerStyle::Powershell => self.add_powershell_installer(to_release),
-            InstallerStyle::Npm => self.add_npm_installer(to_release),
-            InstallerStyle::Homebrew => self.add_homebrew_installer(to_release),
-            InstallerStyle::Msi => self.add_msi_installer(to_release)?,
-            InstallerStyle::Pkg => self.add_pkg_installer(to_release)?,
-        }
-        Ok(())
-    }
-
-    fn add_shell_installer(&mut self, to_release: ReleaseIdx) {
+    fn add_shell_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
         if !self.global_artifacts_enabled() {
-            return;
+            return Ok(());
         }
         let release = self.release(to_release);
+        let Some(config) = &release.config.installers.shell else {
+            return Ok(());
+        };
+        require_nonempty_installer(release, config)?;
         let release_id = &release.id;
         let schema_release = self
             .manifest
@@ -2016,9 +1711,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         if artifacts.is_empty() {
             warn!("skipping shell installer: not building any supported platforms (use --artifacts=global)");
-            return;
+            return Ok(());
         };
-        let bin_aliases = release.bin_aliases.for_targets(&target_triples);
+        let bin_aliases = BinaryAliases(config.bin_aliases.clone()).for_targets(&target_triples);
 
         let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
@@ -2034,19 +1729,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
-                install_paths: release
+                install_paths: config
                     .install_path
                     .iter()
                     .map(|p| p.clone().into_jinja())
                     .collect(),
-                install_success_msg: release.install_success_msg.to_owned(),
+                install_success_msg: config.install_success_msg.to_owned(),
                 base_url: download_url.to_owned(),
                 artifacts,
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
-                install_libraries: release.install_libraries.clone(),
+                install_libraries: config.install_libraries.clone(),
                 runtime_conditions,
                 platform_support: None,
                 install_dir_env_var,
@@ -2055,14 +1750,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         self.add_global_artifact(to_release, installer_artifact);
+        Ok(())
     }
 
-    fn add_homebrew_installer(&mut self, to_release: ReleaseIdx) {
+    fn add_homebrew_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
         if !self.global_artifacts_enabled() {
-            return;
+            return Ok(());
         }
         let release = self.release(to_release);
-        let formula = if let Some(formula) = &release.formula {
+        let Some(config) = &release.config.installers.homebrew else {
+            return Ok(());
+        };
+        require_nonempty_installer(release, config)?;
+        let formula = if let Some(formula) = &config.formula {
             formula
         } else {
             &release.id
@@ -2077,7 +1777,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
 
         // If tap is specified, include that in the `brew install` message
-        let install_target = if let Some(tap) = &self.inner.tap {
+        let install_target = if let Some(tap) = &self.inner.global_homebrew_tap {
             // So that, for example, axodotdev/homebrew-tap becomes axodotdev/tap
             let tap = tap.replace("/homebrew-", "/");
             format!("{tap}/{formula}")
@@ -2117,7 +1817,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         if artifacts.is_empty() {
             warn!("skipping Homebrew installer: not building any supported platforms (use --artifacts=global)");
-            return;
+            return Ok(());
         };
 
         let release = self.release(to_release);
@@ -2140,18 +1840,20 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             release.app_homepage_url.clone()
         };
-        let tap = release.tap.clone();
+        let tap = config.tap.clone();
 
-        if tap.is_some() && !self.inner.publish_jobs.contains(&PublishStyle::Homebrew) {
+        if tap.is_some() && release.config.publishers.homebrew.is_none() {
             warn!("A Homebrew tap was specified but the Homebrew publish job is disabled\n  consider adding \"homebrew\" to publish-jobs in Cargo.toml");
         }
-        if self.inner.publish_jobs.contains(&PublishStyle::Homebrew) && tap.is_none() {
+        if release.config.publishers.homebrew.is_some() && tap.is_none() {
             warn!("The Homebrew publish job is enabled but no tap was specified\n  consider setting the tap field in Cargo.toml");
         }
 
         let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
         let dependencies: Vec<String> = release
+            .config
+            .builds
             .system_dependencies
             .homebrew
             .clone()
@@ -2159,7 +1861,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Run))
             .map(|(name, _)| name)
             .collect();
-        let bin_aliases = release.bin_aliases.for_targets(&target_triples);
+        let bin_aliases = BinaryAliases(config.bin_aliases.clone()).for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -2188,39 +1890,44 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     dest_path: artifact_path,
                     app_name: release.app_name.clone(),
                     app_version: release.version.to_string(),
-                    install_paths: release
+                    install_paths: config
                         .install_path
                         .iter()
                         .map(|p| p.clone().into_jinja())
                         .collect(),
-                    install_success_msg: release.install_success_msg.to_owned(),
+                    install_success_msg: config.install_success_msg.to_owned(),
                     base_url: download_url.to_owned(),
                     artifacts,
                     hint,
                     desc,
                     receipt: None,
                     bin_aliases,
-                    install_libraries: release.install_libraries.clone(),
+                    install_libraries: config.install_libraries.clone(),
                     runtime_conditions,
                     platform_support: None,
                     // Not actually needed for this installer type
                     install_dir_env_var: String::new(),
                 },
-                install_libraries: release.install_libraries.clone(),
+                install_libraries: config.install_libraries.clone(),
             })),
             is_global: true,
         };
 
         self.add_global_artifact(to_release, installer_artifact);
+        Ok(())
     }
 
-    fn add_powershell_installer(&mut self, to_release: ReleaseIdx) {
+    fn add_powershell_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
         if !self.global_artifacts_enabled() {
-            return;
+            return Ok(());
         }
 
         // Get the basic info about the installer
         let release = self.release(to_release);
+        let Some(config) = &release.config.installers.powershell else {
+            return Ok(());
+        };
+        require_nonempty_installer(release, config)?;
         let release_id = &release.id;
         let schema_release = self
             .manifest
@@ -2252,9 +1959,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .collect::<Vec<_>>();
         if artifacts.is_empty() {
             warn!("skipping powershell installer: not building any supported platforms (use --artifacts=global)");
-            return;
+            return Ok(());
         };
-        let bin_aliases = release.bin_aliases.for_targets(&target_triples);
+        let bin_aliases = BinaryAliases(config.bin_aliases.clone()).for_targets(&target_triples);
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -2267,19 +1974,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 dest_path: artifact_path,
                 app_name: release.app_name.clone(),
                 app_version: release.version.to_string(),
-                install_paths: release
+                install_paths: config
                     .install_path
                     .iter()
                     .map(|p| p.clone().into_jinja())
                     .collect(),
-                install_success_msg: release.install_success_msg.to_owned(),
+                install_success_msg: config.install_success_msg.to_owned(),
                 base_url: download_url.to_owned(),
                 artifacts,
                 hint,
                 desc,
                 receipt: InstallReceipt::from_metadata(&self.inner, release),
                 bin_aliases,
-                install_libraries: release.install_libraries.clone(),
+                install_libraries: config.install_libraries.clone(),
                 runtime_conditions: RuntimeConditions::default(),
                 platform_support: None,
                 install_dir_env_var,
@@ -2288,13 +1995,18 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         self.add_global_artifact(to_release, installer_artifact);
+        Ok(())
     }
 
-    fn add_npm_installer(&mut self, to_release: ReleaseIdx) {
+    fn add_npm_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
         if !self.global_artifacts_enabled() {
-            return;
+            return Ok(());
         }
         let release = self.release(to_release);
+        let Some(config) = &release.config.installers.npm else {
+            return Ok(());
+        };
+        require_nonempty_installer(release, config)?;
         let release_id = &release.id;
         let download_url = self
             .manifest
@@ -2302,12 +2014,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .and_then(|r| r.artifact_download_url())
             .expect("couldn't compute a URL to download artifacts from!?");
 
-        let app_name = if let Some(name) = &release.npm_package {
-            name.clone()
-        } else {
-            release.app_name.clone()
-        };
-        let npm_package_name = if let Some(scope) = &release.npm_scope {
+        let app_name = config.package.clone();
+        let npm_package_name = if let Some(scope) = &config.scope {
             format!("{scope}/{}", app_name)
         } else {
             app_name.clone()
@@ -2345,9 +2053,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
         if artifacts.is_empty() {
             warn!("skipping npm installer: not building any supported platforms (use --artifacts=global)");
-            return;
+            return Ok(());
         };
-        let bin_aliases = release.bin_aliases.for_targets(&target_triples);
+        let bin_aliases = BinaryAliases(config.bin_aliases.clone()).for_targets(&target_triples);
 
         let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
@@ -2379,19 +2087,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     dest_path: artifact_path,
                     app_name,
                     app_version: release.version.to_string(),
-                    install_paths: release
+                    install_paths: config
                         .install_path
                         .iter()
                         .map(|p| p.clone().into_jinja())
                         .collect(),
-                    install_success_msg: release.install_success_msg.to_owned(),
+                    install_success_msg: config.install_success_msg.to_owned(),
                     base_url: download_url.to_owned(),
                     artifacts,
                     hint,
                     desc,
                     receipt: None,
                     bin_aliases,
-                    install_libraries: release.install_libraries.clone(),
+                    install_libraries: config.install_libraries.clone(),
                     runtime_conditions,
                     platform_support: None,
                     // Not actually needed for this installer type
@@ -2402,6 +2110,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         self.add_global_artifact(to_release, installer_artifact);
+        Ok(())
     }
 
     fn add_msi_installer(&mut self, to_release: ReleaseIdx) -> DistResult<()> {
@@ -2411,8 +2120,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         // Clone info we need from the release to avoid borrowing across the loop
         let release = self.release(to_release);
+        // TODO: lmao msi ignores EVERY INSTALLER SETTING
+        let Some(_config) = &release.config.installers.msi else {
+            return Ok(());
+        };
+        // TODO: msi doesn't actually respect these...
+        // require_nonempty_installer(release, config)?;
         let variants = release.variants.clone();
-        let checksum = release.checksum;
+        let checksum = self.inner.config.artifacts.checksum;
 
         // Make an msi for every windows platform
         for variant_idx in variants {
@@ -2505,15 +2220,22 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
 
         // Clone info we need from the release to avoid borrowing across the loop
-        let release = self.release(to_release).clone();
+        let release = self.release(to_release);
+        let Some(config) = release.config.installers.pkg.clone() else {
+            return Ok(());
+        };
+        require_nonempty_installer(release, &config)?;
+        let version = release.version.clone();
+        let fragments = release.platform_support.fragments();
+
         let variants = release.variants.clone();
-        let bin_aliases = release.bin_aliases.clone();
-        let checksum = release.checksum;
+        let checksum = self.inner.config.artifacts.checksum;
 
         // Make a pkg for every darwin platform
         for variant_idx in variants {
             let variant = self.variant(variant_idx);
             let binaries = variant.binaries.clone();
+            let bin_aliases = BinaryAliases(config.bin_aliases.clone());
             let target = &variant.target;
             if !target.contains("darwin") {
                 continue;
@@ -2542,17 +2264,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     package_info = Some((binary.pkg_spec.clone(), binary.pkg_idx));
                 }
             }
-            let Some((_, pkg_idx)) = package_info else {
-                return Err(DistError::NoPackage { artifact_name })?;
-            };
-            let package = self.package_metadata(pkg_idx);
-            let Some(mac_pkg_config) = package.mac_pkg_config.clone() else {
-                return Err(DistError::MacPkgConfigMissing {});
-            };
 
-            let Some(artifact) = release
-                .platform_support
-                .fragments()
+            let Some(artifact) = fragments
+                .clone()
                 .into_iter()
                 .find(|a| a.target_triple == variant.target)
             else {
@@ -2579,11 +2293,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     artifact,
                     package_dir: dir_path.clone(),
                     // Un-hardcode this
-                    identifier: mac_pkg_config.identifier,
-                    install_location: mac_pkg_config
-                        .install_location
-                        .unwrap_or("/usr/local".to_owned()),
-                    version: release.version.to_string(),
+                    identifier: config.identifier.clone(),
+                    install_location: config.install_location.clone(),
+                    version: version.to_string(),
                     bin_aliases,
                 })),
                 is_global: false,
@@ -2826,7 +2538,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         // Create a Release for each package
         for info in &announcing.rust_releases {
             // FIXME: this clone is hacky but I'm in the middle of a nasty refactor
-            let package_config = self.package_metadata(info.package_idx).clone();
+            let app_config = self.package_config(info.package_idx).clone();
 
             // Create a Release for this binary
             let release = self.add_release(info.package_idx);
@@ -2856,13 +2568,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             for target in triples {
                 // This logic ensures that (outside of host mode) we only select targets that are a
                 // subset of the ones the package claims to support
-                let use_target = bypass_package_target_prefs
-                    || package_config
-                        .targets
-                        .as_deref()
-                        .unwrap_or_default()
-                        .iter()
-                        .any(|t| t == target);
+                let use_target =
+                    bypass_package_target_prefs || app_config.targets.iter().any(|t| t == target);
                 if !use_target {
                     continue;
                 }
@@ -2870,7 +2577,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 // Create the variant
                 let variant = self.add_variant(release, target.clone())?;
 
-                if self.inner.install_updater {
+                if self.inner.config.installers.updater {
                     self.add_updater(variant);
                 }
             }
@@ -2884,31 +2591,32 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             self.add_source_tarball(&announcing.tag, release);
 
             // Add any extra artifacts defined in the config
-            self.add_extra_artifacts(&package_config, release);
+            self.add_extra_artifacts(&app_config, release);
 
             // Add installers to the Release
             // Prefer the CLI's choices (`cfg`) if they're non-empty
             let installers = if cfg.installers.is_empty() {
-                package_config.installers.as_deref().unwrap_or_default()
+                &[
+                    InstallerStyle::Shell,
+                    InstallerStyle::Powershell,
+                    InstallerStyle::Homebrew,
+                    InstallerStyle::Npm,
+                    InstallerStyle::Msi,
+                    InstallerStyle::Pkg,
+                ]
             } else {
                 &cfg.installers[..]
             };
 
             for installer in installers {
-                // This logic ensures that (outside of host mode) we only select installers that are a
-                // subset of the ones the package claims to support
-                let use_installer = package_config
-                    .installers
-                    .as_deref()
-                    .unwrap_or_default()
-                    .iter()
-                    .any(|i| i == installer);
-                if !use_installer {
-                    continue;
+                match installer {
+                    InstallerStyle::Shell => self.add_shell_installer(release)?,
+                    InstallerStyle::Powershell => self.add_powershell_installer(release)?,
+                    InstallerStyle::Homebrew => self.add_homebrew_installer(release)?,
+                    InstallerStyle::Npm => self.add_npm_installer(release)?,
+                    InstallerStyle::Msi => self.add_msi_installer(release)?,
+                    InstallerStyle::Pkg => self.add_pkg_installer(release)?,
                 }
-
-                // Create the variant
-                self.add_installer(release, installer)?;
             }
         }
 
@@ -2919,29 +2627,27 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn compute_ci(&mut self) -> DistResult<()> {
-        for ci in &self.inner.ci_style {
-            match ci {
-                CiStyle::Github => {
-                    self.inner.ci.github = Some(GithubCiInfo::new(&self.inner)?);
-                }
-            }
+        let CiConfig { github } = &self.inner.config.ci;
+
+        let mut has_ci = false;
+        if let Some(github_config) = github {
+            has_ci = true;
+            self.inner.ci.github = Some(GithubCiInfo::new(&self.inner, github_config)?);
         }
 
-        let external_repo_commit = self
-            .inner
-            .github_releases_submodule_path
-            .as_ref()
-            .map(|path| submodule_head(&self.inner.workspace_dir.join(path)))
-            .transpose()?
-            .flatten();
-
         // apply to manifest
-        if !self.inner.ci_style.is_empty() {
+        if has_ci {
             let CiInfo { github } = &self.inner.ci;
-            let github = github.as_ref().map(|info| cargo_dist_schema::GithubCiInfo {
-                artifacts_matrix: Some(info.artifacts_matrix.clone()),
-                pr_run_mode: Some(info.pr_run_mode),
-                external_repo_commit,
+            let github = github.as_ref().map(|info| {
+                let external_repo_commit = info
+                    .github_release
+                    .as_ref()
+                    .and_then(|r| r.external_repo_commit.clone());
+                cargo_dist_schema::GithubCiInfo {
+                    artifacts_matrix: Some(info.artifacts_matrix.clone()),
+                    pr_run_mode: Some(info.pr_run_mode),
+                    external_repo_commit,
+                }
             });
 
             self.manifest.ci = Some(cargo_dist_schema::CiInfo { github });
@@ -2997,6 +2703,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             ArtifactMode::Lies => true,
         }
     }
+
+    pub(crate) fn package_config(&self, pkg_idx: PackageIdx) -> &AppConfig {
+        &self.package_configs[pkg_idx.0]
+    }
 }
 
 impl DistGraph {
@@ -3038,18 +2748,6 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
         matches!(cfg.tag_settings.tag, TagMode::Infer),
     )?;
 
-    // Prefer the CLI (cfg) if it's non-empty, but only select a subset
-    // of what the workspace supports if it's non-empty
-    let workspace_ci = graph.workspace_metadata.ci.clone().unwrap_or_default();
-    if cfg.ci.is_empty() {
-        graph.set_ci_style(workspace_ci);
-    } else {
-        let cfg_ci = SortedSet::from_iter(cfg.ci.clone());
-        let workspace_ci = SortedSet::from_iter(workspace_ci);
-        let shared_ci = cfg_ci.intersection(&workspace_ci).cloned().collect();
-        graph.set_ci_style(shared_ci);
-    }
-
     // If no targets were specified, just use the host target
     let host_target_triple = [graph.inner.tools.cargo.host_target.clone()];
     // If all targets specified, union together the targets our packages support
@@ -3057,7 +2755,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     let all_target_triples = graph
         .workspaces
         .all_packages()
-        .flat_map(|(id, _)| graph.package_metadata(id).targets.iter().flatten())
+        .flat_map(|(id, _)| &graph.package_config(id).targets)
         .collect::<SortedSet<_>>()
         .into_iter()
         .cloned()
@@ -3106,12 +2804,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     )?;
 
     // Figure out how artifacts should be hosted
-    graph.compute_hosting(
-        cfg,
-        &announcing,
-        graph.workspace_metadata.hosting.clone(),
-        graph.workspace_metadata.ci.clone(),
-    )?;
+    graph.compute_hosting(cfg, &announcing)?;
 
     // Figure out what we're releasing/building
     graph.compute_releases(cfg, &announcing, triples, bypass_package_target_prefs)?;
@@ -3303,33 +2996,10 @@ impl InstallReceipt {
     }
 }
 
-// Determines the *cached* HEAD for a submodule within the workspace.
-// Note that any unstaged commits, and any local changes to commit
-// history that aren't reflected by the submodule commit history,
-// won't be reflected here.
-fn submodule_head(submodule_path: &Utf8PathBuf) -> DistResult<Option<String>> {
-    let output = Cmd::new("git", "fetch cached commit for a submodule")
-        .arg("submodule")
-        .arg("status")
-        .arg("--cached")
-        .arg(submodule_path)
-        .output()
-        .map_err(|_| DistError::GitSubmoduleCommitError {
-            path: submodule_path.to_string(),
-        })?;
-
-    let line = String::from_utf8_lossy(&output.stdout);
-    // Format: one status character, commit, a space, repo name
-    let line = line.trim_start_matches([' ', '-', '+']);
-    let Some((commit, _)) = line.split_once(' ') else {
-        return Err(DistError::GitSubmoduleCommitError {
-            path: submodule_path.to_string(),
-        });
-    };
-
-    if commit.is_empty() {
-        Ok(None)
+fn require_nonempty_installer(release: &Release, config: &CommonInstallerConfig) -> DistResult<()> {
+    if config.install_libraries.is_empty() && release.bins.is_empty() {
+        Err(DistError::EmptyInstaller {})
     } else {
-        Ok(Some(commit.to_owned()))
+        Ok(())
     }
 }

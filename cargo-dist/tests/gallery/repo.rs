@@ -150,6 +150,12 @@ where
         let raw_ctx_guard = Self::init_mutex(maybe_repo, || self.init_context(tools).unwrap());
         let raw_ctx = raw_ctx_guard.as_ref().unwrap();
 
+        // Force reset git repo to undo any mutations other tests made
+        // most notably patches to config files
+        tools
+            .git()
+            .output_checked(|c| c.arg("reset").arg("--hard").arg("FETCH_HEAD"))?;
+
         let ctx = TestContext {
             raw_ctx,
             tools,
