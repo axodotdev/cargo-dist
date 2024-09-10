@@ -1,2 +1,6 @@
+# This file is duplicated from dist-workspace.toml because the test suite
+# treats this as both a workspace and a package of a larger workspace
+# and this involves Crimes
+
 [package]
-homepage = "https://axo.dev/"
+homepage = "https://package.axo.dev/"

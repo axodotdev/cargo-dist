@@ -18,9 +18,12 @@ pub use axoasset::toml_edit::DocumentMut;
 /// All the `[profile]` entries we found in the root Cargo.toml
 pub type CargoProfiles = BTreeMap<String, CargoProfile>;
 
-/// Try to find a Cargo/Rust workspace at the given path
+/// Try to find a Cargo/Rust workspace at start_dir, walking up
+/// ancestors as necessary until we reach clamp_to_dir (or run out of ancestors).
 ///
-/// See [`crate::get_workspaces`][] for the semantics.
+/// Behaviour is unspecified if only part of the workspace is nested in clamp_to_dir
+/// We might find the workspace, or we might not. This is generally assumed to be fine,
+/// since we typically clamp to a git repo, if at all.
 ///
 /// This relies on `cargo metadata` so will only work if you have `cargo` installed.
 pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> WorkspaceSearch {

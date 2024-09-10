@@ -8,7 +8,7 @@ binaries = ["main"]
 build-command = ["make"]
 
 # Config for 'cargo dist'
-[workspace.metadata.dist]
+[dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.4.2"
 # CI backends to support
@@ -34,14 +34,14 @@ publish-prereleases = true
 # Publish jobs to run in CI
 pr-run-mode = "plan"
 
-[workspace.metadata.dist.dependencies.homebrew]
+[dist.dependencies.homebrew]
 cmake = { targets = ["x86_64-apple-darwin"] }
 libcue = { version = "2.2.1", targets = ["x86_64-apple-darwin"] }
 
-[workspace.metadata.dist.dependencies.apt]
+[dist.dependencies.apt]
 cmake = '*'
 libcue-dev = { version = "2.2.1-2" }
 
-[workspace.metadata.dist.dependencies.chocolatey]
+[dist.dependencies.chocolatey]
 lftp = '*'
 cmake = '3.27.6'

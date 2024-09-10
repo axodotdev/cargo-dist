@@ -1,7 +1,7 @@
 //! Shared code for gathering up information about a workspace, used by various axo.dev tools
 //! like cargo-dist and oranda.
 //!
-//! The main entry point is [`get_workspaces`][].
+//! The main entry point is [`WorkspaceGraph::find`][].
 
 #![deny(missing_docs)]
 #![allow(clippy::result_large_err)]
@@ -65,7 +65,7 @@ impl WorkspaceGraph {
             None
         };
 
-        WorkspaceGraph::find_from_git(start_dir, local_repo)
+        Self::find_from_git_clamped(start_dir, local_repo, clamp_to_dir)
     }
 
     /// Create WorkspaceGraph from a local git repo
@@ -73,8 +73,17 @@ impl WorkspaceGraph {
         start_dir: &Utf8Path,
         local_repo: Option<LocalRepo>,
     ) -> std::result::Result<Self, ProjectError> {
+        let clamp_to_dir = local_repo.as_ref().map(|r| r.path.clone());
+        Self::find_from_git_clamped(start_dir, local_repo, clamp_to_dir.as_deref())
+    }
+
+    /// Create WorkspaceGraph from a local git repo
+    fn find_from_git_clamped(
+        start_dir: &Utf8Path,
+        local_repo: Option<LocalRepo>,
+        clamp_to_dir: Option<&Utf8Path>,
+    ) -> std::result::Result<Self, ProjectError> {
         let mut missing = vec![];
-        let clamp_to_dir = local_repo.as_ref().map(|r| r.path.as_path());
 
         // Prefer generic workspace, then use rust workspace.
         // JS is currently not allowed to be a root workspace, only a child
@@ -233,55 +242,6 @@ impl WorkspaceGraph {
             self.packages.iter().collect::<Vec<_>>()
         };
         RepositoryUrl::from_packages(package_list)
-    }
-}
-
-/// Information about various kinds of workspaces
-pub struct Workspaces {
-    /// Info about the generic workspace
-    #[cfg(feature = "generic-projects")]
-    pub generic: WorkspaceSearch,
-    /// Info about the cargo/rust workspace
-    #[cfg(feature = "cargo-projects")]
-    pub rust: WorkspaceSearch,
-    /// Info about the npm/js workspace
-    #[cfg(feature = "npm-projects")]
-    pub javascript: WorkspaceSearch,
-}
-
-impl Workspaces {
-    #[cfg(test)]
-    pub(crate) fn best(self) -> Option<WorkspaceStructure> {
-        #![allow(clippy::vec_init_then_push)]
-
-        let mut best_project = None;
-        let mut max_depth = 0;
-        let mut projects = vec![];
-
-        #[cfg(feature = "generic-projects")]
-        projects.push(self.generic);
-
-        // FIXME: should we provide feedback/logging here?
-        #[cfg(feature = "cargo-projects")]
-        projects.push(self.rust);
-
-        #[cfg(feature = "npm-projects")]
-        projects.push(self.javascript);
-
-        // If we find multiple projects, prefer the one deeper in the file system
-        // (the one closer to the start_dir).
-        for project in projects {
-            let WorkspaceSearch::Found(project) = project else {
-                continue;
-            };
-            let depth = project.workspace.workspace_dir.ancestors().count();
-            if depth > max_depth {
-                best_project = Some(project);
-                max_depth = depth;
-            }
-        }
-
-        best_project
     }
 }
 
@@ -688,34 +648,6 @@ pub struct AutoIncludes {
     pub licenses: Vec<Utf8PathBuf>,
     /// CHANGELOG/RELEASES
     pub changelog: Option<Utf8PathBuf>,
-}
-
-/// Tries to find information about the workspace at start_dir, walking up
-/// ancestors as necessary until we reach clamp_to_dir (or run out of ancestors).
-///
-/// Behaviour is unspecified if only part of the workspace is nested in clamp_to_dir.
-///
-/// In the future setting clamp_to_dir may cause the output's paths to be relative
-/// to that directory, but for now they're always absolute. The cli does this
-/// relativizing, but not the library.
-///
-/// This can be either a cargo project or an npm project. Support for each
-/// one is behind feature flags:
-///
-/// * cargo-projects
-/// * npm-projects
-///
-/// Concepts of both will largely be conflated, the only distinction will be
-/// the top level [`WorkspaceKind`][].
-pub fn get_workspaces(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> Workspaces {
-    Workspaces {
-        #[cfg(feature = "generic-projects")]
-        generic: generic::get_workspace(start_dir, clamp_to_dir),
-        #[cfg(feature = "cargo-projects")]
-        rust: rust::get_workspace(start_dir, clamp_to_dir),
-        #[cfg(feature = "npm-projects")]
-        javascript: javascript::get_workspace(start_dir, clamp_to_dir),
-    }
 }
 
 /// Find auto-includeable files in a dir
