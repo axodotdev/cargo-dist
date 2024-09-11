@@ -26,7 +26,22 @@ APP_VERSION="0.2.2"
 ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
-NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
+if [ -n "${AXOLOTLSAY_NO_MODIFY_PATH:-}" ]; then
+    NO_MODIFY_PATH="$AXOLOTLSAY_NO_MODIFY_PATH"
+else
+    NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
+fi
+if [ "${AXOLOTLSAY_DISABLE_UPDATE:-0}" = "1" ]; then
+    INSTALL_UPDATER=0
+else
+    INSTALL_UPDATER=1
+fi
+UNMANAGED_INSTALL="${AXOLOTLSAY_UNMANAGED_INSTALL:-}"
+if [ -n "${UNMANAGED_INSTALL}" ]; then
+    NO_MODIFY_PATH=1
+    INSTALL_UPDATER=0
+fi
+
 read -r RECEIPT <<EORECEIPT
 {"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
@@ -217,7 +232,7 @@ download_binary_and_run_installer() {
     fi
 
     # ...and then the updater, if it exists
-    if [ -n "$_updater_name" ]; then
+    if [ -n "$_updater_name" ] && [ "$INSTALL_UPDATER" = "1" ]; then
         local _updater_url="$ARTIFACT_DOWNLOAD_URL/$_updater_name"
         # This renames the artifact while doing the download, removing the
         # target triple and leaving just the appname-update format
@@ -258,12 +273,17 @@ download_binary_and_run_installer() {
     ignore rm -rf "$_dir"
 
     # Install the install receipt
-    mkdir -p "$RECEIPT_HOME" || {
-        err "unable to create receipt directory at $RECEIPT_HOME"
-    }
-    echo "$RECEIPT" > "$RECEIPT_HOME/$APP_NAME-receipt.json"
-    # shellcheck disable=SC2320
-    local _retval=$?
+    if [ "$INSTALL_UPDATER" = "1" ]; then
+        if ! mkdir -p "$RECEIPT_HOME"; then
+            err "unable to create receipt directory at $RECEIPT_HOME"
+        else
+            echo "$RECEIPT" > "$RECEIPT_HOME/$APP_NAME-receipt.json"
+            # shellcheck disable=SC2320
+            local _retval=$?
+        fi
+    else
+        local _retval=0
+    fi
 
     return "$_retval"
 }
@@ -475,24 +495,40 @@ install() {
     local _env_script_path_expr
     # Forces the install to occur at this path, not the default
     local _force_install_dir
+    # Installs all files into a single directory
+    local _flat_install_layout
 
     # Check the newer app-specific variable before falling back
     # to the older generic one
     if [ -n "${AXOLOTLSAY_INSTALL_DIR:-}" ]; then
         _force_install_dir="$AXOLOTLSAY_INSTALL_DIR"
+        _flat_install_layout="1"
     elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
+        _flat_install_layout="1"
+    elif [ -n "$UNMANAGED_INSTALL" ]; then
+        _force_install_dir="$UNMANAGED_INSTALL"
+        _flat_install_layout="1"
     fi
 
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${_force_install_dir:-}" ]; then
-        _install_dir="$_force_install_dir"
-        _lib_install_dir="$_force_install_dir"
-        _receipt_install_dir="$_install_dir"
-        _env_script_path="$_force_install_dir/env"
-        _install_dir_expr="$(replace_home "$_force_install_dir")"
-        _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
+        if [ "$_flat_install_layout" = "0" ]; then
+            _install_dir="$_force_install_dir/bin"
+            _lib_install_dir="$_force_install_dir/bin"
+            _receipt_install_dir="$_force_install_dir"
+            _env_script_path="$_force_install_dir/env"
+            _install_dir_expr="$(replace_home "$_force_install_dir/bin")"
+            _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
+        else
+            _install_dir="$_force_install_dir"
+            _lib_install_dir="$_force_install_dir"
+            _receipt_install_dir="$_install_dir"
+            _env_script_path="$_force_install_dir/env"
+            _install_dir_expr="$(replace_home "$_force_install_dir")"
+            _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
+        fi
     fi
     if [ -z "${_install_dir:-}" ]; then
         # Install to $MY_ENV_VAR
@@ -1246,6 +1282,18 @@ $receipt = @"
 "@
 $receipt_home = "${env:LOCALAPPDATA}\axolotlsay"
 
+if ($env:AXOLOTLSAY_DISABLE_UPDATE) {
+  $install_updater = $false
+} else {
+  $install_updater = $true
+}
+
+$unmanaged_install = $env:AXOLOTLSAY_UNMANAGED_INSTALL
+if ($unmanaged_install) {
+  $NoModifyPath = $true
+  $install_updater = $false
+}
+
 function Install-Binary($install_args) {
   if ($Help) {
     Get-Help $PSCommandPath -Detailed
@@ -1393,7 +1441,7 @@ function Download($download_url, $platforms) {
     $staticlib_paths += "$tmp\$lib_name"
   }
 
-  if ($null -ne $info["updater"]) {
+  if (($null -ne $info["updater"]) -and $install_updater) {
     $updater_id = $info["updater"]["artifact_name"]
     $updater_url = "$download_url/$updater_id"
     $out_name = "$tmp\axolotlsay-update.exe"
@@ -1422,12 +1470,18 @@ function Invoke-Installer($artifacts, $platforms) {
 
   # Forces the install to occur at this path, not the default
   $force_install_dir = $null
+  $flat_install_layout = $false
   # Check the newer app-specific variable before falling back
   # to the older generic one
   if (($env:AXOLOTLSAY_INSTALL_DIR)) {
     $force_install_dir = $env:AXOLOTLSAY_INSTALL_DIR
+    $flat_install_layout = $true
   } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
+    $flat_install_layout = $true
+  } elseif ($unmanaged_install) {
+    $force_install_dir = $unmanaged_install
+    $flat_install_layout = $true
   }
 
   # The actual path we're going to install to
@@ -1441,8 +1495,13 @@ function Invoke-Installer($artifacts, $platforms) {
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($force_install_dir)) {
-$dest_dir = $force_install_dir
-    $dest_dir_lib = $dest_dir
+    if (-not $flat_install_layout) {
+      $dest_dir = Join-Path $force_install_dir "bin"
+      $dest_dir_lib = $dest_dir
+    } else {
+      $dest_dir = $force_install_dir
+      $dest_dir_lib = $dest_dir
+    }
     $receipt_dest_dir = $force_install_dir
   }
   if (-Not $dest_dir) {
@@ -1503,13 +1562,15 @@ $dest_dir = $force_install_dir
   $receipt = $receipt.Replace('"binary_aliases":{}', -join('"binary_aliases":',  $info['aliases_json']))
 
   # Write the install receipt
-  $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue
-  # Trying to get Powershell 5.1 (not 6+, which is fake and lies) to write utf8 is a crime
-  # because "Out-File -Encoding utf8" actually still means utf8BOM, so we need to pull out
-  # .NET's APIs which actually do what you tell them (also apparently utf8NoBOM is the
-  # default in newer .NETs but I'd rather not rely on that at this point).
-  $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
-  [IO.File]::WriteAllLines("$receipt_home/axolotlsay-receipt.json", "$receipt", $Utf8NoBomEncoding)
+  if ($install_updater) {
+    $null = New-Item -Path $receipt_home -ItemType "directory" -ErrorAction SilentlyContinue
+    # Trying to get Powershell 5.1 (not 6+, which is fake and lies) to write utf8 is a crime
+    # because "Out-File -Encoding utf8" actually still means utf8BOM, so we need to pull out
+    # .NET's APIs which actually do what you tell them (also apparently utf8NoBOM is the
+    # default in newer .NETs but I'd rather not rely on that at this point).
+    $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+    [IO.File]::WriteAllLines("$receipt_home/axolotlsay-receipt.json", "$receipt", $Utf8NoBomEncoding)
+  }
 
   # Respect the environment, but CLI takes precedence
   if ($null -eq $NoModifyPath) {
@@ -1661,7 +1722,12 @@ try {
     {
       "app_name": "axolotlsay",
       "app_version": "0.2.2",
-      "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
+      "env": {
+        "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
+        "unmanaged_dir_env_var": "AXOLOTLSAY_UNMANAGED_INSTALL",
+        "disable_update_env_var": "AXOLOTLSAY_DISABLE_UPDATE",
+        "no_modify_path_env_var": "AXOLOTLSAY_NO_MODIFY_PATH"
+      },
       "display_name": "axolotlsay",
       "display": true,
       "artifacts": [

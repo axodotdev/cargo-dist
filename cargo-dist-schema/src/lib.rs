@@ -283,6 +283,19 @@ pub struct SystemInfo {
     pub build_environment: BuildEnvironment,
 }
 
+/// Release-specific environment variables
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct EnvironmentVariables {
+    /// Environment variable to force an install location
+    pub install_dir_env_var: String,
+    /// Environment variable to force an unmanaged install location
+    pub unmanaged_dir_env_var: String,
+    /// Environment variable to disable updater features
+    pub disable_update_env_var: String,
+    /// Environment variable to disable modifying the path
+    pub no_modify_path_env_var: String,
+}
+
 /// A Release of an Application
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Release {
@@ -291,10 +304,10 @@ pub struct Release {
     /// The version of the app
     // FIXME: should be a Version but JsonSchema doesn't support (yet?)
     pub app_version: String,
-    /// Environment variable to force an install location
+    /// Environment variables which control this release's installer's behaviour
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub install_dir_env_var: Option<String>,
+    pub env: Option<EnvironmentVariables>,
     /// Alternative display name that can be prettier
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -610,12 +623,23 @@ impl DistManifest {
         if let Some(position) = self.releases.iter().position(|r| r.app_name == name) {
             &mut self.releases[position]
         } else {
-            let install_dir_env_var =
-                Some(name.to_ascii_uppercase().replace('-', "_") + "_INSTALL_DIR");
+            let env_app_name = name.to_ascii_uppercase().replace('-', "_");
+            let install_dir_env_var = format!("{env_app_name}_INSTALL_DIR");
+            let unmanaged_dir_env_var = format!("{env_app_name}_UNMANAGED_INSTALL");
+            let disable_update_env_var = format!("{env_app_name}_DISABLE_UPDATE");
+            let no_modify_path_env_var = format!("{env_app_name}_NO_MODIFY_PATH");
+
+            let environment_variables = EnvironmentVariables {
+                install_dir_env_var,
+                unmanaged_dir_env_var,
+                disable_update_env_var,
+                no_modify_path_env_var,
+            };
+
             self.releases.push(Release {
                 app_name: name,
                 app_version: version,
-                install_dir_env_var,
+                env: Some(environment_variables),
                 artifacts: vec![],
                 hosting: Hosting::default(),
                 display: None,

@@ -14,7 +14,12 @@ expression: self.payload
     {
       "app_name": "axolotlsay",
       "app_version": "0.2.2",
-      "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
+      "env": {
+        "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
+        "unmanaged_dir_env_var": "AXOLOTLSAY_UNMANAGED_INSTALL",
+        "disable_update_env_var": "AXOLOTLSAY_DISABLE_UPDATE",
+        "no_modify_path_env_var": "AXOLOTLSAY_NO_MODIFY_PATH"
+      },
       "display_name": "axolotlsay",
       "display": true,
       "artifacts": [
