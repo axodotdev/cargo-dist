@@ -1788,9 +1788,9 @@ dependencies = [
 
 [[package]]
 name = "parse-changelog"
-version = "0.6.8"
+version = "0.6.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0823752952778b65c46fb05f9dc0516d29ee9007b8733db0d59337e1acb32265"
+checksum = "925e8279ba3a3932660e4f98b9249ccca29a1e38a24408183a8d4b58dfa298ed"
 dependencies = [
  "anyhow",
  "indexmap 2.2.6",
@@ -1798,7 +1798,6 @@ dependencies = [
  "memchr",
  "regex",
  "serde",
- "serde_derive",
  "serde_json",
 ]
 
