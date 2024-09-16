@@ -175,6 +175,9 @@ Possible values:
 - github:    Host on Github Releases
 - axodotdev: Host on Axo Releases ("Abyss")
 
+#### `--opt-in-migrate`
+Opts into the new configuration format
+
 #### `-h, --help`
 Print help (see a summary with '-h')
 

@@ -218,62 +218,6 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     };
     eprintln!("{check} added {key} to your root {filename}");
 
-    if is_migrating {
-        // Migrate each package's Cargo.toml too
-        for (_, package) in workspaces.all_packages() {
-            if package.manifest_path.file_name() == Some("Cargo.toml") {
-                let manifest_src = axoasset::SourceFile::load_local(&package.manifest_path)?;
-                let mut manifest = manifest_src.deserialize_toml_edit()?;
-
-                let mut migrated = false;
-                // There's some package-specific dist config;
-                // migrate this too
-                if let Some(dist) = manifest
-                    .get("package")
-                    .and_then(|t| t.get("metadata"))
-                    .and_then(|t| t.get("dist"))
-                {
-                    let mut new_doc = toml_edit::DocumentMut::new();
-                    let mut dist = dist.clone();
-                    // Remove leading/trailing whitespace, if any
-                    if let Some(table) = dist.as_table_mut() {
-                        if let Some(leader) = table.decor_mut().prefix().and_then(|p| p.as_str()) {
-                            // Preserve the comment, if any; it has to
-                            // end with a trailing newline.
-                            let mut trimmed = leader.trim().to_owned();
-                            if !trimmed.is_empty() {
-                                trimmed = format!("{trimmed}\n");
-                            }
-                            table.decor_mut().set_prefix(trimmed);
-                        }
-                    }
-                    new_doc.insert("dist", dist);
-
-                    let new_path = package
-                        .manifest_path
-                        .parent()
-                        .expect("No parent directory?!")
-                        .join("dist.toml");
-
-                    config::save_cargo_toml(&new_path, new_doc)?;
-
-                    migrated = true;
-                }
-
-                // Remove the dist table from Cargo.toml
-                if migrated {
-                    manifest
-                        .get_mut("package")
-                        .and_then(|t| t.get_mut("metadata"))
-                        .and_then(|t| t.as_table_mut())
-                        .and_then(|t| t.remove("dist"));
-
-                    config::save_cargo_toml(&package.manifest_path, manifest)?;
-                }
-            }
-        }
-    }
-
     // We've been asked to migrate away from Cargo.toml; delete what
     // we've added after writing the new config
     if initted && is_migrating {

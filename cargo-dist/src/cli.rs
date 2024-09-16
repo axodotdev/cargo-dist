@@ -276,7 +276,7 @@ pub struct InitArgs {
     #[clap(long, value_delimiter(','))]
     pub hosting: Vec<HostingStyle>,
     /// Opts into the new configuration format
-    #[clap(long, hide = true)]
+    #[clap(long)]
     pub opt_in_migrate: bool,
 }
 
