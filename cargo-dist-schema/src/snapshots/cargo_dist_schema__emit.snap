@@ -639,6 +639,34 @@ expression: json_schema
         }
       }
     },
+    "EnvironmentVariables": {
+      "description": "Release-specific environment variables",
+      "type": "object",
+      "required": [
+        "disable_update_env_var",
+        "install_dir_env_var",
+        "no_modify_path_env_var",
+        "unmanaged_dir_env_var"
+      ],
+      "properties": {
+        "disable_update_env_var": {
+          "description": "Environment variable to disable updater features",
+          "type": "string"
+        },
+        "install_dir_env_var": {
+          "description": "Environment variable to force an install location",
+          "type": "string"
+        },
+        "no_modify_path_env_var": {
+          "description": "Environment variable to disable modifying the path",
+          "type": "string"
+        },
+        "unmanaged_dir_env_var": {
+          "description": "Environment variable to force an unmanaged install location",
+          "type": "string"
+        }
+      }
+    },
     "GithubCiInfo": {
       "description": "Github CI backend",
       "type": "object",
@@ -970,19 +998,23 @@ expression: json_schema
             "null"
           ]
         },
+        "env": {
+          "description": "Environment variables which control this release's installer's behaviour",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EnvironmentVariables"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "hosting": {
           "description": "Hosting info",
           "allOf": [
             {
               "$ref": "#/definitions/Hosting"
             }
-          ]
-        },
-        "install_dir_env_var": {
-          "description": "Environment variable to force an install location",
-          "type": [
-            "string",
-            "null"
           ]
         }
       }

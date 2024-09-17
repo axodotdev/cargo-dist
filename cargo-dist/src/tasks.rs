@@ -1684,10 +1684,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .manifest
             .release_by_name(&release.app_name)
             .expect("couldn't find the release!?");
-        let install_dir_env_var = schema_release
-            .install_dir_env_var
-            .to_owned()
+
+        let env_vars = schema_release
+            .env
+            .as_ref()
             .expect("couldn't determine app-specific environment variable!?");
+        let install_dir_env_var = env_vars.install_dir_env_var.to_owned();
+        let unmanaged_dir_env_var = env_vars.unmanaged_dir_env_var.to_owned();
+        let disable_update_env_var = env_vars.disable_update_env_var.to_owned();
+        let no_modify_path_env_var = env_vars.no_modify_path_env_var.to_owned();
+
         let download_url = schema_release
             .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
@@ -1745,6 +1751,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 runtime_conditions,
                 platform_support: None,
                 install_dir_env_var,
+                unmanaged_dir_env_var,
+                disable_update_env_var,
+                no_modify_path_env_var,
             })),
             is_global: true,
         };
@@ -1907,6 +1916,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     platform_support: None,
                     // Not actually needed for this installer type
                     install_dir_env_var: String::new(),
+                    unmanaged_dir_env_var: String::new(),
+                    disable_update_env_var: String::new(),
+                    no_modify_path_env_var: String::new(),
                 },
                 install_libraries: config.install_libraries.clone(),
             })),
@@ -1933,10 +1945,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .manifest
             .release_by_name(&release.app_name)
             .expect("couldn't find the release!?");
-        let install_dir_env_var = schema_release
-            .install_dir_env_var
-            .to_owned()
+
+        let env_vars = schema_release
+            .env
+            .as_ref()
             .expect("couldn't determine app-specific environment variable!?");
+        let install_dir_env_var = env_vars.install_dir_env_var.to_owned();
+        let unmanaged_dir_env_var = env_vars.unmanaged_dir_env_var.to_owned();
+        let disable_update_env_var = env_vars.disable_update_env_var.to_owned();
+        let no_modify_path_env_var = env_vars.no_modify_path_env_var.to_owned();
+
         let download_url = schema_release
             .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
@@ -1990,6 +2008,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 runtime_conditions: RuntimeConditions::default(),
                 platform_support: None,
                 install_dir_env_var,
+                unmanaged_dir_env_var,
+                disable_update_env_var,
+                no_modify_path_env_var,
             })),
             is_global: true,
         };
@@ -2110,6 +2131,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     platform_support: None,
                     // Not actually needed for this installer type
                     install_dir_env_var: String::new(),
+                    unmanaged_dir_env_var: String::new(),
+                    disable_update_env_var: String::new(),
+                    no_modify_path_env_var: String::new(),
                 },
             })),
             is_global: true,

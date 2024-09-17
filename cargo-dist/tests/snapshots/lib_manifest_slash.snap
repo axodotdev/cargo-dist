@@ -15,7 +15,12 @@ stdout:
     {
       "app_name": "cargo-dist-schema",
       "app_version": "1.0.0-FAKEVERSION",
-      "install_dir_env_var": "CARGO_DIST_SCHEMA_INSTALL_DIR",
+      "env": {
+        "install_dir_env_var": "CARGO_DIST_SCHEMA_INSTALL_DIR",
+        "unmanaged_dir_env_var": "CARGO_DIST_SCHEMA_UNMANAGED_INSTALL",
+        "disable_update_env_var": "CARGO_DIST_SCHEMA_DISABLE_UPDATE",
+        "no_modify_path_env_var": "CARGO_DIST_SCHEMA_NO_MODIFY_PATH"
+      },
       "display_name": "cargo-dist-schema",
       "display": true,
       "hosting": {
