@@ -2016,6 +2016,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let app_name = config.package.clone();
         let npm_package_name = if let Some(scope) = &config.scope {
+            if scope.to_ascii_lowercase() != *scope {
+                return Err(DistError::ScopeMustBeLowercase {
+                    scope: scope.to_owned(),
+                });
+            }
+
             format!("{scope}/{}", app_name)
         } else {
             app_name.clone()

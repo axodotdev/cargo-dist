@@ -160,6 +160,13 @@ pub enum DistError {
     #[error("Cannot enable npm support without forcing artifacts to be .tar.gz")]
     MustEnableTarGz,
 
+    /// User supplied an illegal npm scope
+    #[error("The npm-scope field must be an all-lowercase value; the supplied value was {scope}")]
+    ScopeMustBeLowercase {
+        /// The incorrectly-formatted scope
+        scope: String,
+    },
+
     /// Completely unknown format to install-path
     ///
     /// NOTE: we can't use `diagnostic(help)` here because this will get crammed into

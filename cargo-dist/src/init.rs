@@ -760,6 +760,8 @@ fn get_new_dist_metadata(
                         let v = v.trim();
                         if v.is_empty() {
                             Ok(())
+                        } else if v != v.to_ascii_lowercase() {
+                            Err("npm scopes must be lowercase")
                         } else if let Some(v) = v.strip_prefix('@') {
                             if v.is_empty() {
                                 Err("@ must be followed by something")
