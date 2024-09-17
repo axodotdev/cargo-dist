@@ -1304,7 +1304,13 @@ if ($env:AXOLOTLSAY_JS_DISABLE_UPDATE) {
   $install_updater = $true
 }
 
+$NoModifyPath = $false
+if ($env:AXOLOTLSAY_JS_NO_MODIFY_PATH) {
+    $NoModifyPath = $true
+}
+
 $unmanaged_install = $env:AXOLOTLSAY_JS_UNMANAGED_INSTALL
+
 if ($unmanaged_install) {
   $NoModifyPath = $true
   $install_updater = $false
@@ -3035,7 +3041,13 @@ if ($env:AXOLOTLSAY_DISABLE_UPDATE) {
   $install_updater = $true
 }
 
+$NoModifyPath = $false
+if ($env:AXOLOTLSAY_NO_MODIFY_PATH) {
+    $NoModifyPath = $true
+}
+
 $unmanaged_install = $env:AXOLOTLSAY_UNMANAGED_INSTALL
+
 if ($unmanaged_install) {
   $NoModifyPath = $true
   $install_updater = $false
