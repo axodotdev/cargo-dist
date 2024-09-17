@@ -106,6 +106,7 @@ download_binary_and_run_installer() {
                 PRINT_VERBOSE=1
                 ;;
             --no-modify-path)
+                say "--no-modify-path has been deprecated; please set AXOLOTLSAY_NO_MODIFY_PATH=1 in the environment"
                 NO_MODIFY_PATH=1
                 ;;
             *)
@@ -1301,7 +1302,10 @@ if ($env:AXOLOTLSAY_DISABLE_UPDATE) {
   $install_updater = $true
 }
 
-$NoModifyPath = $false
+if ($NoModifyPath) {
+    Write-Information "-NoModifyPath has been deprecated; please set AXOLOTLSAY_NO_MODIFY_PATH=1 in the environment"
+}
+
 if ($env:AXOLOTLSAY_NO_MODIFY_PATH) {
     $NoModifyPath = $true
 }
