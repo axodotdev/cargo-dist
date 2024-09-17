@@ -40,7 +40,6 @@ fi
 read -r RECEIPT <<EORECEIPT
 {{ receipt | tojson }}
 EORECEIPT
-# Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/{{ app_name }}"
 
 usage() {
