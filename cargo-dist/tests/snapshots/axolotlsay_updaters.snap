@@ -43,7 +43,7 @@ if [ -n "${UNMANAGED_INSTALL}" ]; then
 fi
 
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_layout":"unspecified","install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
 # Are we happy with this same path on Linux and Mac?
 RECEIPT_HOME="${HOME}/.config/axolotlsay"
@@ -495,26 +495,26 @@ install() {
     local _env_script_path_expr
     # Forces the install to occur at this path, not the default
     local _force_install_dir
-    # Installs all files into a single directory
-    local _flat_install_layout
+    # Which install layout to use - "flat" or "hierarchical"
+    local _install_layout="unspecified"
 
     # Check the newer app-specific variable before falling back
     # to the older generic one
     if [ -n "${AXOLOTLSAY_INSTALL_DIR:-}" ]; then
         _force_install_dir="$AXOLOTLSAY_INSTALL_DIR"
-        _flat_install_layout="0"
+        _install_layout="hierarchical"
     elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _flat_install_layout="0"
+        _install_layout="hierarchical"
     elif [ -n "$UNMANAGED_INSTALL" ]; then
         _force_install_dir="$UNMANAGED_INSTALL"
-        _flat_install_layout="1"
+        _install_layout="flat"
     fi
 
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${_force_install_dir:-}" ]; then
-        if [ "$_flat_install_layout" = "0" ]; then
+        if [ "$_install_layout" = "hierarchical" ]; then
             _install_dir="$_force_install_dir/bin"
             _lib_install_dir="$_force_install_dir/bin"
             _receipt_install_dir="$_force_install_dir"
@@ -531,6 +531,7 @@ install() {
         fi
     fi
     if [ -z "${_install_dir:-}" ]; then
+        _install_layout="hierarchical"
         # first try $CARGO_HOME, then fallback to $HOME/.cargo
         if [ -n "${CARGO_HOME:-}" ]; then
             _receipt_install_dir="$CARGO_HOME"
@@ -573,6 +574,8 @@ install() {
     RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_receipt_install_dir,")
     # Also replace the aliases with the arch-specific one
     RECEIPT=$(echo "$RECEIPT" | sed "s'\"binary_aliases\":{}'\"binary_aliases\":$(json_binary_aliases "$_arch")'")
+    # And replace the install layout
+    RECEIPT=$(echo "$RECEIPT" | sed "s'\"install_layout\":\"unspecified\"'\"install_layout\":\"$_install_layout\"'")
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
@@ -1295,7 +1298,7 @@ $app_name = 'axolotlsay'
 $app_version = '0.2.2'
 
 $receipt = @"
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_layout":"unspecified","install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 "@
 $receipt_home = "${env:LOCALAPPDATA}\axolotlsay"
 
@@ -1501,18 +1504,18 @@ function Invoke-Installer($artifacts, $platforms) {
 
   # Forces the install to occur at this path, not the default
   $force_install_dir = $null
-  $flat_install_layout = $false
+  $install_layout = "unspecified"
   # Check the newer app-specific variable before falling back
   # to the older generic one
   if (($env:AXOLOTLSAY_INSTALL_DIR)) {
     $force_install_dir = $env:AXOLOTLSAY_INSTALL_DIR
-    $flat_install_layout = $false
+    $install_layout = "hierarchical"
   } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
-    $flat_install_layout = $false
+    $install_layout = "hierarchical"
   } elseif ($unmanaged_install) {
     $force_install_dir = $unmanaged_install
-    $flat_install_layout = $true
+    $install_layout = "flat"
   }
 
   # The actual path we're going to install to
@@ -1526,7 +1529,7 @@ function Invoke-Installer($artifacts, $platforms) {
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($force_install_dir)) {
-    if (-not $flat_install_layout) {
+    if ($install_layout -eq "hierarchical") {
       $dest_dir = Join-Path $force_install_dir "bin"
       $dest_dir_lib = $dest_dir
     } else {
@@ -1549,6 +1552,7 @@ function Invoke-Installer($artifacts, $platforms) {
     $dest_dir = Join-Path $root "bin"
     $dest_dir_lib = $dest_dir
     $receipt_dest_dir = $root
+    $install_layout = "hierarchical"
   }
 
   # Looks like all of the above assignments failed
@@ -1558,6 +1562,7 @@ function Invoke-Installer($artifacts, $platforms) {
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $receipt_dest_dir.replace("\", "\\"))
+  $receipt = $receipt.Replace('"install_layout":"unspecified"', -join('"install_layout":"', $install_layout, '"'))
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
   $dest_dir_lib = New-Item -Force -ItemType Directory -Path $dest_dir_lib
