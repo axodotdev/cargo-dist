@@ -2969,11 +2969,27 @@ pub struct Provider {
     pub version: String,
 }
 
+/// Which style of installation layout this app uses
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum InstallLayout {
+    /// Not specified; will be determined later
+    Unspecified,
+    /// All files are in a single directory
+    Flat,
+    /// Separated into file type-specific directories
+    Hierarchical,
+    /// Like Hierarchical, but with only a bin subdirectory
+    CargoHome,
+}
+
 /// Struct representing an install receipt
 #[derive(Clone, Debug, Serialize)]
 pub struct InstallReceipt {
     /// The location on disk where this app was installed
     pub install_prefix: String,
+    /// The layout within the above prefix
+    pub install_layout: InstallLayout,
     /// A list of all binaries installed by this app
     pub binaries: Vec<String>,
     /// A list of all C dynamic libraries installed by this app
@@ -3005,8 +3021,9 @@ impl InstallReceipt {
         };
 
         Some(InstallReceipt {
-            // These first two are placeholder values which the installer will update
+            // These first five are placeholder values which the installer will update
             install_prefix: "AXO_INSTALL_PREFIX".to_owned(),
+            install_layout: InstallLayout::Unspecified,
             binaries: vec!["CARGO_DIST_BINS".to_owned()],
             cdylibs: vec!["CARGO_DIST_DYLIBS".to_owned()],
             cstaticlibs: vec!["CARGO_DIST_STATICLIBS".to_owned()],
