@@ -540,6 +540,9 @@ install() {
     RECEIPT=$(echo "$RECEIPT" | sed "s'\"binary_aliases\":{}'\"binary_aliases\":$(json_binary_aliases "$_arch")'")
     # And replace the install layout
     RECEIPT=$(echo "$RECEIPT" | sed "s'\"install_layout\":\"unspecified\"'\"install_layout\":\"$_install_layout\"'")
+    if [ "$NO_MODIFY_PATH" = "1" ]; then
+        RECEIPT=$(echo "$RECEIPT" | sed "s'\"modify_path\":true'\"modify_path\":false'")
+    fi
 
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"

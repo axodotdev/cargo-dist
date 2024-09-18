@@ -3004,6 +3004,8 @@ pub struct InstallReceipt {
     pub provider: Provider,
     /// A list of aliases binaries were installed under
     pub binary_aliases: BTreeMap<String, Vec<String>>,
+    /// Whether or not to modify system paths when installing
+    pub modify_path: bool,
 }
 
 impl InstallReceipt {
@@ -3039,6 +3041,7 @@ impl InstallReceipt {
                 version: env!("CARGO_PKG_VERSION").to_owned(),
             },
             binary_aliases: BTreeMap::default(),
+            modify_path: true,
         })
     }
 }

@@ -400,6 +400,9 @@ function Invoke-Installer($artifacts, $platforms) {
   $receipt = $receipt.Replace('"CARGO_DIST_STATICLIBS"', $formatted_staticlibs)
   # Also replace the aliases with the arch-specific one
   $receipt = $receipt.Replace('"binary_aliases":{}', -join('"binary_aliases":',  $info['aliases_json']))
+  if ($NoModifyPath) {
+    $receipt = $receipt.Replace('"modify_path":true', '"modify_path":false')
+  }
 
   # Write the install receipt
   if ($install_updater) {
