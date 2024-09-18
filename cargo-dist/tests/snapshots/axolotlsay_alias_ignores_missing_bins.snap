@@ -526,21 +526,35 @@ install() {
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${_force_install_dir:-}" ]; then
-        if [ "$_install_layout" = "hierarchical" ] || [ "$_install_layout" = "cargo-home" ]; then
-            _install_dir="$_force_install_dir/bin"
-            _lib_install_dir="$_force_install_dir/bin"
-            _receipt_install_dir="$_force_install_dir"
-            _env_script_path="$_force_install_dir/env"
-            _install_dir_expr="$(replace_home "$_force_install_dir/bin")"
-            _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
-        else
-            _install_dir="$_force_install_dir"
-            _lib_install_dir="$_force_install_dir"
-            _receipt_install_dir="$_install_dir"
-            _env_script_path="$_force_install_dir/env"
-            _install_dir_expr="$(replace_home "$_force_install_dir")"
-            _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
-        fi
+        case "$_install_layout" in
+            "hierarchical")
+                _install_dir="$_force_install_dir/bin"
+                _lib_install_dir="$_force_install_dir/lib"
+                _receipt_install_dir="$_force_install_dir"
+                _env_script_path="$_force_install_dir/env"
+                _install_dir_expr="$(replace_home "$_force_install_dir/bin")"
+                _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
+                ;;
+            "cargo-home")
+                _install_dir="$_force_install_dir/bin"
+                _lib_install_dir="$_force_install_dir/bin"
+                _receipt_install_dir="$_force_install_dir"
+                _env_script_path="$_force_install_dir/env"
+                _install_dir_expr="$(replace_home "$_force_install_dir/bin")"
+                _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
+                ;;
+            "flat")
+                _install_dir="$_force_install_dir"
+                _lib_install_dir="$_force_install_dir"
+                _receipt_install_dir="$_install_dir"
+                _env_script_path="$_force_install_dir/env"
+                _install_dir_expr="$(replace_home "$_force_install_dir")"
+                _env_script_path_expr="$(replace_home "$_force_install_dir/env")"
+                ;;
+            *)
+                err "Unrecognized install layout: $_install_layout"
+                ;;
+        esac
     fi
     if [ -z "${_install_dir:-}" ]; then
         _install_layout="cargo-home"
@@ -1555,12 +1569,22 @@ function Invoke-Installer($artifacts, $platforms) {
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($force_install_dir)) {
-    if (($install_layout -eq "hierarchical") -or ($install_layout -eq "cargo-home")) {
-      $dest_dir = Join-Path $force_install_dir "bin"
-      $dest_dir_lib = $dest_dir
-    } else {
-      $dest_dir = $force_install_dir
-      $dest_dir_lib = $dest_dir
+    switch ($install_layout) {
+      "hierarchical" {
+        $dest_dir = Join-Path $force_install_dir "bin"
+        $dest_dir_lib = Join-Path $force_install_dir "lib"
+      }
+      "cargo-home" {
+        $dest_dir = Join-Path $force_install_dir "bin"
+        $dest_dir_lib = $dest_dir
+      }
+      "flat" {
+        $dest_dir = $force_install_dir
+        $dest_dir_lib = $dest_dir
+      }
+      Default {
+        throw "Error: unrecognized installation layout: $install_layout"
+      }
     }
     $receipt_dest_dir = $force_install_dir
   }

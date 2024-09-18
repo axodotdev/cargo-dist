@@ -291,12 +291,22 @@ function Invoke-Installer($artifacts, $platforms) {
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($force_install_dir)) {
-    if (($install_layout -eq "hierarchical") -or ($install_layout -eq "cargo-home")) {
-      $dest_dir = Join-Path $force_install_dir "bin"
-      $dest_dir_lib = $dest_dir
-    } else {
-      $dest_dir = $force_install_dir
-      $dest_dir_lib = $dest_dir
+    switch ($install_layout) {
+      "hierarchical" {
+        $dest_dir = Join-Path $force_install_dir "bin"
+        $dest_dir_lib = Join-Path $force_install_dir "lib"
+      }
+      "cargo-home" {
+        $dest_dir = Join-Path $force_install_dir "bin"
+        $dest_dir_lib = $dest_dir
+      }
+      "flat" {
+        $dest_dir = $force_install_dir
+        $dest_dir_lib = $dest_dir
+      }
+      Default {
+        throw "Error: unrecognized installation layout: $install_layout"
+      }
     }
     $receipt_dest_dir = $force_install_dir
   }
