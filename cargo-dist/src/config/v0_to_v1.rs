@@ -348,25 +348,6 @@ impl DistMetadata {
             publishers: publisher_layer,
         };
 
-        // TODO: remove this debug code
-        if cfg!(gankra_debug) {
-            eprintln!("!!!!!!");
-            eprintln!("{}", axoasset::toml::to_string_pretty(&layer).unwrap());
-            eprintln!("------");
-            let layer2: TomlLayer = match axoasset::SourceFile::new(
-                "temp.toml",
-                axoasset::toml::to_string_pretty(&layer).unwrap(),
-            )
-            .deserialize_toml()
-            {
-                Ok(l) => l,
-                Err(e) => {
-                    eprintln!("{:?}", miette::Report::new(e));
-                    panic!("aaa");
-                }
-            };
-            eprintln!("{}", axoasset::toml::to_string_pretty(&layer2).unwrap());
-        }
         layer
     }
 }

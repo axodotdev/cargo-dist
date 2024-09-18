@@ -224,7 +224,6 @@ pub(crate) fn add_releases_to_manifest(
         let out_release =
             manifest.ensure_release(release.app_name.clone(), release.version.to_string());
 
-        // TODO: this is bad, this config is defacto global but we let you override it per-host...
         out_release.display = Some(release.config.hosts.display);
         out_release.display_name = Some(release.config.hosts.display_name.clone());
     }

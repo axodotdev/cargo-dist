@@ -2150,11 +2150,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         // Clone info we need from the release to avoid borrowing across the loop
         let release = self.release(to_release);
-        // TODO: lmao msi ignores EVERY INSTALLER SETTING
+        // FIXME: because we use cargo-wix and cargo-wix's config,
+        // msi installers really don't respect any of our own config!
+        // (We still look it up because it determines whether enabled or not.)
         let Some(_config) = &release.config.installers.msi else {
             return Ok(());
         };
-        // TODO: msi doesn't actually respect these...
+        // FIXME: MSI installer contents don't actually respect this
         // require_nonempty_installer(release, config)?;
         let variants = release.variants.clone();
         let checksum = self.inner.config.artifacts.checksum;
