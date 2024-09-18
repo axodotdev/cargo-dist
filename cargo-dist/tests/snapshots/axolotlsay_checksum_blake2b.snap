@@ -1477,7 +1477,8 @@ download_binary_and_run_installer "$@" || exit 1
       "pr_run_mode": "plan"
     }
   },
-  "linkage": []
+  "linkage": [],
+  "upload_files": []
 }
 
 ================ release.yml ================

@@ -3677,6 +3677,7 @@ run("axolotlsay");
     }
   },
   "linkage": [],
+  "upload_files": [],
   "github_attestations": true
 }
 

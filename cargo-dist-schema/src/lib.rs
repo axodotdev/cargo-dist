@@ -106,7 +106,8 @@ pub struct DistManifest {
     pub linkage: Vec<Linkage>,
     /// Files to upload
     #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    // We need to make sure we always serialize this when it's empty,
+    // because we index into this array unconditionally during upload.
     pub upload_files: Vec<String>,
     /// Whether Artifact Attestations should be found in the GitHub Release
     ///

@@ -127,6 +127,7 @@ expression: json_schema
     },
     "upload_files": {
       "description": "Files to upload",
+      "default": [],
       "type": "array",
       "items": {
         "type": "string"
