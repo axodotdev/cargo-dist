@@ -2071,13 +2071,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .iter()
             .map(|a| a.target_triple.clone())
             .collect::<Vec<_>>();
-        let has_sketchy_archives = artifacts
-            .iter()
-            .any(|a| a.zip_style != ZipStyle::Tar(CompressionImpl::Gzip));
 
-        if has_sketchy_archives {
-            warn!("the npm installer currently only knows how to unpack .tar.gz archives\n  consider setting windows-archive and unix-archive to .tar.gz in your config");
-        }
         if artifacts.is_empty() {
             warn!("skipping npm installer: not building any supported platforms (use --artifacts=global)");
             return Ok(());

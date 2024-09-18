@@ -94,7 +94,9 @@ const getPlatform = () => {
 const getPackage = () => {
   const platform = getPlatform();
   const url = `${artifactDownloadUrl}/${platform.artifactName}`;
-  let binary = new Package(name, url, platform.bins);
+  let filename = platform.artifactName;
+  let ext = platform.zipExt;
+  let binary = new Package(name, url, filename, ext, platform.bins);
 
   return binary;
 };
