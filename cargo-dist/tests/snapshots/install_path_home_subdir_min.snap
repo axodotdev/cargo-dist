@@ -514,7 +514,7 @@ install() {
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${_force_install_dir:-}" ]; then
-        if [ "$_install_layout" = "hierarchical" ]; then
+        if [ "$_install_layout" = "hierarchical" ] || [ "$_install_layout" = "cargo-home" ]; then
             _install_dir="$_force_install_dir/bin"
             _lib_install_dir="$_force_install_dir/bin"
             _receipt_install_dir="$_force_install_dir"
@@ -1504,7 +1504,7 @@ function Invoke-Installer($artifacts, $platforms) {
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($force_install_dir)) {
-    if ($install_layout -eq "hierarchical") {
+    if (($install_layout -eq "hierarchical") -or ($install_layout -eq "cargo-home")) {
       $dest_dir = Join-Path $force_install_dir "bin"
       $dest_dir_lib = $dest_dir
     } else {

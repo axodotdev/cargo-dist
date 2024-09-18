@@ -2979,6 +2979,8 @@ pub enum InstallLayout {
     Flat,
     /// Separated into file type-specific directories
     Hierarchical,
+    /// Like Hierarchical, but with only a bin subdirectory
+    CargoHome,
 }
 
 /// Struct representing an install receipt

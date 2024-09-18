@@ -271,10 +271,10 @@ function Invoke-Installer($artifacts, $platforms) {
   # to the older generic one
   if (($env:{{ install_dir_env_var }})) {
     $force_install_dir = $env:{{ install_dir_env_var }}
-    $install_layout = {% if install_paths | selectattr("kind", "equalto", "CargoHome") -%} "hierarchical" {%- else -%} "flat" {%- endif %}
+    $install_layout = {% if install_paths | selectattr("kind", "equalto", "CargoHome") -%} "cargo-home" {%- else -%} "flat" {%- endif %}
   } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
-    $install_layout = {% if install_paths | selectattr("kind", "equalto", "CargoHome") -%} "hierarchical" {%- else -%} "flat" {%- endif %}
+    $install_layout = {% if install_paths | selectattr("kind", "equalto", "CargoHome") -%} "cargo-home" {%- else -%} "flat" {%- endif %}
   } elseif ($unmanaged_install) {
     $force_install_dir = $unmanaged_install
     $install_layout = "flat"
@@ -291,7 +291,7 @@ function Invoke-Installer($artifacts, $platforms) {
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($force_install_dir)) {
-    if ($install_layout -eq "hierarchical") {
+    if (($install_layout -eq "hierarchical") -or ($install_layout -eq "cargo-home")) {
       $dest_dir = Join-Path $force_install_dir "bin"
       $dest_dir_lib = $dest_dir
     } else {
@@ -316,7 +316,7 @@ function Invoke-Installer($artifacts, $platforms) {
     $dest_dir = Join-Path $root "bin"
     $dest_dir_lib = $dest_dir
     $receipt_dest_dir = $root
-    $install_layout = "hierarchical"
+    $install_layout = "cargo-home"
 {%- elif install_path.kind == "HomeSubdir" %}
     # Install to $HOME/{{ install_path.subdir }}
     $dest_dir = if (($base_dir = $HOME)) {

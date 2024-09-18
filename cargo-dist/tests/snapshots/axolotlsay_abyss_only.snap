@@ -502,10 +502,10 @@ install() {
     # to the older generic one
     if [ -n "${AXOLOTLSAY_INSTALL_DIR:-}" ]; then
         _force_install_dir="$AXOLOTLSAY_INSTALL_DIR"
-        _install_layout="hierarchical"
+        _install_layout="cargo-home"
     elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _install_layout="hierarchical"
+        _install_layout="cargo-home"
     elif [ -n "$UNMANAGED_INSTALL" ]; then
         _force_install_dir="$UNMANAGED_INSTALL"
         _install_layout="flat"
@@ -514,7 +514,7 @@ install() {
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${_force_install_dir:-}" ]; then
-        if [ "$_install_layout" = "hierarchical" ]; then
+        if [ "$_install_layout" = "hierarchical" ] || [ "$_install_layout" = "cargo-home" ]; then
             _install_dir="$_force_install_dir/bin"
             _lib_install_dir="$_force_install_dir/bin"
             _receipt_install_dir="$_force_install_dir"
@@ -531,7 +531,7 @@ install() {
         fi
     fi
     if [ -z "${_install_dir:-}" ]; then
-        _install_layout="hierarchical"
+        _install_layout="cargo-home"
         # first try $CARGO_HOME, then fallback to $HOME/.cargo
         if [ -n "${CARGO_HOME:-}" ]; then
             _receipt_install_dir="$CARGO_HOME"
@@ -1501,10 +1501,10 @@ function Invoke-Installer($artifacts, $platforms) {
   # to the older generic one
   if (($env:AXOLOTLSAY_INSTALL_DIR)) {
     $force_install_dir = $env:AXOLOTLSAY_INSTALL_DIR
-    $install_layout = "hierarchical"
+    $install_layout = "cargo-home"
   } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
-    $install_layout = "hierarchical"
+    $install_layout = "cargo-home"
   } elseif ($unmanaged_install) {
     $force_install_dir = $unmanaged_install
     $install_layout = "flat"
@@ -1521,7 +1521,7 @@ function Invoke-Installer($artifacts, $platforms) {
   # Before actually consulting the configured install strategy, see
   # if we're overriding it.
   if (($force_install_dir)) {
-    if ($install_layout -eq "hierarchical") {
+    if (($install_layout -eq "hierarchical") -or ($install_layout -eq "cargo-home")) {
       $dest_dir = Join-Path $force_install_dir "bin"
       $dest_dir_lib = $dest_dir
     } else {
@@ -1544,7 +1544,7 @@ function Invoke-Installer($artifacts, $platforms) {
     $dest_dir = Join-Path $root "bin"
     $dest_dir_lib = $dest_dir
     $receipt_dest_dir = $root
-    $install_layout = "hierarchical"
+    $install_layout = "cargo-home"
   }
 
   # Looks like all of the above assignments failed

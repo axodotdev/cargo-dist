@@ -490,10 +490,10 @@ install() {
     # to the older generic one
     if [ -n "${AXOLOTLSAY_INSTALL_DIR:-}" ]; then
         _force_install_dir="$AXOLOTLSAY_INSTALL_DIR"
-        _install_layout="hierarchical"
+        _install_layout="cargo-home"
     elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"
-        _install_layout="hierarchical"
+        _install_layout="cargo-home"
     elif [ -n "$UNMANAGED_INSTALL" ]; then
         _force_install_dir="$UNMANAGED_INSTALL"
         _install_layout="flat"
@@ -502,7 +502,7 @@ install() {
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
     if [ -n "${_force_install_dir:-}" ]; then
-        if [ "$_install_layout" = "hierarchical" ]; then
+        if [ "$_install_layout" = "hierarchical" ] || [ "$_install_layout" = "cargo-home" ]; then
             _install_dir="$_force_install_dir/bin"
             _lib_install_dir="$_force_install_dir/bin"
             _receipt_install_dir="$_force_install_dir"
@@ -519,7 +519,7 @@ install() {
         fi
     fi
     if [ -z "${_install_dir:-}" ]; then
-        _install_layout="hierarchical"
+        _install_layout="cargo-home"
         # first try $CARGO_HOME, then fallback to $HOME/.cargo
         if [ -n "${CARGO_HOME:-}" ]; then
             _receipt_install_dir="$CARGO_HOME"
