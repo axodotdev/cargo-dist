@@ -335,7 +335,8 @@ impl DistMetadata {
         });
 
         // done!
-        let layer = TomlLayer {
+
+        TomlLayer {
             dist_version: cargo_dist_version,
             dist,
             allow_dirty,
@@ -346,9 +347,7 @@ impl DistMetadata {
             hosts: host_layer,
             installers: installer_layer,
             publishers: publisher_layer,
-        };
-
-        layer
+        }
     }
 }
 

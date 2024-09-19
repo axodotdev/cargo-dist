@@ -35,7 +35,6 @@ impl PkgInstallerConfig {
         _pkg_idx: PackageIdx,
         common: &CommonInstallerConfig,
     ) -> Self {
-
         Self {
             common: common.clone(),
             // TODO: you *need* to provide this to make a pkg
