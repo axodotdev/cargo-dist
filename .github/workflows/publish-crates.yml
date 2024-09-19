@@ -1,10 +1,15 @@
-# Publishes a release to crates.io
+# Publishes our workspace's crates to crates.io
 #
-# To trigger this:
+# This is triggered automatically by cargo-dist during the publish step
+# (this is a custom publish job: https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-jobs)
 #
-# - go to Actions > PublishRelease
-# - click the Run Workflow dropdown in the top-right
-# - enter the tag of the release as “Release Tag” (e.g. v0.3.18)
+# It is assumed that all crates are versioned and released in lockstep,
+# and that the current commit we're working on already has them at the right version
+# to publish.
+#
+# By default this is invoked only for non-prereleases, because we don't
+# want to clutter up crates.io with a million prereleases (and cratesio gives less useful
+# download stats if you have lots of prereleases).
 name: PublishRelease
 
 on:
