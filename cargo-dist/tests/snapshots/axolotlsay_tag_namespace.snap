@@ -281,7 +281,8 @@ expression: self.payload
       "pr_run_mode": "plan"
     }
   },
-  "linkage": []
+  "linkage": [],
+  "upload_files": []
 }
 
 ================ owo-release.yml ================

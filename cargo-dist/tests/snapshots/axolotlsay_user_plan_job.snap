@@ -3625,7 +3625,8 @@ run("axolotlsay");
       "pr_run_mode": "upload"
     }
   },
-  "linkage": []
+  "linkage": [],
+  "upload_files": []
 }
 
 ================ release.yml ================
