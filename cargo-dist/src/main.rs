@@ -303,7 +303,6 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         no_generate: args.skip_generate,
         with_json_config: args.with_json_config.clone(),
         host: args.hosting.iter().map(|host| host.to_lib()).collect(),
-        migrate_to_new_config: args.opt_in_migrate,
     };
     do_init(&config, &args)?;
     Ok(())
