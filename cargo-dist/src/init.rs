@@ -7,8 +7,8 @@ use serde::Deserialize;
 
 use crate::{
     config::{
-        self, CiStyle, CompressionImpl, Config, DistMetadata, HostingStyle, InstallPathStrategy,
-        InstallerStyle, MacPkgConfig, PublishStyle, ZipStyle,
+        self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
+        MacPkgConfig, PublishStyle,
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -785,31 +785,6 @@ fn get_new_dist_metadata(
                 eprintln!("{check} npm packages will be published under {scope}");
             }
             eprintln!();
-        }
-
-        // FIXME (#226): If they have an npm installer, force on tar.gz compression
-        const TAR_GZ: Option<ZipStyle> = Some(ZipStyle::Tar(CompressionImpl::Gzip));
-        if meta.unix_archive != TAR_GZ || meta.windows_archive != TAR_GZ {
-            let prompt = r#"the npm installer requires binaries to be distributed as .tar.gz, is that ok?
-    otherwise we would distribute your binaries as .zip on windows, .tar.xz everywhere else
-    (this is a hopefully temporary limitation of the npm installer's implementation)"#;
-            let default = true;
-            let force_targz = if args.yes {
-                default
-            } else {
-                let res = Confirm::with_theme(&theme)
-                    .with_prompt(prompt)
-                    .default(default)
-                    .interact()?;
-                eprintln!();
-                res
-            };
-            if force_targz {
-                meta.unix_archive = TAR_GZ;
-                meta.windows_archive = TAR_GZ;
-            } else {
-                Err(DistError::MustEnableTarGz)?;
-            }
         }
     }
 

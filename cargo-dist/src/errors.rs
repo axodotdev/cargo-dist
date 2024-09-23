@@ -156,10 +156,6 @@ pub enum DistError {
         inner: AxoprojectError,
     },
 
-    /// User declined to force tar.gz with npm
-    #[error("Cannot enable npm support without forcing artifacts to be .tar.gz")]
-    MustEnableTarGz,
-
     /// User supplied an illegal npm scope
     #[error("The npm-scope field must be an all-lowercase value; the supplied value was {scope}")]
     ScopeMustBeLowercase {
