@@ -27,10 +27,6 @@ install-updater = false
 github-attestations = true
 # Path that installers should place binaries in
 install-path = "CARGO_HOME"
-# The archive format to use for windows builds (defaults .zip)
-windows-archive = ".tar.gz"
-# The archive format to use for non-windows builds (defaults .tar.xz)
-unix-archive = ".tar.gz"
 
 [[dist.extra-artifacts]]
 artifacts = ["dist-manifest-schema.json"]

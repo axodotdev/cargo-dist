@@ -29,22 +29,22 @@ stdout:
         "dist-manifest-schema.json",
         "cargo-dist-installer.sh",
         "cargo-dist-installer.ps1",
-        "cargo-dist-npm-package.tar.gz",
         "cargo-dist.rb",
-        "cargo-dist-aarch64-apple-darwin.tar.gz",
-        "cargo-dist-aarch64-apple-darwin.tar.gz.sha256",
-        "cargo-dist-aarch64-unknown-linux-gnu.tar.gz",
-        "cargo-dist-aarch64-unknown-linux-gnu.tar.gz.sha256",
-        "cargo-dist-aarch64-unknown-linux-musl.tar.gz",
-        "cargo-dist-aarch64-unknown-linux-musl.tar.gz.sha256",
-        "cargo-dist-x86_64-apple-darwin.tar.gz",
-        "cargo-dist-x86_64-apple-darwin.tar.gz.sha256",
-        "cargo-dist-x86_64-pc-windows-msvc.tar.gz",
-        "cargo-dist-x86_64-pc-windows-msvc.tar.gz.sha256",
-        "cargo-dist-x86_64-unknown-linux-gnu.tar.gz",
-        "cargo-dist-x86_64-unknown-linux-gnu.tar.gz.sha256",
-        "cargo-dist-x86_64-unknown-linux-musl.tar.gz",
-        "cargo-dist-x86_64-unknown-linux-musl.tar.gz.sha256"
+        "cargo-dist-npm-package.tar.gz",
+        "cargo-dist-aarch64-apple-darwin.tar.xz",
+        "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
+        "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
+        "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256",
+        "cargo-dist-aarch64-unknown-linux-musl.tar.xz",
+        "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256",
+        "cargo-dist-x86_64-apple-darwin.tar.xz",
+        "cargo-dist-x86_64-apple-darwin.tar.xz.sha256",
+        "cargo-dist-x86_64-pc-windows-msvc.zip",
+        "cargo-dist-x86_64-pc-windows-msvc.zip.sha256",
+        "cargo-dist-x86_64-unknown-linux-gnu.tar.xz",
+        "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256",
+        "cargo-dist-x86_64-unknown-linux-musl.tar.xz",
+        "cargo-dist-x86_64-unknown-linux-musl.tar.xz.sha256"
       ],
       "hosting": {
         "github": {
@@ -64,8 +64,8 @@ stdout:
     }
   ],
   "artifacts": {
-    "cargo-dist-aarch64-apple-darwin.tar.gz": {
-      "name": "cargo-dist-aarch64-apple-darwin.tar.gz",
+    "cargo-dist-aarch64-apple-darwin.tar.xz": {
+      "name": "cargo-dist-aarch64-apple-darwin.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "aarch64-apple-darwin"
@@ -98,17 +98,17 @@ stdout:
           "kind": "executable"
         }
       ],
-      "checksum": "cargo-dist-aarch64-apple-darwin.tar.gz.sha256"
+      "checksum": "cargo-dist-aarch64-apple-darwin.tar.xz.sha256"
     },
-    "cargo-dist-aarch64-apple-darwin.tar.gz.sha256": {
-      "name": "cargo-dist-aarch64-apple-darwin.tar.gz.sha256",
+    "cargo-dist-aarch64-apple-darwin.tar.xz.sha256": {
+      "name": "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "aarch64-apple-darwin"
       ]
     },
-    "cargo-dist-aarch64-unknown-linux-gnu.tar.gz": {
-      "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.gz",
+    "cargo-dist-aarch64-unknown-linux-gnu.tar.xz": {
+      "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "aarch64-unknown-linux-gnu"
@@ -141,17 +141,17 @@ stdout:
           "kind": "executable"
         }
       ],
-      "checksum": "cargo-dist-aarch64-unknown-linux-gnu.tar.gz.sha256"
+      "checksum": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256"
     },
-    "cargo-dist-aarch64-unknown-linux-gnu.tar.gz.sha256": {
-      "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.gz.sha256",
+    "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "aarch64-unknown-linux-gnu"
       ]
     },
-    "cargo-dist-aarch64-unknown-linux-musl.tar.gz": {
-      "name": "cargo-dist-aarch64-unknown-linux-musl.tar.gz",
+    "cargo-dist-aarch64-unknown-linux-musl.tar.xz": {
+      "name": "cargo-dist-aarch64-unknown-linux-musl.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "aarch64-unknown-linux-musl"
@@ -184,10 +184,10 @@ stdout:
           "kind": "executable"
         }
       ],
-      "checksum": "cargo-dist-aarch64-unknown-linux-musl.tar.gz.sha256"
+      "checksum": "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256"
     },
-    "cargo-dist-aarch64-unknown-linux-musl.tar.gz.sha256": {
-      "name": "cargo-dist-aarch64-unknown-linux-musl.tar.gz.sha256",
+    "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256": {
+      "name": "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "aarch64-unknown-linux-musl"
@@ -296,8 +296,8 @@ stdout:
       "install_hint": "npm install @axodotdev/dist@1.0.0-FAKEVERSION",
       "description": "Install prebuilt binaries into your npm project"
     },
-    "cargo-dist-x86_64-apple-darwin.tar.gz": {
-      "name": "cargo-dist-x86_64-apple-darwin.tar.gz",
+    "cargo-dist-x86_64-apple-darwin.tar.xz": {
+      "name": "cargo-dist-x86_64-apple-darwin.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-apple-darwin"
@@ -330,17 +330,17 @@ stdout:
           "kind": "executable"
         }
       ],
-      "checksum": "cargo-dist-x86_64-apple-darwin.tar.gz.sha256"
+      "checksum": "cargo-dist-x86_64-apple-darwin.tar.xz.sha256"
     },
-    "cargo-dist-x86_64-apple-darwin.tar.gz.sha256": {
-      "name": "cargo-dist-x86_64-apple-darwin.tar.gz.sha256",
+    "cargo-dist-x86_64-apple-darwin.tar.xz.sha256": {
+      "name": "cargo-dist-x86_64-apple-darwin.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "x86_64-apple-darwin"
       ]
     },
-    "cargo-dist-x86_64-pc-windows-msvc.tar.gz": {
-      "name": "cargo-dist-x86_64-pc-windows-msvc.tar.gz",
+    "cargo-dist-x86_64-pc-windows-msvc.zip": {
+      "name": "cargo-dist-x86_64-pc-windows-msvc.zip",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-pc-windows-msvc"
@@ -373,17 +373,17 @@ stdout:
           "kind": "executable"
         }
       ],
-      "checksum": "cargo-dist-x86_64-pc-windows-msvc.tar.gz.sha256"
+      "checksum": "cargo-dist-x86_64-pc-windows-msvc.zip.sha256"
     },
-    "cargo-dist-x86_64-pc-windows-msvc.tar.gz.sha256": {
-      "name": "cargo-dist-x86_64-pc-windows-msvc.tar.gz.sha256",
+    "cargo-dist-x86_64-pc-windows-msvc.zip.sha256": {
+      "name": "cargo-dist-x86_64-pc-windows-msvc.zip.sha256",
       "kind": "checksum",
       "target_triples": [
         "x86_64-pc-windows-msvc"
       ]
     },
-    "cargo-dist-x86_64-unknown-linux-gnu.tar.gz": {
-      "name": "cargo-dist-x86_64-unknown-linux-gnu.tar.gz",
+    "cargo-dist-x86_64-unknown-linux-gnu.tar.xz": {
+      "name": "cargo-dist-x86_64-unknown-linux-gnu.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
@@ -416,17 +416,17 @@ stdout:
           "kind": "executable"
         }
       ],
-      "checksum": "cargo-dist-x86_64-unknown-linux-gnu.tar.gz.sha256"
+      "checksum": "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256"
     },
-    "cargo-dist-x86_64-unknown-linux-gnu.tar.gz.sha256": {
-      "name": "cargo-dist-x86_64-unknown-linux-gnu.tar.gz.sha256",
+    "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "cargo-dist-x86_64-unknown-linux-gnu.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ]
     },
-    "cargo-dist-x86_64-unknown-linux-musl.tar.gz": {
-      "name": "cargo-dist-x86_64-unknown-linux-musl.tar.gz",
+    "cargo-dist-x86_64-unknown-linux-musl.tar.xz": {
+      "name": "cargo-dist-x86_64-unknown-linux-musl.tar.xz",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-unknown-linux-musl"
@@ -459,10 +459,10 @@ stdout:
           "kind": "executable"
         }
       ],
-      "checksum": "cargo-dist-x86_64-unknown-linux-musl.tar.gz.sha256"
+      "checksum": "cargo-dist-x86_64-unknown-linux-musl.tar.xz.sha256"
     },
-    "cargo-dist-x86_64-unknown-linux-musl.tar.gz.sha256": {
-      "name": "cargo-dist-x86_64-unknown-linux-musl.tar.gz.sha256",
+    "cargo-dist-x86_64-unknown-linux-musl.tar.xz.sha256": {
+      "name": "cargo-dist-x86_64-unknown-linux-musl.tar.xz.sha256",
       "kind": "checksum",
       "target_triples": [
         "x86_64-unknown-linux-musl"
