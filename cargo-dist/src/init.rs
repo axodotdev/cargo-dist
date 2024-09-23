@@ -26,8 +26,6 @@ pub struct InitArgs {
     pub with_json_config: Option<Utf8PathBuf>,
     /// Hosts to enable
     pub host: Vec<HostingStyle>,
-    /// Whether to migrate to the new config format
-    pub migrate_to_new_config: bool,
 }
 
 /// Input for --with-json-config
@@ -109,34 +107,32 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let mut newly_initted_generic = false;
     // Users who haven't initted yet should be opted into the
     // new config format by default.
-    let desired_workspace_kind =
-        if root_workspace.kind == WorkspaceKind::Rust && !initted && args.migrate_to_new_config {
-            newly_initted_generic = true;
-            WorkspaceKind::Generic
-        // Already-initted users should be asked whether to migrate.
-        } else if root_workspace.kind == WorkspaceKind::Rust && args.migrate_to_new_config {
-            let prompt = r#"Would you like to opt in to the new configuration format?
+    let desired_workspace_kind = if root_workspace.kind == WorkspaceKind::Rust && !initted {
+        newly_initted_generic = true;
+        WorkspaceKind::Generic
+    // Already-initted users should be asked whether to migrate.
+    } else if root_workspace.kind == WorkspaceKind::Rust {
+        let prompt = r#"Would you like to opt in to the new configuration format?
     Future versions of cargo-dist will feature major changes to the
     configuration format, including a new cargo-dist-specific configuration file."#;
-            let res = if args.yes {
-                // We want to avoid --yes pulling it in at this point.
-                false
-            } else {
-                dialoguer::Confirm::with_theme(&theme())
-                    .with_prompt(prompt)
-                    .default(args.migrate_to_new_config)
-                    .interact()?
-            };
+        let res = if args.yes {
+            false
+        } else {
+            dialoguer::Confirm::with_theme(&theme())
+                .with_prompt(prompt)
+                .default(false)
+                .interact()?
+        };
 
-            if res {
-                is_migrating = true;
-                WorkspaceKind::Generic
-            } else {
-                root_workspace.kind
-            }
+        if res {
+            is_migrating = true;
+            WorkspaceKind::Generic
         } else {
             root_workspace.kind
-        };
+        }
+    } else {
+        root_workspace.kind
+    };
 
     let multi_meta = if let Some(json_path) = &args.with_json_config {
         // json update path, read from a file and apply all requested updates verbatim
