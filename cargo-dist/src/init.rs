@@ -5,6 +5,7 @@ use camino::Utf8PathBuf;
 use semver::Version;
 use serde::Deserialize;
 
+use crate::config::MacPkgConfig;
 use crate::{
     config::{
         self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
