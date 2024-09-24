@@ -18,7 +18,11 @@
 //! Options, because you don't need to specify it in your oranda.json but we want the rest of our
 //! code to have the final result fully resolved.
 //!
-//! The Big Idea is that:
+//!
+//! # The ORIGINAL Big Idea
+//!
+//! These ideas don't hold anymore but they're informative of how we ended up with the
+//! current design. The next section discusses where we ended up and why.
 //!
 //! - a `...Config` type implements [`Default`][] manually to specify default values
 //! - a `...Config` type implements [`ApplyLayer`][] to specify how its `...Layer` gets combined
@@ -31,6 +35,70 @@
 //! which lets config say things like `homebrew = false` when `HomebrewInstallerConfig`
 //! is actually an entire struct.
 //!
+//!
+//! # The ACTUAL Situation
+//!
+//! Here's how things are different from the original ideal design.
+//!
+//! ## Two Different Output Config Types
+//!
+//! Because we wanted to structurally distinguish "global" and "package-specific" configs
+//! we ended up with two kinds of Config type: `Workspace...Config` and `App...Config`.
+//! For instance [`WorkspaceInstallerConfig`][] and [`AppInstallerConfig`][] both exist.
+//! Sometimes only one exists, because the struct would have no fields (because e.g. all the
+//! relevant subconfig is all global).
+//!
+//!
+//! ## Common Fields
+//!
+//! Some "common" fields are defined to be shared to several related things like
+//! e.g. `ShellInstallerConfig` and `PowershellInstallerConfig`.
+//!
+//! These common fields are defined in `...Common` types. For instance [`CommonInstallerConfig`][]
+//! and [`CommonInstallerLayer`][] specify the shared fields for all installers.
+//!
+//! Notably, as a convenience sugar, these common fields can be specified in the parent
+//! struct and will be automatically "folded" into the subtypes. So you can set
+//! `installers.success_msg = "hello"`` and this will be inherited by
+//! `installers.powershell.success_msg` and `installers.shell.success_msg` and so on.
+//!
+//! In addition to being a sugar it also gives a forward-compat path for making a config
+//! more granular in the future without breaking existing configs. So if success_msg
+//! could only be set once for all installers, we could make it "common" *later*
+//! to allow anyone to customize it without breaking any config from before then.
+//!
+//! ...HOWEVER...
+//!
+//! This is a huge thorn in the whole idea of starting with our final config with Default
+//! and then folding in layers over time.
+//!
+//! This is because the "common" fields need to exist in the Layer types and be preserved
+//! as we fold in all the fields *BUT* we want them to go away in the final Config types
+//! because we want a single source of truth (we don't want code to forget to consult
+//! the inheritance chain). So a bunch of places grew [`...ConfigInheritable`] types that
+//! represent a hybrid between Config and Layer where the fields are ostensibly final
+//! but the "common" fields are still not folded in.
+//!
+//! See for example [`InstallerConfigInheritable`][]. We actually construct *THESE*
+//! instead of the `...Config` types, and then "finish" them with the apply_inheritance
+//! methods.
+//!
+//!
+//! ## Future Work
+//!
+//! The above situation is suboptimal and I believe the `...ConfigInheritable` types
+//! are a mistake. We should instead just use the `...Layer` types as that type, and
+//! apply defaults *at the end* instead of *at the start*.
+//!
+//! If you see a bunch of default code that doesn't make much sense, that's because
+//! this refactor should be done because it really doesn't make sense.
+//!
+//! This is in theory not *complex* work, but it is *a bunch* of work.
+//!
+//! It's possible it would be more worthwhile to put the effort into a derive macro
+//! that automates a bunch of this stuff if you're having to rejig a ton of the code/types
+//! anyway.
+
 // We very intentionally manually implement Default a lot in this submodule
 // to keep things very explicit and clear
 #![allow(clippy::derivable_impls)]
@@ -395,7 +463,7 @@ impl TomlLayer {
 }
 
 fn make_path_relative_to(path: &mut Utf8PathBuf, base_path: &Utf8Path) {
-    // TODO: should absolute paths be a hard error? Or should we force them relative?
+    // FIXME: should absolute paths be a hard error? Or should we force them relative?
     if !path.is_absolute() {
         *path = base_path.join(&path);
     }

@@ -37,6 +37,9 @@ impl PkgInstallerConfig {
     ) -> Self {
         Self {
             common: common.clone(),
+            // TODO: you *need* to provide this to make a pkg
+            // installer, so it *should* be non-optional, but the
+            // whole "defaults first" thing makes this messed up...
             identifier: "TODO".to_owned(),
             install_location: "/usr/local".to_owned(),
         }
