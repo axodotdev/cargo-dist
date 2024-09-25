@@ -2,6 +2,8 @@
 //!
 //! This is both "selection of what we're announcing via the tag" and "changelog stuff"
 
+use std::fmt::Display;
+
 use axoproject::platforms::triple_to_display_name;
 use axoproject::PackageIdx;
 use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
@@ -158,6 +160,24 @@ impl<'a> DistGraphBuilder<'a> {
     }
 }
 
+enum DisabledReason {
+    DistFalse,
+    NoArtifacts { kinds: Vec<String> },
+    PublishFalse,
+    TagNotMatched { tag: String },
+}
+
+impl Display for DisabledReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DistFalse => write!(f, "dist = false"),
+            Self::PublishFalse => write!(f, "publish = false"),
+            Self::NoArtifacts { kinds } => write!(f, "no {}", kinds.join(" ")),
+            Self::TagNotMatched { tag } => write!(f, "didn't match tag {}", tag),
+        }
+    }
+}
+
 /// See if we should dist this package.
 ///
 /// Some(disabled_reason) is returned if it shouldn't be.
@@ -174,11 +194,11 @@ fn check_dist_package(
     pkg_id: PackageIdx,
     pkg: &axoproject::PackageInfo,
     announcing: &PartialAnnouncementTag,
-) -> Option<String> {
+) -> Option<DisabledReason> {
     let config = graph.package_config(pkg_id).clone();
 
     let mut package_empty = pkg.binaries.is_empty();
-    let mut missing_categories = vec!["binaries"];
+    let mut missing_categories = vec!["binaries".to_owned()];
     if config
         .artifacts
         .archives
@@ -186,7 +206,7 @@ fn check_dist_package(
         .contains(&LibraryStyle::CDynamic)
     {
         package_empty &= pkg.cdylibs.is_empty();
-        missing_categories.push("cdylibs");
+        missing_categories.push("cdylibs".to_owned());
     }
     if config
         .artifacts
@@ -195,18 +215,20 @@ fn check_dist_package(
         .contains(&LibraryStyle::CStatic)
     {
         package_empty &= pkg.cstaticlibs.is_empty();
-        missing_categories.push("cstaticlibs");
+        missing_categories.push("cstaticlibs".to_owned());
     }
 
     // Nothing to publish if there's no binaries/libraries!
     if package_empty {
-        return Some(format!("no {}", missing_categories.join(" ")));
+        return Some(DisabledReason::NoArtifacts {
+            kinds: missing_categories,
+        });
     }
 
     // If [metadata.dist].dist is explicitly set, respect it!
     let override_publish = if let Some(do_dist) = config.dist {
         if !do_dist {
-            return Some("dist = false".to_owned());
+            return Some(DisabledReason::DistFalse);
         } else {
             true
         }
@@ -216,19 +238,23 @@ fn check_dist_package(
 
     // Otherwise defer to Cargo's `publish = false`
     if !pkg.publish && !override_publish {
-        return Some("publish = false".to_owned());
+        return Some(DisabledReason::PublishFalse);
     }
 
     // If we're announcing a package, reject every other package
     match &announcing.release {
         ReleaseType::Package { idx, version: _ } => {
             if pkg_id != PackageIdx(*idx) {
-                return Some(format!("didn't match tag {}", announcing.tag));
+                return Some(DisabledReason::TagNotMatched {
+                    tag: announcing.tag.to_owned(),
+                });
             }
         }
         ReleaseType::Version(ver) => {
             if pkg.version.as_ref().unwrap().semver() != *ver {
-                return Some(format!("didn't match tag {}", announcing.tag));
+                return Some(DisabledReason::TagNotMatched {
+                    tag: announcing.tag.to_owned(),
+                });
             }
         }
         ReleaseType::None => {}
