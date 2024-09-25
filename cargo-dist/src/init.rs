@@ -1378,7 +1378,7 @@ fn apply_optional_mac_pkg(
                 new_table,
                 "identifier",
                 "# A unique identifier, in tld.domain.package format\n",
-                Some(identifier),
+                identifier.as_ref(),
             );
             apply_optional_value(
                 new_table,

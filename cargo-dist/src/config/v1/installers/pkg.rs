@@ -22,7 +22,7 @@ pub struct PkgInstallerConfig {
     /// Common options
     pub common: CommonInstallerConfig,
     /// A unique identifier, in tld.domain.package format
-    pub identifier: String,
+    pub identifier: Option<String>,
     /// The location to which the software should be installed.
     /// If not specified, /usr/local will be used.
     pub install_location: String,
@@ -37,10 +37,7 @@ impl PkgInstallerConfig {
     ) -> Self {
         Self {
             common: common.clone(),
-            // TODO: you *need* to provide this to make a pkg
-            // installer, so it *should* be non-optional, but the
-            // whole "defaults first" thing makes this messed up...
-            identifier: "TODO".to_owned(),
+            identifier: None,
             install_location: "/usr/local".to_owned(),
         }
     }
@@ -57,7 +54,7 @@ impl ApplyLayer for PkgInstallerConfig {
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
-        self.identifier.apply_val(identifier);
+        self.identifier.apply_opt(identifier);
         self.install_location.apply_val(install_location);
     }
 }

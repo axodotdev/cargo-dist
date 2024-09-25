@@ -734,7 +734,7 @@ impl std::fmt::Display for HostStyle {
 #[serde(rename_all = "kebab-case")]
 pub struct MacPkgConfig {
     /// A unique identifier, in tld.domain.package format
-    pub identifier: String,
+    pub identifier: Option<String>,
     /// The location to which the software should be installed.
     /// If not specified, /usr/local will be used.
     #[serde(skip_serializing_if = "Option::is_none")]

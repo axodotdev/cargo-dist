@@ -2301,6 +2301,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
             let bin_aliases = bin_aliases.for_target(&variant.target);
 
+            let identifier = if let Some(id) = &config.identifier {
+                id.to_owned()
+            } else {
+                return Err(DistError::MacPkgBundleIdentifierMissing {});
+            };
+
             // Gather up the bundles the installer supports
             let installer_artifact = Artifact {
                 id: artifact_name,
@@ -2318,8 +2324,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     file_path: artifact_path.clone(),
                     artifact,
                     package_dir: dir_path.clone(),
-                    // Un-hardcode this
-                    identifier: config.identifier.clone(),
+                    identifier,
                     install_location: config.install_location.clone(),
                     version: version.to_string(),
                     bin_aliases,
