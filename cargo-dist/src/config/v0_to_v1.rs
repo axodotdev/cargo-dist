@@ -283,7 +283,7 @@ impl DistMetadata {
                 } = mac_pkg_config?;
                 Some(PkgInstallerLayer {
                     common: CommonInstallerLayer::default(),
-                    identifier: Some(identifier),
+                    identifier,
                     install_location,
                 })
             });
