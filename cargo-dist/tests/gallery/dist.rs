@@ -192,6 +192,21 @@ impl<'a> TestContext<'a, Tools> {
         self.load_dist_results(test_name, true)
     }
 
+    pub fn cargo_dist_build_tag(&self, test_name: &str, tag_name: &str) -> Result<DistResult> {
+        // If the dist target dir exists, delete it to avoid cross-contamination
+        let out_path = Utf8Path::new("target/distrib/");
+        if out_path.exists() {
+            LocalAsset::remove_dir_all(out_path)?;
+        }
+
+        eprintln!("running dist build --tag={tag_name}...");
+        self.tools
+            .cargo_dist
+            .output_checked(|cmd| cmd.arg("dist").arg("build").arg("--tag").arg(tag_name))?;
+
+        self.load_dist_results(test_name, true)
+    }
+
     /// Run 'dist generate' and return paths to various files that were generated
     pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateResult> {
         self.cargo_dist_generate_prefixed(test_name, "")

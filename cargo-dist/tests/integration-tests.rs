@@ -1652,6 +1652,43 @@ targets = ["x86_64-pc-windows-msvc"]
 }
 
 #[test]
+// Should produce an error on `build` because the requested tag matches a package with dist=false
+#[should_panic(expected = r#"This workspace doesn't have anything for dist to Release!"#)]
+fn axolotlsay_dist_false() {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
+tap = "axodotdev/homebrew-packages"
+publish-jobs = ["homebrew", "npm"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+install-success-msg = ">o_o< everything's installed!"
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+npm-scope = "@axodotdev"
+dist = false
+
+[package.metadata.wix]
+upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
+path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
+
+"#
+        ))?;
+
+        ctx.cargo_dist_build_tag(test_name, "axolotlsay-v0.2.2")?;
+
+        Ok(())
+    }).unwrap()
+}
+
+#[test]
 fn axolotlsay_disable_source_tarball() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
