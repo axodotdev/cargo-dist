@@ -182,6 +182,8 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
             cargo_metadata_table: None,
             #[cfg(feature = "cargo-projects")]
             cargo_profiles: crate::rust::CargoProfiles::new(),
+            #[cfg(feature = "cargo-projects")]
+            axoupdater_version: None,
         },
     })
 }

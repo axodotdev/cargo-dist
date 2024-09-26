@@ -254,6 +254,8 @@ fn process_virtual_workspace(
             cargo_metadata_table: None,
             #[cfg(feature = "cargo-projects")]
             cargo_profiles: crate::rust::CargoProfiles::new(),
+            #[cfg(feature = "cargo-projects")]
+            axoupdater_version: None,
         },
     })
 }
@@ -308,6 +310,8 @@ fn upgrade_package_to_workspace(package: PackageInfo) -> Result<WorkspaceStructu
             cargo_metadata_table: None,
             #[cfg(feature = "cargo-projects")]
             cargo_profiles: Default::default(),
+            #[cfg(feature = "cargo-projects")]
+            axoupdater_version: None,
         },
         sub_workspaces: vec![],
         packages: vec![package],

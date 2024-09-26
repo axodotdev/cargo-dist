@@ -52,8 +52,6 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
 fn package_graph(start_dir: &Utf8Path) -> Result<PackageGraph> {
     let mut metadata_cmd = MetadataCommand::new();
 
-    // We don't care about dependency information, and disabling it makes things much faster!
-    metadata_cmd.no_deps();
     metadata_cmd.current_dir(start_dir);
 
     let pkg_graph = metadata_cmd.build_graph()?;
@@ -89,6 +87,23 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
     let target_dir = workspace.target_directory().to_owned();
     let workspace_dir = workspace.root().to_owned();
 
+    let mut axoupdater_version = None;
+    for package in members.packages(DependencyDirection::Reverse) {
+        let mut version = None;
+        if package.name() == "axoupdater" {
+            version = Some(package.version());
+        } else {
+            for package in package.direct_links() {
+                if package.dep_name() == "axoupdater" {
+                    version = Some(package.to().version());
+                }
+            }
+        }
+        if let Some(version) = version {
+            axoupdater_version = Some(Version::Cargo(version.to_owned()));
+        }
+    }
+
     Ok(WorkspaceStructure {
         sub_workspaces: vec![],
         packages: all_package_info,
@@ -102,6 +117,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
             root_auto_includes,
             cargo_metadata_table,
             cargo_profiles,
+            axoupdater_version,
         },
     })
 }
