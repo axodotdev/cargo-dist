@@ -19,7 +19,10 @@ use crate::{
 };
 
 impl<'a> DistGraphBuilder<'a> {
-    pub(crate) fn compute_cargo_builds(&mut self, workspace_idx: WorkspaceIdx) -> Vec<BuildStep> {
+    pub(crate) fn compute_cargo_builds(
+        &mut self,
+        workspace_idx: WorkspaceIdx,
+    ) -> DistResult<Vec<BuildStep>> {
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
@@ -30,7 +33,10 @@ impl<'a> DistGraphBuilder<'a> {
                 .expect("invalid axoupdater const?!");
 
             if *version < axoupdater_min_version {
-                warn!("Your project uses axoupdater as a library. We've detected that you're using {}, but this version of cargo-dist expects a version of at least {} (or greater). Please consider updating to ensure your users don't experience inconsistent update behaviour.", version, axoupdater_min_version);
+                return Err(DistError::AxoupdaterTooOld {
+                    minimum: version.to_owned(),
+                    your_version: axoupdater_min_version,
+                });
             }
         }
 
@@ -135,7 +141,7 @@ impl<'a> DistGraphBuilder<'a> {
                 }));
             }
         }
-        builds
+        Ok(builds)
     }
 }
 

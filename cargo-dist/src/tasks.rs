@@ -2383,7 +2383,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         idx
     }
 
-    fn compute_build_steps(&mut self) {
+    fn compute_build_steps(&mut self) -> DistResult<()> {
         // FIXME: more intelligently schedule these in a proper graph?
 
         let mut local_build_steps = vec![];
@@ -2394,7 +2394,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let builds = match workspace_kind {
                 axoproject::WorkspaceKind::Javascript => self.compute_generic_builds(workspace_idx),
                 axoproject::WorkspaceKind::Generic => self.compute_generic_builds(workspace_idx),
-                axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(workspace_idx),
+                axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(workspace_idx)?,
             };
             local_build_steps.extend(builds);
         }
@@ -2421,6 +2421,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         self.inner.local_build_steps = local_build_steps;
         self.inner.global_build_steps = global_build_steps;
+
+        Ok(())
     }
 
     fn add_build_steps_for_artifacts(artifacts: &Vec<&Artifact>, build_steps: &mut Vec<BuildStep>) {
@@ -2844,7 +2846,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     graph.compute_announcement_info(&announcing);
 
     // Finally compute all the build steps!
-    graph.compute_build_steps();
+    graph.compute_build_steps()?;
 
     // And now figure out how to orchestrate the result in CI
     graph.compute_ci()?;
