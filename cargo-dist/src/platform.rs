@@ -1,4 +1,232 @@
 //! Logic for computing how different platforms are supported by a project's archives.
+//!
+//! The main entrypoint for this is [`PlatformSupport::new`][].
+//! [`PlatformSupport::platforms`][] is what you want to query.
+//!
+//!
+//! # Platform Support
+//!
+//! The complexity of this module is trying to handle things like:
+//!
+//! * linux-musl-static binaries work on linux-gnu platforms
+//! * but linux-gnu binaries are preferrable if they're available
+//! * but if the target system has a really old version of glibc, the linux-gnu binaries won't work
+//! * so the linux-musl-static binaries need to still be eligible as a fallback
+//!
+//! ("x64 macos binaries can run on arm64 macos under rosetta2" is another good canonical example)
+//!
+//! [`PlatformSupport::platforms`][] is an index
+//! from "target I want to install to" ([`TargetTriple`][])
+//! to "list of archives we can potentially use to do that" ([`PlatformEntry`][]).
+//! The list is sorted in decreasing order from best-to-worst options. The basic idea
+//! is that you go down that list and try each option in order until one "works".
+//! Typically there will only be one option, and that option will always work.
+//!
+//!
+//!
+//! ## SupportQuality
+//!
+//! We get *multiple* options when there are targets that interop, typically
+//! with an emulation layer or some kind of compromise. The level of compromise
+//! is captured by [`SupportQuality`][], which is what we sort the options by.
+//! It can be found on [`PlatformEntry::quality`][].
+//!
+//! For instance, on linux-gnu, linux-gnu binaries have [`SupportQuality::HostNative`][] (best)
+//! while linux-musl-static binaris have [`SupportQuality::ImperfectNative`][] (excellent).
+//!
+//! Note that this `SupportQuality` is specific to the target platform. For instance
+//! x64 macos binaries are [`SupportQuality::HostNative`][] on x86_64-apple-darwin but
+//! [`SupportQuality::Emulated`][] on aarch64-apple-darwin (they run via Rosetta 2).
+//!
+//!
+//! ## RuntimeConditions
+//!
+//! A technically-superior option can *fail* if there are known runtime conditions for
+//! it to execute properly on the install-target system, and the system doesn't satisfy
+//! those conditions. These conditions are captured by [`RuntimeConditions`][].
+//! It can be found on [`PlatformEntry::runtime_conditions`][].
+//!
+//! For instance, linux-gnu binaries are built against a specific version of glibc.
+//! It can work with any glibc *newer* than that version, but it will hard error out
+//! with a glibc *older* than that version.
+//!
+//! It's up to each installer to check these conditions to the best of their ability
+//! and discard options that won't work. As of this writing, the shell installer
+//! does the best job of this, because linux has the most relevant fallback/conditions.
+//!
+//!
+//! ## Native RuntimeConditions
+//!
+//! Note that [`FetchableArchive::native_runtime_conditions`][] also exists but
+//! **YOU PROBABLY DON'T WANT THAT VALUE**. It contains runtime conditions that
+//! are *intrinsic* to the archive, which is a subset of [`PlatformEntry::runtime_conditions`][].
+//!
+//! For instance the glibc version is intrinsic to a linux-gnu archive, and
+//! is therefore a native_runtime_condition, so it will show up in both places.
+//! However "must have Rosetta2 installed" isn't intrinsic to x64 macos binaries,
+//! it *only* applies to "x64 macos binaries on arm64 macos", and so will *only*
+//! appear in [`PlatformEntry::runtime_conditions`][].
+//!
+//!
+//! # When To Invoke This Subsystem
+//!
+//! [`PlatformSupport::new`][] can be called at any time, and will do its best to produce
+//! the best possible results with the information it has. However, the later
+//! this function can be (re)run, the better information it will have.
+//!
+//! In particular, only once we have info from building and linkage-checking
+//! the binaries will we have all the [`RuntimeConditions`][]. In a typical
+//! CI run of cargo-dist this is fine, because the main use of this info
+//! is for installers, which are built with a fresh invocation on a machine
+//! with all binaries/platform info prefetched.
+//!
+//! However, if you were to run cargo-dist locally and try to build binaries
+//! and installers all at once, we currently fail to regenerate the platform
+//! info and update the installers. Doing this would necessitate some refactors
+//! to make the installers compute more of their archive/platform info "latebound"
+//! instead of the current very eager approach where we do that when building the
+//! DistGraph.
+//!
+//! In an ideal world we do an initial invocation of this API when building the DistGraph
+//! to get the list of platforms we expect to support (to know what an installer depends on),
+//! and then after building all binarier/archives and running linkage, we would rerun
+//! this API to get the final/complete picture. Then when we go to build installers we
+//! would lookup the *details* of PlatformSupport.
+//!
+//!
+//! # Compatibility Shims
+//!
+//! There's lots of things that care about platforms/archives, and they were written
+//! before this module. As of this writing we're in the process of gradually migrating
+//! them to using the full power of this API.
+//!
+//! To enable that migration, the PlatformSupport has a few APIs that will squash its
+//! richer information into legacy/simpler ones. In an ideal world we stop using these
+//! APIs and migrate all installers to just Doing It Right (but Doing It Right
+//! moves more logic into each installer, as it essentially requires each installer
+//! to have a full implementation for how to query [`PlatformSupport::platforms`][]
+//! and do the RuntimeCondition fallbacks.
+//!
+//!
+//! ## Fragments
+//!
+//! Fragments is the old platform support format that this API was made to replace.
+//!
+//! [`PlatformSupport::fragments`][] throws out all the fallback/condition information
+//! to produce a list of archives, each with a single target it claims to support.
+//! In cases where e.g. you have linux-musl-static build but no linux-gnu build, we
+//! will emit multiple copies of the linux-musl-static archive, one for each platform
+//! it's the best option for (so typically 3 copies covering linux-musl-static,
+//! linux-musl-dynamic, and linux-gnu).
+//!
+//! This system is a lot easier for an installer to handle, because all it needs to
+//! do is compute the target-triple it wants to try to install, and get the one
+//! archive that claims to support that (or error if none).
+//!
+//! Historically things like musl fallback were implemented in an installer during
+//! its target-triple selection with a single global hardcoded glibc version.
+//!
+//!
+//! ## Conflated Runtime Conditions
+//!
+//! [`PlatformSupport::safe_conflated_runtime_conditions`][] and
+//! [`PlatformSupport::conflated_runtime_conditions`][] exist to deal with
+//! installers that have the above "single global hardcoded glibc version"
+//! mentioned in the previous section.
+//!
+//! It represents a half-step to removing that, by removing the "hardcoded"
+//! part, having the version be baked into the installer when we generate it.
+//!
+//! The "conflation" occurs when you have multiple linux-gnu platforms.
+//! This is typical if you build for x64 and arm64 linux. In this case, the
+//! runners may have different glibc versions, so there's no "correct"
+//! global hardcoded version.
+//!
+//! Conflated conditions handle this by taking the maximum, which is *safe*
+//! but may prevent people from installing on a compatible system (see
+//! the next section for details).
+//!
+//!
+//! # The Importance of Glibc Versions
+//!
+//! Getting the right glibc version is important because it's used to:
+//!
+//! * Trigger musl fallback in installers if your glibc is too new
+//! * Informatively error out installers if there is no musl fallback
+//!
+//! If the version is wrong, there are two kinds of failure mode.
+//!
+//! If this version is too new, we may spuriously error during install for overly
+//! strict constraints, preventing users from installing the application at all.
+//! If there is a musl-static fallback this isn't a concern, and instead we'll just
+//! overly-aggressively use the musl fallback (though it's mildly unfortunate that
+//! a "more native" option is available and unused).
+//!
+//! If this version is too old we will fail to error and/or fail to invoke musl fallback,
+//! and may claim to succesfully install linux-gnu binaries which will immediately error out
+//! when run.
+//!
+//!
+//! ### Madeup Glibc Versions
+//!
+//! There is currently a FIXME in `native_runtime_conditions_for_artifact` about us making up a fake
+//! glibc version if we can't find one, but we're clearing supposed to be linking linux-gnu.
+//!
+//! Under ideal conditions this only is "transiently" used when we're too-eagerly looking up
+//! runtime conditions, or doing tests without linkage info. As such, they
+//! generally won't appear in final production installers.
+//! In this case they will get an "arbitrary" glibc version ([`LibcVersion::default_glibc`][]).
+//!
+//! *HOWEVER* there are genuine situations where we don't run linkage in production.
+//! For instance, if the archives were built and packaged in custom build
+//! steps, because the user wanted to use maturin for cross-compilation.
+//!
+//!
+//! ### Approximating Glibc Versions
+//!
+//! To the best of our knowledge, there is no way to "ask" a binary what version of glibc
+//! it's linked against (if this is wrong PLEASE let us know that would be so useful).
+//! It will tell you it's linked against glibc, but not the version
+//! (there's a version in the library name but that never changes and is therefore irrelevant).
+//!
+//! We approximate the answer by asking the glibc on the system that built the binary
+//! "hey what version are you" and then *ASSUME ALL BINARIES BUILT ON THAT PLATFORM WERE
+//! BUILT AGAINST IT*.
+//!
+//! This is the default for most toolchains and is correct in 99% of cases.
+//! However, some tools may go above and beyond to try to link against older glibcs.
+//! Tools such as maturin and zig do this. In this case we are likely to pick a too-new
+//! glibc version, see the previous sections for the implications of this.
+//! It's possible in the case of maturin you "just" need to check the glibc in the
+//! docker image it used? This is a guess though.
+//!
+//!
+//! # targets vs target
+//!
+//! Ok so a lot of cargo-dist's code is *vaguely* trying to allow for a single archive
+//! to *natively* be built for multiple architectures. This would for instance be the
+//! case for any apple Universal Binary, which is just several binaries built for different
+//! architectures all stapled together.
+//!
+//! This is why you'll see several places where an archive/binary has `targets`, *plural*.
+//!
+//! In practice this is headache inducing, and because nothing we support *actually*
+//! is like this, code variously has punted on supporting it, or asserts against it.
+//! As such, there's a lot of random places where we use `target`, *singular*.
+//! Typically `target` is just `targets[0]`.
+//!
+//! So anyway it would be cool if code tried to work with `targets` but if you see stuff
+//! only using target, or weirdly throwing out parts of targets... that's why.
+//!
+//! In theory *this* is the module that would handle it for everyone else, because once
+//! we've constructed [`PlatformSupport`][] the information is indexed such that the
+//! difference doesn't actually matter (nothing should care what platform an archive
+//! is *natively* for, they should just do whatever [`PlatformSupport::platforms`][] says).
+//!
+//! But until we care about universal binaries, it's not really worth dealing with.
+
+#![allow(rustdoc::private_intra_doc_links)]
+
 use axoproject::platforms::{
     TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
 };
@@ -72,7 +300,12 @@ pub struct LibcVersion {
 }
 
 impl LibcVersion {
-    fn default_glibc() -> Self {
+    /// Get the default glibc version for cases where we just need to guess
+    /// and make one up.
+    ///
+    /// This is the glibc of Ubuntu 20.04, which is the oldest supported
+    /// github linux runner, as of this writing.
+    pub fn default_glibc() -> Self {
         Self {
             major: 2,
             series: 31,
