@@ -1,6 +1,6 @@
 //! Computing the Announcement (and Changelogs)
 //!
-//! The main entrypoints are [`select_tag`] and [`DistGraphBuilder::compute_announcement_info`],
+//! The main entrypoints are `select_tag` and `DistGraphBuilder::compute_announcement_info`,
 //! which should be used in that order.
 //!
 //!
@@ -17,7 +17,7 @@
 //! "single-package" tag. There are many other supported formats but they are
 //! equivalent to this form.
 //!
-//! In [`select_tag`][], "selecting" the tag determines the following facts:
+//! In `select_tag`, "selecting" the tag determines the following facts:
 //!
 //! * What is the git tag
 //! * What is the version we're releasing
