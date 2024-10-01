@@ -404,7 +404,7 @@ impl RepositoryUrl {
 ///
 /// This notably includes finding readmes and licenses even if the user didn't
 /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PackageInfo {
     /// The unoverrideable name of the package within its own package management system.
     ///
