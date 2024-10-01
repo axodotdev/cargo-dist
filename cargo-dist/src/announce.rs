@@ -1,6 +1,90 @@
-//! Computing the Announcement
+//! Computing the Announcement (and Changelogs)
 //!
-//! This is both "selection of what we're announcing via the tag" and "changelog stuff"
+//! The main entrypoints are [`select_tag`] and [`DistGraphBuilder::compute_announcement_info`],
+//! which should be used in that order.
+//!
+//!
+//! # The Tag (Selection)
+//!
+//! The "tag" is cargo-dist slang for "what are we actually announcing", in reference
+//! to the fact that the original/primary mode of operation in cargo-dist was to
+//! push a commit to your repo with a git tag, which we would use as a selector
+//! for the packages we're publishing.
+//!
+//! For instance, `v1.0.0` would select all packages that have the version 1.0.0,
+//! while `my-package-v1.0.0` would select `my-package` (and error if it's not 1.0.0).
+//! We call `v1.0.0` a "universal" or "version" tag, and `my-package-v1.0.0` a
+//! "single-package" tag. There are many other supported formats but they are
+//! equivalent to this form.
+//!
+//! In [`select_tag`][], "selecting" the tag determines the following facts:
+//!
+//! * What is the git tag
+//! * What is the version we're releasing
+//! * Whether it's a prerelease
+//! * What packages are we releasing
+//!
+//! Note that version is *singular* here. It is assumed by cargo-dist that every
+//! announcement is for a single "version", and all packages that are part of that
+//! announcement should therefore have that single version.
+//!
+//! This tag is used to ensure every invocation of cargo-dist in the graph
+//! of CI jobs we kick off agrees on what's being done, with each one being passed the
+//! value via --tag.
+//!
+//!
+//! ## TagMode
+//!
+//! The [`TagMode`][] determines the primary semantics of tag selection.
+//!
+//! The primary mode is [`TagMode::Select`][], where we were given a tag and need to parse it as
+//! the kind of selector described above. The parsing is sensitive to the packages that are in
+//! the workspace, because we try to be pretty flexible about tag formats, and that's the most
+//! reliable way to avoid ambiguities. This code is factored out to a separate library called
+//! [`axotag`][], because we wanted other tools to be able to validate/agree on the results
+//! (particularly axo Releases to avoid messes where tag and version wildly disagreed).
+//!
+//! When `axotag` is invoked, it will select the packages/versions we're working with.
+//!
+//! In all other forms we start with all packages enabled, and filter them down subsequently.
+//! Typically this is in [`TagMode::Infer`][], which is used when no --tag is passed,
+//! and we need to guess at a "plausible" tag based on the packages in the workspace.
+//! Typically this would be "oh all the packages we care about are 1.2.7,
+//! so let's use v1.2.7 as the tag".
+//!
+//! `Infer` in turn has two implicit submodes based on [`TagSettings::needs_coherence`][].
+//! When set to true, this suggests we're using a command like `plan` which just wants to
+//! show you info about everything, so we don't *really* care about a coherent tag.
+//!
+//! ## Package Selection
+//!
+//! ### Distability
+//!
+//! Distability of a package (whether to "dist") is... less well-formed of a notion than one
+//! would like. It's, I think, informative to walk through it *historically*.
+//!
+//! The original idea was we'd see your cargo workspace, find all the packages with binaries
+//! in them, and then build and publish those. Of course, you don't want to dist things with
+//! cargo's `publish = false` because those are probably examples/wip/internal.
+//!
+//! But actually for whatever reason sometimes you do want to avoid the cargo registry and
+//! still "dist" them. So for we added `dist=true/false` to override the `publish=true/false` signal
+//! from cargo.
+//!
+//! Also, even though the *main* thing we do is publish apps and make installers for them,
+//! people want to tag pure-source library releases, and they wanted GitHub Releases to still get
+//! made. This introduced probably the nastiest wrench in the system, the "Library Mode",
+//! where cargo-dist knows it's kinda doing nothing but has to go through some of the motions,
+//! and the CI needs to skip over huge chunks.
+//!
+//! Library Mode is triggered by a single-package tag. **IT BYPASSES DISTABILITY**,
+//! because "has apps" was one of the criteria of distability. This is *messed up*
+//! and makes the system make no sense. This should be changed and rationalized.
+//! If I could I might just drop support for this feature?
+//!
+//! After this we added "force" modes for people who don't want to keep their packages
+//! versioned in lockstep, where we pretend the packages have the given version.
+//! This mode just selects all the distable packages.
 
 use std::fmt::Display;
 
