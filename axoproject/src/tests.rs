@@ -9,7 +9,7 @@ fn get_package(packages: &[(PackageIdx, &crate::PackageInfo)], name: &str) -> cr
     packages
         .iter()
         .find(|(_, p)| p.name == name)
-        .unwrap()
+        .unwrap_or_else(|| panic!("no package found with {name}"))
         .1
         .to_owned()
 }
@@ -24,7 +24,7 @@ fn test_self_detect() {
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(packages.len(), 3);
 
-    let package = packages[1].1;
+    let package = get_package(&packages, "axoproject");
     assert_eq!(package.name, "axoproject");
     assert_eq!(package.binaries.len(), 0);
 }
