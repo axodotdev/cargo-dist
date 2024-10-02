@@ -378,7 +378,7 @@ fn process_package(manifest_path: &Utf8Path, package: Package) -> Result<Package
         #[cfg(feature = "cargo-projects")]
         cargo_package_id: None,
         npm_scope: None,
-        axoupdater_version: None,
+        axoupdater_versions: Default::default(),
     };
 
     // Load and apply auto-includes

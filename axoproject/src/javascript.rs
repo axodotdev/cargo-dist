@@ -162,7 +162,7 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
         #[cfg(feature = "cargo-projects")]
         cargo_package_id: None,
         build_command,
-        axoupdater_version: None,
+        axoupdater_versions: Default::default(),
     };
     crate::merge_auto_includes(&mut info, &root_auto_includes);
 

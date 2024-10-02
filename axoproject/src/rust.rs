@@ -79,7 +79,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
     let root_auto_includes = crate::find_auto_includes(workspace_root)?;
     let mut all_package_info = vec![];
     for package in members.packages(DependencyDirection::Forward) {
-        let mut info = package_info(workspace_root, &package)?;
+        let mut info = package_info(workspace_root, &package, pkg_graph)?;
         crate::merge_auto_includes(&mut info, &root_auto_includes);
         all_package_info.push(info);
     }
@@ -104,7 +104,11 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
     })
 }
 
-fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result<PackageInfo> {
+fn package_info(
+    _workspace_root: &Utf8Path,
+    package: &PackageMetadata,
+    pkg_graph: &PackageGraph,
+) -> Result<PackageInfo> {
     let manifest_path = package.manifest_path().to_owned();
     let package_root = manifest_path
         .parent()
@@ -198,18 +202,20 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
             )
         };
 
-    let axoupdater_version = if package.name() == "axoupdater" {
-        Some(Version::Cargo(package.version().to_owned()))
-    } else {
-        let mut version = None;
-        for subpackage in package.direct_links() {
-            if subpackage.dep_name() == "axoupdater" {
-                version = Some(Version::Cargo(subpackage.to().version().to_owned()));
+    let query = pkg_graph.query_forward(std::iter::once(package.id()))?;
+    let package_set = query.resolve();
+    let mut axoupdater_versions = vec![];
+    for package in package_set.packages(DependencyDirection::Reverse) {
+        if package.name() == "axoupdater" {
+            axoupdater_versions.push(Version::Cargo(package.version().to_owned()))
+        } else {
+            for subpackage in package.direct_links() {
+                if subpackage.dep_name() == "axoupdater" {
+                    axoupdater_versions.push(Version::Cargo(subpackage.to().version().to_owned()))
+                }
             }
         }
-
-        version
-    };
+    }
 
     let version = Some(Version::Cargo(package.version().clone()));
     let mut info = PackageInfo {
@@ -242,7 +248,7 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         cargo_package_id,
         npm_scope: None,
         build_command: None,
-        axoupdater_version,
+        axoupdater_versions,
     };
 
     // Find files we might want to auto-include

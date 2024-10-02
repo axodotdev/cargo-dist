@@ -520,9 +520,9 @@ pub struct PackageInfo {
     /// A unique id used by Cargo to refer to the package
     #[cfg(feature = "cargo-projects")]
     pub cargo_package_id: Option<PackageId>,
-    /// The version of axoupdater directly depended on, if any
+    /// The versions of axoupdater directly depended on, if any
     #[cfg(feature = "cargo-projects")]
-    pub axoupdater_version: Option<Version>,
+    pub axoupdater_versions: Vec<Version>,
     /// npm scope (with the @, like "@axodotdev")
     pub npm_scope: Option<String>,
     /// Command to run to build this package
