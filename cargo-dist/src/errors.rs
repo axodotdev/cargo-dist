@@ -559,7 +559,7 @@ pub enum DistError {
     /// Project depends on a too-old axoupdater
     #[error("Your project ({package_name}) uses axoupdater as a library, but the version specified ({your_version}) is older than the minimum supported version ({minimum}),")]
     #[diagnostic(help(
-        "Please update the version of axoupdater in your Cargo.toml to at least {minimum}"
+        "https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-updater-version-checking"
     ))]
     AxoupdaterTooOld {
         /// Name of the package

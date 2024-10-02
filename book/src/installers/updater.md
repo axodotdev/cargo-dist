@@ -23,6 +23,10 @@ New release installed!
 
 If you would prefer to handle polling for updates yourself, for example in order to incorporate it as an internal subcommand of your own software, axoupdater is available as a [crate] which can be used as a library within your program. More information about how to use axoupdater as a library in your own program can be found in its README and in its [API documentation][axoupdater-docs].
 
+## Minimum supported updater version checking
+
+While cargo-dist will always fetch up to date versions of the updater when building your software, if you use axoupdater as a library then it's important to make sure that it's kept up to date to ensure compatibility. To help you test this, cargo-dist will attempt to check if the packages it's disting use axoupdater as a dependency; if it detects an unsupported, too-old version of axoupdater is in use, it will then refuse to continue to build in order to avoid distributing a package that's unsafe to update.
+
 ## GitHub Actions and Rate Limits in CI
 
 By default, axoupdater uses unauthenticated GitHub API calls when fetching release information. This is reliable in normal use, but it's much more likely to run into rate limits in the highly artificial environment of a CI test. If you're testing the standalone updater in your CI configuration, we recommend setting the `AXOUPDATER_GITHUB_TOKEN` environment variable to the value of the `GITHUB_TOKEN` secret that GitHub Action defines automatically.
