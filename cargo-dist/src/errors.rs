@@ -557,13 +557,15 @@ pub enum DistError {
     MacPkgBundleIdentifierMissing {},
 
     /// Project depends on a too-old axoupdater
-    #[error("Your project ({package_name}) uses axoupdater as a library, but the version specified ({your_version}) is older than the minimum supported version ({minimum}),")]
+    #[error("Your project ({package_name}) uses axoupdater as a library, but the version specified ({your_version}) is older than the minimum supported version ({minimum}). (The dependency comes via {source_name} in the dependency tree.)")]
     #[diagnostic(help(
         "https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-updater-version-checking"
     ))]
     AxoupdaterTooOld {
         /// Name of the package
         package_name: String,
+        /// The package that depended on axoupdater
+        source_name: String,
         /// Minimum supported version
         minimum: semver::Version,
         /// Version the project uses

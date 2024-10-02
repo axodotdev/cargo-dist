@@ -35,14 +35,18 @@ impl<'a> DistGraphBuilder<'a> {
         for (binary_idx, binary) in self.inner.binaries.iter().enumerate() {
             let package = self.workspaces.package(binary.pkg_idx);
 
-            let oldest = package.axoupdater_versions.iter().min();
-            if let Some(axoproject::Version::Cargo(version)) = oldest {
+            let oldest = package
+                .axoupdater_versions
+                .iter()
+                .min_by(|a, b| a.1.cmp(&b.1));
+            if let Some((source, axoproject::Version::Cargo(version))) = oldest {
                 let axoupdater_min_version = semver::Version::parse(AXOUPDATER_MINIMUM_VERSION)
                     .expect("invalid axoupdater const?!");
 
                 if *version < axoupdater_min_version {
                     return Err(DistError::AxoupdaterTooOld {
                         package_name: package.name.to_owned(),
+                        source_name: source.to_owned(),
                         minimum: axoupdater_min_version,
                         your_version: version.to_owned(),
                     });
