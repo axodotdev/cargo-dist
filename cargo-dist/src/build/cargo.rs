@@ -28,14 +28,18 @@ impl<'a> DistGraphBuilder<'a> {
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
 
         let workspace = self.workspaces.workspace(workspace_idx);
-        if let Some(axoproject::Version::Cargo(version)) = &workspace.axoupdater_version {
+        let oldest = workspace
+            .axoupdater_versions
+            .iter()
+            .min_by(|a, b| a.1.cmp(b.1));
+        if let Some((_, axoproject::Version::Cargo(version))) = oldest {
             let axoupdater_min_version = semver::Version::parse(AXOUPDATER_MINIMUM_VERSION)
                 .expect("invalid axoupdater const?!");
 
             if *version < axoupdater_min_version {
                 return Err(DistError::AxoupdaterTooOld {
-                    minimum: version.to_owned(),
-                    your_version: axoupdater_min_version,
+                    minimum: axoupdater_min_version,
+                    your_version: version.to_owned(),
                 });
             }
         }

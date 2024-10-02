@@ -6,7 +6,7 @@
 #![deny(missing_docs)]
 #![allow(clippy::result_large_err)]
 
-use std::fmt::Display;
+use std::{collections::BTreeMap, fmt::Display};
 
 #[cfg(feature = "cargo-projects")]
 use axoasset::serde_json;
@@ -336,8 +336,8 @@ pub struct WorkspaceInfo {
     #[cfg(feature = "cargo-projects")]
     pub cargo_profiles: rust::CargoProfiles,
     #[cfg(feature = "cargo-projects")]
-    /// Which version of axoproject (the Rust library) is in use, if any
-    pub axoupdater_version: Option<Version>,
+    /// Which versions of axoproject (the Rust library) are in use, if any
+    pub axoupdater_versions: BTreeMap<String, Version>,
 }
 
 /// A URL to a repository, with some normalization applied

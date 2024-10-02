@@ -87,20 +87,21 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
     let target_dir = workspace.target_directory().to_owned();
     let workspace_dir = workspace.root().to_owned();
 
-    let mut axoupdater_version = None;
+    let mut axoupdater_versions = BTreeMap::new();
     for package in members.packages(DependencyDirection::Reverse) {
         let mut version = None;
+        let name = package.name().to_owned();
         if package.name() == "axoupdater" {
             version = Some(package.version());
         } else {
-            for package in package.direct_links() {
-                if package.dep_name() == "axoupdater" {
-                    version = Some(package.to().version());
+            for subpackage in package.direct_links() {
+                if subpackage.dep_name() == "axoupdater" {
+                    version = Some(subpackage.to().version());
                 }
             }
         }
         if let Some(version) = version {
-            axoupdater_version = Some(Version::Cargo(version.to_owned()));
+            axoupdater_versions.insert(name, Version::Cargo(version.to_owned()));
         }
     }
 
@@ -117,7 +118,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
             root_auto_includes,
             cargo_metadata_table,
             cargo_profiles,
-            axoupdater_version,
+            axoupdater_versions,
         },
     })
 }

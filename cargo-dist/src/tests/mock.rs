@@ -139,7 +139,7 @@ pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceGraph {
             },
             cargo_metadata_table: None,
             cargo_profiles: Default::default(),
-            axoupdater_version: None,
+            axoupdater_versions: Default::default(),
         },
     };
     workspaces.add_workspace(workspace, None);
