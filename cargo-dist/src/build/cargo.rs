@@ -26,26 +26,28 @@ impl<'a> DistGraphBuilder<'a> {
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
+        let working_dir = self
+            .workspaces
+            .workspace(workspace_idx)
+            .workspace_dir
+            .clone();
 
-        let workspace = self.workspaces.workspace(workspace_idx);
-        let oldest = workspace
-            .axoupdater_versions
-            .iter()
-            .min_by(|a, b| a.1.cmp(b.1));
-        if let Some((_, axoproject::Version::Cargo(version))) = oldest {
-            let axoupdater_min_version = semver::Version::parse(AXOUPDATER_MINIMUM_VERSION)
-                .expect("invalid axoupdater const?!");
-
-            if *version < axoupdater_min_version {
-                return Err(DistError::AxoupdaterTooOld {
-                    minimum: axoupdater_min_version,
-                    your_version: version.to_owned(),
-                });
-            }
-        }
-
-        let working_dir = workspace.workspace_dir.clone();
         for (binary_idx, binary) in self.inner.binaries.iter().enumerate() {
+            let package = self.workspaces.package(binary.pkg_idx);
+
+            if let Some(axoproject::Version::Cargo(version)) = &package.axoupdater_version {
+                let axoupdater_min_version = semver::Version::parse(AXOUPDATER_MINIMUM_VERSION)
+                    .expect("invalid axoupdater const?!");
+
+                if *version < axoupdater_min_version {
+                    return Err(DistError::AxoupdaterTooOld {
+                        package_name: package.name.to_owned(),
+                        minimum: axoupdater_min_version,
+                        your_version: version.to_owned(),
+                    });
+                }
+            }
+
             // Only bother with binaries owned by this workspace
             if self.workspaces.workspace_for_package(binary.pkg_idx) != workspace_idx {
                 continue;

@@ -113,6 +113,7 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
         cargo_package_id: None,
         npm_scope: None,
         build_command: None,
+        axoupdater_version: None,
     }
 }
 
@@ -139,7 +140,6 @@ pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceGraph {
             },
             cargo_metadata_table: None,
             cargo_profiles: Default::default(),
-            axoupdater_versions: Default::default(),
         },
     };
     workspaces.add_workspace(workspace, None);

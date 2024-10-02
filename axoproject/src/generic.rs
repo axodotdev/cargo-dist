@@ -254,8 +254,6 @@ fn process_virtual_workspace(
             cargo_metadata_table: None,
             #[cfg(feature = "cargo-projects")]
             cargo_profiles: crate::rust::CargoProfiles::new(),
-            #[cfg(feature = "cargo-projects")]
-            axoupdater_versions: Default::default(),
         },
     })
 }
@@ -310,8 +308,6 @@ fn upgrade_package_to_workspace(package: PackageInfo) -> Result<WorkspaceStructu
             cargo_metadata_table: None,
             #[cfg(feature = "cargo-projects")]
             cargo_profiles: Default::default(),
-            #[cfg(feature = "cargo-projects")]
-            axoupdater_versions: Default::default(),
         },
         sub_workspaces: vec![],
         packages: vec![package],
@@ -382,6 +378,7 @@ fn process_package(manifest_path: &Utf8Path, package: Package) -> Result<Package
         #[cfg(feature = "cargo-projects")]
         cargo_package_id: None,
         npm_scope: None,
+        axoupdater_version: None,
     };
 
     // Load and apply auto-includes

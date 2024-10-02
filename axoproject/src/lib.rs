@@ -6,7 +6,7 @@
 #![deny(missing_docs)]
 #![allow(clippy::result_large_err)]
 
-use std::{collections::BTreeMap, fmt::Display};
+use std::fmt::Display;
 
 #[cfg(feature = "cargo-projects")]
 use axoasset::serde_json;
@@ -335,9 +335,6 @@ pub struct WorkspaceInfo {
     /// Any [profile.*] entries we found in the root Cargo.toml
     #[cfg(feature = "cargo-projects")]
     pub cargo_profiles: rust::CargoProfiles,
-    #[cfg(feature = "cargo-projects")]
-    /// Which versions of axoproject (the Rust library) are in use, if any
-    pub axoupdater_versions: BTreeMap<String, Version>,
 }
 
 /// A URL to a repository, with some normalization applied
@@ -523,6 +520,9 @@ pub struct PackageInfo {
     /// A unique id used by Cargo to refer to the package
     #[cfg(feature = "cargo-projects")]
     pub cargo_package_id: Option<PackageId>,
+    /// The version of axoupdater directly depended on, if any
+    #[cfg(feature = "cargo-projects")]
+    pub axoupdater_version: Option<Version>,
     /// npm scope (with the @, like "@axodotdev")
     pub npm_scope: Option<String>,
     /// Command to run to build this package

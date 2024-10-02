@@ -87,24 +87,6 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
     let target_dir = workspace.target_directory().to_owned();
     let workspace_dir = workspace.root().to_owned();
 
-    let mut axoupdater_versions = BTreeMap::new();
-    for package in members.packages(DependencyDirection::Reverse) {
-        let mut version = None;
-        let name = package.name().to_owned();
-        if package.name() == "axoupdater" {
-            version = Some(package.version());
-        } else {
-            for subpackage in package.direct_links() {
-                if subpackage.dep_name() == "axoupdater" {
-                    version = Some(subpackage.to().version());
-                }
-            }
-        }
-        if let Some(version) = version {
-            axoupdater_versions.insert(name, Version::Cargo(version.to_owned()));
-        }
-    }
-
     Ok(WorkspaceStructure {
         sub_workspaces: vec![],
         packages: all_package_info,
@@ -118,7 +100,6 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
             root_auto_includes,
             cargo_metadata_table,
             cargo_profiles,
-            axoupdater_versions,
         },
     })
 }
@@ -217,6 +198,19 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
             )
         };
 
+    let axoupdater_version = if package.name() == "axoupdater" {
+        Some(Version::Cargo(package.version().to_owned()))
+    } else {
+        let mut version = None;
+        for subpackage in package.direct_links() {
+            if subpackage.dep_name() == "axoupdater" {
+                version = Some(Version::Cargo(subpackage.to().version().to_owned()));
+            }
+        }
+
+        version
+    };
+
     let version = Some(Version::Cargo(package.version().clone()));
     let mut info = PackageInfo {
         true_name: package.name().to_owned(),
@@ -248,6 +242,7 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         cargo_package_id,
         npm_scope: None,
         build_command: None,
+        axoupdater_version,
     };
 
     // Find files we might want to auto-include
