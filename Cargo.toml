@@ -52,7 +52,7 @@ mach_object = "0.1"
 goblin = "0.8.2"
 similar = "2.6.0"
 tokio = { version = "1.40.0", features = ["full"] }
-temp-dir = "0.1.13"
+temp-dir = "0.1.14"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
 insta = { version = "1.40.0", features = ["filters"] }
