@@ -206,19 +206,12 @@ fn package_info(
     let package_set = query.resolve();
     let mut axoupdater_versions = vec![];
     for p in package_set.packages(DependencyDirection::Reverse) {
-        if p.name() == "axoupdater" {
-            axoupdater_versions.push((
-                package.name().to_owned(),
-                Version::Cargo(p.version().to_owned()),
-            ))
-        } else {
-            for subpackage in p.direct_links() {
-                if subpackage.dep_name() == "axoupdater" {
-                    axoupdater_versions.push((
-                        p.name().to_owned(),
-                        Version::Cargo(subpackage.to().version().to_owned()),
-                    ))
-                }
+        for subpackage in p.direct_links() {
+            if subpackage.dep_name() == "axoupdater" {
+                axoupdater_versions.push((
+                    p.name().to_owned(),
+                    Version::Cargo(subpackage.to().version().to_owned()),
+                ))
             }
         }
     }
