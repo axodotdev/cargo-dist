@@ -5,6 +5,15 @@ use crate::{
     WorkspaceKind,
 };
 
+fn get_package(packages: &[(PackageIdx, &crate::PackageInfo)], name: &str) -> crate::PackageInfo {
+    packages
+        .iter()
+        .find(|(_, p)| p.name == name)
+        .unwrap_or_else(|| panic!("no package found with {name}"))
+        .1
+        .to_owned()
+}
+
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_self_detect() {
@@ -15,7 +24,7 @@ fn test_self_detect() {
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(packages.len(), 3);
 
-    let package = packages[0].1;
+    let package = get_package(&packages, "axoproject");
     assert_eq!(package.name, "axoproject");
     assert_eq!(package.binaries.len(), 0);
 }
@@ -130,38 +139,38 @@ fn test_cargo_nonvirtual() {
     assert_eq!(packages.len(), 6);
 
     {
-        let package = packages[0].1;
-        assert_eq!(package.name, "some-cdylib");
+        let package = get_package(&packages, "some-cdylib");
+        assert_eq!(package.name, "some-cdylib", "packages: {:?}", packages);
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = packages[1].1;
+        let package = get_package(&packages, "some-lib");
         assert_eq!(package.name, "some-lib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = packages[2].1;
+        let package = get_package(&packages, "some-other-lib");
         assert_eq!(package.name, "some-other-lib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = packages[3].1;
+        let package = get_package(&packages, "some-staticlib");
         assert_eq!(package.name, "some-staticlib");
         assert!(package.binaries.is_empty());
     }
 
     {
-        let package = packages[4].1;
+        let package = get_package(&packages, "test-bin");
         assert_eq!(package.name, "test-bin");
         assert_eq!(&package.binaries[..], &["test-bin"]);
         assert!(!package.publish);
     }
 
     {
-        let package = packages[5].1;
+        let package = get_package(&packages, "nonvirtual");
         assert_eq!(package.name, "nonvirtual");
         assert_eq!(&package.binaries[..], &["cargo-nonvirtual", "nonvirtual"]);
         assert!(package.publish);

@@ -555,6 +555,22 @@ pub enum DistError {
     #[error("No bundle identifier was specified")]
     #[diagnostic(help("Please either enter a bundle identifier, or disable the Mac .pkg"))]
     MacPkgBundleIdentifierMissing {},
+
+    /// Project depends on a too-old axoupdater
+    #[error("Your project ({package_name}) uses axoupdater as a library, but the version specified ({your_version}) is older than the minimum supported version ({minimum}). (The dependency comes via {source_name} in the dependency tree.)")]
+    #[diagnostic(help(
+        "https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-version-checking"
+    ))]
+    AxoupdaterTooOld {
+        /// Name of the package
+        package_name: String,
+        /// The package that depended on axoupdater
+        source_name: String,
+        /// Minimum supported version
+        minimum: semver::Version,
+        /// Version the project uses
+        your_version: semver::Version,
+    },
 }
 
 /// This error indicates we tried to deserialize some YAML with serde_yml

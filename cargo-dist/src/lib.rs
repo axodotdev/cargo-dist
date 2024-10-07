@@ -165,6 +165,7 @@ fn run_build_step(
 
 const AXOUPDATER_ASSET_ROOT: &str =
     "https://github.com/axodotdev/axoupdater/releases/latest/download";
+const AXOUPDATER_MINIMUM_VERSION: &str = "0.7.0";
 
 /// Fetches an installer executable and installs it in the expected target path.
 pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {

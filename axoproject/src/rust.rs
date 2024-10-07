@@ -52,8 +52,6 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
 fn package_graph(start_dir: &Utf8Path) -> Result<PackageGraph> {
     let mut metadata_cmd = MetadataCommand::new();
 
-    // We don't care about dependency information, and disabling it makes things much faster!
-    metadata_cmd.no_deps();
     metadata_cmd.current_dir(start_dir);
 
     let pkg_graph = metadata_cmd.build_graph()?;
@@ -81,7 +79,7 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
     let root_auto_includes = crate::find_auto_includes(workspace_root)?;
     let mut all_package_info = vec![];
     for package in members.packages(DependencyDirection::Forward) {
-        let mut info = package_info(workspace_root, &package)?;
+        let mut info = package_info(workspace_root, &package, pkg_graph)?;
         crate::merge_auto_includes(&mut info, &root_auto_includes);
         all_package_info.push(info);
     }
@@ -106,7 +104,11 @@ fn workspace_info(pkg_graph: &PackageGraph) -> Result<WorkspaceStructure> {
     })
 }
 
-fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result<PackageInfo> {
+fn package_info(
+    _workspace_root: &Utf8Path,
+    package: &PackageMetadata,
+    pkg_graph: &PackageGraph,
+) -> Result<PackageInfo> {
     let manifest_path = package.manifest_path().to_owned();
     let package_root = manifest_path
         .parent()
@@ -200,6 +202,20 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
             )
         };
 
+    let query = pkg_graph.query_forward(std::iter::once(package.id()))?;
+    let package_set = query.resolve();
+    let mut axoupdater_versions = vec![];
+    for p in package_set.packages(DependencyDirection::Reverse) {
+        for subpackage in p.direct_links() {
+            if subpackage.dep_name() == "axoupdater" {
+                axoupdater_versions.push((
+                    p.name().to_owned(),
+                    Version::Cargo(subpackage.to().version().to_owned()),
+                ))
+            }
+        }
+    }
+
     let version = Some(Version::Cargo(package.version().clone()));
     let mut info = PackageInfo {
         true_name: package.name().to_owned(),
@@ -231,6 +247,7 @@ fn package_info(_workspace_root: &Utf8Path, package: &PackageMetadata) -> Result
         cargo_package_id,
         npm_scope: None,
         build_command: None,
+        axoupdater_versions,
     };
 
     // Find files we might want to auto-include

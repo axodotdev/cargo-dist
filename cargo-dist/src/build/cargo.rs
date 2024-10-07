@@ -10,13 +10,19 @@ use tracing::warn;
 
 use crate::build::BuildExpectations;
 use crate::env::{calculate_ldflags, fetch_brew_env, parse_env, select_brew_env};
-use crate::{errors::*, BinaryIdx, BuildStep, DistGraphBuilder, TargetTriple, PROFILE_DIST};
+use crate::{
+    errors::*, BinaryIdx, BuildStep, DistGraphBuilder, TargetTriple, AXOUPDATER_MINIMUM_VERSION,
+    PROFILE_DIST,
+};
 use crate::{
     CargoBuildStep, CargoTargetFeatureList, CargoTargetPackages, DistGraph, RustupStep, SortedMap,
 };
 
 impl<'a> DistGraphBuilder<'a> {
-    pub(crate) fn compute_cargo_builds(&mut self, workspace_idx: WorkspaceIdx) -> Vec<BuildStep> {
+    pub(crate) fn compute_cargo_builds(
+        &mut self,
+        workspace_idx: WorkspaceIdx,
+    ) -> DistResult<Vec<BuildStep>> {
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
@@ -25,7 +31,28 @@ impl<'a> DistGraphBuilder<'a> {
             .workspace(workspace_idx)
             .workspace_dir
             .clone();
+
         for (binary_idx, binary) in self.inner.binaries.iter().enumerate() {
+            let package = self.workspaces.package(binary.pkg_idx);
+
+            let oldest = package
+                .axoupdater_versions
+                .iter()
+                .min_by(|a, b| a.1.cmp(&b.1));
+            if let Some((source, axoproject::Version::Cargo(version))) = oldest {
+                let axoupdater_min_version = semver::Version::parse(AXOUPDATER_MINIMUM_VERSION)
+                    .expect("invalid axoupdater const?!");
+
+                if *version < axoupdater_min_version {
+                    return Err(DistError::AxoupdaterTooOld {
+                        package_name: package.name.to_owned(),
+                        source_name: source.to_owned(),
+                        minimum: axoupdater_min_version,
+                        your_version: version.to_owned(),
+                    });
+                }
+            }
+
             // Only bother with binaries owned by this workspace
             if self.workspaces.workspace_for_package(binary.pkg_idx) != workspace_idx {
                 continue;
@@ -125,7 +152,7 @@ impl<'a> DistGraphBuilder<'a> {
                 }));
             }
         }
-        builds
+        Ok(builds)
     }
 }
 

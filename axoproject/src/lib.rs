@@ -401,7 +401,7 @@ impl RepositoryUrl {
 ///
 /// This notably includes finding readmes and licenses even if the user didn't
 /// specify their location -- something Cargo does but Guppy (and cargo-metadata) don't.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PackageInfo {
     /// The unoverrideable name of the package within its own package management system.
     ///
@@ -520,6 +520,9 @@ pub struct PackageInfo {
     /// A unique id used by Cargo to refer to the package
     #[cfg(feature = "cargo-projects")]
     pub cargo_package_id: Option<PackageId>,
+    /// The versions of axoupdater directly depended on, if any
+    #[cfg(feature = "cargo-projects")]
+    pub axoupdater_versions: Vec<(String, Version)>,
     /// npm scope (with the @, like "@axodotdev")
     pub npm_scope: Option<String>,
     /// Command to run to build this package
