@@ -11,6 +11,7 @@
 - [Custom Builds](./custom-builds.md)
 - [Supplychain Security](./supplychain-security/index.md)
   - [Windows Signing](./supplychain-security/signing/windows.md)
+  - [macOS Signing](./supplychain-security/signing/macos.md)
   - [GitHub Attestations](./supplychain-security/attestations/github.md)
 - [Installers](./installers/index.md)
   - [shell](./installers/shell.md)

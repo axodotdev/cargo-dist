@@ -1,15 +1,15 @@
 # Supply-chain security
 
 As software supplychain security concerns and requirements grow, `cargo-dist` is
-commited to making compliance with policies and regulations as turnkey as possible. 
+commited to making compliance with policies and regulations as turnkey as possible.
 
-If you have an integration you are looking for [file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or 
+If you have an integration you are looking for [file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or
 [join our Discord](https://discord.gg/rW4JJ3Wa).
 
 ## Signing
 
 * [Windows Codesigning](./signing/windows.md)
-* [🔜 macOS Codesigning](https://github.com/axodotdev/cargo-dist/issues/1121)
+* [macOS Codesigning](./signing/macos.md)
 * [🔜 Linux Codesigning](https://github.com/axodotdev/cargo-dist/issues/120)
 * [🔜 Sigstore Signing](https://github.com/axodotdev/cargo-dist/issues/120)
 * [🔜 Windows Trusted Signing](https://github.com/axodotdev/cargo-dist/issues/1122)
