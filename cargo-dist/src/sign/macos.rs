@@ -27,10 +27,12 @@ use tracing::warn;
 
 use crate::{create_tmp, DistError, DistResult, TargetTriple};
 
-struct Keychain {
+/// Represents a temporary macOS keychain database. The database object will be created within `_root`, and deleted once this struct is dropped.
+pub struct Keychain {
     _root: TempDir,
     root_path: Utf8PathBuf,
     password: String,
+    /// The path to the keychain database.
     pub path: Utf8PathBuf,
 }
 
@@ -156,6 +158,7 @@ impl std::fmt::Debug for CodesignEnv {
 }
 
 impl Codesign {
+    /// Creates a new Codesign instance, if the host is darwin and the required information is in the environment
     pub fn new(host_target: &TargetTriple) -> DistResult<Option<Self>> {
         if !host_target.contains("darwin") {
             return Ok(None);
@@ -182,10 +185,19 @@ impl Codesign {
         val
     }
 
-    pub fn sign(&self, file: &Utf8Path) -> DistResult<()> {
+    /// Creates a Keychain with this signer's certificate imported,
+    /// then returns it.
+    pub fn create_keychain(&self) -> DistResult<Keychain> {
         let password = uuid::Uuid::new_v4().as_hyphenated().to_string();
         let keychain = Keychain::create(password)?;
         keychain.import_certificate(&self.env.certificate, &self.env.password)?;
+
+        Ok(keychain)
+    }
+
+    /// Signs a binary using `codesign`.
+    pub fn sign(&self, file: &Utf8Path) -> DistResult<()> {
+        let keychain = self.create_keychain()?;
 
         let mut cmd = Cmd::new("/usr/bin/codesign", "sign macOS artifacts");
         cmd.arg("--sign").arg(&self.env.identity);
@@ -195,5 +207,10 @@ impl Codesign {
         cmd.output()?;
 
         Ok(())
+    }
+
+    /// Returns the signing identity represented by this signer.
+    pub fn identity(&self) -> &str {
+        &self.env.identity
     }
 }

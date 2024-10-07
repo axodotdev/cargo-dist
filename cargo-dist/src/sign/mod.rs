@@ -8,7 +8,7 @@ use camino::Utf8Path;
 
 use crate::{config::ProductionMode, DistResult, TargetTriple};
 
-mod macos;
+pub mod macos;
 mod ssldotcom;
 
 /// Code/artifact signing providers
