@@ -176,8 +176,8 @@ download_binary_and_run_installer() {
             _staticlibs_js_array=""
             {%- endif %}
             {%- if archive.updater %}
-            _updater_name="{{ archive.updater.id }}"
-            _updater_bin="{{ archive.updater.binary }}"
+            _updater_name="{{ platform_support.updaters[archive.updater].id }}"
+            _updater_bin="{{ platform_support.updaters[archive.updater].binary }}"
             {%- else %}
             _updater_name=""
             _updater_bin=""
