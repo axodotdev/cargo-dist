@@ -173,8 +173,8 @@ download_binary_and_run_installer() {
             _libs_js_array=""
             _staticlibs=""
             _staticlibs_js_array=""
-            _updater_name=""
-            _updater_bin=""
+            _updater_name="axolotlsay-x86_64-apple-darwin-update"
+            _updater_bin="axolotlsay-x86_64-apple-darwin-update"
             ;;
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz")
             _arch="x86_64-pc-windows-msvc"
@@ -185,8 +185,8 @@ download_binary_and_run_installer() {
             _libs_js_array=""
             _staticlibs=""
             _staticlibs_js_array=""
-            _updater_name=""
-            _updater_bin=""
+            _updater_name="axolotlsay-x86_64-pc-windows-msvc-update"
+            _updater_bin="axolotlsay-x86_64-pc-windows-msvc-update"
             ;;
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz")
             _arch="x86_64-unknown-linux-gnu"
@@ -197,8 +197,8 @@ download_binary_and_run_installer() {
             _libs_js_array=""
             _staticlibs=""
             _staticlibs_js_array=""
-            _updater_name=""
-            _updater_bin=""
+            _updater_name="axolotlsay-x86_64-unknown-linux-gnu-update"
+            _updater_bin="axolotlsay-x86_64-unknown-linux-gnu-update"
             ;;
         *)
             err "internal installer error: selected download $_artifact_name doesn't exist!?"

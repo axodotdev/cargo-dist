@@ -40,6 +40,14 @@ A sample in cargo-dist's CI configuration can be found [here][cargo-dist-ci-conf
 
 If you use the axoupdater crate to implement the updater yourself, instructions for opting into a token in CI can be found [here][axoupdater-token-docs].
 
+## Releases with issues surrounding the standalone updater
+
+cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which prevents the shell installer from installing the standalone updater alongside your binaries. This bug doesn't affect the PowerShell installer. Users of installers created with these releases will have had your software installed as normal, but won't have received an updater. Users whose first installation came via one of these installers will need to upgrade manually using a new shell installer.
+
+Users who first installed with an installer created with an older cargo-dist will still have their updater from their original installation, and so they will be able to update as normal.
+
+This issue was resolved in cargo-dist 0.23.0.
+
 [axoupdater]: https://github.com/axodotdev/axoupdater
 [axoupdater-docs]: https://docs.rs/axoupdater/
 [axoupdater-token-docs]: https://github.com/axodotdev/axoupdater?tab=readme-ov-file#github-actions-and-rate-limits-in-ci
