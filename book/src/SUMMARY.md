@@ -19,6 +19,7 @@
   - [homebrew](./installers/homebrew.md)
   - [msi](./installers/msi.md)
   - [updater](./installers/updater.md)
+  - [Usage](./installers/usage.md)
 - [Artifacts](./artifacts/index.md)
   - [archives](./artifacts/archives.md)
   - [checksums](./artifacts/checksums.md)
