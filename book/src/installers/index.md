@@ -64,6 +64,9 @@ Installers which support bundling:
 * [msi][]: a Windows msi that bundles and installs executables
 
 
+## Usage
+
+Our installers are meant to be usable as-is, without requiring any special options or configuration from the user. We do offer some optional configuration options for end users; see the [usage][] documentation for a description of all supported options.
 
 
 [config-installers]: ../reference/config.md#installers
@@ -77,8 +80,8 @@ Installers which support bundling:
 [msi]: ./msi.md
 [npm]: ./npm.md
 [homebrew]: ./homebrew.md
+[usage]: ./usage.md
 
 [archives]: ../artifacts/archives.md
 [artifact-url]: ../reference/artifact-url.md
 [init]: ../reference/cli.md#cargo-dist-init
-
