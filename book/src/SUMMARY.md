@@ -26,6 +26,7 @@
 - [CI](./ci/index.md)
   - [Customizing](./ci/customizing.md)
 - [Workspaces](./workspaces/index.md)
+  - [Structure](./workspaces/structure.md)
   - [A Simple Application](./workspaces/simple-guide.md)
   - [More Complex Workspaces](./workspaces/workspace-guide.md)
   - [Using cargo-release](./workspaces/cargo-release-guide.md)
