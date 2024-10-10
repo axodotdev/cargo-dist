@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.20.0-prerelease.8</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release pre-release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.20.0-prerelease.8
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Aug  1 2024 at 22:50 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several new features and bugfixes.</p>
+<h2>Support for packaging C libraries</h2>
+<p>Historically, cargo-dist has been focused on building and distributing binaries. There's so many more kinds of software out there, however, and we've had requests to package more kinds of artifacts. This release introduces support for two new kinds of build artifacts: C dynamic libraries, and C static libraries. While these would always be built in the past, we wouldn't package or install them for you. Starting with this release, we've now added the option to include these in your release tarballs/ZIPs and to install them in your installers.</p>
+<p>We recognize that it may cause issues if existing binary-plus-library crates began unexpectedly installing libraries with this release, so we've introduced this feature as opt-in for the time being. It may be turned on by default in a future release. To enable packaging libraries in your tarballs/ZIPs, use the <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#package-libraries" rel="noopener noreferrer">package-libraries</a> configuration option. To enable installing libraries, use the <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-libraries" rel="noopener noreferrer">install-libraries</a> configuration option.</p>
+<p>In the current release, libraries will be installed to the same locations as binaries in the shell and PowerShell installers, while the Homebrew installer will install them to the Homebrew-standard library paths. In the future, as we introduce new forms of installation layouts, we'll provide ways for the shell and PowerShell installers to install libraries to separate locations.</p>
+<p>Rust users can produce these with the <code>cdylib</code> and <code>staticlib</code> crate types. For more information, see the <a href="https://doc.rust-lang.org/reference/linkage.html" rel="noopener noreferrer">Rust documentation</a>. Generic build users can specify which libraries to include using the <code>cdylibs</code> and <code>cstaticlibs</code> configuration fields in <code>dist.toml</code>.</p>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1182" rel="noopener noreferrer">Support cdylibs from Rust/generic projects</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1214" rel="noopener noreferrer">Build and install static libs</a></li>
+</ul>
+</li>
+</ul>
+<h2>Custom pre-build actions in CI</h2>
+<p>This release introduces an experimental feature which makes it possible to run arbitrary extra build steps before cargo-dist's own build step during GitHub Actions runs. This can be useful for users who have mandatory pre-build setup they want to perform which can't be satisfied using the system dependencies feature. For example, a build which requires a custom installation of lua could specify that these two extra steps should be performed before the build begins:</p>
+<pre style="background-color:#263238;"><span style="color:#89ddff;">- </span><span style="color:#f07178;">name</span><span style="color:#89ddff;">: </span><span style="color:#c3e88d;">Install Lua
+</span><span style="color:#eeffff;">  </span><span style="color:#f07178;">uses</span><span style="color:#89ddff;">: </span><span style="color:#c3e88d;">xpol/setup-lua@v1
+</span><span style="color:#eeffff;">  </span><span style="color:#f07178;">with</span><span style="color:#89ddff;">:
+</span><span style="color:#eeffff;">    </span><span style="color:#f07178;">lua-version</span><span style="color:#89ddff;">: "</span><span style="color:#c3e88d;">5.3</span><span style="color:#89ddff;">"
+</span><span style="color:#89ddff;">- </span><span style="color:#f07178;">name</span><span style="color:#89ddff;">: </span><span style="color:#c3e88d;">Check lua installation
+</span><span style="color:#eeffff;">  </span><span style="color:#f07178;">run</span><span style="color:#89ddff;">: </span><span style="color:#c3e88d;">lua -e "print('hello world!')"
+</span></pre>
+
+<p>For more information, <a href="https://opensource.axo.dev/cargo-dist/book/ci/github.html#customizing-build-setup" rel="noopener noreferrer">consult the documentation</a>.</p>
+<ul>
+<li>impl @FreeMasen <a href="https://github.com/axodotdev/cargo-dist/pull/1217" rel="noopener noreferrer">ci: add github build setup configuration</a></li>
+</ul>
+<h2>The First Rumblings Of 1.0</h2>
+<p>This release introduces the first steps in a major overhaul of cargo-dist that makes it more suitable for building and distributing apps that aren't written in Rust. This is something we've supported for a long time, but now we're making a big push to make it first-class and stabilizing all the parts.</p>
+<p>There is also now experimental support for natively understanding JS projects, to make it easier to use dist for standalone JS executables. <a href="https://opensource.axo.dev/cargo-dist/book/quickstart/javascript.html" rel="noopener noreferrer">Read the new JS quickstart for details!</a></p>
+<p>Several other pages of the docs have seen overhauls, and many more are to come.</p>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1253" rel="noopener noreferrer">init: ensure terminal is restored when interrupted</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1221" rel="noopener noreferrer">fix: add missing triples to linkage check</a></li>
+<li>@Colonial-Dev <a href="https://github.com/axodotdev/cargo-dist/pull/1189" rel="noopener noreferrer">fix: compatibility issues with Bash on certain distributions (Fedora, EL)</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>
