@@ -161,8 +161,8 @@ download_binary_and_run_installer() {
             _libs_js_array=""
             _staticlibs=""
             _staticlibs_js_array=""
-            _updater_name=""
-            _updater_bin=""
+            _updater_name="axolotlsay-aarch64-apple-darwin-update"
+            _updater_bin="axolotlsay-aarch64-apple-darwin-update"
             ;;
         "axolotlsay-x86_64-apple-darwin.tar.gz")
             _arch="x86_64-apple-darwin"
