@@ -58,7 +58,7 @@ blake2 = "0.10.6"
 insta = { version = "1.40.0", features = ["filters"] }
 tar = "0.4.42"
 flate2 = "1.0.34"
-pathdiff = { version = "0.2.1", features = ["camino"] }
+pathdiff = { version = "0.2.2", features = ["camino"] }
 url = "2.5.0"
 parse-changelog = "0.6.9"
 schemars = "0.8.21"
