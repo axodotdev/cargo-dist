@@ -1,20 +1,13 @@
 # Guide
 
-The cargo-dist Guide is the "beginner" documentation that walks you through simple usage and then introduces more complex situations as you go. More advanced documentation can be found in "[concepts][]".
+cargo-dist is focused around *workspaces* - conceptual groupings of projects that exist in the same repository, and which can be built and released together. A workspace can contain just a single project, and the simplest form is easy to get going. If you just want to get going, we recommend checking the [quickstart][way-too-quickstart] guide first.
 
-If you have a [Cargo Workspace][workspace] with a single Cargo package that `cargo install` works for, and just want zips containing prebuilt binaries for the major desktop platforms, that should Just Work as described in the [quickstart][way-too-quickstart]. Things get more complicated if you want to:
-
-* have more packages in your [Cargo Workspace][workspace] (libraries, multiple binaries, ...)
-* have additional steps in your build (configure the system, add files, ...)
-* build various kinds of [installers][] (curl-sh scripts, npm packages, msi, ...)
-
-Gonna be blunt and say that cargo-dist is still in early days and we still need to implement a lot of stuff to better support all the things people want to do with Shippable Builds. If what you want to do doesn't seem properly supported and we don't have [an issue][issues] for it, absolutely file one so we can hash it out!
-
-The guide will start by explaining the simple case, and then explain the more complicated cases.
+For users interested in learning more about how workspaces work, and how to put them to work with more complex projects, we recommend starting with our [guide to workspace structure][structure], followed by the [simple guide][simple-guide] which walks you through a simple sample repo and the [complex guide][complex-guide] that introduces a workspace with more complicated features.
 
 [concepts]: ../reference/concepts.md
+[structure]: ./structure.md
+[simple-guide]: ./simple-guide.md
+[complex-guide]: ./workspace-guide.md
 [way-too-quickstart]: ../quickstart/index.md
-[installers]: ../installers/index.md
 
-[issues]: https://github.com/axodotdev/cargo-dist/issues
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html
