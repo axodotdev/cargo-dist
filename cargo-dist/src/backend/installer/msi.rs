@@ -67,6 +67,7 @@ impl MsiInstallerInfo {
     /// run `cargo wix print wxs` to get what the msi should contain
     pub fn generate_wxs_string(&self) -> DistResult<WxsRenders> {
         let mut b = wix::print::wxs::Builder::new();
+        b.input(Some(self.manifest_path.as_str()));
         // Build this specific package
         b.package(Some(&self.pkg_spec));
         let output = self
