@@ -2,6 +2,74 @@
 
 Nothing Yet!
 
+# Version 0.23.0 (2024-10-15)
+
+We're back from a longer-than-usual break between releases with a feature-filled release!
+
+## The new config format emerges
+
+Over the past few months, we've been working towards a new config format. Up to now, aside from a few references in the documentation, these changes have been internal and haven't been visible to users. This release marks the first user-facing side of the new config format.
+
+This new config format uses the `dist-workspace.toml` and `dist.toml` files that were originally created for non-Rust projects. It allows us to unify project configuration formats between languages, and allows you to configure cargo-dist without adding content to your root `Cargo.toml`. In this release, newly `cargo init`ted Rust projects will use the new format. Existing projects will be given the option to opt into the new format, but by default will keep their existing format for now.
+
+For more information, see the [workspace docs][workspace-docs].
+
+- impl
+  - @Gankra [doc: address most config TODOs](https://github.com/axodotdev/cargo-dist/pull/1422)
+  - @mistydemeo [feat: adjust new config opt-in](https://github.com/axodotdev/cargo-dist/pull/1426)
+  - @mistydemeo [fix: handle final config todo](https://github.com/axodotdev/cargo-dist/pull/1430)
+
+## Installer improvements
+
+This release contains a suite of improvements to our installers.
+
+### "Unmanaged" install type
+
+We now support a new install type, "unmanaged" installs. This is intended for users installing in ephemeral install methods such as CI, and disables several features that are unneeded in those environments. Specifically, it:
+
+* Disables updater-related tooling, including install receipt creation
+* Disables modification of the user's `PATH`, including modification of dotfiles
+* Forces a flat installation layout, installing all files into a single directory
+
+For more information, see the [installer usage docs][installer-usage].
+
+- impl @mistydemeo [feat: unmanaged installs](https://github.com/axodotdev/cargo-dist/pull/1410)
+
+### Improved path modification options
+
+While we've always provided options to turn off modifying the user's `PATH` in the installer, this behaviour was inconsistent between the shell and PowerShell installers. In this release, we've unified the behaviour. The current recommended path is to use environment variables; the variable controlling this is `APPNAME_NO_MODIFY_PATH`, where `APPNAME` is the name of your application. For example, `AXOLOTLSAY_NO_MODIFY_PATH` for an app named `axolotlsay`. The commandline flag, which was named inconsistently between platforms, has been deprecated.
+
+We've also made a change to ensure that the user's preference for the "don't modify `PATH`" option is persisted across upgrades. This fixes an issue present in previous versions where it would only be respected on initial installation, not in calls to axoupdater.
+
+For more information, see the [installer usage docs][installer-usage].
+
+- impl
+  - @mistydemeo [feat: unmanaged installs](https://github.com/axodotdev/cargo-dist/pull/1410)
+  - @mistydemeo [feat: deprecate --no-modify-path](https://github.com/axodotdev/cargo-dist/pull/1415)
+  - @mistydemeo [feat: track NO_MODIFY_PATH for updates](https://github.com/axodotdev/cargo-dist/pull/1421)
+
+## npm packages can now use any archive format
+
+In previous versions, enabling the npm installer would require your package to be distributed using `.tar.gz` archives on all platforms, including Windows. This release removes that restriction by rewriting a section of the npm installer code.
+
+- impl @mistydemeo [feat: support any format in npm](https://github.com/axodotdev/cargo-dist/pull/1423)
+
+## Axoupdater version checking
+
+Users who implement an updater by using axoupdater as a library always need to make sure that library is up to date so that they're able to make use of the latest features. This release contains a version checker which detects if your software is using an out-of-date version of axoupdater which may cause problems, and will alert you that an update is needed during builds. For more information, see [the documentation](https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-version-checking).
+
+- impl @mistydemeo [feat: add minimum supported axoupdater check (library)](https://github.com/axodotdev/cargo-dist/pull/1432)
+
+## Standalone axoupdater installation fix
+
+cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which caused the standalone installer to fail to install when using the shell installer. End users who installed your software via installers generated with these versions will not have received a standalone installer along with your software. This bug is fixed beginning with this release. For more information, see [the documentation](https://opensource.axo.dev/cargo-dist/book/installers/updater.html#releases-with-issues-surrounding-the-standalone-updater).
+
+- impl @mistydemeo
+  - [fix: standalone updater installation](https://github.com/axodotdev/cargo-dist/pull/1444)
+  - [fix: invalid updater for first in array](https://github.com/axodotdev/cargo-dist/pull/1451)
+
+[workspace-docs]: https://opensource.axo.dev/cargo-dist/book/workspaces/structure.html
+[installer-usage]: https://opensource.axo.dev/cargo-dist/book/installers/usage.html
 
 # Version 0.22.1 (2024-09-04)
 
