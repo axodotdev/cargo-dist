@@ -1,0 +1,67 @@
+---
+title: Updating
+description: How to update your version of dist
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`dist` ships with functionality to self update. To update to the latest version,
+run:
+
+```shell
+dist selfupdate
+```
+
+## Updating configuration
+
+After you run this command, `dist` will automatically run `dist init` which will
+update your [configuration](/start/config). 
+
+`dist init` is smart, so it will "remember" your current configuration and pre-fill
+you previous answers.
+
+`dist init` is interactive and we recommend you manually working through the
+answers after the updating because it will help you discover new features, however,
+you can instruct `dist init` to simply accept all previous answers by passing
+`-y` or `--yes`.
+
+<Aside type="tip">
+To fully update you'll need to commit the newly generated configuration and workflow
+to your repo.
+</Aside>
+
+## Version
+
+To update to a particular version of `dist` (either newer or older), you can pass
+the `--version` flag:
+
+```shell
+dist selfupdate --version 0.0.1
+```
+
+<Aside type="tip">
+Many projects tag their releases with the version number preceded with a `v`, e.g.
+version `0.1.0` would be tagged `v0.1.0`. When using this feature, make sure to NOT
+precede the version number with a `v`.
+</Aside>
+
+<Aside type="note">
+When you specify a specific version it can be either a stable or pre-release,
+without needing to pass the `--prerelease` flag.
+</Aside>
+
+## Pre-releases
+
+To update to the latest version, including prereleases, you can pass `--prerelease`
+flag:
+
+```shell
+dist selfupdate --prerelease
+```
+
+<Aside type="caution">
+Beware- `cargo-dist` pre-releases are not stable and often are cut on feature
+branches and not off of `main`.
+
+If you use this functionality, make sure you know what you are doing!
+</Aside>

@@ -1,0 +1,115 @@
+---
+title: Overview
+description: How to use dist within your project structure
+---
+
+import { Aside,FileTree,Tabs,TabItem } from '@astrojs/starlight/components';
+
+All dist projects, regardless of how many packages they may contain, are
+considered workspaces. A minimalist dist project would be a workspace that contains
+a single package.
+
+## `dist-workspace.toml`
+
+`dist` infers your project structure based on the location of the `dist-workspace.toml`
+file. This file is usually at the root of your repo, however, if you only ever intend
+to use `dist` on a single project or set of projects within your repo, you can
+place the `dist-workspace.toml` at the root of that part of the repo structure.
+
+<Tabs>
+    <TabItem label="Rust (simple)">
+        <FileTree>
+            - Cargo.toml
+            - Cargo.lock
+            - **dist-workspace.toml**
+            - README.md
+            - src
+                - main.rs
+        </FileTree>
+    </TabItem>
+    <TabItem label="Rust (workspace)">
+        <FileTree>
+            - Cargo.toml
+            - Cargo.lock
+            - **dist-workspace.toml**
+            - README.md
+            - crates
+                - cli
+                    - Cargo.toml
+                    - src
+                        - main.rs
+                - lib
+                    - Cargo.toml
+                    - src
+                        - lib.rs
+        </FileTree>
+    </TabItem>
+    <TabItem label="Javascript (simple)">
+        <Tabs>
+            <TabItem label="File Explorer">
+                <FileTree>
+                    - package.json
+                    - package-lock.json
+                    - **dist-workspace.toml**
+                    - README.md
+                    - index.js
+                </FileTree>
+            </TabItem>
+            <TabItem label="dist-workspace.toml">
+                ```toml
+                [package]
+name = "axolotlsay-js"
+description = "JavaScript port of axolotlsay"
+version = "0.3.0"
+license = "MIT"
+repository = "https://github.com/axodotdev/axolotlsay-js"
+binaries = ["axolotlsay-js"]
+build-command = ["bash", "build.sh"]
+
+# Config for 'cargo dist'
+[dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.15.1"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "powershell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
+# Whether to install an updater program
+install-updater = false
+                ```
+            </TabItem>
+        </Tabs>
+    </TabItem>
+    <TabItem label="Hybrid">
+        <FileTree>
+            - Cargo.toml
+            - Cargo.lock
+            - **dist-workspace.toml**
+            - README.md
+            - web
+                - package.json
+                - package-lock.json
+                - index.js
+            - crates
+                - cli
+                    - Cargo.toml
+                    - src
+                        - main.rs
+                - lib
+                    - Cargo.toml
+                    - src
+                        - lib.rs
+            - README.md
+        </FileTree>
+    </TabItem>
+</Tabs>
+
+<Aside type="note">
+Before version 1.0, `dist` allowed Rust users to put all configuration in their
+`Cargo.toml` file. If you are still on an early version and need help updating,
+you can check out our documentation on [migrating configuration](TODO).
+</Aside>
