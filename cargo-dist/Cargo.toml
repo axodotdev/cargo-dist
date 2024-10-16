@@ -67,6 +67,7 @@ blake2.workspace = true
 serde_yml.workspace = true
 spdx.workspace = true
 base64.workspace = true
+current_platform.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
@@ -84,4 +85,3 @@ npm-package = "dist"
 pre-release-replacements = [
   {file="../CHANGELOG.md", search="# Unreleased", replace="# Unreleased\n\nNothing Yet!\n\n\n# Version {{version}} ({{date}})", exactly=1},
 ]
-

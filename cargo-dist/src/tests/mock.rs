@@ -71,11 +71,12 @@ fn package_manifest(name: &str) -> Utf8PathBuf {
 
 pub fn mock_tools() -> Tools {
     Tools {
-        cargo: CargoInfo {
+        host_target: "x86_64-unknown-linux-gnu".to_owned(),
+        cargo: Some(CargoInfo {
             cmd: String::new(),
             version_line: None,
             host_target: "x86_64-unknown-linux-gnu".to_owned(),
-        },
+        }),
         rustup: None,
         brew: None,
         git: None,
