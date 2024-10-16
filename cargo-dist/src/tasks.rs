@@ -260,8 +260,10 @@ pub struct HostingInfo {
 /// Various tools we have found installed on the system
 #[derive(Debug, Clone)]
 pub struct Tools {
-    /// Info on cargo, which must exist
-    pub cargo: CargoInfo,
+    /// Info on the host
+    pub host_target: TargetTriple,
+    /// Info on cargo
+    pub cargo: Option<CargoInfo>,
     /// rustup, useful for getting specific toolchains
     pub rustup: Option<Tool>,
     /// homebrew, only available on macOS
@@ -272,6 +274,15 @@ pub struct Tools {
     ///
     /// <https://www.ssl.com/guide/esigner-codesigntool-command-guide/>
     pub code_sign_tool: Option<Tool>,
+}
+
+impl Tools {
+    /// Returns the cargo info or an error
+    pub fn cargo(&self) -> DistResult<&CargoInfo> {
+        self.cargo.as_ref().ok_or(DistError::ToolMissing {
+            tool: "cargo".to_owned(),
+        })
+    }
 }
 
 /// Info about the cargo toolchain we're using
@@ -997,11 +1008,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             DirtyMode::AllowList(config.allow_dirty.clone())
         };
-        let cargo_version_line = tools.cargo.version_line.clone();
+        let cargo_version_line = tools.cargo.as_ref().and_then(|c| c.version_line.to_owned());
         let build_environment = if local_builds_are_lies {
             BuildEnvironment::Indeterminate
         } else {
-            determine_build_environment(&tools.cargo.host_target)
+            determine_build_environment(&tools.host_target)
         };
 
         let system = SystemInfo {
@@ -1016,7 +1027,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let signer = Signing::new(
             &axoclient,
-            &tools.cargo.host_target,
+            &tools.host_target,
             &dist_dir,
             config.builds.ssldotcom_windows_sign.clone(),
             config.builds.macos_sign,
@@ -2838,7 +2849,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     )?;
 
     // If no targets were specified, just use the host target
-    let host_target_triple = [graph.inner.tools.cargo.host_target.clone()];
+    let host_target_triple = [graph.inner.tools.host_target.clone()];
     // If all targets specified, union together the targets our packages support
     // Note that this uses BTreeSet as an intermediate to make the order stable
     let all_target_triples = graph
@@ -2864,7 +2875,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
             &host_target_triple
         } else if all_target_triples.is_empty() {
             return Err(DistError::CliMissingTargets {
-                host_target: graph.inner.tools.cargo.host_target.clone(),
+                host_target: graph.inner.tools.host_target.clone(),
             });
         } else {
             info!("using all target-triples");
@@ -2917,7 +2928,7 @@ pub fn cargo() -> DistResult<String> {
 }
 
 /// Get the host target triple from cargo
-pub fn get_host_target(cargo: String) -> DistResult<CargoInfo> {
+pub fn get_cargo_info(cargo: String) -> DistResult<CargoInfo> {
     let mut command = Cmd::new(&cargo, "get your Rust toolchain's version");
     command.arg("-vV");
     let output = command.output()?;
@@ -2962,9 +2973,13 @@ fn target_symbol_kind(target: &TargetTripleRef) -> Option<SymbolKind> {
 }
 
 fn tool_info() -> DistResult<Tools> {
-    let cargo_cmd = cargo()?;
-    let cargo = get_host_target(cargo_cmd)?;
+    let cargo = if let Ok(cargo_cmd) = cargo() {
+        get_cargo_info(cargo_cmd).ok()
+    } else {
+        None
+    };
     Ok(Tools {
+        host_target: TargetTriple::new(current_platform::CURRENT_PLATFORM.to_owned()),
         cargo,
         rustup: find_tool("rustup", "-V"),
         brew: find_tool("brew", "--version"),
