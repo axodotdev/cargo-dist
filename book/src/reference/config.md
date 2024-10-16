@@ -848,7 +848,7 @@ If you set `publish-prereleases = true`, cargo-dist will [publish](#publish-jobs
 
 ## hosting settings
 
-hese settings govern how we host your files with platforms like [GitHub Releases][github-releases-guide] and axo Releases, and the text we tell them to display about your releases.
+These settings govern how we host your files with platforms like [GitHub Releases][github-releases-guide] and axo Releases, and the text we tell them to display about your releases.
 
 ### `hosting`
 
@@ -931,7 +931,7 @@ See also: [`publish-prereleases`](#publish-prereleases)
 
 ### github hosting settings
 
-hese settings govern how we host your files on [GitHub Releases][github-releases-guide] and the text we tell them to display.
+These settings govern how we host your files on [GitHub Releases][github-releases-guide] and the text we tell them to display.
 
 #### `github-attestations`
 
