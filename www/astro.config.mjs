@@ -30,11 +30,13 @@ export default defineConfig({
         },
         sidebar: [
             {
-                label: 'Guides',
+                label: 'Start here',
                 items: [
-                    // Each item here is one entry in the navigation menu.
-                    { label: 'Example Guide', slug: 'guides/example' },
-                ],
+                    { label: 'Installation', slug: 'start/install' },
+                    { label: 'Updating', slug: 'start/update' },
+                    { label: 'Project structure', slug: 'start/structure' },
+                    { label: 'Configuration', slug: 'start/config' }
+                ]
             },
             {
                 label: 'Reference',
