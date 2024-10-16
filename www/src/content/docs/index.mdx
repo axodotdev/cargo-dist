@@ -1,0 +1,109 @@
+---
+title: dist 
+description: professional packaging and distribution for ambitious developers
+template: splash
+hero:
+  tagline: professional packaging and distribution for ambitious developers
+  image:
+    light: ../../assets/logo-light.svg
+    dark: ../../assets/logo-dark.svg
+  actions:
+    - text: Get started
+      link: /guides/example/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/axodotdev/cargo-dist
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## What?
+
+`dist` is a developer tool that generates and manages your release process, end-to-end, from build to announce by:
+
+- Managing your build targets, system dependencies, and other preferences
+- Building and bundling your binaries and other artifacts
+- Generating packaging wrappers and metadata, and
+- Orchestrating the hosting, publishing, and announcing tasks associated with your release. 
+
+`dist` does this by *generating CI/CD workflows* for you. No more writing YAML!
+
+`dist` is distributed with `dist`. Check out an example [release](https://github.com/axodotdev/cargo-dist/releases/tag/v0.23.0) and [configuration](https://github.com/axodotdev/cargo-dist/blob/main/Cargo.toml#L75-L111).
+
+## Install the latest version
+
+<Tabs>
+    <TabItem label="shell">
+
+        ```shell
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/latest/cargo-dist-installer.sh | sh   
+        ```
+
+    </TabItem>
+    <TabItem label="Powershell">
+
+        ```powershell
+        powershell -c "irm https://github.com/axodotdev/cargo-dist/releases/download/latest/cargo-dist-installer.ps1 | iex"
+        ```
+
+    </TabItem>
+    <TabItem label="Homebrew">
+
+        ```shell
+        brew install axodotdev/tap/cargo-dist
+        ```
+
+    </TabItem>
+</Tabs>
+
+## How it works
+
+<Steps>
+
+1. Run `dist init` and set your distribution preferences
+
+    ```shell
+    let's setup your cargo-dist config...
+
+    ? what platforms do you want to build for?
+    (select with arrow keys and space, submit with enter) ›
+        [x] Apple Silicon macOS (aarch64-apple-darwin)
+        [x] Intel macOS (x86_64-apple-darwin)
+        [x] x64 Linux (x86_64-unknown-linux-gnu)
+        [ ] x64 MUSL Linux (x86_64-unknown-linux-musl)
+        [x] x64 Windows (x86_64-pc-windows-msvc)
+    ```
+
+1. Commit the generated workflow file
+
+    ```shell
+    git add .github/workflows/release.yml
+    git commit -m "release: add cargo-dist"
+    ```
+
+1. Trigger your workflow by pushing a tag or through manual dispatch!
+
+    ```shell
+    git tag v0.1.0
+    ```
+
+</Steps>
+
+## Next steps
+
+<CardGrid>
+	<Card title="Workflows" icon="list-format">
+		Edit `src/content/docs/index.mdx` to see this page change.
+	</Card>
+	<Card title="Artifacts" icon="document">
+		Edit `src/content/docs/index.mdx` to see this page change.
+	</Card>
+	<Card title="Installers" icon="laptop">
+		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	</Card>
+	<Card title="Supply-chain Security" icon="magnifier">
+		Edit your `sidebar` and other config in `astro.config.mjs`.
+	</Card>
+</CardGrid>
