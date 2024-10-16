@@ -17,7 +17,7 @@ fn get_package(packages: &[(PackageIdx, &crate::PackageInfo)], name: &str) -> cr
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_self_detect() {
-    let workspaces = WorkspaceGraph::find("./".into(), None).unwrap();
+    let workspaces = WorkspaceGraph::find("./".into(), Some("./".into())).unwrap();
     let project = workspaces.root_workspace();
     let packages = workspaces.all_packages().collect::<Vec<_>>();
 
@@ -32,7 +32,11 @@ fn test_self_detect() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_new() {
-    let workspaces = WorkspaceGraph::find("tests/projects/cargo-new/src/".into(), None).unwrap();
+    let workspaces = WorkspaceGraph::find(
+        "tests/projects/cargo-new/src/".into(),
+        Some("tests/projects/cargo-new/".into()),
+    )
+    .unwrap();
     let project = workspaces.root_workspace();
     let packages = workspaces.all_packages().collect::<Vec<_>>();
     assert_eq!(project.kind, WorkspaceKind::Rust);
@@ -102,8 +106,11 @@ fn test_rooted_cargo_good() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_virtual() {
-    let workspaces =
-        WorkspaceGraph::find("tests/projects/cargo-virtual/virtual/".into(), None).unwrap();
+    let workspaces = WorkspaceGraph::find(
+        "tests/projects/cargo-virtual/virtual/".into(),
+        Some("tests/projects/cargo-virtual/virtual/".into()),
+    )
+    .unwrap();
     let project = workspaces.root_workspace();
     let packages = workspaces.all_packages().collect::<Vec<_>>();
     assert_eq!(project.kind, WorkspaceKind::Rust);
@@ -131,7 +138,11 @@ fn test_cargo_virtual() {
 #[cfg(feature = "cargo-projects")]
 #[test]
 fn test_cargo_nonvirtual() {
-    let workspaces = WorkspaceGraph::find("tests/projects/cargo-nonvirtual/".into(), None).unwrap();
+    let workspaces = WorkspaceGraph::find(
+        "tests/projects/cargo-nonvirtual/".into(),
+        Some("tests/projects/cargo-nonvirtual/".into()),
+    )
+    .unwrap();
     let project = workspaces.root_workspace();
     let packages = workspaces.all_packages().collect::<Vec<_>>();
 
