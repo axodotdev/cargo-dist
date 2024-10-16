@@ -14,6 +14,7 @@ use guppy::{
 use itertools::{concat, Itertools};
 
 pub use axoasset::toml_edit::DocumentMut;
+use tracing::warn;
 
 /// All the `[profile]` entries we found in the root Cargo.toml
 pub type CargoProfiles = BTreeMap<String, CargoProfile>;
@@ -37,8 +38,16 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
         }
     };
 
+    let graph = match package_graph(start_dir) {
+        Ok(graph) => graph,
+        Err(e) => {
+            warn!("Unable to calculate cargo workspaces; is cargo missing?");
+            return WorkspaceSearch::Missing(e);
+        }
+    };
+
     // There's definitely some kind of Cargo workspace, now try to make sense of it
-    let workspace = package_graph(start_dir).and_then(|graph| workspace_info(&graph));
+    let workspace = workspace_info(&graph);
     match workspace {
         Ok(workspace) => WorkspaceSearch::Found(workspace),
         Err(e) => WorkspaceSearch::Broken {
