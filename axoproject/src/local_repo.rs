@@ -22,15 +22,14 @@ impl LocalRepo {
     /// isn't a git repository, this will return an `Err`.
     /// The `git` param is the path to the `git` executable to use.
     pub fn new(git: &str, working_dir: &Utf8Path) -> Result<Self> {
-        let root = get_root(git, working_dir)?;
-        let path = Utf8PathBuf::from(root);
+        let path = get_root(git, working_dir)?;
         let head = get_head_commit(git, working_dir).ok();
 
         Ok(Self { path, head })
     }
 }
 
-fn get_root(git: &str, working_dir: &Utf8Path) -> Result<String> {
+fn get_root(git: &str, working_dir: &Utf8Path) -> Result<Utf8PathBuf> {
     let mut cmd = Cmd::new(git, "detect a git repo");
     cmd.arg("rev-parse")
         .arg("--show-toplevel")
@@ -40,9 +39,13 @@ fn get_root(git: &str, working_dir: &Utf8Path) -> Result<String> {
         .current_dir(working_dir);
 
     let result = cmd.output()?;
+    // We do this two-step process here to normalize path separators,
+    // since `git rev-parse --show-toplevel` uses Unix path separators
+    // even on Windows.
+    let raw = Utf8PathBuf::from(String::from_utf8(result.stdout)?.trim_end());
+    let root = Utf8PathBuf::from_iter(raw.components());
 
-    let root = String::from_utf8(result.stdout)?;
-    Ok(root.trim_end().to_owned())
+    Ok(root)
 }
 
 fn get_head_commit(git: &str, working_dir: &Utf8Path) -> Result<String> {

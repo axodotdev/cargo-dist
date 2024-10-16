@@ -22,7 +22,10 @@ use crate::{
     DistError, DistGraph, SortedMap, SortedSet, TargetTriple,
 };
 
+#[cfg(not(windows))]
 const GITHUB_CI_DIR: &str = ".github/workflows/";
+#[cfg(windows)]
+const GITHUB_CI_DIR: &str = r".github\workflows\";
 const GITHUB_CI_FILE: &str = "release.yml";
 
 /// Info about running cargo-dist in Github CI
