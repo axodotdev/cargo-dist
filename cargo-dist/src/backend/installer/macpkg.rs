@@ -7,9 +7,13 @@ use axoprocess::Cmd;
 use camino::Utf8PathBuf;
 use serde::Serialize;
 use temp_dir::TempDir;
-use tracing::info;
+use tracing::{info, warn};
 
-use crate::{create_tmp, DistResult};
+use crate::{
+    create_tmp,
+    sign::macos::{Codesign, Keychain},
+    DistResult, TargetTriple,
+};
 
 use super::ExecutableZipFragment;
 
@@ -30,12 +34,35 @@ pub struct PkgInstallerInfo {
     pub version: String,
     /// Executable aliases
     pub bin_aliases: BTreeMap<String, Vec<String>>,
+    /// Whether to sign package artifacts
+    pub macos_sign: bool,
+    /// The target we're building from
+    pub host_target: TargetTriple,
+}
+
+struct SigningEnv {
+    pub keychain: Keychain,
+    pub identity: String,
 }
 
 impl PkgInstallerInfo {
     /// Build the pkg installer
     pub fn build(&self) -> DistResult<()> {
         info!("building a pkg: {}", self.identifier);
+
+        let signing_env = if self.macos_sign {
+            if let Some(signer) = Codesign::new(&self.host_target)? {
+                Some(SigningEnv {
+                    keychain: signer.create_keychain()?,
+                    identity: signer.identity().to_owned(),
+                })
+            } else {
+                warn!("Signing was requested, but we weren't able to construct the signing environment - config may be missing");
+                None
+            }
+        } else {
+            None
+        };
 
         // We can't build directly from dist_dir because the
         // package installer wants the directory we feed it
@@ -81,6 +108,14 @@ impl PkgInstallerInfo {
         pkgcmd.arg("--install-location").arg(&self.install_location);
         pkgcmd.arg("--version").arg(&self.version);
         pkgcmd.arg(&pkg_path);
+
+        // If we've been asked to sign, and we have the required
+        // environment, do that here.
+        if let Some(signing_env) = &signing_env {
+            pkgcmd.arg("--sign").arg(&signing_env.identity);
+            pkgcmd.arg("--keychain").arg(&signing_env.keychain.path);
+        }
+
         // Ensures stdout from the build process doesn't taint the dist-manifest
         pkgcmd.stdout_to_stderr();
         pkgcmd.run()?;
@@ -89,6 +124,13 @@ impl PkgInstallerInfo {
         let mut productcmd = Cmd::new("/usr/bin/productbuild", "create final product .pkg");
         productcmd.arg("--package").arg(&pkg_path);
         productcmd.arg(&product_path);
+
+        // We also need to sign the product .pkg.
+        if let Some(signing_env) = &signing_env {
+            productcmd.arg("--sign").arg(&signing_env.identity);
+            productcmd.arg("--keychain").arg(&signing_env.keychain.path);
+        }
+
         productcmd.stdout_to_stderr();
         productcmd.run()?;
 
