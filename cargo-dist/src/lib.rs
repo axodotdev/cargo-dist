@@ -406,14 +406,19 @@ fn generate_and_write_checksum(
 }
 
 /// Collect all checksums for all artifacts and write them to a unified checksum file
-fn generate_unified_checksum(manifest: &DistManifest, _dest_path: &Utf8Path) -> DistResult<()> {
-    for (artifact_id, artifact) in &manifest.artifacts {
-        eprintln!("generating unified checksum for {artifact_id}");
-        for (checksum_style, checksum) in &artifact.checksums {
-            eprintln!("got {checksum_style} {checksum}");
+fn generate_unified_checksum(manifest: &DistManifest, dest_path: &Utf8Path) -> DistResult<()> {
+    let mut output = String::new();
+    use std::fmt::Write;
+
+    for artifact in manifest.artifacts.values() {
+        if let Some(artifact_name) = artifact.name.as_deref() {
+            for (checksum_style, checksum) in &artifact.checksums {
+                writeln!(&mut output, "{checksum_style} {checksum} {artifact_name}").unwrap();
+            }
         }
     }
-    todo!()
+    axoasset::LocalAsset::write_new(&output, dest_path)?;
+    Ok(())
 }
 
 /// Generate a checksum for the src_path and return it as a string
