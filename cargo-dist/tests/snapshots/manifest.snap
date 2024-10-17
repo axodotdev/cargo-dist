@@ -30,6 +30,7 @@ stdout:
         "cargo-dist-installer.sh",
         "cargo-dist-installer.ps1",
         "cargo-dist.rb",
+        "cargo-dist-npm-package.tar.gz",
         "cargo-dist-aarch64-apple-darwin.tar.xz",
         "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
         "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
@@ -218,6 +219,82 @@ stdout:
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
+    },
+    "cargo-dist-npm-package.tar.gz": {
+      "name": "cargo-dist-npm-package.tar.gz",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin",
+        "aarch64-pc-windows-msvc",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl-dynamic",
+        "aarch64-unknown-linux-musl-static",
+        "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
+        "x86_64-pc-windows-msvc",
+        "x86_64-unknown-linux-gnu",
+        "x86_64-unknown-linux-musl-dynamic",
+        "x86_64-unknown-linux-musl-static"
+      ],
+      "assets": [
+        {
+          "name": ".gitignore",
+          "path": ".gitignore",
+          "kind": "unknown"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "binary-install.js",
+          "path": "binary-install.js",
+          "kind": "unknown"
+        },
+        {
+          "name": "binary.js",
+          "path": "binary.js",
+          "kind": "unknown"
+        },
+        {
+          "name": "install.js",
+          "path": "install.js",
+          "kind": "unknown"
+        },
+        {
+          "name": "npm-shrinkwrap.json",
+          "path": "npm-shrinkwrap.json",
+          "kind": "unknown"
+        },
+        {
+          "name": "package.json",
+          "path": "package.json",
+          "kind": "unknown"
+        },
+        {
+          "name": "run.js",
+          "path": "run.js",
+          "kind": "unknown"
+        }
+      ],
+      "install_hint": "npm install @axodotdev/dist@1.0.0-FAKEVERSION",
+      "description": "Install prebuilt binaries into your npm project"
     },
     "cargo-dist-x86_64-apple-darwin.tar.xz": {
       "name": "cargo-dist-x86_64-apple-darwin.tar.xz",
