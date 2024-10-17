@@ -67,6 +67,7 @@ blake2.workspace = true
 serde_yml.workspace = true
 spdx.workspace = true
 base64.workspace = true
+current_platform.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
@@ -76,6 +77,9 @@ flate2.workspace = true
 [package.metadata.dist]
 features = ["fear_no_msrv", "tls_native_roots"]
 npm-package = "dist"
+
+[package.metadata.dist.bin-aliases]
+"cargo-dist" = ["dist"]
 
 [package.metadata.release]
 pre-release-replacements = [
