@@ -366,6 +366,11 @@ fn add_manifest_artifact(
             description = None;
             kind = cargo_dist_schema::ArtifactKind::Checksum;
         }
+        ArtifactKind::UnifiedChecksum => {
+            install_hint = None;
+            description = None;
+            kind = cargo_dist_schema::ArtifactKind::UnifiedChecksum;
+        }
         ArtifactKind::SourceTarball(_) => {
             install_hint = None;
             description = None;

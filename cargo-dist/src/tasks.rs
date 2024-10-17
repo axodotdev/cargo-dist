@@ -368,6 +368,8 @@ pub enum BuildStep {
     GenerateSourceTarball(SourceTarballStep),
     /// Checksum a file
     Checksum(ChecksumImpl),
+    /// Generate a unified checksum file, containing multiple entries
+    UnifiedChecksum(UnifiedChecksumStep),
     /// Fetch or build an updater binary
     Updater(UpdaterStep),
     // FIXME: For macos universal builds we'll want
@@ -461,6 +463,15 @@ pub struct ChecksumImpl {
     pub dest_path: Option<Utf8PathBuf>,
     /// record it for this artifact in the dist-manifest
     pub for_artifact: Option<ArtifactId>,
+}
+
+/// Create a unified checksum file, containing all available
+/// checksums (of all available styles) for all files, except
+/// for the unified checksum itself, of course.
+#[derive(Debug, Clone)]
+pub struct UnifiedChecksumStep {
+    /// record the unified checksum to this path
+    pub dest_path: Utf8PathBuf,
 }
 
 /// Create a source tarball
@@ -570,6 +581,8 @@ pub enum ArtifactKind {
     Installer(InstallerImpl),
     /// A checksum
     Checksum(ChecksumImpl),
+    /// A unified CHECKSUMS file
+    UnifiedChecksum,
     /// A source tarball
     SourceTarball(SourceTarball),
     /// An extra artifact specified via config
@@ -1360,6 +1373,29 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 self.add_global_artifact(to_release, artifact);
             }
         }
+    }
+
+    fn add_unified_checksum_file(&mut self, to_release: ReleaseIdx) {
+        if !self.global_artifacts_enabled() {
+            return;
+        }
+
+        let dist_dir = &self.inner.dist_dir;
+        let file_path = dist_dir.join("CHECKSUMS");
+
+        self.add_global_artifact(
+            to_release,
+            Artifact {
+                id: "CHECKSUMS".to_owned(),
+                target_triples: Default::default(),
+                archive: None,
+                file_path,
+                required_binaries: Default::default(),
+                kind: ArtifactKind::UnifiedChecksum,
+                checksum: None, // who checksums the checksummers...
+                is_global: true,
+            },
+        );
     }
 
     fn add_source_tarball(&mut self, _tag: &str, to_release: ReleaseIdx) {
@@ -2451,6 +2487,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ArtifactKind::Checksum(checksum) => {
                     build_steps.push(BuildStep::Checksum(checksum.clone()));
                 }
+                ArtifactKind::UnifiedChecksum => {
+                    build_steps.push(BuildStep::UnifiedChecksum(UnifiedChecksumStep {
+                        dest_path: artifact.file_path.clone(),
+                    }));
+                }
                 ArtifactKind::SourceTarball(tarball) => {
                     build_steps.push(BuildStep::GenerateSourceTarball(SourceTarballStep {
                         committish: tarball.committish.to_owned(),
@@ -2651,6 +2692,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     InstallerStyle::Pkg => self.add_pkg_installer(release)?,
                 }
             }
+
+            // Add the unified checksum file
+            self.add_unified_checksum_file(release);
         }
 
         // Translate the result to DistManifest

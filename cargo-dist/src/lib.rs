@@ -151,6 +151,9 @@ fn run_build_step(
             dest_path.as_deref(),
             for_artifact.as_ref(),
         )?,
+        BuildStep::UnifiedChecksum(UnifiedChecksumStep { dest_path }) => {
+            generate_unified_checksum(manifest, dest_path)?
+        }
         BuildStep::GenerateSourceTarball(SourceTarballStep {
             committish,
             prefix,
@@ -330,6 +333,9 @@ fn build_fake(
             dest_path.as_deref(),
             for_artifact.as_ref(),
         )?,
+        BuildStep::UnifiedChecksum(UnifiedChecksumStep { dest_path }) => {
+            generate_unified_checksum(manifest, dest_path)?
+        }
         // Except source tarballs, which are definitely not okay
         // We mock these because it requires:
         // 1. git to be installed;
@@ -396,6 +402,22 @@ fn generate_and_write_checksum(
             artifact.checksums.insert(checksum.ext().to_owned(), output);
         }
     }
+    Ok(())
+}
+
+/// Collect all checksums for all artifacts and write them to a unified checksum file
+fn generate_unified_checksum(manifest: &DistManifest, dest_path: &Utf8Path) -> DistResult<()> {
+    let mut output = String::new();
+    use std::fmt::Write;
+
+    for artifact in manifest.artifacts.values() {
+        if let Some(artifact_name) = artifact.name.as_deref() {
+            for (checksum_style, checksum) in &artifact.checksums {
+                writeln!(&mut output, "{checksum_style} {checksum} {artifact_name}").unwrap();
+            }
+        }
+    }
+    axoasset::LocalAsset::write_new(&output, dest_path)?;
     Ok(())
 }
 
