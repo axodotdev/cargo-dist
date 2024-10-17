@@ -104,6 +104,7 @@ pub struct AppResult {
     homebrew_installer_path: Option<Utf8PathBuf>,
     powershell_installer_path: Option<Utf8PathBuf>,
     npm_installer_package_path: Option<Utf8PathBuf>,
+    unified_checksum_path: Option<Utf8PathBuf>,
 }
 
 pub struct PlanResult {
@@ -238,6 +239,7 @@ impl<'a> TestContext<'a, Tools> {
             let homebrew_installer = Utf8PathBuf::from(format!("{target_dir}/{brew_app_name}.rb"));
             let npm_installer =
                 Utf8PathBuf::from(format!("{target_dir}/{app_name}-npm-package.tar.gz"));
+            let unified_checksum_path = Utf8PathBuf::from(format!("{target_dir}/sha256.sum"));
             app_results.push(AppResult {
                 test_name: test_name.to_owned(),
                 trust_hashes,
@@ -247,6 +249,9 @@ impl<'a> TestContext<'a, Tools> {
                 powershell_installer_path: ps_installer.exists().then_some(ps_installer),
                 homebrew_installer_path: homebrew_installer.exists().then_some(homebrew_installer),
                 npm_installer_package_path: npm_installer.exists().then_some(npm_installer),
+                unified_checksum_path: unified_checksum_path
+                    .exists()
+                    .then_some(unified_checksum_path),
             })
         }
 

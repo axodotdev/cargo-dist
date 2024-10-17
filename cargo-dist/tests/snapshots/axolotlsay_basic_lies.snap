@@ -3217,6 +3217,17 @@ install(false);
 const { run } = require("./binary");
 run("axolotlsay");
 
+================ sha256.sum ================
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 axolotlsay-aarch64-apple-darwin.pkg
+8c03c4bdf1e8745f82d9c197a340dca2668a89e4529e57f7bc4d7eec7e000233 axolotlsay-aarch64-apple-darwin.tar.gz
+46c543bc15c20d554e51d9a87b02886c9987872a74c5d82e36acb64bbc39ccc4 axolotlsay-npm-package.tar.gz
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 axolotlsay-x86_64-apple-darwin.pkg
+9b09a4896a0f7c68a9ce9619ebc0b2e07a351d6a673136ce79b61ebae21cfeb6 axolotlsay-x86_64-apple-darwin.tar.gz
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 axolotlsay-x86_64-pc-windows-msvc.msi
+f54e3eedbd9a7a3fc7966b7706d3ec07f0fb864a3a8ee54d88fa0832f12731fd axolotlsay-x86_64-pc-windows-msvc.tar.gz
+90eea05ca3752335cdcd512dfdc334695b843558b70de8a50201b901881a491d axolotlsay-x86_64-unknown-linux-gnu.tar.gz
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 source.tar.gz
+
 ================ dist-manifest.json ================
 {
   "dist_version": "CENSORED",
@@ -3245,6 +3256,7 @@ run("axolotlsay");
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
         "axolotlsay-npm-package.tar.gz",
+        "sha256.sum",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-aarch64-apple-darwin.pkg",
@@ -3642,6 +3654,10 @@ run("axolotlsay");
       ],
       "install_hint": "brew install axodotdev/packages/axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

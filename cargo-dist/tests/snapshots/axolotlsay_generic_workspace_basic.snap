@@ -1776,6 +1776,9 @@ try {
   exit 1
 }
 
+================ sha256.sum ================
+75d8c6cbd1ddf538fc8fb63d2b29e0db7789ce11b58e3332733dd9faed50b709 source.tar.gz
+
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
 # shellcheck shell=dash
@@ -3551,6 +3554,9 @@ try {
   exit 1
 }
 
+================ sha256.sum ================
+75d8c6cbd1ddf538fc8fb63d2b29e0db7789ce11b58e3332733dd9faed50b709 source.tar.gz
+
 ================ dist-manifest.json ================
 {
   "dist_version": "CENSORED",
@@ -3577,6 +3583,7 @@ try {
         "axolotlsay-installer.sh",
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
+        "sha256.sum",
         "axolotlsay-aarch64-apple-darwin.tar.xz",
         "axolotlsay-aarch64-apple-darwin.tar.xz.sha256",
         "axolotlsay-x86_64-apple-darwin.tar.xz",
@@ -3611,6 +3618,7 @@ try {
         "axolotlsay-js-installer.sh",
         "axolotlsay-js-installer.ps1",
         "axolotlsay-js.rb",
+        "sha256.sum",
         "axolotlsay-js-aarch64-apple-darwin.tar.xz",
         "axolotlsay-js-aarch64-apple-darwin.tar.xz.sha256",
         "axolotlsay-js-x86_64-apple-darwin.tar.xz",
@@ -4021,6 +4029,10 @@ try {
       ],
       "install_hint": "brew install axodotdev/packages/axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

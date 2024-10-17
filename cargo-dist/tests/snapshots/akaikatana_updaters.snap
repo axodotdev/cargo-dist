@@ -1785,6 +1785,9 @@ try {
   exit 1
 }
 
+================ sha256.sum ================
+142e0662b2d165342ba462d51c6b360f0385d0ac2cd1777cead765f15b63fc5c source.tar.gz
+
 ================ dist-manifest.json ================
 {
   "dist_version": "CENSORED",
@@ -1811,6 +1814,7 @@ try {
         "akaikatana-repack-installer.sh",
         "akaikatana-repack-installer.ps1",
         "akaikatana-repack.rb",
+        "sha256.sum",
         "akaikatana-repack-aarch64-apple-darwin-update",
         "akaikatana-repack-aarch64-apple-darwin.tar.xz",
         "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256",
@@ -2075,6 +2079,10 @@ try {
       ],
       "install_hint": "brew install mistydemeo/formulae/akaikatana-repack",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

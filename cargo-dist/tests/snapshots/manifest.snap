@@ -31,6 +31,7 @@ stdout:
         "cargo-dist-installer.ps1",
         "cargo-dist.rb",
         "cargo-dist-npm-package.tar.gz",
+        "sha256.sum",
         "cargo-dist-aarch64-apple-darwin.tar.xz",
         "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
         "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
@@ -488,6 +489,10 @@ stdout:
     "dist-manifest-schema.json": {
       "name": "dist-manifest-schema.json",
       "kind": "extra-artifact"
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

@@ -46,6 +46,14 @@ impl DistResult {
                     .unwrap_or_default(),
                 app.npm_installer_package_path.as_deref(),
             )?;
+            append_snapshot_file(
+                &mut snapshots,
+                app.unified_checksum_path
+                    .as_deref()
+                    .and_then(|p| p.file_name())
+                    .unwrap_or_default(),
+                app.unified_checksum_path.as_deref(),
+            )?;
         }
 
         Ok(Snapshots {

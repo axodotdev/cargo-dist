@@ -3252,6 +3252,10 @@ install(false);
 const { run } = require("./binary");
 run("axolotlsay");
 
+================ sha256.sum ================
+89116b2b5e7bd5c40dfdbff30d36e5233ff953ec79a01cbbca68d9e94b685cf5 axolotlsay-npm-package.tar.gz
+6dd3a33b92c3c35b05d8b4c350e7600d9db3f000e402ac0bf226859ec6b0c984 source.tar.gz
+
 ================ dist-manifest.json ================
 {
   "dist_version": "CENSORED",
@@ -3280,6 +3284,7 @@ run("axolotlsay");
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
         "axolotlsay-npm-package.tar.gz",
+        "sha256.sum",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-aarch64-apple-darwin.pkg",
@@ -3653,6 +3658,10 @@ run("axolotlsay");
       ],
       "install_hint": "brew install axodotdev/packages/axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",
