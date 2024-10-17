@@ -151,6 +151,9 @@ fn run_build_step(
             dest_path.as_deref(),
             for_artifact.as_ref(),
         )?,
+        BuildStep::UnifiedChecksum(UnifiedChecksumStep { dest_path }) => {
+            generate_unified_checksum(manifest, dest_path)?
+        }
         BuildStep::GenerateSourceTarball(SourceTarballStep {
             committish,
             prefix,
@@ -330,6 +333,9 @@ fn build_fake(
             dest_path.as_deref(),
             for_artifact.as_ref(),
         )?,
+        BuildStep::UnifiedChecksum(UnifiedChecksumStep { dest_path }) => {
+            generate_unified_checksum(manifest, dest_path)?
+        }
         // Except source tarballs, which are definitely not okay
         // We mock these because it requires:
         // 1. git to be installed;
@@ -397,6 +403,17 @@ fn generate_and_write_checksum(
         }
     }
     Ok(())
+}
+
+/// Collect all checksums for all artifacts and write them to a unified checksum file
+fn generate_unified_checksum(manifest: &DistManifest, _dest_path: &Utf8Path) -> DistResult<()> {
+    for (artifact_id, artifact) in &manifest.artifacts {
+        eprintln!("generating unified checksum for {artifact_id}");
+        for (checksum_style, checksum) in &artifact.checksums {
+            eprintln!("got {checksum_style} {checksum}");
+        }
+    }
+    todo!()
 }
 
 /// Generate a checksum for the src_path and return it as a string

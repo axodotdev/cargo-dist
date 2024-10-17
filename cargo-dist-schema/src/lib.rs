@@ -444,6 +444,9 @@ pub enum ArtifactKind {
     /// A checksum of another artifact
     #[serde(rename = "checksum")]
     Checksum,
+    /// The checksums of many artifacts
+    #[serde(rename = "unified-checksum")]
+    UnifiedChecksum,
     /// A tarball containing the source code
     #[serde(rename = "source-tarball")]
     SourceTarball,
