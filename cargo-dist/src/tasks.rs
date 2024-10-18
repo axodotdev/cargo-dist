@@ -470,6 +470,9 @@ pub struct ChecksumImpl {
 /// for the unified checksum itself, of course.
 #[derive(Debug, Clone)]
 pub struct UnifiedChecksumStep {
+    /// the checksum style to use
+    pub checksum: ChecksumStyle,
+
     /// record the unified checksum to this path
     pub dest_path: Utf8PathBuf,
 }
@@ -581,8 +584,8 @@ pub enum ArtifactKind {
     Installer(InstallerImpl),
     /// A checksum
     Checksum(ChecksumImpl),
-    /// A unified CHECKSUMS file
-    UnifiedChecksum,
+    /// A unified checksum file, like `sha256.sum`
+    UnifiedChecksum(UnifiedChecksumStep),
     /// A source tarball
     SourceTarball(SourceTarball),
     /// An extra artifact specified via config
@@ -1381,7 +1384,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
 
         let dist_dir = &self.inner.dist_dir;
-        let file_path = dist_dir.join("CHECKSUMS");
+        let checksum = self.inner.config.artifacts.checksum;
+        let file_name = format!("{}.sum", checksum.ext());
+        let file_path = dist_dir.join(file_name);
 
         self.add_global_artifact(
             to_release,
@@ -1389,9 +1394,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 id: "CHECKSUMS".to_owned(),
                 target_triples: Default::default(),
                 archive: None,
-                file_path,
+                file_path: file_path.clone(),
                 required_binaries: Default::default(),
-                kind: ArtifactKind::UnifiedChecksum,
+                kind: ArtifactKind::UnifiedChecksum(UnifiedChecksumStep {
+                    checksum,
+                    dest_path: file_path,
+                }),
                 checksum: None, // who checksums the checksummers...
                 is_global: true,
             },
@@ -2487,10 +2495,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ArtifactKind::Checksum(checksum) => {
                     build_steps.push(BuildStep::Checksum(checksum.clone()));
                 }
-                ArtifactKind::UnifiedChecksum => {
-                    build_steps.push(BuildStep::UnifiedChecksum(UnifiedChecksumStep {
-                        dest_path: artifact.file_path.clone(),
-                    }));
+                ArtifactKind::UnifiedChecksum(unified_checksum) => {
+                    build_steps.push(BuildStep::UnifiedChecksum(unified_checksum.clone()));
                 }
                 ArtifactKind::SourceTarball(tarball) => {
                     build_steps.push(BuildStep::GenerateSourceTarball(SourceTarballStep {

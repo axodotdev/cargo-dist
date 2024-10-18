@@ -366,7 +366,7 @@ fn add_manifest_artifact(
             description = None;
             kind = cargo_dist_schema::ArtifactKind::Checksum;
         }
-        ArtifactKind::UnifiedChecksum => {
+        ArtifactKind::UnifiedChecksum(_) => {
             install_hint = None;
             description = None;
             kind = cargo_dist_schema::ArtifactKind::UnifiedChecksum;
