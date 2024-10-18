@@ -1780,6 +1780,7 @@ try {
         "axolotlsay-installer.sh",
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
+        "sha256.sum",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
@@ -2004,6 +2005,10 @@ try {
       ],
       "install_hint": "brew install axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

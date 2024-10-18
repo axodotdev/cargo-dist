@@ -200,6 +200,21 @@ expression: json_schema
           }
         },
         {
+          "description": "The checksums of many artifacts",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "unified-checksum"
+              ]
+            }
+          }
+        },
+        {
           "description": "A tarball containing the source code",
           "type": "object",
           "required": [

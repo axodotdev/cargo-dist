@@ -1738,6 +1738,7 @@ try {
         "source.tar.gz.sha256",
         "axolotlsay-installer.sh",
         "axolotlsay-installer.ps1",
+        "sha256.sum",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-aarch64-apple-darwin.pkg",
@@ -2028,6 +2029,10 @@ try {
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ]
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

@@ -1237,6 +1237,7 @@ download_binary_and_run_installer "$@" || exit 1
         "source.tar.gz",
         "source.tar.gz.sha256",
         "akaikatana-repack-installer.sh",
+        "sha256.sum",
         "akaikatana-repack-aarch64-apple-darwin.tar.xz",
         "akaikatana-repack-aarch64-apple-darwin.tar.xz.sha256",
         "akaikatana-repack-x86_64-apple-darwin.tar.xz",
@@ -1448,6 +1449,10 @@ download_binary_and_run_installer "$@" || exit 1
       "target_triples": [
         "x86_64-unknown-linux-musl"
       ]
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

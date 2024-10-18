@@ -151,6 +151,10 @@ fn run_build_step(
             dest_path.as_deref(),
             for_artifact.as_ref(),
         )?,
+        BuildStep::UnifiedChecksum(UnifiedChecksumStep {
+            checksum,
+            dest_path,
+        }) => generate_unified_checksum(manifest, *checksum, dest_path)?,
         BuildStep::GenerateSourceTarball(SourceTarballStep {
             committish,
             prefix,
@@ -330,6 +334,10 @@ fn build_fake(
             dest_path.as_deref(),
             for_artifact.as_ref(),
         )?,
+        BuildStep::UnifiedChecksum(UnifiedChecksumStep {
+            checksum,
+            dest_path,
+        }) => generate_unified_checksum(manifest, *checksum, dest_path)?,
         // Except source tarballs, which are definitely not okay
         // We mock these because it requires:
         // 1. git to be installed;
@@ -396,6 +404,39 @@ fn generate_and_write_checksum(
             artifact.checksums.insert(checksum.ext().to_owned(), output);
         }
     }
+    Ok(())
+}
+
+/// Collect all checksums for all artifacts and write them to a unified checksum file
+fn generate_unified_checksum(
+    manifest: &DistManifest,
+    checksum: ChecksumStyle,
+    dest_path: &Utf8Path,
+) -> DistResult<()> {
+    let mut output = String::new();
+    use std::fmt::Write;
+
+    let expected_checksum_ext = checksum.ext();
+
+    for artifact in manifest.artifacts.values() {
+        let artifact_name = if let Some(artifact_name) = artifact.name.as_deref() {
+            artifact_name
+        } else {
+            continue;
+        };
+
+        for (checksum_ext, checksum) in &artifact.checksums {
+            if checksum_ext != expected_checksum_ext {
+                tracing::warn!(
+                    "Found checksum {checksum_ext} for {artifact_name}, expected only {expected_checksum_ext}"
+                );
+                continue;
+            }
+
+            writeln!(&mut output, "{checksum} {artifact_name}").unwrap();
+        }
+    }
+    axoasset::LocalAsset::write_new(&output, dest_path)?;
     Ok(())
 }
 
