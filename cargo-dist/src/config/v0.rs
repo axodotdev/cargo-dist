@@ -157,9 +157,8 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub npm_scope: Option<String>,
 
-    /// A scope to prefix npm packages with (@ should be included).
-    ///
-    /// This is required if you're using an npm installer.
+    /// Which checksum algorithm to use, from: sha256, sha512, sha3-256,
+    /// sha3-512, blake2s, blake2b, or false (to disable checksums)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checksum: Option<ChecksumStyle>,
 

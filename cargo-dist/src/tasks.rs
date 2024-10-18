@@ -1386,12 +1386,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let dist_dir = &self.inner.dist_dir;
         let checksum = self.inner.config.artifacts.checksum;
         let file_name = format!("{}.sum", checksum.ext());
-        let file_path = dist_dir.join(file_name);
+        let file_path = dist_dir.join(&file_name);
 
         self.add_global_artifact(
             to_release,
             Artifact {
-                id: "CHECKSUMS".to_owned(),
+                id: file_name,
                 target_triples: Default::default(),
                 archive: None,
                 file_path: file_path.clone(),
