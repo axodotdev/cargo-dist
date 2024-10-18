@@ -26,6 +26,7 @@ expression: self.payload
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",
+        "sha256.sum",
         "axolotlsay-aarch64-unknown-linux-gnu.tar.xz",
         "axolotlsay-aarch64-unknown-linux-gnu.tar.xz.sha256",
         "axolotlsay-aarch64-unknown-linux-musl.tar.xz",
@@ -216,6 +217,10 @@ expression: self.payload
       "target_triples": [
         "x86_64-unknown-linux-musl"
       ]
+    },
+    "sha256.sum": {
+      "name": "sha256.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",
