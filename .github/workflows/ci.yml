@@ -74,6 +74,14 @@ jobs:
       - uses: swatinem/rust-cache@v2
       - run: cargo doc --workspace --no-deps
 
+  # Check for typos (exceptions are provided by the typos.toml)
+  typos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check spelling of entire workspace
+        uses: crate-ci/typos@v1.26.0
+
   # Build and run tests/doctests/examples on all platforms
   # FIXME: look into `cargo-hack` which lets you more aggressively
   # probe all your features and rust versions (see tracing's ci)
