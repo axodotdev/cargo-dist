@@ -136,7 +136,7 @@ This section represents all the configuration for how cargo-dist should build an
 
 This is a list of [`generate`][generate] tasks for cargo-dist to ignore when checking if generated configuration is up to date.
 
-**We recommend avoiding setting this, as it prevents cargo-dist from updating these files for you whenever you update or change your configuation. If you think you need this, please [do file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or ask us about it, so we know what settings we're missing that necessitates this (or ideally, can point you to the existing settings).**
+**We recommend avoiding setting this, as it prevents cargo-dist from updating these files for you whenever you update or change your configuration. If you think you need this, please [do file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or ask us about it, so we know what settings we're missing that necessitates this (or ideally, can point you to the existing settings).**
 
 Nevertheless, setting can be necessary for users who customize their own configuration beyond cargo-dist's generated defaults and want to avoid cargo-dist overwriting it.
 
@@ -175,7 +175,7 @@ The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a V
 > dist = true
 > ```
 
-Specifies whether cargo-dist [should distribute (build and publish) a package][distribute], overidding all other rules for deciding if a package is eligible.
+Specifies whether cargo-dist [should distribute (build and publish) a package][distribute], overriding all other rules for deciding if a package is eligible.
 
 There are 3 major cases where you might use this:
 
@@ -1104,7 +1104,7 @@ Also note that for legacy reasons a tarball is expected to have all the contents
 
 Determines whether CI will try to cache work between builds. Defaults false, unless [`release-branch`](#release-branch) or [`pr-run-mode = "upload"`](#pr-run-mode) are enabled.
 
-This is unlikely to be productive because for safety the cache agressively invalidates based on things like "Cargo.toml or Cargo.lock changed" (which is always true if you change the version of a Rust project), and a noop cache run can randomly take over 2 minutes (typically more like 10 seconds).
+This is unlikely to be productive because for safety the cache aggressively invalidates based on things like "Cargo.toml or Cargo.lock changed" (which is always true if you change the version of a Rust project), and a noop cache run can randomly take over 2 minutes (typically more like 10 seconds).
 
 The cases where we enable it by default are the only ones we know where you *might* want to enable it.
 
@@ -1706,7 +1706,7 @@ Throughout the above docs, different settings will have different rules for wher
 
 * global-only: this setting can only be set in the root workspace config ([dist-workspace.toml][js-guide] or [dist.toml][project-guide])
 * package-only: this setting can only be set in a package config ([dist.toml][project-guide])
-* package-local: this setting can be set in either, with the package overidding the workspace value if it provides one (and otherwise inheriting it).
+* package-local: this setting can be set in either, with the package overriding the workspace value if it provides one (and otherwise inheriting it).
 
 When you override a package-local setting, the workspace value will be discarded completely. So for instance if the workspace sets `features = ["feature1", "feature2"]` and a package sets `features = ["feature2", "feature3"]`, then that package will only get feature2 and feature3.
 

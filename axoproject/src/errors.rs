@@ -25,12 +25,12 @@ pub enum AxoprojectError {
     #[diagnostic(transparent)]
     Axoprocess(#[from] axoprocess::AxoprocessError),
 
-    /// An error occured in guppy/cargo-metadata when trying to find a cargo project
+    /// An error occurred in guppy/cargo-metadata when trying to find a cargo project
     #[cfg(feature = "cargo-projects")]
     #[error(transparent)]
     CargoMetadata(#[from] guppy::Error),
 
-    /// An error occured in parse_changelog
+    /// An error occurred in parse_changelog
     #[error(transparent)]
     ParseChangelog(#[from] parse_changelog::Error),
 
@@ -92,7 +92,7 @@ pub enum AxoprojectError {
         url2: String,
     },
 
-    /// An error that occured while trying to find READMEs and whatnot in your project dir
+    /// An error that occurred while trying to find READMEs and whatnot in your project dir
     #[error("couldn't search for files in\n{dir}")]
     AutoIncludeSearch {
         /// path to the dir we were searching

@@ -91,7 +91,7 @@ pub enum DistError {
     Wix {
         /// The msi we were trying to build
         msi: String,
-        /// The underyling wix error
+        /// The underlying wix error
         #[source]
         details: wix::Error,
     },
@@ -209,7 +209,7 @@ pub enum DistError {
     },
 
     /// packages disagreed on publishers
-    #[error("different publisher setttings were in your workspace, this is currently unuspported")]
+    #[error("different publisher settings were in your workspace, this is currently unuspported")]
     #[diagnostic(help("these packages disagree:\n{packages:#?}"))]
     MismatchedPublishers {
         /// paths of problem manifests
@@ -217,7 +217,7 @@ pub enum DistError {
     },
 
     /// publishers disagreed on prereleases
-    #[error("different publisher 'prereleases' setttings were in your workspace, this is currently unsupported")]
+    #[error("different publisher 'prereleases' settings were in your workspace, this is currently unsupported")]
     MismatchedPrereleases,
 
     /// parse_tag concluded there was nothing to release
@@ -260,7 +260,7 @@ pub enum DistError {
     MultiPackage {
         /// Name of the artifact
         artifact_name: String,
-        /// One of the pacakges
+        /// One of the packages
         spec1: String,
         /// A different package
         spec2: String,
@@ -435,7 +435,7 @@ pub enum DistError {
     },
 
     /// Unknown permission specified in GitHub Actions config
-    #[error("One or more unrecognized permissons levels were specified: {levels:?}")]
+    #[error("One or more unrecognized permissions levels were specified: {levels:?}")]
     #[diagnostic(help("recognized values are: admin, write, read"))]
     GithubUnknownPermission {
         /// The input
@@ -481,7 +481,7 @@ pub enum DistError {
     GithubBuildSetupNotValid {
         /// The value from the configuration file
         file_path: Utf8PathBuf,
-        /// Error messsage details
+        /// Error message details
         message: String,
     },
 
@@ -529,7 +529,7 @@ pub enum DistError {
 
     /// cargo package with build-command
     #[error(
-        "cargo package was overriden with a build-command, which isn't supported yet\n{manifest}"
+        "cargo package was overridden with a build-command, which isn't supported yet\n{manifest}"
     )]
     UnexpectedBuildCommand {
         /// path to manifest
@@ -538,7 +538,7 @@ pub enum DistError {
 
     /// Failure to decode base64-encoded certificate
     #[error("We failed to decode the certificate stored in the CODESIGN_CERTIFICATE environment variable.")]
-    #[diagnostic(help("Is the value of this envirionment variable valid base64?"))]
+    #[diagnostic(help("Is the value of this environment variable valid base64?"))]
     CertificateDecodeError {},
 
     /// Missing configuration for a .pkg

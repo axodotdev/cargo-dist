@@ -9,7 +9,7 @@
 //! The complexity of this module is trying to handle things like:
 //!
 //! * linux-musl-static binaries work on linux-gnu platforms
-//! * but linux-gnu binaries are preferrable if they're available
+//! * but linux-gnu binaries are preferable if they're available
 //! * but if the target system has a really old version of glibc, the linux-gnu binaries won't work
 //! * so the linux-musl-static binaries need to still be eligible as a fallback
 //!
@@ -163,7 +163,7 @@
 //! a "more native" option is available and unused).
 //!
 //! If this version is too old we will fail to error and/or fail to invoke musl fallback,
-//! and may claim to succesfully install linux-gnu binaries which will immediately error out
+//! and may claim to successfully install linux-gnu binaries which will immediately error out
 //! when run.
 //!
 //!
