@@ -15,7 +15,8 @@ exclude = [
 ]
 
 [[bin]]
-name = "cargo-dist"
+name = "dist"
+path = "src/main.rs"
 
 [features]
 # Use bleeding edge features that might mess up people using 'cargo install'
@@ -78,9 +79,6 @@ flate2.workspace = true
 [package.metadata.dist]
 features = ["fear_no_msrv", "tls_native_roots"]
 npm-package = "dist"
-
-[package.metadata.dist.bin-aliases]
-"cargo-dist" = ["dist"]
 
 [package.metadata.release]
 pre-release-replacements = [

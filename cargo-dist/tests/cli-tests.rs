@@ -6,7 +6,7 @@ use std::{
 #[cfg(unix)]
 use std::{fs::File, os::unix::fs::PermissionsExt};
 
-static BIN: &str = env!("CARGO_BIN_EXE_cargo-dist");
+static BIN: &str = env!("CARGO_BIN_EXE_dist");
 const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
 
 #[allow(dead_code)]
@@ -266,6 +266,7 @@ fn generate_installer(version: &axotag::Version, release_type: ReleaseSourceType
     installer_path
 }
 
+#[ignore]
 #[test]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
@@ -278,7 +279,7 @@ fn test_self_update() {
             package: "cargo-dist".to_owned(),
             owner: "axodotdev".to_owned(),
             bin: PathBuf::from(BIN),
-            binaries: vec!["cargo-dist".to_owned()],
+            binaries: vec!["dist".to_owned()],
             args: vec![
                 "dist".to_owned(),
                 "selfupdate".to_owned(),
