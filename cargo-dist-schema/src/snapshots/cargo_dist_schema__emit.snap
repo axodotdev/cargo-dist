@@ -787,7 +787,7 @@ expression: json_schema
           ]
         },
         "runner": {
-          "description": "Github Runner to user",
+          "description": "Github Runner to use",
           "type": [
             "string",
             "null"

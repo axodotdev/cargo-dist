@@ -298,7 +298,7 @@ pub struct GithubMatrixEntry {
     /// Targets to build for
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<TargetTriple>>,
-    /// Github Runner to user
+    /// Github Runner to use
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runner: Option<GithubRunner>,
     /// Expression to execute to install dist
