@@ -287,14 +287,12 @@ macro_rules! declare_strongly_typed_string {
                 pub const fn new(raw: String) -> Self {
                     Self(raw)
                 }
-
                 #[doc = "Turn $name into $ref_name explicitly"]
                 #[inline]
                 pub fn as_explicit_ref(&self) -> &$ref_name {
                     &self
                 }
             }
-
             #[automatically_derived]
             impl ::std::borrow::Borrow<$ref_name> for $name {
                 #[inline]
@@ -302,7 +300,6 @@ macro_rules! declare_strongly_typed_string {
                     ::std::ops::Deref::deref(self)
                 }
             }
-
             #[automatically_derived]
             impl ::std::convert::AsRef<$ref_name> for $name {
                 #[inline]
@@ -310,7 +307,6 @@ macro_rules! declare_strongly_typed_string {
                     ::std::ops::Deref::deref(self)
                 }
             }
-
             #[automatically_derived]
             impl ::std::convert::AsRef<str> for $name {
                 #[inline]
@@ -318,7 +314,6 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str()
                 }
             }
-
             #[automatically_derived]
             impl ::std::str::FromStr for $name {
                 type Err = ::std::convert::Infallible;
@@ -335,7 +330,6 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str()
                 }
             }
-
             #[automatically_derived]
             impl ::std::ops::Deref for $name {
                 type Target = $ref_name;
@@ -344,7 +338,6 @@ macro_rules! declare_strongly_typed_string {
                     $ref_name::from_str(::std::convert::AsRef::as_ref(&self.0))
                 }
             }
-
             #[automatically_derived]
             impl ::std::fmt::Debug for $name {
                 #[inline]
@@ -352,7 +345,6 @@ macro_rules! declare_strongly_typed_string {
                     <$ref_name as ::std::fmt::Debug>::fmt(::std::ops::Deref::deref(self), f)
                 }
             }
-
             #[automatically_derived]
             impl ::std::fmt::Display for $name {
                 #[inline]
@@ -377,14 +369,12 @@ macro_rules! declare_strongly_typed_string {
                     // SAFETY: `$ref_name` is `#[repr(transparent)]` around a single `str` field, so a `*const str` can be safely reinterpreted as a `*const $ref_name`
                     unsafe { &*(ptr as *const Self) }
                 }
-
                 #[doc = r" Provides access to the underlying value as a string slice."]
                 #[inline]
                 pub const fn as_str(&self) -> &str {
                     &self.0
                 }
             }
-
             #[automatically_derived]
             impl ::std::borrow::ToOwned for $ref_name {
                 type Owned = $name;
@@ -393,7 +383,6 @@ macro_rules! declare_strongly_typed_string {
                     $name(self.0.into())
                 }
             }
-
             #[automatically_derived]
             impl ::std::cmp::PartialEq<$ref_name> for $name {
                 #[inline]
@@ -401,7 +390,6 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str() == other.as_str()
                 }
             }
-
             #[automatically_derived]
             impl ::std::cmp::PartialEq<$name> for $ref_name {
                 #[inline]
@@ -409,7 +397,6 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str() == other.as_str()
                 }
             }
-
             #[automatically_derived]
             impl ::std::cmp::PartialEq<&'_ $ref_name> for $name {
                 #[inline]
@@ -417,7 +404,6 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str() == other.as_str()
                 }
             }
-
             #[automatically_derived]
             impl ::std::cmp::PartialEq<$name> for &'_ $ref_name {
                 #[inline]
@@ -425,7 +411,6 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str() == other.as_str()
                 }
             }
-
             #[automatically_derived]
             impl<'a> ::std::convert::From<&'a str> for &'a $ref_name {
                 #[inline]
@@ -433,7 +418,6 @@ macro_rules! declare_strongly_typed_string {
                     $ref_name::from_str(s)
                 }
             }
-
             #[automatically_derived]
             impl ::std::borrow::Borrow<str> for $ref_name {
                 #[inline]
@@ -441,7 +425,6 @@ macro_rules! declare_strongly_typed_string {
                     &self.0
                 }
             }
-
             #[automatically_derived]
             impl ::std::convert::AsRef<str> for $ref_name {
                 #[inline]
@@ -449,7 +432,6 @@ macro_rules! declare_strongly_typed_string {
                     &self.0
                 }
             }
-
             #[automatically_derived]
             impl ::std::convert::From<&'_ $ref_name> for ::std::rc::Rc<$ref_name> {
                 #[allow(unsafe_code)]
@@ -472,7 +454,6 @@ macro_rules! declare_strongly_typed_string {
                     }
                 }
             }
-
             #[automatically_derived]
             impl ::std::fmt::Debug for $ref_name {
                 #[inline]
@@ -480,7 +461,6 @@ macro_rules! declare_strongly_typed_string {
                     <str as ::std::fmt::Debug>::fmt(&self.0, f)
                 }
             }
-
             #[automatically_derived]
             impl ::std::fmt::Display for $ref_name {
                 #[inline]

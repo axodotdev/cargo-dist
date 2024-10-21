@@ -99,6 +99,8 @@ impl<'a> DistGraphBuilder<'a> {
                 rustflags.push_str(" -Ctarget-feature=+crt-static -Clink-self-contained=yes");
             }
 
+            let mut wrapper = CargoBuildWrapper::None;
+
             // If we're trying to cross-compile, ensure the rustup toolchain
             // is setup!
             if target != cargo.host_target {
@@ -107,6 +109,14 @@ impl<'a> DistGraphBuilder<'a> {
                         rustup,
                         target: target.clone(),
                     }));
+
+                    if target.is_windows() {
+                        // If we're targetting windows, let's try `cargo-xwin`
+                        wrapper = CargoBuildWrapper::Xwin;
+                    } else {
+                        // If not, let's try `cargo-zigbuild`
+                        wrapper = CargoBuildWrapper::ZigBuild;
+                    }
                 } else {
                     warn!("You're trying to cross-compile, but I can't find rustup to ensure you have the rust toolchains for it!")
                 }
@@ -127,6 +137,7 @@ impl<'a> DistGraphBuilder<'a> {
                 for ((pkg_spec, features), expected_binaries) in builds_by_pkg_spec {
                     builds.push(BuildStep::Cargo(CargoBuildStep {
                         target_triple: target.clone(),
+                        wrapper,
                         package: CargoTargetPackages::Package(pkg_spec),
                         features,
                         rustflags: rustflags.clone(),
@@ -143,6 +154,7 @@ impl<'a> DistGraphBuilder<'a> {
                     .unwrap_or_default();
                 builds.push(BuildStep::Cargo(CargoBuildStep {
                     target_triple: target.clone(),
+                    wrapper,
                     package: CargoTargetPackages::Workspace,
                     features,
                     rustflags,
@@ -165,13 +177,33 @@ fn make_build_cargo_target_command(
     auditable: bool,
 ) -> Cmd {
     let mut command = Cmd::new(cargo_cmd, "build your app with Cargo");
+    let kind = match target.wrapper {
+        CargoBuildWrapper::None => "cargo",
+        CargoBuildWrapper::ZigBuild => "cargo-zigbuild",
+        CargoBuildWrapper::Xwin => "cargo-xwin",
+    };
+    eprint!(
+        "building {kind} target ({}/{}",
+        target.target_triple, target.profile
+    );
 
     if auditable {
         command.arg("auditable");
     }
 
+    let mut command = Cmd::new(&dist_graph.tools.cargo.cmd, "build your app with Cargo");
+    match target.wrapper {
+        CargoBuildWrapper::None => {
+            command.arg("build");
+        }
+        CargoBuildWrapper::ZigBuild => {
+            command.arg("zigbuild");
+        }
+        CargoBuildWrapper::Xwin => {
+            command.arg("xwin").arg("build");
+        }
+    }
     command
-        .arg("build")
         .arg("--profile")
         .arg(&target.profile)
         .arg("--message-format=json-render-diagnostics")
@@ -319,6 +351,7 @@ mod tests {
             rustflags: "--this-rust-flag-gets-ignored".to_string(),
             target_triple: TargetTriple::new("x86_64-unknown-linux-gnu".to_string()),
             working_dir: ".".to_string().into(), // this feels mildly cursed -duckinator.
+            wrapper: crate::CargoBuildWrapper::None,
         };
 
         let cmd = make_build_cargo_target_command(&cargo_cmd, &rustflags, &target, auditable);
@@ -347,6 +380,7 @@ mod tests {
             rustflags: "--this-rust-flag-gets-ignored".to_string(),
             target_triple: TargetTriple::new("x86_64-unknown-linux-gnu".to_string()),
             working_dir: ".".to_string().into(), // this feels mildly cursed -duckinator.
+            wrapper: crate::CargoBuildWrapper::None,
         };
 
         let cmd = make_build_cargo_target_command(&cargo_cmd, &rustflags, &target, auditable);

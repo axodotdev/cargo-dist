@@ -1,9 +1,5 @@
 [workspace]
-members = [
-    "axoproject",
-    "cargo-dist",
-    "cargo-dist-schema",
-]
+members = ["axoproject", "cargo-dist", "cargo-dist-schema"]
 resolver = "2"
 exclude = ["axoproject/tests/projects/"]
 
