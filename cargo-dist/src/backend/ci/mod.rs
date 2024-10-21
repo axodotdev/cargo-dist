@@ -1,6 +1,9 @@
 //! Support for generating CI scripts for running dist
 
-use cargo_dist_schema::{DashScript, GhaRunStep, PowershellScript, TargetTripleRef};
+use cargo_dist_schema::{
+    target_lexicon::{OperatingSystem, Triple},
+    DashScript, GhaRunStep, PowershellScript,
+};
 use semver::Version;
 use serde::Serialize;
 
@@ -49,19 +52,12 @@ pub trait InstallStrategy {
     fn powershell(&self) -> GhaRunStep;
 
     /// Return the right install method for a given set of targets
-    fn for_targets<'a>(&self, targets: &'a [&'a TargetTripleRef]) -> GhaRunStep {
-        // FIXME: when doing cross-compilation, `host != runner`, and we should
-        // pick something that runs on the host. We need knowledge about "which
-        // platform is this GitHub runner" ahead of time to do that, though.
-
-        for target in targets {
-            if target.is_linux() || target.is_apple() {
-                return self.dash();
-            } else if target.is_windows() {
-                return self.powershell();
-            }
+    fn for_triple(&self, triple: &Triple) -> GhaRunStep {
+        match triple.operating_system {
+            OperatingSystem::Linux | OperatingSystem::Darwin => self.dash(),
+            OperatingSystem::Windows => self.powershell(),
+            _ => panic!("unsupported host triple {triple}"),
         }
-        panic!("unsupported target triple(s) {targets:?}");
     }
 }
 

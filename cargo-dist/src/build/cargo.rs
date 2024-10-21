@@ -4,14 +4,16 @@ use std::env;
 
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
-use cargo_dist_schema::{DistManifest, TargetTriple};
+use cargo_dist_schema::target_lexicon::{Architecture, Environment, Triple};
+use cargo_dist_schema::{DistManifest, TripleName};
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
 
 use crate::build::BuildExpectations;
 use crate::env::{calculate_ldflags, fetch_brew_env, parse_env, select_brew_env};
 use crate::{
-    errors::*, BinaryIdx, BuildStep, DistGraphBuilder, AXOUPDATER_MINIMUM_VERSION, PROFILE_DIST,
+    build_wrapper_for_cross, errors::*, BinaryIdx, BuildStep, CargoBuildWrapper, DistGraphBuilder,
+    AXOUPDATER_MINIMUM_VERSION, PROFILE_DIST,
 };
 use crate::{
     CargoBuildStep, CargoTargetFeatureList, CargoTargetPackages, DistGraph, RustupStep, SortedMap,
@@ -25,7 +27,7 @@ impl<'a> DistGraphBuilder<'a> {
         let cargo = self.inner.tools.cargo()?;
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
-        let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
+        let mut targets = SortedMap::<TripleName, Vec<BinaryIdx>>::new();
         let working_dir = self
             .workspaces
             .workspace(workspace_idx)
@@ -66,7 +68,8 @@ impl<'a> DistGraphBuilder<'a> {
         }
 
         let mut builds = vec![];
-        for (target, binaries) in targets {
+        for (target_triple, binaries) in targets {
+            let target = target_triple.parse().unwrap();
             let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
 
             // FIXME: is there a more principled way for us to add things to RUSTFLAGS
@@ -88,24 +91,27 @@ impl<'a> DistGraphBuilder<'a> {
             // on. Not doing that is basically rolling some dice and hoping the user already
             // has it installed, which isn't great. We should support redists eventually,
             // but for now this hacky global flag is here to let you roll dice.
-            if self.inner.config.builds.cargo.msvc_crt_static && target.is_windows_msvc() {
+            if self.inner.config.builds.cargo.msvc_crt_static
+                && target.environment == Environment::Msvc
+            {
                 rustflags.push_str(" -Ctarget-feature=+crt-static");
             }
 
             // Likewise, the default for musl will change in the future, so
             // we can future-proof this by adding the flag now
             // See: https://github.com/axodotdev/cargo-dist/issues/486
-            if target.is_linux_musl() {
+            if target.environment == Environment::Musl {
                 rustflags.push_str(" -Ctarget-feature=+crt-static -Clink-self-contained=yes");
             }
 
-            // If we're trying to cross-compile, ensure the rustup toolchain
-            // is setup!
-            if target != cargo.host_target {
+            let host = cargo.host_target.parse().unwrap();
+
+            // If we're trying to cross-compile, ensure the rustup toolchain is set up!
+            if target != host {
                 if let Some(rustup) = self.inner.tools.rustup.clone() {
                     builds.push(BuildStep::Rustup(RustupStep {
                         rustup,
-                        target: target.clone(),
+                        target: target_triple.clone(),
                     }));
                 } else {
                     warn!("You're trying to cross-compile, but I can't find rustup to ensure you have the rust toolchains for it!")
@@ -126,7 +132,7 @@ impl<'a> DistGraphBuilder<'a> {
                 }
                 for ((pkg_spec, features), expected_binaries) in builds_by_pkg_spec {
                     builds.push(BuildStep::Cargo(CargoBuildStep {
-                        target_triple: target.clone(),
+                        target_triple: target_triple.clone(),
                         package: CargoTargetPackages::Package(pkg_spec),
                         features,
                         rustflags: rustflags.clone(),
@@ -142,7 +148,7 @@ impl<'a> DistGraphBuilder<'a> {
                     .map(|&idx| self.binary(idx).features.clone())
                     .unwrap_or_default();
                 builds.push(BuildStep::Cargo(CargoBuildStep {
-                    target_triple: target.clone(),
+                    target_triple: target_triple.clone(),
                     package: CargoTargetPackages::Workspace,
                     features,
                     rustflags,
@@ -156,34 +162,68 @@ impl<'a> DistGraphBuilder<'a> {
     }
 }
 
-// This function was split out of build_cargo_target() so it can have unit
-// tests on its own.
-fn make_build_cargo_target_command(
-    cargo_cmd: &String,
-    rustflags: &String,
-    target: &CargoBuildStep,
+/// Generate a `cargo build` command
+pub fn make_build_cargo_target_command(
+    host: &Triple,
+    cargo_cmd: &str,
+    rustflags: &str,
+    step: &CargoBuildStep,
     auditable: bool,
-) -> Cmd {
-    let mut command = Cmd::new(cargo_cmd, "build your app with Cargo");
+) -> DistResult<Cmd> {
+    let target: Triple = step.target_triple.parse().unwrap();
 
+    eprint!("building {target} target");
+    let wrapper = build_wrapper_for_cross(host, &target)?;
+    if &target != host {
+        eprint!(", from {host} host");
+        if let Some(wrapper) = wrapper.as_ref() {
+            eprint!(", via {wrapper}");
+        }
+    }
+    eprint!(", using cargo profile {}", step.profile);
+
+    let mut command = Cmd::new(cargo_cmd, "build your app with Cargo");
     if auditable {
         command.arg("auditable");
+        if wrapper.is_some() {
+            return Err(DistError::CannotDoCargoAuditableAndCrossCompile {
+                host: host.to_owned(),
+                target,
+            });
+        }
     }
-
+    match wrapper {
+        None => {
+            command.arg("build");
+        }
+        Some(CargoBuildWrapper::ZigBuild) => {
+            command.arg("zigbuild");
+        }
+        Some(CargoBuildWrapper::Xwin) => {
+            // cf. <https://github.com/rust-cross/cargo-xwin?tab=readme-ov-file#customization>
+            let arch = match target.architecture {
+                Architecture::X86_32(_) => "x86",
+                Architecture::X86_64 => "x86_64",
+                Architecture::Aarch64(_) => "aarch64",
+                _ => panic!("cargo-xwin doesn't support {target} because of its architecture",),
+            };
+            command.env("XWIN_ARCH", arch);
+            command.arg("xwin").arg("build");
+        }
+    }
     command
-        .arg("build")
         .arg("--profile")
-        .arg(&target.profile)
+        .arg(&step.profile)
         .arg("--message-format=json-render-diagnostics")
         .arg("--target")
-        .arg(target.target_triple.as_str())
+        .arg(step.target_triple.as_str())
         .env("RUSTFLAGS", rustflags)
-        .current_dir(&target.working_dir)
+        .current_dir(&step.working_dir)
         .stdout(std::process::Stdio::piped());
-    if !target.features.default_features {
+    if !step.features.default_features {
         command.arg("--no-default-features");
     }
-    match &target.features.features {
+    match &step.features.features {
         CargoTargetFeatureList::All => {
             command.arg("--all-features");
         }
@@ -198,7 +238,7 @@ fn make_build_cargo_target_command(
             }
         }
     }
-    match &target.package {
+    match &step.package {
         CargoTargetPackages::Workspace => {
             command.arg("--workspace");
             eprintln!(" --workspace)");
@@ -209,27 +249,22 @@ fn make_build_cargo_target_command(
         }
     }
 
-    command
+    Ok(command)
 }
 
 /// Build a cargo target
 pub fn build_cargo_target(
     dist_graph: &DistGraph,
     manifest: &mut DistManifest,
-    target: &CargoBuildStep,
+    step: &CargoBuildStep,
 ) -> DistResult<()> {
     let cargo = dist_graph.tools.cargo()?;
 
-    eprint!(
-        "building cargo target ({}/{}",
-        target.target_triple, target.profile
-    );
-
-    let mut rustflags = target.rustflags.clone();
+    let mut rustflags = step.rustflags.clone();
     let mut desired_extra_env = vec![];
     let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
     if !skip_brewfile {
-        if let Some(env_output) = fetch_brew_env(dist_graph, &target.working_dir)? {
+        if let Some(env_output) = fetch_brew_env(dist_graph, &step.working_dir)? {
             let brew_env = parse_env(&env_output)?;
             desired_extra_env = select_brew_env(&brew_env);
             rustflags = determine_brew_rustflags(&rustflags, &brew_env);
@@ -237,14 +272,16 @@ pub fn build_cargo_target(
     }
 
     let auditable = dist_graph.config.builds.cargo.cargo_auditable;
-    let mut command = make_build_cargo_target_command(&cargo.cmd, &rustflags, target, auditable);
+    let host = cargo_dist_schema::target_lexicon::HOST;
+    let mut command =
+        make_build_cargo_target_command(&host, &cargo.cmd, &rustflags, step, auditable)?;
 
     // If we generated any extra environment variables to
     // inject into the environment, apply them now.
     command.envs(desired_extra_env);
     let mut task = command.spawn()?;
 
-    let mut expected = BuildExpectations::new(dist_graph, &target.expected_binaries);
+    let mut expected = BuildExpectations::new(dist_graph, &step.expected_binaries);
 
     // Collect up the compiler messages to find out where binaries ended up
     let reader = std::io::BufReader::new(task.stdout.take().unwrap());
@@ -297,9 +334,11 @@ fn determine_brew_rustflags(base_rustflags: &str, environment: &SortedMap<&str, 
 
 #[cfg(test)]
 mod tests {
+
     use super::make_build_cargo_target_command;
+    use crate::platform::targets;
     use crate::tasks::{CargoTargetFeatureList, CargoTargetFeatures, CargoTargetPackages};
-    use crate::{CargoBuildStep, TargetTriple};
+    use crate::CargoBuildStep;
 
     #[test]
     fn build_command_not_auditable() {
@@ -311,17 +350,24 @@ mod tests {
             default_features: true,
             features: CargoTargetFeatureList::default(),
         };
-        let target = CargoBuildStep {
-            expected_binaries: vec![],
+        let step = CargoBuildStep {
+            target_triple: targets::TARGET_X64_LINUX_GNU.to_owned(),
             features,
             package: CargoTargetPackages::Workspace,
             profile: "release".to_string(),
             rustflags: "--this-rust-flag-gets-ignored".to_string(),
-            target_triple: TargetTriple::new("x86_64-unknown-linux-gnu".to_string()),
+            expected_binaries: vec![],
             working_dir: ".".to_string().into(), // this feels mildly cursed -duckinator.
         };
 
-        let cmd = make_build_cargo_target_command(&cargo_cmd, &rustflags, &target, auditable);
+        let cmd = make_build_cargo_target_command(
+            &step.target_triple.parse().unwrap(),
+            &cargo_cmd,
+            &rustflags,
+            &step,
+            auditable,
+        )
+        .unwrap();
 
         let mut args = cmd.inner.get_args();
 
@@ -339,17 +385,24 @@ mod tests {
             default_features: true,
             features: CargoTargetFeatureList::default(),
         };
-        let target = CargoBuildStep {
-            expected_binaries: vec![],
+        let step = CargoBuildStep {
+            target_triple: targets::TARGET_X64_LINUX_GNU.to_owned(),
             features,
             package: CargoTargetPackages::Workspace,
             profile: "release".to_string(),
             rustflags: "--this-rust-flag-gets-ignored".to_string(),
-            target_triple: TargetTriple::new("x86_64-unknown-linux-gnu".to_string()),
+            expected_binaries: vec![],
             working_dir: ".".to_string().into(), // this feels mildly cursed -duckinator.
         };
 
-        let cmd = make_build_cargo_target_command(&cargo_cmd, &rustflags, &target, auditable);
+        let cmd = make_build_cargo_target_command(
+            &step.target_triple.parse().unwrap(),
+            &cargo_cmd,
+            &rustflags,
+            &step,
+            auditable,
+        )
+        .unwrap();
 
         let mut args = cmd.inner.get_args();
 

@@ -1914,3 +1914,69 @@ windows-archive = ".tar.gz"
         Ok(())
     })
 }
+
+#[test]
+fn axolotlsay_cross1() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(
+            r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell"]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+
+[workspace.metadata.dist.github-custom-runners]
+x86_64-pc-windows-msvc.container = "messense/cargo-xwin"
+aarch64-pc-windows-msvc.container = "messense/cargo-xwin"
+# aarch64-unknown-linux-gnu should work out of the box
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
+fn axolotlsay_cross2() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(
+            r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell"]
+targets = ["aarch64-unknown-linux-gnu"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+
+[workspace.metadata.dist.github-custom-runners.aarch64-unknown-linux-gnu]
+container = {{ image = "quay.io/pypa/manylinux_2_28_x86_64", host = "aarch64-unknown-linux-gnu" }}
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}

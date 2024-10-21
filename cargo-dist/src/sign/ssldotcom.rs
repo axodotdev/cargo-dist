@@ -4,7 +4,7 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use camino::Utf8Path;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TargetTripleRef;
+use cargo_dist_schema::TripleNameRef;
 use tracing::info;
 use tracing::warn;
 
@@ -71,7 +71,7 @@ impl CodeSignToolEnv {
 impl CodeSignTool {
     pub fn new(
         client: &AxoClient,
-        host_target: &TargetTripleRef,
+        host_target: &TripleNameRef,
         dist_dir: &Utf8Path,
         ssldotcom_windows_sign: Option<ProductionMode>,
     ) -> DistResult<Option<Self>> {

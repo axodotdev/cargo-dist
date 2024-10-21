@@ -227,13 +227,14 @@
 
 #![allow(rustdoc::private_intra_doc_links)]
 
+pub mod github_runners;
 pub mod targets;
 
 use std::collections::HashMap;
 
 use cargo_dist_schema::{
     ArtifactId, AssetId, BuildEnvironment, ChecksumExtension, ChecksumValue, DistManifest,
-    GlibcVersion, Linkage, SystemInfo, TargetTriple, TargetTripleRef,
+    GlibcVersion, Linkage, SystemInfo, TripleName, TripleNameRef,
 };
 use serde::Serialize;
 
@@ -391,7 +392,7 @@ pub struct PlatformSupport {
     ///
     /// The list of PlatformEntries is pre-sorted in descending quality, so the first
     /// is the best and should be used if possible (but maybe there's troublesome RuntimeConditions).
-    pub platforms: SortedMap<TargetTriple, Vec<PlatformEntry>>,
+    pub platforms: SortedMap<TripleName, Vec<PlatformEntry>>,
 }
 
 /// An archive of the prebuilt binaries for an app that can be fetched
@@ -404,9 +405,9 @@ pub struct FetchableArchive {
     /// (You can largely ignore these in favour of the runtime_conditions in PlatformEntry)
     pub native_runtime_conditions: RuntimeConditions,
     /// "The" target triple to use
-    pub target_triple: TargetTriple,
+    pub target_triple: TripleName,
     /// What target triples does this archive natively support
-    pub target_triples: Vec<TargetTriple>,
+    pub target_triples: Vec<TripleName>,
     /// The checksum of the archive, if any
     pub checksum: Option<FetchableArchiveChecksum>,
     /// The executables in the archive (may include .exe, assumed to be in root)
@@ -464,7 +465,7 @@ pub struct PlatformEntry {
 impl PlatformSupport {
     /// Compute the PlatformSupport for a Release
     pub(crate) fn new(dist: &DistGraphBuilder, release_idx: ReleaseIdx) -> PlatformSupport {
-        let mut platforms = SortedMap::<TargetTriple, Vec<PlatformEntry>>::new();
+        let mut platforms = SortedMap::<TripleName, Vec<PlatformEntry>>::new();
         let release = dist.release(release_idx);
         let mut archives = vec![];
         let mut updaters = vec![];
@@ -505,7 +506,7 @@ impl PlatformSupport {
             let archive = FetchableArchive {
                 id: artifact.id,
                 // computed later
-                target_triple: TargetTriple::new("".to_owned()),
+                target_triple: TripleName::new("".to_owned()),
                 target_triples: artifact.target_triples,
                 executables: executables
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
@@ -648,8 +649,8 @@ impl PlatformSupport {
 fn supports(
     archive_idx: FetchableArchiveIdx,
     archive: &FetchableArchive,
-) -> Vec<(TargetTriple, PlatformEntry)> {
-    let mut res: Vec<(TargetTriple, PlatformEntry)> = Vec::new();
+) -> Vec<(TripleName, PlatformEntry)> {
+    let mut res: Vec<(TripleName, PlatformEntry)> = Vec::new();
     for target in &archive.target_triples {
         // this whole function manipulates targets as a string slice, which
         // is unfortunate — these manipulations would be better done on a
@@ -677,7 +678,7 @@ fn supports(
 
         // First, add the target itself as a HostNative entry
         res.push((
-            TargetTriple::new(target.clone()),
+            TripleName::new(target.clone()),
             PlatformEntry {
                 quality: SupportQuality::HostNative,
                 runtime_conditions: archive.native_runtime_conditions.clone(),
@@ -692,7 +693,7 @@ fn supports(
             };
             for &libc in LINUX_STATIC_REPLACEABLE_LIBCS {
                 res.push((
-                    TargetTriple::new(format!("{system}{libc}{abigunk}")),
+                    TripleName::new(format!("{system}{libc}{abigunk}")),
                     PlatformEntry {
                         quality: SupportQuality::ImperfectNative,
                         runtime_conditions: archive.native_runtime_conditions.clone(),
@@ -724,7 +725,7 @@ fn supports(
             ));
         }
 
-        let target = TargetTriple::new(target);
+        let target = TripleName::new(target);
 
         // FIXME?: technically we could add "run 32-bit intel macos on 64-bit intel"
         // BUT this is unlikely to succeed as you increasingly need an EOL macOS,
@@ -790,7 +791,7 @@ fn supports(
         // for now all 5 arm64 mingw users can be a little sad.
         if let Some(system) = target.as_str().strip_suffix("windows-msvc") {
             res.push((
-                TargetTriple::new(format!("{system}windows-gnu")),
+                TripleName::new(format!("{system}windows-gnu")),
                 PlatformEntry {
                     quality: SupportQuality::ImperfectNative,
                     runtime_conditions: archive.native_runtime_conditions.clone(),
@@ -933,7 +934,7 @@ fn native_musl_version(_system: &SystemInfo, _linkage: &Linkage) -> Option<LibcV
 }
 
 /// Translates a Rust triple into a human-readable display name
-pub fn triple_to_display_name(name: &TargetTripleRef) -> Option<&'static str> {
+pub fn triple_to_display_name(name: &TripleNameRef) -> Option<&'static str> {
     if name.as_str() == "all" {
         Some("All Platforms")
     } else {
@@ -942,7 +943,7 @@ pub fn triple_to_display_name(name: &TargetTripleRef) -> Option<&'static str> {
 }
 
 lazy_static::lazy_static! {
-    static ref TARGET_TRIPLE_DISPLAY_NAMES: HashMap<&'static TargetTripleRef, &'static str> =
+    static ref TARGET_TRIPLE_DISPLAY_NAMES: HashMap<&'static TripleNameRef, &'static str> =
         {
             use targets::*;
 

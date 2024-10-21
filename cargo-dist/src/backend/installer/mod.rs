@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{ArtifactId, EnvironmentVariables, Hosting, TargetTriple};
+use cargo_dist_schema::{ArtifactId, EnvironmentVariables, Hosting, TripleName};
 use homebrew::HomebrewFragments;
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
@@ -84,7 +84,7 @@ pub struct InstallerInfo {
     /// Install receipt to write, if any
     pub receipt: Option<InstallReceipt>,
     /// Aliases to install binaries under
-    pub bin_aliases: BTreeMap<TargetTriple, BTreeMap<String, Vec<String>>>,
+    pub bin_aliases: BTreeMap<TripleName, BTreeMap<String, Vec<String>>>,
     /// Whether to install generated C dynamic libraries
     pub install_libraries: Vec<LibraryStyle>,
     /// Platform-specific runtime conditions
@@ -101,7 +101,7 @@ pub struct ExecutableZipFragment {
     /// The id of the artifact
     pub id: ArtifactId,
     /// The target the artifact supports
-    pub target_triple: TargetTriple,
+    pub target_triple: TripleName,
     /// The executables the artifact contains (name, assumed at root)
     pub executables: Vec<String>,
     /// The dynamic libraries the artifact contains (name, assumed at root)

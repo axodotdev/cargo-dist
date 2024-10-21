@@ -4,14 +4,13 @@
 
 dist's generated CI configuration can be extended in several ways: it can be configured to install extra packages before the build begins, and it's possible to add extra jobs to run at specific lifecycle moments.
 
-
 ## Install extra packages
 
 > since 0.4.0
 
 Sometimes, you may need extra packages from the system package manager to be installed before in the builder before dist begins building your software. dist can do this for you by adding the `dependencies` setting to your dist config. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them.
 
-By default, we run Apple silicon (aarch64) builds for macOS on the `macos-13` runner, which is Intel-based. If your build process needs to link against C libraries from Homebrew using the `dependencies` feature, you will need to switch to an Apple silicon-native runner to ensure that you have access to Apple silicon-native dependencies from Homebrew. You can do this using the [custom runners][custom-runners] feature. Currently, `macos-14` is the oldest (and only) GitHub-provided runner for Apple silicon.
+By default, we run Apple silicon (aarch64) builds for macOS on the `macos-13` runner, which is Intel-based. If your build process needs to link against C libraries from Homebrew using the `dependencies` feature, you will need to switch to an Apple silicon-native runner to ensure that you have access to Apple silicon-native dependencies from Homebrew. You can do this using the [custom runners][custom-runners] feature. Currently, `macos-14` is the oldest GitHub-provided runner for Apple silicon.
 
 Sometimes, you may want to make sure your users also have these dependencies available when they install your software. If you use a package manager-based installer, dist has the ability to specify these dependencies. By default, dist will examine your program to try to detect which dependencies it thinks will be necessary. At the moment, [Homebrew][homebrew] is the only supported package manager installer. You can also specify these dependencies manually.
 
@@ -96,7 +95,9 @@ By default, dist uses the following runners:
 It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the [`github-custom-runners`][config-github-custom-runners] configuration setting in your dist config. Here's an example which adds support for Linux (aarch64) using runners from [Buildjet](https://buildjet.com/for-github-actions):
 
 ```toml
-[workspace.metadata.dist.github-custom-runners]
+# in `dist-workspace.toml`
+
+[dist.github-custom-runners]
 aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
 aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
 ```
@@ -104,9 +105,138 @@ aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
 In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to opt into building for Apple Silicon from a native runner by using the `macos-14` runner. Here's an example which uses `macos-14` for native Apple Silicon builds:
 
 ```toml
-[workspace.metadata.dist.github-custom-runners]
+# in `dist-workspace.toml`
+
+[dist.github-custom-runners]
 aarch64-apple-darwin = "macos-14"
 ```
+
+## Cross-compilation
+
+> since 0.26.0
+
+dist will transparently use either of:
+
+  * [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild)
+  * [cargo-xwin](https://github.com/rust-cross/cargo-xwin)
+
+To try and build for the target you specified, from the host you specified.
+
+dist hardcodes knowledge of which cargo wrappers are better suited for which cross: `cargo-zigbuild`
+handles `x86_64-unknown-linux-gnu` to `aarch64-unknown-linux-gnu` handsomely, for example.
+
+So if you ask for `aarch64-unknown-linux-gnu` artifacts, because at the time of this writing
+there are no free `aarch64` GitHub runners, dist will assume you meant this:
+
+```toml
+[dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "ubuntu-20.04"
+```
+
+Which really means this:
+
+```toml
+[dist.github-custom-runners.aarch64-unknown-linux-gnu]
+runner = "ubuntu-20.04"
+host = "x86_64-unknown-linux-gnu"
+```
+
+...since dist knows which platform GitHub's own [runner
+images](https://github.com/actions/runner-images) are.
+
+So you really only need to specify the `host` if you use [third-party GitHub Actions
+runners](https://github.com/neysofu/awesome-github-actions-runners?tab=readme-ov-file#list-of-providers) (Namespace, Buildjet, etc.)
+
+If you don't specify the host, dist will just assume it's the same platform as
+the target, which is why this works:
+
+```toml
+[dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
+```
+
+Building `aarch64-pc-windows-msvc` binaries from a `x86_64-pc-windows-msvc` runner (like
+`windows-2019`) is surprisingly hard. But building both binaries from an `x86_64-unknown-linux-gnu`
+runner is surprisingly easy via `cargo-xwin`
+
+This will work, eventually:
+
+```toml
+# in `dist-workspace.toml`
+
+[dist]
+targets = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+
+[dist.github-custom-runners.x86_64-pc-windows-msvc]
+runner = "ubuntu-20.04"
+
+[dist.github-custom-runners.aarch64-pc-windows-msvc]
+runner = "ubuntu-20.04"
+```
+
+...because dist can install `cargo-xwin` via `pip`. However, it will take
+forever. It's probably best to use a docker image that already has
+`cargo-xwin` installed, and other dependencies you probably want:
+
+```toml
+# in `dist-workspace.toml`
+
+[dist]
+targets = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+
+[dist.github-custom-runners.x86_64-pc-windows-msvc]
+container = "messense/cargo-xwin"
+
+[dist.github-custom-runners.aarch64-pc-windows-msvc]
+container = "messense/cargo-xwin"
+```
+
+Which is short for:
+
+```toml
+# cut: the rest of the config file
+
+[dist.github-custom-runners.x86_64-pc-windows-msvc]
+container = { image = "messense/cargo-xwin", host = "x86_64-unknown-linux-gnu" }
+
+# etc.
+```
+
+...but unfortunately, GitHub Actions's "run workflows in container" feature doesn't
+support emulation yet. We'd have to set up qemu, run docker manually, etc. — which
+dist doesn't do as of now. So the `host` just defaults to `x86_64-unknown-linux-gnu`
+right now, because that's all the GitHub runners support anywyay.
+
+So, because we're only specifying one feature, it's probably easier to just write this:
+
+```toml
+[dist]
+targets = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+
+[dist.github-custom-runners]
+x86_64-pc-windows-msvc.container = "messense/cargo-xwin"
+aarch64-pc-windows-msvc.container = "messense/cargo-xwin"
+
+# (yes, that /is/ valid TOML)
+```
+
+Note that you can use containers for non-cross reasons: maybe you want your binaries to be
+compatible with really old versions of glibc, older than Ubuntu 20.04: in this case, you
+can do something like:
+
+```toml
+[dist.github-custom-runners.x86_64-unknown-linux-gnu]
+container = { image = "quay.io/pypa/manylinux_2_28_x86_64", host = "x86_64-unknown-linux-musl" }
+
+[dist.github-custom-runners.aarch64-unknown-linux-gnu]
+container = { image = "quay.io/pypa/manylinux_2_28_x86_64", host = "x86_64-unknown-linux-musl" }
+```
+
+Note that here, the host triple for those container images is overriden to be `x86_64-unknown-linux-musl`, because dist itself (which must run in the container) might be using a too-recent version of glibc.
+
+Because of dist's cross-compilation support, if you have both `cargo-zigbuild` and `cargo-xwin`
+installed on a macOS machine, you can build pretty much every target dist supports, by running
+`dist build --artifacts all` — in fact, this is used to develop dist itself!
 
 ### Build and upload artifacts on every pull request
 

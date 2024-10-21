@@ -9,7 +9,7 @@
 use axoproject::errors::AxoprojectError;
 use backtrace::Backtrace;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{ArtifactId, TargetTriple};
+use cargo_dist_schema::{target_lexicon::Triple, ArtifactId, TripleName};
 use color_backtrace::BacktracePrinter;
 use console::style;
 use miette::{Diagnostic, SourceOffset, SourceSpan};
@@ -322,9 +322,9 @@ pub enum DistError {
     #[error("unable to run linkage report for {target} on {host}")]
     LinkageCheckInvalidOS {
         /// The OS the check was run on
-        host: TargetTriple,
+        host: String,
         /// The OS being checked
-        target: TargetTriple,
+        target: TripleName,
     },
 
     /// Linkage report can't be run for this target
@@ -410,7 +410,7 @@ pub enum DistError {
     #[diagnostic(help("try adding --target={host_target}"))]
     CliMissingTargets {
         /// Current host target
-        host_target: TargetTriple,
+        host_target: TripleName,
     },
 
     /// Workspace isn't init
@@ -452,7 +452,7 @@ pub enum DistError {
     #[diagnostic(help("The full list of supported targets can be found here: https://opensource.axo.dev/cargo-dist/book/reference/config.html#targets"))]
     UnrecognizedTarget {
         /// The target in question
-        target: TargetTriple,
+        target: TripleName,
     },
 
     /// Installers requested despite having nothing to install
@@ -520,6 +520,30 @@ pub enum DistError {
     NoDistScript {
         /// path to package.json
         manifest: Utf8PathBuf,
+    },
+
+    /// Unsupported cross-compilation host/target combination
+    #[error("Cross-compilation from {host} to {target} is not supported")]
+    #[diagnostic(help("{details}"))]
+    UnsupportedCrossCompile {
+        /// The host system
+        host: Triple,
+        /// The target system
+        target: Triple,
+        /// Additional details about why this combination is unsupported
+        details: String,
+    },
+
+    /// Cannot use cross-compilation with cargo-auditable
+    #[error(
+        "Cross-compilation builds from {host} to {target} cannot be used with cargo-auditable"
+    )]
+    #[diagnostic(help("set cargo-auditable to false or don't do cross-compilation"))]
+    CannotDoCargoAuditableAndCrossCompile {
+        /// The host system
+        host: Triple,
+        /// The target system
+        target: Triple,
     },
 
     /// missing "build-command" for a package that needs one

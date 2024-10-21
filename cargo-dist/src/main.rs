@@ -14,6 +14,7 @@ use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{
     Cli, Commands, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat, PlanArgs,
+    PrintUploadFilesFromManifestArgs,
 };
 use console::Term;
 use miette::{miette, IntoDiagnostic};
@@ -56,6 +57,9 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::HelpMarkdown(args) => cmd_help_md(config, args),
         Commands::ManifestSchema(args) => cmd_manifest_schema(config, args),
         Commands::Build(args) => cmd_build(config, args),
+        Commands::PrintUploadFilesFromManifest(args) => {
+            cmd_print_upload_files_from_manifest(config, args)
+        }
         Commands::Host(args) => cmd_host(config, args),
         Commands::Selfupdate(args) => runtime.block_on(cmd_update(config, args)),
     }
@@ -230,6 +234,24 @@ fn cmd_build(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         args.print.contains(&"linkage".to_owned()),
         None,
     )
+}
+
+fn cmd_print_upload_files_from_manifest(
+    _cli: &Cli,
+    args: &PrintUploadFilesFromManifestArgs,
+) -> Result<(), miette::Report> {
+    let manifest_str = axoasset::LocalAsset::load_string(&args.manifest)?;
+    let manifest = serde_json::from_str::<cargo_dist_schema::DistManifest>(&manifest_str)
+        .into_diagnostic()
+        .map_err(|err| miette!("Failed to parse manifest as JSON: {}", err))?;
+
+    let mut out = Term::stdout();
+    for artifact in manifest.artifacts.values() {
+        if let Some(path) = &artifact.path {
+            writeln!(out, "{}", path).into_diagnostic()?;
+        }
+    }
+    Ok(())
 }
 
 fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {

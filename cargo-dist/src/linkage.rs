@@ -10,16 +10,14 @@ use axoprocess::Cmd;
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{
     AssetInfo, BuildEnvironment, DistManifest, GlibcVersion, Library, Linkage, PackageManager,
-    TargetTripleRef,
+    TripleNameRef,
 };
 use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
 use tracing::warn;
 
-use crate::{
-    config::Config, errors::*, gather_work, platform::targets::TARGET_HOST, Artifact, DistGraph,
-};
+use crate::{config::Config, errors::*, gather_work, Artifact, DistGraph};
 
 /// Arguments for `dist linkage` ([`do_linkage][])
 #[derive(Debug)]
@@ -383,7 +381,7 @@ fn do_pe(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
 /// Get the linkage for a single binary
 ///
 /// If linkage fails for any reason we warn and return the default empty linkage
-pub fn determine_linkage(path: &Utf8PathBuf, target: &TargetTripleRef) -> Linkage {
+pub fn determine_linkage(path: &Utf8PathBuf, target: &TripleNameRef) -> Linkage {
     match try_determine_linkage(path, target) {
         Ok(linkage) => linkage,
         Err(e) => {
@@ -394,14 +392,14 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &TargetTripleRef) -> Linkag
 }
 
 /// Get the linkage for a single binary
-fn try_determine_linkage(path: &Utf8PathBuf, target: &TargetTripleRef) -> DistResult<Linkage> {
+fn try_determine_linkage(path: &Utf8PathBuf, target: &TripleNameRef) -> DistResult<Linkage> {
     let libraries = if target.is_darwin() {
         do_otool(path)?
     } else if target.is_linux() {
         // Currently can only be run on Linux
-        if !TARGET_HOST.is_linux() {
+        if std::env::consts::OS != "linux" {
             return Err(DistError::LinkageCheckInvalidOS {
-                host: TARGET_HOST.to_owned(),
+                host: std::env::consts::OS.to_owned(),
                 target: target.to_owned(),
             });
         }
@@ -450,7 +448,7 @@ fn try_determine_linkage(path: &Utf8PathBuf, target: &TargetTripleRef) -> DistRe
 
 /// Determine the build environment on the current host
 /// This should be done local to the builder!
-pub fn determine_build_environment(target: &TargetTripleRef) -> BuildEnvironment {
+pub fn determine_build_environment(target: &TripleNameRef) -> BuildEnvironment {
     if target.is_darwin() {
         determine_macos_build_environment().unwrap_or(BuildEnvironment::Indeterminate)
     } else if target.is_linux() {

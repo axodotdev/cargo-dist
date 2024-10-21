@@ -5,7 +5,7 @@ use std::os::unix::fs::PermissionsExt;
 
 use axoasset::AxoClient;
 use camino::Utf8Path;
-use cargo_dist_schema::TargetTripleRef;
+use cargo_dist_schema::TripleNameRef;
 
 use crate::{config::ProductionMode, DistResult};
 
@@ -23,7 +23,7 @@ impl Signing {
     /// Setup signing
     pub fn new(
         client: &AxoClient,
-        host_target: &TargetTripleRef,
+        host_target: &TripleNameRef,
         dist_dir: &Utf8Path,
         ssldotcom_windows_sign: Option<ProductionMode>,
         macos_sign: bool,

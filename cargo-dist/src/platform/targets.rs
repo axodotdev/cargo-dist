@@ -2,13 +2,13 @@
 
 // Various target triples
 
-use cargo_dist_schema::TargetTripleRef;
+use cargo_dist_schema::TripleNameRef;
 
 macro_rules! define_target_triples {
     ($($(#[$meta:meta])* const $name:ident = $triple:expr;)*) => {
         $(
             $(#[$meta])*
-            pub const $name: &TargetTripleRef = TargetTripleRef::from_str($triple);
+            pub const $name: &TripleNameRef = TripleNameRef::from_str($triple);
         )*
     };
 }
@@ -29,7 +29,7 @@ define_target_triples!(
 );
 
 /// List of all recognized Windows targets
-pub const KNOWN_WINDOWS_TARGETS: &[&TargetTripleRef] = &[
+pub const KNOWN_WINDOWS_TARGETS: &[&TripleNameRef] = &[
     TARGET_X86_WINDOWS,
     TARGET_X64_WINDOWS,
     TARGET_ARM64_WINDOWS,
@@ -48,7 +48,7 @@ define_target_triples!(
 );
 
 /// List of all recognized Mac targets
-pub const KNOWN_MAC_TARGETS: &[&TargetTripleRef] =
+pub const KNOWN_MAC_TARGETS: &[&TripleNameRef] =
     &[TARGET_X86_MAC, TARGET_X64_MAC, TARGET_ARM64_MAC];
 
 define_target_triples!(
@@ -81,7 +81,7 @@ define_target_triples!(
 );
 
 /// List of all recognized Linux glibc targets
-pub const KNOWN_LINUX_GNU_TARGETS: &[&TargetTripleRef] = &[
+pub const KNOWN_LINUX_GNU_TARGETS: &[&TripleNameRef] = &[
     TARGET_X86_LINUX_GNU,
     TARGET_X64_LINUX_GNU,
     TARGET_ARM64_LINUX_GNU,
@@ -126,7 +126,7 @@ define_target_triples!(
 );
 
 /// List of all recognized Linux MUSL targets
-pub const KNOWN_LINUX_MUSL_TARGETS: &[&TargetTripleRef] = &[
+pub const KNOWN_LINUX_MUSL_TARGETS: &[&TripleNameRef] = &[
     TARGET_X86_LINUX_MUSL,
     TARGET_X64_LINUX_MUSL,
     TARGET_ARM64_LINUX_MUSL,
@@ -142,7 +142,7 @@ pub const KNOWN_LINUX_MUSL_TARGETS: &[&TargetTripleRef] = &[
 ];
 
 /// List of all recognized Linux targets
-pub const KNOWN_LINUX_TARGETS: &[&[&TargetTripleRef]] =
+pub const KNOWN_LINUX_TARGETS: &[&[&TripleNameRef]] =
     &[KNOWN_LINUX_GNU_TARGETS, KNOWN_LINUX_MUSL_TARGETS];
 
 define_target_triples!(
@@ -177,7 +177,7 @@ define_target_triples!(
 );
 
 /// List of all recognized Other targets
-pub const KNOWN_OTHER_TARGETS: &[&TargetTripleRef] = &[
+pub const KNOWN_OTHER_TARGETS: &[&TripleNameRef] = &[
     TARGET_X64_FREEBSD,
     TARGET_X64_ILLUMOS,
     TARGET_X64_NETBSD,
@@ -195,14 +195,10 @@ pub const KNOWN_OTHER_TARGETS: &[&TargetTripleRef] = &[
 ];
 
 /// List of all recognized targets
-pub const KNOWN_TARGET_TRIPLES: &[&[&TargetTripleRef]] = &[
+pub const KNOWN_TARGET_TRIPLES: &[&[&TripleNameRef]] = &[
     KNOWN_WINDOWS_TARGETS,
     KNOWN_MAC_TARGETS,
     KNOWN_LINUX_GNU_TARGETS,
     KNOWN_LINUX_MUSL_TARGETS,
     KNOWN_OTHER_TARGETS,
 ];
-
-/// The current host target (the target of the machine this code is running on).
-/// This is determined through `std::env::consts::OS` rather than running `cargo`
-pub const TARGET_HOST: &TargetTripleRef = TargetTripleRef::from_str(std::env::consts::OS);

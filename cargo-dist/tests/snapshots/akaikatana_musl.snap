@@ -1595,68 +1595,72 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "artifacts_matrix": {
         "include": [
           {
+            "runner": "macos-13",
+            "host": "x86_64-apple-darwin",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "targets": [
               "aarch64-apple-darwin"
             ],
-            "runner": "macos-13",
-            "install_dist": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-            },
             "install_cargo_auditable": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
             },
-            "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "cache_provider": "github"
           },
           {
+            "runner": "macos-13",
+            "host": "x86_64-apple-darwin",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "targets": [
               "x86_64-apple-darwin"
             ],
-            "runner": "macos-13",
-            "install_dist": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-            },
             "install_cargo_auditable": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
             },
-            "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "cache_provider": "github"
           },
           {
+            "runner": "ubuntu-20.04",
+            "host": "x86_64-unknown-linux-gnu",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
             "targets": [
               "x86_64-unknown-linux-gnu"
             ],
-            "runner": "ubuntu-20.04",
-            "install_dist": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-            },
             "install_cargo_auditable": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
             },
-            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
             "cache_provider": "github"
           },
           {
-            "targets": [
-              "x86_64-unknown-linux-musl"
-            ],
             "runner": "ubuntu-20.04",
+            "host": "x86_64-unknown-linux-gnu",
             "install_dist": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
             },
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
+            "targets": [
+              "x86_64-unknown-linux-musl"
+            ],
             "install_cargo_auditable": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
             },
-            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
-            "packages_install": "sudo apt-get update && sudo apt-get install musl-tools",
+            "packages_install": "sudo apt-get update\nsudo apt-get install musl-tools",
             "cache_provider": "github"
           }
         ]
@@ -1780,6 +1784,7 @@ jobs:
       # - N "local" tasks that build each platform's binaries and platform-specific installers
       matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix }}
     runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container && matrix.container.image || null }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
@@ -1790,6 +1795,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install Rust non-interactively if not already installed
+        if: ${{ matrix.container }}
+        run: |
+          if ! command -v cargo > /dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          fi
       - name: Use rustup to set correct Rust version
         run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
       - name: Install dist
@@ -1818,7 +1830,7 @@ jobs:
         run: |
           # Parse out what we just built and upload it to scratch storage
           echo "paths<<EOF" >> "$GITHUB_OUTPUT"
-          jq --raw-output ".upload_files[]" dist-manifest.json >> "$GITHUB_OUTPUT"
+          dist print-upload-files-from-manifest --manifest dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"

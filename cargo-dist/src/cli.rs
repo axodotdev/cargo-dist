@@ -2,7 +2,7 @@
 
 use camino::Utf8PathBuf;
 use cargo_dist::announce::{TagMode, TagSettings};
-use cargo_dist_schema::TargetTriple;
+use cargo_dist_schema::TripleName;
 use clap::{
     builder::{PossibleValuesParser, TypedValueParser},
     Args, Parser, Subcommand, ValueEnum,
@@ -49,7 +49,7 @@ pub struct Cli {
     /// except for `dist init` which will select some "good defaults" for you.
     #[clap(long, short, value_delimiter(','))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
-    pub target: Vec<TargetTriple>,
+    pub target: Vec<TripleName>,
 
     /// Installers we want to build
     ///
@@ -111,6 +111,12 @@ pub enum Commands {
     /// Build artifacts
     #[clap(disable_version_flag = true)]
     Build(BuildArgs),
+
+    /// Print the upload files from a manifest (useful in GitHub Actions to avoid relying on jq)
+    #[clap(disable_version_flag = true)]
+    #[clap(hide = true)]
+    PrintUploadFilesFromManifest(PrintUploadFilesFromManifestArgs),
+
     /// Setup or update dist
     ///
     /// This will interactively guide you through the process of selecting configuration options
@@ -436,6 +442,13 @@ pub struct ManifestSchemaArgs {
     /// Write the manifest schema to the named file instead of stdout
     #[clap(long)]
     pub output: Option<String>,
+}
+
+#[derive(Args, Clone, Debug)]
+pub struct PrintUploadFilesFromManifestArgs {
+    /// The manifest to print upload files from
+    #[clap(long)]
+    pub manifest: String,
 }
 
 #[derive(Args, Clone, Debug)]

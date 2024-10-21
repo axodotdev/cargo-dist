@@ -27,7 +27,7 @@ use build::{
     fake::{build_fake_cargo_target, build_fake_generic_target},
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TargetTriple};
+use cargo_dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TripleName};
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
@@ -799,7 +799,7 @@ fn generate_installer(
 }
 
 /// Get the default list of targets
-pub fn default_desktop_targets() -> Vec<TargetTriple> {
+pub fn default_desktop_targets() -> Vec<TripleName> {
     use crate::platform::targets as t;
 
     vec![
@@ -807,16 +807,15 @@ pub fn default_desktop_targets() -> Vec<TargetTriple> {
         t::TARGET_X64_LINUX_GNU.to_owned(),
         t::TARGET_X64_WINDOWS.to_owned(),
         t::TARGET_X64_MAC.to_owned(),
-        // Apple is really easy to cross from Apple
         t::TARGET_ARM64_MAC.to_owned(),
-        // other cross-compiles not yet supported
-        // targets::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // targets::TARGET_ARM64_WINDOWS.to_owned(),
+        t::TARGET_ARM64_LINUX_GNU.to_owned(),
+        // that one requires a bit of config (use the `messense/cargo-xwin` image)
+        // t::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }
 
 /// Get the list of all known targets
-pub fn known_desktop_targets() -> Vec<TargetTriple> {
+pub fn known_desktop_targets() -> Vec<TripleName> {
     use crate::platform::targets as t;
 
     vec![
@@ -825,10 +824,8 @@ pub fn known_desktop_targets() -> Vec<TargetTriple> {
         t::TARGET_X64_LINUX_MUSL.to_owned(),
         t::TARGET_X64_WINDOWS.to_owned(),
         t::TARGET_X64_MAC.to_owned(),
-        // Apple is really easy to cross from Apple
         t::TARGET_ARM64_MAC.to_owned(),
-        // other cross-compiles not yet supported
-        // t::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // t::TARGET_ARM64_WINDOWS.to_owned(),
+        t::TARGET_ARM64_LINUX_GNU.to_owned(),
+        t::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }

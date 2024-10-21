@@ -1,7 +1,7 @@
 //! Code for generating formula.rb
 
 use axoasset::LocalAsset;
-use cargo_dist_schema::{ChecksumValue, DistManifest};
+use cargo_dist_schema::{ChecksumValue, DistManifest, HomebrewPackageName};
 use serde::Serialize;
 use spdx::{
     expression::{ExprNode, Operator},
@@ -35,7 +35,7 @@ pub struct HomebrewInstallerInfo {
     /// Generic installer info
     pub inner: InstallerInfo,
     /// Additional packages to specify as dependencies
-    pub dependencies: Vec<String>,
+    pub dependencies: Vec<HomebrewPackageName>,
     /// Whether to install packaged C dynamic libraries
     pub install_libraries: Vec<LibraryStyle>,
 }
