@@ -138,6 +138,11 @@ pub enum AxoprojectError {
         /// Version we were looking for
         version: Version,
     },
+
+    /// We couldn't parse a workspace because there's no Cargo
+    #[error("Your app has a Cargo.toml, but you don't appear to have cargo installed.")]
+    #[diagnostic(help("Is cargo in your PATH? You can install cargo via: https://rustup.rs"))]
+    CargoMissing {},
 }
 
 /// Errors related to finding the project
