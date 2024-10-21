@@ -14,7 +14,6 @@ use guppy::{
 use itertools::{concat, Itertools};
 
 pub use axoasset::toml_edit::DocumentMut;
-use tracing::warn;
 
 /// All the `[profile]` entries we found in the root Cargo.toml
 pub type CargoProfiles = BTreeMap<String, CargoProfile>;
@@ -41,8 +40,17 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
     let graph = match package_graph(start_dir) {
         Ok(graph) => graph,
         Err(e) => {
-            warn!("Unable to calculate cargo workspaces; is cargo missing?");
-            return WorkspaceSearch::Missing(e);
+            let error = match e {
+                // Indicates we failed to run `cargo metadata`; this is the
+                // one we want to intercept and replace with a friendlier error.
+                crate::AxoprojectError::CargoMetadata(guppy::Error::CommandError(_)) => {
+                    crate::AxoprojectError::CargoMissing {}
+                }
+                // Any other errors are less expected, and we should pass
+                // those through unaltered.
+                _ => e,
+            };
+            return WorkspaceSearch::Missing(error);
         }
     };
 
