@@ -227,19 +227,20 @@
 
 #![allow(rustdoc::private_intra_doc_links)]
 
-use axoproject::platforms::{
-    TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
-};
-
 use cargo_dist_schema::{
     ArtifactId, AssetId, BuildEnvironment, DistManifest, GlibcVersion, Linkage, SystemInfo,
+    TargetTriple,
 };
 use serde::Serialize;
 
 use crate::{
     backend::installer::{ExecutableZipFragment, UpdaterFragment},
     config::ZipStyle,
-    BinaryKind, DistGraphBuilder, ReleaseIdx, SortedMap, TargetTriple,
+    platforms::{
+        TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS,
+        TARGET_X86_WINDOWS,
+    },
+    BinaryKind, DistGraphBuilder, ReleaseIdx, SortedMap,
 };
 
 /// Suffixes of TargetTriples that refer to statically linked linux libcs.
@@ -453,7 +454,7 @@ impl PlatformSupport {
             let archive = FetchableArchive {
                 id: artifact.id,
                 // computed later
-                target_triple: String::new(),
+                target_triple: TargetTriple::new("".to_owned()),
                 target_triples: artifact.target_triples,
                 executables: executables
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
@@ -575,14 +576,19 @@ fn supports(
     archive_idx: FetchableArchiveIdx,
     archive: &FetchableArchive,
 ) -> Vec<(TargetTriple, PlatformEntry)> {
-    let mut res = Vec::new();
+    let mut res: Vec<(TargetTriple, PlatformEntry)> = Vec::new();
     for target in &archive.target_triples {
+        // this whole function manipulates targets as a string slice, which
+        // is unfortunate — these manipulations would be better done on a
+        // "parsed" version of the target
+        let target = target.as_str();
+
         // For the following linux checks we want to pull off any "eabihf" suffix while
         // comparing/parsing libc types.
         let (degunked_target, abigunk) = if let Some(inner_target) = target.strip_suffix("eabihf") {
             (inner_target, "eabihf")
         } else {
-            (target.as_str(), "")
+            (target, "")
         };
 
         // If this is the ambiguous-soon-to-be-changed "musl" target, rename it to musl-static,
@@ -598,7 +604,7 @@ fn supports(
 
         // First, add the target itself as a HostNative entry
         res.push((
-            target.clone(),
+            TargetTriple::new(target.clone()),
             PlatformEntry {
                 quality: SupportQuality::HostNative,
                 runtime_conditions: archive.native_runtime_conditions.clone(),
@@ -613,7 +619,7 @@ fn supports(
             };
             for &libc in LINUX_STATIC_REPLACEABLE_LIBCS {
                 res.push((
-                    format!("{system}{libc}{abigunk}"),
+                    TargetTriple::new(format!("{system}{libc}{abigunk}")),
                     PlatformEntry {
                         quality: SupportQuality::ImperfectNative,
                         runtime_conditions: archive.native_runtime_conditions.clone(),
@@ -644,6 +650,8 @@ fn supports(
                 },
             ));
         }
+
+        let target = TargetTriple::new(target);
 
         // FIXME?: technically we could add "run 32-bit intel macos on 64-bit intel"
         // BUT this is unlikely to succeed as you increasingly need an EOL macOS,
@@ -707,9 +715,9 @@ fn supports(
         // I don't want to think about computing the transitive closure of platform
         // support and how to do all the tie breaking ("HighwayToHellmulated"?), so
         // for now all 5 arm64 mingw users can be a little sad.
-        if let Some(system) = target.strip_suffix("windows-msvc") {
+        if let Some(system) = target.as_str().strip_suffix("windows-msvc") {
             res.push((
-                format!("{system}windows-gnu"),
+                TargetTriple::new(format!("{system}windows-gnu")),
                 PlatformEntry {
                     quality: SupportQuality::ImperfectNative,
                     runtime_conditions: archive.native_runtime_conditions.clone(),

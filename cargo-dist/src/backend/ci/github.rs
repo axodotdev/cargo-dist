@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use axoasset::{LocalAsset, SourceFile};
 use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry};
+use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry, TargetTriple, TargetTripleRef};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
@@ -19,7 +19,7 @@ use crate::{
         JinjaGithubRepoPair, JobStyle, ProductionMode, PublishStyle, SystemDependencies,
     },
     errors::DistResult,
-    DistError, DistGraph, SortedMap, SortedSet, TargetTriple,
+    DistError, DistGraph, SortedMap, SortedSet,
 };
 
 #[cfg(not(windows))]
@@ -207,7 +207,7 @@ impl GithubCiInfo {
         // Figure out what builds we need to do
         let mut local_targets = SortedSet::new();
         for release in &dist.releases {
-            local_targets.extend(release.targets.iter());
+            local_targets.extend(release.targets.iter().map(TargetTriple::as_explicit_ref));
             dependencies.append(&mut release.config.builds.system_dependencies.clone());
         }
 
@@ -543,10 +543,10 @@ fn cache_provider_for_runner(runner: &str) -> Option<String> {
 ///
 /// In priniciple it does remove some duplicated setup work, so this is ostensibly "cheaper".
 fn distribute_targets_to_runners_merged<'a>(
-    targets: SortedSet<&'a TargetTriple>,
-    custom_runners: &BTreeMap<String, String>,
-) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTriple>)> {
-    let mut groups = SortedMap::<GithubRunner, Vec<&TargetTriple>>::new();
+    targets: SortedSet<&'a TargetTripleRef>,
+    custom_runners: &BTreeMap<TargetTriple, String>,
+) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTripleRef>)> {
+    let mut groups = SortedMap::<GithubRunner, Vec<&TargetTripleRef>>::new();
     for target in targets {
         let runner = github_runner_for_target(target, custom_runners);
         let runner = runner.unwrap_or_else(|| {
@@ -564,9 +564,9 @@ fn distribute_targets_to_runners_merged<'a>(
 /// Given a set of targets we want to build local artifacts for, map them to Github Runners
 /// while preferring each target gets its own runner for latency and fault-isolation.
 fn distribute_targets_to_runners_split<'a>(
-    targets: SortedSet<&'a TargetTriple>,
-    custom_runners: &BTreeMap<String, String>,
-) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTriple>)> {
+    targets: SortedSet<&'a TargetTripleRef>,
+    custom_runners: &BTreeMap<TargetTriple, String>,
+) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTripleRef>)> {
     let mut groups = vec![];
     for target in targets {
         let runner = github_runner_for_target(target, custom_runners);
@@ -593,8 +593,8 @@ const GITHUB_WINDOWS_RUNNER: &str = "windows-2019";
 
 /// Get the appropriate Github Runner for building a target
 fn github_runner_for_target(
-    target: &TargetTriple,
-    custom_runners: &BTreeMap<String, String>,
+    target: &TargetTripleRef,
+    custom_runners: &BTreeMap<TargetTriple, String>,
 ) -> Option<GithubRunner> {
     if let Some(runner) = custom_runners.get(target) {
         return Some(runner.to_owned());
@@ -603,13 +603,13 @@ fn github_runner_for_target(
     // We want to default to older runners to minimize the places
     // where random system dependencies can creep in and be very
     // recent. This helps with portability!
-    if target.contains("linux") {
+    if target.is_linux() {
         Some(GITHUB_LINUX_RUNNER.to_owned())
-    } else if target.contains("x86_64-apple") {
+    } else if target.is_apple() && target.is_x86_64() {
         Some(GITHUB_MACOS_INTEL_RUNNER.to_owned())
-    } else if target.contains("aarch64-apple") {
+    } else if target.is_apple() && target.is_aarch64() {
         Some(GITHUB_MACOS_ARM64_RUNNER.to_owned())
-    } else if target.contains("windows") {
+    } else if target.is_windows() {
         Some(GITHUB_WINDOWS_RUNNER.to_owned())
     } else {
         None
@@ -618,14 +618,14 @@ fn github_runner_for_target(
 
 /// Select the cargo-dist installer approach for a given Github Runner
 fn install_dist_for_targets<'a>(
-    targets: &'a [&'a TargetTriple],
+    targets: &'a [&'a TargetTripleRef],
     install_sh: &'a str,
     install_ps1: &'a str,
 ) -> &'a str {
     for target in targets {
-        if target.contains("linux") || target.contains("apple") {
+        if target.is_linux() || target.is_apple() {
             return install_sh;
-        } else if target.contains("windows") {
+        } else if target.is_windows() {
             return install_ps1;
         }
     }
@@ -664,7 +664,7 @@ brew bundle install"#,
 }
 
 fn package_install_for_targets(
-    targets: &Vec<&TargetTriple>,
+    targets: &[&TargetTripleRef],
     packages: &SystemDependencies,
 ) -> Option<String> {
     // FIXME?: handle mixed-OS targets
@@ -709,7 +709,7 @@ fn package_install_for_targets(
 
                 // musl builds may require musl-tools to build;
                 // necessary for more complex software
-                if target.ends_with("linux-musl") {
+                if target.is_linux_musl() {
                     packages.push("musl-tools".to_owned());
                 }
 

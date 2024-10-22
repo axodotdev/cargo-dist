@@ -5,13 +5,14 @@ use std::collections::BTreeMap;
 use axoasset::{toml_edit, SourceFile};
 use axoproject::local_repo::LocalRepo;
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_dist_schema::{TargetTriple, TargetTripleRef};
 use serde::{Deserialize, Serialize};
 
 use crate::announce::TagSettings;
 use crate::SortedMap;
 use crate::{
     errors::{DistError, DistResult},
-    TargetTriple, METADATA_DIST,
+    METADATA_DIST,
 };
 
 pub mod v0;
@@ -783,16 +784,16 @@ pub struct SystemDependencyComplex {
     pub stage: Vec<DependencyKind>,
     /// One or more targets this package should be installed on; defaults to all targets if not specified
     #[serde(default)]
-    pub targets: Vec<String>,
+    pub targets: Vec<TargetTriple>,
 }
 
 impl SystemDependencyComplex {
     /// Checks if this dependency should be installed on the specified target.
-    pub fn wanted_for_target(&self, target: &String) -> bool {
+    pub fn wanted_for_target(&self, target: &TargetTripleRef) -> bool {
         if self.targets.is_empty() {
             true
         } else {
-            self.targets.contains(target)
+            self.targets.iter().any(|t| t == target)
         }
     }
 

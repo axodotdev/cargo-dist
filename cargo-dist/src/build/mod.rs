@@ -2,12 +2,12 @@
 
 use axoproject::PackageId;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{AssetInfo, DistManifest};
+use cargo_dist_schema::{AssetInfo, DistManifest, TargetTripleRef};
 use tracing::info;
 
 use crate::{
     copy_file, linkage::determine_linkage, Binary, BinaryIdx, BinaryKind, DistError, DistGraph,
-    DistResult, SortedMap, TargetTriple,
+    DistResult, SortedMap,
 };
 
 pub mod cargo;
@@ -195,7 +195,7 @@ impl BuildExpectations {
         dist: &DistGraph,
         manifest: &mut DistManifest,
         src: &ExpectedBinary,
-        target: &TargetTriple,
+        target: &TargetTripleRef,
     ) -> DistResult<()> {
         let src_path = src
             .src_path
@@ -226,7 +226,7 @@ impl BuildExpectations {
                 name: bin.name.clone(),
                 system: dist.system_id.clone(),
                 linkage: Some(linkage),
-                target_triples: vec![target.clone()],
+                target_triples: vec![target.to_owned()],
             },
         );
         Ok(())

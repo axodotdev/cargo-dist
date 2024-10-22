@@ -273,7 +273,7 @@ pub struct AppConfig {
     /// Whether the package should be distributed/built by cargo-dist
     pub dist: Option<bool>,
     /// The full set of target triples to build for.
-    pub targets: Vec<String>,
+    pub targets: Vec<TargetTriple>,
 }
 /// Config scoped to a particular App
 ///
@@ -293,7 +293,7 @@ pub struct AppConfigInheritable {
     /// Whether the package should be distributed/built by cargo-dist
     pub dist: Option<bool>,
     /// The full set of target triples to build for.
-    pub targets: Vec<String>,
+    pub targets: Vec<TargetTriple>,
 }
 impl AppConfigInheritable {
     /// Get the defaults for the given package
@@ -404,7 +404,7 @@ pub struct TomlLayer {
     ///
     /// FIXME: Allow higher level requests like "[macos, windows, linux] x [x86_64, aarch64]"?
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub targets: Option<Vec<String>>,
+    pub targets: Option<Vec<TargetTriple>>,
 
     /// artifact config
     #[serde(skip_serializing_if = "Option::is_none")]

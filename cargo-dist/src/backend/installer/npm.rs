@@ -2,7 +2,7 @@
 
 use axoasset::{LocalAsset, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::GlibcVersion;
+use cargo_dist_schema::{GlibcVersion, TargetTriple};
 use serde::Serialize;
 
 use super::InstallerInfo;
@@ -42,7 +42,7 @@ const RUN_JS: &str = "run.js";
 const PACKAGE_JSON: &str = "package.json";
 const PACKAGE_LOCK: &str = "npm-shrinkwrap.json";
 
-type PackageJsonPlatforms = SortedMap<String, PackageJsonPlatform>;
+type PackageJsonPlatforms = SortedMap<TargetTriple, PackageJsonPlatform>;
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PackageJsonPlatform {

@@ -5,13 +5,14 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
+use cargo_dist_schema::TargetTriple;
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
 
 use crate::{
     config::{JinjaInstallPathStrategy, LibraryStyle, ZipStyle},
     platform::{PlatformSupport, RuntimeConditions},
-    InstallReceipt, ReleaseIdx, TargetTriple,
+    InstallReceipt, ReleaseIdx,
 };
 
 use self::homebrew::HomebrewInstallerInfo;
@@ -70,7 +71,7 @@ pub struct InstallerInfo {
     /// Install receipt to write, if any
     pub receipt: Option<InstallReceipt>,
     /// Aliases to install binaries under
-    pub bin_aliases: BTreeMap<String, BTreeMap<String, Vec<String>>>,
+    pub bin_aliases: BTreeMap<TargetTriple, BTreeMap<String, Vec<String>>>,
     /// Whether to install generated C dynamic libraries
     pub install_libraries: Vec<LibraryStyle>,
     /// Platform-specific runtime conditions

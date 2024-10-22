@@ -4,12 +4,12 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use camino::Utf8Path;
 use camino::Utf8PathBuf;
+use cargo_dist_schema::TargetTripleRef;
 use tracing::info;
 use tracing::warn;
 
 use crate::config::ProductionMode;
 use crate::errors::*;
-use crate::TargetTriple;
 
 /// An instance of ssl.com's CodeSignTool
 #[derive(Debug)]
@@ -70,7 +70,7 @@ impl CodeSignToolEnv {
 impl CodeSignTool {
     pub fn new(
         client: &AxoClient,
-        host_target: &TargetTriple,
+        host_target: &TargetTripleRef,
         dist_dir: &Utf8Path,
         ssldotcom_windows_sign: Option<ProductionMode>,
     ) -> DistResult<Option<Self>> {
@@ -79,7 +79,7 @@ impl CodeSignTool {
             return Ok(None);
         };
         // Must be running on x64 windows
-        if host_target != axoproject::platforms::TARGET_X64_WINDOWS {
+        if host_target != crate::platforms::TARGET_X64_WINDOWS {
             return Ok(None);
         }
 

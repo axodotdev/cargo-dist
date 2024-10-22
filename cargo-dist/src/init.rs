@@ -1,7 +1,7 @@
 use axoasset::toml_edit;
-use axoproject::platforms::triple_to_display_name;
 use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
+use cargo_dist_schema::TargetTripleRef;
 use semver::Version;
 use serde::Deserialize;
 
@@ -12,6 +12,7 @@ use crate::{
     },
     do_generate,
     errors::{DistError, DistResult},
+    platforms::triple_to_display_name,
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
@@ -486,7 +487,7 @@ fn get_new_dist_metadata(
         }
 
         // Prettify/sort things
-        let desc = move |triple: &str| -> String {
+        let desc = move |triple: &TargetTripleRef| -> String {
             let pretty = triple_to_display_name(triple).unwrap_or("[unknown]");
             format!("{pretty} ({triple})")
         };

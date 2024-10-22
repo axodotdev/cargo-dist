@@ -26,7 +26,6 @@ pub mod generic;
 #[cfg(feature = "npm-projects")]
 pub mod javascript;
 pub mod local_repo;
-pub mod platforms;
 mod repo;
 #[cfg(feature = "cargo-projects")]
 pub mod rust;

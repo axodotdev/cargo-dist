@@ -67,6 +67,7 @@ blake2.workspace = true
 serde_yml.workspace = true
 spdx.workspace = true
 base64.workspace = true
+lazy_static.workspace = true
 
 [dev-dependencies]
 insta.workspace = true

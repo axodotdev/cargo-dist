@@ -10,13 +10,14 @@ use axoprocess::Cmd;
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{
     AssetInfo, BuildEnvironment, DistManifest, GlibcVersion, Library, Linkage, PackageManager,
+    TargetTripleRef,
 };
 use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
 use tracing::warn;
 
-use crate::{config::Config, errors::*, gather_work, Artifact, DistGraph};
+use crate::{config::Config, errors::*, gather_work, platforms::TARGET_HOST, Artifact, DistGraph};
 
 /// Arguments for `cargo dist linkage` ([`do_linkage][])
 #[derive(Debug)]
@@ -380,7 +381,7 @@ fn do_pe(path: &Utf8PathBuf) -> DistResult<Vec<String>> {
 /// Get the linkage for a single binary
 ///
 /// If linkage fails for any reason we warn and return the default empty linkage
-pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> Linkage {
+pub fn determine_linkage(path: &Utf8PathBuf, target: &TargetTripleRef) -> Linkage {
     match try_determine_linkage(path, target) {
         Ok(linkage) => linkage,
         Err(e) => {
@@ -391,33 +392,22 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &str) -> Linkage {
 }
 
 /// Get the linkage for a single binary
-fn try_determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage> {
-    let libraries = match target {
-        // Can be run on any OS
-        "i686-apple-darwin" | "x86_64-apple-darwin" | "aarch64-apple-darwin" => do_otool(path)?,
-        "i686-unknown-linux-gnu"
-        | "x86_64-unknown-linux-gnu"
-        | "aarch64-unknown-linux-gnu"
-        | "i686-unknown-linux-musl"
-        | "x86_64-unknown-linux-musl"
-        | "aarch64-unknown-linux-musl" => {
-            // Currently can only be run on Linux
-            if std::env::consts::OS != "linux" {
-                return Err(DistError::LinkageCheckInvalidOS {
-                    host: std::env::consts::OS.to_owned(),
-                    target: target.to_owned(),
-                });
-            }
-            do_ldd(path)?
+fn try_determine_linkage(path: &Utf8PathBuf, target: &TargetTripleRef) -> DistResult<Linkage> {
+    let libraries = if target.is_darwin() {
+        do_otool(path)?
+    } else if target.is_linux() {
+        // Currently can only be run on Linux
+        if !TARGET_HOST.is_linux() {
+            return Err(DistError::LinkageCheckInvalidOS {
+                host: TARGET_HOST.to_owned(),
+                target: target.to_owned(),
+            });
         }
-        // Can be run on any OS
-        "i686-pc-windows-msvc"
-        | "x86_64-pc-windows-msvc"
-        | "aarch64-pc-windows-msvc"
-        | "i686-pc-windows-gnu"
-        | "x86_64-pc-windows-gnu"
-        | "aarch64-pc-windows-gnu" => do_pe(path)?,
-        _ => return Err(DistError::LinkageCheckUnsupportedBinary),
+        do_ldd(path)?
+    } else if target.is_windows() {
+        do_pe(path)?
+    } else {
+        return Err(DistError::LinkageCheckUnsupportedBinary);
     };
 
     let mut linkage = Linkage {
@@ -458,12 +448,12 @@ fn try_determine_linkage(path: &Utf8PathBuf, target: &str) -> DistResult<Linkage
 
 /// Determine the build environment on the current host
 /// This should be done local to the builder!
-pub fn determine_build_environment(target: &str) -> BuildEnvironment {
-    if target.contains("darwin") {
+pub fn determine_build_environment(target: &TargetTripleRef) -> BuildEnvironment {
+    if target.is_darwin() {
         determine_macos_build_environment().unwrap_or(BuildEnvironment::Indeterminate)
-    } else if target.contains("linux") {
+    } else if target.is_linux() {
         determine_linux_build_environment().unwrap_or(BuildEnvironment::Indeterminate)
-    } else if target.contains("windows") {
+    } else if target.is_windows() {
         BuildEnvironment::Windows
     } else {
         BuildEnvironment::Indeterminate

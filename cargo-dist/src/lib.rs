@@ -25,7 +25,7 @@ use build::{
     fake::{build_fake_cargo_target, build_fake_generic_target},
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{ArtifactId, DistManifest};
+use cargo_dist_schema::{ArtifactId, DistManifest, TargetTriple};
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
@@ -50,6 +50,7 @@ pub mod linkage;
 pub mod manifest;
 pub mod net;
 pub mod platform;
+pub mod platforms;
 pub mod sign;
 pub mod tasks;
 #[cfg(test)]
@@ -169,7 +170,7 @@ const AXOUPDATER_MINIMUM_VERSION: &str = "0.7.0";
 
 /// Fetches an installer executable and installs it in the expected target path.
 pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
-    let ext = if updater.target_triple.contains("pc-windows") {
+    let ext = if updater.target_triple.is_windows() {
         ".zip"
     } else {
         ".tar.xz"
@@ -221,7 +222,7 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
 
     // OK, now we have a binary in the tempdir
     let mut source = tmp_root.join("bin").join("axoupdater");
-    if updater.target_triple.contains("windows") {
+    if updater.target_triple.is_windows() {
         source.set_extension("exe");
     }
     LocalAsset::copy_file_to_file(source, dist_graph.target_dir.join(&updater.target_filename))?;
@@ -253,7 +254,7 @@ fn fetch_updater_from_binary(
             .axoclient
             .load_and_write_to_file(asset_url, &zipball_target),
     )?;
-    let suffix = if updater.target_triple.contains("windows") {
+    let suffix = if updater.target_triple.is_windows() {
         ".exe"
     } else {
         ""
@@ -745,32 +746,32 @@ fn generate_installer(
 }
 
 /// Get the default list of targets
-pub fn default_desktop_targets() -> Vec<String> {
+pub fn default_desktop_targets() -> Vec<TargetTriple> {
     vec![
         // Everyone can build x64!
-        axoproject::platforms::TARGET_X64_LINUX_GNU.to_owned(),
-        axoproject::platforms::TARGET_X64_WINDOWS.to_owned(),
-        axoproject::platforms::TARGET_X64_MAC.to_owned(),
+        crate::platforms::TARGET_X64_LINUX_GNU.to_owned(),
+        crate::platforms::TARGET_X64_WINDOWS.to_owned(),
+        crate::platforms::TARGET_X64_MAC.to_owned(),
         // Apple is really easy to cross from Apple
-        axoproject::platforms::TARGET_ARM64_MAC.to_owned(),
+        crate::platforms::TARGET_ARM64_MAC.to_owned(),
         // other cross-compiles not yet supported
-        // axoproject::platforms::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // axoproject::platforms::TARGET_ARM64_WINDOWS.to_owned(),
+        // crate::platforms::TARGET_ARM64_LINUX_GNU.to_owned(),
+        // crate::platforms::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }
 
 /// Get the list of all known targets
-pub fn known_desktop_targets() -> Vec<String> {
+pub fn known_desktop_targets() -> Vec<TargetTriple> {
     vec![
         // Everyone can build x64!
-        axoproject::platforms::TARGET_X64_LINUX_GNU.to_owned(),
-        axoproject::platforms::TARGET_X64_LINUX_MUSL.to_owned(),
-        axoproject::platforms::TARGET_X64_WINDOWS.to_owned(),
-        axoproject::platforms::TARGET_X64_MAC.to_owned(),
+        crate::platforms::TARGET_X64_LINUX_GNU.to_owned(),
+        crate::platforms::TARGET_X64_LINUX_MUSL.to_owned(),
+        crate::platforms::TARGET_X64_WINDOWS.to_owned(),
+        crate::platforms::TARGET_X64_MAC.to_owned(),
         // Apple is really easy to cross from Apple
-        axoproject::platforms::TARGET_ARM64_MAC.to_owned(),
+        crate::platforms::TARGET_ARM64_MAC.to_owned(),
         // other cross-compiles not yet supported
-        // axoproject::platforms::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // axoproject::platforms::TARGET_ARM64_WINDOWS.to_owned(),
+        // crate::platforms::TARGET_ARM64_LINUX_GNU.to_owned(),
+        // crate::platforms::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }

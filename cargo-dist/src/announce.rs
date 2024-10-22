@@ -88,10 +88,9 @@
 
 use std::fmt::Display;
 
-use axoproject::platforms::triple_to_display_name;
 use axoproject::PackageIdx;
 use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
-use cargo_dist_schema::{DistManifest, GithubHosting};
+use cargo_dist_schema::{DistManifest, GithubHosting, TargetTriple, TargetTripleRef};
 use itertools::Itertools;
 use semver::Version;
 use tracing::info;
@@ -99,7 +98,8 @@ use tracing::info;
 use crate::{
     config::LibraryStyle,
     errors::{DistError, DistResult},
-    DistGraphBuilder, SortedMap, TargetTriple,
+    platforms::triple_to_display_name,
+    DistGraphBuilder, SortedMap,
 };
 
 /// details on what we're announcing
@@ -932,16 +932,6 @@ pub fn announcement_github(manifest: &mut DistManifest) {
                     continue;
                 };
 
-                let mut targets = String::new();
-                let mut multi_target = false;
-                for target in &artifact.target_triples {
-                    if multi_target {
-                        targets.push_str(", ");
-                    }
-                    targets.push_str(target);
-                    multi_target = true;
-                }
-
                 let artifact_download_url = format!("{download_url}/{name}");
                 let download = format!("[{name}]({artifact_download_url})");
                 let checksum = if let Some(checksum_name) = &artifact.checksum {
@@ -953,7 +943,7 @@ pub fn announcement_github(manifest: &mut DistManifest) {
                 let mut triple = artifact
                     .target_triples
                     .iter()
-                    .map(|t| triple_to_display_name(t).unwrap_or_else(|| t))
+                    .map(|t| triple_to_display_name(t).unwrap_or_else(|| t.as_str()))
                     .join(", ");
                 if triple.is_empty() {
                     triple = "Unknown".to_string();
@@ -990,13 +980,13 @@ pub fn announcement_github(manifest: &mut DistManifest) {
 fn sortable_triples(triples: &[TargetTriple]) -> Vec<Vec<String>> {
     // Make each triple sortable, and then sort the list of triples by those
     // (usually there's only one triple but DETERMINISM)
-    let mut output: Vec<Vec<String>> = triples.iter().map(sortable_triple).collect();
+    let mut output: Vec<Vec<String>> = triples.iter().map(|t| sortable_triple(t)).collect();
     output.sort();
     output
 }
 
 /// Create a key for Properly sorting target triples
-fn sortable_triple(triple: &TargetTriple) -> Vec<String> {
+fn sortable_triple(triple: &TargetTripleRef) -> Vec<String> {
     // We want to sort lexically by: os, abi, arch
     // We are given arch, vendor, os, abi
     //
@@ -1020,7 +1010,7 @@ fn sortable_triple(triple: &TargetTriple) -> Vec<String> {
     // armv7   -unknown -linux   -gnueabihf
     // aarch64 -unknown -fuchsia
     // aarch64          -fuchsia
-    let mut parts = triple.split('-');
+    let mut parts = triple.as_str().split('-');
     let arch = parts.next();
     let order = parts.chain(arch);
     order.map(|s| s.to_owned()).collect()
@@ -1028,6 +1018,8 @@ fn sortable_triple(triple: &TargetTriple) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
+    use cargo_dist_schema::TargetTripleRef;
+
     use super::sortable_triple;
     #[test]
     fn sort_platforms() {
@@ -1053,7 +1045,7 @@ mod tests {
             "x86_64-unknown-linux-gnu.2.31",
             "x86_64-unknown-linux-musl-static",
         ];
-        targets.sort_by_cached_key(|t| sortable_triple(&t.to_string()));
+        targets.sort_by_cached_key(|t| sortable_triple(TargetTripleRef::from_str(t)));
         assert_eq!(
             targets,
             vec![

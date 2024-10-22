@@ -2,6 +2,7 @@
 
 use axoasset::{toml_edit, LocalAsset};
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_dist_schema::TargetTriple;
 use tracing::info;
 use wix::print::{wxs::WxsRenders, RenderOutput};
 
@@ -17,7 +18,7 @@ pub struct MsiInstallerInfo {
     /// An ideally unambiguous way to refer to a package for the purpose of cargo -p flags.
     pub pkg_spec: String,
     /// Binaries we'll be baking into the msi
-    pub target: String,
+    pub target: TargetTriple,
     /// Final file path of the msi
     pub file_path: Utf8PathBuf,
     /// Dir stuff goes to
@@ -44,7 +45,7 @@ impl MsiInstallerInfo {
         // It built with the `dist` profile
         b.profile(Some("dist"));
         // It explicitly built with this --target
-        b.target(Some(&self.target));
+        b.target(Some(self.target.as_str()));
         // We want the output to go here
         b.output(Some(self.file_path.as_str()));
         // Binaries are over here

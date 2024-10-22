@@ -1,7 +1,7 @@
 //! Mock testing utils, mostly you want the `workspace_*` functions,
 //! but other functions/consts will help you assert the results
 
-use crate::{announce::ReleaseArtifacts, CargoInfo, Tools};
+use crate::{announce::ReleaseArtifacts, platforms::TARGET_X64_LINUX_GNU, CargoInfo, Tools};
 use axoproject::{
     AutoIncludes, PackageIdx, PackageInfo, WorkspaceGraph, WorkspaceInfo, WorkspaceStructure,
 };
@@ -74,7 +74,7 @@ pub fn mock_tools() -> Tools {
         cargo: CargoInfo {
             cmd: String::new(),
             version_line: None,
-            host_target: "x86_64-unknown-linux-gnu".to_owned(),
+            host_target: TARGET_X64_LINUX_GNU.to_owned(),
         },
         rustup: None,
         brew: None,

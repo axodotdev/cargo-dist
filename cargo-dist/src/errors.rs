@@ -8,6 +8,7 @@
 
 use axoproject::errors::AxoprojectError;
 use camino::Utf8PathBuf;
+use cargo_dist_schema::TargetTriple;
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -320,9 +321,9 @@ pub enum DistError {
     #[error("unable to run linkage report for {target} on {host}")]
     LinkageCheckInvalidOS {
         /// The OS the check was run on
-        host: String,
+        host: TargetTriple,
         /// The OS being checked
-        target: String,
+        target: TargetTriple,
     },
 
     /// Linkage report can't be run for this target
@@ -410,7 +411,7 @@ pub enum DistError {
     #[diagnostic(help("try adding --target={host_target}"))]
     CliMissingTargets {
         /// Current host target
-        host_target: String,
+        host_target: TargetTriple,
     },
 
     /// Workspace isn't init
@@ -452,7 +453,7 @@ pub enum DistError {
     #[diagnostic(help("The full list of supported targets can be found here: https://opensource.axo.dev/cargo-dist/book/reference/config.html#targets"))]
     UnrecognizedTarget {
         /// The target in question
-        target: String,
+        target: TargetTriple,
     },
 
     /// Installers requested despite having nothing to install
