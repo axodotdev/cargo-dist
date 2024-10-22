@@ -35,7 +35,7 @@ comfy-table = "7.1.1"
 miette = { version = "7.2.0" }
 thiserror = "1.0.64"
 tracing = { version = "0.1.36", features = ["log"] }
-serde = { version = "1.0.210", features = ["derive"] }
+serde = { version = "1.0.211", features = ["derive"] }
 serde_json = { version = "1.0.132" }
 cargo_metadata = "0.18.1"
 camino = { version = "1.1.9", features = ["serde1"] }
