@@ -205,9 +205,11 @@ impl GithubCiInfo {
         let cache_builds = cache_builds.unwrap_or(caching_could_be_profitable);
 
         // Figure out what builds we need to do
-        let mut local_targets = SortedSet::new();
+        let mut local_targets: SortedSet<&TargetTripleRef> = SortedSet::new();
         for release in &dist.releases {
-            local_targets.extend(release.targets.iter().map(TargetTriple::as_explicit_ref));
+            for target in &release.targets {
+                local_targets.insert(target);
+            }
             dependencies.append(&mut release.config.builds.system_dependencies.clone());
         }
 

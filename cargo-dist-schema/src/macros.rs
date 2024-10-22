@@ -1,7 +1,286 @@
 //! Internal macros for cargo-dist
 
-/// A slightly-borked, declarative-macros-only version of <https://crates.io/crates/aliri_braid>
-/// It makes newtypes of `String` that are actually convenient to use.
+/// ## Motivation
+///
+/// cargo-dist deals with a lot of "string-like" types. A target triple,
+/// like `x86_64-unknown-linux-gnu`, for example, is string-like. So is
+/// a github runner name, like `macos-14`.
+///
+/// Declaring `target` fields to be of type `String` might sound fine,
+/// but when you're looking at:
+///
+/// ```rust
+///   let mystery_var: BTreeMap<String, BTreeMap<String, Vec<String>>>;
+/// ```
+///
+/// how do you know what each of those `String` refer to?
+///
+/// Rust lets you declare type aliases, so you might do:
+///
+/// ```rust
+///  type TargetTriple = String;
+/// ```
+///
+/// And then the type of our mystery_var becomes a little clearer:
+///
+/// ```
+///   let mystery_var: BTreeMap<TargetTriple, BTReeMap<String, Vec<String>>>;
+/// ```
+///
+/// However, this is a small cosmetic difference: we didn't gain any actual
+/// type safety.
+///
+/// We can still very much assign it things that are completely unrelated:
+///
+/// ```rust
+/// type TargetTriple = String;
+/// type GitHubRunner = String;
+///
+/// let mut target: TargetTriple = "x86_64-unknown-linux-gnu".to_owned(); // so far so good
+/// let runner: GithubRunner = "macos-14".to_owned(); // that's okay too
+/// target = runner; // 💥 uh oh! this compiles, but it shouldn't!
+/// target = "complete nonsense".into(); // 😭 no, code, what are you doing! compiler help us!
+/// ```
+///
+/// If we want those two types to be actually distinct, we have to make "new types" for them.
+/// We could make a struct with a field:
+///
+/// ```rust
+/// pub struct TargetTriple {
+///    pub value: String,
+/// }
+///
+/// let t: TargetTriple = get_target();
+/// eprintln!("our target is {}", t.value);
+/// ```
+///
+/// But that's a bit wordy — we're always ever going to have one field. The Rust pattern
+/// most commonly used here is to use a "tuple struct": think of it as a struct with numbered
+/// fields: in this case, it has a single field, named `0`
+///
+/// ```rust
+/// pub struct TargetTriple(String);
+///
+/// let t: TargetTriple = get_target();
+/// eprintln!("our target is {}", t.0);
+/// ```
+///
+/// With this technique, it's impossible to _accidentally_ assign a `GithubRunner`
+/// to a `TargetTriple`, for example:
+///
+/// ```rust
+/// pub struct TargetTriple(String);
+/// pub struct GithubRunner(String);
+///
+/// let mut target: TargetTriple = get_target();
+/// let runner: GithubRunner = get_runner();
+/// target = runner; // ✨ this is now a compile error!
+/// ```
+///
+/// We now have the compiler's back. We can now use rust-analyzer's "Find all references"
+/// functionality on `TargetTriple` and find all the places in the codebase
+/// we care about targets!
+///
+/// But we usually want to do _more_ with these types. Just like we're
+/// able to compare `String`s for equality, and order them, and hash
+/// them, and clone them, we also want to be able to do that for types
+/// like `TargetTriple` and `GithubRunner`.
+///
+/// We also want to be able to build references to them, perhaps some from
+/// some static string. `String` has the corresponding unsized type `str`,
+/// and `String::as_ref()` returns a `&str` — we need some sort of similar
+/// mapping here.
+///
+/// Doing all this by hand, exactly correct, every time, for every one of
+/// those types, is tricky. `String` and `&str` are linked together with
+/// multiple `From`, `AsRef`, and `Deref` implementations: it's really easy
+/// to forget one.
+///
+/// So, this macro does all that for you!
+///
+/// ## Usage
+///
+/// Let's review what you need to know to use a type declared by this macro.
+///
+/// ### Declaring a new type
+///
+/// You can invoke this macro to declare one or more "strongly-typed string"
+/// types, like so:
+///
+/// ```rust
+/// declare_strongly_typed_string! {
+///   /// TargetTriple docs go here
+///   pub const TargetTriple => &TargetTripleRef;
+///
+///   /// GithubRunner docs go here
+///   pub const GithubRunner => &GithubRunner;
+/// }
+/// ```
+///
+/// ### Taking values of that type
+///
+/// Let's assume we're talking about `TargetTriple`: if you'd normally use
+/// the `String` type, (ie. you need ownership of that type, maybe you're
+/// storing it in a struct), then you'll want `TargetTriple` itself:
+///
+/// ```rust
+/// struct Blah {
+///   targets: Vec<String>;
+/// }
+/// // 👇 becomes
+/// struct Blah {
+///   targets: Vec<TargetTriple>;
+/// }
+/// ```
+///
+/// If you're only reading from it, then maybe you can take a `&TargetTripleRef` instead:
+///
+/// ```rust
+/// fn is_target_triple_funny(target: &str) -> bool {
+///   target.contains("loong") // let's be honest: it's kinda funny
+/// }
+/// // 👇 becomes
+/// fn is_target_triple_funny(target: &TargetTripleRef) -> bool {
+///   target.as_str().contains("loong")
+/// }
+/// ```
+///
+/// You don't _have_ to, but it lets you take values built from 'static strings,
+/// which... guess what the next section is about?
+///
+/// ### Creating values of that type
+///
+/// You can create owned values with `::new()`:
+///
+/// ```rust
+/// let target = String::from("x86_64-unknown-linux-gnu");
+/// // 👇 becomes
+/// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
+/// ```
+///
+/// And now you can "Find all reference" for `TargetTriple::new` to find
+/// all the places in the codebase where you're turning "user input" into
+/// such a value.
+///
+/// You can still mess up, but it takes effort, and it's easier to find
+/// places to review.
+///
+/// You can also create references with `::from_str()`:
+///
+/// ```rust
+/// let target = TargetTriple::from_str("x86_64-unknown-linux-gnu");
+/// // 👇 becomes
+/// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
+/// ```
+///
+/// And you can also create references with `::from_static()`:
+///
+/// ```rust
+/// let target = TargetTriple::from_static("x86_64-unknown-linux-gnu");
+/// // 👇 becomes
+/// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
+/// ```
+///
+/// And you can also create references with `::from_str()`:
+///
+/// ```rust
+/// let target = "x86_64-unknown-linux-gnu"; // this is of type `&str`
+/// // 👇 becomes
+/// let target = TargetTripleRef::from_str("x86_64-unknown-linux-gnu");
+/// ```
+///
+/// What you're getting here is a `&'static TargetTripleRef` — no allocations
+/// involved, and if your functions take `&TargetTripleRef`, then you're already
+/// all set.
+///
+/// ### Treating it as a string anyway
+///
+/// You can access the underlying value with `::as_str()`:
+///
+/// ```rust
+/// let target = String::from("x86_64-unknown-linux-gnu");
+/// let first_token = target.split('-').next().unwrap();
+/// // 👇 becomes
+/// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
+/// let first_token = target.as_str().split('-').next().unwrap();
+/// ```
+///
+/// Of course, the `String/&str` version is shorter — the whole thing
+/// is to _discourage_ you from treating that value as a string: to have
+/// it live as a string as short as possible, to avoid mistakes.
+///
+/// ### Adding methods
+///
+/// Because `TargetTriple` is a type we declare ourselves, as opposed to
+/// `String`, which is declared in the standard library, we can define
+/// our own methods on it, like so:
+///
+/// ```rust
+/// impl TargetTriple {
+///     pub fn tokens(&self) -> impl Iterator<Item = &str> {
+///         self.as_str().split('-')
+///     }
+/// }
+/// ```
+///
+/// And then the transformation above would look more like:
+///
+/// ```rust
+/// let target = String::from("x86_64-unknown-linux-gnu");
+/// let first_token = target.split('-').next().unwrap();
+/// // 👇 becomes
+/// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
+/// let first_token = target.tokens().next().unwrap();
+/// ```
+///
+/// Now we're not duplicating the logic of "splitting on '-'" in a bunch
+/// of places. Of course, it's unlikely that target triples will suddenly
+/// switched to em-dash as a separator, but you get the gist.
+///
+/// Note that even the code above `target.tokens()` is a bit too
+/// stringly-typed: we could have a `.as_parsed()` method that returns
+/// a struct like `ParsedTriple`, which has separate fields for
+/// "os", "arch", "abigunk", etc. — again, there would be only one
+/// path from `TargetTriple` to `ParsedTriple`, which would be easy to
+/// search to, the logic for transforming one into the other would be
+/// in a single place, etc. You get it.
+///
+/// ### Annoying corner cases: slices
+///
+/// This will not work:
+///
+/// ```rust
+/// fn i_take_a_slice(targets: &[TargetTripleRef]) { todo!(targets) }
+///
+/// let targets = vec![TargetTriple::new("x86_64-unknown-linux-gnu")];
+/// i_take_a_slice(&targets);
+/// ```
+///
+/// Because you have a `&Vec<TargetTriple>`, and `Deref` only takes you
+/// as far as `&[TargetTriple]`, but not `&[TargetTripleRef]`. If you
+/// encounter that case, it's probably fine to just take a `&[TargetTriple]`.
+///
+/// Note that you would have the same problem with `Vec<String>`: it would give
+/// you a `&[String]`, not a `&[&str]`. You could take an `impl Iterator<Item = &str>`
+/// if you really wanted to.
+///
+/// ### Annoying corner case: match
+///
+/// This will not work:
+///
+/// ```rust
+/// fn match_on_target(target: &TargetTripleRef) => &str {
+///   match target {
+///     TARGET_X64_WINDOWS => "what's up gamers",
+///     _ => "good morning",
+///   }
+/// }
+/// ```
+///
+/// Even if `TARGET_X64_WINDOWS` is a `&'static TargetTripleRef` and
+/// a `const`. Doesn't matter. rustc says no. Maybe in the future.
+///
+/// For now, just stick it in a `HashMap`, or use an if-else chain or something. Sorry!
 #[macro_export]
 macro_rules! declare_strongly_typed_string {
     ($(
@@ -9,7 +288,7 @@ macro_rules! declare_strongly_typed_string {
         $vis:vis struct $name:ident => &$ref_name:ident;
     )+) => {
         $(
-            #[derive(Clone, Hash, PartialEq, Eq)]
+            #[derive(Clone, Hash, PartialEq, Eq, Ord, PartialOrd)]
             #[derive(serde::Serialize, serde::Deserialize)]
             #[derive(schemars::JsonSchema)]
             #[serde(transparent)]
@@ -19,52 +298,19 @@ macro_rules! declare_strongly_typed_string {
 
             #[automatically_derived]
             impl $name {
-                #[doc = "Constructs a new $name"]
+                /// Constructs a new strongly-typed value
                 #[inline]
                 pub const fn new(raw: String) -> Self {
                     Self(raw)
                 }
-                #[inline]
-                #[doc = "Constructs a new $name from a static reference"]
-                #[track_caller]
-                pub fn from_static(raw: &'static str) -> Self {
-                    ::std::borrow::ToOwned::to_owned($ref_name::from_static(raw))
-                }
-                #[doc = "Converts this `$name` into a [`Box<$ref_name>`]\n\nThis will drop any excess capacity."]
-                #[allow(unsafe_code)]
-                #[inline]
-                pub fn into_boxed_ref(self) -> ::std::boxed::Box<$ref_name> {
-                    // SAFETY: `$ref_name` is `#[repr(transparent)]` around a single `str` field
-                    let box_str = ::std::string::String::from(self.0).into_boxed_str();
-                    unsafe {
-                        ::std::boxed::Box::from_raw(::std::boxed::Box::into_raw(box_str) as *mut $ref_name)
-                    }
-                }
-                #[doc = "Unwraps the underlying [`String`] value"]
-                #[inline]
-                pub fn take(self) -> String {
-                    self.0
-                }
+
                 #[doc = "Turn $name into $ref_name explicitly"]
                 #[inline]
                 pub fn as_explicit_ref(&self) -> &$ref_name {
                     &self
                 }
             }
-            #[automatically_derived]
-            impl ::std::convert::From<&'_ $ref_name> for $name {
-                #[inline]
-                fn from(s: &$ref_name) -> Self {
-                    ::std::borrow::ToOwned::to_owned(s)
-                }
-            }
-            #[automatically_derived]
-            impl ::std::convert::From<$name> for ::std::string::String {
-                #[inline]
-                fn from(s: $name) -> Self {
-                    ::std::convert::From::from(s.0)
-                }
-            }
+
             #[automatically_derived]
             impl ::std::borrow::Borrow<$ref_name> for $name {
                 #[inline]
@@ -72,6 +318,7 @@ macro_rules! declare_strongly_typed_string {
                     ::std::ops::Deref::deref(self)
                 }
             }
+
             #[automatically_derived]
             impl ::std::convert::AsRef<$ref_name> for $name {
                 #[inline]
@@ -79,6 +326,7 @@ macro_rules! declare_strongly_typed_string {
                     ::std::ops::Deref::deref(self)
                 }
             }
+
             #[automatically_derived]
             impl ::std::convert::AsRef<str> for $name {
                 #[inline]
@@ -86,66 +334,16 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str()
                 }
             }
-            #[automatically_derived]
-            impl ::std::convert::From<$name> for ::std::boxed::Box<$ref_name> {
-                #[inline]
-                fn from(r: $name) -> Self {
-                    r.into_boxed_ref()
-                }
-            }
-            #[automatically_derived]
-            impl ::std::convert::From<::std::boxed::Box<$ref_name>> for $name {
-                #[inline]
-                fn from(r: ::std::boxed::Box<$ref_name>) -> Self {
-                    r.into_owned()
-                }
-            }
-            #[automatically_derived]
-            impl<'a> ::std::convert::From<::std::borrow::Cow<'a, $ref_name>> for $name {
-                #[inline]
-                fn from(r: ::std::borrow::Cow<'a, $ref_name>) -> Self {
-                    match r {
-                        ::std::borrow::Cow::Borrowed(b) => ::std::borrow::ToOwned::to_owned(b),
-                        ::std::borrow::Cow::Owned(o) => o,
-                    }
-                }
-            }
-            #[automatically_derived]
-            impl<'a> ::std::convert::From<$name> for ::std::borrow::Cow<'a, $ref_name> {
-                #[inline]
-                fn from(owned: $name) -> Self {
-                    ::std::borrow::Cow::Owned(owned)
-                }
-            }
-            #[automatically_derived]
-            impl ::std::convert::From<::std::string::String> for $name {
-                #[inline]
-                fn from(s: ::std::string::String) -> Self {
-                    Self::new(From::from(s))
-                }
-            }
-            #[automatically_derived]
-            impl ::std::convert::From<&'_ str> for $name {
-                #[inline]
-                fn from(s: &str) -> Self {
-                    Self::new(::std::convert::From::from(s))
-                }
-            }
-            #[automatically_derived]
-            impl ::std::convert::From<::std::boxed::Box<str>> for $name {
-                #[inline]
-                fn from(s: ::std::boxed::Box<str>) -> Self {
-                    Self::new(::std::convert::From::from(s))
-                }
-            }
+
             #[automatically_derived]
             impl ::std::str::FromStr for $name {
                 type Err = ::std::convert::Infallible;
                 #[inline]
                 fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
-                    ::std::result::Result::Ok(::std::convert::From::from(s))
+                    ::std::result::Result::Ok($name::new(s.to_owned()))
                 }
             }
+
             #[automatically_derived]
             impl ::std::borrow::Borrow<str> for $name {
                 #[inline]
@@ -153,6 +351,7 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str()
                 }
             }
+
             #[automatically_derived]
             impl ::std::ops::Deref for $name {
                 type Target = $ref_name;
@@ -161,6 +360,7 @@ macro_rules! declare_strongly_typed_string {
                     $ref_name::from_str(::std::convert::AsRef::as_ref(&self.0))
                 }
             }
+
             #[automatically_derived]
             impl ::std::fmt::Debug for $name {
                 #[inline]
@@ -168,25 +368,12 @@ macro_rules! declare_strongly_typed_string {
                     <$ref_name as ::std::fmt::Debug>::fmt(::std::ops::Deref::deref(self), f)
                 }
             }
+
             #[automatically_derived]
             impl ::std::fmt::Display for $name {
                 #[inline]
                 fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                     <$ref_name as ::std::fmt::Display>::fmt(::std::ops::Deref::deref(self), f)
-                }
-            }
-            #[automatically_derived]
-            impl ::std::cmp::Ord for $name {
-                #[inline]
-                fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
-                    ::std::cmp::Ord::cmp(&self.0, &other.0)
-                }
-            }
-            #[automatically_derived]
-            impl ::std::cmp::PartialOrd for $name {
-                #[inline]
-                fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
-                    ::std::cmp::PartialOrd::partial_cmp(&self.0, &other.0)
                 }
             }
 
@@ -206,27 +393,14 @@ macro_rules! declare_strongly_typed_string {
                     // SAFETY: `$ref_name` is `#[repr(transparent)]` around a single `str` field, so a `*const str` can be safely reinterpreted as a `*const $ref_name`
                     unsafe { &*(ptr as *const Self) }
                 }
-                #[inline]
-                #[doc = "Transparently reinterprets the static string slice as a strongly-typed $ref_name"]
-                #[track_caller]
-                pub const fn from_static(raw: &'static str) -> &'static Self {
-                    Self::from_str(raw)
-                }
-                #[allow(unsafe_code)]
-                #[inline]
-                #[doc = "Converts a [`Box<$ref_name>`] into a [`$name`] without copying or allocating"]
-                pub fn into_owned(self: ::std::boxed::Box<$ref_name>) -> $name {
-                    // "SAFETY: `$ref_name` is `#[repr(transparent)]` around a single `str` field, so a `*mut str` can be safely reinterpreted as a `*mut $ref_name`"
-                    let raw = ::std::boxed::Box::into_raw(self);
-                    let boxed = unsafe { ::std::boxed::Box::from_raw(raw as *mut str) };
-                    $name::new(::std::convert::From::from(boxed))
-                }
+
                 #[doc = r" Provides access to the underlying value as a string slice."]
                 #[inline]
                 pub const fn as_str(&self) -> &str {
                     &self.0
                 }
             }
+
             #[automatically_derived]
             impl ::std::borrow::ToOwned for $ref_name {
                 type Owned = $name;
@@ -235,6 +409,7 @@ macro_rules! declare_strongly_typed_string {
                     $name(self.0.into())
                 }
             }
+
             #[automatically_derived]
             impl ::std::cmp::PartialEq<$ref_name> for $name {
                 #[inline]
@@ -242,6 +417,7 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str() == other.as_str()
                 }
             }
+
             #[automatically_derived]
             impl ::std::cmp::PartialEq<$name> for $ref_name {
                 #[inline]
@@ -249,6 +425,7 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str() == other.as_str()
                 }
             }
+
             #[automatically_derived]
             impl ::std::cmp::PartialEq<&'_ $ref_name> for $name {
                 #[inline]
@@ -256,6 +433,7 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str() == other.as_str()
                 }
             }
+
             #[automatically_derived]
             impl ::std::cmp::PartialEq<$name> for &'_ $ref_name {
                 #[inline]
@@ -263,6 +441,7 @@ macro_rules! declare_strongly_typed_string {
                     self.as_str() == other.as_str()
                 }
             }
+
             #[automatically_derived]
             impl<'a> ::std::convert::From<&'a str> for &'a $ref_name {
                 #[inline]
@@ -270,6 +449,7 @@ macro_rules! declare_strongly_typed_string {
                     $ref_name::from_str(s)
                 }
             }
+
             #[automatically_derived]
             impl ::std::borrow::Borrow<str> for $ref_name {
                 #[inline]
@@ -277,6 +457,7 @@ macro_rules! declare_strongly_typed_string {
                     &self.0
                 }
             }
+
             #[automatically_derived]
             impl ::std::convert::AsRef<str> for $ref_name {
                 #[inline]
@@ -284,22 +465,7 @@ macro_rules! declare_strongly_typed_string {
                     &self.0
                 }
             }
-            #[automatically_derived]
-            impl<'a> ::std::convert::From<&'a $ref_name> for ::std::borrow::Cow<'a, $ref_name> {
-                #[inline]
-                fn from(r: &'a $ref_name) -> Self {
-                    ::std::borrow::Cow::Borrowed(r)
-                }
-            }
-            #[automatically_derived]
-            impl<'a, 'b: 'a> ::std::convert::From<&'a ::std::borrow::Cow<'b, $ref_name>>
-                for &'a $ref_name
-            {
-                #[inline]
-                fn from(r: &'a ::std::borrow::Cow<'b, $ref_name>) -> &'a $ref_name {
-                    ::std::borrow::Borrow::borrow(r)
-                }
-            }
+
             #[automatically_derived]
             impl ::std::convert::From<&'_ $ref_name> for ::std::rc::Rc<$ref_name> {
                 #[allow(unsafe_code)]
@@ -322,6 +488,7 @@ macro_rules! declare_strongly_typed_string {
                     }
                 }
             }
+
             #[automatically_derived]
             impl ::std::fmt::Debug for $ref_name {
                 #[inline]
@@ -329,6 +496,7 @@ macro_rules! declare_strongly_typed_string {
                     <str as ::std::fmt::Debug>::fmt(&self.0, f)
                 }
             }
+
             #[automatically_derived]
             impl ::std::fmt::Display for $ref_name {
                 #[inline]
