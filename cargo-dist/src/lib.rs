@@ -50,7 +50,6 @@ pub mod linkage;
 pub mod manifest;
 pub mod net;
 pub mod platform;
-pub mod platforms;
 pub mod sign;
 pub mod tasks;
 #[cfg(test)]
@@ -747,31 +746,35 @@ fn generate_installer(
 
 /// Get the default list of targets
 pub fn default_desktop_targets() -> Vec<TargetTriple> {
+    use crate::platform::targets as t;
+
     vec![
         // Everyone can build x64!
-        crate::platforms::TARGET_X64_LINUX_GNU.to_owned(),
-        crate::platforms::TARGET_X64_WINDOWS.to_owned(),
-        crate::platforms::TARGET_X64_MAC.to_owned(),
+        t::TARGET_X64_LINUX_GNU.to_owned(),
+        t::TARGET_X64_WINDOWS.to_owned(),
+        t::TARGET_X64_MAC.to_owned(),
         // Apple is really easy to cross from Apple
-        crate::platforms::TARGET_ARM64_MAC.to_owned(),
+        t::TARGET_ARM64_MAC.to_owned(),
         // other cross-compiles not yet supported
-        // crate::platforms::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // crate::platforms::TARGET_ARM64_WINDOWS.to_owned(),
+        // targets::TARGET_ARM64_LINUX_GNU.to_owned(),
+        // targets::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }
 
 /// Get the list of all known targets
 pub fn known_desktop_targets() -> Vec<TargetTriple> {
+    use crate::platform::targets as t;
+
     vec![
         // Everyone can build x64!
-        crate::platforms::TARGET_X64_LINUX_GNU.to_owned(),
-        crate::platforms::TARGET_X64_LINUX_MUSL.to_owned(),
-        crate::platforms::TARGET_X64_WINDOWS.to_owned(),
-        crate::platforms::TARGET_X64_MAC.to_owned(),
+        t::TARGET_X64_LINUX_GNU.to_owned(),
+        t::TARGET_X64_LINUX_MUSL.to_owned(),
+        t::TARGET_X64_WINDOWS.to_owned(),
+        t::TARGET_X64_MAC.to_owned(),
         // Apple is really easy to cross from Apple
-        crate::platforms::TARGET_ARM64_MAC.to_owned(),
+        t::TARGET_ARM64_MAC.to_owned(),
         // other cross-compiles not yet supported
-        // crate::platforms::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // crate::platforms::TARGET_ARM64_WINDOWS.to_owned(),
+        // t::TARGET_ARM64_LINUX_GNU.to_owned(),
+        // t::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }

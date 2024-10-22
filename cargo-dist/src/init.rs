@@ -12,7 +12,7 @@ use crate::{
     },
     do_generate,
     errors::{DistError, DistResult},
-    platforms::triple_to_display_name,
+    platform::triple_to_display_name,
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 

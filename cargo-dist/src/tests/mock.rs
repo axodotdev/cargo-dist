@@ -1,7 +1,9 @@
 //! Mock testing utils, mostly you want the `workspace_*` functions,
 //! but other functions/consts will help you assert the results
 
-use crate::{announce::ReleaseArtifacts, platforms::TARGET_X64_LINUX_GNU, CargoInfo, Tools};
+use crate::{
+    announce::ReleaseArtifacts, platform::targets::TARGET_X64_LINUX_GNU, CargoInfo, Tools,
+};
 use axoproject::{
     AutoIncludes, PackageIdx, PackageInfo, WorkspaceGraph, WorkspaceInfo, WorkspaceStructure,
 };

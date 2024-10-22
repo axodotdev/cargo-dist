@@ -98,7 +98,7 @@ use tracing::info;
 use crate::{
     config::LibraryStyle,
     errors::{DistError, DistResult},
-    platforms::triple_to_display_name,
+    platform::triple_to_display_name,
     DistGraphBuilder, SortedMap,
 };
 

@@ -17,7 +17,9 @@ use goblin::Object;
 use mach_object::{LoadCommand, OFile};
 use tracing::warn;
 
-use crate::{config::Config, errors::*, gather_work, platforms::TARGET_HOST, Artifact, DistGraph};
+use crate::{
+    config::Config, errors::*, gather_work, platform::targets::TARGET_HOST, Artifact, DistGraph,
+};
 
 /// Arguments for `cargo dist linkage` ([`do_linkage][])
 #[derive(Debug)]

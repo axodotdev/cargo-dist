@@ -2,8 +2,6 @@
 
 // Various target triples
 
-use std::collections::HashMap;
-
 use cargo_dist_schema::TargetTripleRef;
 
 macro_rules! define_target_triples {
@@ -205,77 +203,6 @@ pub const KNOWN_TARGET_TRIPLES: &[&[&TargetTripleRef]] = &[
     KNOWN_OTHER_TARGETS,
 ];
 
-/// The current host target (the target of the machine this code is running on)
+/// The current host target (the target of the machine this code is running on).
+/// This is determined through `std::env::consts::OS` rather than running `cargo`
 pub const TARGET_HOST: &TargetTripleRef = TargetTripleRef::from_str(std::env::consts::OS);
-
-lazy_static::lazy_static! {
-    static ref TARGET_TRIPLE_DISPLAY_NAMES: HashMap<&'static TargetTripleRef, &'static str> =
-        {
-            let mut map = HashMap::new();
-            map.insert(TARGET_X86_LINUX_GNU, "x86 Linux");
-            map.insert(TARGET_X64_LINUX_GNU, "x64 Linux");
-            map.insert(TARGET_ARM64_LINUX_GNU, "ARM64 Linux");
-            map.insert(TARGET_ARMV7_LINUX_GNU, "ARMv7 Linux");
-            map.insert(TARGET_ARMV6_LINUX_GNU, "ARMv6 Linux");
-            map.insert(TARGET_ARMV6_LINUX_GNU_HARDFLOAT, "ARMv6 Linux (Hardfloat)");
-            map.insert(TARGET_PPC64_LINUX_GNU, "PPC64 Linux");
-            map.insert(TARGET_PPC64LE_LINUX_GNU, "PPC64LE Linux");
-            map.insert(TARGET_S390X_LINUX_GNU, "S390x Linux");
-            map.insert(TARGET_RISCV_LINUX_GNU, "RISCV Linux");
-            map.insert(TARGET_LOONGARCH64_LINUX_GNU, "LOONGARCH64 Linux");
-            map.insert(TARGET_SPARC64_LINUX_GNU, "SPARC64 Linux");
-
-            map.insert(TARGET_X86_LINUX_MUSL, "x86 MUSL Linux");
-            map.insert(TARGET_X64_LINUX_MUSL, "x64 MUSL Linux");
-            map.insert(TARGET_ARM64_LINUX_MUSL, "ARM64 MUSL Linux");
-            map.insert(TARGET_ARMV7_LINUX_MUSL, "ARMv7 MUSL Linux");
-            map.insert(TARGET_ARMV6_LINUX_MUSL, "ARMv6 MUSL Linux");
-            map.insert(
-                TARGET_ARMV6_LINUX_MUSL_HARDFLOAT,
-                "ARMv6 MUSL Linux (Hardfloat)",
-            );
-            map.insert(TARGET_PPC64_LINUX_MUSL, "PPC64 MUSL Linux");
-            map.insert(TARGET_PPC64LE_LINUX_MUSL, "PPC64LE MUSL Linux");
-            map.insert(TARGET_S390X_LINUX_MUSL, "S390x MUSL Linux");
-            map.insert(TARGET_RISCV_LINUX_MUSL, "RISCV MUSL Linux");
-            map.insert(TARGET_LOONGARCH64_LINUX_MUSL, "LOONGARCH64 MUSL Linux");
-            map.insert(TARGET_SPARC64_LINUX_MUSL, "SPARC64 MUSL Linux");
-
-            map.insert(TARGET_X86_WINDOWS, "x86 Windows");
-            map.insert(TARGET_X64_WINDOWS, "x64 Windows");
-            map.insert(TARGET_ARM64_WINDOWS, "ARM64 Windows");
-            map.insert(TARGET_X86_MINGW, "x86 MinGW");
-            map.insert(TARGET_X64_MINGW, "x64 MinGW");
-            map.insert(TARGET_ARM64_MINGW, "ARM64 MinGW");
-
-            map.insert(TARGET_X86_MAC, "x86 macOS");
-            map.insert(TARGET_X64_MAC, "Intel macOS");
-            map.insert(TARGET_ARM64_MAC, "Apple Silicon macOS");
-
-            map.insert(TARGET_X64_FREEBSD, "x64 FreeBSD");
-            map.insert(TARGET_X64_ILLUMOS, "x64 IllumOS");
-            map.insert(TARGET_X64_NETBSD, "x64 NetBSD");
-            map.insert(TARGET_ARM64_IOS, "iOS");
-            map.insert(TARGET_ARM64_IOS_SIM, "ARM64 iOS SIM");
-            map.insert(TARGET_X64_IOS, "x64 iOS");
-            map.insert(TARGET_ARM64_FUCHSIA, "ARM64 Fuchsia");
-            map.insert(TARGET_ARM64_ANDROID, "Android");
-            map.insert(TARGET_X64_ANDROID, "x64 Android");
-            map.insert(TARGET_ASMJS_EMSCRIPTEN, "asm.js Emscripten");
-            map.insert(TARGET_WASM32_WASI, "WASI");
-            map.insert(TARGET_WASM32, "WASM");
-            map.insert(TARGET_SPARC_SOLARIS, "SPARC Solaris");
-            map.insert(TARGET_X64_SOLARIS, "x64 Solaris");
-
-            map
-        };
-}
-
-/// Translates a Rust triple into a human-readable display name
-pub fn triple_to_display_name(name: &TargetTripleRef) -> Option<&'static str> {
-    if name.as_str() == "all" {
-        Some("All Platforms")
-    } else {
-        TARGET_TRIPLE_DISPLAY_NAMES.get(name).copied()
-    }
-}

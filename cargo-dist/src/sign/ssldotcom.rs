@@ -10,6 +10,7 @@ use tracing::warn;
 
 use crate::config::ProductionMode;
 use crate::errors::*;
+use crate::platform::targets::TARGET_X64_WINDOWS;
 
 /// An instance of ssl.com's CodeSignTool
 #[derive(Debug)]
@@ -79,7 +80,7 @@ impl CodeSignTool {
             return Ok(None);
         };
         // Must be running on x64 windows
-        if host_target != crate::platforms::TARGET_X64_WINDOWS {
+        if host_target != TARGET_X64_WINDOWS {
             return Ok(None);
         }
 

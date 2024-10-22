@@ -50,7 +50,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::platforms::{
+use crate::platform::targets::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
 };
 use axoasset::AxoClient;
