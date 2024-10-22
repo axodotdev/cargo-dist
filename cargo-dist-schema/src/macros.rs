@@ -9,7 +9,7 @@
 /// Declaring `target` fields to be of type `String` might sound fine,
 /// but when you're looking at:
 ///
-/// ```rust
+/// ```rust,ignore
 ///   let mystery_var: BTreeMap<String, BTreeMap<String, Vec<String>>>;
 /// ```
 ///
@@ -17,13 +17,13 @@
 ///
 /// Rust lets you declare type aliases, so you might do:
 ///
-/// ```rust
+/// ```rust,ignore
 ///  type TargetTriple = String;
 /// ```
 ///
 /// And then the type of our mystery_var becomes a little clearer:
 ///
-/// ```
+/// ```rust,ignore
 ///   let mystery_var: BTreeMap<TargetTriple, BTReeMap<String, Vec<String>>>;
 /// ```
 ///
@@ -32,7 +32,7 @@
 ///
 /// We can still very much assign it things that are completely unrelated:
 ///
-/// ```rust
+/// ```rust,ignore
 /// type TargetTriple = String;
 /// type GitHubRunner = String;
 ///
@@ -45,7 +45,7 @@
 /// If we want those two types to be actually distinct, we have to make "new types" for them.
 /// We could make a struct with a field:
 ///
-/// ```rust
+/// ```rust,ignore
 /// pub struct TargetTriple {
 ///    pub value: String,
 /// }
@@ -58,7 +58,7 @@
 /// most commonly used here is to use a "tuple struct": think of it as a struct with numbered
 /// fields: in this case, it has a single field, named `0`
 ///
-/// ```rust
+/// ```rust,ignore
 /// pub struct TargetTriple(String);
 ///
 /// let t: TargetTriple = get_target();
@@ -68,7 +68,7 @@
 /// With this technique, it's impossible to _accidentally_ assign a `GithubRunner`
 /// to a `TargetTriple`, for example:
 ///
-/// ```rust
+/// ```rust,ignore
 /// pub struct TargetTriple(String);
 /// pub struct GithubRunner(String);
 ///
@@ -107,7 +107,7 @@
 /// You can invoke this macro to declare one or more "strongly-typed string"
 /// types, like so:
 ///
-/// ```rust
+/// ```rust,ignore
 /// declare_strongly_typed_string! {
 ///   /// TargetTriple docs go here
 ///   pub const TargetTriple => &TargetTripleRef;
@@ -123,7 +123,7 @@
 /// the `String` type, (ie. you need ownership of that type, maybe you're
 /// storing it in a struct), then you'll want `TargetTriple` itself:
 ///
-/// ```rust
+/// ```rust,ignore
 /// struct Blah {
 ///   targets: Vec<String>;
 /// }
@@ -135,7 +135,7 @@
 ///
 /// If you're only reading from it, then maybe you can take a `&TargetTripleRef` instead:
 ///
-/// ```rust
+/// ```rust,ignore
 /// fn is_target_triple_funny(target: &str) -> bool {
 ///   target.contains("loong") // let's be honest: it's kinda funny
 /// }
@@ -152,7 +152,7 @@
 ///
 /// You can create owned values with `::new()`:
 ///
-/// ```rust
+/// ```rust,ignore
 /// let target = String::from("x86_64-unknown-linux-gnu");
 /// // 👇 becomes
 /// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
@@ -167,7 +167,7 @@
 ///
 /// You can also create references with `::from_str()`:
 ///
-/// ```rust
+/// ```rust,ignore
 /// let target = TargetTriple::from_str("x86_64-unknown-linux-gnu");
 /// // 👇 becomes
 /// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
@@ -175,7 +175,7 @@
 ///
 /// And you can also create references with `::from_static()`:
 ///
-/// ```rust
+/// ```rust,ignore
 /// let target = TargetTriple::from_static("x86_64-unknown-linux-gnu");
 /// // 👇 becomes
 /// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
@@ -183,7 +183,7 @@
 ///
 /// And you can also create references with `::from_str()`:
 ///
-/// ```rust
+/// ```rust,ignore
 /// let target = "x86_64-unknown-linux-gnu"; // this is of type `&str`
 /// // 👇 becomes
 /// let target = TargetTripleRef::from_str("x86_64-unknown-linux-gnu");
@@ -197,7 +197,7 @@
 ///
 /// You can access the underlying value with `::as_str()`:
 ///
-/// ```rust
+/// ```rust,ignore
 /// let target = String::from("x86_64-unknown-linux-gnu");
 /// let first_token = target.split('-').next().unwrap();
 /// // 👇 becomes
@@ -215,7 +215,7 @@
 /// `String`, which is declared in the standard library, we can define
 /// our own methods on it, like so:
 ///
-/// ```rust
+/// ```rust,ignore
 /// impl TargetTriple {
 ///     pub fn tokens(&self) -> impl Iterator<Item = &str> {
 ///         self.as_str().split('-')
@@ -225,7 +225,7 @@
 ///
 /// And then the transformation above would look more like:
 ///
-/// ```rust
+/// ```rust,ignore
 /// let target = String::from("x86_64-unknown-linux-gnu");
 /// let first_token = target.split('-').next().unwrap();
 /// // 👇 becomes
@@ -249,7 +249,7 @@
 ///
 /// This will not work:
 ///
-/// ```rust
+/// ```rust,ignore
 /// fn i_take_a_slice(targets: &[TargetTripleRef]) { todo!(targets) }
 ///
 /// let targets = vec![TargetTriple::new("x86_64-unknown-linux-gnu")];
@@ -268,7 +268,7 @@
 ///
 /// This will not work:
 ///
-/// ```rust
+/// ```rust,ignore
 /// fn match_on_target(target: &TargetTripleRef) => &str {
 ///   match target {
 ///     TARGET_X64_WINDOWS => "what's up gamers",
