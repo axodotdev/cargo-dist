@@ -220,9 +220,9 @@ dependencies = [
 
 [[package]]
 name = "axoupdater"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa6f92ef9ab41a352f403f709ef0f09cda1f461795de52085cd46ed831ead02e"
+checksum = "6fe17874ee40fb66fe1d2cb7871b14de4d298fbf77ea29a6cedb8027365e1a33"
 dependencies = [
  "axoasset",
  "axoprocess",
@@ -231,6 +231,7 @@ dependencies = [
  "gazenot",
  "homedir",
  "miette 7.2.0",
+ "self-replace",
  "serde",
  "tempfile",
  "thiserror",
@@ -2311,6 +2312,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "self-replace"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03ec815b5eab420ab893f63393878d89c90fdd94c0bcc44c07abb8ad95552fb7"
+dependencies = [
+ "fastrand",
+ "tempfile",
+ "windows-sys 0.52.0",
+]
+
+[[package]]
 name = "self_cell"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2327,18 +2339,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.211"
+version = "1.0.213"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ac55e59090389fb9f0dd9e0f3c09615afed1d19094284d0b200441f13550793"
+checksum = "3ea7893ff5e2466df8d720bb615088341b295f849602c6956047f8f80f0e9bc1"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.211"
+version = "1.0.213"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54be4f245ce16bc58d57ef2716271d0d4519e0f6defa147f6e081005bcb278ff"
+checksum = "7e85ad2009c50b58e87caa8cd6dac16bdf511bbfb7af6c33df902396aa480fa5"
 dependencies = [
  "proc-macro2",
  "quote",
