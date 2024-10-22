@@ -2300,6 +2300,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             };
 
             let bin_aliases = bin_aliases.for_target(&variant.target);
+            let macos_sign = self.inner.config.builds.macos_sign;
+            let host_target = self.inner.tools.cargo.host_target.clone();
 
             let identifier = if let Some(id) = &config.identifier {
                 id.to_owned()
@@ -2328,6 +2330,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     install_location: config.install_location.clone(),
                     version: version.to_string(),
                     bin_aliases,
+                    macos_sign,
+                    host_target,
                 })),
                 is_global: false,
             };
