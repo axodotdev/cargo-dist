@@ -545,12 +545,16 @@ fn select_packages(
     // add that package as a release still, on the assumption it's a Library
     if releases.is_empty() {
         if let ReleaseType::Package { idx, version: _ } = announcing.release {
-            releases.push(ReleaseArtifacts {
-                package_idx: PackageIdx(idx),
-                executables: vec![],
-                cdylibs: vec![],
-                cstaticlibs: vec![],
-            });
+            let config = graph.package_config(PackageIdx(idx));
+
+            if config.dist != Some(false) {
+                releases.push(ReleaseArtifacts {
+                    package_idx: PackageIdx(idx),
+                    executables: vec![],
+                    cdylibs: vec![],
+                    cstaticlibs: vec![],
+                });
+            }
         }
     }
 
