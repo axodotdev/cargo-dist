@@ -11,7 +11,8 @@ use tracing::warn;
 use crate::build::BuildExpectations;
 use crate::env::{calculate_ldflags, fetch_brew_env, parse_env, select_brew_env};
 use crate::{
-    errors::*, BinaryIdx, BuildStep, DistGraphBuilder, AXOUPDATER_MINIMUM_VERSION, PROFILE_DIST,
+    errors::*, BinaryIdx, BuildStep, CargoBuildWrapper, DistGraphBuilder,
+    AXOUPDATER_MINIMUM_VERSION, PROFILE_DIST,
 };
 use crate::{
     CargoBuildStep, CargoTargetFeatureList, CargoTargetPackages, DistGraph, RustupStep, SortedMap,
@@ -98,6 +99,8 @@ impl<'a> DistGraphBuilder<'a> {
                 rustflags.push_str(" -Ctarget-feature=+crt-static -Clink-self-contained=yes");
             }
 
+            let mut wrapper = CargoBuildWrapper::None;
+
             // If we're trying to cross-compile, ensure the rustup toolchain
             // is setup!
             if target != self.inner.tools.cargo.host_target {
@@ -106,6 +109,14 @@ impl<'a> DistGraphBuilder<'a> {
                         rustup,
                         target: target.clone(),
                     }));
+
+                    if target.is_windows() {
+                        // If we're targetting windows, let's try `cargo-xwin`
+                        wrapper = CargoBuildWrapper::Xwin;
+                    } else {
+                        // If not, let's try `cargo-zigbuild`
+                        wrapper = CargoBuildWrapper::ZigBuild;
+                    }
                 } else {
                     warn!("You're trying to cross-compile, but I can't find rustup to ensure you have the rust toolchains for it!")
                 }
@@ -126,6 +137,7 @@ impl<'a> DistGraphBuilder<'a> {
                 for ((pkg_spec, features), expected_binaries) in builds_by_pkg_spec {
                     builds.push(BuildStep::Cargo(CargoBuildStep {
                         target_triple: target.clone(),
+                        wrapper,
                         package: CargoTargetPackages::Package(pkg_spec),
                         features,
                         rustflags: rustflags.clone(),
@@ -142,6 +154,7 @@ impl<'a> DistGraphBuilder<'a> {
                     .unwrap_or_default();
                 builds.push(BuildStep::Cargo(CargoBuildStep {
                     target_triple: target.clone(),
+                    wrapper,
                     package: CargoTargetPackages::Workspace,
                     features,
                     rustflags,
@@ -161,8 +174,13 @@ pub fn build_cargo_target(
     manifest: &mut DistManifest,
     target: &CargoBuildStep,
 ) -> DistResult<()> {
+    let kind = match target.wrapper {
+        CargoBuildWrapper::None => "cargo",
+        CargoBuildWrapper::ZigBuild => "cargo-zigbuild",
+        CargoBuildWrapper::Xwin => "cargo-xwin",
+    };
     eprint!(
-        "building cargo target ({}/{}",
+        "building {kind} target ({}/{}",
         target.target_triple, target.profile
     );
 
@@ -178,8 +196,18 @@ pub fn build_cargo_target(
     }
 
     let mut command = Cmd::new(&dist_graph.tools.cargo.cmd, "build your app with Cargo");
+    match target.wrapper {
+        CargoBuildWrapper::None => {
+            command.arg("build");
+        }
+        CargoBuildWrapper::ZigBuild => {
+            command.arg("zigbuild");
+        }
+        CargoBuildWrapper::Xwin => {
+            command.arg("xwin").arg("build");
+        }
+    }
     command
-        .arg("build")
         .arg("--profile")
         .arg(&target.profile)
         .arg("--message-format=json-render-diagnostics")

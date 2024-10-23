@@ -543,7 +543,7 @@ fn cache_provider_for_runner(runner: &str) -> Option<String> {
 /// macos builds. It also makes it impossible to have one macos build fail and the other
 /// succeed (uploading itself to the draft release).
 ///
-/// In priniciple it does remove some duplicated setup work, so this is ostensibly "cheaper".
+/// In principle it does remove some duplicated setup work, so this is ostensibly "cheaper".
 fn distribute_targets_to_runners_merged<'a>(
     targets: SortedSet<&'a TargetTripleRef>,
     custom_runners: &BTreeMap<TargetTriple, String>,

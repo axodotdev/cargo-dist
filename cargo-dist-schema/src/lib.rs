@@ -286,7 +286,7 @@ pub struct GithubMatrixEntry {
     /// Targets to build for
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<String>>,
-    /// Github Runner to user
+    /// Github Runner to use
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runner: Option<String>,
     /// Expression to execute to install cargo-dist

@@ -379,6 +379,8 @@ pub enum BuildStep {
 pub struct CargoBuildStep {
     /// The --target triple to pass
     pub target_triple: TargetTriple,
+    /// The cargo wrapper to use
+    pub wrapper: CargoBuildWrapper,
     /// The feature flags to pass
     pub features: CargoTargetFeatures,
     /// What package to build (or "the workspace")
@@ -391,6 +393,21 @@ pub struct CargoBuildStep {
     pub expected_binaries: Vec<BinaryIdx>,
     /// The working directory to run the build in
     pub working_dir: Utf8PathBuf,
+}
+
+/// A wrapper to use instead of `cargo build`, generally used for cross-compilation
+#[derive(Debug, Clone, Copy)]
+pub enum CargoBuildWrapper {
+    /// Run 'cargo build' normally
+    None,
+
+    /// Run 'cargo zigbuild' to cross-compile, e.g. from `x86_64-unknown-linux-gnu` to `aarch64-unknown-linux-gnu`
+    /// cf. <https://github.com/rust-cross/cargo-zigbuild>
+    ZigBuild,
+
+    /// Run 'cargo xwin' to cross-compile, e.g. from `aarch64-apple-darwin` to `x86_64-pc-windows-msvc`
+    /// cf. <https://github.com/rust-cross/cargo-xwin>
+    Xwin,
 }
 
 /// A cargo build (and copy the outputs to various locations)
