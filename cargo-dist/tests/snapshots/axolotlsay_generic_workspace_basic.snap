@@ -1777,7 +1777,7 @@ try {
 }
 
 ================ sha256.sum ================
-75d8c6cbd1ddf538fc8fb63d2b29e0db7789ce11b58e3332733dd9faed50b709 source.tar.gz
+CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477) CENSORED.tar.gz
 
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -3555,7 +3555,7 @@ try {
 }
 
 ================ sha256.sum ================
-75d8c6cbd1ddf538fc8fb63d2b29e0db7789ce11b58e3332733dd9faed50b709 source.tar.gz
+CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477) CENSORED.tar.gz
 
 ================ dist-manifest.json ================
 {

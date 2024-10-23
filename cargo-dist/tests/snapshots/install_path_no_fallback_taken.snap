@@ -1777,7 +1777,7 @@ try {
 }
 
 ================ sha256.sum ================
-6dd3a33b92c3c35b05d8b4c350e7600d9db3f000e402ac0bf226859ec6b0c984 source.tar.gz
+CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477) CENSORED.tar.gz
 
 ================ dist-manifest.json ================
 {
