@@ -3215,7 +3215,7 @@ const { run } = require("./binary");
 run("axolotlsay");
 
 ================ sha256.sum ================
-CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477) CENSORED.tar.gz
+CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  CENSORED.tar.gz
 
 ================ dist-manifest.json ================
 {
