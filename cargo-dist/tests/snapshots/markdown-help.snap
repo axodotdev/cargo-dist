@@ -3,9 +3,9 @@ source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
 ---
 stdout:
-# cargo dist CLI manual
+# dist CLI manual
 
-> This manual can be regenerated with `cargo dist help-markdown`
+> This manual can be regenerated with `dist help-markdown`
 
 Shippable packaging for Rust.
 
@@ -99,7 +99,7 @@ Force package versions to match the tag
 Allow generated files like CI scripts to be out of date
 
 <br><br><br>
-## cargo dist build
+## dist build
 Build artifacts
 
 ### Usage
@@ -141,7 +141,7 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
-## cargo dist init
+## dist init
 Setup or update dist
 
 This will interactively guide you through the process of selecting configuration options and will also automatically run 'dist generate' afterwards as necessary. It will also handle updating your project to a new version of dist if you're running one.
@@ -182,7 +182,7 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
-## cargo dist generate
+## dist generate
 Generate one or more pieces of configuration
 
 ### Usage
@@ -209,7 +209,7 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
-## cargo dist linkage
+## dist linkage
 Report on the dynamic libraries used by the built artifacts
 
 ### Usage
@@ -235,7 +235,7 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
-## cargo dist manifest
+## dist manifest
 Generate the final build manifest without running any builds.
 
 This command is designed to match the exact behaviour of 'dist build' when passed the same flags, which is nice for consistency but annoying for anyone who doesn't understand dist's design really well.
@@ -283,7 +283,7 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
-## cargo dist plan
+## dist plan
 Get a plan of what to build (and check project status)
 
 If you want to know what running your dist CI will produce, this is the command for you! This is the exact command that CI will run to make its build plan and generate dist-manifest.json (although it adds --output-format=json so that it's machine-readable).
@@ -306,7 +306,7 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
-## cargo dist host
+## dist host
 Host artifacts
 
 ### Usage
@@ -333,7 +333,7 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
-## cargo dist selfupdate
+## dist selfupdate
 Performs a self-update, if a new version is available, and then 'init'
 
 ### Usage
@@ -381,7 +381,7 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
-## cargo dist help
+## dist help
 Print this message or the help of the given subcommand(s)
 
 ### Usage

@@ -30,7 +30,7 @@ fn main() {
         args.remove(1);
     }
     let config = Cli::parse_from(args);
-    axocli::CliAppBuilder::new("cargo dist")
+    axocli::CliAppBuilder::new("dist")
         .verbose(config.verbose)
         .json_errors(config.output_format == OutputFormat::Json)
         .start(config, real_main);
@@ -376,7 +376,7 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
     use clap::CommandFactory;
 
     let app_name = "cargo-dist";
-    let pretty_app_name = "cargo dist";
+    let pretty_app_name = "dist";
     // Make a new App to get the help message this time.
 
     writeln!(out, "# {pretty_app_name} CLI manual")?;
