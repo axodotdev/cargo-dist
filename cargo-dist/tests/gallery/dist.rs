@@ -124,7 +124,7 @@ pub struct BuildAndPlanResult {
 }
 
 impl<'a> TestContext<'a, Tools> {
-    /// Run 'cargo dist build -alies --no-local-paths --output-format=json' and return paths to various files that were generated
+    /// Run 'dist build -alies --no-local-paths --output-format=json' and return paths to various files that were generated
     pub fn cargo_dist_build_lies(&self, test_name: &str) -> Result<BuildAndPlanResult> {
         // If the dist target dir exists, delete it to avoid cross-contamination
         let out_path = Utf8Path::new("target/distrib/");
@@ -133,7 +133,7 @@ impl<'a> TestContext<'a, Tools> {
         }
 
         // build installers
-        eprintln!("running cargo dist build -aglobal...");
+        eprintln!("running dist build -aglobal...");
         let output = self.tools.cargo_dist.output_checked(|cmd| {
             cmd.arg("dist")
                 .arg("build")
@@ -161,7 +161,7 @@ impl<'a> TestContext<'a, Tools> {
         Ok(BuildAndPlanResult { build, plan })
     }
 
-    /// Run 'cargo dist plan --output-format=json' and return dist-manifest.json
+    /// Run 'dist plan --output-format=json' and return dist-manifest.json
     pub fn cargo_dist_plan(&self, test_name: &str) -> Result<PlanResult> {
         let output = self
             .tools
@@ -174,7 +174,7 @@ impl<'a> TestContext<'a, Tools> {
             raw_json,
         })
     }
-    /// Run 'cargo dist build -aglobal' and return paths to various files that were generated
+    /// Run 'dist build -aglobal' and return paths to various files that were generated
     pub fn cargo_dist_build_global(&self, test_name: &str) -> Result<DistResult> {
         // If the dist target dir exists, delete it to avoid cross-contamination
         let out_path = Utf8Path::new("target/distrib/");
@@ -183,7 +183,7 @@ impl<'a> TestContext<'a, Tools> {
         }
 
         // build installers
-        eprintln!("running cargo dist build -aglobal...");
+        eprintln!("running dist build -aglobal...");
         self.tools
             .cargo_dist
             .output_checked(|cmd| cmd.arg("dist").arg("build").arg("-aglobal"))?;
@@ -191,11 +191,11 @@ impl<'a> TestContext<'a, Tools> {
         self.load_dist_results(test_name, true)
     }
 
-    /// Run 'cargo dist generate' and return paths to various files that were generated
+    /// Run 'dist generate' and return paths to various files that were generated
     pub fn cargo_dist_generate(&self, test_name: &str) -> Result<GenerateResult> {
         self.cargo_dist_generate_prefixed(test_name, "")
     }
-    /// Run 'cargo dist generate' and return paths to various files that were generated
+    /// Run 'dist generate' and return paths to various files that were generated
     /// (also apply a prefix to the github filename)
     pub fn cargo_dist_generate_prefixed(
         &self,
@@ -214,7 +214,7 @@ impl<'a> TestContext<'a, Tools> {
         }
 
         // run generate
-        eprintln!("running cargo dist generate...");
+        eprintln!("running dist generate...");
         self.tools
             .cargo_dist
             .output_checked(|cmd| cmd.arg("dist").arg("generate"))?;

@@ -190,7 +190,7 @@ pub struct DistGraph {
     /// two machines have any reason to have the exact same CLI args for dist, we
     /// just use a mangled form of the CLI arguments here.
     pub system_id: SystemId,
-    /// Whether it looks like `cargo dist init` has been run
+    /// Whether it looks like `dist init` has been run
     pub is_init: bool,
     /// What to allow to be dirty
     pub allow_dirty: DirtyMode,
@@ -906,7 +906,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         // check homebrew taps for global publish jobs
-        // FIXME: when we add `cargo dist publish` we can drop this,
+        // FIXME: when we add `dist publish` we can drop this,
         // as we can support granular publish settings
         let mut global_homebrew_tap = None;
         let mut packages_with_mismatched_taps = vec![];
@@ -944,7 +944,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
 
         // check publish jobs for global publish jobs
-        // FIXME: when we add `cargo dist publish` we can drop this,
+        // FIXME: when we add `dist publish` we can drop this,
         // as we can support granular publish settings
         let mut global_publishers = None;
         let mut packages_with_mismatched_publishers = vec![];
@@ -979,7 +979,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let global_publish_prereleases = global_publishers
             .as_ref()
             .map(|p| {
-                // until we have `cargo dist publish` we need to enforce everyone agreeing on `prereleases`
+                // until we have `dist publish` we need to enforce everyone agreeing on `prereleases`
                 let PublisherConfig { homebrew, npm } = p;
                 let h_pre = homebrew.as_ref().map(|p| p.prereleases);
                 let npm_pre = npm.as_ref().map(|p| p.prereleases);

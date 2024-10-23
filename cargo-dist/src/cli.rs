@@ -38,7 +38,7 @@ pub struct Cli {
     ///
     /// This is useful for generating a clean "full" manifest as follows:
     ///
-    /// `cargo dist manifest --artifacts=all --output-format=json --no-local-paths`
+    /// `dist manifest --artifacts=all --output-format=json --no-local-paths`
     #[clap(long)]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub no_local_paths: bool,
@@ -46,7 +46,7 @@ pub struct Cli {
     /// Target triples we want to build
     ///
     /// If left unspecified we will use the values in [workspace.metadata.dist],
-    /// except for `cargo dist init` which will select some "good defaults" for you.
+    /// except for `dist init` which will select some "good defaults" for you.
     #[clap(long, short, value_delimiter(','))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub target: Vec<TargetTriple>,
@@ -54,7 +54,7 @@ pub struct Cli {
     /// Installers we want to build
     ///
     /// If left unspecified we will use the values in [workspace.metadata.dist].
-    ///  `cargo dist init` will persist the values you pass to that location.
+    ///  `dist init` will persist the values you pass to that location.
     #[clap(long, short, value_delimiter(','))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub installer: Vec<InstallerStyle>,
@@ -62,7 +62,7 @@ pub struct Cli {
     /// CI we want to support
     ///
     /// If left unspecified we will use the value in [workspace.metadata.dist].
-    /// `cargo dist init` will persist the values you pass to that location.
+    /// `dist init` will persist the values you pass to that location.
     #[clap(long, short, value_delimiter(','))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub ci: Vec<CiStyle>,
@@ -139,7 +139,7 @@ pub enum Commands {
     /// for the host system, and will produce paths to the build dir
     /// that may not exist (since the build wasn't run).
     ///
-    /// 'cargo dist plan' is an alias for this command that picks nicer defaults
+    /// 'dist plan' is an alias for this command that picks nicer defaults
     /// by forcing a couple flags to have specific values. You probably want that.
     #[clap(disable_version_flag = true)]
     Manifest(ManifestArgs),
@@ -163,7 +163,7 @@ pub enum Commands {
     /// This is an alias for the lower-level 'manifest' command with the
     /// appropriate flags forced for asking for "everything"
     ///
-    ///     cargo dist manifest --artifacts=all --no-local-paths
+    ///     dist manifest --artifacts=all --no-local-paths
     ///
     #[clap(disable_version_flag = true)]
     Plan(PlanArgs),
@@ -217,7 +217,7 @@ pub enum ArtifactMode {
     Global,
     /// Fuzzily build "as much as possible" for the host system
     Host,
-    /// Build all the artifacts; useful for `cargo dist manifest`
+    /// Build all the artifacts; useful for `dist manifest`
     All,
     /// Fake all the artifacts; useful for testing/mocking/staging
     Lies,
@@ -248,7 +248,7 @@ pub struct InitArgs {
     /// during the interactive prompts.
     #[clap(long, short)]
     pub yes: bool,
-    /// Skip running 'cargo dist generate' at the end
+    /// Skip running 'dist generate' at the end
     #[clap(long, alias = "no-generate-ci", alias = "no-generate")]
     pub skip_generate: bool,
     /// A path to a json file containing values to set in workspace.metadata.dist
@@ -264,7 +264,7 @@ pub struct InitArgs {
     ///
     /// If left unspecified we will use the value in [workspace.metadata.dist].
     /// (If no such value exists we will use the one "native" to your CI provider)
-    /// `cargo dist init` will persist the values you pass to that location.
+    /// `dist init` will persist the values you pass to that location.
     #[clap(long, value_delimiter(','))]
     pub hosting: Vec<HostingStyle>,
 }
@@ -347,10 +347,10 @@ pub struct UpdateArgs {
     /// during the interactive prompts.
     #[clap(long, short)]
     pub yes: bool,
-    /// Skip running 'cargo dist init' after performing an upgrade
+    /// Skip running 'dist init' after performing an upgrade
     #[clap(long)]
     pub skip_init: bool,
-    /// Skip running 'cargo dist generate' at the end
+    /// Skip running 'dist generate' at the end
     #[clap(long, alias = "no-generate-ci", alias = "no-generate")]
     pub skip_generate: bool,
     /// A path to a json file containing values to set in workspace.metadata.dist
@@ -366,7 +366,7 @@ pub struct UpdateArgs {
     ///
     /// If left unspecified we will use the value in [workspace.metadata.dist].
     /// (If no such value exists we will use the one "native" to your CI provider)
-    /// `cargo dist init` will persist the values you pass to that location.
+    /// `dist init` will persist the values you pass to that location.
     #[clap(long, value_delimiter(','))]
     pub hosting: Vec<HostingStyle>,
 }

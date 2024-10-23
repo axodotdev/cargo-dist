@@ -238,7 +238,7 @@ pub enum DistError {
 
     /// Not an error; indicates that a file's contents differ via --check
     #[error("{} has out of date contents and needs to be regenerated:\n{diff}", file.origin_path())]
-    #[diagnostic(help("run 'cargo dist init' to update the file\n('allow-dirty' in Cargo.toml to ignore out of date contents)"))]
+    #[diagnostic(help("run 'dist init' to update the file\n('allow-dirty' in Cargo.toml to ignore out of date contents)"))]
     CheckFileMismatch {
         /// The file whose contents differ
         file: axoasset::SourceFile,
@@ -246,7 +246,7 @@ pub enum DistError {
         diff: String,
     },
 
-    /// `cargo dist generate` was passed an explicit GenerateMode but the config in their Cargo.toml
+    /// `dist generate` was passed an explicit GenerateMode but the config in their Cargo.toml
     /// has that mode set to allow-dirty, a contradiction!
     #[error("'{generate_mode}' is marked as allow-dirty in your dist config, refusing to run")]
     ContradictoryGenerateModes {
@@ -274,9 +274,9 @@ pub enum DistError {
         artifact_name: String,
     },
 
-    /// These GUIDs for msi's are required and enforced by `cargo dist generate --check`
+    /// These GUIDs for msi's are required and enforced by `dist generate --check`
     #[error("missing WiX GUIDs in {manifest_path}: {keys:?}")]
-    #[diagnostic(help("run 'cargo dist init' to generate them"))]
+    #[diagnostic(help("run 'dist init' to generate them"))]
     MissingWixGuids {
         /// The Cargo.toml missing them
         manifest_path: Utf8PathBuf,
@@ -381,13 +381,13 @@ pub enum DistError {
         bin_name: String,
     },
 
-    /// Error during `cargo dist selfupdate`
-    #[error("`cargo dist selfupdate` failed; the new version isn't in the place we expected")]
+    /// Error during `dist selfupdate`
+    #[error("`dist selfupdate` failed; the new version isn't in the place we expected")]
     #[diagnostic(help("This is probably not your fault, please file an issue!"))]
     UpdateFailed {},
 
-    /// Trying to run cargo dist selfupdate in a random dir
-    #[error("`cargo dist selfupdate` needs to be run in a project")]
+    /// Trying to run dist selfupdate in a random dir
+    #[error("`dist selfupdate` needs to be run in a project")]
     #[diagnostic(help("If you just want to update dist and not your project, pass --skip-init"))]
     UpdateNotInWorkspace {
         /// The report about the missing workspace
@@ -409,12 +409,12 @@ pub enum DistError {
     },
 
     /// Workspace isn't init
-    #[error("please run 'cargo dist init' before running any other commands!")]
+    #[error("please run 'dist init' before running any other commands!")]
     NeedsInit,
 
     /// Running different version from config
     #[error("You're running dist {running_version}, but 'cargo-dist-version = {config_version}' is set in your Cargo.toml")]
-    #[diagnostic(help("Rerun 'cargo dist init' to update to this version."))]
+    #[diagnostic(help("Rerun 'dist init' to update to this version."))]
     MismatchedDistVersion {
         /// config version
         config_version: String,

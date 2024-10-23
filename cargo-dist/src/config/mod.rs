@@ -695,7 +695,7 @@ impl std::fmt::Display for GenerateMode {
     }
 }
 
-/// Arguments to `cargo dist host`
+/// Arguments to `dist host`
 #[derive(Clone, Debug)]
 pub struct HostArgs {
     /// Which hosting steps to run

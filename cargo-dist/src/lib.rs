@@ -55,7 +55,7 @@ pub mod tasks;
 #[cfg(test)]
 mod tests;
 
-/// cargo dist build -- actually build binaries and installers!
+/// dist build -- actually build binaries and installers!
 pub fn do_build(cfg: &Config) -> DistResult<DistManifest> {
     check_integrity(cfg)?;
 
@@ -100,7 +100,7 @@ pub fn do_build(cfg: &Config) -> DistResult<DistManifest> {
     Ok(manifest)
 }
 
-/// Just generate the manifest produced by `cargo dist build` without building
+/// Just generate the manifest produced by `dist build` without building
 pub fn do_manifest(cfg: &Config) -> DistResult<DistManifest> {
     check_integrity(cfg)?;
     let (_dist, manifest) = gather_work(cfg)?;
@@ -616,7 +616,7 @@ fn zip_dir(
     Ok(())
 }
 
-/// Arguments for `cargo dist generate` ([`do_generate`][])
+/// Arguments for `dist generate` ([`do_generate`][])
 #[derive(Debug)]
 pub struct GenerateArgs {
     /// Check whether the output differs without writing to disk
@@ -652,7 +652,7 @@ fn do_generate_preflight_checks(dist: &DistGraph) -> DistResult<()> {
     Ok(())
 }
 
-/// Generate any scripts which are relevant (impl of `cargo dist generate`)
+/// Generate any scripts which are relevant (impl of `dist generate`)
 pub fn do_generate(cfg: &Config, args: &GenerateArgs) -> DistResult<()> {
     let (dist, _manifest) = gather_work(cfg)?;
 
@@ -720,7 +720,7 @@ pub fn run_generate(dist: &DistGraph, args: &GenerateArgs) -> DistResult<()> {
 
 /// Run any necessary integrity checks for "primary" commands like build/plan
 ///
-/// (This is currently equivalent to `cargo dist generate --check`)
+/// (This is currently equivalent to `dist generate --check`)
 pub fn check_integrity(cfg: &Config) -> DistResult<()> {
     // We need to avoid overwriting any parts of configuration from CLI here,
     // so construct a clean copy of config to run the check generate

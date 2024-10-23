@@ -16,7 +16,7 @@ use crate::{
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
-/// Arguments for `cargo dist init` ([`do_init`][])
+/// Arguments for `dist init` ([`do_init`][])
 #[derive(Debug)]
 pub struct InitArgs {
     /// Whether to auto-accept the default values for interactive prompts
@@ -52,7 +52,7 @@ fn theme() -> dialoguer::theme::ColorfulTheme {
     }
 }
 
-/// Run 'cargo dist init'
+/// Run 'dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // on ctrl-c,  dialoguer/console will clean up the rest of its
     // formatting, but the cursor will remain hidden unless we
@@ -262,7 +262,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     // regenerate anything that needs to be
     if !args.no_generate {
-        eprintln!("running 'cargo dist generate' to apply any changes");
+        eprintln!("running 'dist generate' to apply any changes");
         eprintln!();
 
         let ci_args = GenerateArgs {
@@ -310,7 +310,7 @@ fn init_dist_profile(
         new_profile.insert("lto", toml_edit::value("thin"));
         new_profile
             .decor_mut()
-            .set_prefix("\n# The profile that 'cargo dist' will build with\n")
+            .set_prefix("\n# The profile that 'dist' will build with\n")
     }
     dist_profile.or_insert(new_profile);
 
@@ -1293,9 +1293,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     );
 
     // Finalize the table
-    table
-        .decor_mut()
-        .set_prefix("\n# Config for 'cargo dist'\n");
+    table.decor_mut().set_prefix("\n# Config for 'dist'\n");
 }
 
 /// Update the toml table to add/remove this value

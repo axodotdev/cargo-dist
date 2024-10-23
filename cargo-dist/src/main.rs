@@ -24,7 +24,7 @@ use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs}
 mod cli;
 
 fn main() {
-    // Pop extraneous "dist" argument that `cargo dist` passes to us
+    // Pop extraneous "dist" argument that `dist` passes to us
     let mut args: Vec<OsString> = std::env::args_os().collect();
     if args.get(1).map(|arg| arg == "dist").unwrap_or(false) {
         args.remove(1);
@@ -75,7 +75,7 @@ fn print(
             // Add some context if we're printing predicted paths
             if let Some(name) = warn_cmd {
                 if !cli.no_local_paths {
-                    let message = format!("\nNOTE: 'cargo dist {name}' does not perform builds, these paths may not exist yet!");
+                    let message = format!("\nNOTE: 'dist {name}' does not perform builds, these paths may not exist yet!");
                     writeln!(out, "{}", out.style().yellow().apply_to(message))
                         .into_diagnostic()?;
                 }
@@ -561,7 +561,7 @@ fn this_cargo_dist_provided_by_brew() -> bool {
 }
 
 fn perform_init(path: &Utf8PathBuf, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
-    let mut cmd = Cmd::new(path, "cargo dist init");
+    let mut cmd = Cmd::new(path, "dist init");
     cmd.arg("dist").arg("init");
     // Forward shared arguments as necessary
     if args.yes {
@@ -634,7 +634,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     }
 
     if !updater.check_receipt_is_for_this_executable()? {
-        eprintln!("This installation of cargo-dist wasn't installed via a method that `cargo dist selfupdate` supports.");
+        eprintln!("This installation of dist wasn't installed via a method that `dist selfupdate` supports.");
         eprintln!("Please update manually.");
         return Ok(());
     }

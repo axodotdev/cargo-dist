@@ -460,7 +460,7 @@ pub struct PackageInfo {
     /// might also use it for auto-detecting "hey you're using github, here's the
     /// recommended github setup".
     ///
-    /// i.e. `cargo dist init --installer=shell` uses this as the base URL for fetching from
+    /// i.e. `dist init --installer=shell` uses this as the base URL for fetching from
     /// a Github Release™️.
     pub repository_url: Option<String>,
     /// URL to the homepage for this package.
