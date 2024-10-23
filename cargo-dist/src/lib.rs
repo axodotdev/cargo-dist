@@ -1,9 +1,9 @@
 #![deny(missing_docs)]
 #![allow(clippy::single_match, clippy::result_large_err)]
 
-//! # cargo-dist
+//! # dist
 //!
-//! This is the library at the core of the 'cargo dist' CLI. It currently mostly exists
+//! This is the library at the core of the 'dist' CLI. It currently mostly exists
 //! for the sake of internal documentation/testing, and isn't intended to be used by anyone else.
 //! That said, if you have a reason to use it, let us know!
 //!

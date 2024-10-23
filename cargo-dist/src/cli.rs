@@ -67,7 +67,7 @@ pub struct Cli {
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
     pub ci: Vec<CiStyle>,
 
-    /// The (git) tag to use for the Announcement that each invocation of cargo-dist is performing.
+    /// The (git) tag to use for the Announcement that each invocation of dist is performing.
     ///
     /// This tag serves two purposes: defining which apps we are Announcing new Releases for
     /// (and therefore building binaries and installers for); and picking an id to use for
@@ -111,17 +111,17 @@ pub enum Commands {
     /// Build artifacts
     #[clap(disable_version_flag = true)]
     Build(BuildArgs),
-    /// Setup or update cargo-dist
+    /// Setup or update dist
     ///
     /// This will interactively guide you through the process of selecting configuration options
-    /// and will also automatically run 'cargo dist generate' afterwards as necessary. It will
-    /// also handle updating your project to a new version of cargo-dist if you're running one.
+    /// and will also automatically run 'dist generate' afterwards as necessary. It will
+    /// also handle updating your project to a new version of dist if you're running one.
     #[clap(disable_version_flag = true)]
     Init(InitArgs),
     /// Generate one or more pieces of configuration
     #[clap(disable_version_flag = true)]
     Generate(GenerateArgs),
-    /// Generate CI scripts for orchestrating cargo-dist (deprecated in favour of generate)
+    /// Generate CI scripts for orchestrating dist (deprecated in favour of generate)
     #[clap(disable_version_flag = true)]
     #[clap(hide = true)]
     GenerateCi(GenerateCiArgs),
@@ -131,9 +131,9 @@ pub enum Commands {
     /// Generate the final build manifest without running any builds.
     ///
     /// This command is designed to match the exact behaviour of
-    /// 'cargo dist build' when passed the same flags, which is nice
+    /// 'dist build' when passed the same flags, which is nice
     /// for consistency but annoying for anyone who doesn't understand
-    /// cargo-dist's design really well.
+    /// dist's design really well.
     ///
     /// Notably it will default to only talking about artifacts
     /// for the host system, and will produce paths to the build dir
@@ -155,7 +155,7 @@ pub enum Commands {
     ManifestSchema(ManifestSchemaArgs),
     /// Get a plan of what to build (and check project status)
     ///
-    /// If you want to know what running your cargo-dist CI will produce,
+    /// If you want to know what running your dist CI will produce,
     /// this is the command for you! This is the exact command that CI will
     /// run to make its build plan and generate dist-manifest.json
     /// (although it adds --output-format=json so that it's machine-readable).
@@ -185,7 +185,7 @@ pub struct BuildArgs {
     /// made for each target system (archives, symbols, msi installers...); and "global" ones,
     /// which are made once per app (curl-sh installers, npm package, metadata...).
     ///
-    /// Having this distinction lets us run cargo-dist independently on
+    /// Having this distinction lets us run dist independently on
     /// multiple machines without collisions between the outputs.
     ///
     /// If let unspecified, we will pick a fuzzier "host" mode that builds "as much as possible"
@@ -272,7 +272,7 @@ pub struct InitArgs {
 /// Which style(s) of configuration to generate
 #[derive(ValueEnum, Copy, Clone, Debug)]
 pub enum GenerateMode {
-    /// Generate CI scripts for orchestrating cargo-dist
+    /// Generate CI scripts for orchestrating dist
     Ci,
     /// Generate .wxs tempaltes for msi installers
     Msi,

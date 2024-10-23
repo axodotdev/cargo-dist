@@ -30,7 +30,7 @@ const GITHUB_CI_DIR: &str = ".github/workflows/";
 const GITHUB_CI_DIR: &str = r".github\workflows\";
 const GITHUB_CI_FILE: &str = "release.yml";
 
-/// Info about running cargo-dist in Github CI
+/// Info about running dist in Github CI
 #[derive(Debug, Serialize)]
 pub struct GithubCiInfo {
     /// Cached path to github CI workflows dir
@@ -38,9 +38,9 @@ pub struct GithubCiInfo {
     pub github_ci_workflow_dir: Utf8PathBuf,
     /// Version of rust toolchain to install (deprecated)
     pub rust_version: Option<String>,
-    /// expression to use for installing cargo-dist via shell script
+    /// expression to use for installing dist via shell script
     pub install_dist_sh: String,
-    /// expression to use for installing cargo-dist via powershell script
+    /// expression to use for installing dist via powershell script
     pub install_dist_ps1: String,
     /// Whether to fail-fast
     pub fail_fast: bool,
@@ -182,7 +182,7 @@ impl GithubCiInfo {
         // Legacy deprecated support
         let rust_version = dist.config.builds.cargo.rust_toolchain_version.clone();
 
-        // If they don't specify a cargo-dist version, use this one
+        // If they don't specify a dist version, use this one
         let self_dist_version = super::SELF_DIST_VERSION.parse().unwrap();
         let dist_version = dist
             .config
@@ -618,7 +618,7 @@ fn github_runner_for_target(
     }
 }
 
-/// Select the cargo-dist installer approach for a given Github Runner
+/// Select the dist installer approach for a given Github Runner
 fn install_dist_for_targets<'a>(
     targets: &'a [&'a TargetTripleRef],
     install_sh: &'a str,

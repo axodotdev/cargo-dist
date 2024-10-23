@@ -10,7 +10,7 @@ Usage: dist [OPTIONS]
 
 Commands:
   build       Build artifacts
-  init        Setup or update cargo-dist
+  init        Setup or update dist
   generate    Generate one or more pieces of configuration
   linkage     Report on the dynamic libraries used by the built artifacts
   manifest    Generate the final build manifest without running any builds
@@ -30,7 +30,7 @@ GLOBAL OPTIONS:
   -t, --target <TARGET>                Target triples we want to build
   -i, --installer <INSTALLER>          Installers we want to build [possible values: shell, powershell, npm, homebrew, msi]
   -c, --ci <CI>                        CI we want to support [possible values: github]
-      --tag <TAG>                      The (git) tag to use for the Announcement that each invocation of cargo-dist is performing
+      --tag <TAG>                      The (git) tag to use for the Announcement that each invocation of dist is performing
       --force-tag                      Force package versions to match the tag
       --allow-dirty                    Allow generated files like CI scripts to be out of date
 

@@ -15,7 +15,7 @@ use thiserror::Error;
 /// An alias for the common Result type for this crate
 pub type DistResult<T> = std::result::Result<T, DistError>;
 
-/// Errors cargo-dist can have
+/// Errors dist can have
 #[derive(Debug, Error, Diagnostic)]
 pub enum DistError {
     /// random i/o error
@@ -71,9 +71,9 @@ pub enum DistError {
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
 
-    /// A problem with a jinja template, which is always a cargo-dist bug
+    /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
-    #[diagnostic(help("this is a bug in cargo-dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new"))]
+    #[diagnostic(help("this is a bug in dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new"))]
     Jinja {
         /// The SourceFile we were try to parse
         #[source_code]
@@ -117,10 +117,8 @@ pub enum DistError {
         cause: serde_json::Error,
     },
 
-    /// User declined to update cargo-dist, refuse to make progress
-    #[error(
-        "to update your cargo-dist config you must use the version your project is configured for"
-    )]
+    /// User declined to update dist, refuse to make progress
+    #[error("to update your dist config you must use the version your project is configured for")]
     #[diagnostic(help(
         "you're running {running_version} but the project is configured for {project_version}"
     ))]
@@ -223,7 +221,7 @@ pub enum DistError {
     MismatchedPrereleases,
 
     /// parse_tag concluded there was nothing to release
-    #[error("This workspace doesn't have anything for cargo-dist to Release!")]
+    #[error("This workspace doesn't have anything for dist to Release!")]
     NothingToRelease {
         /// full help printout (very dynamic)
         #[help]
@@ -250,9 +248,7 @@ pub enum DistError {
 
     /// `cargo dist generate` was passed an explicit GenerateMode but the config in their Cargo.toml
     /// has that mode set to allow-dirty, a contradiction!
-    #[error(
-        "'{generate_mode}' is marked as allow-dirty in your cargo-dist config, refusing to run"
-    )]
+    #[error("'{generate_mode}' is marked as allow-dirty in your dist config, refusing to run")]
     ContradictoryGenerateModes {
         /// The problematic mode
         generate_mode: crate::config::GenerateMode,
@@ -290,7 +286,7 @@ pub enum DistError {
 
     /// unrecognized job style
     #[error("{style} is not a recognized job value")]
-    #[diagnostic(help("Jobs that do not come with cargo-dist should be prefixed with ./"))]
+    #[diagnostic(help("Jobs that do not come with dist should be prefixed with ./"))]
     UnrecognizedJobStyle {
         /// value provided
         style: String,
@@ -392,9 +388,7 @@ pub enum DistError {
 
     /// Trying to run cargo dist selfupdate in a random dir
     #[error("`cargo dist selfupdate` needs to be run in a project")]
-    #[diagnostic(help(
-        "If you just want to update cargo-dist and not your project, pass --skip-init"
-    ))]
+    #[diagnostic(help("If you just want to update dist and not your project, pass --skip-init"))]
     UpdateNotInWorkspace {
         /// The report about the missing workspace
         #[diagnostic_source]
@@ -419,7 +413,7 @@ pub enum DistError {
     NeedsInit,
 
     /// Running different version from config
-    #[error("You're running cargo-dist {running_version}, but 'cargo-dist-version = {config_version}' is set in your Cargo.toml")]
+    #[error("You're running dist {running_version}, but 'cargo-dist-version = {config_version}' is set in your Cargo.toml")]
     #[diagnostic(help("Rerun 'cargo dist init' to update to this version."))]
     MismatchedDistVersion {
         /// config version

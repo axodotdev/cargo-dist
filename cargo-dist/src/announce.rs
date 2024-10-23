@@ -6,8 +6,8 @@
 //!
 //! # The Tag (Selection)
 //!
-//! The "tag" is cargo-dist slang for "what are we actually announcing", in reference
-//! to the fact that the original/primary mode of operation in cargo-dist was to
+//! The "tag" is dist slang for "what are we actually announcing", in reference
+//! to the fact that the original/primary mode of operation in dist was to
 //! push a commit to your repo with a git tag, which we would use as a selector
 //! for the packages we're publishing.
 //!
@@ -24,11 +24,11 @@
 //! * Whether it's a prerelease
 //! * What packages are we releasing
 //!
-//! Note that version is *singular* here. It is assumed by cargo-dist that every
+//! Note that version is *singular* here. It is assumed by dist that every
 //! announcement is for a single "version", and all packages that are part of that
 //! announcement should therefore have that single version.
 //!
-//! This tag is used to ensure every invocation of cargo-dist in the graph
+//! This tag is used to ensure every invocation of dist in the graph
 //! of CI jobs we kick off agrees on what's being done, with each one being passed the
 //! value via --tag.
 //!
@@ -74,7 +74,7 @@
 //! Also, even though the *main* thing we do is publish apps and make installers for them,
 //! people want to tag pure-source library releases, and they wanted GitHub Releases to still get
 //! made. This introduced probably the nastiest wrench in the system, the "Library Mode",
-//! where cargo-dist knows it's kinda doing nothing but has to go through some of the motions,
+//! where dist knows it's kinda doing nothing but has to go through some of the motions,
 //! and the CI needs to skip over huge chunks.
 //!
 //! Library Mode is triggered by a single-package tag. **IT BYPASSES DISTABILITY**,
@@ -787,9 +787,9 @@ fn tag_help(
         .first_key_value()
         .and_then(|(_, packages)| packages.first())
     else {
-        return r#"It appears that you have no packages in your workspace with distable binaries. You can rerun with "--verbose=info" to see what cargo-dist thinks is in your workspace. Here are some typical issues:
+        return r#"It appears that you have no packages in your workspace with distable binaries. You can rerun with "--verbose=info" to see what dist thinks is in your workspace. Here are some typical issues:
 
-    If you're trying to use cargo-dist to announce libraries, we require you explicitly select the library with e.g. "--tag=my-library-v1.0.0", as this mode is experimental.
+    If you're trying to use dist to announce libraries, we require you explicitly select the library with e.g. "--tag=my-library-v1.0.0", as this mode is experimental.
 
     If you have binaries in your workspace, `publish = false` could be hiding them and adding "dist = true" to [package.metadata.dist] in your Cargo.toml may help."#.to_owned();
     };

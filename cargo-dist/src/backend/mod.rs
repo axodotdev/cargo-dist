@@ -1,4 +1,4 @@
-//! The backend of cargo-dist -- things it outputs
+//! The backend of dist -- things it outputs
 
 use std::time::Duration;
 

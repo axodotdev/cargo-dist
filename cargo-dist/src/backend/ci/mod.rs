@@ -1,4 +1,4 @@
-//! Support for generating CI scripts for running cargo-dist
+//! Support for generating CI scripts for running dist
 
 use semver::Version;
 
@@ -6,7 +6,7 @@ use self::github::GithubCiInfo;
 
 pub mod github;
 
-/// The current version of cargo-dist
+/// The current version of dist
 const SELF_DIST_VERSION: &str = env!("CARGO_PKG_VERSION");
 const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/releases/download";
 
@@ -17,7 +17,7 @@ pub struct CiInfo {
     pub github: Option<GithubCiInfo>,
 }
 
-/// Get the command to invoke to install cargo-dist via sh script
+/// Get the command to invoke to install dist via sh script
 fn install_dist_sh_for_version(version: &Version) -> String {
     if let Some(git) = install_dist_git(version) {
         return git;
@@ -25,7 +25,7 @@ fn install_dist_sh_for_version(version: &Version) -> String {
     let format = cargo_dist_schema::format_of_version(version);
     let installer_name = if format.unsupported() {
         // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested cargo-dist v{version}, which is not supported by the this copy of cargo-dist ({SELF_DIST_VERSION})");
+        panic!("requested dist v{version}, which is not supported by the this copy of dist ({SELF_DIST_VERSION})");
     } else if format.artifact_names_contain_versions() {
         format!("cargo-dist-v{version}-installer.sh")
     } else {
@@ -38,7 +38,7 @@ fn install_dist_sh_for_version(version: &Version) -> String {
     format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh")
 }
 
-/// Get the command to invoke to install cargo-dist via ps1 script
+/// Get the command to invoke to install dist via ps1 script
 fn install_dist_ps1_for_version(version: &Version) -> String {
     if let Some(git) = install_dist_git(version) {
         return git;
@@ -46,7 +46,7 @@ fn install_dist_ps1_for_version(version: &Version) -> String {
     let format = cargo_dist_schema::format_of_version(version);
     let installer_name = if format.unsupported() {
         // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested cargo-dist v{version}, which is not supported by the this copy of cargo-dist ({SELF_DIST_VERSION})");
+        panic!("requested dist v{version}, which is not supported by the this copy of dist ({SELF_DIST_VERSION})");
     } else if format.artifact_names_contain_versions() {
         format!("cargo-dist-v{version}-installer.ps1")
     } else {

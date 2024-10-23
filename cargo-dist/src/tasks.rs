@@ -1,6 +1,6 @@
-//! Code to compute the tasks cargo-dist should do
+//! Code to compute the tasks dist should do
 //!
-//! This is the heart and soul of cargo-dist, and ideally the [`gather_work`][] function
+//! This is the heart and soul of dist, and ideally the [`gather_work`][] function
 //! should compute every minute detail dist will perform ahead of time. This is done with
 //! the DistGraphBuilder, which roughly builds up the work to do as follows:
 //!
@@ -177,7 +177,7 @@ impl BinaryAliases {
     }
 }
 
-/// The graph of all work that cargo-dist needs to do on this invocation.
+/// The graph of all work that dist needs to do on this invocation.
 ///
 /// All work is precomputed at the start of execution because only discovering
 /// what you need to do in the middle of building/packing things is a mess.
@@ -186,8 +186,8 @@ impl BinaryAliases {
 pub struct DistGraph {
     /// Unique id for the system we're building on.
     ///
-    /// Since the whole premise of cargo-dist is to invoke it once on each machine, and no
-    /// two machines have any reason to have the exact same CLI args for cargo-dist, we
+    /// Since the whole premise of dist is to invoke it once on each machine, and no
+    /// two machines have any reason to have the exact same CLI args for dist, we
     /// just use a mangled form of the CLI arguments here.
     pub system_id: SystemId,
     /// Whether it looks like `cargo dist init` has been run
@@ -214,7 +214,7 @@ pub struct DistGraph {
     pub repo_dir: Utf8PathBuf,
     /// The root directory of the current cargo workspace.
     pub workspace_dir: Utf8PathBuf,
-    /// cargo-dist's target dir (generally nested under `target_dir`).
+    /// dist's target dir (generally nested under `target_dir`).
     pub dist_dir: Utf8PathBuf,
     /// misc workspace-global config
     pub config: WorkspaceConfig,
@@ -342,7 +342,7 @@ pub struct Binary {
     pub kind: BinaryKind,
 }
 
-/// Different kinds of binaries cargo-dist knows about
+/// Different kinds of binaries dist knows about
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum BinaryKind {
     /// Standard executable

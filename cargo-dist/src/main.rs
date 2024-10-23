@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-//! CLI binary interface for cargo-dist
+//! CLI binary interface for dist
 
 use std::{ffi::OsString, io::Write};
 
@@ -545,7 +545,7 @@ fn this_cargo_dist_provided_by_brew() -> bool {
     }
 
     if let Ok(path) = std::env::current_exe() {
-        // The cargo-dist being a symlink that points to a copy that
+        // The dist being a symlink that points to a copy that
         // lives in Homebrew's "Cellar", *or* that file directly,
         // suggests that this file is from Homebrew.
         let realpath;
@@ -590,7 +590,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     }
 
     if this_cargo_dist_provided_by_brew() {
-        eprintln!("Your copy of `cargo-dist` seems to have been installed via Homebrew.");
+        eprintln!("Your copy of `dist` seems to have been installed via Homebrew.");
         eprintln!("Please run `brew upgrade cargo-dist` to update this copy.");
         return Ok(());
     }
@@ -680,7 +680,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     // is appropriate.
     if !args.skip_init {
         let my_path = Utf8PathBuf::from_path_buf(std::env::current_exe().into_diagnostic()?)
-            .map_err(|_| miette!("Unable to decode the path to cargo-dist itself"))?;
+            .map_err(|_| miette!("Unable to decode the path to dist itself"))?;
         perform_init(&my_path, args)?;
 
         return Ok(());

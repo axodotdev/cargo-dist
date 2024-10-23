@@ -20,14 +20,14 @@ pub struct GenericConfig {
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct DistMetadata {
-    /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
+    /// The intended version of dist to build with. (normal Cargo SemVer syntax)
     ///
     /// When generating full tasks graphs (such as CI scripts) we will pick this version.
     ///
     /// FIXME: Should we produce a warning if running locally with a different version? In theory
     /// it shouldn't be a problem and newer versions should just be Better... probably you
     /// Really want to have the exact version when running generate to avoid generating
-    /// things other cargo-dist versions can't handle!
+    /// things other dist versions can't handle!
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo_dist_version: Option<Version>,
 
@@ -37,9 +37,9 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rust_toolchain_version: Option<String>,
 
-    /// Whether the package should be distributed/built by cargo-dist
+    /// Whether the package should be distributed/built by dist
     ///
-    /// This mainly exists to be set to `false` to make cargo-dist ignore the existence of this
+    /// This mainly exists to be set to `false` to make dist ignore the existence of this
     /// package. Note that we may still build the package as a side-effect of building the
     /// workspace -- we just won't bundle it up and report it.
     ///
@@ -65,7 +65,7 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
 
-    /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
+    /// Generate targets whose dist should avoid checking for up-to-dateness.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_dirty: Option<Vec<GenerateMode>>,
 
@@ -166,7 +166,7 @@ pub struct DistMetadata {
     /// Build only the required packages, and individually (since 0.1.0) (default: false)
     ///
     /// By default when we need to build anything in your workspace, we build your entire workspace
-    /// with --workspace. This setting tells cargo-dist to instead build each app individually.
+    /// with --workspace. This setting tells dist to instead build each app individually.
     ///
     /// On balance, the Rust experts we've consulted with find building with --workspace to
     /// be a safer/better default, as it provides some of the benefits of a more manual
@@ -208,7 +208,7 @@ pub struct DistMetadata {
     /// When this happens you have two options: give up on the release entirely (`fail-fast = true`),
     /// or keep trying to build all the other platforms anyway (`fail-fast = false`).
     ///
-    /// cargo-dist was designed around the "keep trying" approach, as we create a draft Release
+    /// dist was designed around the "keep trying" approach, as we create a draft Release
     /// and upload results to it over time, undrafting the release only if all tasks succeeded.
     /// The idea is that even if a platform fails to build, you can decide that's acceptable
     /// and manually undraft the release with some missing platforms.
@@ -261,17 +261,17 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default, with = "opt_string_or_vec")]
     pub install_path: Option<Vec<InstallPathStrategy>>,
-    /// A list of features to enable when building a package with cargo-dist
+    /// A list of features to enable when building a package with dist
     ///
     /// (defaults to none)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<Vec<String>>,
-    /// Whether to enable when building a package with cargo-dist
+    /// Whether to enable when building a package with dist
     ///
     /// (defaults to true)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_features: Option<bool>,
-    /// Whether to enable all features building a package with cargo-dist
+    /// Whether to enable all features building a package with dist
     ///
     /// (defaults to false)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -334,7 +334,7 @@ pub struct DistMetadata {
     ///
     /// (defaults to false)
     ///
-    /// Ordinarily, cargo-dist tries to detect if your release
+    /// Ordinarily, dist tries to detect if your release
     /// is a prerelease based on its version number using
     /// semver standards. If it's a prerelease, it will be
     /// marked as a prerelease in hosting services such as
@@ -344,10 +344,10 @@ pub struct DistMetadata {
 
     /// Whether we should create the Github Release for you when you push a tag.
     ///
-    /// If true (default), cargo-dist will create a new Github Release and generate
+    /// If true (default), dist will create a new Github Release and generate
     /// a title/body for it based on your changelog.
     ///
-    /// If false, cargo-dist will assume a draft Github Release already exists
+    /// If false, dist will assume a draft Github Release already exists
     /// with the title/body you want. At the end of a successful publish it will
     /// undraft the Github Release.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -402,7 +402,7 @@ pub struct DistMetadata {
     pub bin_aliases: Option<SortedMap<String, Vec<String>>>,
 
     /// a prefix to add to the release.yml and tag pattern so that
-    /// cargo-dist can co-exist with other release workflows in complex workspaces
+    /// dist can co-exist with other release workflows in complex workspaces
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tag_namespace: Option<String>,
 

@@ -268,7 +268,7 @@ pub fn rustup_toolchain(dist_graph: &DistGraph, cmd: &RustupStep) -> DistResult<
 }
 
 /// Similar to the above, we read Homebrew's recursive dependency tree and
-/// then append link flags to cargo-dist's rustflags.
+/// then append link flags to dist's rustflags.
 /// These ensure that Rust can find C libraries that may exist within
 /// each package's prefix.
 fn determine_brew_rustflags(base_rustflags: &str, environment: &SortedMap<&str, &str>) -> String {

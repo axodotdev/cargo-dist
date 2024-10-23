@@ -40,7 +40,7 @@ impl MsiInstallerInfo {
         let mut b = wix::create::Builder::new();
         // Build this specific package
         b.package(Some(&self.pkg_spec));
-        // cargo-dist already did the build for us
+        // dist already did the build for us
         b.no_build(true);
         // It built with the `dist` profile
         b.profile(Some("dist"));

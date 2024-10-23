@@ -12,7 +12,7 @@ Usage: dist [OPTIONS]
 
 Commands:
   build       Build artifacts
-  init        Setup or update cargo-dist
+  init        Setup or update dist
   generate    Generate one or more pieces of configuration
   linkage     Report on the dynamic libraries used by the built artifacts
   manifest    Generate the final build manifest without running any builds
@@ -74,7 +74,7 @@ GLOBAL OPTIONS:
           - github: Generate github CI that uploads to github releases
 
       --tag <TAG>
-          The (git) tag to use for the Announcement that each invocation of cargo-dist is performing.
+          The (git) tag to use for the Announcement that each invocation of dist is performing.
           
           This tag serves two purposes: defining which apps we are Announcing new Releases for (and therefore building binaries and installers for); and picking an id to use for certain URLs. For instance the git tag associated with a Github Release is part of the URL to fetch artifacts from that release, which needs to be known by some installers!
           

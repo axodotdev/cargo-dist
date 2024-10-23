@@ -5,7 +5,7 @@
 [![Rust CI](https://github.com/axodotdev/axoproject/workflows/Rust%20CI/badge.svg?branch=main)](https://github.com/axodotdev/axoproject/actions/workflows/ci.yml)
 
 A tool that handles the details of detecting a cargo/npm workspace/project at a given directory,
-and making sense of the structure. This should be used by cargo-dist and oranda to share that logic.
+and making sense of the structure. This should be used by dist and oranda to share that logic.
 
 ## License
 

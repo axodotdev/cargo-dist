@@ -83,7 +83,7 @@ pub struct CommonCiLayer {
     /// When this happens you have two options: give up on the release entirely (`fail-fast = true`),
     /// or keep trying to build all the other platforms anyway (`fail-fast = false`).
     ///
-    /// cargo-dist was designed around the "keep trying" approach, as we create a draft Release
+    /// dist was designed around the "keep trying" approach, as we create a draft Release
     /// and upload results to it over time, undrafting the release only if all tasks succeeded.
     /// The idea is that even if a platform fails to build, you can decide that's acceptable
     /// and manually undraft the release with some missing platforms.
@@ -133,7 +133,7 @@ pub struct CommonCiLayer {
     pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
 
     /// a prefix to add to the release.yml and tag pattern so that
-    /// cargo-dist can co-exist with other release workflows in complex workspaces
+    /// dist can co-exist with other release workflows in complex workspaces
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tag_namespace: Option<String>,
 
@@ -206,7 +206,7 @@ pub struct CommonCiConfig {
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
 
     /// a prefix to add to the release.yml and tag pattern so that
-    /// cargo-dist can co-exist with other release workflows in complex workspaces
+    /// dist can co-exist with other release workflows in complex workspaces
     pub tag_namespace: Option<String>,
 
     /// Plan jobs to run in CI

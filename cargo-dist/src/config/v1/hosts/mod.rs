@@ -56,7 +56,7 @@ pub struct HostLayer {
     ///
     /// (defaults to false)
     ///
-    /// Ordinarily, cargo-dist tries to detect if your release
+    /// Ordinarily, dist tries to detect if your release
     /// is a prerelease based on its version number using
     /// semver standards. If it's a prerelease, it will be
     /// marked as a prerelease in hosting services such as

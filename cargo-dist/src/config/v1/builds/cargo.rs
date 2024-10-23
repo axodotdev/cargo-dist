@@ -23,13 +23,13 @@ pub struct AppCargoBuildConfig {
     /// common build config
     pub common: CommonBuildConfig,
 
-    /// A list of features to enable when building a package with cargo-dist
+    /// A list of features to enable when building a package with dist
     pub features: Vec<String>,
-    /// Whether to enable when building a package with cargo-dist
+    /// Whether to enable when building a package with dist
     ///
     /// (defaults to true)
     pub default_features: bool,
-    /// Whether to enable all features building a package with cargo-dist
+    /// Whether to enable all features building a package with dist
     ///
     /// (defaults to false)
     pub all_features: bool,
@@ -58,7 +58,7 @@ pub struct CargoBuildLayer {
     /// Build only the required packages, and individually (since 0.1.0) (default: false)
     ///
     /// By default when we need to build anything in your workspace, we build your entire workspace
-    /// with --workspace. This setting tells cargo-dist to instead build each app individually.
+    /// with --workspace. This setting tells dist to instead build each app individually.
     ///
     /// On balance, the Rust experts we've consulted with find building with --workspace to
     /// be a safer/better default, as it provides some of the benefits of a more manual
@@ -80,17 +80,17 @@ pub struct CargoBuildLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub precise_builds: Option<bool>,
 
-    /// A list of features to enable when building a package with cargo-dist
+    /// A list of features to enable when building a package with dist
     ///
     /// (defaults to none)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<Vec<String>>,
-    /// Whether to enable when building a package with cargo-dist
+    /// Whether to enable when building a package with dist
     ///
     /// (defaults to true)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_features: Option<bool>,
-    /// Whether to enable all features building a package with cargo-dist
+    /// Whether to enable all features building a package with dist
     ///
     /// (defaults to false)
     #[serde(skip_serializing_if = "Option::is_none")]

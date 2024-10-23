@@ -126,7 +126,7 @@ pub struct BuildAndPlanResult {
 impl<'a> TestContext<'a, Tools> {
     /// Run 'cargo dist build -alies --no-local-paths --output-format=json' and return paths to various files that were generated
     pub fn cargo_dist_build_lies(&self, test_name: &str) -> Result<BuildAndPlanResult> {
-        // If the cargo-dist target dir exists, delete it to avoid cross-contamination
+        // If the dist target dir exists, delete it to avoid cross-contamination
         let out_path = Utf8Path::new("target/distrib/");
         if out_path.exists() {
             LocalAsset::remove_dir_all(out_path)?;
@@ -176,7 +176,7 @@ impl<'a> TestContext<'a, Tools> {
     }
     /// Run 'cargo dist build -aglobal' and return paths to various files that were generated
     pub fn cargo_dist_build_global(&self, test_name: &str) -> Result<DistResult> {
-        // If the cargo-dist target dir exists, delete it to avoid cross-contamination
+        // If the dist target dir exists, delete it to avoid cross-contamination
         let out_path = Utf8Path::new("target/distrib/");
         if out_path.exists() {
             LocalAsset::remove_dir_all(out_path)?;

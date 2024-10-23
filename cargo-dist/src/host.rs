@@ -319,7 +319,7 @@ pub(crate) fn select_hosting(
         // This is the one case where we'll tolerate hosting not existing:
         // * they don't have one set explicitly
         // * and they haven't turned on a CI provider
-        // This implies early setup or using cargo-dist very "manually"
+        // This implies early setup or using dist very "manually"
         return Ok(None);
     };
 

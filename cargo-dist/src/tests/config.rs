@@ -60,7 +60,7 @@ version = "1.0.0"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = "github"
@@ -116,7 +116,7 @@ version = "1.0.0"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github"]
@@ -135,7 +135,7 @@ version = "1.0.0"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = "github"
@@ -168,7 +168,7 @@ version = "1.0.0"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github", "github"]
@@ -187,7 +187,7 @@ version = "1.0.0"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github", "github"]

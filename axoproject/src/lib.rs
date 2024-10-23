@@ -1,5 +1,5 @@
 //! Shared code for gathering up information about a workspace, used by various axo.dev tools
-//! like cargo-dist and oranda.
+//! like dist and oranda.
 //!
 //! The main entry point is [`WorkspaceGraph::find`][].
 
@@ -279,7 +279,7 @@ impl WorkspaceSearch {
 /// Kind of workspace
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WorkspaceKind {
-    /// generic cargo-dist compatible workspace
+    /// generic dist compatible workspace
     #[cfg(feature = "generic-projects")]
     Generic,
     /// cargo/rust workspace
