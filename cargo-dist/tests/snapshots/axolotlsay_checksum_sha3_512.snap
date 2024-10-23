@@ -1230,6 +1230,7 @@ download_binary_and_run_installer "$@" || exit 1
         "source.tar.gz",
         "source.tar.gz.sha3-512",
         "axolotlsay-installer.sh",
+        "sha3-512.sum",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha3-512",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
@@ -1432,6 +1433,10 @@ download_binary_and_run_installer "$@" || exit 1
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ]
+    },
+    "sha3-512.sum": {
+      "name": "sha3-512.sum",
+      "kind": "unified-checksum"
     },
     "source.tar.gz": {
       "name": "source.tar.gz",

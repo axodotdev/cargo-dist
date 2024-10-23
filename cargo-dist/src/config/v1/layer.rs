@@ -16,7 +16,7 @@ where
 
     /// Merges this value with another layer of itself, preferring the new layer
     ///
-    /// (asymteric case where the rhs is an Option but we're just A Value)
+    /// (asymmetric case where the rhs is an Option but we're just A Value)
     fn apply_val_layer(&mut self, layer: Option<Self::Layer>) {
         if let Some(val) = layer {
             self.apply_layer(val);
