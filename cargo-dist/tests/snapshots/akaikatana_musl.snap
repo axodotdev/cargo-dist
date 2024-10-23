@@ -1214,7 +1214,7 @@ downloader() {
 download_binary_and_run_installer "$@" || exit 1
 
 ================ sha256.sum ================
-CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477) CENSORED.tar.gz
+CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  CENSORED.tar.gz
 
 ================ dist-manifest.json ================
 {

@@ -433,7 +433,11 @@ fn generate_unified_checksum(
                 continue;
             }
 
-            writeln!(&mut output, "{checksum} {artifact_name}").unwrap();
+            // We write with exactly two spaces to match the output of
+            // shasum. While sha256sum is tolerant of varying numbers of
+            // spaces, shasum itself will only match precisely two -
+            // we need to be precise here for compatibility.
+            writeln!(&mut output, "{checksum}  {artifact_name}").unwrap();
         }
     }
     axoasset::LocalAsset::write_new(&output, dest_path)?;
