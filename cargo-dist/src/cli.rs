@@ -13,7 +13,7 @@ use tracing::level_filters::LevelFilter;
 #[clap(version)]
 #[clap(bin_name = "dist")]
 #[clap(args_conflicts_with_subcommands = true)]
-/// Shippable packaging for Rust.
+/// Professional packaging and distribution for ambitious developers.
 ///
 /// See 'init', 'build' and 'plan' for the 3 most important subcommands.
 pub struct Cli {

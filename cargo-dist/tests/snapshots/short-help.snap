@@ -3,7 +3,7 @@ source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
 ---
 stdout:
-Shippable packaging for Rust
+Professional packaging and distribution for ambitious developers
 
 Usage: dist [OPTIONS]
        dist <COMMAND>

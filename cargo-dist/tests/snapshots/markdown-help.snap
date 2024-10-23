@@ -7,7 +7,7 @@ stdout:
 
 > This manual can be regenerated with `dist help-markdown`
 
-Shippable packaging for Rust.
+Professional packaging and distribution for ambitious developers.
 
 See 'init', 'build' and 'plan' for the 3 most important subcommands.
 
