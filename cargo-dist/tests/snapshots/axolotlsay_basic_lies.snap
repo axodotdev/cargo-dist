@@ -3219,13 +3219,13 @@ run("axolotlsay");
 
 ================ sha256.sum ================
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 axolotlsay-aarch64-apple-darwin.pkg
-8c03c4bdf1e8745f82d9c197a340dca2668a89e4529e57f7bc4d7eec7e000233 axolotlsay-aarch64-apple-darwin.tar.gz
-46c543bc15c20d554e51d9a87b02886c9987872a74c5d82e36acb64bbc39ccc4 axolotlsay-npm-package.tar.gz
+0b8f2ece31d03b7deb5ec51f272f0c813d3e089d16b1f6fdb925c85560a4ed4f axolotlsay-aarch64-apple-darwin.tar.gz
+CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477) npm-package.tar.gz
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 axolotlsay-x86_64-apple-darwin.pkg
-9b09a4896a0f7c68a9ce9619ebc0b2e07a351d6a673136ce79b61ebae21cfeb6 axolotlsay-x86_64-apple-darwin.tar.gz
+a1dbddc71d911e0fc1eb9ccaaf2d068406fbd5b7cb12e09edfdedc7ccbcd5ca3 axolotlsay-x86_64-apple-darwin.tar.gz
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 axolotlsay-x86_64-pc-windows-msvc.msi
-f54e3eedbd9a7a3fc7966b7706d3ec07f0fb864a3a8ee54d88fa0832f12731fd axolotlsay-x86_64-pc-windows-msvc.tar.gz
-90eea05ca3752335cdcd512dfdc334695b843558b70de8a50201b901881a491d axolotlsay-x86_64-unknown-linux-gnu.tar.gz
+7780b1a0d9477f19957c1706d05edd78c52e97f6699ef460a12322221daeb8e5 axolotlsay-x86_64-pc-windows-msvc.tar.gz
+04dd420e074fb3eb0200228afc76c75498995d04d7c20c4d5d47571434c4a10c axolotlsay-x86_64-unknown-linux-gnu.tar.gz
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 source.tar.gz
 
 ================ dist-manifest.json ================

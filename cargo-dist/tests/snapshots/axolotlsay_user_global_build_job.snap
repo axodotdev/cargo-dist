@@ -3215,7 +3215,7 @@ const { run } = require("./binary");
 run("axolotlsay");
 
 ================ sha256.sum ================
-f0674e45ffa2f8d4bb30718534aaf25c79acc9133c87d80d65fc5debdefacd7e axolotlsay-npm-package.tar.gz
+CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477) npm-package.tar.gz
 6dd3a33b92c3c35b05d8b4c350e7600d9db3f000e402ac0bf226859ec6b0c984 source.tar.gz
 
 ================ dist-manifest.json ================

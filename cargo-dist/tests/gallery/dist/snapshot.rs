@@ -168,6 +168,10 @@ pub fn snapshot_settings_with_gallery_filter() -> insta::Settings {
         r#""build_environment": "windows""#,
         r#""build_environment": "indeterminate""#,
     );
+    settings.add_filter(
+        r"[0-9a-f]{64} ([a-zA-Z0-9-]+)-npm-package\.tar\.gz",
+        "CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477) npm-package.tar.gz",
+    );
     settings
 }
 
