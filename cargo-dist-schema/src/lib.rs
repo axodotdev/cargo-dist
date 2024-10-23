@@ -71,6 +71,18 @@ impl TargetTripleRef {
     }
 }
 
+declare_strongly_typed_string! {
+    /// The name of a Github Actions Runner, like `ubuntu-20.04` or `macos-13`
+    pub struct GithubRunner => &GithubRunnerRef;
+}
+
+impl GithubRunnerRef {
+    /// Does the runner name contain the word "buildjet"?
+    pub fn is_buildjet(&self) -> bool {
+        self.as_str().contains("buildjet")
+    }
+}
+
 /// A local system path on the machine cargo-dist was run.
 ///
 /// This is a String because when deserializing this may be a path format from a different OS!
@@ -285,10 +297,10 @@ impl GithubMatrix {
 pub struct GithubMatrixEntry {
     /// Targets to build for
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub targets: Option<Vec<String>>,
+    pub targets: Option<Vec<TargetTriple>>,
     /// Github Runner to user
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub runner: Option<String>,
+    pub runner: Option<GithubRunner>,
     /// Expression to execute to install cargo-dist
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_dist: Option<String>,
