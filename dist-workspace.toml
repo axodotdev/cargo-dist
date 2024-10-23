@@ -4,11 +4,11 @@ members = ["cargo:."]
 # Config for 'cargo dist'
 [dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.23.0"
+cargo-dist-version = "0.24.0-prerelease.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = ["shell", "powershell", "homebrew", "npm"]
+installers = ["shell", "powershell", "npm", "homebrew"]
 # A GitHub repo to push Homebrew formulas to
 tap = "axodotdev/homebrew-tap"
 # A namespace to use when publishing this package to the npm registry
