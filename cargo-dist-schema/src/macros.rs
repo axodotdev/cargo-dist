@@ -173,22 +173,6 @@
 /// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
 /// ```
 ///
-/// And you can also create references with `::from_static()`:
-///
-/// ```rust,ignore
-/// let target = TargetTriple::from_static("x86_64-unknown-linux-gnu");
-/// // 👇 becomes
-/// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
-/// ```
-///
-/// And you can also create references with `::from_str()`:
-///
-/// ```rust,ignore
-/// let target = "x86_64-unknown-linux-gnu"; // this is of type `&str`
-/// // 👇 becomes
-/// let target = TargetTripleRef::from_str("x86_64-unknown-linux-gnu");
-/// ```
-///
 /// What you're getting here is a `&'static TargetTripleRef` — no allocations
 /// involved, and if your functions take `&TargetTripleRef`, then you're already
 /// all set.
