@@ -1,6 +1,7 @@
 //! v0 config
 
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_dist_schema::GithubRunner;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
@@ -391,7 +392,7 @@ pub struct DistMetadata {
 
     /// Custom GitHub runners, mapped by triple target
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub github_custom_runners: Option<SortedMap<TargetTriple, String>>,
+    pub github_custom_runners: Option<SortedMap<TargetTriple, GithubRunner>>,
 
     /// Custom permissions for jobs
     #[serde(skip_serializing_if = "Option::is_none")]

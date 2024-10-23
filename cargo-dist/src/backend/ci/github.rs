@@ -7,7 +7,9 @@ use std::collections::BTreeMap;
 use axoasset::{LocalAsset, SourceFile};
 use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{GithubMatrix, GithubMatrixEntry, TargetTriple, TargetTripleRef};
+use cargo_dist_schema::{
+    GithubMatrix, GithubMatrixEntry, GithubRunner, GithubRunnerRef, TargetTriple, TargetTripleRef,
+};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
@@ -236,12 +238,12 @@ impl GithubCiInfo {
         let global_runner = ci_config
             .runners
             .get("global")
-            .map(|s| s.as_str())
+            .map(|s| s.as_ref())
             .unwrap_or(GITHUB_LINUX_RUNNER);
         let global_task = GithubMatrixEntry {
             targets: None,
             cache_provider: cache_provider_for_runner(global_runner),
-            runner: Some(global_runner.into()),
+            runner: Some(global_runner.to_owned()),
             dist_args: Some("--artifacts=global".into()),
             install_dist: Some(install_dist_sh.clone()),
             packages_install: None,
@@ -305,7 +307,7 @@ impl GithubCiInfo {
                 write!(dist_args, " --target={target}").unwrap();
             }
             tasks.push(GithubMatrixEntry {
-                targets: Some(targets.iter().map(|s| s.to_string()).collect()),
+                targets: Some(targets.iter().copied().map(|s| s.to_owned()).collect()),
                 cache_provider: cache_provider_for_runner(&runner),
                 runner: Some(runner),
                 dist_args: Some(dist_args),
@@ -525,8 +527,8 @@ fn build_jobs(
 /// Get the best `cache-provider` key to use for <https://github.com/Swatinem/rust-cache>.
 ///
 /// In the future we might make "None" here be a way to say "disable the cache".
-fn cache_provider_for_runner(runner: &str) -> Option<String> {
-    if runner.contains("buildjet") {
+fn cache_provider_for_runner(runner: &GithubRunnerRef) -> Option<String> {
+    if runner.is_buildjet() {
         Some("buildjet".into())
     } else {
         Some("github".into())
@@ -546,7 +548,7 @@ fn cache_provider_for_runner(runner: &str) -> Option<String> {
 /// In priniciple it does remove some duplicated setup work, so this is ostensibly "cheaper".
 fn distribute_targets_to_runners_merged<'a>(
     targets: SortedSet<&'a TargetTripleRef>,
-    custom_runners: &BTreeMap<TargetTriple, String>,
+    custom_runners: &BTreeMap<TargetTriple, GithubRunner>,
 ) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTripleRef>)> {
     let mut groups = SortedMap::<GithubRunner, Vec<&TargetTripleRef>>::new();
     for target in targets {
@@ -567,7 +569,7 @@ fn distribute_targets_to_runners_merged<'a>(
 /// while preferring each target gets its own runner for latency and fault-isolation.
 fn distribute_targets_to_runners_split<'a>(
     targets: SortedSet<&'a TargetTripleRef>,
-    custom_runners: &BTreeMap<TargetTriple, String>,
+    custom_runners: &BTreeMap<TargetTriple, GithubRunner>,
 ) -> std::vec::IntoIter<(GithubRunner, Vec<&'a TargetTripleRef>)> {
     let mut groups = vec![];
     for target in targets {
@@ -582,21 +584,19 @@ fn distribute_targets_to_runners_split<'a>(
     groups.into_iter()
 }
 
-/// A string representing a Github Runner
-type GithubRunner = String;
 /// The Github Runner to use for Linux
-const GITHUB_LINUX_RUNNER: &str = "ubuntu-20.04";
+const GITHUB_LINUX_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("ubuntu-20.04");
 /// The Github Runner to use for Intel macos
-const GITHUB_MACOS_INTEL_RUNNER: &str = "macos-13";
+const GITHUB_MACOS_INTEL_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("macos-13");
 /// The Github Runner to use for Apple Silicon macos
-const GITHUB_MACOS_ARM64_RUNNER: &str = "macos-13";
+const GITHUB_MACOS_ARM64_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("macos-13");
 /// The Github Runner to use for windows
-const GITHUB_WINDOWS_RUNNER: &str = "windows-2019";
+const GITHUB_WINDOWS_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("windows-2019");
 
 /// Get the appropriate Github Runner for building a target
 fn github_runner_for_target(
     target: &TargetTripleRef,
-    custom_runners: &BTreeMap<TargetTriple, String>,
+    custom_runners: &BTreeMap<TargetTriple, GithubRunner>,
 ) -> Option<GithubRunner> {
     if let Some(runner) = custom_runners.get(target) {
         return Some(runner.to_owned());
