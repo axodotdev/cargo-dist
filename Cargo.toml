@@ -65,6 +65,7 @@ schemars = "0.8.21"
 serde_yml = "0.0.10"
 spdx = "0.10.6"
 base64 = "0.22.1"
+lazy_static = "1.4.0"
 
 [workspace.metadata.release]
 shared-version = true

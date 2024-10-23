@@ -2,6 +2,7 @@
 
 use camino::Utf8PathBuf;
 use cargo_dist::announce::{TagMode, TagSettings};
+use cargo_dist_schema::TargetTriple;
 use clap::{
     builder::{PossibleValuesParser, TypedValueParser},
     Args, Parser, Subcommand, ValueEnum,
@@ -57,7 +58,7 @@ pub struct Cli {
     /// except for `cargo dist init` which will select some "good defaults" for you.
     #[clap(long, short, value_delimiter(','))]
     #[clap(help_heading = "GLOBAL OPTIONS", global = true)]
-    pub target: Vec<String>,
+    pub target: Vec<TargetTriple>,
 
     /// Installers we want to build
     ///

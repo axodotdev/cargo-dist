@@ -50,14 +50,16 @@
 
 use std::collections::BTreeMap;
 
-use axoasset::AxoClient;
-use axoprocess::Cmd;
-use axoproject::platforms::{
+use crate::platform::targets::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
 };
+use axoasset::AxoClient;
+use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{ArtifactId, BuildEnvironment, DistManifest, SystemId, SystemInfo};
+use cargo_dist_schema::{
+    ArtifactId, BuildEnvironment, DistManifest, SystemId, SystemInfo, TargetTriple, TargetTripleRef,
+};
 use semver::Version;
 use serde::Serialize;
 use tracing::{info, warn};
@@ -118,8 +120,6 @@ pub const CPU_ARM64: &str = "arm64";
 /// The key for referring to 32-bit arm as an "cpu"
 pub const CPU_ARM: &str = "arm";
 
-/// A rust target-triple (e.g. "x86_64-pc-windows-msvc")
-pub type TargetTriple = String;
 /// A map where the order doesn't matter
 pub type FastMap<K, V> = std::collections::HashMap<K, V>;
 /// A map where the order matters
@@ -150,8 +150,8 @@ pub struct BinaryAliases(BTreeMap<String, Vec<String>>);
 impl BinaryAliases {
     /// Returns a formatted copy of the map, with file extensions added
     /// if necessary.
-    pub fn for_target(&self, target: &str) -> BTreeMap<String, Vec<String>> {
-        if target.contains("windows") {
+    pub fn for_target(&self, target: &TargetTripleRef) -> BTreeMap<String, Vec<String>> {
+        if target.is_windows() {
             BTreeMap::from_iter(self.0.iter().map(|(k, v)| {
                 (
                     format!("{k}.exe"),
@@ -167,8 +167,8 @@ impl BinaryAliases {
     /// executable extensions added if necessary.
     pub fn for_targets(
         &self,
-        targets: &[String],
-    ) -> BTreeMap<String, BTreeMap<String, Vec<String>>> {
+        targets: &[TargetTriple],
+    ) -> BTreeMap<TargetTriple, BTreeMap<String, Vec<String>>> {
         BTreeMap::from_iter(
             targets
                 .iter()
@@ -282,7 +282,7 @@ pub struct CargoInfo {
     /// The first line of running cargo with `-vV`, should be version info
     pub version_line: Option<String>,
     /// The host target triple (obtained from `-vV`)
-    pub host_target: String,
+    pub host_target: TargetTriple,
 }
 
 /// A tool we have found installed on the system
@@ -425,7 +425,7 @@ pub struct RustupStep {
     /// The rustup to invoke (mostly here to prove you Have rustup)
     pub rustup: Tool,
     /// The target to install
-    pub target: String,
+    pub target: TargetTriple,
 }
 
 /// zip/tarball some directory
@@ -1210,7 +1210,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     },
                 };
 
-                let target_is_windows = target.contains("windows");
+                let target_is_windows = target.is_windows();
                 let platform_exe_ext;
                 let platform_lib_prefix;
                 if target_is_windows {
@@ -1226,10 +1226,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 if target_is_windows {
                     platform_lib_ext = ".dll";
                     platform_staticlib_ext = ".lib";
-                } else if target.contains("linux") {
+                } else if target.is_linux() {
                     platform_lib_ext = ".so";
                     platform_staticlib_ext = ".a";
-                } else if target.contains("darwin") {
+                } else if target.is_darwin() {
                     platform_lib_ext = ".dylib";
                     platform_staticlib_ext = ".a";
                 } else {
@@ -1545,7 +1545,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let release = self.release(release_idx);
         let variant = self.variant(variant_idx);
 
-        let target_is_windows = variant.target.contains("windows");
+        let target_is_windows = variant.target.is_windows();
         let zip_style = if target_is_windows {
             release.config.artifacts.archives.windows_archive
         } else {
@@ -1708,7 +1708,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .platform_support
             .fragments()
             .into_iter()
-            .filter(|a| !a.target_triple.contains("windows-msvc"))
+            .filter(|a| !a.target_triple.is_windows_msvc())
             .collect::<Vec<_>>();
         let target_triples = artifacts
             .iter()
@@ -1801,7 +1801,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .platform_support
             .fragments()
             .into_iter()
-            .filter(|a| !a.target_triple.contains("windows-msvc"))
+            .filter(|a| !a.target_triple.is_windows_msvc())
             .collect::<Vec<_>>();
         let target_triples = artifacts
             .iter()
@@ -1969,7 +1969,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .platform_support
             .fragments()
             .into_iter()
-            .filter(|a| a.target_triple.contains("windows-msvc"))
+            .filter(|a| a.target_triple.is_windows_msvc())
             .collect::<Vec<_>>();
         let target_triples = artifacts
             .iter()
@@ -2160,7 +2160,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let variant = self.variant(variant_idx);
             let binaries = variant.binaries.clone();
             let target = &variant.target;
-            if !target.contains("windows") {
+            if !target.is_windows() {
                 continue;
             }
 
@@ -2263,7 +2263,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let binaries = variant.binaries.clone();
             let bin_aliases = BinaryAliases(config.bin_aliases.clone());
             let target = &variant.target;
-            if !target.contains("darwin") {
+            if !target.is_darwin() {
                 continue;
             }
 
@@ -2565,7 +2565,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         &mut self,
         cfg: &Config,
         announcing: &AnnouncementTag,
-        triples: &[String],
+        triples: &[TargetTriple],
         bypass_package_target_prefs: bool,
     ) -> DistResult<()> {
         // Create a Release for each package
@@ -2874,21 +2874,21 @@ pub fn get_host_target(cargo: String) -> DistResult<CargoInfo> {
             return Ok(CargoInfo {
                 cmd: cargo,
                 version_line,
-                host_target: target.to_owned(),
+                host_target: TargetTriple::new(target.to_owned()),
             });
         }
     }
     Err(DistError::FailedCargoVersion)
 }
 
-fn target_symbol_kind(target: &str) -> Option<SymbolKind> {
+fn target_symbol_kind(target: &TargetTripleRef) -> Option<SymbolKind> {
     #[allow(clippy::if_same_then_else)]
-    if target.contains("windows-msvc") {
+    if target.is_windows_msvc() {
         // Temporary disabled pending redesign of symbol handling!
 
         // Some(SymbolKind::Pdb)
         None
-    } else if target.contains("apple") {
+    } else if target.is_apple() {
         // Macos dSYM files are real and work but things
         // freak out because it turns out they're directories
         // and not "real" files? Temporarily disabling this

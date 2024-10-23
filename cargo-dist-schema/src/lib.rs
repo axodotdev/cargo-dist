@@ -8,11 +8,68 @@
 //!
 //! The root type of the schema is [`DistManifest`][].
 
+pub mod macros;
+
 use std::collections::BTreeMap;
 
 use schemars::JsonSchema;
 use semver::Version;
 use serde::{Deserialize, Serialize};
+
+declare_strongly_typed_string! {
+    /// A rust target-triple (e.g. "x86_64-pc-windows-msvc")
+    pub struct TargetTriple => &TargetTripleRef;
+}
+
+impl TargetTripleRef {
+    /// Returns true if this target triple contains the word "musl"
+    pub fn is_musl(&self) -> bool {
+        self.0.contains("musl")
+    }
+
+    /// Returns true if this target triple contains the word "linux"
+    pub fn is_linux(&self) -> bool {
+        self.0.contains("linux")
+    }
+
+    /// Returns true if this target triple contains the word "apple"
+    pub fn is_apple(&self) -> bool {
+        self.0.contains("apple")
+    }
+
+    /// Returns true if this target triple contains the word "darwin"
+    pub fn is_darwin(&self) -> bool {
+        self.0.contains("darwin")
+    }
+
+    /// Returns true if this target triple contains the word "windows"
+    pub fn is_windows(&self) -> bool {
+        self.0.contains("windows")
+    }
+
+    /// Returns true if this target triple contains the word "x86_64"
+    pub fn is_x86_64(&self) -> bool {
+        self.0.contains("x86_64")
+    }
+
+    /// Returns true if this target triple contains the word "aarch64"
+    pub fn is_aarch64(&self) -> bool {
+        self.0.contains("aarch64")
+    }
+
+    //---------------------------
+    // common combinations
+
+    /// Returns true if this target triple contains the string "linux-musl"
+    pub fn is_linux_musl(&self) -> bool {
+        self.0.contains("linux-musl")
+    }
+
+    /// Returns true if this target triple contains the string "windows-msvc"
+    pub fn is_windows_msvc(&self) -> bool {
+        self.0.contains("windows-msvc")
+    }
+}
 
 /// A local system path on the machine cargo-dist was run.
 ///
@@ -176,7 +233,7 @@ pub struct AssetInfo {
     /// * length 0: not a meaningful question, maybe some static file
     /// * length 1: typical of binaries
     /// * length 2+: some kind of universal binary
-    pub target_triples: Vec<String>,
+    pub target_triples: Vec<TargetTriple>,
     /// the linkage of this Asset
     pub linkage: Option<Linkage>,
 }
@@ -346,7 +403,7 @@ pub struct Artifact {
     /// The target triple of the bundle
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
-    pub target_triples: Vec<String>,
+    pub target_triples: Vec<TargetTriple>,
     /// The location of the artifact on the local system
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]

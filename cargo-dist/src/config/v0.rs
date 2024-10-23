@@ -116,7 +116,7 @@ pub struct DistMetadata {
     ///
     /// FIXME: Allow higher level requests like "[macos, windows, linux] x [x86_64, aarch64]"?
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub targets: Option<Vec<String>>,
+    pub targets: Option<Vec<TargetTriple>>,
 
     /// Include the following static files in bundles like archives.
     ///
@@ -391,7 +391,7 @@ pub struct DistMetadata {
 
     /// Custom GitHub runners, mapped by triple target
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub github_custom_runners: Option<SortedMap<String, String>>,
+    pub github_custom_runners: Option<SortedMap<TargetTriple, String>>,
 
     /// Custom permissions for jobs
     #[serde(skip_serializing_if = "Option::is_none")]

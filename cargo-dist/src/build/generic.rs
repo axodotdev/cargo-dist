@@ -5,14 +5,14 @@ use std::{env, process::ExitStatus};
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{DistManifest, TargetTriple, TargetTripleRef};
 
 use crate::{
     build::{package_id_string, BuildExpectations},
     copy_file,
     env::{calculate_cflags, calculate_ldflags, fetch_brew_env, parse_env, select_brew_env},
     ArtifactKind, BinaryIdx, BuildStep, DistError, DistGraph, DistGraphBuilder, DistResult,
-    ExtraBuildStep, GenericBuildStep, SortedMap, TargetTriple,
+    ExtraBuildStep, GenericBuildStep, SortedMap,
 };
 
 impl<'a> DistGraphBuilder<'a> {
@@ -95,24 +95,24 @@ impl<'a> DistGraphBuilder<'a> {
     }
 }
 
-fn platform_appropriate_cc(target: &str) -> &str {
-    if target.contains("darwin") {
+fn platform_appropriate_cc(target: &TargetTripleRef) -> &str {
+    if target.is_darwin() {
         "clang"
-    } else if target.contains("linux") {
+    } else if target.is_linux() {
         "gcc"
-    } else if target.contains("windows") {
+    } else if target.is_windows() {
         "cl.exe"
     } else {
         "cc"
     }
 }
 
-fn platform_appropriate_cxx(target: &str) -> &str {
-    if target.contains("darwin") {
+fn platform_appropriate_cxx(target: &TargetTripleRef) -> &str {
+    if target.is_darwin() {
         "clang++"
-    } else if target.contains("linux") {
+    } else if target.is_linux() {
         "g++"
-    } else if target.contains("windows") {
+    } else if target.is_windows() {
         "cl.exe"
     } else {
         "c++"
@@ -157,7 +157,7 @@ fn run_build(
     if let Some(target) = target {
         // Ensure we inform the build what architecture and platform
         // it's building for.
-        command.env("CARGO_DIST_TARGET", target);
+        command.env("CARGO_DIST_TARGET", target.as_str());
 
         let cc = std::env::var("CC").unwrap_or(platform_appropriate_cc(target).to_owned());
         command.env("CC", cc);

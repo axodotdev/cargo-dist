@@ -1,5 +1,7 @@
 //! github ci config
 
+use cargo_dist_schema::TargetTriple;
+
 use super::*;
 
 /// github ci config (raw from file)
@@ -12,7 +14,7 @@ pub struct GithubCiLayer {
 
     /// Custom GitHub runners, mapped by triple target
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub runners: Option<SortedMap<String, String>>,
+    pub runners: Option<SortedMap<TargetTriple, String>>,
 
     /// Custom permissions for jobs
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -28,7 +30,7 @@ pub struct GithubCiConfig {
     /// Common options
     pub common: CommonCiConfig,
     /// Custom GitHub runners, mapped by triple target
-    pub runners: SortedMap<String, String>,
+    pub runners: SortedMap<TargetTriple, String>,
     /// Custom permissions for jobs
     pub permissions: SortedMap<String, GithubPermissionMap>,
     /// Custom permissions for jobs

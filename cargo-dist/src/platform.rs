@@ -227,19 +227,24 @@
 
 #![allow(rustdoc::private_intra_doc_links)]
 
-use axoproject::platforms::{
-    TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
-};
+pub mod targets;
+
+use std::collections::HashMap;
 
 use cargo_dist_schema::{
     ArtifactId, AssetId, BuildEnvironment, DistManifest, GlibcVersion, Linkage, SystemInfo,
+    TargetTriple, TargetTripleRef,
 };
 use serde::Serialize;
 
 use crate::{
     backend::installer::{ExecutableZipFragment, UpdaterFragment},
     config::ZipStyle,
-    BinaryKind, DistGraphBuilder, ReleaseIdx, SortedMap, TargetTriple,
+    BinaryKind, DistGraphBuilder, ReleaseIdx, SortedMap,
+};
+
+use targets::{
+    TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
 };
 
 /// Suffixes of TargetTriples that refer to statically linked linux libcs.
@@ -453,7 +458,7 @@ impl PlatformSupport {
             let archive = FetchableArchive {
                 id: artifact.id,
                 // computed later
-                target_triple: String::new(),
+                target_triple: TargetTriple::new("".to_owned()),
                 target_triples: artifact.target_triples,
                 executables: executables
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
@@ -575,14 +580,19 @@ fn supports(
     archive_idx: FetchableArchiveIdx,
     archive: &FetchableArchive,
 ) -> Vec<(TargetTriple, PlatformEntry)> {
-    let mut res = Vec::new();
+    let mut res: Vec<(TargetTriple, PlatformEntry)> = Vec::new();
     for target in &archive.target_triples {
+        // this whole function manipulates targets as a string slice, which
+        // is unfortunate — these manipulations would be better done on a
+        // "parsed" version of the target
+        let target = target.as_str();
+
         // For the following linux checks we want to pull off any "eabihf" suffix while
         // comparing/parsing libc types.
         let (degunked_target, abigunk) = if let Some(inner_target) = target.strip_suffix("eabihf") {
             (inner_target, "eabihf")
         } else {
-            (target.as_str(), "")
+            (target, "")
         };
 
         // If this is the ambiguous-soon-to-be-changed "musl" target, rename it to musl-static,
@@ -598,7 +608,7 @@ fn supports(
 
         // First, add the target itself as a HostNative entry
         res.push((
-            target.clone(),
+            TargetTriple::new(target.clone()),
             PlatformEntry {
                 quality: SupportQuality::HostNative,
                 runtime_conditions: archive.native_runtime_conditions.clone(),
@@ -613,7 +623,7 @@ fn supports(
             };
             for &libc in LINUX_STATIC_REPLACEABLE_LIBCS {
                 res.push((
-                    format!("{system}{libc}{abigunk}"),
+                    TargetTriple::new(format!("{system}{libc}{abigunk}")),
                     PlatformEntry {
                         quality: SupportQuality::ImperfectNative,
                         runtime_conditions: archive.native_runtime_conditions.clone(),
@@ -644,6 +654,8 @@ fn supports(
                 },
             ));
         }
+
+        let target = TargetTriple::new(target);
 
         // FIXME?: technically we could add "run 32-bit intel macos on 64-bit intel"
         // BUT this is unlikely to succeed as you increasingly need an EOL macOS,
@@ -707,9 +719,9 @@ fn supports(
         // I don't want to think about computing the transitive closure of platform
         // support and how to do all the tie breaking ("HighwayToHellmulated"?), so
         // for now all 5 arm64 mingw users can be a little sad.
-        if let Some(system) = target.strip_suffix("windows-msvc") {
+        if let Some(system) = target.as_str().strip_suffix("windows-msvc") {
             res.push((
-                format!("{system}windows-gnu"),
+                TargetTriple::new(format!("{system}windows-gnu")),
                 PlatformEntry {
                     quality: SupportQuality::ImperfectNative,
                     runtime_conditions: archive.native_runtime_conditions.clone(),
@@ -827,4 +839,78 @@ fn native_glibc_version(system: &SystemInfo, linkage: &Linkage) -> Option<LibcVe
 fn native_musl_version(_system: &SystemInfo, _linkage: &Linkage) -> Option<LibcVersion> {
     // FIXME: this should be the same as glibc_version but we don't get this info yet!
     None
+}
+
+/// Translates a Rust triple into a human-readable display name
+pub fn triple_to_display_name(name: &TargetTripleRef) -> Option<&'static str> {
+    if name.as_str() == "all" {
+        Some("All Platforms")
+    } else {
+        TARGET_TRIPLE_DISPLAY_NAMES.get(name).copied()
+    }
+}
+
+lazy_static::lazy_static! {
+    static ref TARGET_TRIPLE_DISPLAY_NAMES: HashMap<&'static TargetTripleRef, &'static str> =
+        {
+            use targets::*;
+
+            let mut map = HashMap::new();
+            map.insert(TARGET_X86_LINUX_GNU, "x86 Linux");
+            map.insert(TARGET_X64_LINUX_GNU, "x64 Linux");
+            map.insert(TARGET_ARM64_LINUX_GNU, "ARM64 Linux");
+            map.insert(TARGET_ARMV7_LINUX_GNU, "ARMv7 Linux");
+            map.insert(TARGET_ARMV6_LINUX_GNU, "ARMv6 Linux");
+            map.insert(TARGET_ARMV6_LINUX_GNU_HARDFLOAT, "ARMv6 Linux (Hardfloat)");
+            map.insert(TARGET_PPC64_LINUX_GNU, "PPC64 Linux");
+            map.insert(TARGET_PPC64LE_LINUX_GNU, "PPC64LE Linux");
+            map.insert(TARGET_S390X_LINUX_GNU, "S390x Linux");
+            map.insert(TARGET_RISCV_LINUX_GNU, "RISCV Linux");
+            map.insert(TARGET_LOONGARCH64_LINUX_GNU, "LOONGARCH64 Linux");
+            map.insert(TARGET_SPARC64_LINUX_GNU, "SPARC64 Linux");
+
+            map.insert(TARGET_X86_LINUX_MUSL, "x86 MUSL Linux");
+            map.insert(TARGET_X64_LINUX_MUSL, "x64 MUSL Linux");
+            map.insert(TARGET_ARM64_LINUX_MUSL, "ARM64 MUSL Linux");
+            map.insert(TARGET_ARMV7_LINUX_MUSL, "ARMv7 MUSL Linux");
+            map.insert(TARGET_ARMV6_LINUX_MUSL, "ARMv6 MUSL Linux");
+            map.insert(
+                TARGET_ARMV6_LINUX_MUSL_HARDFLOAT,
+                "ARMv6 MUSL Linux (Hardfloat)",
+            );
+            map.insert(TARGET_PPC64_LINUX_MUSL, "PPC64 MUSL Linux");
+            map.insert(TARGET_PPC64LE_LINUX_MUSL, "PPC64LE MUSL Linux");
+            map.insert(TARGET_S390X_LINUX_MUSL, "S390x MUSL Linux");
+            map.insert(TARGET_RISCV_LINUX_MUSL, "RISCV MUSL Linux");
+            map.insert(TARGET_LOONGARCH64_LINUX_MUSL, "LOONGARCH64 MUSL Linux");
+            map.insert(TARGET_SPARC64_LINUX_MUSL, "SPARC64 MUSL Linux");
+
+            map.insert(TARGET_X86_WINDOWS, "x86 Windows");
+            map.insert(TARGET_X64_WINDOWS, "x64 Windows");
+            map.insert(TARGET_ARM64_WINDOWS, "ARM64 Windows");
+            map.insert(TARGET_X86_MINGW, "x86 MinGW");
+            map.insert(TARGET_X64_MINGW, "x64 MinGW");
+            map.insert(TARGET_ARM64_MINGW, "ARM64 MinGW");
+
+            map.insert(TARGET_X86_MAC, "x86 macOS");
+            map.insert(TARGET_X64_MAC, "Intel macOS");
+            map.insert(TARGET_ARM64_MAC, "Apple Silicon macOS");
+
+            map.insert(TARGET_X64_FREEBSD, "x64 FreeBSD");
+            map.insert(TARGET_X64_ILLUMOS, "x64 IllumOS");
+            map.insert(TARGET_X64_NETBSD, "x64 NetBSD");
+            map.insert(TARGET_ARM64_IOS, "iOS");
+            map.insert(TARGET_ARM64_IOS_SIM, "ARM64 iOS SIM");
+            map.insert(TARGET_X64_IOS, "x64 iOS");
+            map.insert(TARGET_ARM64_FUCHSIA, "ARM64 Fuchsia");
+            map.insert(TARGET_ARM64_ANDROID, "Android");
+            map.insert(TARGET_X64_ANDROID, "x64 Android");
+            map.insert(TARGET_ASMJS_EMSCRIPTEN, "asm.js Emscripten");
+            map.insert(TARGET_WASM32_WASI, "WASI");
+            map.insert(TARGET_WASM32, "WASM");
+            map.insert(TARGET_SPARC_SOLARIS, "SPARC Solaris");
+            map.insert(TARGET_X64_SOLARIS, "x64 Solaris");
+
+            map
+        };
 }

@@ -22,10 +22,11 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use base64::Engine;
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_dist_schema::TargetTripleRef;
 use temp_dir::TempDir;
 use tracing::warn;
 
-use crate::{create_tmp, DistError, DistResult, TargetTriple};
+use crate::{create_tmp, DistError, DistResult};
 
 struct Keychain {
     _root: TempDir,
@@ -156,8 +157,8 @@ impl std::fmt::Debug for CodesignEnv {
 }
 
 impl Codesign {
-    pub fn new(host_target: &TargetTriple) -> DistResult<Option<Self>> {
-        if !host_target.contains("darwin") {
+    pub fn new(host_target: &TargetTripleRef) -> DistResult<Option<Self>> {
+        if !host_target.is_darwin() {
             return Ok(None);
         }
 
