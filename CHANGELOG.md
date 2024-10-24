@@ -2,6 +2,34 @@
 
 Nothing Yet!
 
+# Version 0.24.0 (2024-10-28)
+
+It's been less than two weeks, and we're already back with a big dist release for you. This release has several major features, beginning with the biggest news that:
+
+## dist has a new name
+
+Did the last paragraph give it away? Well, it's true: `cargo-dist` is now just `dist`. This reflects our growing support for packaging software built by tools beyond just Cargo. Our support for Cargo isn't going away of course, or becoming any less of a focus.
+
+As a part of this, `dist` has moved towards a standalone CLI tool that doesn't have to be run as a `cargo` subcommand. You can now run `dist init`, `dist build` and more without needing to prefix it with `cargo`. We still install the Cargo plugin, though, so you're welcome to keep using `cargo dist` like always. As a part of being able to run without the Cargo plugin, there's one more big change:
+
+- impl @Gankra, @mistydemeo [feat: make cargo optional](https://github.com/axodotdev/cargo-dist/pull/1267)
+
+## dist runs without Cargo
+
+`dist` no longer requires Cargo if you're not building Rust projects! This is a major change which should make it much more ergonomic for users of other languages. We do still require Cargo if your workspace contains at least one Rust project; this includes commands such as `dist init` and `dist plan`.
+
+- impl @Gankra, @mistydemeo [feat: make cargo optional](https://github.com/axodotdev/cargo-dist/pull/1267)
+
+## Unified checksum file
+
+This change is completely unrelated to the new name, but it's a very nice one. We've always shipped individual checksum files for each artifact, but in this release we now also ship a unified checksum file which contains all of your hashes in a single place. It's named `$HASH_STYLE.sum`, for example `sha256.sum`, and is designed to be compatible with tools such as `shasum` and `sha256sum`.
+
+- impl @fasterthanlime [Introduce unified manifest file](https://github.com/axodotdev/cargo-dist/pull/1465)
+
+## Fixes
+* impl @mistydemeo [fix: print Windows paths correctly](https://github.com/axodotdev/cargo-dist/pull/1457)
+* impl @pnehrer [Specify path to Cargo.toml when generating wix for package](https://github.com/axodotdev/cargo-dist/pull/1454)
+
 # Version 0.23.0 (2024-10-15)
 
 We're back from a longer-than-usual break between releases with a feature-filled release!
