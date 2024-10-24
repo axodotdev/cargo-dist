@@ -1,6 +1,6 @@
 # Archives
 
-Archives are the primary output of cargo-dist: a single file (zip or tarball) containing prebuilt executables/binaries for an app, along with additional static files like READMEs, LICENSEs, and CHANGELOGs. The docs previously referred to these as "executable-zips", so if you ever see that term floating around, this is what's being talked about.
+Archives are the primary output of dist: a single file (zip or tarball) containing prebuilt executables/binaries for an app, along with additional static files like READMEs, LICENSEs, and CHANGELOGs. The docs previously referred to these as "executable-zips", so if you ever see that term floating around, this is what's being talked about.
 
 When you [tell us to build an app][apps] for [a platform][config-targets] we will always make an archive for it.
 

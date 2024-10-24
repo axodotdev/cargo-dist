@@ -2,18 +2,18 @@
 
 <!-- toc -->
 
-cargo-dist's generated CI configuration can be extended in several ways: it can be configured to install extra packages before the build begins, and it's possible to add extra jobs to run at specific lifecycle moments.
+dist's generated CI configuration can be extended in several ways: it can be configured to install extra packages before the build begins, and it's possible to add extra jobs to run at specific lifecycle moments.
 
 
 ## Install extra packages
 
 > since 0.4.0
 
-Sometimes, you may need extra packages from the system package manager to be installed before in the builder before cargo-dist begins building your software. Cargo-dist can do this for you by adding the `dependencies` setting to your dist config. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them.
+Sometimes, you may need extra packages from the system package manager to be installed before in the builder before dist begins building your software. dist can do this for you by adding the `dependencies` setting to your dist config. When set, the packages you request will be fetched and installed in the step before `build`. Additionally, on macOS, the `cargo build` process will be wrapped in `brew bundle exec` to ensure that your dependencies can be found no matter where Homebrew placed them.
 
 By default, we run Apple silicon (aarch64) builds for macOS on the `macos-13` runner, which is Intel-based. If your build process needs to link against C libraries from Homebrew using the `dependencies` feature, you will need to switch to an Apple silicon-native runner to ensure that you have access to Apple silicon-native dependencies from Homebrew. You can do this using the [custom runners][custom-runners] feature. Currently, `macos-14` is the oldest (and only) GitHub-provided runner for Apple silicon.
 
-Sometimes, you may want to make sure your users also have these dependencies available when they install your software. If you use a package manager-based installer, cargo-dist has the ability to specify these dependencies. By default, cargo-dist will examine your program to try to detect which dependencies it thinks will be necessary. At the moment, [Homebrew][homebrew] is the only supported package manager installer. You can also specify these dependencies manually.
+Sometimes, you may want to make sure your users also have these dependencies available when they install your software. If you use a package manager-based installer, dist has the ability to specify these dependencies. By default, dist will examine your program to try to detect which dependencies it thinks will be necessary. At the moment, [Homebrew][homebrew] is the only supported package manager installer. You can also specify these dependencies manually.
 
 For more information, see the [configuration syntax][config-dependencies].
 
@@ -25,7 +25,7 @@ For more information, see the [configuration syntax][config-dependencies].
 
 > since 0.3.0 (publish-jobs) and 0.7.0 (other steps)
 
-cargo-dist's CI can be configured to call additional jobs on top of the ones it has builtin. Currently, we support adding extra jobs to the the following list of steps:
+dist's CI can be configured to call additional jobs on top of the ones it has builtin. Currently, we support adding extra jobs to the the following list of steps:
 
 * [`plan-jobs`][config-plan] (the beginning of the build process)
 * [`build-local-artifacts-jobs`][config-build-local]
@@ -54,7 +54,7 @@ on:
   # Defining workflow_call means that this workflow can be called from
   # your main workflow job
   workflow_call:
-    # cargo-dist exposes the plan from the plan step, as a JSON string,
+    # dist exposes the plan from the plan step, as a JSON string,
     # to your job if it needs it
     inputs:
       plan:
@@ -80,13 +80,13 @@ Then, add the following to your `publish-jobs` array:
 publish-jobs = ["./publish-greeter"]
 ```
 
-Running `cargo-dist init` for your tool will update your GitHub Actions configuration to make use of the new reusable workflow during the publish step.
+Running `dist init` for your tool will update your GitHub Actions configuration to make use of the new reusable workflow during the publish step.
 
 ## Custom runners
 
 > since 0.6.0
 
-By default, cargo-dist uses the following runners:
+By default, dist uses the following runners:
 
 * Linux (x86_64): `ubuntu-20.04`
 * macOS (x86_64): `macos-13`
@@ -112,7 +112,7 @@ aarch64-apple-darwin = "macos-14"
 
 > since 0.3.0
 
-By default, cargo-dist will run the plan step on every pull request but won't perform a full release build. If these builds are turned on, the resulting pull request artifacts won't be uploaded to a release but will be available as a download from within the CI job. To enable this, select the "upload" option from the "check your release process in pull requests" question in `cargo-dist-init` or set [the `pr-run-mode` key][config-pr-run-mode] to `"upload"` in `Cargo.toml`'s cargo-dist config. For example:
+By default, dist will run the plan step on every pull request but won't perform a full release build. If these builds are turned on, the resulting pull request artifacts won't be uploaded to a release but will be available as a download from within the CI job. To enable this, select the "upload" option from the "check your release process in pull requests" question in `dist init` or set [the `pr-run-mode` key][config-pr-run-mode] to `"upload"` in `Cargo.toml`'s dist config. For example:
 
 ```toml
 pr-run-mode = "upload"
@@ -128,9 +128,9 @@ These features are specialized to very particular usecases, but may be useful fo
 
 This is an experimental feature.
 
-In the event that installing platform dependencies using cargo-dist's system dependency feature
+In the event that installing platform dependencies using dist's system dependency feature
 doesn't work for your needs, for example a build dependency for your project isn't provided by the
-system's package manager, cargo-dist provides a method for injecting build steps into the
+system's package manager, dist provides a method for injecting build steps into the
 `build-local-artifacts` job to prepare the container.
 
 To do this, use the [github-build-setup setting](../reference/config.md#github-build-setup) which
@@ -196,9 +196,9 @@ multi-line strings.
 
 > since 0.2.0
 
-By default, cargo-dist will want to create its own GitHub Release and set the title/body with things like your CHANGELOG/RELEASES and some info about how to install the release. However if you have your own process for generating the contents of GitHub Release, we support that.
+By default, dist will want to create its own GitHub Release and set the title/body with things like your CHANGELOG/RELEASES and some info about how to install the release. However if you have your own process for generating the contents of GitHub Release, we support that.
 
-If you set [`create-release = false`](../reference/config.md#create-release) in your cargo-dist config, cargo-dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the GitHub Release for you.
+If you set [`create-release = false`](../reference/config.md#create-release) in your dist config, dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the GitHub Release for you.
 
 ### Publish GitHub Release To Another Repository
 
@@ -210,15 +210,15 @@ You can change which repository a GitHub Release gets published to with the [git
 
 > since 0.3.0
 
-The happy-path of cargo-dist has us completely managing release.yml, and since 0.3.0 we will actually consider it an error for there to be any edits or out of date information in release.yml.
+The happy-path of dist has us completely managing release.yml, and since 0.3.0 we will actually consider it an error for there to be any edits or out of date information in release.yml.
 
-If there's something that cargo-dist can't do that makes you want to hand-edit the file, we'd love to hear about it so that you can stay on the happy-path!
+If there's something that dist can't do that makes you want to hand-edit the file, we'd love to hear about it so that you can stay on the happy-path!
 
-However we know you sometimes really need to do those hand-edits, so there is a way to opt into it. If you [set `allow-dirty = ["ci"]` in your cargo-dist config][config-allow-dirty], cargo-dist will stop trying to update the file and stop checking if it's out of date.
+However we know you sometimes really need to do those hand-edits, so there is a way to opt into it. If you [set `allow-dirty = ["ci"]` in your dist config][config-allow-dirty], dist will stop trying to update the file and stop checking if it's out of date.
 
-Although you're not "using cargo-dist wrong" if you do this, **be aware that you are losing access to a lot of the convenience and UX benefits of cargo-dist**. Every piece of documentation that says "just run cargo dist init" may not work correctly, as a new feature may require the CI template to be updated. Even things as simple as "updating cargo-dist" will stop working.
+Although you're not "using dist wrong" if you do this, **be aware that you are losing access to a lot of the convenience and UX benefits of dist**. Every piece of documentation that says "just run dist init" may not work correctly, as a new feature may require the CI template to be updated. Even things as simple as "updating dist" will stop working.
 
-We have put a lot of effort into minimizing those situations, with `plan` increasingly being responsible for dynamically computing what the CI should do, but that's not perfect, and there's no guarantees that future versions of cargo-dist won't completely change the way CI is structured.
+We have put a lot of effort into minimizing those situations, with `plan` increasingly being responsible for dynamically computing what the CI should do, but that's not perfect, and there's no guarantees that future versions of dist won't completely change the way CI is structured.
 
 ### Fiddly build task settings
 
@@ -226,9 +226,9 @@ We have put a lot of effort into minimizing those situations, with `plan` increa
 
 Here's a grab-bag of more random settings you probably don't want to use, but exist in case you need them.
 
-By default cargo-dist lets all the build tasks keep running even if one of them fails, to try to get you as much as possible when things go wrong. [`fail-fast = true` can be set to disable this][config-fail-fast].
+By default dist lets all the build tasks keep running even if one of them fails, to try to get you as much as possible when things go wrong. [`fail-fast = true` can be set to disable this][config-fail-fast].
 
-By default cargo-dist breaks build tasks onto more machines than strictly necessary to create the maximum opportunities for concurrency and to increase fault-tolerance. For instance if you want to build for both arm64 macOS and x64 macOS, that *could* be done on the same machine, but we put it on two machines so they can be in parallel and succeed/fail independently. [`merge-tasks = true` can be set to disable this][config-merge-tasks].
+By default dist breaks build tasks onto more machines than strictly necessary to create the maximum opportunities for concurrency and to increase fault-tolerance. For instance if you want to build for both arm64 macOS and x64 macOS, that *could* be done on the same machine, but we put it on two machines so they can be in parallel and succeed/fail independently. [`merge-tasks = true` can be set to disable this][config-merge-tasks].
 
 
 [custom-runners]: #custom-runners

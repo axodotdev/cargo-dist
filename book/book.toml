@@ -3,7 +3,7 @@ authors = ["Axo Developer Co"]
 language = "en"
 multilingual = false
 src = "src"
-title = "cargo-dist"
+title = "dist"
 
 [output.html]
 git-repository-url = "https://github.com/axodotdev/cargo-dist"

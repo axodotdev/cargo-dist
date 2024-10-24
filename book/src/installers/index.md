@@ -1,6 +1,6 @@
 # Installers
 
-The core functionality of cargo-dist is to build your binaries and produce [tarballs / zips][archives] containing them. Basically every other kind of output it produces is considered an "installer" that helps download/install/run those binaries.
+The core functionality of dist is to build your binaries and produce [tarballs / zips][archives] containing them. Basically every other kind of output it produces is considered an "installer" that helps download/install/run those binaries.
 
 Note that we use the term "installer" very loosely -- if it's fancier than a tarball, it's an installer to us!
 
@@ -15,7 +15,7 @@ Currently supported installers include:
 * [homebrew][]: a Homebrew formula that fetches and installs executables
 * [msi][]: a Windows msi that bundles and installs executables
 
-These keys can be specified via [`installer` in your cargo-dist config][config-installers]. The [`cargo dist init` command][init] provides an interactive UI for enabling/disabling them.
+These keys can be specified via [`installer` in your dist config][config-installers]. The [`dist init` command][init] provides an interactive UI for enabling/disabling them.
 
 The above installers can have one of two strategies: *fetching* and *bundling* (defined below). Currently each installer is hardcoded to one particular strategy, but in the future [we may make it configurable][issue-unlock-installers].
 
@@ -84,4 +84,4 @@ Our installers are meant to be usable as-is, without requiring any special optio
 
 [archives]: ../artifacts/archives.md
 [artifact-url]: ../reference/artifact-url.md
-[init]: ../reference/cli.md#cargo-dist-init
+[init]: ../reference/cli.md#dist-init

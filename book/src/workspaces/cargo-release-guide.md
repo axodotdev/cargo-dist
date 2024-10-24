@@ -2,11 +2,11 @@
 
 <!-- toc -->
 
-> NOTE: It will be helpful to read [the section on cargo-dist Announcement Tags][announcements], because that is the interface boundary between cargo-release and cargo-dist. TL;DR: cargo-dist interprets a git tag of "v1.0.0" as "Announce/Release the whole workspace" (Unified Announcement) and "my-app-v1.0.0" or "my-app/v1.0.0" as "Announce/Release that one package" (Singular Announcement).
+> NOTE: It will be helpful to read [the section on dist Announcement Tags][announcements], because that is the interface boundary between cargo-release and dist. TL;DR: dist interprets a git tag of "v1.0.0" as "Announce/Release the whole workspace" (Unified Announcement) and "my-app-v1.0.0" or "my-app/v1.0.0" as "Announce/Release that one package" (Singular Announcement).
 
 > NOTE: this guide assumes you're running [cargo-release v0.22.0][release-22] or greater, as that version made several significant changes to default behaviours (for the better!).
 
-cargo-dist intentionally doesn't handle these steps of cutting a release for you:
+dist intentionally doesn't handle these steps of cutting a release for you:
 
 * updating the versions of your packages
 * writing your release notes
@@ -15,9 +15,9 @@ cargo-dist intentionally doesn't handle these steps of cutting a release for you
 * pushing to your repo
 * publishing to crates.io
 
-There's a lot of different workflows for these things and we're happy to leave that to you. All cargo-dist cares about is that a tagged commit eventually ends up in your repo (and that the format of that commit reflects the versions/names in your Cargo.tomls).
+There's a lot of different workflows for these things and we're happy to leave that to you. All dist cares about is that a tagged commit eventually ends up in your repo (and that the format of that commit reflects the versions/names in your Cargo.tomls).
 
-That said, you might find [cargo-release][] useful because it can handle all of the above things for you in a single command like `cargo release 1.0.0`. This section is dedicated to explaining how to use cargo-release with cargo-dist in various situations.
+That said, you might find [cargo-release][] useful because it can handle all of the above things for you in a single command like `cargo release 1.0.0`. This section is dedicated to explaining how to use cargo-release with dist in various situations.
 
 
 
@@ -38,7 +38,7 @@ git push --atomic <remote-branch> refs/tags/v1.0.0
 
 (The `git push --atomic` is basically a more robust version of `git push && git push --tags`)
 
-Hey neat that's basically everything I listed at the start of this section! And the tag format is exactly what cargo-dist expects for [a simple project][simple-guide]!! What a coincidence!!! 😸
+Hey neat that's basically everything I listed at the start of this section! And the tag format is exactly what dist expects for [a simple project][simple-guide]!! What a coincidence!!! 😸
 
 If you don't want some of these behaviours, you can disable them permanently with `[workspace.metadata.release]` in your Cargo.toml, or disable temporarily with CLI flags. See the [cargo-release reference][cargo-release-ref] for all the details but here's some important ones to only get a subset of the behaviours:
 
@@ -55,7 +55,7 @@ Note also that you can use `[package.metadata.release]` to set configs on indivi
 
 ## cargo-release Advanced Usage
 
-With [a more complex project/workspace][workspace-guide], cargo-release won't work as well out of the box with cargo-dist. To understand why, we need to understand the rules it applies consistently that can be strange if unexpected.
+With [a more complex project/workspace][workspace-guide], cargo-release won't work as well out of the box with dist. To understand why, we need to understand the rules it applies consistently that can be strange if unexpected.
 
 When you run `cargo release` **it should follow the same rules cargo does for selecting the subset of the workspace to operate on**. That is, if you were to run `cargo test`, the packages that actually get tested are the same ones that `cargo release` will attempt to release! I'll try to briefly summarize (imperfectly, workspaces can get really Complicated):
 
@@ -71,7 +71,7 @@ When you run `cargo release` **it should follow the same rules cargo does for se
 * If there is a root package (the workspace is non-virtual), releases of the root package will be tagged as `v{VERSION}` ("v1.0.0").
 * All other packages will be tagged `{PACKAGE_NAME}-v{VERSION}` ("my-app-v1.0.0")
 
-As we'll see below, these combined behaviours have the following interactions with cargo-dist:
+As we'll see below, these combined behaviours have the following interactions with dist:
 
 * ✅ one package workspace: tags it like "v1.0.0"
 * ✅ virtual workspace, independent versions: tags each package like "my-app-v1.0.0"
@@ -95,7 +95,7 @@ cargo release 1.0.0
 
 -------
 
-As stated previously, cargo-release works great with cargo-dist if you have [a simple project][simple-guide] consisting of a single package (the kind of project `cargo new my-app` or `cargo init my-app` will create).
+As stated previously, cargo-release works great with dist if you have [a simple project][simple-guide] consisting of a single package (the kind of project `cargo new my-app` or `cargo init my-app` will create).
 
 See the previous sections for what this will do and how to configure the behaviour if, e.g. you want to hold off on publishing to crates.io or pushing.
 
@@ -118,9 +118,9 @@ cargo release -p my-package 1.0.0
 --------
 
 
-If you have a [virtual workspace][] (one where the root Cargo.toml isn't an actual package) and want everything in the workspace to be versioned/released independently, then cargo-dist will default to operating on all your packages at once, and you should do the same thing you would do if you were running `cargo publish`: either use `-p` to select the relevant packages or `cd` into the subdir of that package before running the command.
+If you have a [virtual workspace][] (one where the root Cargo.toml isn't an actual package) and want everything in the workspace to be versioned/released independently, then dist will default to operating on all your packages at once, and you should do the same thing you would do if you were running `cargo publish`: either use `-p` to select the relevant packages or `cd` into the subdir of that package before running the command.
 
-Each tag will induce cargo-dist to produce an independent Announcement (Github Release) for that package.
+Each tag will induce dist to produce an independent Announcement (Github Release) for that package.
 
 If the package is a library the Github Release won't have any builds/artifacts uploaded. [See here for details][lib-hack].
 
@@ -185,7 +185,7 @@ cargo release 1.0.0 --workspace
 
 If you have a non-virtual workspace (one where the root Cargo.toml is a package) and want everything in the workspace to be versioned/released in lockstep with a single Unified Announcement (One Big Github Release), then it's *almost* the same as the virtual case (see the previous section).
 
-The one caveat is that cargo-dist is consistent to a fault here, and even though we've explicitly told it things should be versioned/tagged in lockstep, **running it in the root of your project still only releases the root package**, and that's not what you want!
+The one caveat is that dist is consistent to a fault here, and even though we've explicitly told it things should be versioned/tagged in lockstep, **running it in the root of your project still only releases the root package**, and that's not what you want!
 
 We need to tell it that we *really* meant it and pass `--workspace`!
 
@@ -237,17 +237,17 @@ So if your workspace looks like this:
 * root package is The One Application this project exists to develop
 * all other packages are libraries that support it
 
-Whenever you `cargo release` the root package, it will get tagged without a prefix ("v1.0.0") and cargo-dist will create a Unified Announcement. Even though there are other packages in the workspace, cargo-dist will take this in stride because as far as it's concerned **this looks exactly the same as a workspace with one package**. Which is to say, it's no different from [a simple project][simple-guide] as far as cargo-dist is concerned.
+Whenever you `cargo release` the root package, it will get tagged without a prefix ("v1.0.0") and dist will create a Unified Announcement. Even though there are other packages in the workspace, dist will take this in stride because as far as it's concerned **this looks exactly the same as a workspace with one package**. Which is to say, it's no different from [a simple project][simple-guide] as far as dist is concerned.
 
-Whenever you `cargo release` a library, it will get tagged with a prefix ("my-lib-v1.0.0") and cargo-dist will create a minimal Singular Announcement. [See here for details][lib-hack]. In future versions we might change this default (or at least make it configurable).
+Whenever you `cargo release` a library, it will get tagged with a prefix ("my-lib-v1.0.0") and dist will create a minimal Singular Announcement. [See here for details][lib-hack]. In future versions we might change this default (or at least make it configurable).
 
-I have some vague concerns that this will be wonky if you ever introduce a second application to the workspace, but honestly that's probably going to be true regardless of if you were using cargo-dist, so maybe it's fine? Really I just don't trust non-virtual workspaces...
+I have some vague concerns that this will be wonky if you ever introduce a second application to the workspace, but honestly that's probably going to be true regardless of if you were using dist, so maybe it's fine? Really I just don't trust non-virtual workspaces...
 
 
 
 ## Library-only Workspaces
 
-cargo-dist really isn't designed for this but technically you can use the [Singular Library Trick][lib-hack] if you want. If you want cargo-dist to properly support this, please let us know!
+dist really isn't designed for this but technically you can use the [Singular Library Trick][lib-hack] if you want. If you want dist to properly support this, please let us know!
 
 
 
@@ -259,13 +259,13 @@ cargo-release defaults to dry-run semantics, only doing side-effectful operation
 There are two things to keep in mind:
 
 * cargo-release's dry-run is imperfect and has some differences from the real run
-* cargo-release isn't aware of cargo-dist, so it can't check if what it's about to do will blow up in CI or not
+* cargo-release isn't aware of dist, so it can't check if what it's about to do will blow up in CI or not
 
 Let's start with the dry-run differences. I don't know them all but the *biggest* one that I hit is that it doesn't fully emulate bumping the versions in your Cargo.tomls. Notably when it checks if `publish` will work, it's building the current version of the packages. If your build is aware of its own version this can cause/miss problems (and you'll see funky stuff like "Upgrading my-app from 1.0.0 to 2.0.0" ... "Packaging my-app 1.0.0").
 
-As for being aware of cargo-dist... I want to design some features for this, but I'm not quite sure what it should look like yet.
+As for being aware of dist... I want to design some features for this, but I'm not quite sure what it should look like yet.
 
-I think in the short-term, the best I can offer you is "make a temporary git branch and tell cargo-release to --execute but not push/tag/publish, then ask cargo-dist what it thinks extremely manually". A rough sketch:
+I think in the short-term, the best I can offer you is "make a temporary git branch and tell cargo-release to --execute but not push/tag/publish, then ask dist what it thinks extremely manually". A rough sketch:
 
 ```sh
 # make a temp branch where we can mess stuff up
@@ -276,17 +276,17 @@ git checkout -b tmp-release
 cargo release 1.0.0
 ```
 
-That should end with a line that looks like "Pushing main, v1.0.0 to origin". The first item is the branch it's pushing to, all the following items are all the tags it wants to push. Now that we know the tags, we can ask cargo-release to update the package versions and then ask cargo-dist what it thinks of those tags:
+That should end with a line that looks like "Pushing main, v1.0.0 to origin". The first item is the branch it's pushing to, all the following items are all the tags it wants to push. Now that we know the tags, we can ask cargo-release to update the package versions and then ask dist what it thinks of those tags:
 
 ```sh
 # just bump versions
 cargo release 1.0.0 --execute --no-push --no-tag --no-publish
 
-# ask cargo-dist what should be produced for the given tag
-cargo dist plan --tag=<tag-you-want-to-check>
+# ask dist what should be produced for the given tag
+dist plan --tag=<tag-you-want-to-check>
 ```
 
-If that runs successfully and prints out the artifacts you expect, that's pretty good sign running cargo-release For Real will work! (You can also try `cargo dist build` if you're worried about the actual build failing.)
+If that runs successfully and prints out the artifacts you expect, that's pretty good sign running cargo-release For Real will work! (You can also try `dist build` if you're worried about the actual build failing.)
 
 
 
@@ -344,14 +344,14 @@ cargo release --no-publish --no-tag --allow-branch=$BRANCH $VERSION
 #  * tag the commit
 #  * push the tag
 #  * publish all crates to crates.io (handles waiting for dep publishes to propagate)
-#  * trigger cargo-dist when it sees the tag (if applicable)
+#  * trigger dist when it sees the tag (if applicable)
 # THIS WON'T CREATE NEW COMMITS
 #
-# running "cargo dist plan" is totally optional, but this is is the best time to check
-# that your cargo-dist release CI will produce the desired result when you push the tag
+# running "dist plan" is totally optional, but this is is the best time to check
+# that your dist release CI will produce the desired result when you push the tag
 git checkout main
 git pull
-cargo dist plan
+dist plan
 cargo release
 ```
 

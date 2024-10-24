@@ -2,9 +2,9 @@
 
 > since 0.5.0
 
-When releasing software in languages other than Rust or JavaScript, you'll need to tell cargo-dist how to build it &mdash; there are more buildsystems than stars in the sky, and cargo-dist can't know how to run all of them (or how to figure out what to release from them).
+When releasing software in languages other than Rust or JavaScript, you'll need to tell dist how to build it &mdash; there are more buildsystems than stars in the sky, and dist can't know how to run all of them (or how to figure out what to release from them).
 
-This guide assumes you've already initialized the cargo-dist config; check the [quickstart guide][quickstart-everyone-else] for how to get started.
+This guide assumes you've already initialized the dist config; check the [quickstart guide][quickstart-everyone-else] for how to get started.
 
 ## Examples
 
@@ -27,7 +27,7 @@ version = "0.1.0"
 repository = "https://github.com/example/example"
 # The executables produced by your app
 binaries = ["main"]
-# The build command cargo-dist runs to produce those binaries
+# The build command dist runs to produce those binaries
 build-command = ["make"]
 ```
 
@@ -37,7 +37,7 @@ All you need to run to build this program is `make`, so we specified `build-comm
 build-command = ["./build.sh"]
 ```
 
-We expose a special environment variable called `CARGO_DIST_TARGET` into your build. It contains a [Rust-style target triple][target-triple] for the platform we expect your build to build for. Depending on the language of the software you're building, you may need to use this to set appropriate cross-compilation flags. For example, when cargo-dist is building for an Apple Silicon Mac, we'll set `aarch64-apple-darwin` in order to allow your build to know when it should build for aarch64 even if the host is x86_64.
+We expose a special environment variable called `CARGO_DIST_TARGET` into your build. It contains a [Rust-style target triple][target-triple] for the platform we expect your build to build for. Depending on the language of the software you're building, you may need to use this to set appropriate cross-compilation flags. For example, when dist is building for an Apple Silicon Mac, we'll set `aarch64-apple-darwin` in order to allow your build to know when it should build for aarch64 even if the host is x86_64.
 
 On macOS, we expose several additional environment variables to help your buildsystem find dependencies. In the future, we may add more environment variables on all platforms.
 

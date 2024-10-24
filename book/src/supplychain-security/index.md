@@ -1,6 +1,6 @@
 # Supply-chain security
 
-As software supplychain security concerns and requirements grow, `cargo-dist` is
+As software supplychain security concerns and requirements grow, `dist` is
 commited to making compliance with policies and regulations as turnkey as possible. 
 
 If you have an integration you are looking for [file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or 

@@ -2,7 +2,7 @@
 
 > since 0.0.6
 
-cargo-dist can automatically build and publish [npm](https://www.npmjs.com/) packages for your applications. Users can install your application with an expression like `npm install -g @axodotdev/axolotlsay`, or immediately run it with `npx @axodotdev/axolotlsay`.
+dist can automatically build and publish [npm](https://www.npmjs.com/) packages for your applications. Users can install your application with an expression like `npm install -g @axodotdev/axolotlsay`, or immediately run it with `npx @axodotdev/axolotlsay`.
 
 The npm package will [fetch][artifact-url] your prebuilt [archives](../artifacts/archives.md) and install your binaries to node_modules, exposing them as commands ("bins") of the package.
 If the package [unambiguously has one true command](https://docs.npmjs.com/cli/v7/commands/npx#description), then the package can be run without specifying one.
@@ -36,7 +36,7 @@ To setup your npm installer you need to create an npm access token and enable th
 
 ### Part 2: Enabling The npm Installer
 
-1. run `cargo dist init` on your project
+1. run `dist init` on your project
 2. when prompted to pick installers, enable "npm"
 3. this should trigger a prompt for your optional scope (`@axodotdev`)
 
