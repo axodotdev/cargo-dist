@@ -247,8 +247,12 @@ pub struct DistGraph {
 pub struct HostingInfo {
     /// Hosting backends
     pub hosts: Vec<HostingStyle>,
+    /// The domain at which the repo is hosted, (e.g. `"https://github.com"`)
+    pub domain: String,
     /// Repo url
     pub repo_url: String,
+    /// Path at the domain
+    pub repo_path: String,
     /// Source hosting provider (e.g. "github")
     pub source_host: String,
     /// Project owner
@@ -1758,6 +1762,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let download_url = schema_release
             .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
+        let hosting = schema_release.hosting.clone();
         let artifact_name = format!("{release_id}-installer.sh");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
@@ -1803,6 +1808,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .collect(),
                 install_success_msg: config.install_success_msg.to_owned(),
                 base_url: download_url.to_owned(),
+                hosting,
                 artifacts,
                 hint,
                 desc,
@@ -1837,11 +1843,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             &release.id
         };
-        let download_url = self
+        let schema_release = self
             .manifest
             .release_by_name(&release.id)
-            .and_then(|r| r.artifact_download_url())
+            .expect("couldn't find the release!?");
+        let download_url = schema_release
+            .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
+        let hosting = schema_release.hosting.clone();
 
         let artifact_name = format!("{formula}.rb");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
@@ -1967,6 +1976,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .collect(),
                     install_success_msg: config.install_success_msg.to_owned(),
                     base_url: download_url.to_owned(),
+                    hosting,
                     artifacts,
                     hint,
                     desc,
@@ -2019,6 +2029,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let download_url = schema_release
             .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
+        let hosting = schema_release.hosting.clone();
         let artifact_name = format!("{release_id}-installer.ps1");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
@@ -2060,6 +2071,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .collect(),
                 install_success_msg: config.install_success_msg.to_owned(),
                 base_url: download_url.to_owned(),
+                hosting,
                 artifacts,
                 hint,
                 desc,
@@ -2090,11 +2102,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         require_nonempty_installer(release, config)?;
         let release_id = &release.id;
-        let download_url = self
+        let schema_release = self
             .manifest
             .release_by_name(&release.app_name)
-            .and_then(|r| r.artifact_download_url())
+            .expect("couldn't find the release!?");
+        let download_url = schema_release
+            .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
+        let hosting = schema_release.hosting.clone();
 
         let app_name = config.package.clone();
         let npm_package_name = if let Some(scope) = &config.scope {
@@ -2176,6 +2191,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .collect(),
                     install_success_msg: config.install_success_msg.to_owned(),
                     base_url: download_url.to_owned(),
+                    hosting,
                     artifacts,
                     hint,
                     desc,

@@ -722,13 +722,23 @@ expression: json_schema
       "description": "Github Hosting",
       "type": "object",
       "required": [
+        "artifact_base_url",
+        "artifact_download_path",
         "artifact_download_url",
         "owner",
         "repo"
       ],
       "properties": {
+        "artifact_base_url": {
+          "description": "The URL of the host for GitHub, usually `\"https://github.com\"` (This can vary for GitHub Enterprise)",
+          "type": "string"
+        },
+        "artifact_download_path": {
+          "description": "The path of the release without the base URL\n\ne.g. `/myowner/myrepo/releases/download/v1.0.0/`",
+          "type": "string"
+        },
         "artifact_download_url": {
-          "description": "The URL of the Github Release's artifact downloads\n\ne.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`",
+          "description": "The URL of the GitHub Release's artifact downloads\n\ne.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`",
           "type": "string"
         },
         "owner": {

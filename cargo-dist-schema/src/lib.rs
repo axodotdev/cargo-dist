@@ -772,7 +772,14 @@ pub struct Hosting {
 /// Github Hosting
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct GithubHosting {
-    /// The URL of the Github Release's artifact downloads
+    /// The URL of the host for GitHub, usually `"https://github.com"`
+    /// (This can vary for GitHub Enterprise)
+    pub artifact_base_url: String,
+    /// The path of the release without the base URL
+    ///
+    /// e.g. `/myowner/myrepo/releases/download/v1.0.0/`
+    pub artifact_download_path: String,
+    /// The URL of the GitHub Release's artifact downloads
     ///
     /// e.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`
     pub artifact_download_url: String,

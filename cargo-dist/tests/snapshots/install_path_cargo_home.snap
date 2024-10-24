@@ -23,7 +23,17 @@ set -u
 
 APP_NAME="axolotlsay"
 APP_VERSION="0.2.2"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2}"
+# Look for GitHub Enterprise-style base URL first
+if [ -n "${INSTALLER_GITHUB_ENTERPRISE_BASE_URL:-}" ]; then
+    INSTALLER_BASE_URL="$INSTALLER_GITHUB_ENTERPRISE_BASE_URL"
+else
+    INSTALLER_BASE_URL="${INSTALLER_GITHUB_BASE_URL:-https://github.com}"
+fi
+if [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
+    ARTIFACT_DOWNLOAD_URL="$INSTALLER_DOWNLOAD_URL"
+else
+    ARTIFACT_DOWNLOAD_URL="${INSTALLER_BASE_URL}/axodotdev/axolotlsay/releases/download/v0.2.2"
+fi
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 if [ -n "${AXOLOTLSAY_NO_MODIFY_PATH:-}" ]; then
@@ -1313,6 +1323,18 @@ param (
 
 $app_name = 'axolotlsay'
 $app_version = '0.2.2'
+if ($env:INSTALLER_GITHUB_ENTERPRISE_BASE_URL) {
+  $installer_base_url = $env:INSTALLER_GITHUB_ENTERPRISE_BASE_URL
+} elseif ($env:INSTALLER_GITHUB_BASE_URL) {
+  $installer_base_url = $env:INSTALLER_GITHUB_BASE_URL
+} else {
+  $installer_base_url = "https://github.com"
+}
+if ($env:INSTALLER_DOWNLOAD_URL) {
+  $ArtifactDownloadUrl = $env:INSTALLER_DOWNLOAD_URL
+} else {
+  $ArtifactDownloadUrl = "$installer_base_url/axodotdev/axolotlsay/releases/download/v0.2.2"
+}
 
 $receipt = @"
 {"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_layout":"unspecified","install_prefix":"AXO_INSTALL_PREFIX","modify_path":true,"provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
@@ -1819,6 +1841,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       ],
       "hosting": {
         "github": {
+          "artifact_base_url": "https://github.com",
+          "artifact_download_path": "/axodotdev/axolotlsay/releases/download/v0.2.2",
           "artifact_download_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2",
           "owner": "axodotdev",
           "repo": "axolotlsay"

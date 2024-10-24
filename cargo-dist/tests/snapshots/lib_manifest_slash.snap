@@ -25,6 +25,8 @@ stdout:
       "display": true,
       "hosting": {
         "github": {
+          "artifact_base_url": "https://github.com",
+          "artifact_download_path": "/axodotdev/cargo-dist/releases/download/cargo-dist-schema/v1.0.0-FAKEVERSION",
           "artifact_download_url": "https://github.com/axodotdev/cargo-dist/releases/download/cargo-dist-schema/v1.0.0-FAKEVERSION",
           "owner": "axodotdev",
           "repo": "cargo-dist"

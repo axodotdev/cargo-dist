@@ -18,7 +18,21 @@ set -u
 
 APP_NAME="{{ app_name }}"
 APP_VERSION="{{ app_version }}"
+{%- if hosting.axodotdev %}
 ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-{{ base_url }}}"
+{% else %}
+# Look for GitHub Enterprise-style base URL first
+if [ -n "${INSTALLER_GITHUB_ENTERPRISE_BASE_URL:-}" ]; then
+    INSTALLER_BASE_URL="$INSTALLER_GITHUB_ENTERPRISE_BASE_URL"
+else
+    INSTALLER_BASE_URL="${INSTALLER_GITHUB_BASE_URL:-{{ hosting.github.artifact_base_url }}}"
+fi
+if [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
+    ARTIFACT_DOWNLOAD_URL="$INSTALLER_DOWNLOAD_URL"
+else
+    ARTIFACT_DOWNLOAD_URL="${INSTALLER_BASE_URL}{{ hosting.github.artifact_download_path }}"
+fi
+{%- endif %}
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 if [ -n "{{ '${' }}{{ no_modify_path_env_var }}:-}" ]; then

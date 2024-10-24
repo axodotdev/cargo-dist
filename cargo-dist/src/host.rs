@@ -185,12 +185,15 @@ impl<'a> DistGraphBuilder<'a> {
                 HostingStyle::Github => {
                     // CI currently impls this for us, all we need to know is the URL to download from
                     let repo_url = &hosting.repo_url;
+                    let repo_path = &hosting.repo_path;
                     for (name, version) in &releases_without_hosting {
                         let tag = &announcing.tag;
                         self.manifest
                             .ensure_release(name.clone(), version.clone())
                             .hosting
                             .github = Some(cargo_dist_schema::GithubHosting {
+                            artifact_base_url: hosting.domain.clone(),
+                            artifact_download_path: format!("{repo_path}/releases/download/{tag}"),
                             artifact_download_url: format!("{repo_url}/releases/download/{tag}"),
                             owner: hosting.owner.clone(),
                             repo: hosting.project.clone(),
@@ -350,11 +353,15 @@ pub(crate) fn select_hosting(
     let repo = raw_repository_url
         .github_repo()
         .map_err(|e| DistError::CantEnableGithubUrlNotGithub { inner: e })?;
+    let domain = repo.domain();
     let repo_url = repo.web_url();
+    let repo_path = repo.web_path();
 
     Ok(Some(HostingInfo {
         hosts: hosting_providers,
+        domain,
         repo_url: repo_url.clone(),
+        repo_path,
         source_host: "github".to_owned(),
         owner: repo.owner,
         project: repo.name,

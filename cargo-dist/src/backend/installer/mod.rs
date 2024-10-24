@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TargetTriple;
+use cargo_dist_schema::{Hosting, TargetTriple};
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
 
@@ -58,6 +58,8 @@ pub struct InstallerInfo {
     pub app_version: String,
     /// URL of the directory where artifacts can be fetched from
     pub base_url: String,
+    /// Full information about configured hosting
+    pub hosting: Hosting,
     /// Artifacts this installer can fetch
     pub artifacts: Vec<ExecutableZipFragment>,
     /// Description of the installer (a good heading)
