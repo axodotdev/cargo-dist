@@ -1,6 +1,6 @@
 <div class="oranda-hide">
 
-# `dist`
+# `dist` (formerly known as `cargo-dist`)
 
 </div>
 
