@@ -16,7 +16,7 @@ use crate::{
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
-/// Arguments for `cargo dist init` ([`do_init`][])
+/// Arguments for `dist init` ([`do_init`][])
 #[derive(Debug)]
 pub struct InitArgs {
     /// Whether to auto-accept the default values for interactive prompts
@@ -52,7 +52,7 @@ fn theme() -> dialoguer::theme::ColorfulTheme {
     }
 }
 
-/// Run 'cargo dist init'
+/// Run 'dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // on ctrl-c,  dialoguer/console will clean up the rest of its
     // formatting, but the cursor will remain hidden unless we
@@ -79,7 +79,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let root_workspace = workspaces.root_workspace();
     let check = console::style("✔".to_string()).for_stderr().green();
 
-    eprintln!("let's setup your cargo-dist config...");
+    eprintln!("let's setup your dist config...");
     eprintln!();
 
     // For each [workspace] Cargo.toml in the workspaces, initialize [profile]
@@ -114,8 +114,8 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // Already-initted users should be asked whether to migrate.
     } else if root_workspace.kind == WorkspaceKind::Rust {
         let prompt = r#"Would you like to opt in to the new configuration format?
-    Future versions of cargo-dist will feature major changes to the
-    configuration format, including a new cargo-dist-specific configuration file."#;
+    Future versions of dist will feature major changes to the
+    configuration format, including a new dist-specific configuration file."#;
         let res = if args.yes {
             false
         } else {
@@ -257,12 +257,12 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         }
     }
 
-    eprintln!("{check} cargo-dist is setup!");
+    eprintln!("{check} dist is setup!");
     eprintln!();
 
     // regenerate anything that needs to be
     if !args.no_generate {
-        eprintln!("running 'cargo dist generate' to apply any changes");
+        eprintln!("running 'dist generate' to apply any changes");
         eprintln!();
 
         let ci_args = GenerateArgs {
@@ -299,7 +299,7 @@ fn init_dist_profile(
         // that enormous applications like chromium can become unbuildable), but definitely
         // eeks out a bit more from your binaries.
         //
-        // In principle cargo-dist is targeting True Shippable Binaries and so it's
+        // In principle dist is targeting True Shippable Binaries and so it's
         // worth it to go nuts getting every last drop out of your binaries... but a lot
         // of people are going to build binaries that might never even be used, so really
         // we're just burning a bunch of CI time for nothing.
@@ -310,7 +310,7 @@ fn init_dist_profile(
         new_profile.insert("lto", toml_edit::value("thin"));
         new_profile
             .decor_mut()
-            .set_prefix("\n# The profile that 'cargo dist' will build with\n")
+            .set_prefix("\n# The profile that 'dist' will build with\n")
     }
     dist_profile.or_insert(new_profile);
 
@@ -443,7 +443,7 @@ fn get_new_dist_metadata(
         if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
             let default = true;
             let prompt = format!(
-                r#"update your project to this version of cargo-dist?
+                r#"update your project to this version of dist?
     {} => {}"#,
                 desired_version, current_version
             );
@@ -677,7 +677,7 @@ fn get_new_dist_metadata(
             .contains(&InstallerStyle::Homebrew);
 
         if homebrew_is_new {
-            let prompt = r#"you've enabled Homebrew support; if you want cargo-dist
+            let prompt = r#"you've enabled Homebrew support; if you want dist
     to automatically push package updates to a tap (repository) for you,
     please enter the tap name (in GitHub owner/name format)"#;
             let default = "".to_string();
@@ -920,7 +920,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     apply_optional_value(
         table,
         "cargo-dist-version",
-        "# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)\n",
+        "# The preferred dist version to use in CI (Cargo.toml SemVer syntax)\n",
         cargo_dist_version.as_ref().map(|v| v.to_string()),
     );
 
@@ -1083,14 +1083,14 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     apply_optional_value(
         table,
         "create-release",
-        "# Whether cargo-dist should create a Github Release or use an existing draft\n",
+        "# Whether dist should create a Github Release or use an existing draft\n",
         *create_release,
     );
 
     apply_optional_value(
         table,
         "github-release",
-        "# Which phase cargo-dist should use to create the GitHub release\n",
+        "# Which phase dist should use to create the GitHub release\n",
         github_release.as_ref().map(|a| a.to_string()),
     );
 
@@ -1253,7 +1253,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     apply_optional_value(
         table,
         "tag-namespace",
-        "# A prefix git tags must include for cargo-dist to care about them\n",
+        "# A prefix git tags must include for dist to care about them\n",
         tag_namespace.as_ref(),
     );
 
@@ -1293,9 +1293,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     );
 
     // Finalize the table
-    table
-        .decor_mut()
-        .set_prefix("\n# Config for 'cargo dist'\n");
+    table.decor_mut().set_prefix("\n# Config for 'dist'\n");
 }
 
 /// Update the toml table to add/remove this value

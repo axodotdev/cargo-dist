@@ -1,6 +1,6 @@
-//! Code to compute the tasks cargo-dist should do
+//! Code to compute the tasks dist should do
 //!
-//! This is the heart and soul of cargo-dist, and ideally the [`gather_work`][] function
+//! This is the heart and soul of dist, and ideally the [`gather_work`][] function
 //! should compute every minute detail dist will perform ahead of time. This is done with
 //! the DistGraphBuilder, which roughly builds up the work to do as follows:
 //!
@@ -177,7 +177,7 @@ impl BinaryAliases {
     }
 }
 
-/// The graph of all work that cargo-dist needs to do on this invocation.
+/// The graph of all work that dist needs to do on this invocation.
 ///
 /// All work is precomputed at the start of execution because only discovering
 /// what you need to do in the middle of building/packing things is a mess.
@@ -186,11 +186,11 @@ impl BinaryAliases {
 pub struct DistGraph {
     /// Unique id for the system we're building on.
     ///
-    /// Since the whole premise of cargo-dist is to invoke it once on each machine, and no
-    /// two machines have any reason to have the exact same CLI args for cargo-dist, we
+    /// Since the whole premise of dist is to invoke it once on each machine, and no
+    /// two machines have any reason to have the exact same CLI args for dist, we
     /// just use a mangled form of the CLI arguments here.
     pub system_id: SystemId,
-    /// Whether it looks like `cargo dist init` has been run
+    /// Whether it looks like `dist init` has been run
     pub is_init: bool,
     /// What to allow to be dirty
     pub allow_dirty: DirtyMode,
@@ -214,7 +214,7 @@ pub struct DistGraph {
     pub repo_dir: Utf8PathBuf,
     /// The root directory of the current cargo workspace.
     pub workspace_dir: Utf8PathBuf,
-    /// cargo-dist's target dir (generally nested under `target_dir`).
+    /// dist's target dir (generally nested under `target_dir`).
     pub dist_dir: Utf8PathBuf,
     /// misc workspace-global config
     pub config: WorkspaceConfig,
@@ -260,8 +260,10 @@ pub struct HostingInfo {
 /// Various tools we have found installed on the system
 #[derive(Debug, Clone)]
 pub struct Tools {
-    /// Info on cargo, which must exist
-    pub cargo: CargoInfo,
+    /// Info on the host
+    pub host_target: TargetTriple,
+    /// Info on cargo
+    pub cargo: Option<CargoInfo>,
     /// rustup, useful for getting specific toolchains
     pub rustup: Option<Tool>,
     /// homebrew, only available on macOS
@@ -272,6 +274,15 @@ pub struct Tools {
     ///
     /// <https://www.ssl.com/guide/esigner-codesigntool-command-guide/>
     pub code_sign_tool: Option<Tool>,
+}
+
+impl Tools {
+    /// Returns the cargo info or an error
+    pub fn cargo(&self) -> DistResult<&CargoInfo> {
+        self.cargo.as_ref().ok_or(DistError::ToolMissing {
+            tool: "cargo".to_owned(),
+        })
+    }
 }
 
 /// Info about the cargo toolchain we're using
@@ -331,7 +342,7 @@ pub struct Binary {
     pub kind: BinaryKind,
 }
 
-/// Different kinds of binaries cargo-dist knows about
+/// Different kinds of binaries dist knows about
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum BinaryKind {
     /// Standard executable
@@ -895,7 +906,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
 
         // check homebrew taps for global publish jobs
-        // FIXME: when we add `cargo dist publish` we can drop this,
+        // FIXME: when we add `dist publish` we can drop this,
         // as we can support granular publish settings
         let mut global_homebrew_tap = None;
         let mut packages_with_mismatched_taps = vec![];
@@ -933,7 +944,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
 
         // check publish jobs for global publish jobs
-        // FIXME: when we add `cargo dist publish` we can drop this,
+        // FIXME: when we add `dist publish` we can drop this,
         // as we can support granular publish settings
         let mut global_publishers = None;
         let mut packages_with_mismatched_publishers = vec![];
@@ -968,7 +979,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let global_publish_prereleases = global_publishers
             .as_ref()
             .map(|p| {
-                // until we have `cargo dist publish` we need to enforce everyone agreeing on `prereleases`
+                // until we have `dist publish` we need to enforce everyone agreeing on `prereleases`
                 let PublisherConfig { homebrew, npm } = p;
                 let h_pre = homebrew.as_ref().map(|p| p.prereleases);
                 let npm_pre = npm.as_ref().map(|p| p.prereleases);
@@ -997,11 +1008,11 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             DirtyMode::AllowList(config.allow_dirty.clone())
         };
-        let cargo_version_line = tools.cargo.version_line.clone();
+        let cargo_version_line = tools.cargo.as_ref().and_then(|c| c.version_line.to_owned());
         let build_environment = if local_builds_are_lies {
             BuildEnvironment::Indeterminate
         } else {
-            determine_build_environment(&tools.cargo.host_target)
+            determine_build_environment(&tools.host_target)
         };
 
         let system = SystemInfo {
@@ -1016,7 +1027,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let signer = Signing::new(
             &axoclient,
-            &tools.cargo.host_target,
+            &tools.host_target,
             &dist_dir,
             config.builds.ssldotcom_windows_sign.clone(),
             config.builds.macos_sign,
@@ -2838,7 +2849,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     )?;
 
     // If no targets were specified, just use the host target
-    let host_target_triple = [graph.inner.tools.cargo.host_target.clone()];
+    let host_target_triple = [graph.inner.tools.host_target.clone()];
     // If all targets specified, union together the targets our packages support
     // Note that this uses BTreeSet as an intermediate to make the order stable
     let all_target_triples = graph
@@ -2864,7 +2875,7 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
             &host_target_triple
         } else if all_target_triples.is_empty() {
             return Err(DistError::CliMissingTargets {
-                host_target: graph.inner.tools.cargo.host_target.clone(),
+                host_target: graph.inner.tools.host_target.clone(),
             });
         } else {
             info!("using all target-triples");
@@ -2917,7 +2928,7 @@ pub fn cargo() -> DistResult<String> {
 }
 
 /// Get the host target triple from cargo
-pub fn get_host_target(cargo: String) -> DistResult<CargoInfo> {
+pub fn get_cargo_info(cargo: String) -> DistResult<CargoInfo> {
     let mut command = Cmd::new(&cargo, "get your Rust toolchain's version");
     command.arg("-vV");
     let output = command.output()?;
@@ -2962,9 +2973,13 @@ fn target_symbol_kind(target: &TargetTripleRef) -> Option<SymbolKind> {
 }
 
 fn tool_info() -> DistResult<Tools> {
-    let cargo_cmd = cargo()?;
-    let cargo = get_host_target(cargo_cmd)?;
+    let cargo = if let Ok(cargo_cmd) = cargo() {
+        get_cargo_info(cargo_cmd).ok()
+    } else {
+        None
+    };
     Ok(Tools {
+        host_target: TargetTriple::new(current_platform::CURRENT_PLATFORM.to_owned()),
         cargo,
         rustup: find_tool("rustup", "-V"),
         brew: find_tool("brew", "--version"),

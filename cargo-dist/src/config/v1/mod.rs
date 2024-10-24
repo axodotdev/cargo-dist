@@ -1,4 +1,4 @@
-//! The cargo-dist 1.0 config format (as opposed to the old v0 format)
+//! The dist 1.0 config format (as opposed to the old v0 format)
 //!
 //! This is the config subsystem!
 //!
@@ -159,9 +159,9 @@ pub fn app_config(
 /// config that is global to the entire workspace
 #[derive(Debug, Clone)]
 pub struct WorkspaceConfig {
-    /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
+    /// The intended version of dist to build with. (normal Cargo SemVer syntax)
     pub dist_version: Option<Version>,
-    /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
+    /// Generate targets whose dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
     /// ci config
     pub ci: CiConfig,
@@ -179,9 +179,9 @@ pub struct WorkspaceConfig {
 /// but inheritance relationships haven't been folded in yet.
 #[derive(Debug, Clone)]
 pub struct WorkspaceConfigInheritable {
-    /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
+    /// The intended version of dist to build with. (normal Cargo SemVer syntax)
     pub dist_version: Option<Version>,
-    /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
+    /// Generate targets whose dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
     /// artifact config
     pub artifacts: WorkspaceArtifactConfig,
@@ -270,7 +270,7 @@ pub struct AppConfig {
     pub installers: AppInstallerConfig,
     /// publisher config
     pub publishers: PublisherConfig,
-    /// Whether the package should be distributed/built by cargo-dist
+    /// Whether the package should be distributed/built by dist
     pub dist: Option<bool>,
     /// The full set of target triples to build for.
     pub targets: Vec<TargetTriple>,
@@ -290,7 +290,7 @@ pub struct AppConfigInheritable {
     pub installers: InstallerConfigInheritable,
     /// publisher config
     pub publishers: PublisherConfigInheritable,
-    /// Whether the package should be distributed/built by cargo-dist
+    /// Whether the package should be distributed/built by dist
     pub dist: Option<bool>,
     /// The full set of target triples to build for.
     pub targets: Vec<TargetTriple>,
@@ -366,20 +366,20 @@ impl ApplyLayer for AppConfigInheritable {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct TomlLayer {
-    /// The intended version of cargo-dist to build with. (normal Cargo SemVer syntax)
+    /// The intended version of dist to build with. (normal Cargo SemVer syntax)
     ///
     /// When generating full tasks graphs (such as CI scripts) we will pick this version.
     ///
     /// FIXME: Should we produce a warning if running locally with a different version? In theory
     /// it shouldn't be a problem and newer versions should just be Better... probably you
     /// Really want to have the exact version when running generate to avoid generating
-    /// things other cargo-dist versions can't handle!
+    /// things other dist versions can't handle!
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_version: Option<Version>,
 
-    /// Whether the package should be distributed/built by cargo-dist
+    /// Whether the package should be distributed/built by dist
     ///
-    /// This mainly exists to be set to `false` to make cargo-dist ignore the existence of this
+    /// This mainly exists to be set to `false` to make dist ignore the existence of this
     /// package. Note that we may still build the package as a side-effect of building the
     /// workspace -- we just won't bundle it up and report it.
     ///
@@ -387,7 +387,7 @@ pub struct TomlLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist: Option<bool>,
 
-    /// Generate targets whose cargo-dist should avoid checking for up-to-dateness.
+    /// Generate targets whose dist should avoid checking for up-to-dateness.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_dirty: Option<Vec<GenerateMode>>,
 

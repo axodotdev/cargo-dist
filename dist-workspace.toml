@@ -1,14 +1,14 @@
 [workspace]
 members = ["cargo:."]
 
-# Config for 'cargo dist'
+# Config for 'dist'
 [dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.23.0"
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.24.0-prerelease.2"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = ["shell", "powershell", "homebrew", "npm"]
+installers = ["shell", "powershell", "npm", "homebrew"]
 # A GitHub repo to push Homebrew formulas to
 tap = "axodotdev/homebrew-tap"
 # A namespace to use when publishing this package to the npm registry
@@ -35,3 +35,6 @@ build = ["cargo", "run", "--release", "--", "dist", "manifest-schema", "--output
 [dist.github-custom-runners]
 aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
 aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
+
+[dist.bin-aliases]
+"dist" = ["cargo-dist"]

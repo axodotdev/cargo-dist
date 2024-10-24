@@ -3,7 +3,7 @@
 //! # cargo-dist-schema
 //!
 //! This crate exists to serialize and deserialize the dist-manifest.json produced
-//! by cargo-dist. Ideally it should be reasonably forward and backward compatible
+//! by dist. Ideally it should be reasonably forward and backward compatible
 //! with different versions of this format.
 //!
 //! The root type of the schema is [`DistManifest`][].
@@ -83,7 +83,7 @@ impl GithubRunnerRef {
     }
 }
 
-/// A local system path on the machine cargo-dist was run.
+/// A local system path on the machine dist was run.
 ///
 /// This is a String because when deserializing this may be a path format from a different OS!
 pub type LocalPath = String;
@@ -102,10 +102,10 @@ pub type AssetId = String;
 /// A sorted set of values
 pub type SortedSet<T> = std::collections::BTreeSet<T>;
 
-/// A report of the releases and artifacts that cargo-dist generated
+/// A report of the releases and artifacts that dist generated
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DistManifest {
-    /// The version of cargo-dist that generated this
+    /// The version of dist that generated this
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_version: Option<String>,
@@ -113,7 +113,7 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announcement_tag: Option<String>,
-    /// True if --tag wasn't explicitly passed to cargo-dist. This usually indicates
+    /// True if --tag wasn't explicitly passed to dist. This usually indicates
     /// some kind of dry-run state like pr-run-mode=upload. Some third-party tools
     /// may use this as a proxy for "is dry run"
     #[serde(default)]
@@ -301,10 +301,10 @@ pub struct GithubMatrixEntry {
     /// Github Runner to user
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runner: Option<GithubRunner>,
-    /// Expression to execute to install cargo-dist
+    /// Expression to execute to install dist
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_dist: Option<String>,
-    /// Arguments to pass to cargo-dist
+    /// Arguments to pass to dist
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_args: Option<String>,
     /// Command to run to install dependencies
@@ -935,7 +935,7 @@ impl std::fmt::Display for Library {
 fn dist_version(input: &str) -> Option<Version> {
     #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
     struct PartialDistManifest {
-        /// The version of cargo-dist that generated this
+        /// The version of dist that generated this
         #[serde(default)]
         #[serde(skip_serializing_if = "Option::is_none")]
         pub dist_version: Option<String>,

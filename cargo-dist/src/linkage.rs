@@ -21,7 +21,7 @@ use crate::{
     config::Config, errors::*, gather_work, platform::targets::TARGET_HOST, Artifact, DistGraph,
 };
 
-/// Arguments for `cargo dist linkage` ([`do_linkage][])
+/// Arguments for `dist linkage` ([`do_linkage][])
 #[derive(Debug)]
 pub struct LinkageArgs {
     /// Print human-readable output
@@ -32,7 +32,7 @@ pub struct LinkageArgs {
     pub from_json: Option<String>,
 }
 
-/// Determinage dynamic linkage of built artifacts (impl of `cargo dist linkage`)
+/// Determinage dynamic linkage of built artifacts (impl of `dist linkage`)
 pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> DistResult<()> {
     let manifest = if let Some(target) = args.from_json.clone() {
         let file = SourceFile::load_local(target)?;
@@ -53,7 +53,7 @@ pub fn do_linkage(cfg: &Config, args: &LinkageArgs) -> DistResult<()> {
     Ok(())
 }
 
-/// Assuming someone just ran `cargo dist build` on the current machine,
+/// Assuming someone just ran `dist build` on the current machine,
 /// compute the linkage by checking binaries in the temp to-be-zipped dirs.
 fn compute_linkage_assuming_local_build(
     dist: &DistGraph,

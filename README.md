@@ -1,6 +1,6 @@
 <div class="oranda-hide">
 
-# `cargo-dist`
+# `dist` (formerly known as `cargo-dist`)
 
 </div>
 
@@ -8,9 +8,9 @@
 [![docs](https://docs.rs/cargo-dist/badge.svg)](https://docs.rs/cargo-dist)
 [![Rust CI](https://github.com/axodotdev/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)](https://github.com/axodotdev/cargo-dist/actions/workflows/ci.yml)
 
-*cargo-dist distributes your binaries*
+*dist distributes your binaries*
 
-The TL;DR is that with cargo-dist set up, just doing this:
+The TL;DR is that with dist set up, just doing this:
 
 ```sh
 git commit -am "release: 0.2.0"
@@ -28,7 +28,7 @@ Or if you're using [oranda](https://opensource.axo.dev/oranda/), you'll get [thi
 
 Cutting releases of your apps and distributing binaries for them has a lot of steps, and cargo-dist is quickly growing to try to cover them all!
 
-To accomplish this, cargo-dist functionality can be broken up into two parts:
+To accomplish this, dist functionality can be broken up into two parts:
 
 * building (**planning** the release; **building** binaries and installers)
 * distributing (**hosting** artifacts; **publishing** packages; **announcing** releases)
@@ -38,7 +38,7 @@ The build functionality can be used on its own if you just want some tarballs an
 
 ## Building
 
-As a build tool, cargo-dist can do the following:
+As a build tool, dist can do the following:
 
 * Pick good build flags for "shippable binaries"
 * Make [tarballs][] and [installers][] for the resulting binaries
@@ -49,7 +49,7 @@ That's a short list because "we make [installers][]" is doing a lot of heavy lif
 
 ## Distributing
 
-As a distribution tool, cargo-dist gets to flex its biggest superpower: **it generates [its own CI scripts][ci-providers]**. For instance, enabling [GitHub CI][ci-providers] with `cargo dist init` will generate release.yml, which implements the full pipeline of plan, build, host, publish, announce:
+As a distribution tool, dist gets to flex its biggest superpower: **it generates [its own CI scripts][ci-providers]**. For instance, enabling [GitHub CI][ci-providers] with `dist init` will generate release.yml, which implements the full pipeline of plan, build, host, publish, announce:
 
 * Plan
     * Waits for you to push a git tag for a new version (v1.0.0, my-app-v1.0.0, my-app/1.0.0, ...)
@@ -73,7 +73,7 @@ As a distribution tool, cargo-dist gets to flex its biggest superpower: **it gen
 
 # Read The Book!
 
-We've got all the docs you need over at the [cargo-dist book](https://axodotdev.github.io/cargo-dist/book/)!
+We've got all the docs you need over at the [dist book](https://axodotdev.github.io/cargo-dist/book/)!
 
 * [Introduction](https://opensource.axo.dev/cargo-dist/book/introduction.html)
 * [Install](https://opensource.axo.dev/cargo-dist/book/install.html)
@@ -87,7 +87,7 @@ We've got all the docs you need over at the [cargo-dist book](https://axodotdev.
 
 ## Updating Snapshots
 
-cargo-dist's tests rely on [cargo-insta](https://crates.io/crates/cargo-insta) for snapshot testing various
+dist's tests rely on [cargo-insta](https://crates.io/crates/cargo-insta) for snapshot testing various
 outputs. This allows us to both catch regressions and also more easily review UI/output changes. If a snapshot
 test fails, you will need to use the `cargo insta` CLI tool to update them:
 
@@ -109,7 +109,7 @@ If you know you like the changes, just use `cargo insta accept` to auto-apply al
 
 ## Cutting Releases
 
-cargo-dist is self-hosting, so you just need to push a git-tag with the right format to "do" a release. Of course there's lots of other tedious tasks that come with updating a release, and we use cargo-release to handle all those mechanical details of updating versions/headings/tags. See [these sections of the docs for the release workflow we use](https://opensource.axo.dev/cargo-dist/book/workspaces/cargo-release-guide.html#using-cargo-release-with-pull-requests).
+dist is self-hosting, so you just need to push a git-tag with the right format to "do" a release. Of course there's lots of other tedious tasks that come with updating a release, and we use cargo-release to handle all those mechanical details of updating versions/headings/tags. See [these sections of the docs for the release workflow we use](https://opensource.axo.dev/cargo-dist/book/workspaces/cargo-release-guide.html#using-cargo-release-with-pull-requests).
 
 TL;DR:
 
@@ -117,15 +117,15 @@ TL;DR:
 * run cargo-release as described in the docs
 * ..you're done!
 
-Note that we've wired up cargo-dist and cargo-release to understand the "Unreleased" heading so you
+Note that we've wired up dist and cargo-release to understand the "Unreleased" heading so you
 should never edit that name, the tools will update it as needed.
 
-If that releases succeeds, we recommend updating the bootstrap version of cargo-dist as a follow up:
+If that releases succeeds, we recommend updating the bootstrap version of dist as a follow up:
 
-* install the version of cargo-dist you just released on your system
-* run `cargo dist init --yes`
+* install the version of dist you just released on your system
+* run `dist init --yes`
 * commit "chore: update bootstrap dist to ..."
 
-Note that as a consequence of the way we self-host, cargo-dist's published artifacts will always be built/generated by a previous version of itself. This can be problematic if you make breaking changes to cargo-dist-schema's format... so don't! Many things in the schema are intentionally optional to enable forward and backward compatibility, so this should hopefully work well!
+Note that as a consequence of the way we self-host, dist's published artifacts will always be built/generated by a previous version of itself. This can be problematic if you make breaking changes to cargo-dist-schema's format... so don't! Many things in the schema are intentionally optional to enable forward and backward compatibility, so this should hopefully work well!
 
 </div>

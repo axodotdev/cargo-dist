@@ -84,7 +84,7 @@ function Install-Binary($install_args) {
 
   Initialize-Environment
 
-  # Platform info injected by cargo-dist
+  # Platform info injected by dist
   $platforms = @{
   {%- for artifact in artifacts %}
     "{{ artifact.target_triple }}" = @{

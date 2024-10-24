@@ -1,8 +1,8 @@
 #![deny(missing_docs)]
 
-//! CLI binary interface for cargo-dist
+//! CLI binary interface for dist
 
-use std::io::Write;
+use std::{ffi::OsString, io::Write};
 
 use axoasset::LocalAsset;
 use axoprocess::Cmd;
@@ -13,8 +13,7 @@ use cargo_dist::{linkage::LinkageDisplay, *};
 use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{
-    Cli, Commands, FakeCli, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat,
-    PlanArgs,
+    Cli, Commands, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat, PlanArgs,
 };
 use console::Term;
 use miette::{miette, IntoDiagnostic};
@@ -25,8 +24,13 @@ use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs}
 mod cli;
 
 fn main() {
-    let FakeCli::Dist(config) = FakeCli::parse();
-    axocli::CliAppBuilder::new("cargo dist")
+    // Pop extraneous "dist" argument that `dist` passes to us
+    let mut args: Vec<OsString> = std::env::args_os().collect();
+    if args.get(1).map(|arg| arg == "dist").unwrap_or(false) {
+        args.remove(1);
+    }
+    let config = Cli::parse_from(args);
+    axocli::CliAppBuilder::new("dist")
         .verbose(config.verbose)
         .json_errors(config.output_format == OutputFormat::Json)
         .start(config, real_main);
@@ -71,7 +75,7 @@ fn print(
             // Add some context if we're printing predicted paths
             if let Some(name) = warn_cmd {
                 if !cli.no_local_paths {
-                    let message = format!("\nNOTE: 'cargo dist {name}' does not perform builds, these paths may not exist yet!");
+                    let message = format!("\nNOTE: 'dist {name}' does not perform builds, these paths may not exist yet!");
                     writeln!(out, "{}", out.style().yellow().apply_to(message))
                         .into_diagnostic()?;
                 }
@@ -372,7 +376,7 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
     use clap::CommandFactory;
 
     let app_name = "cargo-dist";
-    let pretty_app_name = "cargo dist";
+    let pretty_app_name = "dist";
     // Make a new App to get the help message this time.
 
     writeln!(out, "# {pretty_app_name} CLI manual")?;
@@ -383,8 +387,8 @@ fn print_help_markdown(out: &mut dyn Write) -> std::io::Result<()> {
     )?;
     writeln!(out)?;
 
-    let mut fake_cli = FakeCli::command().term_width(0);
-    let full_command = fake_cli.get_subcommands_mut().next().unwrap();
+    let mut fake_cli = Cli::command().term_width(0);
+    let full_command = &mut fake_cli;
     full_command.build();
     let mut work_stack = vec![full_command];
     let mut is_full_command = true;
@@ -541,7 +545,7 @@ fn this_cargo_dist_provided_by_brew() -> bool {
     }
 
     if let Ok(path) = std::env::current_exe() {
-        // The cargo-dist being a symlink that points to a copy that
+        // The dist being a symlink that points to a copy that
         // lives in Homebrew's "Cellar", *or* that file directly,
         // suggests that this file is from Homebrew.
         let realpath;
@@ -557,7 +561,7 @@ fn this_cargo_dist_provided_by_brew() -> bool {
 }
 
 fn perform_init(path: &Utf8PathBuf, args: &cli::UpdateArgs) -> Result<(), miette::ErrReport> {
-    let mut cmd = Cmd::new(path, "cargo dist init");
+    let mut cmd = Cmd::new(path, "dist init");
     cmd.arg("dist").arg("init");
     // Forward shared arguments as necessary
     if args.yes {
@@ -586,7 +590,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     }
 
     if this_cargo_dist_provided_by_brew() {
-        eprintln!("Your copy of `cargo-dist` seems to have been installed via Homebrew.");
+        eprintln!("Your copy of `dist` seems to have been installed via Homebrew.");
         eprintln!("Please run `brew upgrade cargo-dist` to update this copy.");
         return Ok(());
     }
@@ -630,7 +634,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     }
 
     if !updater.check_receipt_is_for_this_executable()? {
-        eprintln!("This installation of cargo-dist wasn't installed via a method that `cargo dist selfupdate` supports.");
+        eprintln!("This installation of dist wasn't installed via a method that `dist selfupdate` supports.");
         eprintln!("Please update manually.");
         return Ok(());
     }
@@ -676,7 +680,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     // is appropriate.
     if !args.skip_init {
         let my_path = Utf8PathBuf::from_path_buf(std::env::current_exe().into_diagnostic()?)
-            .map_err(|_| miette!("Unable to decode the path to cargo-dist itself"))?;
+            .map_err(|_| miette!("Unable to decode the path to dist itself"))?;
         perform_init(&my_path, args)?;
 
         return Ok(());

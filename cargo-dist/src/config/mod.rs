@@ -72,7 +72,7 @@ pub enum ArtifactMode {
     Global,
     /// Fuzzily build "as much as possible" for the host system
     Host,
-    /// Build all the artifacts; only really appropriate for `cargo-dist manifest`
+    /// Build all the artifacts; only really appropriate for `dist manifest`
     All,
     /// Fake all the artifacts; useful for testing/mocking/staging
     Lies,
@@ -678,7 +678,7 @@ impl ChecksumStyle {
 /// Which style(s) of configuration to generate
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum GenerateMode {
-    /// Generate CI scripts for orchestrating cargo-dist
+    /// Generate CI scripts for orchestrating dist
     #[serde(rename = "ci")]
     Ci,
     /// Generate wsx (WiX) templates for msi installers
@@ -695,7 +695,7 @@ impl std::fmt::Display for GenerateMode {
     }
 }
 
-/// Arguments to `cargo dist host`
+/// Arguments to `dist host`
 #[derive(Clone, Debug)]
 pub struct HostArgs {
     /// Which hosting steps to run

@@ -5,7 +5,7 @@ expression: json_schema
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DistManifest",
-  "description": "A report of the releases and artifacts that cargo-dist generated",
+  "description": "A report of the releases and artifacts that dist generated",
   "type": "object",
   "properties": {
     "announcement_changelog": {
@@ -35,7 +35,7 @@ expression: json_schema
       ]
     },
     "announcement_tag_is_implicit": {
-      "description": "True if --tag wasn't explicitly passed to cargo-dist. This usually indicates some kind of dry-run state like pr-run-mode=upload. Some third-party tools may use this as a proxy for \"is dry run\"",
+      "description": "True if --tag wasn't explicitly passed to dist. This usually indicates some kind of dry-run state like pr-run-mode=upload. Some third-party tools may use this as a proxy for \"is dry run\"",
       "default": false,
       "type": "boolean"
     },
@@ -72,7 +72,7 @@ expression: json_schema
       ]
     },
     "dist_version": {
-      "description": "The version of cargo-dist that generated this",
+      "description": "The version of dist that generated this",
       "type": [
         "string",
         "null"
@@ -766,14 +766,14 @@ expression: json_schema
           ]
         },
         "dist_args": {
-          "description": "Arguments to pass to cargo-dist",
+          "description": "Arguments to pass to dist",
           "type": [
             "string",
             "null"
           ]
         },
         "install_dist": {
-          "description": "Expression to execute to install cargo-dist",
+          "description": "Expression to execute to install dist",
           "type": [
             "string",
             "null"

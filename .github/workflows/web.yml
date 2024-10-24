@@ -20,12 +20,12 @@ on:
   # Whenever something gets pushed to main, update the docs!
   # This is great for getting docs changes live without cutting a full release.
   #
-  # Note that if you're using cargo-dist, this will "race" the Release workflow
+  # Note that if you're using dist, this will "race" the Release workflow
   # that actually builds the Github Release that oranda tries to read (and
   # this will almost certainly complete first). As a result you will publish
   # docs for the latest commit but the oranda landing page won't know about
   # the latest release. The workflow_run trigger below will properly wait for
-  # cargo-dist, and so this half-published state will only last for ~10 minutes.
+  # dist, and so this half-published state will only last for ~10 minutes.
   #
   # If you only want docs to update with releases, disable this one.
   push:
@@ -34,7 +34,7 @@ on:
 
   # Whenever a workflow called "Release" completes, update the docs!
   #
-  # If you're using cargo-dist, this is recommended, as it will ensure that
+  # If you're using dist, this is recommended, as it will ensure that
   # oranda always sees the latest release right when it's available. Note
   # however that Github's UI is wonky when you use workflow_run, and won't
   # show this workflow as part of any commit. You have to go to the "actions"

@@ -1,5 +1,5 @@
 //! Shared code for gathering up information about a workspace, used by various axo.dev tools
-//! like cargo-dist and oranda.
+//! like dist and oranda.
 //!
 //! The main entry point is [`WorkspaceGraph::find`][].
 
@@ -279,7 +279,7 @@ impl WorkspaceSearch {
 /// Kind of workspace
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WorkspaceKind {
-    /// generic cargo-dist compatible workspace
+    /// generic dist compatible workspace
     #[cfg(feature = "generic-projects")]
     Generic,
     /// cargo/rust workspace
@@ -460,7 +460,7 @@ pub struct PackageInfo {
     /// might also use it for auto-detecting "hey you're using github, here's the
     /// recommended github setup".
     ///
-    /// i.e. `cargo dist init --installer=shell` uses this as the base URL for fetching from
+    /// i.e. `dist init --installer=shell` uses this as the base URL for fetching from
     /// a Github Release™️.
     pub repository_url: Option<String>,
     /// URL to the homepage for this package.

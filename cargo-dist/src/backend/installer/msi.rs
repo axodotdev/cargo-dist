@@ -32,15 +32,15 @@ pub struct MsiInstallerInfo {
 impl MsiInstallerInfo {
     /// Build the msi installer
     ///
-    /// Note that this assumes `write_wsx_to_disk` was run beforehand (via `cargo dist generate`),
-    /// which should be enforced by `check_wsx` (via `cargo dist generate --check`).
+    /// Note that this assumes `write_wsx_to_disk` was run beforehand (via `dist generate`),
+    /// which should be enforced by `check_wsx` (via `dist generate --check`).
     pub fn build(&self, dist: &DistGraph) -> DistResult<()> {
         info!("building an msi: {}", self.file_path);
 
         let mut b = wix::create::Builder::new();
         // Build this specific package
         b.package(Some(&self.pkg_spec));
-        // cargo-dist already did the build for us
+        // dist already did the build for us
         b.no_build(true);
         // It built with the `dist` profile
         b.profile(Some("dist"));
@@ -86,13 +86,13 @@ impl MsiInstallerInfo {
         Ok(renders)
     }
 
-    /// msi's impl of `cargo dist genenerate --check`
+    /// msi's impl of `dist genenerate --check`
     pub fn check_config(&self) -> DistResult<()> {
         self.check_wix_guids()?;
         self.check_wxs()?;
         Ok(())
     }
-    /// msi's impl of `cargo dist genenerate`
+    /// msi's impl of `dist genenerate`
     pub fn write_config_to_disk(&self) -> DistResult<()> {
         self.write_wix_guids_to_disk()?;
         self.write_wxs_to_disk()?;

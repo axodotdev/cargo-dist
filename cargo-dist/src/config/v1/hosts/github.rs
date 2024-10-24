@@ -12,10 +12,10 @@ pub struct GithubHostLayer {
 
     /// Whether we should create the Github Release for you when you push a tag.
     ///
-    /// If true (default), cargo-dist will create a new Github Release and generate
+    /// If true (default), dist will create a new Github Release and generate
     /// a title/body for it based on your changelog.
     ///
-    /// If false, cargo-dist will assume a draft Github Release already exists
+    /// If false, dist will assume a draft Github Release already exists
     /// with the title/body you want. At the end of a successful publish it will
     /// undraft the Github Release.
     #[serde(skip_serializing_if = "Option::is_none")]

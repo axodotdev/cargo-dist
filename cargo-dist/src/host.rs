@@ -129,7 +129,7 @@ impl<'a> DistGraphBuilder<'a> {
                 let name = package.name.clone();
                 // Only update them if they don't already have hosting
                 // if create_hosting is set, then consider all entries out of date
-                // and needing refreshing (this is only set by `cargo dist host create`)
+                // and needing refreshing (this is only set by `dist host create`)
                 let needs_hosting = create_hosting
                     || self
                         .manifest
@@ -319,7 +319,7 @@ pub(crate) fn select_hosting(
         // This is the one case where we'll tolerate hosting not existing:
         // * they don't have one set explicitly
         // * and they haven't turned on a CI provider
-        // This implies early setup or using cargo-dist very "manually"
+        // This implies early setup or using dist very "manually"
         return Ok(None);
     };
 

@@ -58,9 +58,9 @@ fn basic_cargo_toml_no_change() {
 name = "whatever"
 version = "1.0.0"
 
-# Config for 'cargo dist'
+# Config for 'dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = "github"
@@ -114,9 +114,9 @@ fn basic_cargo_toml_one_item_arrays() {
 name = "whatever"
 version = "1.0.0"
 
-# Config for 'cargo dist'
+# Config for 'dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github"]
@@ -133,9 +133,9 @@ targets = ["aarch64-apple-darwin"]
 name = "whatever"
 version = "1.0.0"
 
-# Config for 'cargo dist'
+# Config for 'dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = "github"
@@ -166,9 +166,9 @@ fn basic_cargo_toml_multi_item_arrays() {
 name = "whatever"
 version = "1.0.0"
 
-# Config for 'cargo dist'
+# Config for 'dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github", "github"]
@@ -185,9 +185,9 @@ targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
 name = "whatever"
 version = "1.0.0"
 
-# Config for 'cargo dist'
+# Config for 'dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github", "github"]

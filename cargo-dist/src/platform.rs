@@ -76,11 +76,11 @@
 //!
 //! In particular, only once we have info from building and linkage-checking
 //! the binaries will we have all the [`RuntimeConditions`][]. In a typical
-//! CI run of cargo-dist this is fine, because the main use of this info
+//! CI run of dist this is fine, because the main use of this info
 //! is for installers, which are built with a fresh invocation on a machine
 //! with all binaries/platform info prefetched.
 //!
-//! However, if you were to run cargo-dist locally and try to build binaries
+//! However, if you were to run dist locally and try to build binaries
 //! and installers all at once, we currently fail to regenerate the platform
 //! info and update the installers. Doing this would necessitate some refactors
 //! to make the installers compute more of their archive/platform info "latebound"
@@ -203,7 +203,7 @@
 //!
 //! # targets vs target
 //!
-//! Ok so a lot of cargo-dist's code is *vaguely* trying to allow for a single archive
+//! Ok so a lot of dist's code is *vaguely* trying to allow for a single archive
 //! to *natively* be built for multiple architectures. This would for instance be the
 //! case for any apple Universal Binary, which is just several binaries built for different
 //! architectures all stapled together.

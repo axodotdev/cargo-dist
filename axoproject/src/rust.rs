@@ -37,8 +37,25 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
         }
     };
 
+    let graph = match package_graph(start_dir) {
+        Ok(graph) => graph,
+        Err(e) => {
+            let error = match e {
+                // Indicates we failed to run `cargo metadata`; this is the
+                // one we want to intercept and replace with a friendlier error.
+                crate::AxoprojectError::CargoMetadata(guppy::Error::CommandError(_)) => {
+                    crate::AxoprojectError::CargoMissing {}
+                }
+                // Any other errors are less expected, and we should pass
+                // those through unaltered.
+                _ => e,
+            };
+            return WorkspaceSearch::Missing(error);
+        }
+    };
+
     // There's definitely some kind of Cargo workspace, now try to make sense of it
-    let workspace = package_graph(start_dir).and_then(|graph| workspace_info(&graph));
+    let workspace = workspace_info(&graph);
     match workspace {
         Ok(workspace) => WorkspaceSearch::Found(workspace),
         Err(e) => WorkspaceSearch::Broken {

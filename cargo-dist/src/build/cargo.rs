@@ -22,6 +22,7 @@ impl<'a> DistGraphBuilder<'a> {
         &mut self,
         workspace_idx: WorkspaceIdx,
     ) -> DistResult<Vec<BuildStep>> {
+        let cargo = self.inner.tools.cargo()?;
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
@@ -100,7 +101,7 @@ impl<'a> DistGraphBuilder<'a> {
 
             // If we're trying to cross-compile, ensure the rustup toolchain
             // is setup!
-            if target != self.inner.tools.cargo.host_target {
+            if target != cargo.host_target {
                 if let Some(rustup) = self.inner.tools.rustup.clone() {
                     builds.push(BuildStep::Rustup(RustupStep {
                         rustup,
@@ -161,6 +162,8 @@ pub fn build_cargo_target(
     manifest: &mut DistManifest,
     target: &CargoBuildStep,
 ) -> DistResult<()> {
+    let cargo = dist_graph.tools.cargo()?;
+
     eprint!(
         "building cargo target ({}/{}",
         target.target_triple, target.profile
@@ -177,7 +180,7 @@ pub fn build_cargo_target(
         }
     }
 
-    let mut command = Cmd::new(&dist_graph.tools.cargo.cmd, "build your app with Cargo");
+    let mut command = Cmd::new(&cargo.cmd, "build your app with Cargo");
     command
         .arg("build")
         .arg("--profile")
@@ -265,7 +268,7 @@ pub fn rustup_toolchain(dist_graph: &DistGraph, cmd: &RustupStep) -> DistResult<
 }
 
 /// Similar to the above, we read Homebrew's recursive dependency tree and
-/// then append link flags to cargo-dist's rustflags.
+/// then append link flags to dist's rustflags.
 /// These ensure that Rust can find C libraries that may exist within
 /// each package's prefix.
 fn determine_brew_rustflags(base_rustflags: &str, environment: &SortedMap<&str, &str>) -> String {

@@ -1345,7 +1345,7 @@ function Install-Binary($install_args) {
 
   Initialize-Environment
 
-  # Platform info injected by cargo-dist
+  # Platform info injected by dist
   $platforms = @{
     "aarch64-pc-windows-msvc" = @{
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"

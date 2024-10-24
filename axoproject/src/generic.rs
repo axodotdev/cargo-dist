@@ -1,4 +1,4 @@
-//! Support for generic projects with cargo-dist build instructions
+//! Support for generic projects with dist build instructions
 
 use axoasset::{AxoassetError, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
