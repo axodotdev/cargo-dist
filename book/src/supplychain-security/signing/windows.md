@@ -41,7 +41,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     In the same "signing credentials" section as the previous step, you may want to disable the "malware blocker".
 
-    SSL.com's cloud signing provides an [optional malware checking service](https://www.ssl.com/guide/how-to-use-pre-signing-malware-scan-with-ssl-com-esigner/) which you may want to disable in your account settings. The purpose of this feature is to mitigate the risk of your infrastucture being compromised and being used to sign malware, by essentially giving SSL.com permission to refuse to sign suspicious-looking binaries.
+    SSL.com's cloud signing provides an [optional malware checking service](https://www.ssl.com/guide/how-to-use-pre-signing-malware-scan-with-ssl-com-esigner/) which you may want to disable in your account settings. The purpose of this feature is to mitigate the risk of your infrastructure being compromised and being used to sign malware, by essentially giving SSL.com permission to refuse to sign suspicious-looking binaries.
 
     When publishing from environments like GitHub CI, there isn't much room for such a compromise to occur that wouldn't just compromise your SSL.com account anyway, so the benefits are unclear compared to the risk of your releases randomly failing due to a false positive.
 

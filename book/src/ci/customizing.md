@@ -189,7 +189,7 @@ this as early in the build job as possible.
 Currently the use of [folding](https://yaml.org/spec/1.2.2/#813-folded-style) (`>`) and
 [chomping](https://yaml.org/spec/1.2.2/#8112-block-chomping-indicator) (`-`) multi-line string
 modifiers will probably generate a surprising outputs. This is particularly important for any
-actions that use the `run` keyword and it is recomended to use the literal (`|`) string modifier for
+actions that use the `run` keyword and it is recommended to use the literal (`|`) string modifier for
 multi-line strings.
 
 ### Bring your own release

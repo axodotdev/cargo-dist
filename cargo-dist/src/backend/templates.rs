@@ -116,9 +116,9 @@ impl Templates {
                 let Some(value) = v.as_str() else {
                     return minijinja::escape_formatter(o, s, v);
                 };
-                // preserve exising behavior for single line strings not sure why but
+                // preserve existing behavior for single line strings not sure why but
                 // an empty string is being formatted when importing the homebrew publish
-                // job so also preserve this behvaior for whitespace only strings
+                // job so also preserve this behavior for whitespace only strings
                 if !value.trim().contains('\n') {
                     return minijinja::escape_formatter(o, s, v);
                 };

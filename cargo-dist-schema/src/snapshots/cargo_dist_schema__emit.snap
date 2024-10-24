@@ -585,7 +585,7 @@ expression: json_schema
               "type": "object",
               "properties": {
                 "glibc_version": {
-                  "description": "The builder's glibc verison, relevant to glibc-based builds.",
+                  "description": "The builder's glibc version, relevant to glibc-based builds.",
                   "anyOf": [
                     {
                       "$ref": "#/definitions/GlibcVersion"

@@ -138,7 +138,7 @@ pub struct GithubJobStep {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub run: Option<String>,
 
-    /// The working directory this action sould run
+    /// The working directory this action should run
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub working_directory: Option<String>,
@@ -172,7 +172,7 @@ pub struct GithubJobStep {
 pub struct GithubCiJob {
     /// Name of the job
     pub name: String,
-    /// Permisions to give the job
+    /// Permissions to give the job
     pub permissions: Option<GithubPermissionMap>,
 }
 
@@ -252,7 +252,7 @@ impl GithubCiInfo {
         let tap = dist.global_homebrew_tap.clone();
 
         let mut job_permissions = ci_config.permissions.clone();
-        // user publish jobs default to elevated priviledges
+        // user publish jobs default to elevated privileges
         for JobStyle::User(name) in &ci_config.publish_jobs {
             job_permissions.entry(name.clone()).or_insert_with(|| {
                 GithubPermissionMap::from_iter([

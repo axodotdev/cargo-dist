@@ -33,7 +33,7 @@ pub(crate) fn diff_source(existing: SourceFile, new_file_contents: &str) -> Dist
     // The timeout exists because essentially diff algorithms iteratively refine the results,
     // and can convince themselves to try way too hard for minimum benefit. Hitting the timeout
     // isn't fatal, it just tells the algorithm to call the result "good enough" if it hits
-    // something pathalogical.
+    // something pathological.
     let diff = similar::TextDiff::configure()
         .algorithm(similar::Algorithm::Patience)
         .timeout(Duration::from_millis(10))

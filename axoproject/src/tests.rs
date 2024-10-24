@@ -658,7 +658,7 @@ fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
             package.changelog_file.as_deref().unwrap(),
             "inner fake changelog!",
         );
-        // repository should yield this one, so this should faile
+        // repository should yield this one, so this should fail
         assert_eq!(
             workspaces
                 .repository_url(Some(&[PackageIdx(0)]))
@@ -739,7 +739,7 @@ fn shared_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
             package.changelog_file.as_deref().unwrap(),
             "inner fake changelog!",
         );
-        // repository should yield this one, so this should faile
+        // repository should yield this one, so this should fail
         assert_eq!(
             workspaces
                 .repository_url(Some(&[PackageIdx(0)]))

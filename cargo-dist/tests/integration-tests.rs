@@ -10,7 +10,7 @@
 //! * Run PSScriptAnalyzer on installer.ps1 (only if detected on the system)
 //! * Run installer.sh and check the results
 //!    * linux/macos only, must also set RUIN_MY_COMPUTER_WITH_INSTALLERS to opt in
-//!    * HOME, CARGO_HOME, and MY_ENV_VAR overriden to keep it scoped to a temp dir
+//!    * HOME, CARGO_HOME, and MY_ENV_VAR overridden to keep it scoped to a temp dir
 //!        * CARGO_HOME currently always deleted, should probably have a test where we set it
 //! * insta.rs snapshot the installers
 //!

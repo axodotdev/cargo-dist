@@ -86,7 +86,7 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<InstallerStyle>>,
 
-    /// Custom sucess message for installers
+    /// Custom success message for installers
     ///
     /// When an shell or powershell installer succeeds at installing your app it
     /// will out put a message to the user. This config allows a user to specify
@@ -189,7 +189,7 @@ pub struct DistMetadata {
     pub precise_builds: Option<bool>,
 
     /// Whether we should try to merge otherwise-parallelizable tasks onto the same machine,
-    /// sacrificing latency and fault-isolation for more the sake of minor effeciency gains.
+    /// sacrificing latency and fault-isolation for more the sake of minor efficiency gains.
     ///
     /// (defaults to false)
     ///

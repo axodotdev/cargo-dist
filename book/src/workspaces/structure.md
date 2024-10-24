@@ -13,7 +13,7 @@ Dist has two types of configuration:
 
 The vast majority of configuration for dist is workspace configuration. Because
 we understand language-specific config manifests like `Cargo.toml` and
-`package.json`, package configuration ususally does not require any additional
+`package.json`, package configuration usually does not require any additional
 files. Dedicated package configuration, in `dist.toml` files, is typically only needed when using dist's ["custom builds"][custom-builds] mode.
 
 ## Workspace configuration

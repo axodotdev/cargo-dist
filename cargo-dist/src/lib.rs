@@ -545,7 +545,7 @@ fn write_checksum(checksum: &str, src_path: &Utf8Path, dest_path: &Utf8Path) -> 
     //
     // * checksum is the checksum in hex
     // * mode is ` ` for "text" and `*` for "binary" (we mostly have binaries)
-    // * path is a relative path to the thing being checksumed (usually just a filename)
+    // * path is a relative path to the thing being checksummed (usually just a filename)
     //
     // We also make sure there's a trailing newline as is traditional.
     //

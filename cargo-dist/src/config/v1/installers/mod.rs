@@ -231,7 +231,7 @@ pub struct CommonInstallerLayer {
     #[serde(default, with = "opt_string_or_vec")]
     pub install_path: Option<Vec<InstallPathStrategy>>,
 
-    /// Custom sucess message for installers
+    /// Custom success message for installers
     ///
     /// When an shell or powershell installer succeeds at installing your app it
     /// will out put a message to the user. This config allows a user to specify
@@ -262,7 +262,7 @@ pub struct CommonInstallerConfig {
     /// allow for the input to be an array of options to try in sequence.
     pub install_path: Vec<InstallPathStrategy>,
 
-    /// Custom sucess message for installers
+    /// Custom success message for installers
     ///
     /// When an shell or powershell installer succeeds at installing your app it
     /// will out put a message to the user. This config allows a user to specify
