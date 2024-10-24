@@ -6,33 +6,33 @@ Let's start with the kind of simple [Cargo Workspace][workspace] you would get f
 
 Our goal will be to setup a Github CI workflow that announces a new release of our application with a Github Release. The workflow will also build our application for the 3 major desktop platforms, wrap the binaries in zips/tarballs, and upload them to the Github Release. The Github Release's text will also include the relevant release notes from our RELEASES.md file.
 
-The workflow will be triggered whenever you push a [Git Tag][git-tag] specifying the application's new version, like "v1.0.0". Don't worry, you won't need to write those workflows yourself, cargo-dist will generate them for you!
+The workflow will be triggered whenever you push a [Git Tag][git-tag] specifying the application's new version, like "v1.0.0". Don't worry, you won't need to write those workflows yourself, dist will generate them for you!
 
-> TO BE EXTREMELY PEDANTIC: The workflow will trigger whenever Github sees that the git tag *and* the commit it refers to are part of the repo *and* the timestamp(?) of both(?) is *after* the commit that introduced the workflow's yml file. That last part is an absolute headache, and may require you to delete the tag *both locally and on github* if you created it before the workflow. Basically, setup cargo-dist *before* you start cutting releases!
+> TO BE EXTREMELY PEDANTIC: The workflow will trigger whenever Github sees that the git tag *and* the commit it refers to are part of the repo *and* the timestamp(?) of both(?) is *after* the commit that introduced the workflow's yml file. That last part is an absolute headache, and may require you to delete the tag *both locally and on github* if you created it before the workflow. Basically, setup dist *before* you start cutting releases!
 
 ## Setup (and Updates)
 
-To setup cargo-dist on our project (after we've [installed it][install]), we "need" to run `cargo dist init`, which will provide us with a series of interactive prompts and explanations to configure our project. The recommended option can always be selected by hitting ENTER, and you can automate that by just passing `--yes`.
+To setup dist on our project (after we've [installed it][install]), we "need" to run `dist init`, which will provide us with a series of interactive prompts and explanations to configure our project. The recommended option can always be selected by hitting ENTER, and you can automate that by just passing `--yes`.
 
-You can rerun `init` as many times as you want, as it also functions as an "update" command for your config. This is especially convenient for updating your project to the version of cargo-dist you're running, as it will prompt you to do that whenever the versions don't match (refusing to proceed if declined).
+You can rerun `init` as many times as you want, as it also functions as an "update" command for your config. This is especially convenient for updating your project to the version of dist you're running, as it will prompt you to do that whenever the versions don't match (refusing to proceed if declined).
 
 ```sh
-cargo dist init
+dist init
 ```
 
-[`init`][init] on its own just edits your Cargo.toml to include the recommended defaults. If you have enabled CI support, it will also run `cargo dist generate` after setting things up. This ensures your config and your CI scripts are in sync, but will unfortunately clobber any hand-edits you made to the scripts.
+[`init`][init] on its own just edits your Cargo.toml to include the recommended defaults. If you have enabled CI support, it will also run `dist generate` after setting things up. This ensures your config and your CI scripts are in sync, but will unfortunately clobber any hand-edits you made to the scripts.
 
 Let's look at those defaults that were added (yes those comments are generated too, you will never stop me from adding more docs!!!):
 
 ```toml
-# The profile that 'cargo dist' will build with
+# The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
 
-# Config for 'cargo dist'
+# Config for 'dist'
 [workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.6"
 # CI backends to support
 ci = ["github"]
@@ -42,15 +42,15 @@ installers = []
 targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 ```
 
-> If your config doesn't have `ci = ["github"]` by default, then you probably don't have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). The rest of this guide will assume you did. cargo-dist will work fine without it, you just won't get Github CI integration or [installers][].
+> If your config doesn't have `ci = ["github"]` by default, then you probably don't have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). The rest of this guide will assume you did. dist will work fine without it, you just won't get Github CI integration or [installers][].
 
 ### The "dist" Profile
 
-First let's talk about `[profile.dist]`. This is a custom [Cargo Profile][cargo-profile] that cargo-dist will use to build your app. If you want to, you can use it yourself by passing `--profile=dist` to cargo (i.e. `cargo run --profile=dist`). We define a separate profile from the normal "release" one so that you can be comfortable giving your Shippable Builds more aggressive settings without making local development too tedious.
+First let's talk about `[profile.dist]`. This is a custom [Cargo Profile][cargo-profile] that dist will use to build your app. If you want to, you can use it yourself by passing `--profile=dist` to cargo (i.e. `cargo run --profile=dist`). We define a separate profile from the normal "release" one so that you can be comfortable giving your Shippable Builds more aggressive settings without making local development too tedious.
 
-In this case the default profile cargo-dist recommends is essentially the same as --release (hence `inherits = "release"`), but with [thin LTO][thin-lto] enabled (`lto = "thin"`). This will make the build take longer, but produce more optimized builds.
+In this case the default profile dist recommends is essentially the same as --release (hence `inherits = "release"`), but with [thin LTO][thin-lto] enabled (`lto = "thin"`). This will make the build take longer, but produce more optimized builds.
 
-cargo-dist uses the existence of `[profile.dist]` in your Cargo.toml to detect if your project has been properly initialized, and will generally refuse to run other commands otherwise. Sorry but you can't delete the profile!
+dist uses the existence of `[profile.dist]` in your Cargo.toml to detect if your project has been properly initialized, and will generally refuse to run other commands otherwise. Sorry but you can't delete the profile!
 
 
 
@@ -58,44 +58,44 @@ cargo-dist uses the existence of `[profile.dist]` in your Cargo.toml to detect i
 
 Next let's talk about `[workspace.metadata.dist]`. Cargo allows other tools to include their own project-wide settings in this kind of [metadata table][workspace-metadata]. See [config][] for the full set of options, but here we'll look at the defaults.
 
-`cargo-dist-version = "0.0.6"` is cargo-dist recording its own version in your config for the sake of reproducibility and documentation. When you run [generate][] the resulting CI scripts will use that version of cargo-dist.
+`cargo-dist-version = "0.0.6"` is dist recording its own version in your config for the sake of reproducibility and documentation. When you run [generate][] the resulting CI scripts will use that version of dist.
 
 `ci = ["github"]` lets subsequent runs of [generate][] know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. It will be enabled by default if you have `repository = "https://github.com/..."` consistently set in your Cargo.toml(s). ("github" is currently the only supported CI backend.)
 
 `installer = []` is just saying that we haven't enabled any [installers][]. Installers are intentionally excluded here to keep this example focused.
 
-`targets = ...` is listing the [platforms][] to build your application for. In this case, because we didn't specify the targets with `--target`, [init][] has selected the "recommended desktop suite": "x64 linux", "x64 macos", "x64 windows", and "arm64 macos (Apple silicon)". In v0.0.6 these are the only properly supported choices, because we wanted to get the core of cargo-dist solid first. Future versions should hopefully introduce proper support for important targets like "musl linux".
+`targets = ...` is listing the [platforms][] to build your application for. In this case, because we didn't specify the targets with `--target`, [init][] has selected the "recommended desktop suite": "x64 linux", "x64 macos", "x64 windows", and "arm64 macos (Apple silicon)". In v0.0.6 these are the only properly supported choices, because we wanted to get the core of dist solid first. Future versions should hopefully introduce proper support for important targets like "musl linux".
 
 
 
 ### The CI Script
 
-Because we set `ci = ["github"]`, [init][] invoked [generate][] for us. Creating the Github CI workflow we wanted at `.github/workflows/release.yml`. Rather than including the full text here, I'll just link [cargo-dist's own release.yml][release-yml], because cargo-dist is self-hosting and has an extremely boring build/config that is basically equivalent to the one we're looking at in this example.
+Because we set `ci = ["github"]`, [init][] invoked [generate][] for us. Creating the Github CI workflow we wanted at `.github/workflows/release.yml`. Rather than including the full text here, I'll just link [dist's own release.yml][release-yml], because dist is self-hosting and has an extremely boring build/config that is basically equivalent to the one we're looking at in this example.
 
 The first thing you might notice is that there's a *lot* of comments describing the script. As always: you will never stop me from writing more docs and shoving them in your face. Actually ok you *can* stop me because I need to write a lot of docs here and those comments are already decent docs. Feel free to peruse them to get a feel for it.
 
-One thing I want to emphasize is that each job of the workflow essentially boils down to "install cargo-dist, run cargo-dist exactly once, then upload the files it tells you to". Ideally this means you can run that one cargo-dist command and get the same things that CI produced!
+One thing I want to emphasize is that each job of the workflow essentially boils down to "install dist, run dist exactly once, then upload the files it tells you to". Ideally this means you can run that one dist command and get the same things that CI produced!
 
 Anyway, the CI totally does all the things we said it should! Yay!
 
 
 ### Finishing Setup
 
-Now that we've run `cargo dist init`, all we need to do is commit the results and push them up:
+Now that we've run `dist init`, all we need to do is commit the results and push them up:
 
 ```sh
 git add .
-git commit -am 'wow cool new cargo-dist CI!'
+git commit -am 'wow cool new dist CI!'
 git push
 ```
 
 Actually wait we should... probably test that we set things up properly? The devil's always in the details when it comes to CI, but we can do some initial checking of things with the [plan][] command:
 
 ```sh
-cargo dist plan
+dist plan
 ```
 
-[plan][] is the same as [build][] but it doesn't actually *run* the build and defaults to reporting info for all platforms. This makes it ideal for asking cargo-dist about the full Announcement a CI run would produce.
+[plan][] is the same as [build][] but it doesn't actually *run* the build and defaults to reporting info for all platforms. This makes it ideal for asking dist about the full Announcement a CI run would produce.
 
 If everything went right, you should see something like the following:
 
@@ -103,7 +103,7 @@ If everything went right, you should see something like the following:
 
 This output has two parts: "analyzing workspace" and "announcing"
 
-"analyzing workspace" describes what cargo-dist found in your workspace. In this case there's a package called "my-app" with a [binary target][bin] of the same name.
+"analyzing workspace" describes what dist found in your workspace. In this case there's a package called "my-app" with a [binary target][bin] of the same name.
 
 "announcing v0.1.0" tells us the tag that should be pushed to announce a release of the current workspace ("v0.1.0"). Underneath it we see that the announcement will include "my-app 0.1.0" as expected. Underneath that we see 4 artifacts will be produced and uploaded:
 
@@ -112,7 +112,7 @@ This output has two parts: "analyzing workspace" and "announcing"
 * The Windows build: my-app-v0.1.0-x86_64-pc-windows-msvc.zip
 * The Linux build: my-app-v0.1.0-x86_64-unknown-linux-gnu.tar.xz
 
-It also helpfully lists the contents of each zip. In this case I didn't properly setup my project at all, so it only contains a prebuilt binary. If I actually add files like README.md, LICENSE, and RELEASES.md, cargo-dist will helpfully pick those up and include them (disable this with the `auto-includes=false` [config][]):
+It also helpfully lists the contents of each zip. In this case I didn't properly setup my project at all, so it only contains a prebuilt binary. If I actually add files like README.md, LICENSE, and RELEASES.md, dist will helpfully pick those up and include them (disable this with the `auto-includes=false` [config][]):
 
 ![The same as the last screenshot, but now the files mentioned above are included in each zip/tarball][simple-app-manifest-with-files]
 
@@ -127,10 +127,10 @@ With all our one-time setup done, we're ready to cut a release! This can be stre
 
 The first step is to do all the things you would do to prep a release: update docs, update release notes, bump version numbers in Cargo.tomls, run tests, and so on.
 
-At this point we're confident and want to release things for real. Once again, we can check what cargo-dist thinks should happen with the [plan][] command:
+At this point we're confident and want to release things for real. Once again, we can check what dist thinks should happen with the [plan][] command:
 
 ```sh
-cargo dist plan
+dist plan
 ```
 
 Similarly you can check that `cargo publish` will work with the `--dry-run` flag:
@@ -142,7 +142,7 @@ cargo publish --dry-run
 If both of those seem happy, you're ready to release! All we need to do is push up a commit that has the [Git Tag][git-tag] that [plan][] suggested. As we've seen in previous sections, it's recommending "v0.1.0" for our example app, so let's use that:
 
 ```sh
-# Publish to a Github Release with cargo-dist
+# Publish to a Github Release with dist
 git commit -am "Chore: Release 0.1.0"
 git tag "v0.1.0"
 git push
@@ -152,7 +152,7 @@ git push --tags
 cargo publish
 ```
 
-and that's... it! If everything's working, your CI should spin up a "Release" workflow that cargo-dist generated for you, and after a few minutes the "Releases" section of your repo should have all the results populated with something like this:
+and that's... it! If everything's working, your CI should spin up a "Release" workflow that dist generated for you, and after a few minutes the "Releases" section of your repo should have all the results populated with something like this:
 
 ![A Github Release for "my-app 0.1.0" with shell-script installers and tarballs of prebuilt binaries][simple-release]
 
@@ -162,7 +162,7 @@ Oops! There's some extra features in that screenshot that I haven't explained ye
 
 ### Release Notes
 
-If your project has a top-level RELEASES/CHANGELOG file like "RELEASES.md", then cargo-dist will automatically try to use it as part of your Announcement (Github Release). We use the [parse-changelog][] library to try to find a heading for the version you're releasing, and if we do, we add it to the Github Release's text. We also use the heading as the title for the Github Release (rather than just the git tag).
+If your project has a top-level RELEASES/CHANGELOG file like "RELEASES.md", then dist will automatically try to use it as part of your Announcement (Github Release). We use the [parse-changelog][] library to try to find a heading for the version you're releasing, and if we do, we add it to the Github Release's text. We also use the heading as the title for the Github Release (rather than just the git tag).
 
 Roughly speaking, the library is looking for something like:
 

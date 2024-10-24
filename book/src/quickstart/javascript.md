@@ -2,10 +2,10 @@
 
 <!-- toc -->
 
-So you've written a JavaScript CLI application and you'd like to distribute standalone executables so your users don't need to install nodejs or npm, without having to write your own CI or installers? Well, good news, cargo-dist can do just that! This guide will help you get up and running as quickly as possible.
+So you've written a JavaScript CLI application and you'd like to distribute standalone executables so your users don't need to install nodejs or npm, without having to write your own CI or installers? Well, good news, dist can do just that! This guide will help you get up and running as quickly as possible.
 
 
-## Initial cargo-dist Setup
+## Initial dist Setup
 
 🔧 This feature requires some extra setup that will be builtin in the future, please let us know if it doesn't work for you!
 
@@ -46,7 +46,7 @@ We want it to be easy for anyone to run our bun build on any platform, so add [a
   },
 ```
 
-We run `npm install` in "predist" to ensure dev-dependencies like bun are installed for anyone who runs the "dist" script. The name "dist" here is important, as cargo-dist will be looking for it. However the file it runs can have any name/location. Here we're calling it "dist.js", and it contains the following:
+We run `npm install` in "predist" to ensure dev-dependencies like bun are installed for anyone who runs the "dist" script. The name "dist" here is important, as dist will be looking for it. However the file it runs can have any name/location. Here we're calling it "dist.js", and it contains the following:
 
 ```js
 // you might need to change this path to your package.json
@@ -118,7 +118,7 @@ So your package.json should at a minimum look something like this:
 
 #### Adding dist-workspace.toml
 
-cargo-dist uses a custom configuration format called `dist-workspace.toml`, written in the [TOML][toml] format. cargo-dist can manage most of your settings for you, or find them in your package.json, but we need to tell it that we're making a JS project.
+dist uses a custom configuration format called `dist-workspace.toml`, written in the [TOML][toml] format. dist can manage most of your settings for you, or find them in your package.json, but we need to tell it that we're making a JS project.
 
 Create a file named `dist-workspace.toml` in the root of your repository. These are the entire contents of the file (you supply the path):
 
@@ -132,22 +132,20 @@ members = ["npm:relative/path/to/your/package/"]
 
 ### First Init
 
-To properly run cargo-dist you will also need to [install cargo/rust](https://rustup.rs/). [This requirement will be removed soon](https://github.com/axodotdev/cargo-dist/pull/1267).
+Once you've done that and also [installed dist][install], we can ask dist to generate the rest of its configuration for us: just run `dist init`, and answer all the questions it asks you. This command interactively walks you through configuration options, **and should be run again whenever you want to change your settings or want to update dist**.
 
-Once you've done that and also [installed cargo-dist][install], we can ask cargo-dist to generate the rest of its configuration for us: just run `cargo dist init`, and answer all the questions it asks you. This command interactively walks you through configuration options, **and should be run again whenever you want to change your settings or want to update cargo-dist**.
-
-Just to really emphasize that: [`cargo dist init` is designed to be rerun over and over, and will preserve your settings while handling any necessary updates and migrations. Always Be Initing](../updating.md).
+Just to really emphasize that: [`dist init` is designed to be rerun over and over, and will preserve your settings while handling any necessary updates and migrations. Always Be Initing](../updating.md).
 
 Since this is a quickstart, we'll pass `--yes` to auto-accept all defaults on our first setup!
 
 ```sh
-# setup cargo-dist in your project (--yes to accept defaults)
-cargo dist init --yes
+# setup dist in your project (--yes to accept defaults)
+dist init --yes
 git add .
-git commit -am 'chore: wow shiny new cargo-dist CI!'
+git commit -am 'chore: wow shiny new dist CI!'
 ```
 
-**It's very common for `cargo dist init` to return an error about the "repository" URLs set in your package.json. If this happens, no work will be lost.** You can just follow the instructions in the error and rerun `cargo dist init` again and it will pick up where you left off.**
+**It's very common for `dist init` to return an error about the "repository" URLs set in your package.json. If this happens, no work will be lost.** You can just follow the instructions in the error and rerun `dist init` again and it will pick up where you left off.**
 
 This one-time setup will:
 
@@ -159,22 +157,22 @@ This one-time setup will:
 
 > 🚨🚨🚨 VERY IMPORTANT 🚨🚨🚨
 >
-> cargo-dist supports "npm installers" and "npm publishes" but these refer to a feature that wraps your prebuilt binaries in an npm package that fetches them, and is [not (YET) a thing for actual native javascript projects](https://github.com/axodotdev/cargo-dist/issues/1169)!
+> dist supports "npm installers" and "npm publishes" but these refer to a feature that wraps your prebuilt binaries in an npm package that fetches them, and is [not (YET) a thing for actual native javascript projects](https://github.com/axodotdev/cargo-dist/issues/1169)!
 
-The most common reason to update cargo-dist or mess with its config is to add a new [installer][], which is basically our blanket term for anything more fancy than [tarballs][] (curl-sh scripts, npm packages, msi installers, ...).
+The most common reason to update dist or mess with its config is to add a new [installer][], which is basically our blanket term for anything more fancy than [tarballs][] (curl-sh scripts, npm packages, msi installers, ...).
 
 You can skip this step for now and just test out the basics the initial setup gives you. Each individual [installer][] should have a guide that assumes you did the initial setup.
 
-The tl;dr of those guides is "run `cargo dist init` again, select the installer you want to add, and fill in any extra details that are needed".
+The tl;dr of those guides is "run `dist init` again, select the installer you want to add, and fill in any extra details that are needed".
 
 
 
 ## Test It Out
 
-There are a several ways to test out cargo-dist before committing to running a proper release:
+There are a several ways to test out dist before committing to running a proper release:
 
-1. build for the current platform (`cargo dist build`)
-2. check what CI will build (`cargo dist plan`)
+1. build for the current platform (`dist build`)
+2. check what CI will build (`dist plan`)
 3. check the release process on pull-requests
 
 
@@ -183,14 +181,14 @@ There are a several ways to test out cargo-dist before committing to running a p
 ### Build For The Current Platform
 
 ```sh
-cargo dist build
+dist build
 ```
 
-![Running "cargo dist build" on a project, resulting in the application getting built and bundled into a .zip, and an "installer.ps1" script getting generated. Paths to these files are printed along with some metadata.][quickstart-build]
+![Running "dist build" on a project, resulting in the application getting built and bundled into a .zip, and an "installer.ps1" script getting generated. Paths to these files are printed along with some metadata.][quickstart-build]
 
 The [build command][build] will by default try to build things for the computer you're running it on. So if you run it on linux you might get a `tar.xz` containing your binary and an installer.sh, but if you run it on windows you might get a `zip` and an installer.ps1.
 
-cargo-dist will then spit out paths to the files it created, so you can inspect their contents and try running them (**note that installer scripts probably won't be locally runnable, because they will try to fetch their binaries from GitHub**).
+dist will then spit out paths to the files it created, so you can inspect their contents and try running them (**note that installer scripts probably won't be locally runnable, because they will try to fetch their binaries from GitHub**).
 
 
 
@@ -199,19 +197,19 @@ cargo-dist will then spit out paths to the files it created, so you can inspect 
 ### Check What CI Will Build
 
 ```sh
-cargo dist plan
+dist plan
 ```
 
-![Running "cargo dist plan" on a project, producing a full printout of the tarballs/zips that will be produced for all platforms (mac, linux, windows), and all installers (shell, powershell)][quickstart-plan]
+![Running "dist plan" on a project, producing a full printout of the tarballs/zips that will be produced for all platforms (mac, linux, windows), and all installers (shell, powershell)][quickstart-plan]
 
-The [plan command][plan] should be running the exact same logic that cargo-dist's generated CI will run, but without actually building anything. This lets you quickly check what cutting a new release will produce. It will also try to catch any inconsistencies that could make the CI error out.
+The [plan command][plan] should be running the exact same logic that dist's generated CI will run, but without actually building anything. This lets you quickly check what cutting a new release will produce. It will also try to catch any inconsistencies that could make the CI error out.
 
 
 
 
 ### Check The Release Process On Pull-Requests
 
-By default we run the "plan" step of your release CI on every pull-request so that we can catch breakage to your release process as early as possible. This will work even for a pull-request that sets up cargo-dist for the first time, so you can be confident you're landing something that works.
+By default we run the "plan" step of your release CI on every pull-request so that we can catch breakage to your release process as early as possible. This will work even for a pull-request that sets up dist for the first time, so you can be confident you're landing something that works.
 
 You can also crank this up by setting `pr-run-mode = "upload"`, which will run all the build steps as well, and upload the results to the PR's Workflow Summary as an "artifacts.zip". This is great for making sure the windows build works even if you only have a linux machine, or vice-versa. Although you should probably only keep it on temporarily, as it's very slow and wasteful to build all those shippable artifacts for every PR.
 
@@ -219,7 +217,7 @@ You can also crank this up by setting `pr-run-mode = "upload"`, which will run a
 
 ## Cut A Release (Trigger Github CI)
 
-cargo-dist largely doesn't care about the details of how you prepare your release, and doesn't yet provide tools to streamline it. All it cares about is you getting your release branch into the state you want, and then pushing a properly formatted git tag like "v0.1.0". Here's a super bare-bones release process where we're releasing by just pushing a bunch of stuff to main branch (but it would work just as well with PRs and release branches):
+dist largely doesn't care about the details of how you prepare your release, and doesn't yet provide tools to streamline it. All it cares about is you getting your release branch into the state you want, and then pushing a properly formatted git tag like "v0.1.0". Here's a super bare-bones release process where we're releasing by just pushing a bunch of stuff to main branch (but it would work just as well with PRs and release branches):
 
 ```sh
 # <manually update the version of your package, run tests, etc>
@@ -228,7 +226,7 @@ cargo-dist largely doesn't care about the details of how you prepare your releas
 git commit -am "release: version 0.1.0"
 git push
 
-# actually push the tag up (this triggers cargo-dist's CI)
+# actually push the tag up (this triggers dist's CI)
 git tag v0.1.0
 git push --tags
 ```
