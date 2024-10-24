@@ -26,9 +26,9 @@ mod tools;
 /// Otherwise MEGA DANGER in messing up your computer.
 #[cfg(any(target_family = "unix", target_family = "windows"))]
 const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
-/// Set this at runtime to override STATIC_CARGO_DIST_BIN
-const ENV_RUNTIME_CARGO_DIST_BIN: &str = "OVERRIDE_CARGO_BIN_EXE_dist";
-const STATIC_CARGO_DIST_BIN: &str = env!("CARGO_BIN_EXE_dist");
+/// Set this at runtime to override STATIC_DIST_BIN
+const ENV_RUNTIME_DIST_BIN: &str = "OVERRIDE_CARGO_BIN_EXE_dist";
+const STATIC_DIST_BIN: &str = env!("CARGO_BIN_EXE_dist");
 const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
 static TOOLS: Mutex<Option<Tools>> = Mutex::new(None);
 
