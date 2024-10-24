@@ -66,6 +66,7 @@ serde_yml = "0.0.10"
 spdx = "0.10.6"
 base64 = "0.22.1"
 lazy_static = "1.4.0"
+target-lexicon = "0.12.16"
 
 [workspace.metadata.release]
 shared-version = true

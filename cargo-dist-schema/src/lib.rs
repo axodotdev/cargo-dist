@@ -10,11 +10,12 @@
 
 pub mod macros;
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, str::FromStr};
 
 use schemars::JsonSchema;
 use semver::Version;
 use serde::{Deserialize, Serialize};
+use target_lexicon::Triple;
 
 declare_strongly_typed_string! {
     /// A rust target-triple (e.g. "x86_64-pc-windows-msvc")
@@ -22,6 +23,11 @@ declare_strongly_typed_string! {
 }
 
 impl TargetTripleRef {
+    /// Parse as a [`Triple`]
+    pub fn parse(&self) -> Result<Triple, <Triple as FromStr>::Err> {
+        Triple::from_str(self.as_str())
+    }
+
     /// Returns true if this target triple contains the word "musl"
     pub fn is_musl(&self) -> bool {
         self.0.contains("musl")

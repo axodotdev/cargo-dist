@@ -491,3 +491,52 @@ macro_rules! declare_strongly_typed_string {
         )+
     };
 }
+
+/// Some values look a lot like strings, like the "windows" in "i686-pc-windows-msvc"
+/// or the "linux" in "x86_64-unknown-linux-gnu" — but in practice, we have special
+/// handling for just a handful of possible values.
+///
+/// In that case, instead of having a `String` field, it's useful to have an enum with
+/// all the variants we know/care about, and a "fallback" variant for the ones we don't
+/// know about.
+#[macro_export]
+macro_rules! declare_stringish_enum {
+    (
+        $(
+            $(#[$enum_meta:meta])*
+            $vis:vis enum $name:ident {
+                $(#[$other_meta:meta])*
+                Other(String),
+                $($(#[$meta:meta])* $variant:ident = $str:expr,)+
+            }
+        )+
+    ) => {
+        $(
+            #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+            $(#[$enum_meta])*
+            $vis enum $name {
+                $($(#[$meta])* $variant,)*
+                $(#[$other_meta])*
+                Other(::std::string::String),
+            }
+
+            impl ::std::fmt::Display for $name {
+                fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+                    match self {
+                        $(Self::$variant => write!(f, "{}", $str),)*
+                        Self::Other(s) => write!(f, "{}", s),
+                    }
+                }
+            }
+
+            impl $name {
+                fn from_str(s: &str) -> Self {
+                    match s {
+                        $($str => Self::$variant,)*
+                        other => Self::Other(other.to_string()),
+                    }
+                }
+            }
+        )+
+    };
+}

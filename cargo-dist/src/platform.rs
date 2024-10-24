@@ -900,12 +900,9 @@ lazy_static::lazy_static! {
             map.insert(TARGET_X64_ILLUMOS, "x64 IllumOS");
             map.insert(TARGET_X64_NETBSD, "x64 NetBSD");
             map.insert(TARGET_ARM64_IOS, "iOS");
-            map.insert(TARGET_ARM64_IOS_SIM, "ARM64 iOS SIM");
-            map.insert(TARGET_X64_IOS, "x64 iOS");
             map.insert(TARGET_ARM64_FUCHSIA, "ARM64 Fuchsia");
             map.insert(TARGET_ARM64_ANDROID, "Android");
             map.insert(TARGET_X64_ANDROID, "x64 Android");
-            map.insert(TARGET_ASMJS_EMSCRIPTEN, "asm.js Emscripten");
             map.insert(TARGET_WASM32_WASI, "WASI");
             map.insert(TARGET_WASM32, "WASM");
             map.insert(TARGET_SPARC_SOLARIS, "SPARC Solaris");

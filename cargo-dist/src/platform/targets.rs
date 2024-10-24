@@ -154,18 +154,12 @@ define_target_triples!(
     const TARGET_X64_NETBSD = "x86_64-unknown-netbsd";
     /// ARM64 iOS
     const TARGET_ARM64_IOS = "aarch64-apple-ios";
-    /// Apple iOS Simulator on ARM64
-    const TARGET_ARM64_IOS_SIM = "aarch64-apple-ios-sum";
-    /// 64-bit x86 iOS (simulator)
-    const TARGET_X64_IOS = "x86_64-apple-ios";
     /// ARM64 Fuchsia
     const TARGET_ARM64_FUCHSIA = "aarch64-unknown-fuchsia";
     /// ARM64 Android
     const TARGET_ARM64_ANDROID = "aarch64-linux-android";
     /// 64-bit x86 Android
     const TARGET_X64_ANDROID = "x86_64-linux-android";
-    /// asm.js via Emscripten
-    const TARGET_ASMJS_EMSCRIPTEN = "asm.js via Emscripten";
     /// WebAssembly with WASI
     const TARGET_WASM32_WASI = "wasm32-wasi";
     /// WebAssembly
@@ -182,12 +176,9 @@ pub const KNOWN_OTHER_TARGETS: &[&TargetTripleRef] = &[
     TARGET_X64_ILLUMOS,
     TARGET_X64_NETBSD,
     TARGET_ARM64_IOS,
-    TARGET_ARM64_IOS_SIM,
-    TARGET_X64_IOS,
     TARGET_ARM64_FUCHSIA,
     TARGET_ARM64_ANDROID,
     TARGET_X64_ANDROID,
-    TARGET_ASMJS_EMSCRIPTEN,
     TARGET_WASM32_WASI,
     TARGET_WASM32,
     TARGET_SPARC_SOLARIS,
