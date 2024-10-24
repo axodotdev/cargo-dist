@@ -129,8 +129,8 @@ At this point you're done! The generated CI script should pick up the ball and c
 [artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
 [installer]: ../installers/index.md
 [tarballs]: ../artifacts/archives.md
-[build]: ../reference/cli.md#cargo-dist-build
-[plan]: ../reference/cli.md#cargo-dist-plan
+[build]: ../reference/cli.md#dist-build
+[plan]: ../reference/cli.md#dist-plan
 
 [cargo-release]: https://github.com/crate-ci/cargo-release
 [workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html

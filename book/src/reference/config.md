@@ -1723,7 +1723,7 @@ When you override a package-local setting, the workspace value will be discarded
 [npm-installer]: ../installers/npm.md
 [msi-installer]: ../installers/msi.md
 [artifact-url]: ../reference/artifact-url.md
-[generate]: ../reference/cli.md#cargo-dist-generate
+[generate]: ../reference/cli.md#dist-generate
 [archives]: ../artifacts/archives.md
 [artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
 [github-build-setup]: ../ci/customizing.md#customizing-build-setup

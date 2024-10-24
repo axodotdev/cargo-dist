@@ -185,10 +185,10 @@ If none of the previous rules apply, "1.0.0-prerelease.1" will also match a spec
 [install]: ../install.md
 [concepts]: ../reference/concepts.md
 [way-too-quickstart]: ../quickstart/index.md
-[init]:  ../reference/cli.md#cargo-dist-init
-[generate]:  ../reference/cli.md#cargo-dist-generate
-[plan]:  ../reference/cli.md#cargo-dist-plan
-[build]: ../reference/cli.md#cargo-dist-build
+[init]:  ../reference/cli.md#dist-init
+[generate]:  ../reference/cli.md#dist-generate
+[plan]:  ../reference/cli.md#dist-plan
+[build]: ../reference/cli.md#dist-build
 [artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
 [config]: ../reference/config.html
 [cargo-release-guide]: ./cargo-release-guide.md

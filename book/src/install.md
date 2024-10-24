@@ -36,7 +36,7 @@ brew install axodotdev/tap/cargo-dist
 
 #### Pacman (Arch Linux)
 
-Arch Linux users can install `dist` from the [extra repository](https://archlinux.org/packages/extra/x86_64/cargo-dist/) using [pacman](https://wiki.archlinux.org/title/Pacman):
+Arch Linux users can install the `cargo-dist` package from the [extra repository](https://archlinux.org/packages/extra/x86_64/cargo-dist/) using [pacman](https://wiki.archlinux.org/title/Pacman):
 
 ```sh
 pacman -S cargo-dist

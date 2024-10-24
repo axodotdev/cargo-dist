@@ -129,11 +129,11 @@ For more details on configuring builds and other advanced features, see the [cus
 [quickstart-build]: ../img/quickstart-build.png
 [quickstart-plan]: ../img/quickstart-plan.png
 
-[build]: ../reference/cli.md#cargo-dist-build
+[build]: ../reference/cli.md#dist-build
 [custom-builds]: ../custom-builds.md
 [install]: ../install.md
 [installer]: ../installers/index.md
 [package-section]: ../reference/config.md#the-package-section
-[plan]: ../reference/cli.md#cargo-dist-plan
+[plan]: ../reference/cli.md#dist-plan
 [tarballs]: ../artifacts/archives.md
 [toml]: https://toml.io/en/

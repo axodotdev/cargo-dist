@@ -84,4 +84,4 @@ Our installers are meant to be usable as-is, without requiring any special optio
 
 [archives]: ../artifacts/archives.md
 [artifact-url]: ../reference/artifact-url.md
-[init]: ../reference/cli.md#cargo-dist-init
+[init]: ../reference/cli.md#dist-init
