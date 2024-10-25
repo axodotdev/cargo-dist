@@ -8,7 +8,13 @@ The homebrew installer actually ignores your checksum setting and always uses sh
 
 Updating the other fetching installers to use these checksums is [still a work in progress][issue-checksum-backlog].
 
+> since 0.24.0
 
+cargo-dist also generates a "unified" checksum file, like `sha256.sum`, which contains the checksums for all the archives it has generated, in a format that can be checked with `sha256sum -c`, for example.
+
+Individual checksums will be deprecated in a future version in favor of that unified checksum file.
+
+Although you can [pick other checksum algorithms][config-checksum], since you can only pick one, be aware that not every macOS/Linux/Windows system may have tools installed that are able to check `blake2b`, for example.
 
 [issue-checksum-backlog]: https://github.com/axodotdev/cargo-dist/issues/439
 
