@@ -436,6 +436,11 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub mac_pkg_config: Option<MacPkgConfig>,
+
+    /// Override the native glibc version, if it isn't auto-detected correctly
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub minimum_glibc_version: Option<String>,
 }
 
 impl DistMetadata {
@@ -504,6 +509,7 @@ impl DistMetadata {
             install_libraries: _,
             github_build_setup: _,
             mac_pkg_config: _,
+            minimum_glibc_version: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -600,6 +606,7 @@ impl DistMetadata {
             install_libraries,
             github_build_setup,
             mac_pkg_config,
+            minimum_glibc_version,
         } = self;
 
         // Check for global settings on local packages
@@ -783,6 +790,9 @@ impl DistMetadata {
         }
         if mac_pkg_config.is_none() {
             mac_pkg_config.clone_from(&workspace_config.mac_pkg_config);
+        }
+        if minimum_glibc_version.is_none() {
+            minimum_glibc_version.clone_from(&workspace_config.minimum_glibc_version);
         }
 
         // This was historically implemented as extend, but I'm not convinced the

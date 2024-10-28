@@ -82,6 +82,7 @@ impl DistMetadata {
             package_libraries,
             install_libraries,
             github_build_setup,
+            minimum_glibc_version,
         } = self.clone();
 
         // Archives
