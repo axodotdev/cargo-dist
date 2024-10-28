@@ -433,11 +433,20 @@ fn generate_unified_checksum(
                 continue;
             }
 
-            // We write with exactly two spaces to match the output of
-            // shasum. While sha256sum is tolerant of varying numbers of
-            // spaces, shasum itself will only match precisely two -
-            // we need to be precise here for compatibility.
-            writeln!(&mut output, "{checksum}  {artifact_name}").unwrap();
+            // GNU coreutils manpage says:
+            //
+            // > The default mode is to print a line with: checksum, a space, a character indicating
+            // > input mode ('*' for binary, ' ' for text or where binary is insignificant), and name
+            // > for each FILE.
+            // >
+            // > There is no difference between binary mode and text mode on GNU systems.
+            //
+            // If we only output _one_ space, tools like `shasum` (Perl) will refuse to check
+            // the sums in this file. Should we output '*' as the mode? Probably, but even GCC releases
+            // don't bother to do so (see e.g. `sha512.sum` for GCC 14.2.0) for clearly-binary artifacts (.tar.xz)
+            let separator = ' ';
+            let mode = ' ';
+            writeln!(&mut output, "{checksum}{separator}{mode}{artifact_name}").unwrap();
         }
     }
     axoasset::LocalAsset::write_new(&output, dest_path)?;
