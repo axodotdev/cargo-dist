@@ -207,7 +207,7 @@ impl WorkspaceConfigInheritable {
             allow_dirty: vec![],
         }
     }
-    /// Apply the inheritance to ge tthe final WorkspaceConfig
+    /// Apply the inheritance to get the final WorkspaceConfig
     pub fn apply_inheritance_for_workspace(self, workspaces: &WorkspaceGraph) -> WorkspaceConfig {
         let Self {
             artifacts,

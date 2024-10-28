@@ -274,7 +274,7 @@ pub struct InitArgs {
 pub enum GenerateMode {
     /// Generate CI scripts for orchestrating dist
     Ci,
-    /// Generate .wxs tempaltes for msi installers
+    /// Generate .wxs templates for msi installers
     Msi,
 }
 

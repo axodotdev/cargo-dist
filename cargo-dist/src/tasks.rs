@@ -1685,7 +1685,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             if let Some(symbol_kind) = target_symbol_kind(&binary.target) {
                 // FIXME: For some formats these won't be the same but for now stubbed out
 
-                // FIXME: rustc/cargo has so more complex logic to do platform-specifc name remapping
+                // FIXME: rustc/cargo has so more complex logic to do platform-specific name remapping
                 // (see should_replace_hyphens in src/cargo/core/compiler/build_context/target_info.rs)
 
                 // FIXME: feed info about the expected source symbol name down to build_cargo_target

@@ -1,0 +1,13 @@
+# https://github.com/crate-ci/typos # LSP: https://github.com/tekumara/typos-lsp
+# install:  cargo install typos-cli
+# run:      typos
+[default]
+extend-ignore-identifiers-re = [
+    # Allow all-caps words that are 2-letters or more and ends with 's'
+    "[A-Z]{2,}s",
+]
+# Ignore CLIENT_ID=<random letters>
+extend-ignore-re = ["CLIENT_ID=[A-Za-z0-9_-]+"]
+
+[default.extend-identifiers]
+PnP = "PnP"
