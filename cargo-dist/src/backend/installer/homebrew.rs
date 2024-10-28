@@ -1,7 +1,7 @@
 //! Code for generating formula.rb
 
 use axoasset::LocalAsset;
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{ChecksumValue, DistManifest};
 use serde::Serialize;
 use spdx::{
     expression::{ExprNode, Operator},
@@ -119,7 +119,7 @@ struct HomebrewFragment {
     /// SHA256 sum of the fragment. When building "just the installers", like
     /// when running `dist build --artifacts global` locally, we don't have
     /// the SHA256 for the fragment, since we didn't actually build them.
-    sha256: Option<String>,
+    sha256: Option<ChecksumValue>,
 
     /// homebrew package dependencies
     dependencies: Vec<String>,

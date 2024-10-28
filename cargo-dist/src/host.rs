@@ -14,7 +14,7 @@ use crate::{
     DistError, DistGraph, DistGraphBuilder, HostingInfo,
 };
 use axoproject::WorkspaceGraph;
-use cargo_dist_schema::{DistManifest, Hosting};
+use cargo_dist_schema::{ArtifactIdRef, DistManifest, Hosting};
 use gazenot::{AnnouncementKey, Gazenot};
 
 /// Do hosting
@@ -212,6 +212,8 @@ fn check_hosting(_dist: &DistGraph, _manifest: &DistManifest, _abyss: &Gazenot) 
 }
 
 fn upload_to_hosting(dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot) -> DistResult<()> {
+    const DIST_MANIFEST_ARTIFACT_ID: &ArtifactIdRef = ArtifactIdRef::from_str("dist-manifest.json");
+
     // Gather up the files to upload for each release
     let files = manifest.releases.iter().filter_map(|release| {
         // Github Releases only has semantics on Announce
@@ -224,8 +226,8 @@ fn upload_to_hosting(dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot)
             let files = manifest
                 .artifacts_for_release(release)
                 .filter_map(|(_id, artifact)| artifact.name.as_deref())
-                .chain(Some("dist-manifest.json"))
-                .map(|name| dist.dist_dir.join(name))
+                .chain(Some(DIST_MANIFEST_ARTIFACT_ID))
+                .map(|name| dist.dist_dir.join(name.as_str()))
                 .collect::<Vec<_>>();
             Some((set, files))
         } else {

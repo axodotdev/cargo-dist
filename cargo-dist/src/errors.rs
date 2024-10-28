@@ -9,7 +9,7 @@
 use axoproject::errors::AxoprojectError;
 use backtrace::Backtrace;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TargetTriple;
+use cargo_dist_schema::{ArtifactId, TargetTriple};
 use color_backtrace::BacktracePrinter;
 use console::style;
 use miette::{Diagnostic, SourceOffset, SourceSpan};
@@ -264,7 +264,7 @@ pub enum DistError {
     #[diagnostic(help("depends on {spec1} and {spec2}"))]
     MultiPackage {
         /// Name of the artifact
-        artifact_name: String,
+        artifact_name: ArtifactId,
         /// One of the packages
         spec1: String,
         /// A different package
@@ -276,7 +276,7 @@ pub enum DistError {
     #[diagnostic(help("This should be impossible, you did nothing wrong, please file an issue!"))]
     NoPackage {
         /// Name of the msi
-        artifact_name: String,
+        artifact_name: ArtifactId,
     },
 
     /// These GUIDs for msi's are required and enforced by `dist generate --check`

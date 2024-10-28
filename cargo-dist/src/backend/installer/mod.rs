@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{EnvironmentVariables, Hosting, TargetTriple};
+use cargo_dist_schema::{ArtifactId, EnvironmentVariables, Hosting, TargetTriple};
 use homebrew::HomebrewFragments;
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
@@ -99,7 +99,7 @@ pub struct InstallerInfo {
 #[derive(Debug, Clone, Serialize)]
 pub struct ExecutableZipFragment {
     /// The id of the artifact
-    pub id: String,
+    pub id: ArtifactId,
     /// The target the artifact supports
     pub target_triple: TargetTriple,
     /// The executables the artifact contains (name, assumed at root)
@@ -120,7 +120,7 @@ pub struct ExecutableZipFragment {
 #[derive(Debug, Clone, Serialize)]
 pub struct UpdaterFragment {
     /// The id of the artifact
-    pub id: String,
+    pub id: ArtifactId,
     /// The binary the artifact contains (name, assumed at root)
-    pub binary: String,
+    pub binary: ArtifactId,
 }
