@@ -93,8 +93,12 @@ pub type LocalPath = String;
 ///
 /// (Should we normalize this one?)
 pub type RelPath = String;
-/// The unique ID of an Artifact
-pub type ArtifactId = String;
+
+declare_strongly_typed_string! {
+    /// The unique ID of an Artifact
+    pub struct ArtifactId => &ArtifactIdRef;
+}
+
 /// The unique ID of a System
 pub type SystemId = String;
 /// The unique ID of an Asset
@@ -403,6 +407,19 @@ pub struct Release {
     pub hosting: Hosting,
 }
 
+declare_strongly_typed_string! {
+    /// A lowercase descriptor for a checksum algorithm, like "sha256"
+    /// or "blake2b".
+    ///
+    /// TODO(amos): Honestly this type should not exist, it's just what
+    /// `ChecksumStyle` serializes to. `ChecksumsStyle` should just
+    /// be serializable, that's it.
+    pub struct ChecksumExtension => &ChecksumExtensionRef;
+
+    /// A checksum value, usually the lower-cased hex string of the checksum
+    pub struct ChecksumValue => &ChecksumValueRef;
+}
+
 /// A distributable artifact that's part of a Release
 ///
 /// i.e. a zip or installer
@@ -415,7 +432,7 @@ pub struct Artifact {
     /// indicate you can install the application with `cargo install` or `npm install`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub name: Option<String>,
+    pub name: Option<ArtifactId>,
     /// The kind of artifact this is (e.g. "executable-zip")
     #[serde(flatten)]
     pub kind: ArtifactKind,
@@ -442,14 +459,14 @@ pub struct Artifact {
     /// id of an Artifact that contains the checksum for this Artifact
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub checksum: Option<String>,
+    pub checksum: Option<ArtifactId>,
     /// checksums for this artifact
     ///
     /// keys are the name of an algorithm like "sha256" or "sha512"
     /// values are the actual hex string of the checksum
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub checksums: BTreeMap<String, String>,
+    pub checksums: BTreeMap<ChecksumExtension, ChecksumValue>,
 }
 
 /// An asset contained in an artifact (executable, license, etc.)
@@ -546,7 +563,7 @@ pub struct ExecutableAsset {
     /// The name of the Artifact containing symbols for this executable
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub symbols_artifact: Option<String>,
+    pub symbols_artifact: Option<ArtifactId>,
 }
 
 /// A C dynamic library artifact (so/dylib/dll)
@@ -555,7 +572,7 @@ pub struct DynamicLibraryAsset {
     /// The name of the Artifact containing symbols for this library
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub symbols_artifact: Option<String>,
+    pub symbols_artifact: Option<ArtifactId>,
 }
 
 /// A C static library artifact (a/lib)
@@ -564,7 +581,7 @@ pub struct StaticLibraryAsset {
     /// The name of the Artifact containing symbols for this library
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub symbols_artifact: Option<String>,
+    pub symbols_artifact: Option<ArtifactId>,
 }
 
 /// Info about a manifest version
@@ -612,7 +629,7 @@ impl Format {
 
 impl DistManifest {
     /// Create a new DistManifest
-    pub fn new(releases: Vec<Release>, artifacts: BTreeMap<String, Artifact>) -> Self {
+    pub fn new(releases: Vec<Release>, artifacts: BTreeMap<ArtifactId, Artifact>) -> Self {
         Self {
             dist_version: None,
             announcement_tag: None,
@@ -655,7 +672,7 @@ impl DistManifest {
     pub fn artifacts_for_release<'a>(
         &'a self,
         release: &'a Release,
-    ) -> impl Iterator<Item = (&'a str, &'a Artifact)> {
+    ) -> impl Iterator<Item = (&'a ArtifactIdRef, &'a Artifact)> {
         release
             .artifacts
             .iter()
