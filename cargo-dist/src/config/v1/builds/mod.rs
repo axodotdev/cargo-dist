@@ -72,6 +72,8 @@ pub struct BuildLayer {
     #[serde(rename = "dependencies")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system_dependencies: Option<SystemDependencies>,
+
+    pub minimum_glibc_version: Option<String>,
 }
 impl BuildConfigInheritable {
     /// get defaults for a package
