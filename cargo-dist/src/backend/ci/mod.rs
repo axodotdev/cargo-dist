@@ -25,7 +25,7 @@ fn install_dist_sh_for_version(version: &Version) -> String {
     let format = cargo_dist_schema::format_of_version(version);
     let installer_name = if format.unsupported() {
         // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested dist v{version}, which is not supported by the this copy of dist ({SELF_DIST_VERSION})");
+        panic!("requested dist v{version}, which is not supported by this copy of dist ({SELF_DIST_VERSION})");
     } else if format.artifact_names_contain_versions() {
         format!("cargo-dist-v{version}-installer.sh")
     } else {
