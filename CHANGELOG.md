@@ -2,6 +2,13 @@
 
 Nothing Yet!
 
+# Version 0.24.1 (2024-10-29)
+
+Loosens the "cargo is broken" error reporting condition, letting us be more
+precise about cases where Cargo is present but Cargo metadata can't be parsed.
+
+- impl @fasterthanlime [Distinguish "cargo metadata failed" from "cargo is not installed"](https://github.com/axodotdev/cargo-dist/pull/1501)
+
 # Version 0.24.0 (2024-10-28)
 
 It's been less than two weeks, and we're already back with a big dist release for you. This release has several major features, beginning with the biggest news that:
