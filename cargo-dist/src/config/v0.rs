@@ -1,7 +1,7 @@
 //! v0 config
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::GithubRunner;
+use cargo_dist_schema::{declare_strongly_typed_string, GithubRunner};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
@@ -14,6 +14,14 @@ use crate::SortedMap;
 pub struct GenericConfig {
     /// The dist field within dist.toml
     pub dist: Option<DistMetadata>,
+}
+
+declare_strongly_typed_string! {
+    /// A URL to use to install `cargo-dist` (with the installer script).
+    /// This overwrites `cargo_dist_version` and expects the URL to have
+    /// a similar structure to `./target/distrib` after running `dist build`
+    /// on itself.
+    pub struct CargoDistUrlOverride => &CargoDistUrlOverrideRef;
 }
 
 /// Contents of METADATA_DIST in Cargo.toml files
@@ -30,6 +38,10 @@ pub struct DistMetadata {
     /// things other dist versions can't handle!
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cargo_dist_version: Option<Version>,
+
+    /// See [`CargoDistUrlOverride`]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cargo_dist_url_override: Option<CargoDistUrlOverride>,
 
     /// (deprecated) The intended version of Rust/Cargo to build with (rustup toolchain syntax)
     ///
@@ -447,6 +459,7 @@ impl DistMetadata {
             extra_artifacts,
             // The rest of these don't include relative paths
             cargo_dist_version: _,
+            cargo_dist_url_override: _,
             rust_toolchain_version: _,
             dist: _,
             ci: _,
@@ -541,6 +554,7 @@ impl DistMetadata {
         // This is intentionally written awkwardly to make you update it
         let DistMetadata {
             cargo_dist_version,
+            cargo_dist_url_override,
             rust_toolchain_version,
             dist,
             ci,
@@ -605,6 +619,9 @@ impl DistMetadata {
         // Check for global settings on local packages
         if cargo_dist_version.is_some() {
             warn!("package.metadata.dist.cargo-dist-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if cargo_dist_url_override.is_some() {
+            warn!("package.metadata.dist.cargo-dist-url-override is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if rust_toolchain_version.is_some() {
             warn!("package.metadata.dist.rust-toolchain-version is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

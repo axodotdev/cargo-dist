@@ -70,6 +70,7 @@ spdx.workspace = true
 base64.workspace = true
 lazy_static.workspace = true
 current_platform.workspace = true
+schemars.workspace = true
 
 [dev-dependencies]
 insta.workspace = true

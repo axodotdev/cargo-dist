@@ -24,6 +24,8 @@ use crate::{
     DistError, DistGraph, SortedMap, SortedSet,
 };
 
+use super::FullVersionInfo;
+
 #[cfg(not(windows))]
 const GITHUB_CI_DIR: &str = ".github/workflows/";
 #[cfg(windows)]
@@ -216,8 +218,12 @@ impl GithubCiInfo {
         }
 
         // Get the platform-specific installation methods
-        let install_dist_sh = super::install_dist_sh_for_version(dist_version);
-        let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
+        let ver_info = FullVersionInfo {
+            version: dist_version,
+            url_override: dist.config.dist_url_override.as_deref(),
+        };
+        let install_dist_sh = super::install_dist_sh_for_version(&ver_info);
+        let install_dist_ps1 = super::install_dist_ps1_for_version(&ver_info);
         let hosting_providers = dist
             .hosting
             .as_ref()

@@ -359,6 +359,7 @@ fn get_new_dist_metadata(
         DistMetadata {
             // If they init with this version we're gonna try to stick to it!
             cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
+            cargo_dist_url_override: None,
             // deprecated, default to not emitting it
             rust_toolchain_version: None,
             ci: None,
@@ -839,6 +840,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     // This is intentionally written awkwardly to make you update this
     let DistMetadata {
         cargo_dist_version,
+        cargo_dist_url_override,
         rust_toolchain_version,
         dist,
         ci,
@@ -922,6 +924,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "cargo-dist-version",
         "# The preferred dist version to use in CI (Cargo.toml SemVer syntax)\n",
         cargo_dist_version.as_ref().map(|v| v.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "cargo-dist-url-override",
+        "# A URL to use to install `cargo-dist` (with the installer script)\n",
+        cargo_dist_url_override.as_ref().map(|v| v.to_string()),
     );
 
     apply_optional_value(
