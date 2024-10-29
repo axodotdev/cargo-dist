@@ -1,4 +1,7 @@
 #!/usr/bin/env node
 
 const { run } = require("./binary");
+{#- see https://github.com/axodotdev/cargo-dist/issues/1524 #}
+{%- if bin is defined %}
 run({{ bin }});
+{%- endif %}

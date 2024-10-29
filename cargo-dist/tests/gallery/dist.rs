@@ -102,6 +102,7 @@ pub struct AppResult {
     bins: Vec<String>,
     shell_installer_path: Option<Utf8PathBuf>,
     homebrew_installer_path: Option<Utf8PathBuf>,
+    homebrew_skip_install: bool,
     powershell_installer_path: Option<Utf8PathBuf>,
     npm_installer_package_path: Option<Utf8PathBuf>,
     unified_checksum_path: Option<Utf8PathBuf>,
@@ -236,7 +237,9 @@ impl<'a> TestContext<'a, Tools> {
             let ps_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.ps1"));
             let sh_installer = Utf8PathBuf::from(format!("{target_dir}/{app_name}-installer.sh"));
             let brew_app_name = self.options.homebrew_package_name(&app_name);
+            let homebrew_skip_install = self.options.homebrew_skip_install(&app_name);
             let homebrew_installer = Utf8PathBuf::from(format!("{target_dir}/{brew_app_name}.rb"));
+
             let npm_installer =
                 Utf8PathBuf::from(format!("{target_dir}/{app_name}-npm-package.tar.gz"));
             let unified_checksum_path = Utf8PathBuf::from(format!("{target_dir}/sha256.sum"));
@@ -248,6 +251,7 @@ impl<'a> TestContext<'a, Tools> {
                 shell_installer_path: sh_installer.exists().then_some(sh_installer),
                 powershell_installer_path: ps_installer.exists().then_some(ps_installer),
                 homebrew_installer_path: homebrew_installer.exists().then_some(homebrew_installer),
+                homebrew_skip_install,
                 npm_installer_package_path: npm_installer.exists().then_some(npm_installer),
                 unified_checksum_path: unified_checksum_path
                     .exists()

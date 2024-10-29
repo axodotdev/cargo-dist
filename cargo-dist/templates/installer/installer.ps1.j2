@@ -50,7 +50,7 @@ param (
 $app_name = '{{ app_name }}'
 $app_version = '{{ app_version }}'
 
-{%- if hosting.axodotdev %}
+{%- if hosting.axodotdev is defined %}
 if ($env:INSTALLER_DOWNLOAD_URL) {
   $ArtifactDownloadUrl = $env:INSTALLER_DOWNLOAD_URL
 }

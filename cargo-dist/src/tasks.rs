@@ -50,6 +50,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::backend::installer::{ExecutableZipFragment, HomebrewImpl};
 use crate::platform::targets::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
 };
@@ -67,7 +68,7 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::backend::installer::homebrew::to_homebrew_license_format;
+use crate::backend::installer::homebrew::{to_homebrew_license_format, HomebrewFragments};
 use crate::backend::installer::macpkg::PkgInstallerInfo;
 use crate::config::v1::builds::cargo::AppCargoBuildConfig;
 use crate::config::v1::ci::CiConfig;
@@ -1861,40 +1862,35 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .into_iter()
             .filter(|a| !a.target_triple.is_windows_msvc())
             .collect::<Vec<_>>();
-        let target_triples = artifacts
-            .iter()
-            .map(|a| a.target_triple.clone())
-            .collect::<Vec<_>>();
-        let x86_64_macos = artifacts
-            .iter()
-            .find(|a| a.target_triple == TARGET_X64_MAC)
-            .cloned();
-        let arm64_macos = artifacts
-            .iter()
-            .find(|a| a.target_triple == TARGET_ARM64_MAC)
-            .cloned();
-        let x86_64_linux = artifacts
-            .iter()
-            .find(|a| a.target_triple == TARGET_X64_LINUX_GNU)
-            .cloned();
-        let arm64_linux = artifacts
-            .iter()
-            .find(|a| a.target_triple == TARGET_ARM64_LINUX_GNU)
-            .cloned();
-
         if artifacts.is_empty() {
             warn!("skipping Homebrew installer: not building any supported platforms (use --artifacts=global)");
             return Ok(());
         };
 
+        let target_triples = artifacts
+            .iter()
+            .map(|a| a.target_triple.clone())
+            .collect::<Vec<_>>();
+
+        let find_fragment = |triple: &TargetTripleRef| -> Option<ExecutableZipFragment> {
+            artifacts
+                .iter()
+                .find(|a| a.target_triple == triple)
+                .cloned()
+        };
+        let fragments = HomebrewFragments {
+            x86_64_macos: find_fragment(TARGET_X64_MAC),
+            arm64_macos: find_fragment(TARGET_ARM64_MAC),
+            x86_64_linux: find_fragment(TARGET_X64_LINUX_GNU),
+            arm64_linux: find_fragment(TARGET_ARM64_LINUX_GNU),
+        };
+
         let release = self.release(to_release);
         let app_name = release.app_name.clone();
-        let app_desc = if release.app_desc.is_none() {
+        let app_desc = release.app_desc.clone().unwrap_or_else(|| {
             warn!("The Homebrew publish job is enabled but no description was specified\n  consider adding `description = ` to package in Cargo.toml");
-            Some(format!("The {} application", release.app_name))
-        } else {
-            release.app_desc.clone()
-        };
+            format!("The {} application", release.app_name)
+        });
         let app_license = release.app_license.clone();
         let homebrew_dsl_license = app_license.as_ref().map(|app_license| {
             // Parse SPDX license expression and convert to Homebrew's Ruby license DSL.
@@ -1929,54 +1925,52 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .map(|(name, _)| name)
             .collect();
         let bin_aliases = BinaryAliases(config.bin_aliases.clone()).for_targets(&target_triples);
+
+        let inner = InstallerInfo {
+            release: to_release,
+            dest_path: artifact_path.clone(),
+            app_name: release.app_name.clone(),
+            app_version: release.version.to_string(),
+            install_paths: config
+                .install_path
+                .iter()
+                .map(|p| p.clone().into_jinja())
+                .collect(),
+            install_success_msg: config.install_success_msg.to_owned(),
+            base_url: download_url.to_owned(),
+            hosting,
+            artifacts,
+            hint,
+            desc,
+            receipt: None,
+            bin_aliases,
+            install_libraries: config.install_libraries.clone(),
+            runtime_conditions,
+            platform_support: None,
+            // Not actually needed for this installer type
+            env_vars: None,
+        };
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
             archive: None,
-            file_path: artifact_path.clone(),
-            required_binaries: FastMap::new(),
+            file_path: artifact_path,
+            required_binaries: Default::default(),
             checksum: None,
-            kind: ArtifactKind::Installer(InstallerImpl::Homebrew(HomebrewInstallerInfo {
-                x86_64_macos,
-                x86_64_macos_sha256: None,
-                arm64_macos,
-                arm64_macos_sha256: None,
-                x86_64_linux,
-                x86_64_linux_sha256: None,
-                arm64_linux,
-                arm64_linux_sha256: None,
-                name: app_name,
-                formula_class: to_class_case(formula),
-                desc: app_desc,
-                license: homebrew_dsl_license,
-                homepage: app_homepage_url,
-                tap,
-                dependencies,
-                inner: InstallerInfo {
-                    release: to_release,
-                    dest_path: artifact_path,
-                    app_name: release.app_name.clone(),
-                    app_version: release.version.to_string(),
-                    install_paths: config
-                        .install_path
-                        .iter()
-                        .map(|p| p.clone().into_jinja())
-                        .collect(),
-                    install_success_msg: config.install_success_msg.to_owned(),
-                    base_url: download_url.to_owned(),
-                    hosting,
-                    artifacts,
-                    hint,
-                    desc,
-                    receipt: None,
-                    bin_aliases,
+            kind: ArtifactKind::Installer(InstallerImpl::Homebrew(HomebrewImpl {
+                info: HomebrewInstallerInfo {
+                    name: app_name,
+                    formula_class: to_class_case(formula),
+                    desc: app_desc,
+                    license: homebrew_dsl_license,
+                    homepage: app_homepage_url,
+                    tap,
+                    dependencies,
+                    inner,
                     install_libraries: config.install_libraries.clone(),
-                    runtime_conditions,
-                    platform_support: None,
-                    // Not actually needed for this installer type
-                    env_vars: None,
                 },
-                install_libraries: config.install_libraries.clone(),
+                fragments,
             })),
             is_global: true,
         };

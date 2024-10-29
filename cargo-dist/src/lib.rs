@@ -17,7 +17,9 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use backend::{
     ci::CiInfo,
-    installer::{self, macpkg::PkgInstallerInfo, msi::MsiInstallerInfo, InstallerImpl},
+    installer::{
+        self, macpkg::PkgInstallerInfo, msi::MsiInstallerInfo, HomebrewImpl, InstallerImpl,
+    },
 };
 use build::generic::{build_generic_target, run_extra_artifacts_build};
 use build::{
@@ -780,8 +782,8 @@ fn generate_installer(
             installer::powershell::write_install_ps_script(dist, info)?
         }
         InstallerImpl::Npm(info) => installer::npm::write_npm_project(dist, info)?,
-        InstallerImpl::Homebrew(info) => {
-            installer::homebrew::write_homebrew_formula(dist, info, manifest)?
+        InstallerImpl::Homebrew(HomebrewImpl { info, fragments }) => {
+            installer::homebrew::write_homebrew_formula(dist, info, fragments, manifest)?
         }
         InstallerImpl::Msi(info) => info.build(dist)?,
         InstallerImpl::Pkg(info) => info.build()?,

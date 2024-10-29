@@ -18,7 +18,7 @@ set -u
 
 APP_NAME="{{ app_name }}"
 APP_VERSION="{{ app_version }}"
-{%- if hosting.axodotdev %}
+{%- if hosting.axodotdev is defined %}
 ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-{{ base_url }}}"
 {% else %}
 # Look for GitHub Enterprise-style base URL first
@@ -339,7 +339,7 @@ select_archive_for_arch() {
         "{{ target }}")
             {%- for option in platform_support.platforms[target] %}
             _archive="{{platform_support.archives[option.archive_idx].id}}"
-            {%- if option.runtime_conditions.min_glibc_version %}
+            {%- if option.runtime_conditions.min_glibc_version is defined %}
             if ! check_glibc "{{option.runtime_conditions.min_glibc_version.major}}" "{{option.runtime_conditions.min_glibc_version.series}}"; then
                 _archive=""
             fi
