@@ -6,7 +6,7 @@ use crate::platform::targets as t;
 use cargo_dist_schema::{GithubRunnerRef, TargetTripleRef};
 
 lazy_static::lazy_static! {
-    static ref KNOWN_GITHUB_RUNNERS: HashMap<&'static GithubRunnerRef, &'static TargetTripleRef> = {
+    pub(crate) static ref KNOWN_GITHUB_RUNNERS: HashMap<&'static GithubRunnerRef, &'static TargetTripleRef> = {
         let mut m = HashMap::new();
         // cf. https://github.com/actions/runner-images/blob/main/README.md
         // last updated 2024-10-25

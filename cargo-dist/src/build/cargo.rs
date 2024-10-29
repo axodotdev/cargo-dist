@@ -4,6 +4,7 @@ use std::env;
 
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
+use cargo_dist_schema::target_lexicon::Environment;
 use cargo_dist_schema::{DistManifest, TargetTriple};
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
@@ -11,7 +12,7 @@ use tracing::warn;
 use crate::build::BuildExpectations;
 use crate::env::{calculate_ldflags, fetch_brew_env, parse_env, select_brew_env};
 use crate::{
-    errors::*, BinaryIdx, BuildStep, CargoBuildWrapper, DistGraphBuilder,
+    build_wrapper_for_cross, errors::*, BinaryIdx, BuildStep, CargoBuildWrapper, DistGraphBuilder,
     AXOUPDATER_MINIMUM_VERSION, PROFILE_DIST,
 };
 use crate::{
@@ -67,7 +68,8 @@ impl<'a> DistGraphBuilder<'a> {
         }
 
         let mut builds = vec![];
-        for (target, binaries) in targets {
+        for (target_triple, binaries) in targets {
+            let target = target_triple.parse().unwrap();
             let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
 
             // FIXME: is there a more principled way for us to add things to RUSTFLAGS
@@ -89,35 +91,33 @@ impl<'a> DistGraphBuilder<'a> {
             // on. Not doing that is basically rolling some dice and hoping the user already
             // has it installed, which isn't great. We should support redists eventually,
             // but for now this hacky global flag is here to let you roll dice.
-            if self.inner.config.builds.cargo.msvc_crt_static && target.is_windows_msvc() {
+            if self.inner.config.builds.cargo.msvc_crt_static
+                && target.environment == Environment::Msvc
+            {
                 rustflags.push_str(" -Ctarget-feature=+crt-static");
             }
 
             // Likewise, the default for musl will change in the future, so
             // we can future-proof this by adding the flag now
             // See: https://github.com/axodotdev/cargo-dist/issues/486
-            if target.is_linux_musl() {
+            if target.environment == Environment::Musl {
                 rustflags.push_str(" -Ctarget-feature=+crt-static -Clink-self-contained=yes");
             }
 
-            let mut wrapper = CargoBuildWrapper::None;
+            let mut wrapper: Option<CargoBuildWrapper> = None;
 
-            // If we're trying to cross-compile, ensure the rustup toolchain
-            // is setup!
-            if target != cargo.host_target {
+            let host = cargo.host_target.parse().unwrap();
+
+            // If we're trying to cross-compile, ensure the rustup toolchain is set up!
+            if target != host {
                 if let Some(rustup) = self.inner.tools.rustup.clone() {
                     builds.push(BuildStep::Rustup(RustupStep {
                         rustup,
-                        target: target.clone(),
+                        target: target_triple.clone(),
                     }));
 
-                    if target.is_windows() {
-                        // If we're targetting windows, let's try `cargo-xwin`
-                        wrapper = CargoBuildWrapper::Xwin;
-                    } else {
-                        // If not, let's try `cargo-zigbuild`
-                        wrapper = CargoBuildWrapper::ZigBuild;
-                    }
+                    // some cross-compilations require build wrappers
+                    wrapper = build_wrapper_for_cross(&host, &target);
                 } else {
                     warn!("You're trying to cross-compile, but I can't find rustup to ensure you have the rust toolchains for it!")
                 }
@@ -137,7 +137,7 @@ impl<'a> DistGraphBuilder<'a> {
                 }
                 for ((pkg_spec, features), expected_binaries) in builds_by_pkg_spec {
                     builds.push(BuildStep::Cargo(CargoBuildStep {
-                        target_triple: target.clone(),
+                        target_triple: target_triple.clone(),
                         wrapper,
                         package: CargoTargetPackages::Package(pkg_spec),
                         features,
@@ -154,7 +154,7 @@ impl<'a> DistGraphBuilder<'a> {
                     .map(|&idx| self.binary(idx).features.clone())
                     .unwrap_or_default();
                 builds.push(BuildStep::Cargo(CargoBuildStep {
-                    target_triple: target.clone(),
+                    target_triple: target_triple.clone(),
                     wrapper,
                     package: CargoTargetPackages::Workspace,
                     features,
@@ -177,9 +177,9 @@ pub fn build_cargo_target(
 ) -> DistResult<()> {
     let cargo = dist_graph.tools.cargo()?;
     let kind = match target.wrapper {
-        CargoBuildWrapper::None => "cargo",
-        CargoBuildWrapper::ZigBuild => "cargo-zigbuild",
-        CargoBuildWrapper::Xwin => "cargo-xwin",
+        None => "cargo",
+        Some(CargoBuildWrapper::ZigBuild) => "cargo-zigbuild",
+        Some(CargoBuildWrapper::Xwin) => "cargo-xwin",
     };
     eprint!(
         "building {kind} target ({}/{}",
@@ -199,13 +199,13 @@ pub fn build_cargo_target(
 
     let mut command = Cmd::new(&cargo.cmd, "build your app with Cargo");
     match target.wrapper {
-        CargoBuildWrapper::None => {
+        None => {
             command.arg("build");
         }
-        CargoBuildWrapper::ZigBuild => {
+        Some(CargoBuildWrapper::ZigBuild) => {
             command.arg("zigbuild");
         }
-        CargoBuildWrapper::Xwin => {
+        Some(CargoBuildWrapper::Xwin) => {
             command.arg("xwin").arg("build");
         }
     }

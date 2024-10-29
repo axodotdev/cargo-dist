@@ -57,8 +57,10 @@ use axoasset::AxoClient;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::Utf8PathBuf;
+use cargo_dist_schema::target_lexicon::{OperatingSystem, Triple};
 use cargo_dist_schema::{
-    ArtifactId, BuildEnvironment, DistManifest, SystemId, SystemInfo, TargetTriple, TargetTripleRef,
+    ArtifactId, BuildEnvironment, DistManifest, HomebrewPackageName, SystemId, SystemInfo,
+    TargetTriple, TargetTripleRef,
 };
 use semver::Version;
 use serde::Serialize;
@@ -393,7 +395,7 @@ pub struct CargoBuildStep {
     /// The --target triple to pass
     pub target_triple: TargetTriple,
     /// The cargo wrapper to use
-    pub wrapper: CargoBuildWrapper,
+    pub wrapper: Option<CargoBuildWrapper>,
     /// The feature flags to pass
     pub features: CargoTargetFeatures,
     /// What package to build (or "the workspace")
@@ -409,11 +411,8 @@ pub struct CargoBuildStep {
 }
 
 /// A wrapper to use instead of `cargo build`, generally used for cross-compilation
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CargoBuildWrapper {
-    /// Run 'cargo build' normally
-    None,
-
     /// Run 'cargo zigbuild' to cross-compile, e.g. from `x86_64-unknown-linux-gnu` to `aarch64-unknown-linux-gnu`
     /// cf. <https://github.com/rust-cross/cargo-zigbuild>
     ZigBuild,
@@ -421,6 +420,48 @@ pub enum CargoBuildWrapper {
     /// Run 'cargo xwin' to cross-compile, e.g. from `aarch64-apple-darwin` to `x86_64-pc-windows-msvc`
     /// cf. <https://github.com/rust-cross/cargo-xwin>
     Xwin,
+}
+
+/// Returns the cargo build wrapper required to perform a certain cross-compilation
+pub fn build_wrapper_for_cross(host: &Triple, target: &Triple) -> Option<CargoBuildWrapper> {
+    if host == target {
+        // that's not even a cross!
+        return None;
+    }
+
+    match (host.operating_system, target.operating_system) {
+        (OperatingSystem::Darwin, OperatingSystem::Darwin) => {
+            // from mac to mac, even if we do aarch64 => x86_64, or the other way
+            // around, _all we need_ is to add the target to rustup
+            return None;
+        }
+        (_, OperatingSystem::Darwin) => {
+            panic!("cross-compiling to macOS is a road paved with sadness — we cowardly refuse to walk it.");
+        }
+        (OperatingSystem::Darwin, OperatingSystem::Linux) => {
+            // zigbuild works for this
+            return Some(CargoBuildWrapper::ZigBuild);
+        }
+        (OperatingSystem::Linux { .. }, OperatingSystem::Linux) => {
+            // zigbuild works for x86_64-unknown-linux-gnu => aarch64-unknown-linux-gnu
+            // for example.
+            if host.architecture != target.architecture {
+                return Some(CargoBuildWrapper::ZigBuild);
+            }
+        }
+        (OperatingSystem::Linux { .. }, OperatingSystem::Windows) => {
+            // xwin definitely works for this
+            return Some(CargoBuildWrapper::Xwin);
+        }
+        (OperatingSystem::Windows { .. }, OperatingSystem::Windows) => {
+            todo!("not sure about windows crosses?? we're doing {host} => {target}, maybe zigbuild has something? idk");
+        }
+        _ => {
+            // don't know, crossing fingers
+        }
+    }
+
+    None
 }
 
 /// A cargo build (and copy the outputs to various locations)
@@ -1938,7 +1979,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
-        let dependencies: Vec<String> = release
+        let dependencies: Vec<HomebrewPackageName> = release
             .config
             .builds
             .system_dependencies

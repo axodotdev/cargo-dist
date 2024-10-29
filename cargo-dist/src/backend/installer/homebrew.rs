@@ -1,7 +1,7 @@
 //! Code for generating formula.rb
 
 use axoasset::LocalAsset;
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{DistManifest, HomebrewPackageName};
 use serde::Serialize;
 use spdx::{
     expression::{ExprNode, Operator},
@@ -51,7 +51,7 @@ pub struct HomebrewInstallerInfo {
     /// Generic installer info
     pub inner: InstallerInfo,
     /// Additional packages to specify as dependencies
-    pub dependencies: Vec<String>,
+    pub dependencies: Vec<HomebrewPackageName>,
     /// Whether to install packaged C dynamic libraries
     pub install_libraries: Vec<LibraryStyle>,
 }
@@ -104,14 +104,14 @@ fn use_sha256_checksum(
 fn use_linkage(
     manifest: &DistManifest,
     fragment: &Option<ExecutableZipFragment>,
-    dependencies: &mut Vec<String>,
+    dependencies: &mut Vec<HomebrewPackageName>,
 ) {
     if let Some(frag) = fragment {
         let archive_linkage = manifest.linkage_for_artifact(&frag.id);
         let homebrew_deps = archive_linkage
             .homebrew
             .iter()
-            .filter_map(|lib| lib.source.clone());
+            .filter_map(|lib| lib.source.clone().map(HomebrewPackageName::new));
         dependencies.extend(homebrew_deps);
     }
 }

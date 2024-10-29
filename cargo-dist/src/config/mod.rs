@@ -5,7 +5,9 @@ use std::collections::BTreeMap;
 use axoasset::{toml_edit, SourceFile};
 use axoproject::local_repo::LocalRepo;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{TargetTriple, TargetTripleRef};
+use cargo_dist_schema::{
+    declare_strongly_typed_string, HomebrewPackageName, TargetTriple, TargetTripleRef,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::announce::TagSettings;
@@ -742,6 +744,20 @@ pub struct MacPkgConfig {
     pub install_location: Option<String>,
 }
 
+declare_strongly_typed_string! {
+    /// An APT package name, cf. <https://en.wikipedia.org/wiki/APT_(software)>
+    pub struct AptPackageName => &AptPackageNameRef;
+
+    /// A chocolatey package name, cf. <https://community.chocolatey.org/packages>
+    pub struct ChocolateyPackageName => &ChocolateyPackageNameRef;
+
+    /// A pip package name
+    pub struct PipPackageName => &PipPackageNameRef;
+
+    /// A package version
+    pub struct PackageVersion => &PackageVersionRef;
+}
+
 /// Packages to install before build from the system package manager
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SystemDependencies {
@@ -749,15 +765,15 @@ pub struct SystemDependencies {
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     // #[serde(with = "sysdep_derive")]
-    pub homebrew: BTreeMap<String, SystemDependency>,
+    pub homebrew: BTreeMap<HomebrewPackageName, SystemDependency>,
     /// Packages to install in apt
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub apt: BTreeMap<String, SystemDependency>,
+    pub apt: BTreeMap<AptPackageName, SystemDependency>,
     /// Package to install in Chocolatey
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub chocolatey: BTreeMap<String, SystemDependency>,
+    pub chocolatey: BTreeMap<ChocolateyPackageName, SystemDependency>,
 }
 
 impl SystemDependencies {
@@ -778,7 +794,7 @@ pub struct SystemDependency(pub SystemDependencyComplex);
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct SystemDependencyComplex {
     /// The version to install, as expected by the underlying package manager
-    pub version: Option<String>,
+    pub version: Option<PackageVersion>,
     /// Stages at which the dependency is required
     #[serde(default)]
     pub stage: Vec<DependencyKind>,
@@ -851,7 +867,7 @@ impl<'de> Deserialize<'de> for SystemDependency {
             SystemDependencyKind::Untagged(version) => {
                 let v = if version == "*" { None } else { Some(version) };
                 SystemDependencyComplex {
-                    version: v,
+                    version: v.map(PackageVersion::new),
                     stage: vec![],
                     targets: vec![],
                 }

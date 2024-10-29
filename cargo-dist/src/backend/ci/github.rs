@@ -8,20 +8,26 @@ use axoasset::{LocalAsset, SourceFile};
 use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
-    GithubMatrix, GithubMatrixEntry, GithubRunner, GithubRunnerRef, TargetTriple, TargetTripleRef,
+    target_lexicon::{self, OperatingSystem, Triple},
+    GithubMatrix, GithubMatrixEntry, GithubRunner, GithubRunnerRef, HomebrewPackageName,
+    PackageInstallScript, TargetTriple, TargetTripleRef,
 };
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
+    build_wrapper_for_cross,
     config::{
         v1::{ci::github::GithubCiConfig, publishers::PublisherConfig},
-        DependencyKind, GithubPermission, GithubPermissionMap, GithubReleasePhase, HostingStyle,
-        JinjaGithubRepoPair, JobStyle, ProductionMode, PublishStyle, SystemDependencies,
+        AptPackageName, ChocolateyPackageName, DependencyKind, GithubPermission,
+        GithubPermissionMap, GithubReleasePhase, HostingStyle, JinjaGithubRepoPair, JobStyle,
+        PackageVersion, ProductionMode, PublishStyle, SystemDependencies,
     },
     errors::DistResult,
-    DistError, DistGraph, SortedMap, SortedSet,
+    platform::{github_runners::KNOWN_GITHUB_RUNNERS, targets::TARGET_X64_LINUX_GNU},
+    CargoBuildWrapper, DistError, DistGraph, SortedMap, SortedSet,
 };
 
 use super::FullVersionInfo;
@@ -305,6 +311,18 @@ impl GithubCiInfo {
             distribute_targets_to_runners_split(local_targets, &ci_config.runners)
         };
         for (runner, targets) in local_runs {
+            let host = KNOWN_GITHUB_RUNNERS
+                .get(runner.as_explicit_ref())
+                .copied()
+                .and_then(|t| t.parse().ok());
+            let host_or_default = host.unwrap_or_else(|| {
+                warn!(
+                    "don't know the triple for github runner '{}', assuming {}",
+                    runner, TARGET_X64_LINUX_GNU
+                );
+                TARGET_X64_LINUX_GNU.parse().unwrap()
+            });
+
             use std::fmt::Write;
             let install_dist =
                 install_dist_for_targets(&targets, &install_dist_sh, &install_dist_ps1);
@@ -318,7 +336,11 @@ impl GithubCiInfo {
                 runner: Some(runner),
                 dist_args: Some(dist_args),
                 install_dist: Some(install_dist.to_owned()),
-                packages_install: package_install_for_targets(&targets, &dependencies),
+                packages_install: package_install_for_targets(
+                    host_or_default,
+                    &targets,
+                    &dependencies,
+                ),
             });
         }
 
@@ -641,11 +663,10 @@ fn install_dist_for_targets<'a>(
     unreachable!("internal error: unknown target triple!?")
 }
 
-fn brewfile_from(packages: &[String]) -> String {
-    let brewfile_lines: Vec<String> = packages
-        .iter()
+fn brewfile_from<'a>(packages: impl Iterator<Item = &'a HomebrewPackageName>) -> String {
+    packages
         .map(|p| {
-            let lower = p.to_ascii_lowercase();
+            let lower = p.as_str().to_ascii_lowercase();
             // Although `brew install` can take either a formula or a cask,
             // Brewfiles require you to use the `cask` verb for casks and `brew`
             // for formulas.
@@ -655,12 +676,10 @@ fn brewfile_from(packages: &[String]) -> String {
                 format!(r#"brew "{p}""#).to_owned()
             }
         })
-        .collect();
-
-    brewfile_lines.join("\n")
+        .join("\n")
 }
 
-fn brew_bundle_command(packages: &[String]) -> String {
+fn brew_bundle_command<'a>(packages: impl Iterator<Item = &'a HomebrewPackageName>) -> String {
     format!(
         r#"cat << EOF >Brewfile
 {}
@@ -672,91 +691,119 @@ brew bundle install"#,
 }
 
 fn package_install_for_targets(
+    host: Triple,
     targets: &[&TargetTripleRef],
     packages: &SystemDependencies,
-) -> Option<String> {
-    // FIXME?: handle mixed-OS targets
-    for target in targets {
-        match target.as_str() {
-            "i686-apple-darwin" | "x86_64-apple-darwin" | "aarch64-apple-darwin" => {
-                let packages: Vec<String> = packages
-                    .homebrew
-                    .clone()
-                    .into_iter()
-                    .filter(|(_, package)| package.0.wanted_for_target(target))
-                    .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Build))
-                    .map(|(name, _)| name)
-                    .collect();
+) -> Option<PackageInstallScript> {
+    let mut brew_packages: SortedSet<HomebrewPackageName> = Default::default();
+    let mut apt_packages: SortedSet<(AptPackageName, Option<PackageVersion>)> = Default::default();
+    let mut chocolatey_packages: SortedSet<(ChocolateyPackageName, Option<PackageVersion>)> =
+        Default::default();
 
-                if packages.is_empty() {
-                    return None;
+    match host.operating_system {
+        OperatingSystem::Darwin => {
+            for (name, pkg) in &packages.homebrew {
+                if !pkg.0.stage_wanted(&DependencyKind::Build) {
+                    continue;
                 }
-
-                return Some(brew_bundle_command(&packages));
+                if !targets.iter().any(|target| pkg.0.wanted_for_target(target)) {
+                    continue;
+                }
+                brew_packages.insert(name.clone());
             }
-            "i686-unknown-linux-gnu"
-            | "x86_64-unknown-linux-gnu"
-            | "aarch64-unknown-linux-gnu"
-            | "i686-unknown-linux-musl"
-            | "x86_64-unknown-linux-musl"
-            | "aarch64-unknown-linux-musl" => {
-                let mut packages: Vec<String> = packages
-                    .apt
-                    .clone()
-                    .into_iter()
-                    .filter(|(_, package)| package.0.wanted_for_target(target))
-                    .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Build))
-                    .map(|(name, spec)| {
-                        if let Some(version) = spec.0.version {
-                            format!("{name}={version}")
-                        } else {
-                            name
-                        }
-                    })
-                    .collect();
+        }
+        OperatingSystem::Linux => {
+            for (name, pkg) in &packages.apt {
+                if !pkg.0.stage_wanted(&DependencyKind::Build) {
+                    continue;
+                }
+                if !targets.iter().any(|target| pkg.0.wanted_for_target(target)) {
+                    continue;
+                }
+                apt_packages.insert((name.clone(), pkg.0.version.clone()));
+            }
 
+            let has_musl_target = targets.iter().any(|target| {
+                target.parse().unwrap().environment == target_lexicon::Environment::Musl
+            });
+            if has_musl_target {
                 // musl builds may require musl-tools to build;
                 // necessary for more complex software
-                if target.is_linux_musl() {
-                    packages.push("musl-tools".to_owned());
-                }
-
-                if packages.is_empty() {
-                    return None;
-                }
-
-                let apts = packages.join(" ");
-                return Some(
-                    format!("sudo apt-get update && sudo apt-get install {apts}").to_owned(),
-                );
+                apt_packages.insert((AptPackageName::new("musl-tools".to_owned()), None));
             }
-            "i686-pc-windows-msvc" | "x86_64-pc-windows-msvc" | "aarch64-pc-windows-msvc" => {
-                let commands: Vec<String> = packages
-                    .chocolatey
-                    .clone()
-                    .into_iter()
-                    .filter(|(_, package)| package.0.wanted_for_target(target))
-                    .filter(|(_, package)| package.0.stage_wanted(&DependencyKind::Build))
-                    .map(|(name, package)| {
-                        if let Some(version) = package.0.version {
-                            format!("choco install {name} --version={version}")
-                        } else {
-                            format!("choco install {name}")
-                        }
-                    })
-                    .collect();
-
-                if commands.is_empty() {
-                    return None;
+        }
+        OperatingSystem::Windows => {
+            for (name, pkg) in &packages.chocolatey {
+                if !pkg.0.stage_wanted(&DependencyKind::Build) {
+                    continue;
                 }
-
-                return Some(commands.join("\n"));
+                if !targets.iter().any(|target| pkg.0.wanted_for_target(target)) {
+                    continue;
+                }
+                chocolatey_packages.insert((name.clone(), pkg.0.version.clone()));
             }
-            _ => {}
+        }
+        _ => {
+            panic!(
+                "unsupported host operating system: {:?}",
+                host.operating_system
+            )
         }
     }
 
-    None
+    let mut lines = vec![];
+    if !brew_packages.is_empty() {
+        lines.push(brew_bundle_command(brew_packages.iter()))
+    }
+
+    if !apt_packages.is_empty() {
+        lines.push("sudo apt-get update".to_owned());
+        let args = apt_packages
+            .iter()
+            .map(|(pkg, version)| {
+                if let Some(v) = version {
+                    format!("{pkg}={v}")
+                } else {
+                    pkg.to_string()
+                }
+            })
+            .join(" ");
+        lines.push(format!("sudo apt-get install {args}"));
+    }
+
+    for (pkg, version) in &chocolatey_packages {
+        lines.push(if let Some(v) = version {
+            format!("choco install {pkg} --version={v} --yes")
+        } else {
+            format!("choco install {pkg} --yes")
+        });
+    }
+
+    // Regardless of what we're doing, we might need build wrappers!
+    let mut required_wrappers: SortedSet<CargoBuildWrapper> = Default::default();
+    for target in targets {
+        let target = target.parse().unwrap();
+        if let Some(wrapper) = build_wrapper_for_cross(&host, &target) {
+            required_wrappers.insert(wrapper);
+        }
+    }
+
+    if required_wrappers.contains(&CargoBuildWrapper::ZigBuild) {
+        // installing via pip is a safe bet — it also pulls in zig itself
+        lines.push("pip install cargo-zigbuild".to_owned());
+    }
+    if required_wrappers.contains(&CargoBuildWrapper::Xwin) {
+        // installing via pip is _technically possible_ but it _will_ take forever
+        // to warm up its caches (downloading/extracting windows SDKs, etc.) so...
+        // really that should be done through docker images.
+        lines.push("pip install cargo-xwin".to_owned());
+    }
+
+    if lines.is_empty() {
+        None
+    } else {
+        Some(PackageInstallScript::new(lines.join("\n")))
+    }
 }
 
 /// Builder for looking up and reporting errors in the steps provided by the

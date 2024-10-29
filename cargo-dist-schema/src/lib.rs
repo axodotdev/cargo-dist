@@ -9,6 +9,7 @@
 //! The root type of the schema is [`DistManifest`][].
 
 pub mod macros;
+pub use target_lexicon;
 
 use std::{collections::BTreeMap, str::FromStr};
 
@@ -298,6 +299,11 @@ impl GithubMatrix {
     }
 }
 
+declare_strongly_typed_string! {
+    /// A bit of shell script to install brew/apt/chocolatey/etc. packages
+    pub struct PackageInstallScript => &PackageInstallScriptRef;
+}
+
 /// Entry for a github matrix
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct GithubMatrixEntry {
@@ -315,7 +321,7 @@ pub struct GithubMatrixEntry {
     pub dist_args: Option<String>,
     /// Command to run to install dependencies
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub packages_install: Option<String>,
+    pub packages_install: Option<PackageInstallScript>,
     /// what cache provider to use
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_provider: Option<String>,
@@ -844,6 +850,11 @@ pub enum PackageManager {
     Apt,
 }
 
+declare_strongly_typed_string! {
+    /// A homebrew package name, cf. <https://formulae.brew.sh/>
+    pub struct HomebrewPackageName => &HomebrewPackageNameRef;
+}
+
 /// Represents a dynamic library located somewhere on the system
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Library {
@@ -854,6 +865,9 @@ pub struct Library {
     pub source: Option<String>,
     /// Which package manager provided this library
     pub package_manager: Option<PackageManager>,
+    // FIXME: `HomebrewPackageName` and others are now strongly-typed, which makes having this
+    // source/packagemanager thingy problematic. Maybe we could just have an enum, with Apt,
+    // Homebrew, and Chocolatey variants? That would change the schema though.
 }
 
 impl Linkage {
@@ -872,31 +886,6 @@ impl Linkage {
             .extend(public_unmanaged.iter().cloned());
         self.other.extend(other.iter().cloned());
         self.frameworks.extend(frameworks.iter().cloned());
-    }
-
-    /// Returns a flat list of packages that come from the specific package manager
-    pub fn packages_from(&self, package_manager: PackageManager) -> Vec<String> {
-        let mut packages = vec![];
-        packages.extend(
-            self.system
-                .iter()
-                .filter(|l| l.package_manager == Some(package_manager))
-                .filter_map(|l| l.source.clone()),
-        );
-        packages.extend(
-            self.homebrew
-                .iter()
-                .filter(|l| l.package_manager == Some(package_manager))
-                .filter_map(|l| l.source.clone()),
-        );
-        packages.extend(
-            self.other
-                .iter()
-                .filter(|l| l.package_manager == Some(package_manager))
-                .filter_map(|l| l.source.clone()),
-        );
-
-        packages
     }
 }
 
