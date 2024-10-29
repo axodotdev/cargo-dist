@@ -325,6 +325,43 @@ impl LibcVersion {
     }
 }
 
+impl std::fmt::Display for LibcVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}.{}", self.major, self.series)
+    }
+}
+
+impl<'de> serde::de::Deserialize<'de> for LibcVersion {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let version_str = String::deserialize(deserializer)?;
+        let parts: Vec<&str> = version_str.split('.').collect();
+        if parts.len() != 2 {
+            return Err(serde::de::Error::custom(
+                "libc version must be {major}.{series} where major and series are numbers",
+            ));
+        }
+
+        let major = parts[0].parse().map_err(|_| {
+            serde::de::Error::custom(format!(
+                "expected {{major}}.{{series}} where major and series are numbers, but got input with major={}",
+                parts[0],
+            ))
+        })?;
+
+        let series = parts[1].parse().map_err(|_| {
+            serde::de::Error::custom(format!(
+                "expected {{major}}.{{series}} where major and series are numbers, but got input with series={}",
+                parts[1],
+            ))
+        })?;
+
+        Ok(LibcVersion { major, series })
+    }
+}
+
 /// Conditions that an installer should ideally check before using this an archive
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct RuntimeConditions {
@@ -780,7 +817,12 @@ fn native_runtime_conditions_for_artifact(
         && runtime_conditions.min_glibc_version.is_none()
     {
         runtime_conditions.min_glibc_version = Some(LibcVersion::default_glibc());
+
+        if dist.inner.config.builds.minimum_glibc_version.is_some() {
+            runtime_conditions.min_glibc_version = dist.inner.config.builds.minimum_glibc_version;
+        }
     }
+
     runtime_conditions
 }
 

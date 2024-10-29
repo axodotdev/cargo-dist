@@ -4,6 +4,7 @@ pub mod cargo;
 pub mod generic;
 
 use super::*;
+use crate::platform::LibcVersion;
 use cargo::*;
 use generic::*;
 
@@ -17,7 +18,7 @@ pub struct WorkspaceBuildConfig {
     /// whether to sign macos binaries with apple
     pub macos_sign: bool,
     /// Overrides the minimum supported glibc version.
-    pub minimum_glibc_version: Option<String>,
+    pub minimum_glibc_version: Option<LibcVersion>,
 }
 
 /// app-scoped build config
@@ -30,7 +31,7 @@ pub struct AppBuildConfig {
     /// A set of packages to install before building
     pub system_dependencies: SystemDependencies,
     /// Overrides the minimum supported glibc version.
-    pub minimum_glibc_version: Option<String>,
+    pub minimum_glibc_version: Option<LibcVersion>,
 }
 
 /// build config (inheritance not yet folded)
@@ -49,7 +50,7 @@ pub struct BuildConfigInheritable {
     /// A set of packages to install before building
     pub system_dependencies: SystemDependencies,
     /// Overrides the minimum supported glibc version.
-    pub minimum_glibc_version: Option<String>,
+    pub minimum_glibc_version: Option<LibcVersion>,
 }
 
 /// build config (raw from file)
@@ -80,7 +81,7 @@ pub struct BuildLayer {
     pub system_dependencies: Option<SystemDependencies>,
     /// Overrides the minimum supported glibc version.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub minimum_glibc_version: Option<String>,
+    pub minimum_glibc_version: Option<LibcVersion>,
 }
 impl BuildConfigInheritable {
     /// get defaults for a package

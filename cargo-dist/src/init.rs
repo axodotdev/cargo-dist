@@ -1298,7 +1298,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         table,
         "minimum-glibc-version",
         "# The minimum glibc version supported by the package (overrides auto-detection)\n",
-        minimum_glibc_version.as_ref(),
+        minimum_glibc_version.as_ref().map(|v| v.to_string()),
     );
 
     // Finalize the table
