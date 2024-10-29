@@ -67,7 +67,7 @@ impl AppResult {
             assert!(!saved_path.trim().is_empty(), "failed to load path");
             eprintln!("backing up PATH: {saved_path}\n");
 
-            // on exit, retore the current PATH in the registry, even if we panic
+            // on exit, restore the current PATH in the registry, even if we panic
             struct RestorePath<'a> {
                 powershell: &'a CommandInfo,
                 tempdir: &'a Utf8Path,
@@ -151,7 +151,7 @@ impl AppResult {
                 // (note that "where" and "where.exe" are completely different things...)
                 //
                 // also note that HKCU:\Environment\PATH is not actually the full PATH
-                // a shell will have, so preprend it to the current PATH (if we don't do
+                // a shell will have, so prepend it to the current PATH (if we don't do
                 // this then where.exe won't be on PATH anymore!)
                 let empirical_path = run_ps1_script(
                     &powershell,

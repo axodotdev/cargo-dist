@@ -1,6 +1,6 @@
 # Config
 
-These are the reference docs for configuring cargo-dist. [cargo dist init][init] manages the most important of these for you, but if you ever need advanced configuration, this is where to look!
+These are the reference docs for configuring dist. [dist init][init] manages the most important of these for you, but if you ever need advanced configuration, this is where to look!
 
 Configuration is currently read from the following sources, in increasing preference:
 
@@ -120,7 +120,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 
 # the `[dist]` section
 
-This section represents all the configuration for how cargo-dist should build and publish your applications. The `[dist]` section is a temporary placeholder which will soon be replaced (and automatically migrated) to a new hierarchy in [Config 1.0](https://github.com/axodotdev/cargo-dist/pull/1247).
+This section represents all the configuration for how dist should build and publish your applications. The `[dist]` section is a temporary placeholder which will soon be replaced (and automatically migrated) to a new hierarchy in [Config 1.0](https://github.com/axodotdev/cargo-dist/pull/1247).
 
 
 ## `allow-dirty`
@@ -134,11 +134,11 @@ This section represents all the configuration for how cargo-dist should build an
 > allow-dirty = ["ci", "msi"]
 > ```
 
-This is a list of [`generate`][generate] tasks for cargo-dist to ignore when checking if generated configuration is up to date.
+This is a list of [`generate`][generate] tasks for dist to ignore when checking if generated configuration is up to date.
 
-**We recommend avoiding setting this, as it prevents cargo-dist from updating these files for you whenever you update or change your configuation. If you think you need this, please [do file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or ask us about it, so we know what settings we're missing that necessitates this (or ideally, can point you to the existing settings).**
+**We recommend avoiding setting this, as it prevents dist from updating these files for you whenever you update or change your configuration. If you think you need this, please [do file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or ask us about it, so we know what settings we're missing that necessitates this (or ideally, can point you to the existing settings).**
 
-Nevertheless, setting can be necessary for users who customize their own configuration beyond cargo-dist's generated defaults and want to avoid cargo-dist overwriting it.
+Nevertheless, setting can be necessary for users who customize their own configuration beyond dist's generated defaults and want to avoid dist overwriting it.
 
 Possible values are:
 
@@ -156,9 +156,9 @@ Possible values are:
 > cargo-dist-version = "0.10.0"
 > ```
 
-This is added automatically by [`cargo dist init`][init], and is a recording of its own version for the sake of reproducibility and documentation.
+This is added automatically by [`dist init`][init], and is a recording of its own version for the sake of reproducibility and documentation.
 
-Your [release CI][github-ci] will fetch and use the given version of cargo-dist to build and publish your project.
+Your [release CI][github-ci] will fetch and use the given version of dist to build and publish your project.
 
 The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a VersionReq!).
 
@@ -175,12 +175,12 @@ The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a V
 > dist = true
 > ```
 
-Specifies whether cargo-dist [should distribute (build and publish) a package][distribute], overidding all other rules for deciding if a package is eligible.
+Specifies whether dist [should distribute (build and publish) a package][distribute], overriding all other rules for deciding if a package is eligible.
 
 There are 3 major cases where you might use this:
 
-* `dist = false` on a package can be used to force cargo-dist to ignore it
-* `dist = true` on a package can be used to force cargo-dist to distribute it in spite of signals like Cargo's `publish = false` that would suggest otherwise.
+* `dist = false` on a package can be used to force dist to ignore it
+* `dist = true` on a package can be used to force dist to distribute it in spite of signals like Cargo's `publish = false` that would suggest otherwise.
 * `dist = false` on a whole workspace defaults all packages to do-not-distribute, forcing you to manually allow-list packages with `dist = true` (large monorepos often find this to be a better way of managing project distribution when most developers aren't release engineers).
 
 
@@ -213,7 +213,7 @@ The supported choices are:
 * x64 Linux (static musl): "x86_64-unknown-linux-musl"
 * arm64 Linux (static musl): "aarch64-unknown-linux-musl"
 
-By default all runs of `cargo-dist` will be trying to handle all platforms specified here at once. If you specify `--target=...` on the CLI this will focus the run to only those platforms. As discussed in [concepts][], this cannot be used to specify platforms that are not listed in `metadata.dist`, to ensure different runs agree on the maximum set of platforms.
+By default all runs of `dist` will be trying to handle all platforms specified here at once. If you specify `--target=...` on the CLI this will focus the run to only those platforms. As discussed in [concepts][], this cannot be used to specify platforms that are not listed in `metadata.dist`, to ensure different runs agree on the maximum set of platforms.
 
 
 ## artifact settings
@@ -272,9 +272,9 @@ This specifies extra artifacts to build and upload to your [hosting][]. Users ca
 Each extra-artifacts entry takes the following settings:
 
 * `build`: A command or script to run to produce these artifacts. This is an array of one or more strings; the first string is the command to run, and any subsequent strings are arguments to pass to that command.
-* `artifacts`: An array of relative paths to files that cargo-dist expects to exist after the `build` command is run. Every file in this list will be uploaded individually to your release as its own artifact.
+* `artifacts`: An array of relative paths to files that dist expects to exist after the `build` command is run. Every file in this list will be uploaded individually to your release as its own artifact.
 
-cargo-dist uses this feature to distribute its [`dist-manifest-schema.json`](./schema.md) as part of every release.
+dist uses this feature to distribute its [`dist-manifest-schema.json`](./schema.md) as part of every release.
 
 
 ### `source-tarball`
@@ -289,7 +289,7 @@ cargo-dist uses this feature to distribute its [`dist-manifest-schema.json`](./s
 > source-tarball = false
 > ```
 
-By default, cargo-dist creates and uploads source tarballs from your repository. This setting disables that behaviour. This is especially useful for users who distribute closed-source software to hosts outside their git repos and who would prefer not to distribute source code to their users.
+By default, dist creates and uploads source tarballs from your repository. This setting disables that behaviour. This is especially useful for users who distribute closed-source software to hosts outside their git repos and who would prefer not to distribute source code to their users.
 
 
 ### `ssldotcom-windows-sign`
@@ -328,7 +328,7 @@ These strings match the [environment_name setting](https://github.com/SSLcom/esi
 > auto-includes = false
 > ```
 
-Specifies whether cargo-dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [archives][] and [installers][].
+Specifies whether dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in [archives][] and [installers][].
 
 See also: [`include`](#include)
 
@@ -449,7 +449,7 @@ Allows specifying dependencies to be installed from a system package manager bef
 Supported options are:
 
 * `version` - A specific version of the package to install. This must be specified in the format that the package manager itself uses. Not used on Homebrew, since Homebrew does not support any method to specify installing specific versions of software.
-* `stage` - When exactly cargo-dist should make use of this package. Two values are supported: `build`, which specifies that the package should be installed before the build occurs; and `run`, which specifies that the package should be installed alongside your software at the time end users run it. The default is `build`. If `run` is specified for Homebrew dependencies, and you've enabled the Homebrew installer, the Homebrew installer will specify those packages as dependencies.
+* `stage` - When exactly dist should make use of this package. Two values are supported: `build`, which specifies that the package should be installed before the build occurs; and `run`, which specifies that the package should be installed alongside your software at the time end users run it. The default is `build`. If `run` is specified for Homebrew dependencies, and you've enabled the Homebrew installer, the Homebrew installer will specify those packages as dependencies.
 * `targets` - A set of one or more targets to install the package on, in Rust target-triple format. If not specified, the package is installed on all targets. This is meant as an override to allow a package to be conditionally installed on only certain platforms; for example, a platform may need a build dependency only on Apple Silicon macOS, or have different build dependencies between x86_64 and ARM Windows.
 
 Supported package managers:
@@ -519,7 +519,7 @@ For instance for packages that are a library and a CLI binary, some developers p
 > msvc-crt-static = false
 > ```
 
-Specifies how The C Runtime (CRT) should be linked when building a Cargo package for Windows. Rust defaults to this being `= false` (dynamically link the CRT), but cargo-dist actually defaults to making this `= true` (statically link the CRT). [The Rust default is mostly a historical accident, and it's widely regarded to be an error that should one day be changed][crt-static]. Specifically it's a mistake for the typical Rust application which statically links everything else, because Windows doesn't actually guarantee that the desired things are installed on all machines by default, and statically linking the CRT is a supported solution to this issue.
+Specifies how The C Runtime (CRT) should be linked when building a Cargo package for Windows. Rust defaults to this being `= false` (dynamically link the CRT), but dist actually defaults to making this `= true` (statically link the CRT). [The Rust default is mostly a historical accident, and it's widely regarded to be an error that should one day be changed][crt-static]. Specifically it's a mistake for the typical Rust application which statically links everything else, because Windows doesn't actually guarantee that the desired things are installed on all machines by default, and statically linking the CRT is a supported solution to this issue.
 
 However when you *do* want a Rust application that dynamically links more things, it then becomes correct to dynamically link the CRT so that your app and the DLLs it uses can agree on things like malloc. However Rust's default is still insufficient for reliably shipping such a binary, because you really should also bundle a "Visual C(++) Redistributable" with your app that installs your required version of the CRT. The only case where it's *probably* fine to not do this is when shipping tools for programmers who probably already have all of that stuff installed (i.e. anyone who installs the Rust toolchain will have that stuff installed).
 
@@ -543,7 +543,7 @@ Build only the required Cargo packages, and individually.
 
 [See "inferring precise-builds" for the default behaviour.](#inferring-precise-builds)
 
-By default when we need to build anything in your workspace, we try to build your entire workspace with `--workspace`. This setting tells cargo-dist to instead build each app individually.
+By default when we need to build anything in your workspace, we try to build your entire workspace with `--workspace`. This setting tells dist to instead build each app individually.
 
 On balance, the Rust experts we've consulted with find building with --workspace to be a safer/better default, as it provides some of the benefits of a more manual [workspace-hack][], without the user needing to be aware that this is a thing.
 
@@ -558,9 +558,9 @@ If that downside is big enough for you, this setting is a good idea.
 
 ##### inferring precise-builds
 
-Although cargo-dist prefers `--workspace` builds ([precise-builds](#precise-builds) = `false`) for the reasons stated above, it *will* attempt to check if that's possible, and use `--package` builds if necessary (`precise-builds = true`).
+Although dist prefers `--workspace` builds ([precise-builds](#precise-builds) = `false`) for the reasons stated above, it *will* attempt to check if that's possible, and use `--package` builds if necessary (`precise-builds = true`).
 
-If you explicitly set `precise-builds = false` and we determine `--package` builds are required, cargo-dist will produce an error. `precise-builds = true` will never produce an error.
+If you explicitly set `precise-builds = false` and we determine `--package` builds are required, dist will produce an error. `precise-builds = true` will never produce an error.
 
 Precise-builds are considered required when you use any of [features](#features), [all-features](#all-features), or [default-features](#default-features) *and* not all of the packages in your workspace have the same values set.
 
@@ -720,7 +720,7 @@ install-path = ["$MY_APP_HOME/bin", "~/.my-app/bin"]
 
 It hasn't yet been tested whether this is appropriate to pair with things like `$XDG_BIN_HOME`, but we'd sure like it to be.
 
-We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. `~/My cargo-dist Documents/bin/` works), but we won't be surprised if things misbehave on Interesting Inputs.
+We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. `~/My dist Documents/bin/` works), but we won't be surprised if things misbehave on Interesting Inputs.
 
 Future Improvements:
 
@@ -766,7 +766,7 @@ These settings are specific to the [npm installer][npm-installer].
 > npm-scope = "@axodotdev"
 > ```
 
-Specifies that [npm installers][npm-installer] should be published under the given [scope][]. The leading `@` is mandatory. If you newly enable the npm installer in `cargo dist init`'s interactive UI, then it will give you an opportunity to add the scope.
+Specifies that [npm installers][npm-installer] should be published under the given [scope][]. The leading `@` is mandatory. If you newly enable the npm installer in `dist init`'s interactive UI, then it will give you an opportunity to add the scope.
 
 If no scope is specified the package will be global.
 
@@ -806,7 +806,7 @@ These settings are specific to the [homebrew installer][homebrew-installer].
 > tap = "axodotdev/homebrew-tap"
 > ```
 
-This is the name of a GitHub repository which cargo-dist should publish the Homebrew installer to. It must already exist, and the token which creates releases must have write access.
+This is the name of a GitHub repository which dist should publish the Homebrew installer to. It must already exist, and the token which creates releases must have write access.
 
 It's conventional for the repo name to start with `homebrew-`.
 
@@ -843,7 +843,7 @@ These settings are specific to how we publish your packages to package managers 
 > publish-preleases = true
 > ```
 
-If you set `publish-prereleases = true`, cargo-dist will [publish](#publish-jobs) prerelease versions to package managers such as [homebrew][homebrew-installer] and [npm][npm-installer]. By default, cargo-dist will only publish stable versions to avoid polluting your releases. This is especially important for things like Homebrew which don't really have a proper notion of "prereleases" or "literally having more than one published version of a package".
+If you set `publish-prereleases = true`, dist will [publish](#publish-jobs) prerelease versions to package managers such as [homebrew][homebrew-installer] and [npm][npm-installer]. By default, dist will only publish stable versions to avoid polluting your releases. This is especially important for things like Homebrew which don't really have a proper notion of "prereleases" or "literally having more than one published version of a package".
 
 
 ## hosting settings
@@ -919,12 +919,12 @@ Specifies how to refer to the package in release bodies of [hosting providers](#
 > force-latest = true
 > ```
 
-Overrides cargo-dist's default handling of prerelease versions. Ordinarily, cargo-dist uses [semver](https://semver.org) rules to determine if a version number is a prerelease or not and has some special handling if it is. With this setting, cargo-dist will always consider a version to be the latest no matter what its version number is.
+Overrides dist's default handling of prerelease versions. Ordinarily, dist uses [semver](https://semver.org) rules to determine if a version number is a prerelease or not and has some special handling if it is. With this setting, dist will always consider a version to be the latest no matter what its version number is.
 
 This means that the following prerelease handling behaviour will **no longer apply**:
 
-* If cargo-dist interprets a version as a prerelease, it will [publish it to GitHub Releases](#hosting) as a "prerelease" instead of the "latest" release.
-* cargo-dist will not publish prereleases to [Homebrew][homebrew-installer] or [npm][npm-installer] by default.
+* If dist interprets a version as a prerelease, it will [publish it to GitHub Releases](#hosting) as a "prerelease" instead of the "latest" release.
+* dist will not publish prereleases to [Homebrew][homebrew-installer] or [npm][npm-installer] by default.
 
 See also: [`publish-prereleases`](#publish-prereleases)
 
@@ -999,7 +999,7 @@ GitHub Releases isn't really designed for this, so there's a few strange things 
 
 * GitHub Releases always requires a commit to be tagged, and in this case the tag would be on `myorg/public` even though the workflow is running on `myorg/private`, which (presumably) has unrelated commits. Currently **we will tag the latest commit on the [default branch](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-branches#about-the-default-branch) of `myorg/public`**. If you're using [the dispatch-releases flow](#dispatch-releases), no tag will be created on `myorg/private`.
 
-* GitHub Releases will provide a source tarball pointing at the tagged commit on `myorg/public`, but that's (presumably) not the source that your release was actually built from. This cannot be disabled, but it's also essentially harmless. However **cargo-dist uploads its own source tarball and that *WILL* contain the source of the private repo**. If you don't want this, use [the `source-tarball = false` setting](#source-tarball).
+* GitHub Releases will provide a source tarball pointing at the tagged commit on `myorg/public`, but that's (presumably) not the source that your release was actually built from. This cannot be disabled, but it's also essentially harmless. However **dist uploads its own source tarball and that *WILL* contain the source of the private repo**. If you don't want this, use [the `source-tarball = false` setting](#source-tarball).
 
 
 #### `github-releases-submodule-path`
@@ -1031,10 +1031,10 @@ Designed for use with [github-releases-repo](#github-releases-repo) setting. Whe
 
 Whether we should create the GitHub Release for you in your Release CI.
 
-If true, cargo-dist will create a new GitHub Release and generate
+If true, dist will create a new GitHub Release and generate
 a title/body for it based on your changelog.
 
-If false, cargo-dist will assume a draft GitHub Release for the current git tag
+If false, dist will assume a draft GitHub Release for the current git tag
 already exists with the title/body you want, and just upload artifacts to it, undrafting when all artifacts are uploaded.
 
 See also: [`github-release`](#github-release)
@@ -1056,7 +1056,7 @@ These settings govern how [your CI should work][github-ci], including how to tri
 > ci = ["github"]
 > ```
 
-This is a list of CI backends you want to support, allowing cargo-dist to know what CI scripts to generate. Most cargo-dist features require this to be enabled!
+This is a list of CI backends you want to support, allowing dist to know what CI scripts to generate. Most dist features require this to be enabled!
 
 ["github"][github-ci] is currently the only supported CI backend.
 
@@ -1072,7 +1072,7 @@ This is a list of CI backends you want to support, allowing cargo-dist to know w
 > build-local-artifacts = false
 > ```
 
-`build-local-artifacts = false` disables the builtin CI jobs that would build your binaries and archives (and MSI installers). This allows a Sufficiently Motivated user to use custom `build-local-jobs` to completely replace cargo-dist's binary building with something like maturin.
+`build-local-artifacts = false` disables the builtin CI jobs that would build your binaries and archives (and MSI installers). This allows a Sufficiently Motivated user to use custom `build-local-jobs` to completely replace dist's binary building with something like maturin.
 
 The requirements are simply that you need your custom actions to:
 
@@ -1082,7 +1082,7 @@ The requirements are simply that you need your custom actions to:
 You can get a listing of the exact artifact names to use and their expected contents with:
 
 ```
-cargo dist manifest --artifacts=local --no-local-paths
+dist manifest --artifacts=local --no-local-paths
 ```
 
 (`[checksum]` entries are separate artifacts and not actually stored in the archives.)
@@ -1104,7 +1104,7 @@ Also note that for legacy reasons a tarball is expected to have all the contents
 
 Determines whether CI will try to cache work between builds. Defaults false, unless [`release-branch`](#release-branch) or [`pr-run-mode = "upload"`](#pr-run-mode) are enabled.
 
-This is unlikely to be productive because for safety the cache agressively invalidates based on things like "Cargo.toml or Cargo.lock changed" (which is always true if you change the version of a Rust project), and a noop cache run can randomly take over 2 minutes (typically more like 10 seconds).
+This is unlikely to be productive because for safety the cache aggressively invalidates based on things like "Cargo.toml or Cargo.lock changed" (which is always true if you change the version of a Rust project), and a noop cache run can randomly take over 2 minutes (typically more like 10 seconds).
 
 The cases where we enable it by default are the only ones we know where you *might* want to enable it.
 
@@ -1162,7 +1162,7 @@ Either way, the global build task will refuse to run if any of these tasks fail,
 This setting determines to what extent we run your Release CI on pull-requests:
 
 * "skip": don't check the release process in PRs
-* "plan": run 'cargo dist plan' on PRs (recommended, also the default)
+* "plan": run 'dist plan' on PRs (recommended, also the default)
 * "upload": build and upload an artifacts to the PR (expensive)
 
 
@@ -1178,9 +1178,9 @@ This setting determines to what extent we run your Release CI on pull-requests:
 > tag-namespace = "some-prefix"
 > ```
 
-Setting `tag-namespace = "owo"` will change the tag matching expression we put in your GitHub CI, to require the tag to start with "owo" for cargo-dist to care about it. This can be useful for situations where you have several things with different tag/release workflows in the same workspace. It also renames `release.yaml` to `owo-release.yml` to make it clear it's just one of many release workflows.
+Setting `tag-namespace = "owo"` will change the tag matching expression we put in your GitHub CI, to require the tag to start with "owo" for dist to care about it. This can be useful for situations where you have several things with different tag/release workflows in the same workspace. It also renames `release.yaml` to `owo-release.yml` to make it clear it's just one of many release workflows.
 
-**NOTE**: if you change tag-namespace, cargo-dist will generate the new `owo-release.yml` file, but not delete the old one. Be sure to manually delete the old `release.yml`!
+**NOTE**: if you change tag-namespace, dist will generate the new `owo-release.yml` file, but not delete the old one. Be sure to manually delete the old `release.yml`!
 
 
 ### `merge-tasks`
@@ -1205,7 +1205,7 @@ The default is `false`. Before 0.1.0 it was always `true` and couldn't be change
 
 ### github ci settings
 
-These settings are specific to [your cargo-dist GitHub CI][github-ci].
+These settings are specific to [your dist GitHub CI][github-ci].
 
 #### `github-build-setup`
 
@@ -1222,7 +1222,7 @@ These settings are specific to [your cargo-dist GitHub CI][github-ci].
 
 This configuration value should be a path relative to the repository your `.github/workflows` directory.
 The file located at that path should contain a yaml array of [steps][github-workflow-step] which will be
-performed before we call `cargo dist build`.
+performed before we call `dist build`.
 
 
 #### `github-custom-job-permissions`
@@ -1266,7 +1266,7 @@ In addition to defining runners for a target, it's also possible to specify a ru
 
 ### custom ci jobs
 
-These settings all similarly extend [your cargo-dist GitHub CI][github-ci] with custom jobs to run at specific steps of the release process, which looks like:
+These settings all similarly extend [your dist GitHub CI][github-ci] with custom jobs to run at specific steps of the release process, which looks like:
 
 1. plan: check settings, decide what we're releasing
 2. build-local: compile things for each platform
@@ -1332,7 +1332,7 @@ This setting determines which custom jobs to run during the "build global artifa
 > host-jobs = ["./my-job"]
 > ```
 
-This setting determines which custom jobs to run during the "host" phase, during which cargo-dist decides whether to proceed with publishing the release.
+This setting determines which custom jobs to run during the "host" phase, during which dist decides whether to proceed with publishing the release.
 
 
 #### `publish-jobs`
@@ -1366,7 +1366,7 @@ This setting determines which publish jobs to run. It accepts 3 kinds of value:
 > ```
 
 
-This setting determines which custom jobs to run after the "announce" phase. "Announce" is the final phase during which cargo-dist schedules any jobs, so any custom jobs specified here are guaranteed to run after everything else.
+This setting determines which custom jobs to run after the "announce" phase. "Announce" is the final phase during which dist schedules any jobs, so any custom jobs specified here are guaranteed to run after everything else.
 
 
 
@@ -1393,7 +1393,7 @@ This section is only available in `dist-workspace.toml` files.
 > ```
 
 In a dist-workspace.toml, this specifies the various projects/workspaces/packages that should
-be managed by cargo-dist. Each member is of the format `<project-type>:<relative-path>` where
+be managed by dist. Each member is of the format `<project-type>:<relative-path>` where
 `relative-path` is a path relative to the dist-workspace.toml to a directory containing that type of project, and `project-type` can be one of:
 
 * cargo: expect a Cargo.toml for a cargo-based Rust project in that dir
@@ -1502,7 +1502,7 @@ The following formats are all supported and treated as equivalent:
 
 If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
-This is *essentially* required as almost all cargo-dist features are blocked behind knowing where your project is hosted. All [distable](#dist) packages must agree on this value.
+This is *essentially* required as almost all dist features are blocked behind knowing where your project is hosted. All [distable](#dist) packages must agree on this value.
 
 
 ## `package.homepage`
@@ -1559,7 +1559,7 @@ A relative path to the changelog file for your package.
 
 If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
-This can be used by various cargo-dist features that use your changelog, such as [auto-includes](#auto-includes) and [release-bodies][github-releases-guide]. We will often [autodetect this for you][archives], so this setting is only needed if your changelog has a special name/location/format we can't find.
+This can be used by various dist features that use your changelog, such as [auto-includes](#auto-includes) and [release-bodies][github-releases-guide]. We will often [autodetect this for you][archives], so this setting is only needed if your changelog has a special name/location/format we can't find.
 
 
 ## `package.readme`
@@ -1578,7 +1578,7 @@ A relative path to the readme file for your package.
 
 If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
-This can be used by various cargo-dist features that use your readme, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your readme has a special name/location/format we can't find.
+This can be used by various dist features that use your readme, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your readme has a special name/location/format we can't find.
 
 
 ## `package.license`
@@ -1616,7 +1616,7 @@ Relative paths to the license files for your package.
 
 If not specified, this can be inherited from a language's native package format like a [Cargo.toml][rust-guide], [package.json][js-guide], etc.
 
-This can be used by various cargo-dist features that use your license files, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your licenses have a special name/location/format we can't find.
+This can be used by various dist features that use your license files, such as [auto-includes](#auto-includes). We will often [autodetect this for you][archives], so this setting is only needed if your licenses have a special name/location/format we can't find.
 
 
 ## `package.binaries`
@@ -1706,7 +1706,7 @@ Throughout the above docs, different settings will have different rules for wher
 
 * global-only: this setting can only be set in the root workspace config ([dist-workspace.toml][js-guide] or [dist.toml][project-guide])
 * package-only: this setting can only be set in a package config ([dist.toml][project-guide])
-* package-local: this setting can be set in either, with the package overidding the workspace value if it provides one (and otherwise inheriting it).
+* package-local: this setting can be set in either, with the package overriding the workspace value if it provides one (and otherwise inheriting it).
 
 When you override a package-local setting, the workspace value will be discarded completely. So for instance if the workspace sets `features = ["feature1", "feature2"]` and a package sets `features = ["feature2", "feature3"]`, then that package will only get feature2 and feature3.
 
@@ -1723,7 +1723,7 @@ When you override a package-local setting, the workspace value will be discarded
 [npm-installer]: ../installers/npm.md
 [msi-installer]: ../installers/msi.md
 [artifact-url]: ../reference/artifact-url.md
-[generate]: ../reference/cli.md#cargo-dist-generate
+[generate]: ../reference/cli.md#dist-generate
 [archives]: ../artifacts/archives.md
 [artifact-modes]: ../reference/concepts.md#artifact-modes-selecting-artifacts
 [github-build-setup]: ../ci/customizing.md#customizing-build-setup

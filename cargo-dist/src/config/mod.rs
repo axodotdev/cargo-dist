@@ -51,7 +51,7 @@ pub struct Config {
     pub artifact_mode: ArtifactMode,
     /// Whether local paths to files should be in the final dist json output
     pub no_local_paths: bool,
-    /// If true, override allow-dirty in the config and ignore all dirtyness
+    /// If true, override allow-dirty in the config and ignore all dirtiness
     pub allow_all_dirty: bool,
     /// Target triples we want to build for
     pub targets: Vec<TargetTriple>,

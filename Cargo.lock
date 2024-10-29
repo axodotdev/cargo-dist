@@ -187,7 +187,7 @@ dependencies = [
 
 [[package]]
 name = "axoproject"
-version = "0.24.0-prerelease.2"
+version = "0.24.0"
 dependencies = [
  "axoasset",
  "axoprocess",
@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist"
-version = "0.24.0-prerelease.2"
+version = "0.24.0"
 dependencies = [
  "axoasset",
  "axocli",
@@ -426,7 +426,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist-schema"
-version = "0.24.0-prerelease.2"
+version = "0.24.0"
 dependencies = [
  "camino",
  "gazenot",
@@ -1409,9 +1409,9 @@ dependencies = [
 
 [[package]]
 name = "lazy_static"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "lexopt"
@@ -1793,9 +1793,9 @@ dependencies = [
 
 [[package]]
 name = "parse-changelog"
-version = "0.6.9"
+version = "0.6.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "925e8279ba3a3932660e4f98b9249ccca29a1e38a24408183a8d4b58dfa298ed"
+checksum = "532e249be6db1bd99543ded61e79a22a4b76690795372e416fe946570e7da1e5"
 dependencies = [
  "anyhow",
  "indexmap 2.2.6",

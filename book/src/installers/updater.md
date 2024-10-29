@@ -6,7 +6,7 @@ NOTE: This feature is currently experimental.
 
 Ordinarily, your users will need to visit your website and download an installer for the latest release in order to upgrade. Users who installed your software via a package manager, like Homebrew and npm, can use that package manager to upgrade to the latest release. For users of the [shell] and [PowerShell] installers, you can provide your users with a standalone installation program to upgrade more conveniently.
 
-If you add `install-updater = true` to your `Cargo.toml`, cargo-dist's shell and PowerShell installers will include an updater program alongside your program itself. This standalone program will be installed as the name `yourpackage-update`, and users can simply run it to poll for new releases and have them installed. The source code for this program is open source in the [axoupdater] repository.
+If you add `install-updater = true` to your `Cargo.toml`, dist's shell and PowerShell installers will include an updater program alongside your program itself. This standalone program will be installed as the name `yourpackage-update`, and users can simply run it to poll for new releases and have them installed. The source code for this program is open source in the [axoupdater] repository.
 
 Users will interact with this updater by running the `yourpackage-update` command. It takes no options or arguments, and will automatically perform an upgrade without further input from the user. If your program supports custom external subcommands via the executable naming structure, like `git` and `cargo` do, then your user can also run `yourpackage update`. Here's a sample `axolotlsay-update` session as a demonstration of what your users will experience:
 
@@ -25,7 +25,7 @@ If you would prefer to handle polling for updates yourself, for example in order
 
 ## Minimum supported version checking
 
-While cargo-dist will always fetch up to date versions of the updater when building your software, if you use axoupdater as a library then it's important to make sure that it's kept up to date to ensure compatibility. To help you test this, cargo-dist will attempt to check if the packages it's disting use axoupdater as a dependency; if it detects an unsupported, too-old version of axoupdater is in use, it will then refuse to continue to build in order to avoid distributing a package that's unsafe to update.
+While dist will always fetch up to date versions of the updater when building your software, if you use axoupdater as a library then it's important to make sure that it's kept up to date to ensure compatibility. To help you test this, dist will attempt to check if the packages it's disting use axoupdater as a dependency; if it detects an unsupported, too-old version of axoupdater is in use, it will then refuse to continue to build in order to avoid distributing a package that's unsafe to update.
 
 ## GitHub Actions and Rate Limits in CI
 
@@ -36,17 +36,17 @@ env:
   AXOUPDATER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-A sample in cargo-dist's CI configuration can be found [here][cargo-dist-ci-config].
+A sample in dist's CI configuration can be found [here][cargo-dist-ci-config].
 
 If you use the axoupdater crate to implement the updater yourself, instructions for opting into a token in CI can be found [here][axoupdater-token-docs].
 
 ## Releases with issues surrounding the standalone updater
 
-cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which prevents the shell installer from installing the standalone updater alongside your binaries. This bug doesn't affect the PowerShell installer. Users of installers created with these releases will have had your software installed as normal, but won't have received an updater. Users whose first installation came via one of these installers will need to upgrade manually using a new shell installer.
+dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which prevents the shell installer from installing the standalone updater alongside your binaries. This bug doesn't affect the PowerShell installer. Users of installers created with these releases will have had your software installed as normal, but won't have received an updater. Users whose first installation came via one of these installers will need to upgrade manually using a new shell installer.
 
-Users who first installed with an installer created with an older cargo-dist will still have their updater from their original installation, and so they will be able to update as normal.
+Users who first installed with an installer created with an older dist will still have their updater from their original installation, and so they will be able to update as normal.
 
-This issue was resolved in cargo-dist 0.23.0.
+This issue was resolved in dist 0.23.0.
 
 [axoupdater]: https://github.com/axodotdev/axoupdater
 [axoupdater-docs]: https://docs.rs/axoupdater/

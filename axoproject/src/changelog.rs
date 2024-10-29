@@ -1,4 +1,4 @@
-//! Support for interpretting changelogs
+//! Support for interpreting changelogs
 
 use camino::Utf8Path;
 

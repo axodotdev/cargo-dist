@@ -1,6 +1,6 @@
 # JSON Schema
 
-Many cargo-dist commands when run with `--output-format=json` will output to stdout a format we call "dist-manifest.json". This contains:
+Many dist commands when run with `--output-format=json` will output to stdout a format we call "dist-manifest.json". This contains:
 
 * Top-level facts about the Announcement (tag, announcement title, etc)
 * Info about the Apps being Released as part of the Announcement ("releases")

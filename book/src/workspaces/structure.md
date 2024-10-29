@@ -13,7 +13,7 @@ Dist has two types of configuration:
 
 The vast majority of configuration for dist is workspace configuration. Because
 we understand language-specific config manifests like `Cargo.toml` and
-`package.json`, package configuration ususally does not require any additional
+`package.json`, package configuration usually does not require any additional
 files. Dedicated package configuration, in `dist.toml` files, is typically only needed when using dist's ["custom builds"][custom-builds] mode.
 
 ## Workspace configuration
@@ -88,7 +88,7 @@ members = [
 
 ## Which Packages Are Distable
 
-When you ask cargo-dist to release a version of your workspace (by specifying a
+When you ask dist to release a version of your workspace (by specifying a
 version, either with a tag or via workflow dispatch), we will release all "distable" packages with the
 given version.
 
