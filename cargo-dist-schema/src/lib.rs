@@ -306,8 +306,9 @@ pub struct GithubMatrixEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runner: Option<GithubRunner>,
     /// Expression to execute to install dist
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub install_dist: Option<String>,
+    pub install_dist: GhaRunStep,
+    /// Expression to execute to install cargo-auditable
+    pub install_cargo_auditable: GhaRunStep,
     /// Arguments to pass to dist
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_args: Option<String>,
@@ -317,9 +318,41 @@ pub struct GithubMatrixEntry {
     /// what cache provider to use
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_provider: Option<String>,
-    /// Expression to execute to install cargo-auditable
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub install_cargo_auditable: Option<String>,
+}
+
+/// A GitHub Actions "run" step, either bash or powershell
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+// this mirrors GHA's structure, see
+//   * <https://serde.rs/enum-representations.html>
+//   * <https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell>
+#[serde(tag = "shell", content = "run")]
+pub enum GhaRunStep {
+    /// see [`DashScript`]
+    #[serde(rename = "sh")]
+    Dash(DashScript),
+    /// see [`PowershellScript`]
+    #[serde(rename = "pwsh")]
+    Powershell(PowershellScript),
+}
+
+impl From<DashScript> for GhaRunStep {
+    fn from(bash: DashScript) -> Self {
+        Self::Dash(bash)
+    }
+}
+
+impl From<PowershellScript> for GhaRunStep {
+    fn from(powershell: PowershellScript) -> Self {
+        Self::Powershell(powershell)
+    }
+}
+
+declare_strongly_typed_string! {
+    /// A bit of shell script (that can run with `/bin/sh`), ran on CI runners. Can be multi-line.
+    pub struct DashScript => &DashScriptRef;
+
+    /// A bit of powershell script, ran on CI runners. Can be multi-line.
+    pub struct PowershellScript => &PowershellScriptRef;
 }
 
 /// Type of job to run on pull request
