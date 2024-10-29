@@ -114,6 +114,7 @@ pub mod publishers;
 
 use axoproject::{PackageIdx, WorkspaceGraph};
 use semver::Version;
+use v0::CargoDistUrlOverride;
 
 use super::*;
 use layer::*;
@@ -161,6 +162,8 @@ pub fn app_config(
 pub struct WorkspaceConfig {
     /// The intended version of dist to build with. (normal Cargo SemVer syntax)
     pub dist_version: Option<Version>,
+    /// See [`CargoDistUrlOverride`]
+    pub dist_url_override: Option<CargoDistUrlOverride>,
     /// Generate targets whose dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
     /// ci config
@@ -181,6 +184,8 @@ pub struct WorkspaceConfig {
 pub struct WorkspaceConfigInheritable {
     /// The intended version of dist to build with. (normal Cargo SemVer syntax)
     pub dist_version: Option<Version>,
+    /// See [`CargoDistUrlOverride`]
+    pub dist_url_override: Option<CargoDistUrlOverride>,
     /// Generate targets whose dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
     /// artifact config
@@ -204,6 +209,7 @@ impl WorkspaceConfigInheritable {
             builds: BuildConfigInheritable::defaults_for_workspace(workspaces),
             installers: InstallerConfigInheritable::defaults_for_workspace(workspaces),
             dist_version: None,
+            dist_url_override: None,
             allow_dirty: vec![],
         }
     }
@@ -216,6 +222,7 @@ impl WorkspaceConfigInheritable {
             builds,
             installers,
             dist_version,
+            dist_url_override,
             allow_dirty,
         } = self;
         WorkspaceConfig {
@@ -225,6 +232,7 @@ impl WorkspaceConfigInheritable {
             builds: builds.apply_inheritance_for_workspace(workspaces),
             installers: installers.apply_inheritance_for_workspace(workspaces),
             dist_version,
+            dist_url_override,
             allow_dirty,
         }
     }
@@ -241,6 +249,7 @@ impl ApplyLayer for WorkspaceConfigInheritable {
             ci,
             allow_dirty,
             dist_version,
+            dist_url_override,
             // app-scope only
             dist: _,
             targets: _,
@@ -253,6 +262,7 @@ impl ApplyLayer for WorkspaceConfigInheritable {
         self.installers.apply_val_layer(installers);
         self.ci.apply_val_layer(ci);
         self.dist_version.apply_opt(dist_version);
+        self.dist_url_override.apply_opt(dist_url_override);
         self.allow_dirty.apply_val(allow_dirty);
     }
 }
@@ -350,6 +360,7 @@ impl ApplyLayer for AppConfigInheritable {
             ci: _,
             allow_dirty: _,
             dist_version: _,
+            dist_url_override: _,
         }: Self::Layer,
     ) {
         self.artifacts.apply_val_layer(artifacts);
@@ -376,6 +387,10 @@ pub struct TomlLayer {
     /// things other dist versions can't handle!
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_version: Option<Version>,
+
+    /// see [`CargoDistUrlOverride`]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dist_url_override: Option<CargoDistUrlOverride>,
 
     /// Whether the package should be distributed/built by dist
     ///

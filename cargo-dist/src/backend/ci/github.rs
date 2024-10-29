@@ -8,7 +8,8 @@ use axoasset::{LocalAsset, SourceFile};
 use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
-    GithubMatrix, GithubMatrixEntry, GithubRunner, GithubRunnerRef, TargetTriple, TargetTripleRef,
+    GhaRunStep, GithubMatrix, GithubMatrixEntry, GithubRunner, GithubRunnerRef, TargetTriple,
+    TargetTripleRef,
 };
 use serde::{Deserialize, Serialize};
 use tracing::warn;
@@ -24,6 +25,10 @@ use crate::{
     DistError, DistGraph, SortedMap, SortedSet,
 };
 
+use super::{
+    CargoAuditableInstallStrategy, DistInstallSettings, DistInstallStrategy, InstallStrategy,
+};
+
 #[cfg(not(windows))]
 const GITHUB_CI_DIR: &str = ".github/workflows/";
 #[cfg(windows)]
@@ -31,6 +36,8 @@ const GITHUB_CI_DIR: &str = r".github\workflows\";
 const GITHUB_CI_FILE: &str = "release.yml";
 
 /// Info about running dist in Github CI
+///
+/// THESE FIELDS ARE LOAD-BEARING because they're used in the templates.
 #[derive(Debug, Serialize)]
 pub struct GithubCiInfo {
     /// Cached path to github CI workflows dir
@@ -38,14 +45,10 @@ pub struct GithubCiInfo {
     pub github_ci_workflow_dir: Utf8PathBuf,
     /// Version of rust toolchain to install (deprecated)
     pub rust_version: Option<String>,
-    /// expression to use for installing dist via shell script
-    pub install_dist_sh: String,
-    /// expression to use for installing dist via powershell script
-    pub install_dist_ps1: String,
-    /// expression to use for installing cargo-auditable via shell script
-    pub install_cargo_auditable_sh: String,
-    /// expression to use for installing cargo-auditable via powershell script
-    pub install_cargo_auditable_ps1: String,
+    /// How to install dist when "coordinating" (plan, global build, etc.)
+    pub dist_install_for_coordinator: GhaRunStep,
+    /// Our install strategy for dist itself
+    pub dist_install_strategy: DistInstallStrategy,
     /// Whether to fail-fast
     pub fail_fast: bool,
     /// Whether to cache builds
@@ -223,11 +226,13 @@ impl GithubCiInfo {
             dependencies.append(&mut release.config.builds.system_dependencies.clone());
         }
 
-        // Get the platform-specific installation methods
-        let install_dist_sh = super::install_dist_sh_for_version(dist_version);
-        let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
-        let install_cargo_auditable_sh = super::install_cargo_auditable_sh_latest();
-        let install_cargo_auditable_ps1 = super::install_cargo_auditable_ps1_latest();
+        let dist_install_strategy = (DistInstallSettings {
+            version: dist_version,
+            url_override: dist.config.dist_url_override.as_deref(),
+        })
+        .install_strategy();
+        let cargo_auditable_install_strategy = CargoAuditableInstallStrategy;
+
         let hosting_providers = dist
             .hosting
             .as_ref()
@@ -255,8 +260,8 @@ impl GithubCiInfo {
             cache_provider: cache_provider_for_runner(global_runner),
             runner: Some(global_runner.to_owned()),
             dist_args: Some("--artifacts=global".into()),
-            install_dist: Some(install_dist_sh.clone()),
-            install_cargo_auditable: Some(install_cargo_auditable_sh.clone()),
+            install_dist: dist_install_strategy.dash(),
+            install_cargo_auditable: cargo_auditable_install_strategy.dash(),
             packages_install: None,
         };
 
@@ -311,13 +316,9 @@ impl GithubCiInfo {
         };
         for (runner, targets) in local_runs {
             use std::fmt::Write;
-            let install_dist =
-                install_package_for_targets(&targets, &install_dist_sh, &install_dist_ps1);
-            let install_cargo_auditable = install_package_for_targets(
-                &targets,
-                &install_cargo_auditable_sh,
-                &install_cargo_auditable_ps1,
-            );
+            let install_dist = dist_install_strategy.for_targets(&targets);
+            let install_cargo_auditable = cargo_auditable_install_strategy.for_targets(&targets);
+
             let mut dist_args = String::from("--artifacts=local");
             for target in &targets {
                 write!(dist_args, " --target={target}").unwrap();
@@ -327,8 +328,8 @@ impl GithubCiInfo {
                 cache_provider: cache_provider_for_runner(&runner),
                 runner: Some(runner),
                 dist_args: Some(dist_args),
-                install_dist: Some(install_dist.to_owned()),
-                install_cargo_auditable: Some(install_cargo_auditable.to_owned()),
+                install_dist: install_dist.to_owned(),
+                install_cargo_auditable: install_cargo_auditable.to_owned(),
                 packages_install: package_install_for_targets(&targets, &dependencies),
             });
         }
@@ -351,10 +352,8 @@ impl GithubCiInfo {
             github_ci_workflow_dir,
             tag_namespace,
             rust_version,
-            install_dist_sh,
-            install_dist_ps1,
-            install_cargo_auditable_sh,
-            install_cargo_auditable_ps1,
+            dist_install_for_coordinator: dist_install_strategy.dash(),
+            dist_install_strategy,
             fail_fast,
             cache_builds,
             build_local_artifacts,
@@ -636,23 +635,6 @@ fn github_runner_for_target(
     } else {
         None
     }
-}
-
-/// Select the (dist-produced) installer approach for a given Github Runner
-fn install_package_for_targets<'a>(
-    targets: &'a [&'a TargetTripleRef],
-    install_sh: &'a str,
-    install_ps1: &'a str,
-) -> &'a str {
-    for target in targets {
-        if target.is_linux() || target.is_apple() {
-            return install_sh;
-        } else if target.is_windows() {
-            return install_ps1;
-        }
-    }
-
-    unreachable!("internal error: unknown target triple!?")
 }
 
 fn brewfile_from(packages: &[String]) -> String {

@@ -2264,40 +2264,64 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
               "aarch64-apple-darwin"
             ],
             "runner": "macos-13",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "install_cargo_auditable": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            },
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
-            "cache_provider": "github",
-            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            "cache_provider": "github"
           },
           {
             "targets": [
               "x86_64-apple-darwin"
             ],
             "runner": "macos-13",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "install_cargo_auditable": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            },
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
-            "cache_provider": "github",
-            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            "cache_provider": "github"
           },
           {
             "targets": [
               "x86_64-pc-windows-msvc"
             ],
             "runner": "windows-2019",
-            "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex\"",
+            "install_dist": {
+              "shell": "pwsh",
+              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
+            },
+            "install_cargo_auditable": {
+              "shell": "pwsh",
+              "run": "powershell -c \"irm https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.ps1 | iex\""
+            },
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
-            "cache_provider": "github",
-            "install_cargo_auditable": "powershell -c \"irm https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.ps1 | iex\""
+            "cache_provider": "github"
           },
           {
             "targets": [
               "x86_64-unknown-linux-gnu"
             ],
             "runner": "ubuntu-20.04",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "install_cargo_auditable": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            },
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
-            "cache_provider": "github",
-            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            "cache_provider": "github"
           }
         ]
       },
@@ -2433,7 +2457,8 @@ jobs:
       - name: Use rustup to set correct Rust version
         run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
       - name: Install dist
-        run: ${{ matrix.install_dist }}
+        shell: ${{ matrix.install_dist.shell }}
+        run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4

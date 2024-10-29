@@ -127,7 +127,7 @@ jobs:
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
-        run: {{{ install_dist_sh }}}
+        run: {{{ dist_install_for_coordinator.run }}}
       - name: Cache dist
         uses: actions/upload-artifact@v4
         with:
@@ -284,7 +284,8 @@ jobs:
           cache-provider: ${{ matrix.cache_provider }}
       {{%- endif %}}
       - name: Install dist
-        run: ${{ matrix.install_dist }}
+        shell: ${{ matrix.install_dist.shell }}
+        run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
@@ -296,8 +297,8 @@ jobs:
       - name: Install cargo-auditable
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` return non-0
-        run: ${{ matrix.install_cargo_auditable }}
-        shell: bash
+        shell: ${{ matrix.install_cargo_auditable.shell }}
+        run: ${{ matrix.install_cargo_auditable.run }}
       {{%- endif %}}
       - name: Install dependencies
         run: |
