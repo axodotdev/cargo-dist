@@ -74,6 +74,15 @@ tag-name = "v{{version}}"
 pre-release-commit-message = "release: {{version}}"
 publish = false
 
+[profile.dev]
+# level true/2 is usually overkill, cf. <https://doc.rust-lang.org/cargo/reference/profiles.html#debug>
+debug = "limited"
+# thin-local LTO is basically free, cf. <https://doc.rust-lang.org/cargo/reference/profiles.html#lto>
+lto = false
+# this speeds up xz compression etc. significantly. we could
+# be more selective about which packages to optimize but :shrug:
+package."*" = { opt-level = 2 }
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
