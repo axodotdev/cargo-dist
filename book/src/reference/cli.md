@@ -1,4 +1,4 @@
-# cargo-dist CLI Manual
+# dist CLI Manual
 
 <!-- toc -->
 

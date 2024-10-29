@@ -88,7 +88,7 @@ members = [
 
 ## Which Packages Are Distable
 
-When you ask cargo-dist to release a version of your workspace (by specifying a
+When you ask dist to release a version of your workspace (by specifying a
 version, either with a tag or via workflow dispatch), we will release all "distable" packages with the
 given version.
 
