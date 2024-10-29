@@ -8,3 +8,6 @@ cargo-dist/wix
 oranda-debug.log
 /public
 cargo-dist/public
+
+# Samply: <https://crates.io/crates/samply>
+/profile.json
