@@ -81,7 +81,7 @@ pub struct InstallerInfo {
     /// platform support matrix
     pub platform_support: Option<PlatformSupport>,
     /// Environment variables for installer customization
-    pub env_vars: EnvironmentVariables,
+    pub env_vars: Option<EnvironmentVariables>,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

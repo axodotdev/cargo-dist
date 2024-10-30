@@ -1750,10 +1750,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .release_by_name(&release.app_name)
             .expect("couldn't find the release!?");
 
-        let env_vars = schema_release
-            .env
-            .clone()
-            .expect("couldn't determine app-specific environment variable!?");
+        let env_vars = schema_release.env.clone();
 
         let download_url = schema_release
             .artifact_download_url()
@@ -1979,7 +1976,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     runtime_conditions,
                     platform_support: None,
                     // Not actually needed for this installer type
-                    env_vars: cargo_dist_schema::EnvironmentVariables::default(),
+                    env_vars: None,
                 },
                 install_libraries: config.install_libraries.clone(),
             })),
@@ -2007,10 +2004,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .release_by_name(&release.app_name)
             .expect("couldn't find the release!?");
 
-        let env_vars = schema_release
-            .env
-            .clone()
-            .expect("couldn't determine app-specific environment variable!?");
+        let env_vars = schema_release.env.clone();
 
         let download_url = schema_release
             .artifact_download_url()
@@ -2184,7 +2178,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     runtime_conditions,
                     platform_support: None,
                     // Not actually needed for this installer type
-                    env_vars: cargo_dist_schema::EnvironmentVariables::default(),
+                    env_vars: None,
                 },
             })),
             is_global: true,
