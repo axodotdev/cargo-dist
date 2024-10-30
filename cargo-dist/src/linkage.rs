@@ -399,7 +399,7 @@ fn try_determine_linkage(path: &Utf8PathBuf, target: &TargetTripleRef) -> DistRe
         // Currently can only be run on Linux
         if std::env::consts::OS != "linux" {
             return Err(DistError::LinkageCheckInvalidOS {
-                host: TARGET_HOST.to_owned(),
+                host: std::env::consts::OS.to_owned(),
                 target: target.to_owned(),
             });
         }

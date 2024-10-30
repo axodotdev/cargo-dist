@@ -2,10 +2,9 @@
 
 use std::env;
 
-use axoasset::reqwest::header::HOST;
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
-use cargo_dist_schema::target_lexicon::{Environment, Triple, HOST};
+use cargo_dist_schema::target_lexicon::{Architecture, Environment, Triple};
 use cargo_dist_schema::{DistManifest, TargetTriple};
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
@@ -209,6 +208,14 @@ pub fn build_cargo_target(
             command.arg("zigbuild");
         }
         Some(CargoBuildWrapper::Xwin) => {
+            // cf. <https://github.com/rust-cross/cargo-xwin?tab=readme-ov-file#customization>
+            let arch = match target.architecture {
+                Architecture::X86_32(_) => "x86",
+                Architecture::X86_64 => "x86_64",
+                Architecture::Aarch64(_) => "aarch64",
+                _ => panic!("cargo-xwin doesn't support {target} because of its architecture",),
+            };
+            command.env("XWIN_ARCH", arch);
             command.arg("xwin").arg("build");
         }
     }

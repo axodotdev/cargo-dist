@@ -317,7 +317,7 @@ pub enum DistError {
     #[error("unable to run linkage report for {target} on {host}")]
     LinkageCheckInvalidOS {
         /// The OS the check was run on
-        host: TargetTriple,
+        host: String,
         /// The OS being checked
         target: TargetTriple,
     },
