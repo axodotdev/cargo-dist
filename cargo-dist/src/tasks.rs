@@ -422,6 +422,15 @@ pub enum CargoBuildWrapper {
     Xwin,
 }
 
+impl std::fmt::Display for CargoBuildWrapper {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.pad(match self {
+            CargoBuildWrapper::ZigBuild => "cargo-zigbuild",
+            CargoBuildWrapper::Xwin => "cargo-xwin",
+        })
+    }
+}
+
 /// Returns the cargo build wrapper required to perform a certain cross-compilation
 pub fn build_wrapper_for_cross(host: &Triple, target: &Triple) -> Option<CargoBuildWrapper> {
     if host == target {

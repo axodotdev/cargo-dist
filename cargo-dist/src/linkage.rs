@@ -17,9 +17,7 @@ use goblin::Object;
 use mach_object::{LoadCommand, OFile};
 use tracing::warn;
 
-use crate::{
-    config::Config, errors::*, gather_work, platform::targets::TARGET_HOST, Artifact, DistGraph,
-};
+use crate::{config::Config, errors::*, gather_work, Artifact, DistGraph};
 
 /// Arguments for `dist linkage` ([`do_linkage][])
 #[derive(Debug)]
@@ -399,7 +397,7 @@ fn try_determine_linkage(path: &Utf8PathBuf, target: &TargetTripleRef) -> DistRe
         do_otool(path)?
     } else if target.is_linux() {
         // Currently can only be run on Linux
-        if !TARGET_HOST.is_linux() {
+        if std::env::consts::OS != "linux" {
             return Err(DistError::LinkageCheckInvalidOS {
                 host: TARGET_HOST.to_owned(),
                 target: target.to_owned(),

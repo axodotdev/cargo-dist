@@ -202,7 +202,3 @@ pub const KNOWN_TARGET_TRIPLES: &[&[&TargetTripleRef]] = &[
     KNOWN_LINUX_MUSL_TARGETS,
     KNOWN_OTHER_TARGETS,
 ];
-
-/// The current host target (the target of the machine this code is running on).
-/// This is determined through `std::env::consts::OS` rather than running `cargo`
-pub const TARGET_HOST: &TargetTripleRef = TargetTripleRef::from_str(std::env::consts::OS);

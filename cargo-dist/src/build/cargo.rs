@@ -2,9 +2,10 @@
 
 use std::env;
 
+use axoasset::reqwest::header::HOST;
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
-use cargo_dist_schema::target_lexicon::Environment;
+use cargo_dist_schema::target_lexicon::{Environment, Triple, HOST};
 use cargo_dist_schema::{DistManifest, TargetTriple};
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
@@ -173,24 +174,26 @@ impl<'a> DistGraphBuilder<'a> {
 pub fn build_cargo_target(
     dist_graph: &DistGraph,
     manifest: &mut DistManifest,
-    target: &CargoBuildStep,
+    step: &CargoBuildStep,
 ) -> DistResult<()> {
-    let cargo = dist_graph.tools.cargo()?;
-    let kind = match target.wrapper {
-        None => "cargo",
-        Some(CargoBuildWrapper::ZigBuild) => "cargo-zigbuild",
-        Some(CargoBuildWrapper::Xwin) => "cargo-xwin",
-    };
-    eprint!(
-        "building {kind} target ({}/{}",
-        target.target_triple, target.profile
-    );
+    let host = cargo_dist_schema::target_lexicon::HOST;
+    let target: Triple = step.target_triple.parse().unwrap();
 
-    let mut rustflags = target.rustflags.clone();
+    let cargo = dist_graph.tools.cargo()?;
+    eprint!("building {target} target");
+    if target != host {
+        eprint!(", from {host} host");
+        if let Some(wrapper) = step.wrapper.as_ref() {
+            eprint!(", via {wrapper}");
+        }
+    }
+    eprint!(", using cargo profile {}", step.profile);
+
+    let mut rustflags = step.rustflags.clone();
     let mut desired_extra_env = vec![];
     let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
     if !skip_brewfile {
-        if let Some(env_output) = fetch_brew_env(dist_graph, &target.working_dir)? {
+        if let Some(env_output) = fetch_brew_env(dist_graph, &step.working_dir)? {
             let brew_env = parse_env(&env_output)?;
             desired_extra_env = select_brew_env(&brew_env);
             rustflags = determine_brew_rustflags(&rustflags, &brew_env);
@@ -198,7 +201,7 @@ pub fn build_cargo_target(
     }
 
     let mut command = Cmd::new(&cargo.cmd, "build your app with Cargo");
-    match target.wrapper {
+    match step.wrapper {
         None => {
             command.arg("build");
         }
@@ -211,17 +214,17 @@ pub fn build_cargo_target(
     }
     command
         .arg("--profile")
-        .arg(&target.profile)
+        .arg(&step.profile)
         .arg("--message-format=json-render-diagnostics")
         .arg("--target")
-        .arg(target.target_triple.as_str())
+        .arg(step.target_triple.as_str())
         .env("RUSTFLAGS", &rustflags)
-        .current_dir(&target.working_dir)
+        .current_dir(&step.working_dir)
         .stdout(std::process::Stdio::piped());
-    if !target.features.default_features {
+    if !step.features.default_features {
         command.arg("--no-default-features");
     }
-    match &target.features.features {
+    match &step.features.features {
         CargoTargetFeatureList::All => {
             command.arg("--all-features");
         }
@@ -236,7 +239,7 @@ pub fn build_cargo_target(
             }
         }
     }
-    match &target.package {
+    match &step.package {
         CargoTargetPackages::Workspace => {
             command.arg("--workspace");
             eprintln!(" --workspace)");
@@ -251,7 +254,7 @@ pub fn build_cargo_target(
     command.envs(desired_extra_env);
     let mut task = command.spawn()?;
 
-    let mut expected = BuildExpectations::new(dist_graph, &target.expected_binaries);
+    let mut expected = BuildExpectations::new(dist_graph, &step.expected_binaries);
 
     // Collect up the compiler messages to find out where binaries ended up
     let reader = std::io::BufReader::new(task.stdout.take().unwrap());
