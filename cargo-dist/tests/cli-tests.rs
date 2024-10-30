@@ -266,7 +266,6 @@ fn generate_installer(version: &axotag::Version, release_type: ReleaseSourceType
     installer_path
 }
 
-#[ignore]
 #[test]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
