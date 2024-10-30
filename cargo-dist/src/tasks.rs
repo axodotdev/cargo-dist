@@ -1752,15 +1752,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let env_vars = schema_release
             .env
-            .as_ref()
+            .clone()
             .expect("couldn't determine app-specific environment variable!?");
-        let install_dir_env_var = env_vars.install_dir_env_var.to_owned();
-        let unmanaged_dir_env_var = env_vars.unmanaged_dir_env_var.to_owned();
-        let disable_update_env_var = env_vars.disable_update_env_var.to_owned();
-        let no_modify_path_env_var = env_vars.no_modify_path_env_var.to_owned();
-        let github_base_url_env_var = env_vars.github_base_url_env_var.to_owned();
-        let github_enterprise_base_url_env_var =
-            env_vars.github_enterprise_base_url_env_var.to_owned();
 
         let download_url = schema_release
             .artifact_download_url()
@@ -1820,12 +1813,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: config.install_libraries.clone(),
                 runtime_conditions,
                 platform_support: None,
-                install_dir_env_var,
-                unmanaged_dir_env_var,
-                disable_update_env_var,
-                no_modify_path_env_var,
-                github_base_url_env_var,
-                github_enterprise_base_url_env_var,
+                env_vars,
             })),
             is_global: true,
         };
@@ -1991,12 +1979,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     runtime_conditions,
                     platform_support: None,
                     // Not actually needed for this installer type
-                    install_dir_env_var: String::new(),
-                    unmanaged_dir_env_var: String::new(),
-                    disable_update_env_var: String::new(),
-                    no_modify_path_env_var: String::new(),
-                    github_base_url_env_var: String::new(),
-                    github_enterprise_base_url_env_var: String::new(),
+                    env_vars: cargo_dist_schema::EnvironmentVariables::default(),
                 },
                 install_libraries: config.install_libraries.clone(),
             })),
@@ -2026,15 +2009,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let env_vars = schema_release
             .env
-            .as_ref()
+            .clone()
             .expect("couldn't determine app-specific environment variable!?");
-        let install_dir_env_var = env_vars.install_dir_env_var.to_owned();
-        let unmanaged_dir_env_var = env_vars.unmanaged_dir_env_var.to_owned();
-        let disable_update_env_var = env_vars.disable_update_env_var.to_owned();
-        let no_modify_path_env_var = env_vars.no_modify_path_env_var.to_owned();
-        let github_base_url_env_var = env_vars.github_base_url_env_var.to_owned();
-        let github_enterprise_base_url_env_var =
-            env_vars.github_enterprise_base_url_env_var.to_owned();
 
         let download_url = schema_release
             .artifact_download_url()
@@ -2090,12 +2066,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: config.install_libraries.clone(),
                 runtime_conditions: RuntimeConditions::default(),
                 platform_support: None,
-                install_dir_env_var,
-                unmanaged_dir_env_var,
-                disable_update_env_var,
-                no_modify_path_env_var,
-                github_base_url_env_var,
-                github_enterprise_base_url_env_var,
+                env_vars,
             })),
             is_global: true,
         };
@@ -2213,12 +2184,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     runtime_conditions,
                     platform_support: None,
                     // Not actually needed for this installer type
-                    install_dir_env_var: String::new(),
-                    unmanaged_dir_env_var: String::new(),
-                    disable_update_env_var: String::new(),
-                    no_modify_path_env_var: String::new(),
-                    github_base_url_env_var: String::new(),
-                    github_enterprise_base_url_env_var: String::new(),
+                    env_vars: cargo_dist_schema::EnvironmentVariables::default(),
                 },
             })),
             is_global: true,

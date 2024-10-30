@@ -354,7 +354,7 @@ pub struct SystemInfo {
 }
 
 /// Release-specific environment variables
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct EnvironmentVariables {
     /// Environment variable to force an install location
     pub install_dir_env_var: String,

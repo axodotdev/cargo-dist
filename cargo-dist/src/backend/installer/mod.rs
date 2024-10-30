@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{Hosting, TargetTriple};
+use cargo_dist_schema::{EnvironmentVariables, Hosting, TargetTriple};
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
 
@@ -80,18 +80,8 @@ pub struct InstallerInfo {
     pub runtime_conditions: RuntimeConditions,
     /// platform support matrix
     pub platform_support: Option<PlatformSupport>,
-    /// Environment variable to force an install location
-    pub install_dir_env_var: String,
-    /// Like the above, but for unmanaged installs
-    pub unmanaged_dir_env_var: String,
-    /// Environment variable to disable self-update features
-    pub disable_update_env_var: String,
-    /// Environment variable to disable modifying the path
-    pub no_modify_path_env_var: String,
-    /// Environment variable to set the GitHub base URL
-    pub github_base_url_env_var: String,
-    /// Environment variable to set the GitHub Enterprise base URL
-    pub github_enterprise_base_url_env_var: String,
+    /// Environment variables for installer customization
+    pub env_vars: EnvironmentVariables,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

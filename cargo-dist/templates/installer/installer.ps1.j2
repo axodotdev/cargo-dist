@@ -55,10 +55,10 @@ if ($env:INSTALLER_DOWNLOAD_URL) {
   $ArtifactDownloadUrl = $env:INSTALLER_DOWNLOAD_URL
 }
 {% else %}
-if ($env:{{ github_enterprise_base_url_env_var }}) {
-  $installer_base_url = $env:{{ github_enterprise_base_url_env_var }}
-} elseif ($env:{{ github_base_url_env_var }}) {
-  $installer_base_url = $env:{{ github_base_url_env_var }}
+if ($env:{{ env_vars.github_enterprise_base_url_env_var }}) {
+  $installer_base_url = $env:{{ env_vars.github_enterprise_base_url_env_var }}
+} elseif ($env:{{ env_vars.github_base_url_env_var }}) {
+  $installer_base_url = $env:{{ env_vars.github_base_url_env_var }}
 } else {
   $installer_base_url = "{{ hosting.github.artifact_base_url }}"
 }
@@ -74,21 +74,21 @@ $receipt = @"
 "@
 $receipt_home = "${env:LOCALAPPDATA}\{{ app_name }}"
 
-if ($env:{{ disable_update_env_var }}) {
+if ($env:{{ env_vars.disable_update_env_var }}) {
   $install_updater = $false
 } else {
   $install_updater = $true
 }
 
 if ($NoModifyPath) {
-    Write-Information "-NoModifyPath has been deprecated; please set {{ no_modify_path_env_var }}=1 in the environment"
+    Write-Information "-NoModifyPath has been deprecated; please set {{ env_vars.no_modify_path_env_var }}=1 in the environment"
 }
 
-if ($env:{{ no_modify_path_env_var }}) {
+if ($env:{{ env_vars.no_modify_path_env_var }}) {
     $NoModifyPath = $true
 }
 
-$unmanaged_install = $env:{{ unmanaged_dir_env_var }}
+$unmanaged_install = $env:{{ env_vars.unmanaged_dir_env_var }}
 
 if ($unmanaged_install) {
   $NoModifyPath = $true
@@ -291,8 +291,8 @@ function Invoke-Installer($artifacts, $platforms) {
   $install_layout = "unspecified"
   # Check the newer app-specific variable before falling back
   # to the older generic one
-  if (($env:{{ install_dir_env_var }})) {
-    $force_install_dir = $env:{{ install_dir_env_var }}
+  if (($env:{{ env_vars.install_dir_env_var }})) {
+    $force_install_dir = $env:{{ env_vars.install_dir_env_var }}
     $install_layout = {% if install_paths | selectattr("kind", "equalto", "CargoHome") -%} "cargo-home" {%- else -%} "flat" {%- endif %}
   } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
