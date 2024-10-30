@@ -816,11 +816,12 @@ fn native_runtime_conditions_for_artifact(
         && artifact_id.contains("-gnu")
         && runtime_conditions.min_glibc_version.is_none()
     {
-        runtime_conditions.min_glibc_version = Some(LibcVersion::default_glibc());
-
-        if dist.inner.config.builds.minimum_glibc_version.is_some() {
-            runtime_conditions.min_glibc_version = dist.inner.config.builds.minimum_glibc_version;
-        }
+        runtime_conditions.min_glibc_version =
+            if dist.inner.config.builds.minimum_glibc_version.is_some() {
+                dist.inner.config.builds.minimum_glibc_version
+            } else {
+                Some(LibcVersion::default_glibc())
+            }
     }
 
     runtime_conditions
