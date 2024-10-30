@@ -3,10 +3,11 @@
 use std::collections::HashMap;
 
 use crate::platform::targets as t;
-use cargo_dist_schema::{GithubRunnerRef, TargetTripleRef};
+use cargo_dist_schema::{target_lexicon::Triple, GithubRunnerRef, TargetTripleRef};
+use tracing::warn;
 
 lazy_static::lazy_static! {
-    pub(crate) static ref KNOWN_GITHUB_RUNNERS: HashMap<&'static GithubRunnerRef, &'static TargetTripleRef> = {
+    static ref KNOWN_GITHUB_RUNNERS: HashMap<&'static GithubRunnerRef, &'static TargetTripleRef> = {
         let mut m = HashMap::new();
         // cf. https://github.com/actions/runner-images/blob/main/README.md
         // last updated 2024-10-25
@@ -45,7 +46,7 @@ lazy_static::lazy_static! {
 }
 
 /// Get the target triple for a given GitHub Actions runner (if we know about it)
-pub fn target_for_github_runner(runner: &GithubRunnerRef) -> Option<&TargetTripleRef> {
+pub fn target_for_github_runner(runner: &GithubRunnerRef) -> Option<&'static TargetTripleRef> {
     if let Some(target) = KNOWN_GITHUB_RUNNERS.get(runner).copied() {
         return Some(target);
     }
@@ -62,6 +63,25 @@ pub fn target_for_github_runner(runner: &GithubRunnerRef) -> Option<&TargetTripl
     }
 
     None
+}
+
+/// Get the target triple for a given GitHub Actions runner (if we know about it), or assume x64-linux-gnu
+pub fn target_for_github_runner_or_default(runner: &GithubRunnerRef) -> &'static TargetTripleRef {
+    const DEFAULT_ASSUMED_TARGET: &TargetTripleRef = t::TARGET_X64_LINUX_GNU;
+
+    target_for_github_runner(runner).unwrap_or_else(|| {
+        warn!(
+            "don't know the triple for github runner '{runner}', assuming {DEFAULT_ASSUMED_TARGET}"
+        );
+        DEFAULT_ASSUMED_TARGET
+    })
+}
+
+/// Gets the parsed [`Triple`] for a given GitHub runner.
+pub fn triple_for_github_runner_or_default(runner: &GithubRunnerRef) -> Triple {
+    // unwrap safety: all the triples in `KNOWN_GITHUB_RUNNERS` should parse
+    // cleanly.
+    target_for_github_runner_or_default(runner).parse().unwrap()
 }
 
 #[cfg(test)]

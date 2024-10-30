@@ -26,7 +26,7 @@ use crate::{
         PackageVersion, ProductionMode, PublishStyle, SystemDependencies,
     },
     errors::DistResult,
-    platform::{github_runners::KNOWN_GITHUB_RUNNERS, targets::TARGET_X64_LINUX_GNU},
+    platform::github_runners::triple_for_github_runner_or_default,
     CargoBuildWrapper, DistError, DistGraph, SortedMap, SortedSet,
 };
 
@@ -311,17 +311,7 @@ impl GithubCiInfo {
             distribute_targets_to_runners_split(local_targets, &ci_config.runners)
         };
         for (runner, targets) in local_runs {
-            let host = KNOWN_GITHUB_RUNNERS
-                .get(runner.as_explicit_ref())
-                .copied()
-                .and_then(|t| t.parse().ok());
-            let host_or_default = host.unwrap_or_else(|| {
-                warn!(
-                    "don't know the triple for github runner '{}', assuming {}",
-                    runner, TARGET_X64_LINUX_GNU
-                );
-                TARGET_X64_LINUX_GNU.parse().unwrap()
-            });
+            let host_or_default: Triple = triple_for_github_runner_or_default(&runner);
 
             use std::fmt::Write;
             let install_dist =

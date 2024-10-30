@@ -429,39 +429,48 @@ pub fn build_wrapper_for_cross(host: &Triple, target: &Triple) -> Option<CargoBu
         return None;
     }
 
-    match (host.operating_system, target.operating_system) {
-        (OperatingSystem::Darwin, OperatingSystem::Darwin) => {
-            // from mac to mac, even if we do aarch64 => x86_64, or the other way
-            // around, _all we need_ is to add the target to rustup
-            return None;
-        }
-        (_, OperatingSystem::Darwin) => {
-            panic!("cross-compiling to macOS is a road paved with sadness — we cowardly refuse to walk it.");
-        }
-        (OperatingSystem::Darwin, OperatingSystem::Linux) => {
-            // zigbuild works for this
-            return Some(CargoBuildWrapper::ZigBuild);
-        }
-        (OperatingSystem::Linux { .. }, OperatingSystem::Linux) => {
-            // zigbuild works for x86_64-unknown-linux-gnu => aarch64-unknown-linux-gnu
-            // for example.
-            if host.architecture != target.architecture {
-                return Some(CargoBuildWrapper::ZigBuild);
+    match target.operating_system {
+        // compiling for macOS (making Mach-O binaries, .dylib files, etc.)
+        OperatingSystem::Darwin => match host.operating_system {
+            OperatingSystem::Darwin => {
+                // from mac to mac, even if we do aarch64 => x86_64, or the other way
+                // around, _all we need_ is to add the target to rustup
+                None
             }
-        }
-        (OperatingSystem::Linux { .. }, OperatingSystem::Windows) => {
-            // xwin definitely works for this
-            return Some(CargoBuildWrapper::Xwin);
-        }
-        (OperatingSystem::Windows { .. }, OperatingSystem::Windows) => {
-            todo!("not sure about windows crosses?? we're doing {host} => {target}, maybe zigbuild has something? idk");
-        }
+            _ => {
+                panic!("cross-compiling to macOS is a road paved with sadness — we cowardly refuse to walk it.");
+            }
+        },
+        // compiling for Linux (making ELF binaries, .so files, etc.)
+        OperatingSystem::Linux => match host.operating_system {
+            OperatingSystem::Linux | OperatingSystem::Darwin | OperatingSystem::Windows => {
+                // zigbuild works for e.g. x86_64-unknown-linux-gnu => aarch64-unknown-linux-gnu
+                Some(CargoBuildWrapper::ZigBuild)
+            }
+            _ => {
+                panic!("no idea how to cross-compile from {host} to linux");
+            }
+        },
+        // compiling for Windows (making PE binaries, .dll files, etc.)
+        OperatingSystem::Windows => match host.operating_system {
+            OperatingSystem::Windows => {
+                // this is just cross-arch, hopefully no wrappers are needed?
+                Some(CargoBuildWrapper::ZigBuild)
+            }
+            OperatingSystem::Linux | OperatingSystem::Darwin => {
+                // cargo-xwin is made for that
+                Some(CargoBuildWrapper::Xwin)
+            }
+            _ => {
+                panic!("no idea how to cross-compile from {host} to windows");
+            }
+        },
         _ => {
-            // don't know, crossing fingers
+            panic!(
+                "no idea how to cross-compile from anything (including the current host, {host}) to {target}"
+            );
         }
     }
-
-    None
 }
 
 /// A cargo build (and copy the outputs to various locations)
