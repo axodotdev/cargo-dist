@@ -1758,6 +1758,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let unmanaged_dir_env_var = env_vars.unmanaged_dir_env_var.to_owned();
         let disable_update_env_var = env_vars.disable_update_env_var.to_owned();
         let no_modify_path_env_var = env_vars.no_modify_path_env_var.to_owned();
+        let github_base_url_env_var = env_vars.github_base_url_env_var.to_owned();
+        let github_enterprise_base_url_env_var =
+            env_vars.github_enterprise_base_url_env_var.to_owned();
 
         let download_url = schema_release
             .artifact_download_url()
@@ -1821,6 +1824,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 unmanaged_dir_env_var,
                 disable_update_env_var,
                 no_modify_path_env_var,
+                github_base_url_env_var,
+                github_enterprise_base_url_env_var,
             })),
             is_global: true,
         };
@@ -1990,6 +1995,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     unmanaged_dir_env_var: String::new(),
                     disable_update_env_var: String::new(),
                     no_modify_path_env_var: String::new(),
+                    github_base_url_env_var: String::new(),
+                    github_enterprise_base_url_env_var: String::new(),
                 },
                 install_libraries: config.install_libraries.clone(),
             })),
@@ -2025,6 +2032,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let unmanaged_dir_env_var = env_vars.unmanaged_dir_env_var.to_owned();
         let disable_update_env_var = env_vars.disable_update_env_var.to_owned();
         let no_modify_path_env_var = env_vars.no_modify_path_env_var.to_owned();
+        let github_base_url_env_var = env_vars.github_base_url_env_var.to_owned();
+        let github_enterprise_base_url_env_var =
+            env_vars.github_enterprise_base_url_env_var.to_owned();
 
         let download_url = schema_release
             .artifact_download_url()
@@ -2084,6 +2094,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 unmanaged_dir_env_var,
                 disable_update_env_var,
                 no_modify_path_env_var,
+                github_base_url_env_var,
+                github_enterprise_base_url_env_var,
             })),
             is_global: true,
         };
@@ -2205,6 +2217,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     unmanaged_dir_env_var: String::new(),
                     disable_update_env_var: String::new(),
                     no_modify_path_env_var: String::new(),
+                    github_base_url_env_var: String::new(),
+                    github_enterprise_base_url_env_var: String::new(),
                 },
             })),
             is_global: true,

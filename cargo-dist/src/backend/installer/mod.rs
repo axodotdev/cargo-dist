@@ -88,6 +88,10 @@ pub struct InstallerInfo {
     pub disable_update_env_var: String,
     /// Environment variable to disable modifying the path
     pub no_modify_path_env_var: String,
+    /// Environment variable to set the GitHub base URL
+    pub github_base_url_env_var: String,
+    /// Environment variable to set the GitHub Enterprise base URL
+    pub github_enterprise_base_url_env_var: String,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

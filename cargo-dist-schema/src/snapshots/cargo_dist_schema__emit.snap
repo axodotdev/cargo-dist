@@ -660,6 +660,8 @@ expression: json_schema
       "type": "object",
       "required": [
         "disable_update_env_var",
+        "github_base_url_env_var",
+        "github_enterprise_base_url_env_var",
         "install_dir_env_var",
         "no_modify_path_env_var",
         "unmanaged_dir_env_var"
@@ -667,6 +669,14 @@ expression: json_schema
       "properties": {
         "disable_update_env_var": {
           "description": "Environment variable to disable updater features",
+          "type": "string"
+        },
+        "github_base_url_env_var": {
+          "description": "Environment variable to set the GitHub base URL",
+          "type": "string"
+        },
+        "github_enterprise_base_url_env_var": {
+          "description": "Environment variable to set the GitHub Enterprise base URL",
           "type": "string"
         },
         "install_dir_env_var": {

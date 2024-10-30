@@ -55,10 +55,10 @@ if ($env:INSTALLER_DOWNLOAD_URL) {
   $ArtifactDownloadUrl = $env:INSTALLER_DOWNLOAD_URL
 }
 {% else %}
-if ($env:INSTALLER_GITHUB_ENTERPRISE_BASE_URL) {
-  $installer_base_url = $env:INSTALLER_GITHUB_ENTERPRISE_BASE_URL
-} elseif ($env:INSTALLER_GITHUB_BASE_URL) {
-  $installer_base_url = $env:INSTALLER_GITHUB_BASE_URL
+if ($env:{{ github_enterprise_base_url_env_var }}) {
+  $installer_base_url = $env:{{ github_enterprise_base_url_env_var }}
+} elseif ($env:{{ github_base_url_env_var }}) {
+  $installer_base_url = $env:{{ github_base_url_env_var }}
 } else {
   $installer_base_url = "{{ hosting.github.artifact_base_url }}"
 }

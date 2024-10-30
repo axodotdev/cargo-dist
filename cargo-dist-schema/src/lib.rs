@@ -364,6 +364,10 @@ pub struct EnvironmentVariables {
     pub disable_update_env_var: String,
     /// Environment variable to disable modifying the path
     pub no_modify_path_env_var: String,
+    /// Environment variable to set the GitHub base URL
+    pub github_base_url_env_var: String,
+    /// Environment variable to set the GitHub Enterprise base URL
+    pub github_enterprise_base_url_env_var: String,
 }
 
 /// A Release of an Application
@@ -701,12 +705,17 @@ impl DistManifest {
             let unmanaged_dir_env_var = format!("{env_app_name}_UNMANAGED_INSTALL");
             let disable_update_env_var = format!("{env_app_name}_DISABLE_UPDATE");
             let no_modify_path_env_var = format!("{env_app_name}_NO_MODIFY_PATH");
+            let github_base_url_env_var = format!("{env_app_name}_INSTALLER_GITHUB_BASE_URL");
+            let github_enterprise_base_url_env_var =
+                format!("{env_app_name}_INSTALLER_GITHUB_ENTERPRISE_BASE_URL");
 
             let environment_variables = EnvironmentVariables {
                 install_dir_env_var,
                 unmanaged_dir_env_var,
                 disable_update_env_var,
                 no_modify_path_env_var,
+                github_base_url_env_var,
+                github_enterprise_base_url_env_var,
             };
 
             self.releases.push(Release {
