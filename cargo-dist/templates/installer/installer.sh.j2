@@ -22,8 +22,8 @@ APP_VERSION="{{ app_version }}"
 ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-{{ base_url }}}"
 {% else %}
 # Look for GitHub Enterprise-style base URL first
-if [ -n "{{ '${' }}{{ env_vars.github_enterprise_base_url_env_var }}:-}" ]; then
-    INSTALLER_BASE_URL="${{ env_vars.github_enterprise_base_url_env_var }}"
+if [ -n "{{ '${' }}{{ env_vars.ghe_base_url_env_var }}:-}" ]; then
+    INSTALLER_BASE_URL="${{ env_vars.ghe_base_url_env_var }}"
 else
     INSTALLER_BASE_URL="{{ '${' }}{{ env_vars.github_base_url_env_var }}:-{{ hosting.github.artifact_base_url }}}"
 fi

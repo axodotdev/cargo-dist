@@ -24,8 +24,8 @@ set -u
 APP_NAME="axolotlsay"
 APP_VERSION="0.2.2"
 # Look for GitHub Enterprise-style base URL first
-if [ -n "${AXOLOTLSAY_INSTALLER_GITHUB_ENTERPRISE_BASE_URL:-}" ]; then
-    INSTALLER_BASE_URL="$AXOLOTLSAY_INSTALLER_GITHUB_ENTERPRISE_BASE_URL"
+if [ -n "${AXOLOTLSAY_INSTALLER_GHE_BASE_URL:-}" ]; then
+    INSTALLER_BASE_URL="$AXOLOTLSAY_INSTALLER_GHE_BASE_URL"
 else
     INSTALLER_BASE_URL="${AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL:-https://github.com}"
 fi
@@ -1326,8 +1326,8 @@ param (
 
 $app_name = 'axolotlsay'
 $app_version = '0.2.2'
-if ($env:AXOLOTLSAY_INSTALLER_GITHUB_ENTERPRISE_BASE_URL) {
-  $installer_base_url = $env:AXOLOTLSAY_INSTALLER_GITHUB_ENTERPRISE_BASE_URL
+if ($env:AXOLOTLSAY_INSTALLER_GHE_BASE_URL) {
+  $installer_base_url = $env:AXOLOTLSAY_INSTALLER_GHE_BASE_URL
 } elseif ($env:AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL) {
   $installer_base_url = $env:AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL
 } else {
@@ -3269,7 +3269,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "disable_update_env_var": "AXOLOTLSAY_DISABLE_UPDATE",
         "no_modify_path_env_var": "AXOLOTLSAY_NO_MODIFY_PATH",
         "github_base_url_env_var": "AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL",
-        "github_enterprise_base_url_env_var": "AXOLOTLSAY_INSTALLER_GITHUB_ENTERPRISE_BASE_URL"
+        "ghe_base_url_env_var": "AXOLOTLSAY_INSTALLER_GHE_BASE_URL"
       },
       "display_name": "axolotlsay",
       "display": true,
