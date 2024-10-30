@@ -13,6 +13,9 @@ exclude = [
   "tests/",
 ]
 
+[lib]
+doctest = false
+
 [dependencies]
 # would be nice to inherit this from workspace but we don't want to pull in
 # a full http client for the schema crate!
