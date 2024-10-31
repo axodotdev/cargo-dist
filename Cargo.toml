@@ -23,7 +23,7 @@ axoproject = { version = "=0.24.1", path = "axoproject", default-features = fals
 axocli = { version = "0.2.0" }
 axoupdater = { version = "0.7.3" }
 axotag = "0.2.0"
-axoasset = { version = "1.0.0", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
+axoasset = { version = "1.0.1", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
 axoprocess = { version = "0.2.0" }
 gazenot = { version = "0.3.3" }
 
