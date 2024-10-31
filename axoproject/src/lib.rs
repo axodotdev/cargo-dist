@@ -656,7 +656,7 @@ pub struct AutoIncludes {
 ///
 /// This includes:
 ///
-/// * reamde: `README*`
+/// * readme: `README*`
 /// * license: `LICENSE*` and `UNLICENSE*`
 /// * changelog: `CHANGELOG*` and `RELEASES*`
 ///

@@ -192,7 +192,7 @@ pub enum BuildEnvironment {
     /// Linux-specific information
     #[serde(rename = "linux")]
     Linux {
-        /// The builder's glibc verison, relevant to glibc-based
+        /// The builder's glibc version, relevant to glibc-based
         /// builds.
         glibc_version: Option<GlibcVersion>,
     },

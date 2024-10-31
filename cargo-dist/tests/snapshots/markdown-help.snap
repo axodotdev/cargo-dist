@@ -197,7 +197,7 @@ Which type of configuration to generate
 
 Possible values:
 - ci:  Generate CI scripts for orchestrating dist
-- msi: Generate .wxs tempaltes for msi installers
+- msi: Generate .wxs templates for msi installers
 
 #### `--check`
 Check if the generated output differs from on-disk config without writing it
