@@ -419,6 +419,7 @@ fn get_new_dist_metadata(
             install_libraries: None,
             github_build_setup: None,
             mac_pkg_config: None,
+            minimum_glibc_version: None,
         }
     };
 
@@ -892,6 +893,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         package_libraries,
         install_libraries,
         mac_pkg_config,
+        minimum_glibc_version,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -1290,6 +1292,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "install-libraries",
         "# Which kinds of packaged libraries to install\n",
         install_libraries.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "minimum-glibc-version",
+        "# The minimum glibc version supported by the package (overrides auto-detection)\n",
+        minimum_glibc_version.as_ref().map(|v| v.to_string()),
     );
 
     // Finalize the table

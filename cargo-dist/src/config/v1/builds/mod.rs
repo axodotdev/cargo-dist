@@ -4,6 +4,7 @@ pub mod cargo;
 pub mod generic;
 
 use super::*;
+use crate::platform::LibcVersion;
 use cargo::*;
 use generic::*;
 
@@ -16,6 +17,8 @@ pub struct WorkspaceBuildConfig {
     pub ssldotcom_windows_sign: Option<ProductionMode>,
     /// whether to sign macos binaries with apple
     pub macos_sign: bool,
+    /// Overrides the minimum supported glibc version.
+    pub minimum_glibc_version: Option<LibcVersion>,
 }
 
 /// app-scoped build config
@@ -27,6 +30,8 @@ pub struct AppBuildConfig {
     pub generic: GenericBuildConfig,
     /// A set of packages to install before building
     pub system_dependencies: SystemDependencies,
+    /// Overrides the minimum supported glibc version.
+    pub minimum_glibc_version: Option<LibcVersion>,
 }
 
 /// build config (inheritance not yet folded)
@@ -44,6 +49,8 @@ pub struct BuildConfigInheritable {
     pub generic: Option<GenericBuildLayer>,
     /// A set of packages to install before building
     pub system_dependencies: SystemDependencies,
+    /// Overrides the minimum supported glibc version.
+    pub minimum_glibc_version: Option<LibcVersion>,
 }
 
 /// build config (raw from file)
@@ -72,6 +79,9 @@ pub struct BuildLayer {
     #[serde(rename = "dependencies")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system_dependencies: Option<SystemDependencies>,
+    /// Overrides the minimum supported glibc version.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minimum_glibc_version: Option<LibcVersion>,
 }
 impl BuildConfigInheritable {
     /// get defaults for a package
@@ -83,6 +93,7 @@ impl BuildConfigInheritable {
             system_dependencies: Default::default(),
             ssldotcom_windows_sign: None,
             macos_sign: None,
+            minimum_glibc_version: None,
         }
     }
     /// get defaults for a workspace
@@ -94,6 +105,7 @@ impl BuildConfigInheritable {
             system_dependencies: Default::default(),
             ssldotcom_windows_sign: None,
             macos_sign: None,
+            minimum_glibc_version: None,
         }
     }
     /// apply inheritance to get final workspace config
@@ -106,6 +118,7 @@ impl BuildConfigInheritable {
             cargo,
             ssldotcom_windows_sign,
             macos_sign,
+            minimum_glibc_version,
             // local-only
             generic: _,
             system_dependencies: _,
@@ -118,6 +131,7 @@ impl BuildConfigInheritable {
             cargo: cargo_out,
             macos_sign: macos_sign.unwrap_or(false),
             ssldotcom_windows_sign,
+            minimum_glibc_version,
         }
     }
     /// apply inheritance to get final package config
@@ -131,6 +145,7 @@ impl BuildConfigInheritable {
             cargo,
             generic,
             system_dependencies,
+            minimum_glibc_version,
             // local-only
             ssldotcom_windows_sign: _,
             macos_sign: _,
@@ -149,6 +164,7 @@ impl BuildConfigInheritable {
             cargo: cargo_out,
             generic: generic_out,
             system_dependencies,
+            minimum_glibc_version,
         }
     }
 }
@@ -163,6 +179,7 @@ impl ApplyLayer for BuildConfigInheritable {
             system_dependencies,
             ssldotcom_windows_sign,
             macos_sign,
+            minimum_glibc_version,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -172,6 +189,7 @@ impl ApplyLayer for BuildConfigInheritable {
         self.ssldotcom_windows_sign
             .apply_opt(ssldotcom_windows_sign);
         self.macos_sign.apply_opt(macos_sign);
+        self.minimum_glibc_version.apply_opt(minimum_glibc_version);
     }
 }
 

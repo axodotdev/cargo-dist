@@ -82,6 +82,7 @@ impl DistMetadata {
             package_libraries,
             install_libraries,
             github_build_setup,
+            minimum_glibc_version,
         } = self.clone();
 
         // Archives
@@ -126,7 +127,8 @@ impl DistMetadata {
         let needs_build_layer = cargo_layer.is_some()
             || system_dependencies.is_some()
             || ssldotcom_windows_sign.is_some()
-            || msvc_crt_static.is_some();
+            || msvc_crt_static.is_some()
+            || minimum_glibc_version.is_some();
         let build_layer = needs_build_layer.then_some(BuildLayer {
             common: CommonBuildLayer {},
             ssldotcom_windows_sign,
@@ -134,6 +136,7 @@ impl DistMetadata {
             system_dependencies,
             cargo: cargo_layer,
             generic: None,
+            minimum_glibc_version,
         });
 
         // CI

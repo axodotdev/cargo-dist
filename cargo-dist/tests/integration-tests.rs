@@ -43,6 +43,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+minimum-glibc-version = "2.18"
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
