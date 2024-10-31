@@ -2,6 +2,39 @@
 
 Nothing Yet!
 
+# Version 0.24.1 (2024-10-29)
+
+Loosens the "cargo is broken" error reporting condition, letting us be more
+precise about cases where Cargo is present but Cargo metadata can't be parsed.
+
+- impl @fasterthanlime [Distinguish "cargo metadata failed" from "cargo is not installed"](https://github.com/axodotdev/cargo-dist/pull/1501)
+
+# Version 0.24.0 (2024-10-28)
+
+It's been less than two weeks, and we're already back with a big dist release for you. This release has several major features, beginning with the biggest news that:
+
+## dist has a new name
+
+Did the last paragraph give it away? Well, it's true: `cargo-dist` is now just `dist`. This reflects our growing support for packaging software built by tools beyond just Cargo. Our support for Cargo isn't going away of course, or becoming any less of a focus.
+
+As a part of this, `dist` has moved towards a standalone CLI tool that doesn't have to be run as a `cargo` subcommand. You can now run `dist init`, `dist build` and more without needing to prefix it with `cargo`. We still install the Cargo plugin, though, so you're welcome to keep using `cargo dist` like always. As a part of being able to run without the Cargo plugin, there's one more big change:
+
+## dist runs without Cargo
+
+`dist` no longer requires Cargo if you're not building Rust projects! This is a major change which should make it much more ergonomic for users of other languages. We do still require Cargo if your workspace contains at least one Rust project; this includes commands such as `dist init` and `dist plan`.
+
+- impl @Gankra, @mistydemeo [feat: make cargo optional](https://github.com/axodotdev/cargo-dist/pull/1267)
+
+## Unified checksum file
+
+This change is completely unrelated to the new name, but it's a very nice one. We've always shipped individual checksum files for each artifact, but in this release we now also ship a unified checksum file which contains all of your hashes in a single place. It's named `$HASH_STYLE.sum`, for example `sha256.sum`, and is designed to be compatible with tools such as `shasum` and `sha256sum`.
+
+- impl @fasterthanlime [Introduce unified manifest file](https://github.com/axodotdev/cargo-dist/pull/1465)
+
+## Fixes
+* impl @mistydemeo [fix: print Windows paths correctly](https://github.com/axodotdev/cargo-dist/pull/1457)
+* impl @pnehrer [Specify path to Cargo.toml when generating wix for package](https://github.com/axodotdev/cargo-dist/pull/1454)
+
 # Version 0.23.0 (2024-10-15)
 
 We're back from a longer-than-usual break between releases with a feature-filled release!
@@ -77,7 +110,7 @@ This is a small patch release that incidentally includes some initial groundwork
 
 * @gankra [fix: give PATH update instructions for cmd too](https://github.com/axodotdev/cargo-dist/pull/1382)
 * @gankra [fix: make linkage truly infallible](https://github.com/axodotdev/cargo-dist/pull/1390)
-* @mistydemeo [feat: intial impl of Mac .pkg installer](https://github.com/axodotdev/cargo-dist/pull/1312)
+* @mistydemeo [feat: initial impl of Mac .pkg installer](https://github.com/axodotdev/cargo-dist/pull/1312)
 
 
 # Version 0.22.0 (2024-08-28)
@@ -90,7 +123,7 @@ We generate installers for our users- and then our *users' users* use those inst
 
 While we had implemented some environment variables that enable users to control the behavior of installers, previously they were largely designed for internal use, and therefore namespaced with `DIST`. However, we quickly realized that this isn't suitable for having our users communicate with their users- so we've enabled the generation of app-branded installer customization environment variables- so that installer users can leverage environment variables that are branded to the application they are trying to install.
 
-Right now, the only customization we allow for installers is the install directory- so instead of `CARGO_DIST_FORCE_INSTALL_DIR`, you can tell your users to use `AXOLOTLSAY_INSTALL_DIR` (if your app is named `axolotlsay`). If you have a name with hypens or other characters, we normalize it for you, and you can find this value at the `install_dir_env_var` field in the `dist-manifest.json` that is generated with each of your releases.
+Right now, the only customization we allow for installers is the install directory- so instead of `CARGO_DIST_FORCE_INSTALL_DIR`, you can tell your users to use `AXOLOTLSAY_INSTALL_DIR` (if your app is named `axolotlsay`). If you have a name with hyphens or other characters, we normalize it for you, and you can find this value at the `install_dir_env_var` field in the `dist-manifest.json` that is generated with each of your releases.
 
 * impl @mistydemeo [add app branded env var for custom dir to installers](https://github.com/axodotdev/cargo-dist/pull/1377)
 
@@ -109,7 +142,7 @@ This PR translates the SPDX expression to the Homebrew license DSL.
 
 Creating a personal tap with brew tap-new creates a default Github Actions workflow that runs a homebrew-specific style check (brew style <TAPNAME>) on the repo. Cargo-dist's generated homebrew formulas fail this style check. This does not block the core functionality of cargo-dist's homebrew publishing functionality (formula still functions), but does mean that users whorun `brew style` (which is a side effect of creating a tap with `brew tap-new`) would get frustrating errors.
 
-Rather than separately chasing formatting issues as they come up, this PR updates the homebrew publish workflow to install and run `brew style --fix` on each formula before commiting it.
+Rather than separately chasing formatting issues as they come up, this PR updates the homebrew publish workflow to install and run `brew style --fix` on each formula before committing it.
 
 * impl
   * @cxreiff [format homebrew formulas with brew style --fix](https://github.com/axodotdev/cargo-dist/pull/1340)
@@ -242,7 +275,7 @@ In the future we *may* just enable system certificates by default. We're being a
 ## Features
 
 
-### disabling the CI build cache when unecessary
+### disabling the CI build cache when unnecessary
 
 For a long time now we've had [`swatinem/rust-cache`](https://github.com/Swatinem/rust-cache) as part of cargo-dist's CI build jobs. In fact, improving the configuration for that cache has been one of the most frequent new contributions!
 
@@ -422,7 +455,7 @@ When a shell or powershell installer runs successfully it will print out "everyt
 
 cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new [`force-latest`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest) configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.
 
-This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.
+This mostly exists to support projects who only plan to produce prereleases for the foreseeable future, so that GitHub properly shows them in its UI.
 
 * [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest)
 * impl @mistydemeo [feat: allow always marking releases as stable](https://github.com/axodotdev/cargo-dist/pull/1054)
@@ -754,7 +787,7 @@ This release is a few minor improvements, and a new config for homebrew installe
 
 ## Features
 
-The name of your homebrew formula can now be overriden with `formula = "my-cool-formula"`.
+The name of your homebrew formula can now be overridden with `formula = "my-cool-formula"`.
 
 * [docs](opensource.axo.dev/cargo-dist/book/reference/config.html#formula)
 * @ashleygwilliams [impl](https://github.com/axodotdev/cargo-dist/pull/791)
@@ -1266,7 +1299,7 @@ Note that because these binaries are statically linked, they cannot dynamically 
 
 ### msvc-crt-static opt-out
 
-cargo-dist has [always forced +crt-static on, as it is considered more correct for targetting Windows with the typical statically linked Rust binary](https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md). However with the introduction of initial support for chocolatey as a system package manager, it's now very easy for our users to dynamically link other DLLs. Once you do, [it once again becomes more correct to dynamically link the windows crt, and to use systems like Visual C(++) Redistributables](https://github.com/axodotdev/cargo-dist/issues/496).
+cargo-dist has [always forced +crt-static on, as it is considered more correct for targeting Windows with the typical statically linked Rust binary](https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md). However with the introduction of initial support for chocolatey as a system package manager, it's now very easy for our users to dynamically link other DLLs. Once you do, [it once again becomes more correct to dynamically link the windows crt, and to use systems like Visual C(++) Redistributables](https://github.com/axodotdev/cargo-dist/issues/496).
 
 Although we [would like to teach cargo-dist to handle redistributables for you](https://github.com/axodotdev/cargo-dist/issues/496), we're starting with a simple escape hatch: if you set `msvc-crt-static = false` in `[workspace.metadata.dist]`, we'll revert to the typical Rust behaviour of dynamically linking the CRT.
 
@@ -1793,7 +1826,7 @@ You can now include persistent configuration for cargo-dist in `[workspace.metad
 
 Previously cargo-dist had some vague notions of what it was supposed to do when you invoked it, because there were platform-specific artifacts like executable-zips but also more platform-agnostic ones like installer scripts. This result in flags like `--no-builds` with messy semantics and hacks to filter out artifacts we "don't want right now" in the CI scripts (`--no-builds` was is removed in this release, it was busted).
 
-Now cargo-dist can produce well-defined subsets of all tne possible artifacts with the `--artifacts` flag:
+Now cargo-dist can produce well-defined subsets of all the possible artifacts with the `--artifacts` flag:
 
 > --artifacts = "local" | "global" | "all" | "host"
 >

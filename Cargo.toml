@@ -12,18 +12,18 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
 homepage = "https://opensource.axo.dev/cargo-dist/"
-version = "0.24.0-prerelease.2"
+version = "0.24.1"
 
 [workspace.dependencies]
 # intra-workspace deps (you need to bump these versions when you cut releases too!
-cargo-dist-schema = { version = "=0.24.0-prerelease.2", path = "cargo-dist-schema" }
-axoproject = { version = "=0.24.0-prerelease.2", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
+cargo-dist-schema = { version = "=0.24.1", path = "cargo-dist-schema" }
+axoproject = { version = "=0.24.1", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
 
 # first-party deps
 axocli = { version = "0.2.0" }
 axoupdater = { version = "0.7.3" }
 axotag = "0.2.0"
-axoasset = { version = "1.0.0", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
+axoasset = { version = "1.0.1", features = ["json-serde", "toml-serde", "toml-edit", "compression", "remote"] }
 axoprocess = { version = "0.2.0" }
 gazenot = { version = "0.3.3" }
 
@@ -35,7 +35,7 @@ comfy-table = "7.1.1"
 miette = { version = "7.2.0" }
 thiserror = "1.0.65"
 tracing = { version = "0.1.36", features = ["log"] }
-serde = { version = "1.0.211", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
 serde_json = { version = "1.0.132" }
 cargo_metadata = "0.18.1"
 camino = { version = "1.1.9", features = ["serde1"] }
@@ -43,7 +43,7 @@ semver = "1.0.23"
 newline-converter = "0.3.0"
 dialoguer = "0.11.0"
 sha2 = "0.10.6"
-minijinja = { version = "2.3.1", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
+minijinja = { version = "2.4.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.4"
 itertools = "0.13.0"
 cargo-wix = "0.3.8"
@@ -60,12 +60,12 @@ tar = "0.4.42"
 flate2 = "1.0.34"
 pathdiff = { version = "0.2.2", features = ["camino"] }
 url = "2.5.0"
-parse-changelog = "0.6.9"
+parse-changelog = "0.6.10"
 schemars = "0.8.21"
 serde_yml = "0.0.10"
 spdx = "0.10.6"
 base64 = "0.22.1"
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 current_platform = "0.2.0"
 
 [workspace.metadata.release]
@@ -73,6 +73,15 @@ shared-version = true
 tag-name = "v{{version}}"
 pre-release-commit-message = "release: {{version}}"
 publish = false
+
+[profile.dev]
+# level true/2 is usually overkill, cf. <https://doc.rust-lang.org/cargo/reference/profiles.html#debug>
+debug = "limited"
+# thin-local LTO is basically free, cf. <https://doc.rust-lang.org/cargo/reference/profiles.html#lto>
+lto = false
+# this speeds up xz compression etc. significantly. we could
+# be more selective about which packages to optimize but :shrug:
+package."*" = { opt-level = 2 }
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

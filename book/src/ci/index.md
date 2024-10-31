@@ -1,8 +1,8 @@
 # CI
 
-All of the [distribute functionality][distribute] of cargo-dist depends on some kind of CI integration to provide things like [file hosting][artifact-url], secret keys, and the ability to spin up multiple machines.
+All of the [distribute functionality][distribute] of dist depends on some kind of CI integration to provide things like [file hosting][artifact-url], secret keys, and the ability to spin up multiple machines.
 
-cargo-dist enables CI for you by default the first time you `cargo-dist init`. cargo-dist's core CI job can be [customized][ci-customization] using several extra features.
+dist enables CI for you by default the first time you `dist init`. dist's core CI job can be [customized][ci-customization] using several extra features.
 
 
 
@@ -28,10 +28,10 @@ The default CI configuration covers most users' needs. For more advanced needs, 
 
 The CI process is divided into several stages which happen in order. Understanding these steps will help you follow the release process and, if necessary, debug failures.
 
-1. plan: cargo-dist calculates which builds to run, and which platforms to build for, and enumerates the files that builds are expected to produce. The output of this step is saved and shared between steps and is also included in the final release as `dist-manifest.json`.
-2. build-local-artifacts: cargo-dist builds native binaries and produces tarballs.
-3. build-global-artifacts: cargo-dist builds platform-independent artifacts such as installers.
-4. host: cargo-dist decides whether to proceed with publishing a release and uploading artifacts.
+1. plan: dist calculates which builds to run, and which platforms to build for, and enumerates the files that builds are expected to produce. The output of this step is saved and shared between steps and is also included in the final release as `dist-manifest.json`.
+2. build-local-artifacts: dist builds native binaries and produces tarballs.
+3. build-global-artifacts: dist builds platform-independent artifacts such as installers.
+4. host: dist decides whether to proceed with publishing a release and uploading artifacts.
 5. publish: Artifacts are uploaded and, if used, the Homebrew formula is released.
 6. announce: The release is created with its final non-draft contents.
 
@@ -45,12 +45,12 @@ The most important output of your build is your release, but there's more advanc
 
 Although most Rust builds are statically linked and contain their own Rust dependencies, some crates will end up dynamically linking against system libraries. It's useful to know what your software picked up&mdash;sometimes this will help you catch things you may not have intended, like dynamically linking to OpenSSL, or allow you to check for package manager-provided libraries your users will need to have installed in order to be able to run your software.
 
-cargo-dist provides a linkage report during your CI build in order to allow you to check for this. For macOS and Linux, it's able to categorize the targets it linked against to help you gauge whether or not it's likely to cause problems for your users. To view this, check the detailed view of your CI build and consult the "Build" step from the `upload-local artifacts` jobs.
+dist provides a linkage report during your CI build in order to allow you to check for this. For macOS and Linux, it's able to categorize the targets it linked against to help you gauge whether or not it's likely to cause problems for your users. To view this, check the detailed view of your CI build and consult the "Build" step from the `upload-local artifacts` jobs.
 
 This feature is defined for advanced users; most users won't need to use it. It's most useful for developers with specialized build setups who want to ensure that their binaries will be safe for all of their users. A few examples of users who may need to use it:
 
 * Users with custom runners with extra packages installed beyond what's included in the operating system;
-* Users who have installed extra packages using cargo-dist's system dependency feature;
+* Users who have installed extra packages using dist's system dependency feature;
 * Users whose cargo buildsystems include extra C dependencies.
 
 The report is divided into categories to help you make sense of where these libraries are from and what it might mean for your users. These categories are:

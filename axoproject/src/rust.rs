@@ -43,8 +43,17 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
             let error = match e {
                 // Indicates we failed to run `cargo metadata`; this is the
                 // one we want to intercept and replace with a friendlier error.
-                crate::AxoprojectError::CargoMetadata(guppy::Error::CommandError(_)) => {
-                    crate::AxoprojectError::CargoMissing {}
+                crate::AxoprojectError::CargoMetadata(e) => {
+                    if cargo_version_works() {
+                        // we have cargo, `cargo metadata` just failed though — relay
+                        // its stderr, which should clue in the users on TOML parse errors,
+                        // invalid dependencies, etc.
+                        crate::AxoprojectError::CargoMetadata(e)
+                    } else {
+                        // even `cargo --version` failed, so let's tell the user where they
+                        // can grab cargo!
+                        crate::AxoprojectError::CargoMissing {}
+                    }
                 }
                 // Any other errors are less expected, and we should pass
                 // those through unaltered.
@@ -63,6 +72,15 @@ pub fn get_workspace(start_dir: &Utf8Path, clamp_to_dir: Option<&Utf8Path>) -> W
             cause: e,
         },
     }
+}
+
+/// Simple check if cargo is installed and can be executed
+fn cargo_version_works() -> bool {
+    std::process::Command::new("cargo")
+        .arg("--version")
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
 }
 
 /// Get the PackageGraph for the current workspace

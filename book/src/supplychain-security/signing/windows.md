@@ -2,9 +2,9 @@
 
 > since 0.15.0
 
-cargo-dist can automatically codesign Windows EXEs and [MSIs](../../installers/msi.md) using SSL.com's [eSigner cloud signing service](https://www.ssl.com/esigner/).
+dist can automatically codesign Windows EXEs and [MSIs](../../installers/msi.md) using SSL.com's [eSigner cloud signing service](https://www.ssl.com/esigner/).
 
-Although there are many ways to do code signing, this process is specifically concerned with ensuring [Windows SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who [downloads your application with a web browser](https://en.wikipedia.org/wiki/Mark_of_the_Web) will get a popup warning them against running it. (Alternative methods of downloading and installing, such as [cargo-dist's powershell installers](../../installers/powershell.md) do not trigger SmartScreen.)
+Although there are many ways to do code signing, this process is specifically concerned with ensuring [Windows SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who [downloads your application with a web browser](https://en.wikipedia.org/wiki/Mark_of_the_Web) will get a popup warning them against running it. (Alternative methods of downloading and installing, such as [dist's powershell installers](../../installers/powershell.md) do not trigger SmartScreen.)
 
 Windows code signing is done using essentially the same certificate infrastructure as HTTPS, just with stricter requirements on issuance and management of the private keys. In principle this means you can go to your favourite SSL/TLS Certificate vendor and ask for an EV Code Signing Certificate and follow the same process regardless of which vendor you picked. **However [as of July 2023](https://knowledge.digicert.com/alerts/code-signing-changes-in-2023), all the relevant kinds of code signing certificates can only be issued via hardware security modules (HSMs) like Yubikeys.** This poses a significant challenge for CI/CD pipelines, because you can't just plug a USB key into GitHub CI.
 
@@ -41,7 +41,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     In the same "signing credentials" section as the previous step, you may want to disable the "malware blocker".
 
-    SSL.com's cloud signing provides an [optional malware checking service](https://www.ssl.com/guide/how-to-use-pre-signing-malware-scan-with-ssl-com-esigner/) which you may want to disable in your account settings. The purpose of this feature is to mitigate the risk of your infrastucture being compromised and being used to sign malware, by essentially giving SSL.com permission to refuse to sign suspicious-looking binaries.
+    SSL.com's cloud signing provides an [optional malware checking service](https://www.ssl.com/guide/how-to-use-pre-signing-malware-scan-with-ssl-com-esigner/) which you may want to disable in your account settings. The purpose of this feature is to mitigate the risk of your infrastructure being compromised and being used to sign malware, by essentially giving SSL.com permission to refuse to sign suspicious-looking binaries.
 
     When publishing from environments like GitHub CI, there isn't much room for such a compromise to occur that wouldn't just compromise your SSL.com account anyway, so the benefits are unclear compared to the risk of your releases randomly failing due to a false positive.
 
@@ -55,9 +55,9 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
     For reference, the [SSL.com documentation for their official GitHub Action](https://www.ssl.com/how-to/cloud-code-signing-integration-with-github-actions/) uses the names: ES_USERNAME, ES_PASSWORD, ES_TOTP_SECRET, and CREDENTIAL_ID for these values. The “ES” stands for “esign”. We renamed these variables to make them more specific and clear.
 
 
-### Part 2: Enable SSL.com signing with cargo-dist
+### Part 2: Enable SSL.com signing with dist
 
-1. **Configure cargo-dist to codesign**
+1. **Configure dist to codesign**
 
     Add the following to your `Cargo.toml` or `dist.toml`:
 
@@ -67,7 +67,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
     ```
 
 
-2. **Run `cargo dist init` on your project**
+2. **Run `dist init` on your project**
 
     You've already fully configured the feature, we're just ensuring your config changes are applied and checked.
 

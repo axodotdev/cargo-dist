@@ -64,7 +64,7 @@ impl ApplyLayer for CiConfigInheritable {
 #[serde(rename_all = "kebab-case")]
 pub struct CommonCiLayer {
     /// Whether we should try to merge otherwise-parallelizable tasks onto the same machine,
-    /// sacrificing latency and fault-isolation for more the sake of minor effeciency gains.
+    /// sacrificing latency and fault-isolation for more the sake of minor efficiency gains.
     ///
     /// (defaults to false)
     ///

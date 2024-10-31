@@ -369,7 +369,7 @@ where
     // Otherwise treat "is in the list" as a simple boolean
     let is_in_list = list.contains(&item);
     if is_global && !is_in_list {
-        // ... with the exception of an omited value in the global list.
+        // ... with the exception of an omitted value in the global list.
         // here None and Some(false) are the same, so Some(false) is Noise
         // we want to hide.
         None

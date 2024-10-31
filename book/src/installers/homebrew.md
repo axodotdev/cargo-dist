@@ -2,11 +2,11 @@
 
 > since 0.2.0
 
-cargo-dist can automatically build and publish [Homebrew](https://brew.sh) formulae (packages) for your application. Users can install your application with an expression like `brew install axodotdev/tap/axolotlsay` and automatically get updates whenever they update their Homebrew packages.
+dist can automatically build and publish [Homebrew](https://brew.sh) formulae (packages) for your application. Users can install your application with an expression like `brew install axodotdev/tap/axolotlsay` and automatically get updates whenever they update their Homebrew packages.
 
 The homebrew package will [fetch](../reference/artifact-url.md) your prebuilt [archives](../artifacts/archives.md), and install the contents in the traditional homebrew directory structure.
 
-*Building* a formula is pretty straight-forward, but publishing it requires you to create a your own [Homebrew tap](https://docs.brew.sh/Taps) (package repository), because [the core Homebrew tap](https://github.com/Homebrew/homebrew-core) does not accept prebuilt binaries from third parties. This sounds hard, but surprisingly it's not: you need to make a repository named "homebrew-tap" under your GitHub org or user, and get a GitHub API token to push to it. cargo-dist will manage the contents of the repo for you.
+*Building* a formula is pretty straight-forward, but publishing it requires you to create a your own [Homebrew tap](https://docs.brew.sh/Taps) (package repository), because [the core Homebrew tap](https://github.com/Homebrew/homebrew-core) does not accept prebuilt binaries from third parties. This sounds hard, but surprisingly it's not: you need to make a repository named "homebrew-tap" under your GitHub org or user, and get a GitHub API token to push to it. dist will manage the contents of the repo for you.
 
 
 ## Quickstart
@@ -20,14 +20,14 @@ To setup your homebrew installer you need to create a custom tap and enable the 
 2. Create a GitHub [personal access token](https://github.com/settings/tokens/new?scopes=repo) with the `repo` scope
 3. Add the token as a [GitHub Secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets) called `HOMEBREW_TAP_TOKEN` to the repository you want to publish **from** (`axodotdev/axolotlsay`)
 
-We recommend initializing the repository with a README, but otherwise the directory structure will be managed by cargo-dist, and many separate repos can publish to the same tap without issue.
+We recommend initializing the repository with a README, but otherwise the directory structure will be managed by dist, and many separate repos can publish to the same tap without issue.
 
 A Homebrew Tap is just a GitHub repository that starts with `homebrew-`. Many homebrew features allow that prefix to be elided, so the package `axolotlsay` published in `axodotdev/homebrew-tap`, can be installed as `axodotdev/tap/axolotlsay`. Your users don't need to "register" anything to use it, custom taps are just that builtin to Homebrew.
 
 
 ### Part 2: Enabling The Homebrew Installer
 
-1. run `cargo dist init` on your project
+1. run `dist init` on your project
 2. when prompted to pick installers, enable "homebrew"
 3. this should trigger a prompt for your tap (`axodotdev/homebrew-tap`)
 
@@ -82,7 +82,7 @@ If you want to install symlinked aliases for your binaries, you can do so with t
 
 > since 0.6.0
 
-The formulae cargo-dist builds automatically support Linux and macOS, as long as you release your application for the relevant targets.
+The formulae dist builds automatically support Linux and macOS, as long as you release your application for the relevant targets.
 
 
 ## Limitations / Caveats
