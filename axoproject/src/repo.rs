@@ -26,7 +26,7 @@ impl GithubRepo {
         "https://github.com".to_owned()
     }
 
-    /// Similar to `web_url`, but returns just the path component without the domain.
+    /// Path component. Used with `domain` to construct `web_url`.
     pub fn web_path(&self) -> String {
         format!("/{}/{}", self.owner, self.name)
     }
