@@ -23,7 +23,17 @@ set -u
 
 APP_NAME="akaikatana-repack"
 APP_VERSION="0.2.0"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0}"
+# Look for GitHub Enterprise-style base URL first
+if [ -n "${AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL:-}" ]; then
+    INSTALLER_BASE_URL="$AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL"
+else
+    INSTALLER_BASE_URL="${AKAIKATANA_REPACK_INSTALLER_GITHUB_BASE_URL:-https://github.com}"
+fi
+if [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
+    ARTIFACT_DOWNLOAD_URL="$INSTALLER_DOWNLOAD_URL"
+else
+    ARTIFACT_DOWNLOAD_URL="${INSTALLER_BASE_URL}/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
+fi
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 if [ -n "${AKAIKATANA_REPACK_NO_MODIFY_PATH:-}" ]; then
@@ -1232,7 +1242,9 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "install_dir_env_var": "AKAIKATANA_REPACK_INSTALL_DIR",
         "unmanaged_dir_env_var": "AKAIKATANA_REPACK_UNMANAGED_INSTALL",
         "disable_update_env_var": "AKAIKATANA_REPACK_DISABLE_UPDATE",
-        "no_modify_path_env_var": "AKAIKATANA_REPACK_NO_MODIFY_PATH"
+        "no_modify_path_env_var": "AKAIKATANA_REPACK_NO_MODIFY_PATH",
+        "github_base_url_env_var": "AKAIKATANA_REPACK_INSTALLER_GITHUB_BASE_URL",
+        "ghe_base_url_env_var": "AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL"
       },
       "display_name": "akaikatana-repack",
       "display": true,
@@ -1252,7 +1264,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       ],
       "hosting": {
         "github": {
-          "artifact_download_url": "https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0",
+          "artifact_base_url": "https://github.com",
+          "artifact_download_path": "/mistydemeo/akaikatana-repack/releases/download/v0.2.0",
           "owner": "mistydemeo",
           "repo": "akaikatana-repack"
         }

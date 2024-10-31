@@ -660,6 +660,8 @@ expression: json_schema
       "type": "object",
       "required": [
         "disable_update_env_var",
+        "ghe_base_url_env_var",
+        "github_base_url_env_var",
         "install_dir_env_var",
         "no_modify_path_env_var",
         "unmanaged_dir_env_var"
@@ -667,6 +669,14 @@ expression: json_schema
       "properties": {
         "disable_update_env_var": {
           "description": "Environment variable to disable updater features",
+          "type": "string"
+        },
+        "ghe_base_url_env_var": {
+          "description": "Environment variable to set the GitHub Enterprise base URL",
+          "type": "string"
+        },
+        "github_base_url_env_var": {
+          "description": "Environment variable to set the GitHub base URL",
           "type": "string"
         },
         "install_dir_env_var": {
@@ -722,13 +732,18 @@ expression: json_schema
       "description": "Github Hosting",
       "type": "object",
       "required": [
-        "artifact_download_url",
+        "artifact_base_url",
+        "artifact_download_path",
         "owner",
         "repo"
       ],
       "properties": {
-        "artifact_download_url": {
-          "description": "The URL of the Github Release's artifact downloads\n\ne.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`",
+        "artifact_base_url": {
+          "description": "The URL of the host for GitHub, usually `\"https://github.com\"` (This can vary for GitHub Enterprise)",
+          "type": "string"
+        },
+        "artifact_download_path": {
+          "description": "The path of the release without the base URL\n\ne.g. `/myowner/myrepo/releases/download/v1.0.0/`",
           "type": "string"
         },
         "owner": {

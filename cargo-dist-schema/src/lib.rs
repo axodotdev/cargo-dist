@@ -364,6 +364,10 @@ pub struct EnvironmentVariables {
     pub disable_update_env_var: String,
     /// Environment variable to disable modifying the path
     pub no_modify_path_env_var: String,
+    /// Environment variable to set the GitHub base URL
+    pub github_base_url_env_var: String,
+    /// Environment variable to set the GitHub Enterprise base URL
+    pub ghe_base_url_env_var: String,
 }
 
 /// A Release of an Application
@@ -701,12 +705,16 @@ impl DistManifest {
             let unmanaged_dir_env_var = format!("{env_app_name}_UNMANAGED_INSTALL");
             let disable_update_env_var = format!("{env_app_name}_DISABLE_UPDATE");
             let no_modify_path_env_var = format!("{env_app_name}_NO_MODIFY_PATH");
+            let github_base_url_env_var = format!("{env_app_name}_INSTALLER_GITHUB_BASE_URL");
+            let ghe_base_url_env_var = format!("{env_app_name}_INSTALLER_GHE_BASE_URL");
 
             let environment_variables = EnvironmentVariables {
                 install_dir_env_var,
                 unmanaged_dir_env_var,
                 disable_update_env_var,
                 no_modify_path_env_var,
+                github_base_url_env_var,
+                ghe_base_url_env_var,
             };
 
             self.releases.push(Release {
@@ -750,7 +758,7 @@ impl DistManifest {
 
 impl Release {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
-    pub fn artifact_download_url(&self) -> Option<&str> {
+    pub fn artifact_download_url(&self) -> Option<String> {
         self.hosting.artifact_download_url()
     }
 }
@@ -772,10 +780,13 @@ pub struct Hosting {
 /// Github Hosting
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct GithubHosting {
-    /// The URL of the Github Release's artifact downloads
+    /// The URL of the host for GitHub, usually `"https://github.com"`
+    /// (This can vary for GitHub Enterprise)
+    pub artifact_base_url: String,
+    /// The path of the release without the base URL
     ///
-    /// e.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`
-    pub artifact_download_url: String,
+    /// e.g. `/myowner/myrepo/releases/download/v1.0.0/`
+    pub artifact_download_path: String,
     /// The owner of the repo
     pub owner: String,
     /// The name of the repo
@@ -784,14 +795,17 @@ pub struct GithubHosting {
 
 impl Hosting {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
-    pub fn artifact_download_url(&self) -> Option<&str> {
+    pub fn artifact_download_url(&self) -> Option<String> {
         let Hosting { axodotdev, github } = &self;
         // Prefer axodotdev is present, otherwise github
         if let Some(host) = &axodotdev {
-            return host.set_download_url.as_deref();
+            return host.set_download_url.clone();
         }
         if let Some(host) = &github {
-            return Some(&host.artifact_download_url);
+            return Some(format!(
+                "{}{}",
+                host.artifact_base_url, host.artifact_download_path
+            ));
         }
         None
     }

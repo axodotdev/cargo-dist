@@ -247,8 +247,10 @@ pub struct DistGraph {
 pub struct HostingInfo {
     /// Hosting backends
     pub hosts: Vec<HostingStyle>,
-    /// Repo url
-    pub repo_url: String,
+    /// The domain at which the repo is hosted, (e.g. `"https://github.com"`)
+    pub domain: String,
+    /// Path at the domain
+    pub repo_path: String,
     /// Source hosting provider (e.g. "github")
     pub source_host: String,
     /// Project owner
@@ -1746,18 +1748,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .release_by_name(&release.app_name)
             .expect("couldn't find the release!?");
 
-        let env_vars = schema_release
-            .env
-            .as_ref()
-            .expect("couldn't determine app-specific environment variable!?");
-        let install_dir_env_var = env_vars.install_dir_env_var.to_owned();
-        let unmanaged_dir_env_var = env_vars.unmanaged_dir_env_var.to_owned();
-        let disable_update_env_var = env_vars.disable_update_env_var.to_owned();
-        let no_modify_path_env_var = env_vars.no_modify_path_env_var.to_owned();
+        let env_vars = schema_release.env.clone();
 
         let download_url = schema_release
             .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
+        let hosting = schema_release.hosting.clone();
         let artifact_name = format!("{release_id}-installer.sh");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
@@ -1803,6 +1799,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .collect(),
                 install_success_msg: config.install_success_msg.to_owned(),
                 base_url: download_url.to_owned(),
+                hosting,
                 artifacts,
                 hint,
                 desc,
@@ -1811,10 +1808,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: config.install_libraries.clone(),
                 runtime_conditions,
                 platform_support: None,
-                install_dir_env_var,
-                unmanaged_dir_env_var,
-                disable_update_env_var,
-                no_modify_path_env_var,
+                env_vars,
             })),
             is_global: true,
         };
@@ -1837,11 +1831,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         } else {
             &release.id
         };
-        let download_url = self
+        let schema_release = self
             .manifest
             .release_by_name(&release.id)
-            .and_then(|r| r.artifact_download_url())
+            .expect("couldn't find the release!?");
+        let download_url = schema_release
+            .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
+        let hosting = schema_release.hosting.clone();
 
         let artifact_name = format!("{formula}.rb");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
@@ -1967,6 +1964,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .collect(),
                     install_success_msg: config.install_success_msg.to_owned(),
                     base_url: download_url.to_owned(),
+                    hosting,
                     artifacts,
                     hint,
                     desc,
@@ -1976,10 +1974,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     runtime_conditions,
                     platform_support: None,
                     // Not actually needed for this installer type
-                    install_dir_env_var: String::new(),
-                    unmanaged_dir_env_var: String::new(),
-                    disable_update_env_var: String::new(),
-                    no_modify_path_env_var: String::new(),
+                    env_vars: None,
                 },
                 install_libraries: config.install_libraries.clone(),
             })),
@@ -2007,18 +2002,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .release_by_name(&release.app_name)
             .expect("couldn't find the release!?");
 
-        let env_vars = schema_release
-            .env
-            .as_ref()
-            .expect("couldn't determine app-specific environment variable!?");
-        let install_dir_env_var = env_vars.install_dir_env_var.to_owned();
-        let unmanaged_dir_env_var = env_vars.unmanaged_dir_env_var.to_owned();
-        let disable_update_env_var = env_vars.disable_update_env_var.to_owned();
-        let no_modify_path_env_var = env_vars.no_modify_path_env_var.to_owned();
+        let env_vars = schema_release.env.clone();
 
         let download_url = schema_release
             .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
+        let hosting = schema_release.hosting.clone();
         let artifact_name = format!("{release_id}-installer.ps1");
         let artifact_path = self.inner.dist_dir.join(&artifact_name);
         let installer_url = format!("{download_url}/{artifact_name}");
@@ -2060,6 +2049,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .collect(),
                 install_success_msg: config.install_success_msg.to_owned(),
                 base_url: download_url.to_owned(),
+                hosting,
                 artifacts,
                 hint,
                 desc,
@@ -2068,10 +2058,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 install_libraries: config.install_libraries.clone(),
                 runtime_conditions: RuntimeConditions::default(),
                 platform_support: None,
-                install_dir_env_var,
-                unmanaged_dir_env_var,
-                disable_update_env_var,
-                no_modify_path_env_var,
+                env_vars,
             })),
             is_global: true,
         };
@@ -2090,11 +2077,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         require_nonempty_installer(release, config)?;
         let release_id = &release.id;
-        let download_url = self
+        let schema_release = self
             .manifest
             .release_by_name(&release.app_name)
-            .and_then(|r| r.artifact_download_url())
+            .expect("couldn't find the release!?");
+        let download_url = schema_release
+            .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
+        let hosting = schema_release.hosting.clone();
 
         let app_name = config.package.clone();
         let npm_package_name = if let Some(scope) = &config.scope {
@@ -2176,6 +2166,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .collect(),
                     install_success_msg: config.install_success_msg.to_owned(),
                     base_url: download_url.to_owned(),
+                    hosting,
                     artifacts,
                     hint,
                     desc,
@@ -2185,10 +2176,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     runtime_conditions,
                     platform_support: None,
                     // Not actually needed for this installer type
-                    install_dir_env_var: String::new(),
-                    unmanaged_dir_env_var: String::new(),
-                    disable_update_env_var: String::new(),
-                    no_modify_path_env_var: String::new(),
+                    env_vars: None,
                 },
             })),
             is_global: true,
