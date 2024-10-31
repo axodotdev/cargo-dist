@@ -249,8 +249,6 @@ pub struct HostingInfo {
     pub hosts: Vec<HostingStyle>,
     /// The domain at which the repo is hosted, (e.g. `"https://github.com"`)
     pub domain: String,
-    /// Repo url
-    pub repo_url: String,
     /// Path at the domain
     pub repo_path: String,
     /// Source hosting provider (e.g. "github")

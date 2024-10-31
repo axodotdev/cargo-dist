@@ -3322,7 +3322,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "github": {
           "artifact_base_url": "https://github.com",
           "artifact_download_path": "/axodotdev/axolotlsay/releases/download/v0.2.2",
-          "artifact_download_url": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2",
           "owner": "axodotdev",
           "repo": "axolotlsay"
         }

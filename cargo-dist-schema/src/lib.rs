@@ -758,7 +758,7 @@ impl DistManifest {
 
 impl Release {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
-    pub fn artifact_download_url(&self) -> Option<&str> {
+    pub fn artifact_download_url(&self) -> Option<String> {
         self.hosting.artifact_download_url()
     }
 }
@@ -787,10 +787,6 @@ pub struct GithubHosting {
     ///
     /// e.g. `/myowner/myrepo/releases/download/v1.0.0/`
     pub artifact_download_path: String,
-    /// The URL of the GitHub Release's artifact downloads
-    ///
-    /// e.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`
-    pub artifact_download_url: String,
     /// The owner of the repo
     pub owner: String,
     /// The name of the repo
@@ -799,14 +795,17 @@ pub struct GithubHosting {
 
 impl Hosting {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
-    pub fn artifact_download_url(&self) -> Option<&str> {
+    pub fn artifact_download_url(&self) -> Option<String> {
         let Hosting { axodotdev, github } = &self;
         // Prefer axodotdev is present, otherwise github
         if let Some(host) = &axodotdev {
-            return host.set_download_url.as_deref();
+            return host.set_download_url.clone();
         }
         if let Some(host) = &github {
-            return Some(&host.artifact_download_url);
+            return Some(format!(
+                "{}{}",
+                host.artifact_base_url, host.artifact_download_path
+            ));
         }
         None
     }

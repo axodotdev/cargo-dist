@@ -734,7 +734,6 @@ expression: json_schema
       "required": [
         "artifact_base_url",
         "artifact_download_path",
-        "artifact_download_url",
         "owner",
         "repo"
       ],
@@ -745,10 +744,6 @@ expression: json_schema
         },
         "artifact_download_path": {
           "description": "The path of the release without the base URL\n\ne.g. `/myowner/myrepo/releases/download/v1.0.0/`",
-          "type": "string"
-        },
-        "artifact_download_url": {
-          "description": "The URL of the GitHub Release's artifact downloads\n\ne.g. `https://github.com/myowner/myrepo/releases/download/v1.0.0/`",
           "type": "string"
         },
         "owner": {
