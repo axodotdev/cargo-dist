@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
+snapshot_kind: text
 ---
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -407,7 +408,7 @@ select_archive_for_arch() {
             ;;
         "x86_64-unknown-linux-gnu")
             _archive="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
-            if ! check_glibc "2" "31"; then
+            if ! check_glibc "2" "18"; then
                 _archive=""
             fi
             if [ -n "$_archive" ]; then
@@ -3146,7 +3147,7 @@ install(false);
   },
   "glibcMinimum": {
     "major": 2,
-    "series": 31
+    "series": 18
   },
   "homepage": "https://github.com/axodotdev/axolotlsay",
   "license": "MIT OR Apache-2.0",
