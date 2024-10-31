@@ -81,6 +81,44 @@ skip this setup step.
     will modify this environment variable to ensure that all installed
     applications are immediately available on PATH.
 
+## Artifact location
+
+> since 0.25.0
+
+Some folks, particularly those working in security-sensitive business environments,
+may need to mirror artifacts within a private network. `dist` enables this usecase
+by allowing end users to customize the URL that artifacts are fetched from:
+
+- `${app name}_GITHUB_INSTALLER_BASE_URL`
+- `${app name}_GHE_INSTALLER_BASE_URL`
+
+> Replace `{app name}` with the name of the application. To transform the
+> app name to the env var, replace any spaces or hyphens with an underscore
+> and then put it in all caps. You can double check this transform by
+> comparing the `install_dir_env_var` value in your `dist-manifest.json`.
+
+These environment variables enable you to specify both a base URL and a URL
+structure to the installer and updater of a project that distributes with `dist`.
+When set, installers will fetch from URL constructed based on the value you set
+here.
+
+When setting up your mirror you'll need to both mirror the artifacts *and* provide
+an endpoint that indexes the available releases (so that the updater can work).
+
+To minimize complexity for both us and our end users, we have standardized our
+requested API structure expectations to match either:
+
+- Github.com, or
+    - Public artifact URLs: https://{CUSTOM}/owner/repo/releases/download/version/artifact-name
+    - Releases API: https://api.{CUSTOM}/repos/owner/repo/releases/latest ([docs](https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28))
+- Github Enterprise
+    - Public artifact URLs: https://{CUSTOM}/owner/repo/releases/download/version/artifact-name
+    - Releases API: https://{CUSTOM}/api/v3/repos/owner/repo/releases/latest ([docs](https://docs.github.com/en/enterprise-server@3.14/rest/releases/releases?apiVersion=2022-11-28))
+
+`dist` is eager to support enterprise level features like this- so if you have questions
+or related feature requests, please join our [Discord](https://discord.gg/XAFG6xSZ) or send
+us an email at hello@axo.dev.
+
 ## Receipt
 
 > since 0.9.0
