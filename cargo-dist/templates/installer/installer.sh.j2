@@ -18,20 +18,34 @@ set -u
 
 APP_NAME="{{ app_name }}"
 APP_VERSION="{{ app_version }}"
+{%- if hosting.axodotdev %}
 ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-{{ base_url }}}"
+{% else %}
+# Look for GitHub Enterprise-style base URL first
+if [ -n "{{ '${' }}{{ env_vars.ghe_base_url_env_var }}:-}" ]; then
+    INSTALLER_BASE_URL="${{ env_vars.ghe_base_url_env_var }}"
+else
+    INSTALLER_BASE_URL="{{ '${' }}{{ env_vars.github_base_url_env_var }}:-{{ hosting.github.artifact_base_url }}}"
+fi
+if [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
+    ARTIFACT_DOWNLOAD_URL="$INSTALLER_DOWNLOAD_URL"
+else
+    ARTIFACT_DOWNLOAD_URL="${INSTALLER_BASE_URL}{{ hosting.github.artifact_download_path }}"
+fi
+{%- endif %}
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
-if [ -n "{{ '${' }}{{ no_modify_path_env_var }}:-}" ]; then
-    NO_MODIFY_PATH="${{ no_modify_path_env_var }}"
+if [ -n "{{ '${' }}{{ env_vars.no_modify_path_env_var }}:-}" ]; then
+    NO_MODIFY_PATH="${{ env_vars.no_modify_path_env_var }}"
 else
     NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
 fi
-if [ "{{ '${' }}{{ disable_update_env_var }}:-0}" = "1" ]; then
+if [ "{{ '${' }}{{ env_vars.disable_update_env_var }}:-0}" = "1" ]; then
     INSTALL_UPDATER=0
 else
     INSTALL_UPDATER=1
 fi
-UNMANAGED_INSTALL="{{ '${' }}{{ unmanaged_dir_env_var }}:-}"
+UNMANAGED_INSTALL="{{ '${' }}{{ env_vars.unmanaged_dir_env_var }}:-}"
 if [ -n "${UNMANAGED_INSTALL}" ]; then
     NO_MODIFY_PATH=1
     INSTALL_UPDATER=0
@@ -108,7 +122,7 @@ download_binary_and_run_installer() {
                 PRINT_VERBOSE=1
                 ;;
             --no-modify-path)
-                say "--no-modify-path has been deprecated; please set {{ no_modify_path_env_var }}=1 in the environment"
+                say "--no-modify-path has been deprecated; please set {{ env_vars.no_modify_path_env_var }}=1 in the environment"
                 NO_MODIFY_PATH=1
                 ;;
             *)
@@ -421,8 +435,8 @@ install() {
 
     # Check the newer app-specific variable before falling back
     # to the older generic one
-    if [ -n "{{ '${' }}{{ install_dir_env_var }}:-}" ]; then
-        _force_install_dir="${{ install_dir_env_var }}"
+    if [ -n "{{ '${' }}{{ env_vars.install_dir_env_var }}:-}" ]; then
+        _force_install_dir="${{ env_vars.install_dir_env_var }}"
         _install_layout={%- if install_paths | selectattr("kind", "equalto", "CargoHome") -%} "cargo-home" {%- else -%} "flat" {%- endif %}
     elif [ -n "${CARGO_DIST_FORCE_INSTALL_DIR:-}" ]; then
         _force_install_dir="$CARGO_DIST_FORCE_INSTALL_DIR"

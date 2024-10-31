@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TargetTriple;
+use cargo_dist_schema::{EnvironmentVariables, Hosting, TargetTriple};
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
 
@@ -58,6 +58,8 @@ pub struct InstallerInfo {
     pub app_version: String,
     /// URL of the directory where artifacts can be fetched from
     pub base_url: String,
+    /// Full information about configured hosting
+    pub hosting: Hosting,
     /// Artifacts this installer can fetch
     pub artifacts: Vec<ExecutableZipFragment>,
     /// Description of the installer (a good heading)
@@ -78,14 +80,8 @@ pub struct InstallerInfo {
     pub runtime_conditions: RuntimeConditions,
     /// platform support matrix
     pub platform_support: Option<PlatformSupport>,
-    /// Environment variable to force an install location
-    pub install_dir_env_var: String,
-    /// Like the above, but for unmanaged installs
-    pub unmanaged_dir_env_var: String,
-    /// Environment variable to disable self-update features
-    pub disable_update_env_var: String,
-    /// Environment variable to disable modifying the path
-    pub no_modify_path_env_var: String,
+    /// Environment variables for installer customization
+    pub env_vars: Option<EnvironmentVariables>,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

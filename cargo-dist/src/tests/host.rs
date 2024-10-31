@@ -41,7 +41,6 @@ fn github_simple() {
     let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
 
     let hosting = hosting.unwrap().unwrap();
-    assert_eq!(hosting.repo_url, REPO_URL);
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
     assert_eq!(hosting.owner, REPO_OWNER);
     assert_eq!(hosting.project, REPO_PROJECT);
@@ -59,7 +58,6 @@ fn github_and_axo_simple() {
     let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
 
     let hosting = hosting.unwrap().unwrap();
-    assert_eq!(hosting.repo_url, REPO_URL);
     assert_eq!(
         hosting.hosts,
         &[HostingStyle::Github, HostingStyle::Axodotdev]
@@ -80,7 +78,6 @@ fn github_implicit() {
     let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
 
     let hosting = hosting.unwrap().unwrap();
-    assert_eq!(hosting.repo_url, REPO_URL);
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
     assert_eq!(hosting.owner, REPO_OWNER);
     assert_eq!(hosting.project, REPO_PROJECT);
@@ -106,7 +103,6 @@ fn github_diff_repository_on_non_distables() {
     let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
 
     let hosting = hosting.unwrap().unwrap();
-    assert_eq!(hosting.repo_url, REPO_URL);
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
     assert_eq!(hosting.owner, REPO_OWNER);
     assert_eq!(hosting.project, REPO_PROJECT);
@@ -236,7 +232,6 @@ fn github_dot_git() {
     let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
 
     let hosting = hosting.unwrap().unwrap();
-    assert_eq!(hosting.repo_url, REPO_URL);
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
     assert_eq!(hosting.owner, REPO_OWNER);
     assert_eq!(hosting.project, REPO_PROJECT);
@@ -262,7 +257,6 @@ fn github_trail_slash() {
     let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
 
     let hosting = hosting.unwrap().unwrap();
-    assert_eq!(hosting.repo_url, REPO_URL);
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
     assert_eq!(hosting.owner, REPO_OWNER);
     assert_eq!(hosting.project, REPO_PROJECT);

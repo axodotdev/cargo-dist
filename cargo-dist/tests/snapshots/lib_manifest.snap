@@ -19,13 +19,16 @@ stdout:
         "install_dir_env_var": "CARGO_DIST_SCHEMA_INSTALL_DIR",
         "unmanaged_dir_env_var": "CARGO_DIST_SCHEMA_UNMANAGED_INSTALL",
         "disable_update_env_var": "CARGO_DIST_SCHEMA_DISABLE_UPDATE",
-        "no_modify_path_env_var": "CARGO_DIST_SCHEMA_NO_MODIFY_PATH"
+        "no_modify_path_env_var": "CARGO_DIST_SCHEMA_NO_MODIFY_PATH",
+        "github_base_url_env_var": "CARGO_DIST_SCHEMA_INSTALLER_GITHUB_BASE_URL",
+        "ghe_base_url_env_var": "CARGO_DIST_SCHEMA_INSTALLER_GHE_BASE_URL"
       },
       "display_name": "cargo-dist-schema",
       "display": true,
       "hosting": {
         "github": {
-          "artifact_download_url": "https://github.com/axodotdev/cargo-dist/releases/download/cargo-dist-schema-v1.0.0-FAKEVERSION",
+          "artifact_base_url": "https://github.com",
+          "artifact_download_path": "/axodotdev/cargo-dist/releases/download/cargo-dist-schema-v1.0.0-FAKEVERSION",
           "owner": "axodotdev",
           "repo": "cargo-dist"
         },

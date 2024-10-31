@@ -21,7 +21,9 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "install_dir_env_var": "AXOLOTLSAY_INSTALL_DIR",
         "unmanaged_dir_env_var": "AXOLOTLSAY_UNMANAGED_INSTALL",
         "disable_update_env_var": "AXOLOTLSAY_DISABLE_UPDATE",
-        "no_modify_path_env_var": "AXOLOTLSAY_NO_MODIFY_PATH"
+        "no_modify_path_env_var": "AXOLOTLSAY_NO_MODIFY_PATH",
+        "github_base_url_env_var": "AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL",
+        "ghe_base_url_env_var": "AXOLOTLSAY_INSTALLER_GHE_BASE_URL"
       },
       "display_name": "axolotlsay",
       "display": true,

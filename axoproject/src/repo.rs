@@ -20,9 +20,20 @@ pub struct GithubRepo {
 }
 
 impl GithubRepo {
+    /// Returns the domain. At the moment this is hardcoded to github.com, but
+    /// it may support more options in the future.
+    pub fn domain(&self) -> String {
+        "https://github.com".to_owned()
+    }
+
+    /// Path component. Used with `domain` to construct `web_url`.
+    pub fn web_path(&self) -> String {
+        format!("/{}/{}", self.owner, self.name)
+    }
+
     /// Returns a URL suitable for web access to the repository.
     pub fn web_url(&self) -> String {
-        format!("https://github.com/{}/{}", self.owner, self.name)
+        format!("{}{}", self.domain(), self.web_path())
     }
 
     /// Constructs a new Github repository from a "owner/name" string. Notably, this does not check
