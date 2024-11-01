@@ -420,6 +420,7 @@ fn get_new_dist_metadata(
             github_build_setup: None,
             mac_pkg_config: None,
             minimum_glibc_version: None,
+            cargo_auditable: None,
         }
     };
 
@@ -894,6 +895,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         install_libraries,
         mac_pkg_config,
         minimum_glibc_version,
+        cargo_auditable,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -1299,6 +1301,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "minimum-glibc-version",
         "# The minimum glibc version supported by the package (overrides auto-detection)\n",
         minimum_glibc_version.as_ref().map(|v| v.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "cargo-auditable",
+        "# Whether to embed dependency information using cargo-auditable\n",
+        *cargo_auditable,
     );
 
     // Finalize the table

@@ -83,6 +83,7 @@ impl DistMetadata {
             install_libraries,
             github_build_setup,
             minimum_glibc_version,
+            cargo_auditable,
         } = self.clone();
 
         // Archives
@@ -114,7 +115,8 @@ impl DistMetadata {
             || precise_builds.is_some()
             || features.is_some()
             || default_features.is_some()
-            || all_features.is_some();
+            || all_features.is_some()
+            || cargo_auditable.is_some();
         let cargo_layer = needs_cargo_build_layer.then_some(BoolOr::Val(CargoBuildLayer {
             common: CommonBuildLayer::default(),
             rust_toolchain_version,
@@ -123,6 +125,7 @@ impl DistMetadata {
             default_features,
             all_features,
             msvc_crt_static,
+            cargo_auditable,
         }));
         let needs_build_layer = cargo_layer.is_some()
             || system_dependencies.is_some()

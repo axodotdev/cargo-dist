@@ -442,6 +442,11 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub minimum_glibc_version: Option<LibcVersion>,
+
+    /// Whether to embed dependency information in the executable.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub cargo_auditable: Option<bool>,
 }
 
 impl DistMetadata {
@@ -511,6 +516,7 @@ impl DistMetadata {
             github_build_setup: _,
             mac_pkg_config: _,
             minimum_glibc_version: _,
+            cargo_auditable: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -608,6 +614,7 @@ impl DistMetadata {
             github_build_setup,
             mac_pkg_config,
             minimum_glibc_version,
+            cargo_auditable,
         } = self;
 
         // Check for global settings on local packages
@@ -794,6 +801,9 @@ impl DistMetadata {
         }
         if minimum_glibc_version.is_none() {
             minimum_glibc_version.clone_from(&workspace_config.minimum_glibc_version);
+        }
+        if cargo_auditable.is_none() {
+            cargo_auditable.clone_from(&workspace_config.cargo_auditable);
         }
 
         // This was historically implemented as extend, but I'm not convinced the
