@@ -2,6 +2,29 @@
 
 Nothing Yet!
 
+# Version 0.25.0 (2024-11-01)
+
+This release contains a few new features for further customizing the installer experience, both as a packager and the end user.
+
+## Artifact location installer customization
+
+We now provide two new environment variables making it possible to customize just the base URL for fetching installers. Previously, the only customization for overriding the install URL overrode the full URL, including version-specific paths, which made it difficult to use for users who were proxying or mirroring GitHub paths. These new variables are branded with your app's name. For example:
+
+* `{app_name}_INSTALLER_GITHUB_BASE_URL`
+* `{app_name}_INSTALLER_GHE_BASE_URL`
+
+These two variables will also be supported by a new version of axoupdater in order to allow overriding the GitHub API URL. Thank you to user @gaborbernat for inspiring this change and writing the axoupdater side!
+
+- impl @mistydemeo [feat: allow installer domain to be overridden](feat: allow installer domain to be overridden)
+
+You can learn more about this feature in the [artifact location installer usage documentation](https://opensource.axo.dev/cargo-dist/book/installers/usage.html#artifact-location).
+
+## Default glibc version override
+
+Ordinarily, dist automatically detects the version of glibc used by your `linux-gnu` builds and uses this in the installers to detect if the end user's system will be compatible. In certain specific build environments, this autodetection isn't possible, so we've introduced a feature allowing the glibc version to be manually specified in the dist configuration. If provided, this replaces the fallback version that would otherwise be used.
+
+- impl @duckinator [Allow overriding minimum supported glibc version.](https://github.com/axodotdev/cargo-dist/pull/1496)
+
 # Version 0.24.1 (2024-10-29)
 
 Loosens the "cargo is broken" error reporting condition, letting us be more
