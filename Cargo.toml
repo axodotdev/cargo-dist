@@ -33,7 +33,7 @@ console = { version = "0.15.8" }
 clap-cargo = { version = "0.14.0" }
 comfy-table = "7.1.1"
 miette = { version = "7.2.0" }
-thiserror = "1.0.65"
+thiserror = "1.0.66"
 tracing = { version = "0.1.36", features = ["log"] }
 serde = { version = "1.0.214", features = ["derive"] }
 serde_json = { version = "1.0.132" }
