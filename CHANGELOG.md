@@ -2,7 +2,7 @@
 
 Nothing Yet!
 
-# Version 0.25.0 (2024-11-01)
+# Version 0.25.1 (2024-11-01)
 
 This release contains a few new features for further customizing the installer experience, both as a packager and the end user.
 
