@@ -181,6 +181,12 @@ pub fn build_cargo_target(
     }
 
     let mut command = Cmd::new(&cargo.cmd, "build your app with Cargo");
+
+    if dist_graph.config.builds.cargo.cargo_auditable {
+        eprint!(" auditable");
+        command.arg("auditable");
+    }
+
     command
         .arg("build")
         .arg("--profile")
