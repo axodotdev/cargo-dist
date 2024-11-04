@@ -156,33 +156,15 @@ impl<'a> DistGraphBuilder<'a> {
     }
 }
 
-/// Build a cargo target
-pub fn build_cargo_target(
-    dist_graph: &DistGraph,
-    manifest: &mut DistManifest,
+fn make_build_cargo_target_command(
+    cargo_cmd: &String,
+    rustflags: &String,
     target: &CargoBuildStep,
-) -> DistResult<()> {
-    let cargo = dist_graph.tools.cargo()?;
+    auditable: bool,
+) -> Cmd {
+    let mut command = Cmd::new(cargo_cmd, "build your app with Cargo");
 
-    eprint!(
-        "building cargo target ({}/{}",
-        target.target_triple, target.profile
-    );
-
-    let mut rustflags = target.rustflags.clone();
-    let mut desired_extra_env = vec![];
-    let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
-    if !skip_brewfile {
-        if let Some(env_output) = fetch_brew_env(dist_graph, &target.working_dir)? {
-            let brew_env = parse_env(&env_output)?;
-            desired_extra_env = select_brew_env(&brew_env);
-            rustflags = determine_brew_rustflags(&rustflags, &brew_env);
-        }
-    }
-
-    let mut command = Cmd::new(&cargo.cmd, "build your app with Cargo");
-
-    if dist_graph.config.builds.cargo.cargo_auditable {
+    if auditable {
         eprint!(" auditable");
         command.arg("auditable");
     }
@@ -194,7 +176,7 @@ pub fn build_cargo_target(
         .arg("--message-format=json-render-diagnostics")
         .arg("--target")
         .arg(target.target_triple.as_str())
-        .env("RUSTFLAGS", &rustflags)
+        .env("RUSTFLAGS", rustflags)
         .current_dir(&target.working_dir)
         .stdout(std::process::Stdio::piped());
     if !target.features.default_features {
@@ -225,6 +207,37 @@ pub fn build_cargo_target(
             eprintln!(" --package={})", package);
         }
     }
+
+    command
+}
+
+/// Build a cargo target
+pub fn build_cargo_target(
+    dist_graph: &DistGraph,
+    manifest: &mut DistManifest,
+    target: &CargoBuildStep,
+) -> DistResult<()> {
+    let cargo = dist_graph.tools.cargo()?;
+
+    eprint!(
+        "building cargo target ({}/{}",
+        target.target_triple, target.profile
+    );
+
+    let mut rustflags = target.rustflags.clone();
+    let mut desired_extra_env = vec![];
+    let skip_brewfile = env::var("DO_NOT_USE_BREWFILE").is_ok();
+    if !skip_brewfile {
+        if let Some(env_output) = fetch_brew_env(dist_graph, &target.working_dir)? {
+            let brew_env = parse_env(&env_output)?;
+            desired_extra_env = select_brew_env(&brew_env);
+            rustflags = determine_brew_rustflags(&rustflags, &brew_env);
+        }
+    }
+
+    let auditable = dist_graph.config.builds.cargo.cargo_auditable;
+    let mut command = make_build_cargo_target_command(&cargo.cmd, &rustflags, target, auditable);
+
     // If we generated any extra environment variables to
     // inject into the environment, apply them now.
     command.envs(desired_extra_env);
@@ -279,4 +292,70 @@ pub fn rustup_toolchain(dist_graph: &DistGraph, cmd: &RustupStep) -> DistResult<
 /// each package's prefix.
 fn determine_brew_rustflags(base_rustflags: &str, environment: &SortedMap<&str, &str>) -> String {
     format!("{base_rustflags} {}", calculate_ldflags(environment))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::make_build_cargo_target_command;
+    use crate::tasks::{CargoTargetFeatureList, CargoTargetFeatures, CargoTargetPackages};
+    use crate::{CargoBuildStep, TargetTriple};
+
+    #[test]
+    fn build_command_not_auditable() {
+        let cargo_cmd = "cargo".to_string();
+        let rustflags = "--some-rust-flag".to_string();
+        let auditable = false;
+
+        let features = CargoTargetFeatures {
+            default_features: true,
+            features: CargoTargetFeatureList::default(),
+        };
+        let target = CargoBuildStep {
+            expected_binaries: vec![],
+            features: features,
+            package: CargoTargetPackages::Workspace,
+            profile: "release".to_string(),
+            rustflags: "--this-rust-flag-gets-ignored".to_string(),
+            target_triple: TargetTriple::new("x86_64-unknown-linux-gnu".to_string()),
+            working_dir: ".".to_string().into(), // this feels mildly cursed -duckinator.
+        };
+
+        let cmd = make_build_cargo_target_command(&cargo_cmd, &rustflags, &target, auditable);
+
+        let mut args = cmd.inner.get_args();
+
+        let arg1 = args.next().unwrap().to_str().unwrap();
+        assert_eq!(arg1, "build");
+    }
+
+    #[test]
+    fn build_command_auditable() {
+        let cargo_cmd = "cargo".to_string();
+        let rustflags = "--some-rust-flag".to_string();
+        let auditable = true;
+
+        let features = CargoTargetFeatures {
+            default_features: true,
+            features: CargoTargetFeatureList::default(),
+        };
+        let target = CargoBuildStep {
+            expected_binaries: vec![],
+            features: features,
+            package: CargoTargetPackages::Workspace,
+            profile: "release".to_string(),
+            rustflags: "--this-rust-flag-gets-ignored".to_string(),
+            target_triple: TargetTriple::new("x86_64-unknown-linux-gnu".to_string()),
+            working_dir: ".".to_string().into(), // this feels mildly cursed -duckinator.
+        };
+
+        let cmd = make_build_cargo_target_command(&cargo_cmd, &rustflags, &target, auditable);
+
+        let mut args = cmd.inner.get_args();
+
+        let arg1 = args.next().unwrap().to_str().unwrap();
+        assert_eq!(arg1, "auditable");
+
+        let arg2 = args.next().unwrap().to_str().unwrap();
+        assert_eq!(arg2, "build");
+    }
 }
