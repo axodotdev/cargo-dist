@@ -12,7 +12,7 @@ const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/relea
 
 // NOTE: This is hard-coded to download latest.
 const BASE_CARGO_AUDITABLE_FETCH_LATEST_URL: &str =
-    "https://github.com/rust-secure-code/cargo-auditable/releases/download";
+    "https://github.com/rust-secure-code/cargo-auditable/releases/latest/download";
 
 /// Info about all the enabled CI backends
 #[derive(Debug, Default)]
