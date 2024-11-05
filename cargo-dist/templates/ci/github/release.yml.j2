@@ -133,13 +133,6 @@ jobs:
         with:
           name: cargo-dist-cache
           path: ~/.cargo/bin/dist
-      {{%- if need_cargo_auditable %}}
-      - name: Install cargo-auditable
-        # we specify bash to get pipefail; it guards against the `curl` command
-        # failing. otherwise `sh` won't catch that `curl` return non-0
-        run: {{{ install_cargo_auditable_sh }}}
-        shell: bash
-      {{%- endif %}}
       # sure would be cool if github gave us proper conditionals...
       # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
       # functionality based on whether this is a pull_request, and whether it's from a fork.
@@ -299,6 +292,13 @@ jobs:
           pattern: artifacts-*
           path: target/distrib/
           merge-multiple: true
+      {{%- if need_cargo_auditable %}}
+      - name: Install cargo-auditable
+        # we specify bash to get pipefail; it guards against the `curl` command
+        # failing. otherwise `sh` won't catch that `curl` return non-0
+        run: ${{ matrix.install_cargo_auditable }}
+        shell: bash
+      {{%- endif %}}
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
