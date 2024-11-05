@@ -11,7 +11,8 @@ const SELF_DIST_VERSION: &str = env!("CARGO_PKG_VERSION");
 const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/releases/download";
 
 // NOTE: This is hard-coded to download latest.
-const BASE_CARGO_AUDITABLE_FETCH_LATEST_URL: &str = "https://github.com/rust-secure-code/cargo-auditable/releases/download";
+const BASE_CARGO_AUDITABLE_FETCH_LATEST_URL: &str =
+    "https://github.com/rust-secure-code/cargo-auditable/releases/download";
 
 /// Info about all the enabled CI backends
 #[derive(Debug, Default)]
@@ -72,12 +73,14 @@ fn install_dist_git(version: &Version) -> Option<String> {
 
 /// Get the command to invoke to install cargo-auditable via sh script
 fn install_cargo_auditable_sh_latest() -> String {
-    let installer_url = format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.sh");
+    let installer_url =
+        format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.sh");
     format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh")
 }
 
 /// Get the command to invoke to install cargo-auditable via ps1 script
 fn install_cargo_auditable_ps1_latest() -> String {
-    let installer_url = format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.ps1");
+    let installer_url =
+        format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.ps1");
     format!(r#"powershell -c "irm {installer_url} | iex""#)
 }
