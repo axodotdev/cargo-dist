@@ -156,6 +156,8 @@ impl<'a> DistGraphBuilder<'a> {
     }
 }
 
+// This function was split out of build_cargo_target() so it can have unit
+// tests on its own.
 fn make_build_cargo_target_command(
     cargo_cmd: &String,
     rustflags: &String,
@@ -165,7 +167,6 @@ fn make_build_cargo_target_command(
     let mut command = Cmd::new(cargo_cmd, "build your app with Cargo");
 
     if auditable {
-        eprint!(" auditable");
         command.arg("auditable");
     }
 
