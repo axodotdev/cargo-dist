@@ -313,8 +313,11 @@ impl GithubCiInfo {
             use std::fmt::Write;
             let install_dist =
                 install_dist_for_targets(&targets, &install_dist_sh, &install_dist_ps1);
-            let install_cargo_auditable =
-                install_dist_for_targets(&targets, &install_cargo_auditable_sh, &install_cargo_auditable_ps1);
+            let install_cargo_auditable = install_dist_for_targets(
+                &targets,
+                &install_cargo_auditable_sh,
+                &install_cargo_auditable_ps1,
+            );
             let mut dist_args = String::from("--artifacts=local");
             for target in &targets {
                 write!(dist_args, " --target={target}").unwrap();

@@ -312,7 +312,7 @@ mod tests {
         };
         let target = CargoBuildStep {
             expected_binaries: vec![],
-            features: features,
+            features,
             package: CargoTargetPackages::Workspace,
             profile: "release".to_string(),
             rustflags: "--this-rust-flag-gets-ignored".to_string(),
@@ -340,7 +340,7 @@ mod tests {
         };
         let target = CargoBuildStep {
             expected_binaries: vec![],
-            features: features,
+            features,
             package: CargoTargetPackages::Workspace,
             profile: "release".to_string(),
             rustflags: "--this-rust-flag-gets-ignored".to_string(),
