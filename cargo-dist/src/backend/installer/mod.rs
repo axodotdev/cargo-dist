@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{EnvironmentVariables, Hosting, TargetTriple};
+use homebrew::HomebrewFragments;
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
 
@@ -37,11 +38,21 @@ pub enum InstallerImpl {
     /// npm installer package
     Npm(NpmInstallerInfo),
     /// Homebrew formula
-    Homebrew(HomebrewInstallerInfo),
+    Homebrew(HomebrewImpl),
     /// Windows msi installer
     Msi(MsiInstallerInfo),
     /// Mac pkg installer
     Pkg(PkgInstallerInfo),
+}
+
+/// Information needed to make a homebrew installer
+#[derive(Debug, Clone)]
+pub struct HomebrewImpl {
+    /// Base information
+    pub info: HomebrewInstallerInfo,
+
+    /// Various fragments (arm64 mac, x86_64 mac, arm64 linux, x86_64 linux, etc.)
+    pub fragments: HomebrewFragments<ExecutableZipFragment>,
 }
 
 /// Generic info about an installer

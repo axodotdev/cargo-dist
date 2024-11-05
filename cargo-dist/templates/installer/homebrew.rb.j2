@@ -1,70 +1,56 @@
 class {{ formula_class }} < Formula
-  {%- if desc %}
   desc "{{ desc }}"
-  {%- endif %}
   {%- if homepage %}
   homepage "{{ homepage }}"
   {%- endif %}
   version "{{ inner.app_version }}"
-  {#- #}
-  {%- if arm64_macos.id or x86_64_macos.id %}
-  if OS.mac?
-    {#- If arm64/x86_64 builds are the same, skip the Hardware::CPU.type if statement #}
-    {%- if arm64_macos.id == x86_64_macos.id %}
-    url "{{ inner.base_url }}/{{ arm64_macos.id }}"
-    {%- if arm64_macos_sha256 %}
-    sha256 "{{ arm64_macos_sha256 }}"
-    {%- endif %}
+
+  {#- note: this is a jinja2 macro: <https://jinja.palletsprojects.com/en/stable/templates/#macros>  #}
+  {%- macro fragment_url_and_hash(frag, cond) %}
+  {%- if frag %}
+    {%- if cond is defined %}
+    if {{ cond }}
+      url "{{ inner.base_url }}/{{ frag.id }}"
+      {%- if frag.sha256 %}
+      sha256 "{{ frag.sha256 }}"
+      {%- endif %}
+    end
     {%- else %}
-    {%- if arm64_macos.id %}
-    if Hardware::CPU.arm?
-      url "{{ inner.base_url }}/{{ arm64_macos.id }}"
-      {%- if arm64_macos_sha256 %}
-      sha256 "{{ arm64_macos_sha256 }}"
-      {%- endif %}
-    end
-    {%- endif %}
-    {%- if x86_64_macos.id %}
-    if Hardware::CPU.intel?
-      url "{{ inner.base_url }}/{{ x86_64_macos.id }}"
-      {%- if x86_64_macos_sha256 %}
-      sha256 "{{ x86_64_macos_sha256 }}"
-      {%- endif %}
-    end
+    url "{{ inner.base_url }}/{{ frag.id }}"
+    {%- if frag.sha256 %}
+    sha256 "{{ frag.sha256 }}"
     {%- endif %}
     {%- endif %}
+  {%- endif %}
+  {%- endmacro %}
+
+  {%- if arm64_macos or x86_64_macos %}
+  if OS.mac?
+  {%- if arm64_macos and x86_64_macos and arm64_macos.id == x86_64_macos.id %}
+    {{- fragment_url_and_hash(arm64_macos) }}
+  {%- else %}
+    {{- fragment_url_and_hash(arm64_macos, "Hardware::CPU.arm?") }}
+    {{- fragment_url_and_hash(x86_64_macos, "Hardware::CPU.intel?") }}
+  {%- endif %}
   end
   {%- endif %}
-  {#- #}
-  {%- if arm64_linux.id or x86_64_linux.id %}
+  {%- if arm64_linux or x86_64_linux %}
   if OS.linux?
-    {%- if arm64_linux.id %}
-    if Hardware::CPU.arm?
-      url "{{ inner.base_url }}/{{ arm64_linux.id }}"
-      {%- if arm64_linux %}
-      sha256 "{{ arm64_linux_sha256 }}"
-      {%- endif %}
-    end
-    {%- endif %}
-    {%- if x86_64_linux.id %}
-    if Hardware::CPU.intel?
-      url "{{ inner.base_url }}/{{ x86_64_linux.id }}"
-      {%- if x86_64_linux_sha256 %}
-      sha256 "{{ x86_64_linux_sha256 }}"
-      {%- endif %}
-    end
-    {%- endif %}
+  {%- if arm64_linux and x86_64_linux and arm64_linux.id == x86_64_linux.id %}
+    {{- fragment_url_and_hash(arm64_linux) }}
+  {%- else %}
+    {{- fragment_url_and_hash(arm64_linux, "Hardware::CPU.arm?") }}
+    {{- fragment_url_and_hash(x86_64_linux, "Hardware::CPU.intel?") }}
+  {%- endif %}
   end
   {%- endif %}
-  {#- #}
+
   {%- if license %}
   license {{ license }}
-  {%- endif %}
-  {%- if dependencies|length > 0 %}
+  {%- endif -%}
   {% for dep in dependencies %}
   depends_on "{{ dep }}"
   {%- endfor %}
-  {%- endif %}
 
   BINARY_ALIASES = {{ inner.bin_aliases | tojson(indent=2) | indent(2) }}
 
@@ -84,58 +70,26 @@ class {{ formula_class }} < Formula
   end
 
   def install
-    {%- if arm64_macos.executables or arm64_macos.cdylibs %}
-    if OS.mac? && Hardware::CPU.arm?
-      {%- if arm64_macos.executables %}
-      bin.install {% for binary in arm64_macos.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
+    {%- macro install_fragment(frag, cond) %}
+    {%- if frag %}
+    if {{ cond }}
+      {%- if frag.executables %}
+      bin.install {% for binary in frag.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
-      {%- if arm64_macos.cdylibs and "cdylib" in install_libraries %}
-      lib.install {% for library in arm64_macos.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      {%- if frag.cdylibs and "cdylib" in install_libraries %}
+      lib.install {% for library in frag.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
-      {%- if arm64_macos.cstaticlibs and "cstaticlib" in install_libraries %}
-      lib.install {% for library in arm64_macos.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-    end
-    {%- endif %}
-    {%- if x86_64_macos.executables or x86_64_macos.cdylibs %}
-    if OS.mac? && Hardware::CPU.intel?
-      {%- if x86_64_macos.executables %}
-      bin.install {% for binary in x86_64_macos.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-      {%- if x86_64_macos.cdylibs and "cdylib" in install_libraries %}
-      lib.install {% for library in x86_64_macos.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-      {%- if x86_64_macos.cstaticlibs and "cstaticlib" in install_libraries %}
-      lib.install {% for library in x86_64_macos.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
+      {%- if frag.cstaticlibs and "cstaticlib" in install_libraries %}
+      lib.install {% for library in frag.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
       {%- endif %}
     end
     {%- endif %}
-    {%- if arm64_linux.executables or arm64_linux.cdylibs %}
-    if OS.linux? && Hardware::CPU.arm?
-      {%- if arm64_linux.executables %}
-      bin.install {% for binary in arm64_linux.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-      {%- if arm64_linux.cdylibs and "cdylib" in install_libraries %}
-      lib.install {% for library in arm64_linux.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-      {%- if arm64_linux.cstaticlibs and "cstaticlib" in install_libraries %}
-      lib.install {% for library in arm64_linux.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-    end
-    {%- endif %}
-    {%- if x86_64_linux.executables %}
-    if OS.linux? && Hardware::CPU.intel?
-      {%- if x86_64_linux.executables %}
-      bin.install {% for binary in x86_64_linux.executables %}"{{ binary }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-      {%- if x86_64_linux.cdylibs and "cdylib" in install_libraries %}
-      lib.install {% for library in x86_64_linux.cdylibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-      {%- if x86_64_linux.cstaticlibs and "cstaticlib" in install_libraries %}
-      lib.install {% for library in x86_64_linux.cstaticlibs %}"{{ library }}"{{ ", " if not loop.last else "" }}{% endfor %}
-      {%- endif %}
-    end
-{% endif %}
+    {%- endmacro %}
+    {{- install_fragment(arm64_macos, "OS.mac? && Hardware::CPU.arm?") }}
+    {{- install_fragment(x86_64_macos, "OS.mac? && Hardware::CPU.intel?") }}
+    {{- install_fragment(arm64_linux, "OS.linux? && Hardware::CPU.arm?") }}
+    {{- install_fragment(x86_64_linux, "OS.linux? && Hardware::CPU.intel?") }}
+
     install_binary_aliases!
 
     # Homebrew will automatically install these, so we don't need to do that

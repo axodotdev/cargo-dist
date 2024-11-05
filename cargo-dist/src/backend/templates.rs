@@ -131,6 +131,7 @@ impl Templates {
         }
         for env in envs.values_mut() {
             env.set_debug(true);
+            env.set_undefined_behavior(minijinja::UndefinedBehavior::Strict);
 
             fn jinja_error(details: String) -> std::result::Result<String, minijinja::Error> {
                 Err(minijinja::Error::new(

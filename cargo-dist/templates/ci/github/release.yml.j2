@@ -300,7 +300,7 @@ jobs:
           # Actually do builds and make zips and whatnot
           dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "dist ran successfully"
-      {{%- if github_attestations %}}
+      {{%- if github_attestations is defined and github_attestations %}}
       - name: Attest
         uses: actions/attest-build-provenance@v1
         with:
