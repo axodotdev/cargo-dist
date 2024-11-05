@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
+snapshot_kind: text
 ---
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -3681,7 +3682,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "packages_install": "cat << EOF >Brewfile\ncask \"homebrew/cask/macfuse\"\nbrew \"libcue\"\nEOF\n\nbrew bundle install",
-            "cache_provider": "github"
+            "cache_provider": "github",
+            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/download/cargo-auditable-installer.sh | sh"
           },
           {
             "targets": [
@@ -3691,7 +3693,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "packages_install": "cat << EOF >Brewfile\ncask \"homebrew/cask/macfuse\"\nbrew \"libcue\"\nEOF\n\nbrew bundle install",
-            "cache_provider": "github"
+            "cache_provider": "github",
+            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/download/cargo-auditable-installer.sh | sh"
           },
           {
             "targets": [
@@ -3700,7 +3703,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "runner": "windows-2019",
             "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex\"",
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
-            "cache_provider": "github"
+            "cache_provider": "github",
+            "install_cargo_auditable": "powershell -c \"irm https://github.com/rust-secure-code/cargo-auditable/releases/download/cargo-auditable-installer.ps1 | iex\""
           },
           {
             "targets": [
@@ -3709,7 +3713,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
-            "cache_provider": "github"
+            "cache_provider": "github",
+            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/download/cargo-auditable-installer.sh | sh"
           }
         ]
       },

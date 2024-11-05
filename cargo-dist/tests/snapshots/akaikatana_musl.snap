@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
+snapshot_kind: text
 ---
 ================ akaikatana-repack-installer.sh ================
 #!/bin/sh
@@ -1500,7 +1501,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "runner": "macos-13",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
-            "cache_provider": "github"
+            "cache_provider": "github",
+            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/download/cargo-auditable-installer.sh | sh"
           },
           {
             "targets": [
@@ -1509,7 +1511,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "runner": "macos-13",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
-            "cache_provider": "github"
+            "cache_provider": "github",
+            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/download/cargo-auditable-installer.sh | sh"
           },
           {
             "targets": [
@@ -1518,7 +1521,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "runner": "ubuntu-20.04",
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
-            "cache_provider": "github"
+            "cache_provider": "github",
+            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/download/cargo-auditable-installer.sh | sh"
           },
           {
             "targets": [
@@ -1528,7 +1532,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
             "packages_install": "sudo apt-get update && sudo apt-get install musl-tools",
-            "cache_provider": "github"
+            "cache_provider": "github",
+            "install_cargo_auditable": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/download/cargo-auditable-installer.sh | sh"
           }
         ]
       },
