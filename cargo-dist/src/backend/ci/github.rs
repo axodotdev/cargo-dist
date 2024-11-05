@@ -312,8 +312,8 @@ impl GithubCiInfo {
         for (runner, targets) in local_runs {
             use std::fmt::Write;
             let install_dist =
-                install_dist_for_targets(&targets, &install_dist_sh, &install_dist_ps1);
-            let install_cargo_auditable = install_dist_for_targets(
+                install_package_for_targets(&targets, &install_dist_sh, &install_dist_ps1);
+            let install_cargo_auditable = install_package_for_targets(
                 &targets,
                 &install_cargo_auditable_sh,
                 &install_cargo_auditable_ps1,
@@ -638,8 +638,8 @@ fn github_runner_for_target(
     }
 }
 
-/// Select the dist installer approach for a given Github Runner
-fn install_dist_for_targets<'a>(
+/// Select the (dist-produced) installer approach for a given Github Runner
+fn install_package_for_targets<'a>(
     targets: &'a [&'a TargetTripleRef],
     install_sh: &'a str,
     install_ps1: &'a str,
