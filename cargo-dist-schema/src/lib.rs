@@ -313,6 +313,9 @@ pub struct GithubMatrixEntry {
     /// what cache provider to use
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_provider: Option<String>,
+    /// Expression to execute to install cargo-auditable
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_cargo_auditable: Option<String>,
 }
 
 /// Type of job to run on pull request

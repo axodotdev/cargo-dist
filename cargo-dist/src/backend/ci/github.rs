@@ -42,6 +42,10 @@ pub struct GithubCiInfo {
     pub install_dist_sh: String,
     /// expression to use for installing dist via powershell script
     pub install_dist_ps1: String,
+    /// expression to use for installing cargo-auditable via shell script
+    pub install_cargo_auditable_sh: String,
+    /// expression to use for installing cargo-auditable via powershell script
+    pub install_cargo_auditable_ps1: String,
     /// Whether to fail-fast
     pub fail_fast: bool,
     /// Whether to cache builds
@@ -89,6 +93,8 @@ pub struct GithubCiInfo {
     /// Info about making a GitHub Release (if we're making one)
     #[serde(flatten)]
     pub github_release: Option<GithubReleaseInfo>,
+    /// Whether to install cargo-auditable
+    pub need_cargo_auditable: bool,
 }
 
 /// Details for github releases
@@ -206,6 +212,8 @@ impl GithubCiInfo {
             release_branch.is_some() || pr_run_mode == cargo_dist_schema::PrRunMode::Upload;
         let cache_builds = cache_builds.unwrap_or(caching_could_be_profitable);
 
+        let need_cargo_auditable = dist.config.builds.cargo.cargo_auditable;
+
         // Figure out what builds we need to do
         let mut local_targets: SortedSet<&TargetTripleRef> = SortedSet::new();
         for release in &dist.releases {
@@ -218,6 +226,8 @@ impl GithubCiInfo {
         // Get the platform-specific installation methods
         let install_dist_sh = super::install_dist_sh_for_version(dist_version);
         let install_dist_ps1 = super::install_dist_ps1_for_version(dist_version);
+        let install_cargo_auditable_sh = super::install_cargo_auditable_sh_latest();
+        let install_cargo_auditable_ps1 = super::install_cargo_auditable_ps1_latest();
         let hosting_providers = dist
             .hosting
             .as_ref()
@@ -246,6 +256,7 @@ impl GithubCiInfo {
             runner: Some(global_runner.to_owned()),
             dist_args: Some("--artifacts=global".into()),
             install_dist: Some(install_dist_sh.clone()),
+            install_cargo_auditable: Some(install_cargo_auditable_sh.clone()),
             packages_install: None,
         };
 
@@ -302,6 +313,8 @@ impl GithubCiInfo {
             use std::fmt::Write;
             let install_dist =
                 install_dist_for_targets(&targets, &install_dist_sh, &install_dist_ps1);
+            let install_cargo_auditable =
+                install_dist_for_targets(&targets, &install_cargo_auditable_sh, &install_cargo_auditable_ps1);
             let mut dist_args = String::from("--artifacts=local");
             for target in &targets {
                 write!(dist_args, " --target={target}").unwrap();
@@ -312,6 +325,7 @@ impl GithubCiInfo {
                 runner: Some(runner),
                 dist_args: Some(dist_args),
                 install_dist: Some(install_dist.to_owned()),
+                install_cargo_auditable: Some(install_cargo_auditable.to_owned()),
                 packages_install: package_install_for_targets(&targets, &dependencies),
             });
         }
@@ -336,6 +350,8 @@ impl GithubCiInfo {
             rust_version,
             install_dist_sh,
             install_dist_ps1,
+            install_cargo_auditable_sh,
+            install_cargo_auditable_ps1,
             fail_fast,
             cache_builds,
             build_local_artifacts,
@@ -358,6 +374,7 @@ impl GithubCiInfo {
             root_permissions,
             github_build_setup,
             github_release,
+            need_cargo_auditable,
         })
     }
 
