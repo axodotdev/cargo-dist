@@ -1,6 +1,7 @@
 ---
 source: cargo-dist-schema/src/lib.rs
 expression: json_schema
+snapshot_kind: text
 ---
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -782,6 +783,13 @@ expression: json_schema
         },
         "dist_args": {
           "description": "Arguments to pass to dist",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "install_cargo_auditable": {
+          "description": "Expression to execute to install cargo-auditable",
           "type": [
             "string",
             "null"
