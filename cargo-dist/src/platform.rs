@@ -232,8 +232,8 @@ pub mod targets;
 use std::collections::HashMap;
 
 use cargo_dist_schema::{
-    ArtifactId, AssetId, BuildEnvironment, DistManifest, GlibcVersion, Linkage, SystemInfo,
-    TargetTriple, TargetTripleRef,
+    ArtifactId, AssetId, BuildEnvironment, ChecksumExtension, ChecksumValue, DistManifest,
+    GlibcVersion, Linkage, SystemInfo, TargetTriple, TargetTripleRef,
 };
 use serde::Serialize;
 
@@ -403,8 +403,8 @@ pub struct FetchableArchive {
     pub target_triple: TargetTriple,
     /// What target triples does this archive natively support
     pub target_triples: Vec<TargetTriple>,
-    /// The sha256sum of the archive
-    pub sha256sum: Option<String>,
+    /// The checksum of the archive, if any
+    pub checksum: Option<FetchableArchiveChecksum>,
     /// The executables in the archive (may include .exe, assumed to be in root)
     pub executables: Vec<String>,
     /// The dynamic libraries in the archive (assumed to be in root)
@@ -417,13 +417,23 @@ pub struct FetchableArchive {
     pub updater: Option<FetchableUpdaterIdx>,
 }
 
+/// The checksum for a fetchable archive
+#[derive(Debug, Clone, Serialize)]
+pub struct FetchableArchiveChecksum {
+    /// The checksum style (sha256, etc.)
+    pub style: ChecksumExtension,
+
+    /// The checksum value (lowercase hex)
+    pub value: ChecksumValue,
+}
+
 /// An updater for an app that can be fetched
 #[derive(Debug, Clone, Serialize)]
 pub struct FetchableUpdater {
     /// The unique id (and filename) of the updater
     pub id: ArtifactId,
     /// The binary name of the updater
-    pub binary: String,
+    pub binary: ArtifactId,
 }
 
 /// An index into [`PlatformSupport::archives`][]
@@ -449,9 +459,6 @@ pub struct PlatformEntry {
 
 impl PlatformSupport {
     /// Compute the PlatformSupport for a Release
-    ///
-    /// The later this information is computed, the richer it will be.
-    /// For instance if this is (re)computed after builds, it will contain shasums.
     pub(crate) fn new(dist: &DistGraphBuilder, release_idx: ReleaseIdx) -> PlatformSupport {
         let mut platforms = SortedMap::<TargetTriple, Vec<PlatformEntry>>::new();
         let release = dist.release(release_idx);
@@ -507,10 +514,11 @@ impl PlatformSupport {
                     .map(|(_, dest_path)| dest_path.file_name().unwrap().to_owned())
                     .collect(),
                 zip_style: artifact.archive.as_ref().unwrap().zip_style,
-                sha256sum: None,
+                checksum: None,
                 native_runtime_conditions,
                 updater: updater_idx,
             };
+
             archives.push(archive);
         }
 
@@ -604,6 +612,27 @@ impl PlatformSupport {
         }
 
         runtime_conditions
+    }
+
+    /// Add checksum information for all archives built so far. They appeared
+    /// in the manifest after the initial platform support was computed.
+    pub fn fill_in_checksums_from_manifest(&mut self, manifest: &DistManifest) {
+        for archive in &mut self.archives {
+            if let Some(manifest_archive) = manifest.artifacts.get(&archive.id) {
+                if let Some((style, value)) = manifest_archive.checksums.first_key_value() {
+                    archive.checksum = Some(FetchableArchiveChecksum {
+                        style: style.clone(),
+                        value: value.clone(),
+                    });
+                }
+            }
+        }
+    }
+
+    /// A chainable version of [`Self::fill_in_checksums_from_manifest`]
+    pub fn with_checksums_from_manifest(mut self, manifest: &DistManifest) -> Self {
+        self.fill_in_checksums_from_manifest(manifest);
+        self
     }
 }
 
@@ -812,8 +841,8 @@ fn native_runtime_conditions_for_artifact(
     };
     // FIXME: in our test suite we're running bare artifacts=global so we're missing
     // all artifact/linkage info, preventing basic glibc bounds
-    if artifact_id.contains("linux")
-        && artifact_id.contains("-gnu")
+    if artifact_id.as_str().contains("linux")
+        && artifact_id.as_str().contains("-gnu")
         && runtime_conditions.min_glibc_version.is_none()
     {
         runtime_conditions.min_glibc_version =

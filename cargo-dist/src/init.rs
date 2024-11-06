@@ -1032,7 +1032,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         table,
         "checksum",
         "# Checksums to generate for each App\n",
-        checksum.map(|c| c.ext()),
+        checksum.map(|c| c.ext().as_str()),
     );
 
     apply_optional_value(

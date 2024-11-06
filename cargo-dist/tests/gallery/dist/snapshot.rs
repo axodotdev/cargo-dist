@@ -169,7 +169,7 @@ pub fn snapshot_settings_with_gallery_filter() -> insta::Settings {
         r#""build_environment": "indeterminate""#,
     );
     settings.add_filter(
-        r"[0-9a-f]{64}  (?<filename>([a-zA-Z0-9-_]+)(\.tar\.gz|\.pkg))",
+        r"[0-9a-f]{64} .(?<filename>([a-zA-Z0-9-_]+)(\.tar\.gz|\.pkg))",
         "CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  $filename",
     );
     settings
