@@ -292,6 +292,13 @@ jobs:
           pattern: artifacts-*
           path: target/distrib/
           merge-multiple: true
+      {{%- if need_cargo_auditable %}}
+      - name: Install cargo-auditable
+        # we specify bash to get pipefail; it guards against the `curl` command
+        # failing. otherwise `sh` won't catch that `curl` return non-0
+        run: ${{ matrix.install_cargo_auditable }}
+        shell: bash
+      {{%- endif %}}
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
