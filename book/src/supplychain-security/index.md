@@ -23,7 +23,7 @@ If you have an integration you are looking for [file an issue](https://github.co
 ## SBOMs and Dependency Managers
 
 * [🔜 cargo-CycloneDX](https://github.com/axodotdev/cargo-dist/issues/1016)
-* [🔜 cargo-auditable](https://github.com/axodotdev/cargo-dist/issues/81)
+* [cargo-auditable](../reference/config.html#cargo-auditable)
 
 
 ## Software identification

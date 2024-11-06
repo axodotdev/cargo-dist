@@ -41,6 +41,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`msvc-crt-static`](#msvc-crt-static)
     * [`precise-builds`](#precise-builds)
     * [`rust-toolchain-version`](#rust-toolchain-version)
+    * [`cargo-auditable`](#cargo-auditable)
 
 [installer settings](#installer-settings)
 * [`installers`](#installers)
@@ -590,6 +591,15 @@ The syntax must be a valid rustup toolchain like "1.60.0" or "stable" (should no
 
 Without this setting, CI won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal).
 
+#### `cargo-auditable`
+
+> <span style="float:right">since 0.26.0<br>[package-local][]</span>
+> default = `false`
+
+Specifies whether to use [`cargo auditable`](https://github.com/rust-secure-code/cargo-auditable) to embed metadata about your dependency tree into the built executables.
+When this value is false, dist will run `cargo build`; when it is true, dist will run `cargo auditable build`.
+
+You can then use [`cargo audit`](https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md) to audit your dependencies for security vulnerabilities that have been reported to the [RustSec Vulnerability Database](https://rustsec.org/).
 
 ## installer settings
 
