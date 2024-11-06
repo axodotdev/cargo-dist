@@ -72,6 +72,7 @@ lazy_static.workspace = true
 current_platform.workspace = true
 color-backtrace.workspace = true
 backtrace.workspace = true
+schemars.workspace = true
 
 [dev-dependencies]
 insta.workspace = true

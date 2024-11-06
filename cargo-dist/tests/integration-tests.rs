@@ -1878,3 +1878,34 @@ identifier = "dev.axo.axolotsay"
         Ok(())
     })
 }
+
+#[test]
+fn axolotlsay_dist_url_override() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(
+            r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+cargo-dist-url-override = "https://dl.bearcove.cloud/dump/dist-cross"
+installers = ["shell", "powershell"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}

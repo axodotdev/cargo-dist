@@ -1,6 +1,10 @@
 //! Support for generating CI scripts for running dist
 
+use cargo_dist_schema::{DashScript, GhaRunStep, PowershellScript, TargetTripleRef};
 use semver::Version;
+use serde::Serialize;
+
+use crate::config::v0::CargoDistUrlOverrideRef;
 
 use self::github::GithubCiInfo;
 
@@ -21,66 +25,133 @@ pub struct CiInfo {
     pub github: Option<GithubCiInfo>,
 }
 
-/// Get the command to invoke to install dist via sh script
-fn install_dist_sh_for_version(version: &Version) -> String {
-    if let Some(git) = install_dist_git(version) {
-        return git;
+/// Gives us the full information re: the version of dist we're supposed
+/// to install/run in CI
+struct DistInstallSettings<'a> {
+    version: &'a Version,
+    url_override: Option<&'a CargoDistUrlOverrideRef>,
+}
+
+/// Generates github steps to install a tool
+pub trait InstallStrategy {
+    /// Return a sh/dash script
+    fn dash(&self) -> GhaRunStep;
+
+    /// Return a powershell script
+    fn powershell(&self) -> GhaRunStep;
+
+    /// Return the right install method for a given set of targets
+    fn for_targets<'a>(&self, targets: &'a [&'a TargetTripleRef]) -> GhaRunStep {
+        // FIXME: when doing cross-compilation, `host != runner`, and we should
+        // pick something that runs on the host. We need knowledge about "which
+        // platform is this GitHub runner" ahead of time to do that, though.
+
+        for target in targets {
+            if target.is_linux() || target.is_apple() {
+                return self.dash();
+            } else if target.is_windows() {
+                return self.powershell();
+            }
+        }
+        panic!("unsupported target triple(s) {targets:?}");
     }
-    let format = cargo_dist_schema::format_of_version(version);
-    let installer_name = if format.unsupported() {
-        // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested dist v{version}, which is not supported by the this copy of dist ({SELF_DIST_VERSION})");
-    } else if format.artifact_names_contain_versions() {
-        format!("cargo-dist-v{version}-installer.sh")
-    } else {
-        "cargo-dist-installer.sh".to_owned()
-    };
-
-    // FIXME: it would be nice if these values were somehow using all the machinery
-    // to compute these values for packages we build *BUT* it's messy and not that important
-    let installer_url = format!("{BASE_DIST_FETCH_URL}/v{version}/{installer_name}");
-    format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh")
 }
 
-/// Get the command to invoke to install dist via ps1 script
-fn install_dist_ps1_for_version(version: &Version) -> String {
-    if let Some(git) = install_dist_git(version) {
-        return git;
+/// The strategy used to install dist in CI
+#[derive(Debug, Clone, Serialize)]
+pub enum DistInstallStrategy {
+    /// Download an installer and run it
+    Installer {
+        /// the prefix of the installer url, e.g.
+        installer_url: String,
+        /// the installer name, without `.sh` or `.ps1`
+        installer_name: String,
+    },
+    /// Run `cargo install --git` (slow!)
+    GitBranch {
+        /// the branch to install from — from <https://github.com/axodotdev/cargo-dist>
+        branch: String,
+    },
+}
+
+impl DistInstallSettings<'_> {
+    fn install_strategy(&self) -> DistInstallStrategy {
+        if let Some(branch) = self.version.pre.strip_prefix("github-") {
+            return DistInstallStrategy::GitBranch {
+                branch: branch.to_owned(),
+            };
+        }
+
+        if let Some(url) = self.url_override.as_ref() {
+            return DistInstallStrategy::Installer {
+                installer_url: url.as_str().to_owned(),
+                installer_name: "cargo-dist-installer".to_owned(),
+            };
+        }
+
+        let version = self.version;
+        let format = cargo_dist_schema::format_of_version(version);
+        let installer_name = if format.unsupported() {
+            // FIXME: we should probably do this check way higher up and produce a proper err...
+            panic!("requested dist v{version}, which is not supported by the this copy of dist ({SELF_DIST_VERSION})");
+        } else if format.artifact_names_contain_versions() {
+            format!("cargo-dist-v{version}-installer")
+        } else {
+            "cargo-dist-installer".to_owned()
+        };
+
+        DistInstallStrategy::Installer {
+            // FIXME: it would be nice if these values were somehow using all the machinery
+            // to compute these values for packages we build *BUT* it's messy and not that important
+            installer_url: format!("{BASE_DIST_FETCH_URL}/v{version}"),
+            installer_name,
+        }
     }
-    let format = cargo_dist_schema::format_of_version(version);
-    let installer_name = if format.unsupported() {
-        // FIXME: we should probably do this check way higher up and produce a proper err...
-        panic!("requested dist v{version}, which is not supported by the this copy of dist ({SELF_DIST_VERSION})");
-    } else if format.artifact_names_contain_versions() {
-        format!("cargo-dist-v{version}-installer.ps1")
-    } else {
-        "cargo-dist-installer.ps1".to_owned()
-    };
-
-    // FIXME: it would be nice if these values were somehow using all the machinery
-    // to compute these values for packages we build *BUT* it's messy and not that important
-    let installer_url = format!("{BASE_DIST_FETCH_URL}/v{version}/{installer_name}");
-    format!(r#"powershell -c "irm {installer_url} | iex""#)
 }
 
-/// Cute little hack for developing dist itself: if we see a version like "0.0.3-github-config"
-/// then install from the main github repo with branch=config!
-fn install_dist_git(version: &Version) -> Option<String> {
-    version.pre.strip_prefix("github-").map(|branch| {
-        format!("cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} cargo-dist")
-    })
+impl InstallStrategy for DistInstallStrategy {
+    /// Returns a bit of sh/dash to install the requested version of dist
+    fn dash(&self) -> GhaRunStep {
+        DashScript::new(match self {
+            DistInstallStrategy::Installer { installer_url, installer_name } => format!(
+                "curl --proto '=https' --tlsv1.2 -LsSf {installer_url}/{installer_name}.sh | sh"
+            ),
+            DistInstallStrategy::GitBranch { branch } => format!(
+                "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} cargo-dist"
+            ),
+        }).into()
+    }
+
+    /// Returns a bit of powershell to install the requested version of dist
+    fn powershell(&self) -> GhaRunStep {
+        PowershellScript::new(match self {
+            DistInstallStrategy::Installer { installer_url, installer_name } => format!(
+                "irm {installer_url}/{installer_name}.ps1 | iex"
+            ),
+            DistInstallStrategy::GitBranch { branch } => format!(
+                "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} cargo-dist"
+            ),
+        }).into()
+    }
 }
 
-/// Get the command to invoke to install cargo-auditable via sh script
-fn install_cargo_auditable_sh_latest() -> String {
-    let installer_url =
-        format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.sh");
-    format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh")
-}
+struct CargoAuditableInstallStrategy;
 
-/// Get the command to invoke to install cargo-auditable via ps1 script
-fn install_cargo_auditable_ps1_latest() -> String {
-    let installer_url =
-        format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.ps1");
-    format!(r#"powershell -c "irm {installer_url} | iex""#)
+impl InstallStrategy for CargoAuditableInstallStrategy {
+    /// Return a sh/dash script
+    fn dash(&self) -> GhaRunStep {
+        let installer_url =
+            format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.sh");
+        DashScript::new(format!(
+            "curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh"
+        ))
+        .into()
+    }
+
+    /// Return a powershell script
+    fn powershell(&self) -> GhaRunStep {
+        let installer_url =
+            format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.ps1");
+        PowershellScript::new(format!(r#"powershell -c "irm {installer_url} | iex""#)).into()
+    }
 }

@@ -23,6 +23,7 @@ impl DistMetadata {
     pub fn to_toml_layer(&self, is_global: bool) -> TomlLayer {
         let DistMetadata {
             cargo_dist_version,
+            cargo_dist_url_override,
             rust_toolchain_version,
             dist,
             ci,
@@ -344,6 +345,7 @@ impl DistMetadata {
 
         TomlLayer {
             dist_version: cargo_dist_version,
+            dist_url_override: cargo_dist_url_override,
             dist,
             allow_dirty,
             targets,
