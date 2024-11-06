@@ -391,6 +391,11 @@ fn add_manifest_artifact(
             description = None;
             kind = cargo_dist_schema::ArtifactKind::Updater;
         }
+        ArtifactKind::SBOM(_) => {
+            install_hint = None;
+            description = None;
+            kind = cargo_dist_schema::ArtifactKind::SBOM;
+        }
     };
 
     let checksum = artifact.checksum.map(|idx| dist.artifact(idx).id.clone());

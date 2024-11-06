@@ -57,7 +57,7 @@ use crate::platform::targets::{
 use axoasset::AxoClient;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
     ArtifactId, BuildEnvironment, DistManifest, SystemId, SystemInfo, TargetTriple, TargetTripleRef,
 };
@@ -612,6 +612,8 @@ pub enum ArtifactKind {
     ExtraArtifact(ExtraArtifactImpl),
     /// An updater executable
     Updater(UpdaterImpl),
+    /// An existing file representing a Software Bill Of Materials
+    SBOM(SBOMImpl),
 }
 
 /// An Archive containing binaries (aka ExecutableZip)
@@ -655,6 +657,10 @@ pub struct ExtraArtifactImpl {
 /// An updater executable
 #[derive(Clone, Debug)]
 pub struct UpdaterImpl {}
+
+/// A file containing a Software Bill Of Materials
+#[derive(Clone, Debug)]
+pub struct SBOMImpl {}
 
 /// A logical release of an application that artifacts are grouped under
 #[derive(Clone, Debug)]
@@ -1398,6 +1404,32 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 self.add_global_artifact(to_release, artifact);
             }
         }
+    }
+
+    fn add_cyclonedx_sbom_file(&mut self, to_package: PackageIdx, to_release: ReleaseIdx) {
+        let release = self.release(to_release);
+
+        if !self.global_artifacts_enabled() || !release.config.builds.cargo.cargo_cyclonedx {
+            return;
+        }
+
+        let package = self.workspaces.package(to_package);
+
+        let file_name = format!("{}.cdx.xml", package.true_name);
+        let file_path = Utf8Path::new("target/distrib/").join(file_name.clone());
+        self.add_global_artifact(
+            to_release,
+            Artifact {
+                id: ArtifactId::new(file_name),
+                target_triples: Default::default(),
+                archive: None,
+                file_path: file_path.clone(),
+                required_binaries: Default::default(),
+                kind: ArtifactKind::SBOM(SBOMImpl {}),
+                checksum: None,
+                is_global: true,
+            },
+        );
     }
 
     fn add_unified_checksum_file(&mut self, to_release: ReleaseIdx) {
@@ -2521,6 +2553,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         target_filename: artifact.file_path.to_owned(),
                     }))
                 }
+                ArtifactKind::SBOM(_) => {
+                    // The SBOM is already generated.
+                }
             }
 
             if let Some(archive) = &artifact.archive {
@@ -2703,6 +2738,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     InstallerStyle::Pkg => self.add_pkg_installer(release)?,
                 }
             }
+
+            // Add SBOM file, if it exists.
+            self.add_cyclonedx_sbom_file(info.package_idx, release);
 
             // Add the unified checksum file
             self.add_unified_checksum_file(release);
