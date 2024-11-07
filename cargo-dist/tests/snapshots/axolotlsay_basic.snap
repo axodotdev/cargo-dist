@@ -3360,6 +3360,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
         "axolotlsay-npm-package.tar.gz",
+        "axolotlsay.cdx.xml",
         "sha256.sum",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
@@ -3724,6 +3725,10 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "x86_64-unknown-linux-gnu"
       ]
     },
+    "axolotlsay.cdx.xml": {
+      "name": "axolotlsay.cdx.xml",
+      "kind": "sbom"
+    },
     "axolotlsay.rb": {
       "name": "axolotlsay.rb",
       "kind": "installer",
@@ -4015,6 +4020,11 @@ jobs:
           name: cargo-dist-cache
           path: ~/.cargo/bin/
       - run: chmod +x ~/.cargo/bin/dist
+      - name: Install cargo-cyclonedx
+        # we specify bash to get pipefail; it guards against the `curl` command
+        # failing. otherwise `sh` won't catch that `curl` return non-0
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/CycloneDX/cyclonedx-rust-cargo/releases/download/cargo-cyclonedx-0.5.5/cargo-cyclonedx-installer.sh | sh"
+        shell: bash
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
@@ -4034,12 +4044,26 @@ jobs:
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
+      - id: cargo-cyclonedx
+        shell: bash
+        run: |
+            # Generate SBOM (.cdx.xml) files.
+            cargo cyclonedx -v
+
+            # Move all SBOM (.cdx.xml) files under target/distrib/ since
+            # we expect all artifacts to be in that folder.
+            find . -name '*.cdx.xml' -exec mv '{}' target/distrib/ ';'
+
+            echo "paths<<EOF" >> "$GITHUB_OUTPUT"
+            find . -name '*.cdx.xml' | tee -a "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v4
         with:
           name: artifacts-build-global
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
+            ${{ steps.cargo-cyclonedx.output.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
   # Determines if we should publish/announce
   host:

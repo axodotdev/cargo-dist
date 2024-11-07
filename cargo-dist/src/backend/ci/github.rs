@@ -26,7 +26,8 @@ use crate::{
 };
 
 use super::{
-    CargoAuditableInstallStrategy, DistInstallSettings, DistInstallStrategy, InstallStrategy,
+    CargoAuditableInstallStrategy, CargoCyclonedxInstallStrategy, DistInstallSettings,
+    DistInstallStrategy, InstallStrategy,
 };
 
 #[cfg(not(windows))]
@@ -98,6 +99,8 @@ pub struct GithubCiInfo {
     pub github_release: Option<GithubReleaseInfo>,
     /// Whether to install cargo-auditable
     pub need_cargo_auditable: bool,
+    /// Whether to run cargo-cyclonedx
+    pub need_cargo_cyclonedx: bool,
 }
 
 /// Details for github releases
@@ -216,6 +219,7 @@ impl GithubCiInfo {
         let cache_builds = cache_builds.unwrap_or(caching_could_be_profitable);
 
         let need_cargo_auditable = dist.config.builds.cargo.cargo_auditable;
+        let need_cargo_cyclonedx = dist.config.builds.cargo.cargo_cyclonedx;
 
         // Figure out what builds we need to do
         let mut local_targets: SortedSet<&TargetTripleRef> = SortedSet::new();
@@ -232,6 +236,7 @@ impl GithubCiInfo {
         })
         .install_strategy();
         let cargo_auditable_install_strategy = CargoAuditableInstallStrategy;
+        let cargo_cyclonedx_install_strategy = CargoCyclonedxInstallStrategy;
 
         let hosting_providers = dist
             .hosting
@@ -262,6 +267,7 @@ impl GithubCiInfo {
             dist_args: Some("--artifacts=global".into()),
             install_dist: dist_install_strategy.dash(),
             install_cargo_auditable: cargo_auditable_install_strategy.dash(),
+            install_cargo_cyclonedx: Some(cargo_cyclonedx_install_strategy.dash()),
             packages_install: None,
         };
 
@@ -330,6 +336,7 @@ impl GithubCiInfo {
                 dist_args: Some(dist_args),
                 install_dist: install_dist.to_owned(),
                 install_cargo_auditable: install_cargo_auditable.to_owned(),
+                install_cargo_cyclonedx: None, // Not used by local builds.
                 packages_install: package_install_for_targets(&targets, &dependencies),
             });
         }
@@ -377,6 +384,7 @@ impl GithubCiInfo {
             github_build_setup,
             github_release,
             need_cargo_auditable,
+            need_cargo_cyclonedx,
         })
     }
 

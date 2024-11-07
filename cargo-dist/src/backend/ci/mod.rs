@@ -18,6 +18,14 @@ const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/relea
 const BASE_CARGO_AUDITABLE_FETCH_LATEST_URL: &str =
     "https://github.com/rust-secure-code/cargo-auditable/releases/latest/download";
 
+const BASE_CARGO_CYCLONEDX_FETCH_URL: &str =
+    "https://github.com/CycloneDX/cyclonedx-rust-cargo/releases/download";
+
+// NOTE: This is hard-coded to a specific version because both cargo-cyclonedx
+//       and cyclonedx-bom are released on the same repo.
+//       This means the "latest" release is sometimes NOT actually cargo-cyclonedx!
+const CARGO_CYCLONEDX_VERSION: &str = "0.5.5";
+
 /// Info about all the enabled CI backends
 #[derive(Debug, Default)]
 pub struct CiInfo {
@@ -152,6 +160,28 @@ impl InstallStrategy for CargoAuditableInstallStrategy {
     fn powershell(&self) -> GhaRunStep {
         let installer_url =
             format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.ps1");
+        PowershellScript::new(format!(r#"powershell -c "irm {installer_url} | iex""#)).into()
+    }
+}
+
+struct CargoCyclonedxInstallStrategy;
+
+impl InstallStrategy for CargoCyclonedxInstallStrategy {
+    /// Return an sh/dash script to install cargo-cyclonedx
+    fn dash(&self) -> GhaRunStep {
+        let installer_url =
+            format!("{BASE_CARGO_CYCLONEDX_FETCH_URL}/cargo-cyclonedx-{CARGO_CYCLONEDX_VERSION}/cargo-cyclonedx-installer.sh");
+        DashScript::new(format!(
+            "curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh"
+        ))
+        .into()
+    }
+
+    /// Return a powershell script to install cargo-cyclonedx.
+    /// This probably isn't being used.
+    fn powershell(&self) -> GhaRunStep {
+        let installer_url =
+            format!("{BASE_CARGO_CYCLONEDX_FETCH_URL}/cargo-cyclonedx-{CARGO_CYCLONEDX_VERSION}/cargo-cyclonedx-installer.ps1");
         PowershellScript::new(format!(r#"powershell -c "irm {installer_url} | iex""#)).into()
     }
 }

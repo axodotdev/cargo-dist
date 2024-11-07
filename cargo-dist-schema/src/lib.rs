@@ -309,6 +309,9 @@ pub struct GithubMatrixEntry {
     pub install_dist: GhaRunStep,
     /// Expression to execute to install cargo-auditable
     pub install_cargo_auditable: GhaRunStep,
+    /// Expression to execute to install cargo-cyclonedx
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_cargo_cyclonedx: Option<GhaRunStep>,
     /// Arguments to pass to dist
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_args: Option<String>,
@@ -582,6 +585,9 @@ pub enum ArtifactKind {
     /// An updater executable
     #[serde(rename = "updater")]
     Updater,
+    /// A file that already exists
+    #[serde(rename = "sbom")]
+    SBOM,
     /// Unknown to this version of cargo-dist-schema
     ///
     /// This is a fallback for forward/backward-compat
