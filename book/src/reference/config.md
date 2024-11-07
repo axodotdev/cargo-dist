@@ -42,6 +42,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`precise-builds`](#precise-builds)
     * [`rust-toolchain-version`](#rust-toolchain-version)
     * [`cargo-auditable`](#cargo-auditable)
+    * [`cargo-cyclonedx`](#cargo-cyclonedx)
 
 [installer settings](#installer-settings)
 * [`installers`](#installers)
@@ -600,6 +601,13 @@ Specifies whether to use [`cargo auditable`](https://github.com/rust-secure-code
 When this value is false, dist will run `cargo build`; when it is true, dist will run `cargo auditable build`.
 
 You can then use [`cargo audit`](https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md) to audit your dependencies for security vulnerabilities that have been reported to the [RustSec Vulnerability Database](https://rustsec.org/).
+
+#### `cargo-cyclonedx`
+
+> <span style="float:right">since 0.26.0<br>[package-local][]</span>
+> default = `false`
+
+Specifies whether to use [`cargo cyclonedx`](https://github.com/CycloneDX/cyclonedx-rust-cargo) to generate and upload a Software Bill Of Materials (SBOM) for each project in a workspace.
 
 ## installer settings
 
