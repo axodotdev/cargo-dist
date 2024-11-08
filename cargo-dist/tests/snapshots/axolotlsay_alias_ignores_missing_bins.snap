@@ -1695,7 +1695,7 @@ function Invoke-Installer($artifacts, $platforms) {
     # `\` so we normalize for comparison. We don't use `Resolve-Path` because they
     # may not exist.
     $cargo_home = if ($env:CARGO_HOME) { $env:CARGO_HOME } else {
-        Join-Path $(if ($env:HOME) { $env:HOME } else { "." }) ".cargo"
+        Join-Path $(if ($HOME) { $HOME } else { "." }) ".cargo"
     }
     if ($force_install_dir.Replace('\\', '\') -eq $cargo_home) {
       $install_layout = "cargo-home"
