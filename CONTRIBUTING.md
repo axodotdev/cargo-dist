@@ -31,3 +31,13 @@ list, even if we wish it could be.
 
 If you haven't heard from us in a while and want to check in, feel free to
 at-mention @ashleygwilliams- but please be kind while doing so!
+
+## Running tests
+
+The test suite can be run with `cargo test`. [insta](https://insta.rs/docs/cli/)
+is used for snapshots; after running the test suite, use `cargo insta review` to
+review any changed snapshots.
+
+The test suite cannot be run in parallel. Using an alternative test runner like
+`nextest` will cause unexpected behavior as tests will override each other's
+state.
