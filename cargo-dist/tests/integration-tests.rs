@@ -37,15 +37,18 @@ cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell", "homebrew", "npm", "msi", "pkg"]
 tap = "axodotdev/homebrew-packages"
 publish-jobs = ["homebrew", "npm"]
-targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
 install-success-msg = ">o_o< everything's installed!"
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
-minimum-glibc-version = "2.18"
 cargo-auditable = true
 cargo-cyclonedx = true
+
+[workspace.metadata.dist.minimum-glibc-version]
+"*" = "2.17"
+x86_64-unknown-linux-gnu = "2.18"
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -86,7 +89,8 @@ install-success-msg = ">o_o< everything's installed!"
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-minimum-glibc-version = "2.18"
+minimum-glibc-version."*" = "2.18"
+
 
 "#
         ))?;
@@ -122,7 +126,7 @@ install-success-msg = ">o_o< everything's installed!"
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-minimum-glibc-version = "2.18"
+minimum-glibc-version."*" = "2.18"
 
 "#
         ))?;

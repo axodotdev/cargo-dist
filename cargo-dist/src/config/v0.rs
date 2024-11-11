@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tracing::log::warn;
 
 use super::*;
-use crate::platform::LibcVersion;
+use crate::platform::MinimumGlibcVersion;
 use crate::SortedMap;
 
 /// A container to assist deserializing metadata from dist(-workspace).tomls
@@ -453,7 +453,7 @@ pub struct DistMetadata {
     /// Override the native glibc version, if it isn't auto-detected correctly
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub minimum_glibc_version: Option<LibcVersion>,
+    pub minimum_glibc_version: Option<MinimumGlibcVersion>,
 
     /// Whether to embed dependency information in the executable.
     #[serde(skip_serializing_if = "Option::is_none")]

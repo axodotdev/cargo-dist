@@ -12,7 +12,7 @@ use crate::{
     },
     do_generate,
     errors::{DistError, DistResult},
-    platform::triple_to_display_name,
+    platform::{triple_to_display_name, MinimumGlibcVersion},
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
@@ -1307,11 +1307,11 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         install_libraries.as_ref(),
     );
 
-    apply_optional_value(
+    apply_optional_min_glibc_version(
         table,
         "minimum-glibc-version",
         "# The minimum glibc version supported by the package (overrides auto-detection)\n",
-        minimum_glibc_version.as_ref().map(|v| v.to_string()),
+        minimum_glibc_version.as_ref(),
     );
 
     apply_optional_value(
@@ -1421,6 +1421,28 @@ fn apply_optional_mac_pkg(
                 "# The location to which the software should be installed\n",
                 install_location.as_ref(),
             );
+            new_table.decor_mut().set_prefix(desc);
+        }
+        new_item.or_insert(new_table);
+    } else {
+        table.remove(key);
+    }
+}
+
+/// Similar to [`apply_optional_value`][] but specialized to `MinimumGlibcVersion`, since we're not able to work with structs dynamically
+fn apply_optional_min_glibc_version(
+    table: &mut toml_edit::Table,
+    key: &str,
+    desc: &str,
+    val: Option<&MinimumGlibcVersion>,
+) {
+    if let Some(min_glibc_version) = val {
+        let new_item = &mut table[key];
+        let mut new_table = toml_edit::table();
+        if let Some(new_table) = new_table.as_table_mut() {
+            for (target, version) in min_glibc_version {
+                new_table.insert(target, toml_edit::Item::Value(version.to_string().into()));
+            }
             new_table.decor_mut().set_prefix(desc);
         }
         new_item.or_insert(new_table);
