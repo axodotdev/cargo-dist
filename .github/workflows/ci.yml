@@ -90,7 +90,6 @@ jobs:
     env:
       # runtest the installer scripts
       RUIN_MY_COMPUTER_WITH_INSTALLERS: all
-      CARGO_DIST_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       # Test the cross-product of these platforms+toolchains
       matrix:
@@ -119,6 +118,7 @@ jobs:
       - run: cargo test --workspace
         env:
           PWD: ${{ env.GITHUB_WORKSPACE }}
+          CARGO_DIST_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Test the examples (default features)
       # - run: cargo test --workspace --examples --bins
       #  env:
