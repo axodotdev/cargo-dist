@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
+snapshot_kind: text
 ---
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -176,8 +177,8 @@ download_binary_and_run_installer() {
             _updater_name=""
             _updater_bin=""
             ;;
-        "axolotlsay-aarch64-unknown-linux-gnu.tar.gz")
-            _arch="aarch64-unknown-linux-gnu"
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz")
+            _arch="i686-unknown-linux-gnu"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
@@ -337,7 +338,7 @@ json_binary_aliases() {
     "aarch64-apple-darwin")
         echo '{}'
         ;;
-    "aarch64-unknown-linux-gnu")
+    "i686-unknown-linux-gnu")
         echo '{}'
         ;;
     "x86_64-apple-darwin")
@@ -367,7 +368,7 @@ aliases_for_binary() {
             ;;
         esac
         ;;
-    "aarch64-unknown-linux-gnu")
+    "i686-unknown-linux-gnu")
         case "$_bin" in
         *)
             echo ""
@@ -427,8 +428,8 @@ select_archive_for_arch() {
                 return 0
             fi
             ;;
-        "aarch64-unknown-linux-gnu")
-            _archive="axolotlsay-aarch64-unknown-linux-gnu.tar.gz"
+        "i686-unknown-linux-gnu")
+            _archive="axolotlsay-i686-unknown-linux-gnu.tar.gz"
             if ! check_glibc "2" "17"; then
                 _archive=""
             fi
@@ -1361,9 +1362,6 @@ class Axolotlsay < Formula
     end
   end
   if OS.linux?
-    if Hardware::CPU.arm?
-      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-unknown-linux-gnu.tar.gz"
-    end
     if Hardware::CPU.intel?
       url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
     end
@@ -1372,7 +1370,7 @@ class Axolotlsay < Formula
 
   BINARY_ALIASES = {
     "aarch64-apple-darwin": {},
-    "aarch64-unknown-linux-gnu": {},
+    "i686-unknown-linux-gnu": {},
     "x86_64-apple-darwin": {},
     "x86_64-pc-windows-gnu": {},
     "x86_64-unknown-linux-gnu": {}
@@ -1398,9 +1396,6 @@ class Axolotlsay < Formula
       bin.install "axolotlsay"
     end
     if OS.mac? && Hardware::CPU.intel?
-      bin.install "axolotlsay"
-    end
-    if OS.linux? && Hardware::CPU.arm?
       bin.install "axolotlsay"
     end
     if OS.linux? && Hardware::CPU.intel?
@@ -3350,8 +3345,8 @@ install(false);
       },
       "zipExt": ".tar.gz"
     },
-    "aarch64-unknown-linux-gnu": {
-      "artifactName": "axolotlsay-aarch64-unknown-linux-gnu.tar.gz",
+    "i686-unknown-linux-gnu": {
+      "artifactName": "axolotlsay-i686-unknown-linux-gnu.tar.gz",
       "bins": {
         "axolotlsay": "axolotlsay"
       },
@@ -3411,7 +3406,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.2",
   "announcement_changelog": "```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy ByPass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-aarch64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n| [axolotlsay-aarch64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-unknown-linux-gnu.tar.gz) | ARM64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy ByPass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-aarch64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n| [axolotlsay-i686-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz) | x86 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "axolotlsay",
@@ -3439,8 +3434,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-aarch64-apple-darwin.pkg",
         "axolotlsay-aarch64-apple-darwin.pkg.sha256",
-        "axolotlsay-aarch64-unknown-linux-gnu.tar.gz",
-        "axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256",
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz",
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.pkg",
@@ -3530,11 +3525,11 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "aarch64-apple-darwin"
       ]
     },
-    "axolotlsay-aarch64-unknown-linux-gnu.tar.gz": {
-      "name": "axolotlsay-aarch64-unknown-linux-gnu.tar.gz",
+    "axolotlsay-i686-unknown-linux-gnu.tar.gz": {
+      "name": "axolotlsay-i686-unknown-linux-gnu.tar.gz",
       "kind": "executable-zip",
       "target_triples": [
-        "aarch64-unknown-linux-gnu"
+        "i686-unknown-linux-gnu"
       ],
       "assets": [
         {
@@ -3558,19 +3553,19 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-aarch64-unknown-linux-gnu-exe-axolotlsay",
+          "id": "axolotlsay-i686-unknown-linux-gnu-exe-axolotlsay",
           "name": "axolotlsay",
           "path": "axolotlsay",
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256"
+      "checksum": "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256"
     },
-    "axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256": {
-      "name": "axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256",
+    "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256",
       "kind": "checksum",
       "target_triples": [
-        "aarch64-unknown-linux-gnu"
+        "i686-unknown-linux-gnu"
       ]
     },
     "axolotlsay-installer.ps1": {
@@ -3588,7 +3583,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
-        "aarch64-unknown-linux-gnu",
+        "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
@@ -3602,7 +3597,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "target_triples": [
         "aarch64-apple-darwin",
         "aarch64-pc-windows-msvc",
-        "aarch64-unknown-linux-gnu",
+        "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc",
@@ -3854,7 +3849,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
-        "aarch64-unknown-linux-gnu",
+        "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
@@ -3907,7 +3902,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
           },
           {
             "targets": [
-              "aarch64-unknown-linux-gnu"
+              "i686-unknown-linux-gnu"
             ],
             "runner": "ubuntu-20.04",
             "install_dist": {
@@ -3918,7 +3913,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
             },
-            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu",
+            "dist_args": "--artifacts=local --target=i686-unknown-linux-gnu",
             "cache_provider": "github"
           },
           {
