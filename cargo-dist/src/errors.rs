@@ -7,9 +7,12 @@
 //! If we ever change this decision, this will be a lot more important!
 
 use axoproject::errors::AxoprojectError;
+use backtrace::Backtrace;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TargetTriple;
-use miette::Diagnostic;
+use cargo_dist_schema::{ArtifactId, TargetTriple};
+use color_backtrace::BacktracePrinter;
+use console::style;
+use miette::{Diagnostic, SourceOffset, SourceSpan};
 use thiserror::Error;
 
 /// An alias for the common Result type for this crate
@@ -73,7 +76,9 @@ pub enum DistError {
 
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
-    #[diagnostic(help("this is a bug in dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new"))]
+    #[diagnostic(
+        help("this is a bug in dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new")
+    )]
     Jinja {
         /// The SourceFile we were try to parse
         #[source_code]
@@ -83,7 +88,7 @@ pub enum DistError {
         span: Option<miette::SourceSpan>,
         /// Details of the error
         #[source]
-        details: minijinja::Error,
+        backtrace: JinjaErrorWithBacktrace,
     },
 
     /// Error from (cargo-)wix
@@ -259,7 +264,7 @@ pub enum DistError {
     #[diagnostic(help("depends on {spec1} and {spec2}"))]
     MultiPackage {
         /// Name of the artifact
-        artifact_name: String,
+        artifact_name: ArtifactId,
         /// One of the packages
         spec1: String,
         /// A different package
@@ -271,7 +276,7 @@ pub enum DistError {
     #[diagnostic(help("This should be impossible, you did nothing wrong, please file an issue!"))]
     NoPackage {
         /// Name of the msi
-        artifact_name: String,
+        artifact_name: ArtifactId,
     },
 
     /// These GUIDs for msi's are required and enforced by `dist generate --check`
@@ -587,11 +592,67 @@ pub struct AxoassetYamlError {
 impl From<minijinja::Error> for DistError {
     fn from(details: minijinja::Error) -> Self {
         let source: String = details.template_source().unwrap_or_default().to_owned();
-        let span = details.range().map(|r| r.into());
+        let span = details.range().map(|r| r.into()).or_else(|| {
+            details.line().map(|line| {
+                // some minijinja errors only have a line, not a range, so let's just highlight the whole line
+                let start = SourceOffset::from_location(&source, line, 0);
+                let end = SourceOffset::from_location(&source, line + 1, 0);
+                let len = (end.offset() - start.offset()).wrapping_sub(1);
+                SourceSpan::from((start, len))
+            })
+        });
+
         DistError::Jinja {
             source,
             span,
-            details,
+            backtrace: JinjaErrorWithBacktrace::new(details),
         }
+    }
+}
+/// A struct that implements `std::error::Error` so it can be added as "related" to
+/// a miette diagnostic, and it'll show the backtrace.
+#[derive(Debug)]
+pub struct JinjaErrorWithBacktrace {
+    /// The original minijinja error
+    pub error: minijinja::Error,
+    /// The captured backtrace
+    backtrace: Backtrace,
+}
+
+impl JinjaErrorWithBacktrace {
+    fn new(error: minijinja::Error) -> Self {
+        Self {
+            error,
+            backtrace: Backtrace::new_unresolved(),
+        }
+    }
+}
+
+impl std::error::Error for JinjaErrorWithBacktrace {}
+
+impl std::fmt::Display for JinjaErrorWithBacktrace {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut bt = self.backtrace.clone();
+        bt.resolve();
+        let backtrace = BacktracePrinter::new()
+            .add_frame_filter(Box::new(|frames| {
+                // try to find index of a frame that says `dist::real_main` and remove everything after it
+                if let Some(real_main_idx) = frames.iter().position(|f| {
+                    f.name
+                        .as_ref()
+                        .map(|n| n.contains("real_main"))
+                        .unwrap_or(false)
+                }) {
+                    frames.splice(real_main_idx + 1.., vec![]);
+                }
+            }))
+            .format_trace_to_string(&bt)
+            .unwrap();
+        write!(
+            f,
+            "Backtrace:\n{}\n{}",
+            style(&backtrace).dim(),
+            style(&self.error).red()
+        )
     }
 }

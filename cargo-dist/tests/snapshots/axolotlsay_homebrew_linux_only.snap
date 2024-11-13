@@ -3,6 +3,54 @@ source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
 snapshot_kind: text
 ---
+================ axolotlsay.rb ================
+class Axolotlsay < Formula
+  desc "💬 a CLI for learning to distribute CLIs in rust"
+  homepage "https://github.com/axodotdev/axolotlsay"
+  version "0.2.2"
+  if OS.linux?
+    if Hardware::CPU.intel?
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
+    end
+  end
+  license any_of: ["MIT", "Apache-2.0"]
+
+  BINARY_ALIASES = {
+    "x86_64-unknown-linux-gnu": {}
+  }
+
+  def target_triple
+    cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
+    os = OS.mac? ? "apple-darwin" : "unknown-linux-gnu"
+
+    "#{cpu}-#{os}"
+  end
+
+  def install_binary_aliases!
+    BINARY_ALIASES[target_triple.to_sym].each do |source, dests|
+      dests.each do |dest|
+        bin.install_symlink bin/source.to_s => dest
+      end
+    end
+  end
+
+  def install
+    if OS.linux? && Hardware::CPU.intel?
+      bin.install "axolotlsay"
+    end
+
+    install_binary_aliases!
+
+    # Homebrew will automatically install these, so we don't need to do that
+    doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
+    leftover_contents = Dir["*"] - doc_files
+
+    # Install any leftover files in pkgshare; these are probably config or
+    # sample files.
+    pkgshare.install(*leftover_contents) unless leftover_contents.empty?
+  end
+end
+
 ================ sha256.sum ================
 CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.gz
 
@@ -15,7 +63,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.2",
   "announcement_changelog": "```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.zip](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.zip.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "axolotlsay",
@@ -33,15 +81,10 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",
+        "axolotlsay.rb",
         "sha256.sum",
-        "axolotlsay-aarch64-apple-darwin.tar.xz",
-        "axolotlsay-aarch64-apple-darwin.tar.xz.sha256",
-        "axolotlsay-x86_64-apple-darwin.tar.xz",
-        "axolotlsay-x86_64-apple-darwin.tar.xz.sha256",
-        "axolotlsay-x86_64-pc-windows-msvc.zip",
-        "axolotlsay-x86_64-pc-windows-msvc.zip.sha256",
-        "axolotlsay-x86_64-unknown-linux-gnu.tar.xz",
-        "axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256"
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
       ],
       "hosting": {
         "github": {
@@ -54,137 +97,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
     }
   ],
   "artifacts": {
-    "axolotlsay-aarch64-apple-darwin.tar.xz": {
-      "name": "axolotlsay-aarch64-apple-darwin.tar.xz",
-      "kind": "executable-zip",
-      "target_triples": [
-        "aarch64-apple-darwin"
-      ],
-      "assets": [
-        {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
-          "kind": "license"
-        },
-        {
-          "name": "README.md",
-          "path": "README.md",
-          "kind": "readme"
-        },
-        {
-          "id": "axolotlsay-aarch64-apple-darwin-exe-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay",
-          "kind": "executable"
-        }
-      ],
-      "checksum": "axolotlsay-aarch64-apple-darwin.tar.xz.sha256"
-    },
-    "axolotlsay-aarch64-apple-darwin.tar.xz.sha256": {
-      "name": "axolotlsay-aarch64-apple-darwin.tar.xz.sha256",
-      "kind": "checksum",
-      "target_triples": [
-        "aarch64-apple-darwin"
-      ]
-    },
-    "axolotlsay-x86_64-apple-darwin.tar.xz": {
-      "name": "axolotlsay-x86_64-apple-darwin.tar.xz",
-      "kind": "executable-zip",
-      "target_triples": [
-        "x86_64-apple-darwin"
-      ],
-      "assets": [
-        {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
-          "kind": "license"
-        },
-        {
-          "name": "README.md",
-          "path": "README.md",
-          "kind": "readme"
-        },
-        {
-          "id": "axolotlsay-x86_64-apple-darwin-exe-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay",
-          "kind": "executable"
-        }
-      ],
-      "checksum": "axolotlsay-x86_64-apple-darwin.tar.xz.sha256"
-    },
-    "axolotlsay-x86_64-apple-darwin.tar.xz.sha256": {
-      "name": "axolotlsay-x86_64-apple-darwin.tar.xz.sha256",
-      "kind": "checksum",
-      "target_triples": [
-        "x86_64-apple-darwin"
-      ]
-    },
-    "axolotlsay-x86_64-pc-windows-msvc.zip": {
-      "name": "axolotlsay-x86_64-pc-windows-msvc.zip",
-      "kind": "executable-zip",
-      "target_triples": [
-        "x86_64-pc-windows-msvc"
-      ],
-      "assets": [
-        {
-          "name": "CHANGELOG.md",
-          "path": "CHANGELOG.md",
-          "kind": "changelog"
-        },
-        {
-          "name": "LICENSE-APACHE",
-          "path": "LICENSE-APACHE",
-          "kind": "license"
-        },
-        {
-          "name": "LICENSE-MIT",
-          "path": "LICENSE-MIT",
-          "kind": "license"
-        },
-        {
-          "name": "README.md",
-          "path": "README.md",
-          "kind": "readme"
-        },
-        {
-          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay.exe",
-          "kind": "executable"
-        }
-      ],
-      "checksum": "axolotlsay-x86_64-pc-windows-msvc.zip.sha256"
-    },
-    "axolotlsay-x86_64-pc-windows-msvc.zip.sha256": {
-      "name": "axolotlsay-x86_64-pc-windows-msvc.zip.sha256",
-      "kind": "checksum",
-      "target_triples": [
-        "x86_64-pc-windows-msvc"
-      ]
-    },
-    "axolotlsay-x86_64-unknown-linux-gnu.tar.xz": {
-      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.xz",
+    "axolotlsay-x86_64-unknown-linux-gnu.tar.gz": {
+      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
       "kind": "executable-zip",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
@@ -217,14 +131,23 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256"
+      "checksum": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
     },
-    "axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256": {
-      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256",
+    "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256",
       "kind": "checksum",
       "target_triples": [
         "x86_64-unknown-linux-gnu"
       ]
+    },
+    "axolotlsay.rb": {
+      "name": "axolotlsay.rb",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ],
+      "install_hint": "brew install axodotdev/packages/axolotlsay",
+      "description": "Install prebuilt binaries via Homebrew"
     },
     "sha256.sum": {
       "name": "sha256.sum",
@@ -255,54 +178,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "include": [
           {
             "targets": [
-              "aarch64-apple-darwin"
-            ],
-            "runner": "macos-13",
-            "install_dist": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-            },
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
-            "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
-            "cache_provider": "github"
-          },
-          {
-            "targets": [
-              "x86_64-apple-darwin"
-            ],
-            "runner": "macos-13",
-            "install_dist": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
-            },
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
-            "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
-            "cache_provider": "github"
-          },
-          {
-            "targets": [
-              "x86_64-pc-windows-msvc"
-            ],
-            "runner": "windows-2019",
-            "install_dist": {
-              "shell": "pwsh",
-              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
-            },
-            "install_cargo_auditable": {
-              "shell": "pwsh",
-              "run": "powershell -c \"irm https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.ps1 | iex\""
-            },
-            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
-            "cache_provider": "github"
-          },
-          {
-            "targets": [
               "x86_64-unknown-linux-gnu"
             ],
             "runner": "ubuntu-20.04",
@@ -326,7 +201,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
   "upload_files": []
 }
 
-================ owo-release.yml ================
+================ release.yml ================
 # This file was autogenerated by dist: https://opensource.axo.dev/cargo-dist/
 #
 # Copyright 2022-2024, axodotdev
@@ -371,7 +246,7 @@ on:
   pull_request:
   push:
     tags:
-      - 'owo**[0-9]+.[0-9]+.[0-9]+*'
+      - '**[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
@@ -595,14 +470,60 @@ jobs:
 
           gh release create "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
 
+  publish-homebrew-formula:
+    needs:
+      - plan
+      - host
+    runs-on: "ubuntu-20.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PLAN: ${{ needs.plan.outputs.val }}
+      GITHUB_USER: "axo bot"
+      GITHUB_EMAIL: "admin+bot@axo.dev"
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: "axodotdev/homebrew-packages"
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      # So we have access to the formula
+      - name: Fetch homebrew formulae
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: Formula/
+          merge-multiple: true
+      # This is extra complex because you can make your Formula name not match your app name
+      # so we need to find releases with a *.rb file, and publish with that filename.
+      - name: Commit formula files
+        run: |
+          git config --global user.name "${GITHUB_USER}"
+          git config --global user.email "${GITHUB_EMAIL}"
+
+          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith(".rb")] | any)'); do
+            filename=$(echo "$release" | jq '.artifacts[] | select(endswith(".rb"))' --raw-output)
+            name=$(echo "$filename" | sed "s/\.rb$//")
+            version=$(echo "$release" | jq .app_version --raw-output)
+
+            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+            brew update
+            # We avoid reformatting user-provided data such as the app description and homepage.
+            brew style --except-cops FormulaAudit/Homepage,FormulaAudit/Desc,FormulaAuditStrict --fix "Formula/${filename}" || true
+
+            git add "Formula/${filename}"
+            git commit -m "${name} ${version}"
+          done
+          git push
+
   announce:
     needs:
       - plan
       - host
+      - publish-homebrew-formula
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
-    if: ${{ always() && needs.host.result == 'success' }}
+    if: ${{ always() && needs.host.result == 'success' && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') }}
     runs-on: "ubuntu-20.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

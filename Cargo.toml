@@ -12,12 +12,12 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
 homepage = "https://opensource.axo.dev/cargo-dist/"
-version = "0.25.1"
+version = "0.25.2-prerelease.3"
 
 [workspace.dependencies]
 # intra-workspace deps (you need to bump these versions when you cut releases too!
-cargo-dist-schema = { version = "=0.25.1", path = "cargo-dist-schema" }
-axoproject = { version = "=0.25.1", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
+cargo-dist-schema = { version = "=0.25.2-prerelease.3", path = "cargo-dist-schema" }
+axoproject = { version = "=0.25.2-prerelease.3", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
 
 # first-party deps
 axocli = { version = "0.2.0" }
@@ -33,9 +33,9 @@ console = { version = "0.15.8" }
 clap-cargo = { version = "0.14.0" }
 comfy-table = "7.1.1"
 miette = { version = "7.2.0" }
-thiserror = "1.0.65"
+thiserror = "1.0.68"
 tracing = { version = "0.1.36", features = ["log"] }
-serde = { version = "1.0.214", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 serde_json = { version = "1.0.132" }
 cargo_metadata = "0.18.1"
 camino = { version = "1.1.9", features = ["serde1"] }
@@ -43,7 +43,8 @@ semver = "1.0.23"
 newline-converter = "0.3.0"
 dialoguer = "0.11.0"
 sha2 = "0.10.6"
-minijinja = { version = "2.4.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
+# TODO: revert to `minijinja` when the next version after `2.4.0` is released
+axominijinja = { version = "2.4.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.4"
 itertools = "0.13.0"
 cargo-wix = "0.3.8"
@@ -51,7 +52,7 @@ uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
 goblin = "0.8.2"
 similar = "2.6.0"
-tokio = { version = "1.41.0", features = ["full"] }
+tokio = { version = "1.41.1", features = ["full"] }
 temp-dir = "0.1.14"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
@@ -67,6 +68,8 @@ spdx = "0.10.6"
 base64 = "0.22.1"
 lazy_static = "1.5.0"
 current_platform = "0.2.0"
+color-backtrace = "0.6.1"
+backtrace = "0.3.74"
 
 [workspace.metadata.release]
 shared-version = true

@@ -1,7 +1,7 @@
 //! Code for generating formula.rb
 
 use axoasset::LocalAsset;
-use cargo_dist_schema::DistManifest;
+use cargo_dist_schema::{ChecksumValue, DistManifest};
 use serde::Serialize;
 use spdx::{
     expression::{ExprNode, Operator},
@@ -29,25 +29,9 @@ pub struct HomebrewInstallerInfo {
     /// The URL to the application's homepage
     pub homepage: Option<String>,
     /// A brief description of the application
-    pub desc: Option<String>,
+    pub desc: String,
     /// A GitHub repository to write the formula to, in owner/name format
     pub tap: Option<String>,
-    /// macOS AMD64 artifact
-    pub x86_64_macos: Option<ExecutableZipFragment>,
-    /// sha256 of macOS AMD64 artifact
-    pub x86_64_macos_sha256: Option<String>,
-    /// macOS ARM64 artifact
-    pub arm64_macos: Option<ExecutableZipFragment>,
-    /// sha256 of macOS ARM64 artifact
-    pub arm64_macos_sha256: Option<String>,
-    /// Linux AMD64 artifact
-    pub x86_64_linux: Option<ExecutableZipFragment>,
-    /// sha256 of Linux AMD64 artifact
-    pub x86_64_linux_sha256: Option<String>,
-    /// Linux ARM64 artifact
-    pub arm64_linux: Option<ExecutableZipFragment>,
-    /// sha256 of Linux ARM64 artifact
-    pub arm64_linux_sha256: Option<String>,
     /// Generic installer info
     pub inner: InstallerInfo,
     /// Additional packages to specify as dependencies
@@ -56,64 +40,89 @@ pub struct HomebrewInstallerInfo {
     pub install_libraries: Vec<LibraryStyle>,
 }
 
+/// All homebrew-specific fragments
+#[derive(Debug, Clone, Serialize)]
+pub struct HomebrewFragments<T> {
+    /// macOS AMD64 artifact
+    pub x86_64_macos: Option<T>,
+    /// macOS ARM64 artifact
+    pub arm64_macos: Option<T>,
+    /// Linux AMD64 artifact
+    pub x86_64_linux: Option<T>,
+    /// Linux ARM64 artifact
+    pub arm64_linux: Option<T>,
+}
+
 pub(crate) fn write_homebrew_formula(
     dist: &DistGraph,
-    source_info: &HomebrewInstallerInfo,
+    info: &HomebrewInstallerInfo,
+    fragments: &HomebrewFragments<ExecutableZipFragment>,
     manifest: &DistManifest,
 ) -> DistResult<()> {
-    let mut info = source_info.clone();
+    let info = info.clone();
 
-    // Fetch any detected dependencies from the linkage data
-    // FIXME: ideally this would be writing to per-target dependencies,
-    // but for now we just shove them all into one big list.
-    use_linkage(manifest, &info.arm64_macos, &mut info.dependencies);
-    use_linkage(manifest, &info.x86_64_macos, &mut info.dependencies);
-    use_linkage(manifest, &info.arm64_linux, &mut info.dependencies);
-    use_linkage(manifest, &info.x86_64_linux, &mut info.dependencies);
+    let checksum_key = ChecksumStyle::Sha256.ext();
+    let map_fragment = |fragment: ExecutableZipFragment| -> HomebrewFragment {
+        let sha256 = manifest
+            .artifacts
+            .get(&fragment.id)
+            .and_then(|a| a.checksums.get(checksum_key))
+            .cloned();
+        let linkage = manifest.linkage_for_artifact(&fragment.id);
 
-    // Grab checksums
-    use_sha256_checksum(manifest, &info.arm64_macos, &mut info.arm64_macos_sha256);
-    use_sha256_checksum(manifest, &info.x86_64_macos, &mut info.x86_64_macos_sha256);
-    use_sha256_checksum(manifest, &info.arm64_linux, &mut info.arm64_linux_sha256);
-    use_sha256_checksum(manifest, &info.x86_64_linux, &mut info.x86_64_linux_sha256);
+        let dependencies = linkage
+            .homebrew
+            .iter()
+            .filter_map(|lib| lib.source.clone())
+            .collect();
+
+        HomebrewFragment {
+            fragment,
+            sha256,
+            dependencies,
+        }
+    };
+
+    macro_rules! map_fragments {
+        ($fragments:ident = ($($name:ident),*)) => {
+            let $fragments = HomebrewFragments {
+                $($name: $fragments.$name.clone().map(map_fragment)),*
+            };
+        };
+    }
+    map_fragments!(fragments = (arm64_linux, x86_64_linux, arm64_macos, x86_64_macos));
+
+    let dest_path = info.inner.dest_path.clone();
+    let inputs = HomebrewTemplateInputs { info, fragments };
 
     let script = dist
         .templates
-        .render_file_to_clean_string(TEMPLATE_INSTALLER_RB, &info)?;
-    LocalAsset::write_new(&script, &info.inner.dest_path)?;
+        .render_file_to_clean_string(TEMPLATE_INSTALLER_RB, &inputs)?;
+    LocalAsset::write_new(&script, dest_path)?;
     Ok(())
 }
 
-/// Grab the sha256 checksum for this artifact from the manifest
-fn use_sha256_checksum(
-    manifest: &DistManifest,
-    fragment: &Option<ExecutableZipFragment>,
-    checksum: &mut Option<String>,
-) {
-    let checksum_key = ChecksumStyle::Sha256.ext();
-    if let Some(frag) = &fragment {
-        *checksum = manifest
-            .artifacts
-            .get(&frag.id)
-            .and_then(|a| a.checksums.get(checksum_key))
-            .cloned()
-    }
+#[derive(Debug, Clone, Serialize)]
+struct HomebrewTemplateInputs {
+    #[serde(flatten)]
+    info: HomebrewInstallerInfo,
+
+    #[serde(flatten)]
+    fragments: HomebrewFragments<HomebrewFragment>,
 }
 
-// Grab the linkage for this artifact from the manifest
-fn use_linkage(
-    manifest: &DistManifest,
-    fragment: &Option<ExecutableZipFragment>,
-    dependencies: &mut Vec<String>,
-) {
-    if let Some(frag) = fragment {
-        let archive_linkage = manifest.linkage_for_artifact(&frag.id);
-        let homebrew_deps = archive_linkage
-            .homebrew
-            .iter()
-            .filter_map(|lib| lib.source.clone());
-        dependencies.extend(homebrew_deps);
-    }
+#[derive(Debug, Clone, Serialize)]
+struct HomebrewFragment {
+    #[serde(flatten)]
+    fragment: ExecutableZipFragment,
+
+    /// SHA256 sum of the fragment. When building "just the installers", like
+    /// when running `dist build --artifacts global` locally, we don't have
+    /// the SHA256 for the fragment, since we didn't actually build them.
+    sha256: Option<ChecksumValue>,
+
+    /// homebrew package dependencies
+    dependencies: Vec<String>,
 }
 
 /// Converts the provided app name into a Ruby class-compatible

@@ -50,13 +50,14 @@
 
 use std::collections::BTreeMap;
 
+use crate::backend::installer::{ExecutableZipFragment, HomebrewImpl};
 use crate::platform::targets::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
 };
 use axoasset::AxoClient;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
     ArtifactId, BuildEnvironment, DistManifest, SystemId, SystemInfo, TargetTriple, TargetTripleRef,
 };
@@ -67,7 +68,7 @@ use tracing::{info, warn};
 use crate::announce::{self, AnnouncementTag, TagMode};
 use crate::backend::ci::github::GithubCiInfo;
 use crate::backend::ci::CiInfo;
-use crate::backend::installer::homebrew::to_homebrew_license_format;
+use crate::backend::installer::homebrew::{to_homebrew_license_format, HomebrewFragments};
 use crate::backend::installer::macpkg::PkgInstallerInfo;
 use crate::config::v1::builds::cargo::AppCargoBuildConfig;
 use crate::config::v1::ci::CiConfig;
@@ -547,7 +548,7 @@ pub struct Artifact {
     /// Unique id for the Artifact (its file name)
     ///
     /// i.e. `cargo-dist-v0.1.0-x86_64-pc-windows-msvc.zip`
-    pub id: String,
+    pub id: ArtifactId,
     /// The target platform
     ///
     /// i.e. `x86_64-pc-windows-msvc`
@@ -611,6 +612,8 @@ pub enum ArtifactKind {
     ExtraArtifact(ExtraArtifactImpl),
     /// An updater executable
     Updater(UpdaterImpl),
+    /// An existing file representing a Software Bill Of Materials
+    SBOM(SBOMImpl),
 }
 
 /// An Archive containing binaries (aka ExecutableZip)
@@ -654,6 +657,10 @@ pub struct ExtraArtifactImpl {
 /// An updater executable
 #[derive(Clone, Debug)]
 pub struct UpdaterImpl {}
+
+/// A file containing a Software Bill Of Materials
+#[derive(Clone, Debug)]
+pub struct SBOMImpl {}
 
 /// A logical release of an application that artifacts are grouped under
 #[derive(Clone, Debug)]
@@ -1372,11 +1379,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         for extra in artifacts {
             for artifact_relpath in extra.artifact_relpaths {
-                let artifact_name = artifact_relpath
-                    .file_name()
-                    .expect("extra artifact had no name!?")
-                    .to_owned();
-                let target_path = dist_dir.join(&artifact_name);
+                let artifact_name = ArtifactId::new(
+                    artifact_relpath
+                        .file_name()
+                        .expect("extra artifact had no name!?")
+                        .to_owned(),
+                );
+                let target_path = dist_dir.join(artifact_name.as_str());
                 let artifact = Artifact {
                     id: artifact_name,
                     target_triples: vec![],
@@ -1397,6 +1406,32 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         }
     }
 
+    fn add_cyclonedx_sbom_file(&mut self, to_package: PackageIdx, to_release: ReleaseIdx) {
+        let release = self.release(to_release);
+
+        if !self.global_artifacts_enabled() || !release.config.builds.cargo.cargo_cyclonedx {
+            return;
+        }
+
+        let package = self.workspaces.package(to_package);
+
+        let file_name = format!("{}.cdx.xml", package.true_name);
+        let file_path = Utf8Path::new("target/distrib/").join(file_name.clone());
+        self.add_global_artifact(
+            to_release,
+            Artifact {
+                id: ArtifactId::new(file_name),
+                target_triples: Default::default(),
+                archive: None,
+                file_path: file_path.clone(),
+                required_binaries: Default::default(),
+                kind: ArtifactKind::SBOM(SBOMImpl {}),
+                checksum: None,
+                is_global: true,
+            },
+        );
+    }
+
     fn add_unified_checksum_file(&mut self, to_release: ReleaseIdx) {
         if !self.global_artifacts_enabled() {
             return;
@@ -1404,8 +1439,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let dist_dir = &self.inner.dist_dir;
         let checksum = self.inner.config.artifacts.checksum;
-        let file_name = format!("{}.sum", checksum.ext());
-        let file_path = dist_dir.join(&file_name);
+        let file_name = ArtifactId::new(format!("{}.sum", checksum.ext()));
+        let file_path = dist_dir.join(file_name.as_str());
 
         self.add_global_artifact(
             to_release,
@@ -1480,12 +1515,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let dist_dir = &self.inner.dist_dir.to_owned();
 
-        let filename = "source.tar.gz".to_owned();
-        let target_path = dist_dir.join(&filename);
+        let artifact_name = ArtifactId::new("source.tar.gz".to_owned());
+        let target_path = dist_dir.join(artifact_name.as_str());
         let prefix = format!("{}-{}/", release.app_name, release.version);
 
         let artifact = Artifact {
-            id: filename.to_owned(),
+            id: artifact_name.to_owned(),
             target_triples: vec![],
             file_path: target_path.to_owned(),
             required_binaries: FastMap::new(),
@@ -1508,8 +1543,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact_idx = self.add_global_artifact(to_release, artifact);
 
         if checksum != ChecksumStyle::False {
-            let checksum_id = format!("{filename}.{}", checksum.ext());
-            let checksum_path = dist_dir.join(&checksum_id);
+            let checksum_id = ArtifactId::new(format!("{artifact_name}.{}", checksum.ext()));
+            let checksum_path = dist_dir.join(checksum_id.as_str());
             let checksum = Artifact {
                 id: checksum_id.to_owned(),
                 target_triples: vec![],
@@ -1540,8 +1575,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact = self.artifact(artifact_idx);
         let checksum_artifact = {
             let checksum_ext = checksum.ext();
-            let checksum_id = format!("{}.{}", artifact.id, checksum_ext);
-            let checksum_path = artifact.file_path.parent().unwrap().join(&checksum_id);
+            let checksum_id = ArtifactId::new(format!("{}.{}", artifact.id, checksum_ext));
+            let checksum_path = artifact
+                .file_path
+                .parent()
+                .unwrap()
+                .join(checksum_id.as_str());
             Artifact {
                 id: checksum_id,
                 kind: ArtifactKind::Checksum(ChecksumImpl {
@@ -1580,8 +1619,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
     pub(crate) fn make_updater_for_variant(&self, variant_idx: ReleaseVariantIdx) -> Artifact {
         let variant = self.variant(variant_idx);
-        let filename = format!("{}-update", variant.id);
-        let target_path = &self.inner.dist_dir.to_owned().join(&filename);
+        let filename = ArtifactId::new(format!("{}-update", variant.id));
+        let target_path = &self.inner.dist_dir.to_owned().join(filename.as_str());
 
         Artifact {
             id: filename.to_owned(),
@@ -1618,8 +1657,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact_dir_name = variant.id.clone();
         let artifact_dir_path = dist_dir.join(&artifact_dir_name);
         let artifact_ext = zip_style.ext();
-        let artifact_name = format!("{artifact_dir_name}{artifact_ext}");
-        let artifact_path = dist_dir.join(&artifact_name);
+        let artifact_name = ArtifactId::new(format!("{artifact_dir_name}{artifact_ext}"));
+        let artifact_path = dist_dir.join(artifact_name.as_str());
 
         let static_assets = variant.static_assets.clone();
         let mut built_assets = Vec::new();
@@ -1698,8 +1737,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 // let base_name = &binary.name;
                 let binary_id = &binary.id;
                 // let src_symbol_name = format!("{base_name}.{src_symbol_ext}");
-                let dest_symbol_name = format!("{binary_id}.{dest_symbol_ext}");
-                let artifact_path = dist_dir.join(&dest_symbol_name);
+                let dest_symbol_name = ArtifactId::new(format!("{binary_id}.{dest_symbol_ext}"));
+                let artifact_path = dist_dir.join(dest_symbol_name.as_str());
 
                 let artifact = Artifact {
                     id: dest_symbol_name,
@@ -1754,8 +1793,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
         let hosting = schema_release.hosting.clone();
-        let artifact_name = format!("{release_id}-installer.sh");
-        let artifact_path = self.inner.dist_dir.join(&artifact_name);
+        let artifact_name = ArtifactId::new(format!("{release_id}-installer.sh"));
+        let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
         let installer_url = format!("{download_url}/{artifact_name}");
         let hint = format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
@@ -1840,8 +1879,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .expect("couldn't compute a URL to download artifacts from!?");
         let hosting = schema_release.hosting.clone();
 
-        let artifact_name = format!("{formula}.rb");
-        let artifact_path = self.inner.dist_dir.join(&artifact_name);
+        let artifact_name = ArtifactId::new(format!("{formula}.rb"));
+        let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
 
         // If tap is specified, include that in the `brew install` message
         let install_target = if let Some(tap) = &self.inner.global_homebrew_tap {
@@ -1861,40 +1900,35 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .into_iter()
             .filter(|a| !a.target_triple.is_windows_msvc())
             .collect::<Vec<_>>();
-        let target_triples = artifacts
-            .iter()
-            .map(|a| a.target_triple.clone())
-            .collect::<Vec<_>>();
-        let x86_64_macos = artifacts
-            .iter()
-            .find(|a| a.target_triple == TARGET_X64_MAC)
-            .cloned();
-        let arm64_macos = artifacts
-            .iter()
-            .find(|a| a.target_triple == TARGET_ARM64_MAC)
-            .cloned();
-        let x86_64_linux = artifacts
-            .iter()
-            .find(|a| a.target_triple == TARGET_X64_LINUX_GNU)
-            .cloned();
-        let arm64_linux = artifacts
-            .iter()
-            .find(|a| a.target_triple == TARGET_ARM64_LINUX_GNU)
-            .cloned();
-
         if artifacts.is_empty() {
             warn!("skipping Homebrew installer: not building any supported platforms (use --artifacts=global)");
             return Ok(());
         };
 
+        let target_triples = artifacts
+            .iter()
+            .map(|a| a.target_triple.clone())
+            .collect::<Vec<_>>();
+
+        let find_fragment = |triple: &TargetTripleRef| -> Option<ExecutableZipFragment> {
+            artifacts
+                .iter()
+                .find(|a| a.target_triple == triple)
+                .cloned()
+        };
+        let fragments = HomebrewFragments {
+            x86_64_macos: find_fragment(TARGET_X64_MAC),
+            arm64_macos: find_fragment(TARGET_ARM64_MAC),
+            x86_64_linux: find_fragment(TARGET_X64_LINUX_GNU),
+            arm64_linux: find_fragment(TARGET_ARM64_LINUX_GNU),
+        };
+
         let release = self.release(to_release);
         let app_name = release.app_name.clone();
-        let app_desc = if release.app_desc.is_none() {
+        let app_desc = release.app_desc.clone().unwrap_or_else(|| {
             warn!("The Homebrew publish job is enabled but no description was specified\n  consider adding `description = ` to package in Cargo.toml");
-            Some(format!("The {} application", release.app_name))
-        } else {
-            release.app_desc.clone()
-        };
+            format!("The {} application", release.app_name)
+        });
         let app_license = release.app_license.clone();
         let homebrew_dsl_license = app_license.as_ref().map(|app_license| {
             // Parse SPDX license expression and convert to Homebrew's Ruby license DSL.
@@ -1929,54 +1963,52 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .map(|(name, _)| name)
             .collect();
         let bin_aliases = BinaryAliases(config.bin_aliases.clone()).for_targets(&target_triples);
+
+        let inner = InstallerInfo {
+            release: to_release,
+            dest_path: artifact_path.clone(),
+            app_name: release.app_name.clone(),
+            app_version: release.version.to_string(),
+            install_paths: config
+                .install_path
+                .iter()
+                .map(|p| p.clone().into_jinja())
+                .collect(),
+            install_success_msg: config.install_success_msg.to_owned(),
+            base_url: download_url.to_owned(),
+            hosting,
+            artifacts,
+            hint,
+            desc,
+            receipt: None,
+            bin_aliases,
+            install_libraries: config.install_libraries.clone(),
+            runtime_conditions,
+            platform_support: None,
+            // Not actually needed for this installer type
+            env_vars: None,
+        };
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
             archive: None,
-            file_path: artifact_path.clone(),
-            required_binaries: FastMap::new(),
+            file_path: artifact_path,
+            required_binaries: Default::default(),
             checksum: None,
-            kind: ArtifactKind::Installer(InstallerImpl::Homebrew(HomebrewInstallerInfo {
-                x86_64_macos,
-                x86_64_macos_sha256: None,
-                arm64_macos,
-                arm64_macos_sha256: None,
-                x86_64_linux,
-                x86_64_linux_sha256: None,
-                arm64_linux,
-                arm64_linux_sha256: None,
-                name: app_name,
-                formula_class: to_class_case(formula),
-                desc: app_desc,
-                license: homebrew_dsl_license,
-                homepage: app_homepage_url,
-                tap,
-                dependencies,
-                inner: InstallerInfo {
-                    release: to_release,
-                    dest_path: artifact_path,
-                    app_name: release.app_name.clone(),
-                    app_version: release.version.to_string(),
-                    install_paths: config
-                        .install_path
-                        .iter()
-                        .map(|p| p.clone().into_jinja())
-                        .collect(),
-                    install_success_msg: config.install_success_msg.to_owned(),
-                    base_url: download_url.to_owned(),
-                    hosting,
-                    artifacts,
-                    hint,
-                    desc,
-                    receipt: None,
-                    bin_aliases,
+            kind: ArtifactKind::Installer(InstallerImpl::Homebrew(HomebrewImpl {
+                info: HomebrewInstallerInfo {
+                    name: app_name,
+                    formula_class: to_class_case(formula),
+                    desc: app_desc,
+                    license: homebrew_dsl_license,
+                    homepage: app_homepage_url,
+                    tap,
+                    dependencies,
+                    inner,
                     install_libraries: config.install_libraries.clone(),
-                    runtime_conditions,
-                    platform_support: None,
-                    // Not actually needed for this installer type
-                    env_vars: None,
                 },
-                install_libraries: config.install_libraries.clone(),
+                fragments,
             })),
             is_global: true,
         };
@@ -2008,8 +2040,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .artifact_download_url()
             .expect("couldn't compute a URL to download artifacts from!?");
         let hosting = schema_release.hosting.clone();
-        let artifact_name = format!("{release_id}-installer.ps1");
-        let artifact_path = self.inner.dist_dir.join(&artifact_name);
+        let artifact_name = ArtifactId::new(format!("{release_id}-installer.ps1"));
+        let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
         let installer_url = format!("{download_url}/{artifact_name}");
         let hint = format!(r#"powershell -ExecutionPolicy ByPass -c "irm {installer_url} | iex""#);
         let desc = "Install prebuilt binaries via powershell script".to_owned();
@@ -2111,8 +2143,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let dir_path = self.inner.dist_dir.join(&dir_name);
         let zip_style = ZipStyle::Tar(CompressionImpl::Gzip);
         let zip_ext = zip_style.ext();
-        let artifact_name = format!("{dir_name}{zip_ext}");
-        let artifact_path = self.inner.dist_dir.join(&artifact_name);
+        let artifact_name = ArtifactId::new(format!("{dir_name}{zip_ext}"));
+        let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
         // let installer_url = format!("{download_url}/{artifact_name}");
         let hint = format!("npm install {npm_package_name}@{npm_package_version}");
         let desc = "Install prebuilt binaries into your npm project".to_owned();
@@ -2214,8 +2246,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
 
             let variant_id = &variant.id;
-            let artifact_name = format!("{variant_id}.msi");
-            let artifact_path = self.inner.dist_dir.join(&artifact_name);
+            let artifact_name = ArtifactId::new(format!("{variant_id}.msi"));
+            let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
             let dir_name = format!("{variant_id}_msi");
             let dir_path = self.inner.dist_dir.join(&dir_name);
 
@@ -2317,8 +2349,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             }
 
             let variant_id = &variant.id;
-            let artifact_name = format!("{variant_id}.pkg");
-            let artifact_path = self.inner.dist_dir.join(&artifact_name);
+            let artifact_name = ArtifactId::new(format!("{variant_id}.pkg"));
+            let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
             let dir_name = format!("{variant_id}_pkg");
             let dir_path = self.inner.dist_dir.join(&dir_name);
 
@@ -2521,6 +2553,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         target_filename: artifact.file_path.to_owned(),
                     }))
                 }
+                ArtifactKind::SBOM(_) => {
+                    // The SBOM is already generated.
+                }
             }
 
             if let Some(archive) = &artifact.archive {
@@ -2703,6 +2738,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     InstallerStyle::Pkg => self.add_pkg_installer(release)?,
                 }
             }
+
+            // Add SBOM file, if it exists.
+            self.add_cyclonedx_sbom_file(info.package_idx, release);
 
             // Add the unified checksum file
             self.add_unified_checksum_file(release);

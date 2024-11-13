@@ -46,7 +46,9 @@ use tracing::warn;
 use crate::{
     announce::AnnouncementTag,
     backend::{
-        installer::{homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, InstallerImpl},
+        installer::{
+            homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, HomebrewImpl, InstallerImpl,
+        },
         templates::{TemplateEntry, TEMPLATE_INSTALLER_NPM},
     },
     config::Config,
@@ -344,7 +346,10 @@ fn add_manifest_artifact(
         ArtifactKind::Installer(
             InstallerImpl::Powershell(info)
             | InstallerImpl::Shell(info)
-            | InstallerImpl::Homebrew(HomebrewInstallerInfo { inner: info, .. })
+            | InstallerImpl::Homebrew(HomebrewImpl {
+                info: HomebrewInstallerInfo { inner: info, .. },
+                ..
+            })
             | InstallerImpl::Npm(NpmInstallerInfo { inner: info, .. }),
         ) => {
             install_hint = Some(info.hint.clone());
@@ -385,6 +390,11 @@ fn add_manifest_artifact(
             install_hint = None;
             description = None;
             kind = cargo_dist_schema::ArtifactKind::Updater;
+        }
+        ArtifactKind::SBOM(_) => {
+            install_hint = None;
+            description = None;
+            kind = cargo_dist_schema::ArtifactKind::SBOM;
         }
     };
 

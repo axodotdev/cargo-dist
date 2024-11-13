@@ -5,7 +5,8 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{EnvironmentVariables, Hosting, TargetTriple};
+use cargo_dist_schema::{ArtifactId, EnvironmentVariables, Hosting, TargetTriple};
+use homebrew::HomebrewFragments;
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
 
@@ -37,11 +38,21 @@ pub enum InstallerImpl {
     /// npm installer package
     Npm(NpmInstallerInfo),
     /// Homebrew formula
-    Homebrew(HomebrewInstallerInfo),
+    Homebrew(HomebrewImpl),
     /// Windows msi installer
     Msi(MsiInstallerInfo),
     /// Mac pkg installer
     Pkg(PkgInstallerInfo),
+}
+
+/// Information needed to make a homebrew installer
+#[derive(Debug, Clone)]
+pub struct HomebrewImpl {
+    /// Base information
+    pub info: HomebrewInstallerInfo,
+
+    /// Various fragments (arm64 mac, x86_64 mac, arm64 linux, x86_64 linux, etc.)
+    pub fragments: HomebrewFragments<ExecutableZipFragment>,
 }
 
 /// Generic info about an installer
@@ -88,7 +99,7 @@ pub struct InstallerInfo {
 #[derive(Debug, Clone, Serialize)]
 pub struct ExecutableZipFragment {
     /// The id of the artifact
-    pub id: String,
+    pub id: ArtifactId,
     /// The target the artifact supports
     pub target_triple: TargetTriple,
     /// The executables the artifact contains (name, assumed at root)
@@ -109,7 +120,7 @@ pub struct ExecutableZipFragment {
 #[derive(Debug, Clone, Serialize)]
 pub struct UpdaterFragment {
     /// The id of the artifact
-    pub id: String,
+    pub id: ArtifactId,
     /// The binary the artifact contains (name, assumed at root)
-    pub binary: String,
+    pub binary: ArtifactId,
 }

@@ -69,6 +69,9 @@ impl TestOptions {
             .as_deref()
             .unwrap_or(app_name)
     }
+    pub fn homebrew_skip_install<'a>(&'a self, app_name: &'a str) -> bool {
+        self.options(app_name).homebrew_skip_install
+    }
     pub fn bins_with_aliases(&self, app_name: &str, bins: &[String]) -> Vec<String> {
         self.options(app_name)
             .bin_aliases
@@ -87,6 +90,9 @@ pub struct AppOverrides {
     #[allow(dead_code)]
     pub homebrew_tap: Option<String>,
     pub homebrew_package_name: Option<String>,
+    /// don't try to install the brew formula in CI,
+    /// cf. https://github.com/axodotdev/cargo-dist/issues/1525
+    pub homebrew_skip_install: bool,
     pub bin_aliases: Option<Vec<String>>,
 }
 
@@ -95,6 +101,7 @@ static EMPTY_OVERRIDES: AppOverrides = AppOverrides {
     npm_scope: None,
     homebrew_tap: None,
     homebrew_package_name: None,
+    homebrew_skip_install: false,
     bin_aliases: None,
 };
 
@@ -142,6 +149,7 @@ where
     /// Run a test on this repo
     pub fn run_test(&self, test: impl FnOnce(TestContext<Tools>) -> Result<()>) -> Result<()> {
         std::env::set_var("CARGO_DIST_MOCK_NETWORKING", "1");
+        std::env::set_var("CARGO_DIST_FORCE_BACKTRACE", "1");
         let maybe_tools = self.tools.lock();
         let maybe_repo = self.ctx.lock();
         // Intentionally unwrapping here to poison the mutexes if we can't fetch

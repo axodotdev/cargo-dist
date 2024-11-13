@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use axoasset::{toml_edit, SourceFile};
 use axoproject::local_repo::LocalRepo;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{TargetTriple, TargetTripleRef};
+use cargo_dist_schema::{ChecksumExtensionRef, TargetTriple, TargetTripleRef};
 use serde::{Deserialize, Serialize};
 
 use crate::announce::TagSettings;
@@ -662,8 +662,8 @@ pub enum ChecksumStyle {
 
 impl ChecksumStyle {
     /// Get the extension of a checksum
-    pub fn ext(self) -> &'static str {
-        match self {
+    pub fn ext(self) -> &'static ChecksumExtensionRef {
+        ChecksumExtensionRef::from_str(match self {
             ChecksumStyle::Sha256 => "sha256",
             ChecksumStyle::Sha512 => "sha512",
             ChecksumStyle::Sha3_256 => "sha3-256",
@@ -671,7 +671,7 @@ impl ChecksumStyle {
             ChecksumStyle::Blake2s => "blake2s",
             ChecksumStyle::Blake2b => "blake2b",
             ChecksumStyle::False => "false",
-        }
+        })
     }
 }
 

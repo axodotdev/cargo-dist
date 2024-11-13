@@ -15,6 +15,12 @@ pub struct WorkspaceCargoBuildConfig {
 
     /// Build only the required packages, and individually
     pub precise_builds: Option<bool>,
+
+    /// Whether to embed dependency information in the executable.
+    pub cargo_auditable: bool,
+
+    /// Whether to run cargo-cyclonedx on the workspace.
+    pub cargo_cyclonedx: bool,
 }
 
 /// cargo build config for a specific app
@@ -33,6 +39,14 @@ pub struct AppCargoBuildConfig {
     ///
     /// (defaults to false)
     pub all_features: bool,
+    /// Whether to embed dependency information in the executable.
+    ///
+    /// (defaults to false)
+    pub cargo_auditable: bool,
+    /// Whether to use cargo-cyclonedx to generate an SBOM.
+    ///
+    /// (defaults to false)
+    pub cargo_cyclonedx: bool,
 }
 
 /// cargo build config (raw)
@@ -95,6 +109,16 @@ pub struct CargoBuildLayer {
     /// (defaults to false)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub all_features: Option<bool>,
+    /// Whether to embed dependency information in the executable.
+    ///
+    /// (defaults to false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cargo_auditable: Option<bool>,
+    /// Whether to run cargo-cyclonedx to generate an SBOM.
+    ///
+    /// (defaults to false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cargo_cyclonedx: Option<bool>,
 }
 
 impl WorkspaceCargoBuildConfig {
@@ -107,6 +131,8 @@ impl WorkspaceCargoBuildConfig {
             rust_toolchain_version: None,
             precise_builds: None,
             msvc_crt_static: true,
+            cargo_auditable: false,
+            cargo_cyclonedx: false,
         }
     }
 }
@@ -123,6 +149,8 @@ impl AppCargoBuildConfig {
             features: vec![],
             default_features: true,
             all_features: false,
+            cargo_auditable: false,
+            cargo_cyclonedx: false,
         }
     }
 }
@@ -134,6 +162,8 @@ impl ApplyLayer for WorkspaceCargoBuildConfig {
         Self::Layer {
             rust_toolchain_version,
             precise_builds,
+            cargo_auditable,
+            cargo_cyclonedx,
             // local-only
             common: _,
             msvc_crt_static: _,
@@ -145,6 +175,8 @@ impl ApplyLayer for WorkspaceCargoBuildConfig {
         self.rust_toolchain_version
             .apply_opt(rust_toolchain_version);
         self.precise_builds.apply_opt(precise_builds);
+        self.cargo_auditable.apply_val(cargo_auditable);
+        self.cargo_cyclonedx.apply_val(cargo_cyclonedx);
     }
 }
 impl ApplyLayer for AppCargoBuildConfig {
@@ -156,6 +188,8 @@ impl ApplyLayer for AppCargoBuildConfig {
             features,
             default_features,
             all_features,
+            cargo_auditable,
+            cargo_cyclonedx,
 
             // global-only
             rust_toolchain_version: _,
@@ -167,6 +201,8 @@ impl ApplyLayer for AppCargoBuildConfig {
         self.features.apply_val(features);
         self.default_features.apply_val(default_features);
         self.all_features.apply_val(all_features);
+        self.cargo_auditable.apply_val(cargo_auditable);
+        self.cargo_cyclonedx.apply_val(cargo_cyclonedx);
     }
 }
 impl ApplyLayer for CargoBuildLayer {
@@ -181,6 +217,8 @@ impl ApplyLayer for CargoBuildLayer {
             features,
             default_features,
             all_features,
+            cargo_auditable,
+            cargo_cyclonedx,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -191,6 +229,8 @@ impl ApplyLayer for CargoBuildLayer {
         self.features.apply_opt(features);
         self.default_features.apply_opt(default_features);
         self.all_features.apply_opt(all_features);
+        self.cargo_auditable.apply_opt(cargo_auditable);
+        self.cargo_cyclonedx.apply_opt(cargo_cyclonedx);
     }
 }
 

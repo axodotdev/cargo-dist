@@ -93,8 +93,12 @@ pub type LocalPath = String;
 ///
 /// (Should we normalize this one?)
 pub type RelPath = String;
-/// The unique ID of an Artifact
-pub type ArtifactId = String;
+
+declare_strongly_typed_string! {
+    /// The unique ID of an Artifact
+    pub struct ArtifactId => &ArtifactIdRef;
+}
+
 /// The unique ID of a System
 pub type SystemId = String;
 /// The unique ID of an Asset
@@ -302,8 +306,12 @@ pub struct GithubMatrixEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runner: Option<GithubRunner>,
     /// Expression to execute to install dist
+    pub install_dist: GhaRunStep,
+    /// Expression to execute to install cargo-auditable
+    pub install_cargo_auditable: GhaRunStep,
+    /// Expression to execute to install cargo-cyclonedx
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub install_dist: Option<String>,
+    pub install_cargo_cyclonedx: Option<GhaRunStep>,
     /// Arguments to pass to dist
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_args: Option<String>,
@@ -313,6 +321,41 @@ pub struct GithubMatrixEntry {
     /// what cache provider to use
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_provider: Option<String>,
+}
+
+/// A GitHub Actions "run" step, either bash or powershell
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+// this mirrors GHA's structure, see
+//   * <https://serde.rs/enum-representations.html>
+//   * <https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell>
+#[serde(tag = "shell", content = "run")]
+pub enum GhaRunStep {
+    /// see [`DashScript`]
+    #[serde(rename = "sh")]
+    Dash(DashScript),
+    /// see [`PowershellScript`]
+    #[serde(rename = "pwsh")]
+    Powershell(PowershellScript),
+}
+
+impl From<DashScript> for GhaRunStep {
+    fn from(bash: DashScript) -> Self {
+        Self::Dash(bash)
+    }
+}
+
+impl From<PowershellScript> for GhaRunStep {
+    fn from(powershell: PowershellScript) -> Self {
+        Self::Powershell(powershell)
+    }
+}
+
+declare_strongly_typed_string! {
+    /// A bit of shell script (that can run with `/bin/sh`), ran on CI runners. Can be multi-line.
+    pub struct DashScript => &DashScriptRef;
+
+    /// A bit of powershell script, ran on CI runners. Can be multi-line.
+    pub struct PowershellScript => &PowershellScriptRef;
 }
 
 /// Type of job to run on pull request
@@ -400,6 +443,19 @@ pub struct Release {
     pub hosting: Hosting,
 }
 
+declare_strongly_typed_string! {
+    /// A lowercase descriptor for a checksum algorithm, like "sha256"
+    /// or "blake2b".
+    ///
+    /// TODO(amos): Honestly this type should not exist, it's just what
+    /// `ChecksumStyle` serializes to. `ChecksumsStyle` should just
+    /// be serializable, that's it.
+    pub struct ChecksumExtension => &ChecksumExtensionRef;
+
+    /// A checksum value, usually the lower-cased hex string of the checksum
+    pub struct ChecksumValue => &ChecksumValueRef;
+}
+
 /// A distributable artifact that's part of a Release
 ///
 /// i.e. a zip or installer
@@ -412,7 +468,7 @@ pub struct Artifact {
     /// indicate you can install the application with `cargo install` or `npm install`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub name: Option<String>,
+    pub name: Option<ArtifactId>,
     /// The kind of artifact this is (e.g. "executable-zip")
     #[serde(flatten)]
     pub kind: ArtifactKind,
@@ -439,14 +495,14 @@ pub struct Artifact {
     /// id of an Artifact that contains the checksum for this Artifact
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub checksum: Option<String>,
+    pub checksum: Option<ArtifactId>,
     /// checksums for this artifact
     ///
     /// keys are the name of an algorithm like "sha256" or "sha512"
     /// values are the actual hex string of the checksum
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub checksums: BTreeMap<String, String>,
+    pub checksums: BTreeMap<ChecksumExtension, ChecksumValue>,
 }
 
 /// An asset contained in an artifact (executable, license, etc.)
@@ -529,6 +585,9 @@ pub enum ArtifactKind {
     /// An updater executable
     #[serde(rename = "updater")]
     Updater,
+    /// A file that already exists
+    #[serde(rename = "sbom")]
+    SBOM,
     /// Unknown to this version of cargo-dist-schema
     ///
     /// This is a fallback for forward/backward-compat
@@ -543,7 +602,7 @@ pub struct ExecutableAsset {
     /// The name of the Artifact containing symbols for this executable
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub symbols_artifact: Option<String>,
+    pub symbols_artifact: Option<ArtifactId>,
 }
 
 /// A C dynamic library artifact (so/dylib/dll)
@@ -552,7 +611,7 @@ pub struct DynamicLibraryAsset {
     /// The name of the Artifact containing symbols for this library
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub symbols_artifact: Option<String>,
+    pub symbols_artifact: Option<ArtifactId>,
 }
 
 /// A C static library artifact (a/lib)
@@ -561,7 +620,7 @@ pub struct StaticLibraryAsset {
     /// The name of the Artifact containing symbols for this library
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub symbols_artifact: Option<String>,
+    pub symbols_artifact: Option<ArtifactId>,
 }
 
 /// Info about a manifest version
@@ -609,7 +668,7 @@ impl Format {
 
 impl DistManifest {
     /// Create a new DistManifest
-    pub fn new(releases: Vec<Release>, artifacts: BTreeMap<String, Artifact>) -> Self {
+    pub fn new(releases: Vec<Release>, artifacts: BTreeMap<ArtifactId, Artifact>) -> Self {
         Self {
             dist_version: None,
             announcement_tag: None,
@@ -652,7 +711,7 @@ impl DistManifest {
     pub fn artifacts_for_release<'a>(
         &'a self,
         release: &'a Release,
-    ) -> impl Iterator<Item = (&'a str, &'a Artifact)> {
+    ) -> impl Iterator<Item = (&'a ArtifactIdRef, &'a Artifact)> {
         release
             .artifacts
             .iter()

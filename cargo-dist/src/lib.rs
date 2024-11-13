@@ -17,7 +17,9 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use backend::{
     ci::CiInfo,
-    installer::{self, macpkg::PkgInstallerInfo, msi::MsiInstallerInfo, InstallerImpl},
+    installer::{
+        self, macpkg::PkgInstallerInfo, msi::MsiInstallerInfo, HomebrewImpl, InstallerImpl,
+    },
 };
 use build::generic::{build_generic_target, run_extra_artifacts_build};
 use build::{
@@ -25,7 +27,7 @@ use build::{
     fake::{build_fake_cargo_target, build_fake_generic_target},
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{ArtifactId, DistManifest, TargetTriple};
+use cargo_dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TargetTriple};
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
@@ -397,7 +399,8 @@ fn generate_and_write_checksum(
 ) -> DistResult<()> {
     let output = generate_checksum(checksum, src_path)?;
     if let Some(dest_path) = dest_path {
-        write_checksum(&output, src_path, dest_path)?;
+        let name = src_path.file_name().expect("hashing file with no name!?");
+        write_checksum_file(&[(name, &output)], dest_path)?;
     }
     if let Some(artifact_id) = for_artifact {
         if let Some(artifact) = manifest.artifacts.get_mut(artifact_id) {
@@ -413,10 +416,8 @@ fn generate_unified_checksum(
     checksum: ChecksumStyle,
     dest_path: &Utf8Path,
 ) -> DistResult<()> {
-    let mut output = String::new();
-    use std::fmt::Write;
-
     let expected_checksum_ext = checksum.ext();
+    let mut entries: Vec<(&str, &ChecksumValueRef)> = vec![];
 
     for artifact in manifest.artifacts.values() {
         let artifact_name = if let Some(artifact_name) = artifact.name.as_deref() {
@@ -426,26 +427,18 @@ fn generate_unified_checksum(
         };
 
         for (checksum_ext, checksum) in &artifact.checksums {
-            if checksum_ext != expected_checksum_ext {
-                tracing::warn!(
-                    "Found checksum {checksum_ext} for {artifact_name}, expected only {expected_checksum_ext}"
-                );
-                continue;
+            if checksum_ext == expected_checksum_ext {
+                entries.push((artifact_name.as_str(), checksum));
             }
-
-            // We write with exactly two spaces to match the output of
-            // shasum. While sha256sum is tolerant of varying numbers of
-            // spaces, shasum itself will only match precisely two -
-            // we need to be precise here for compatibility.
-            writeln!(&mut output, "{checksum}  {artifact_name}").unwrap();
         }
     }
-    axoasset::LocalAsset::write_new(&output, dest_path)?;
+    write_checksum_file(&entries, dest_path)?;
+
     Ok(())
 }
 
 /// Generate a checksum for the src_path and return it as a string
-fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResult<String> {
+fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResult<ChecksumValue> {
     info!("generating {checksum:?} for {src_path}");
     use sha2::Digest;
     use std::fmt::Write;
@@ -487,11 +480,11 @@ fn generate_checksum(checksum: &ChecksumStyle, src_path: &Utf8Path) -> DistResul
             unreachable!()
         }
     };
-    let mut output = String::new();
+    let mut output = String::with_capacity(hash.len() * 2);
     for byte in hash {
         write!(&mut output, "{:02x}", byte).unwrap();
     }
-    Ok(output)
+    Ok(ChecksumValue::new(output))
 }
 
 /// Creates a source code tarball from the git archive from
@@ -539,20 +532,30 @@ fn generate_fake_source_tarball(
 }
 
 /// Write the checksum to dest_path
-fn write_checksum(checksum: &str, src_path: &Utf8Path, dest_path: &Utf8Path) -> DistResult<()> {
+fn write_checksum_file(
+    entries: &[(&str, &ChecksumValueRef)],
+    dest_path: &Utf8Path,
+) -> DistResult<()> {
     // Tools like sha256sum expect a new-line-delimited format of
     // <checksum> <mode><path>
     //
     // * checksum is the checksum in hex
-    // * mode is ` ` for "text" and `*` for "binary" (we mostly have binaries)
+    // * mode is ` ` for "text" and `*` for "binary" — "text" is for CRLF support, we don't want it.
     // * path is a relative path to the thing being checksummed (usually just a filename)
     //
     // We also make sure there's a trailing newline as is traditional.
     //
-    // By following this format we support commands like `sha256sum --check my-app.tar.gz.sha256`
-    let file_path = src_path.file_name().expect("hashing file with no name!?");
-    let line = format!("{checksum} *{file_path}\n");
-    axoasset::LocalAsset::write_new(&line, dest_path)?;
+    // By following this format we support commands like `sha256sum --check sha256.sum`,
+    // both the GNU coreutils and Darwin variants, and also Perl `shasum` utility.
+    let mut contents = String::new();
+    for (file_path, checksum) in entries {
+        use std::fmt::Write;
+        writeln!(&mut contents, "{checksum} *{file_path}",).unwrap();
+    }
+    // leave a trailing newline
+    contents.push('\n');
+
+    axoasset::LocalAsset::write_new(&contents, dest_path)?;
     Ok(())
 }
 
@@ -775,13 +778,15 @@ fn generate_installer(
     manifest: &DistManifest,
 ) -> DistResult<()> {
     match style {
-        InstallerImpl::Shell(info) => installer::shell::write_install_sh_script(dist, info)?,
+        InstallerImpl::Shell(info) => {
+            installer::shell::write_install_sh_script(dist, info, manifest)?
+        }
         InstallerImpl::Powershell(info) => {
             installer::powershell::write_install_ps_script(dist, info)?
         }
         InstallerImpl::Npm(info) => installer::npm::write_npm_project(dist, info)?,
-        InstallerImpl::Homebrew(info) => {
-            installer::homebrew::write_homebrew_formula(dist, info, manifest)?
+        InstallerImpl::Homebrew(HomebrewImpl { info, fragments }) => {
+            installer::homebrew::write_homebrew_formula(dist, info, fragments, manifest)?
         }
         InstallerImpl::Msi(info) => info.build(dist)?,
         InstallerImpl::Pkg(info) => info.build()?,

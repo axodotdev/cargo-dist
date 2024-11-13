@@ -359,6 +359,7 @@ fn get_new_dist_metadata(
         DistMetadata {
             // If they init with this version we're gonna try to stick to it!
             cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
+            cargo_dist_url_override: None,
             // deprecated, default to not emitting it
             rust_toolchain_version: None,
             ci: None,
@@ -420,6 +421,8 @@ fn get_new_dist_metadata(
             github_build_setup: None,
             mac_pkg_config: None,
             minimum_glibc_version: None,
+            cargo_auditable: None,
+            cargo_cyclonedx: None,
         }
     };
 
@@ -840,6 +843,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     // This is intentionally written awkwardly to make you update this
     let DistMetadata {
         cargo_dist_version,
+        cargo_dist_url_override,
         rust_toolchain_version,
         dist,
         ci,
@@ -894,6 +898,8 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         install_libraries,
         mac_pkg_config,
         minimum_glibc_version,
+        cargo_auditable,
+        cargo_cyclonedx,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -924,6 +930,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "cargo-dist-version",
         "# The preferred dist version to use in CI (Cargo.toml SemVer syntax)\n",
         cargo_dist_version.as_ref().map(|v| v.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "cargo-dist-url-override",
+        "# A URL to use to install `cargo-dist` (with the installer script)\n",
+        cargo_dist_url_override.as_ref().map(|v| v.to_string()),
     );
 
     apply_optional_value(
@@ -1030,7 +1043,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         table,
         "checksum",
         "# Checksums to generate for each App\n",
-        checksum.map(|c| c.ext()),
+        checksum.map(|c| c.ext().as_str()),
     );
 
     apply_optional_value(
@@ -1299,6 +1312,20 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "minimum-glibc-version",
         "# The minimum glibc version supported by the package (overrides auto-detection)\n",
         minimum_glibc_version.as_ref().map(|v| v.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "cargo-auditable",
+        "# Whether to embed dependency information using cargo-auditable\n",
+        *cargo_auditable,
+    );
+
+    apply_optional_value(
+        table,
+        "cargo-cyclonedx",
+        "# Whether to use cargo-cyclonedx to generate an SBOM\n",
+        *cargo_cyclonedx,
     );
 
     // Finalize the table

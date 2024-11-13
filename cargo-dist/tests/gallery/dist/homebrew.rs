@@ -21,6 +21,12 @@ impl AppResult {
                 return Ok(());
             };
 
+            // don't do this if the test asked not to do it,
+            // cf. https://github.com/axodotdev/cargo-dist/issues/1525
+            if self.homebrew_skip_install {
+                return Ok(());
+            }
+
             // Only do this if Homebrew is installed
             let Some(homebrew) = &ctx.tools.homebrew else {
                 return Ok(());

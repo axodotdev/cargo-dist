@@ -1,6 +1,7 @@
 ---
 source: cargo-dist-schema/src/lib.rs
 expression: json_schema
+snapshot_kind: text
 ---
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -255,6 +256,21 @@ expression: json_schema
               "type": "string",
               "enum": [
                 "updater"
+              ]
+            }
+          }
+        },
+        {
+          "description": "A file that already exists",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "sbom"
               ]
             }
           }
@@ -693,6 +709,49 @@ expression: json_schema
         }
       }
     },
+    "GhaRunStep": {
+      "description": "A GitHub Actions \"run\" step, either bash or powershell",
+      "oneOf": [
+        {
+          "description": "see [`DashScript`]",
+          "type": "object",
+          "required": [
+            "run",
+            "shell"
+          ],
+          "properties": {
+            "run": {
+              "type": "string"
+            },
+            "shell": {
+              "type": "string",
+              "enum": [
+                "sh"
+              ]
+            }
+          }
+        },
+        {
+          "description": "see [`PowershellScript`]",
+          "type": "object",
+          "required": [
+            "run",
+            "shell"
+          ],
+          "properties": {
+            "run": {
+              "type": "string"
+            },
+            "shell": {
+              "type": "string",
+              "enum": [
+                "pwsh"
+              ]
+            }
+          }
+        }
+      ]
+    },
     "GithubCiInfo": {
       "description": "Github CI backend",
       "type": "object",
@@ -772,6 +831,10 @@ expression: json_schema
     "GithubMatrixEntry": {
       "description": "Entry for a github matrix",
       "type": "object",
+      "required": [
+        "install_cargo_auditable",
+        "install_dist"
+      ],
       "properties": {
         "cache_provider": {
           "description": "what cache provider to use",
@@ -787,11 +850,31 @@ expression: json_schema
             "null"
           ]
         },
+        "install_cargo_auditable": {
+          "description": "Expression to execute to install cargo-auditable",
+          "allOf": [
+            {
+              "$ref": "#/definitions/GhaRunStep"
+            }
+          ]
+        },
+        "install_cargo_cyclonedx": {
+          "description": "Expression to execute to install cargo-cyclonedx",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GhaRunStep"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "install_dist": {
           "description": "Expression to execute to install dist",
-          "type": [
-            "string",
-            "null"
+          "allOf": [
+            {
+              "$ref": "#/definitions/GhaRunStep"
+            }
           ]
         },
         "packages_install": {

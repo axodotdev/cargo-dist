@@ -152,15 +152,17 @@ download_binary_and_run_installer() {
     assert_nz "$_true_arch" "arch"
     local _cur_arch="$_true_arch"
 
-    # Lookup what archives support this platform
+
+    # look up what archives support this platform
     local _artifact_name
     _artifact_name="$(select_archive_for_arch "$_true_arch")" || return 1
     local _bins
     local _zip_ext
     local _arch
+    local _checksum_style
+    local _checksum_value
 
-    # try each archive, checking runtime conditions like libc versions
-    # accepting the first one that matches, as it's the best match
+    # destructure selected archive info into locals
     case "$_artifact_name" in 
         "axolotlsay-aarch64-apple-darwin.tar.gz")
             _arch="aarch64-apple-darwin"
@@ -239,6 +241,12 @@ download_binary_and_run_installer() {
       say "that $APP_NAME's release process is not working. When in doubt"
       say "please feel free to open an issue!"
       exit 1
+    fi
+
+    if [ -n "${_checksum_style:-}" ]; then
+        verify_checksum "$_file" "$_checksum_style" "$_checksum_value"
+    else
+        say "no checksums to verify"
     fi
 
     # ...and then the updater, if it exists
@@ -374,6 +382,9 @@ aliases_for_binary() {
 select_archive_for_arch() {
     local _true_arch="$1"
     local _archive
+
+    # try each archive, checking runtime conditions like libc versions
+    # accepting the first one that matches, as it's the best match
     case "$_true_arch" in 
         "aarch64-apple-darwin")
             _archive="axolotlsay-aarch64-apple-darwin.tar.gz"
@@ -520,6 +531,18 @@ install() {
         _force_install_dir="$UNMANAGED_INSTALL"
         _install_layout="flat"
     fi
+
+    # Check if the install layout should be changed from `flat` to `cargo-home`
+    # for backwards compatible updates of applications that switched layouts.
+    if [ -n "${_force_install_dir:-}" ]; then
+        if [ "$_install_layout" = "flat" ]; then
+            # If the install directory is targeting the Cargo home directory, then
+            # we assume this application was previously installed that layout
+            if [ "$_force_install_dir" = "${CARGO_HOME:-${HOME:-}/.cargo}" ]; then
+                _install_layout="cargo-home"
+            fi
+        fi
+     fi
 
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
@@ -1213,6 +1236,83 @@ downloader() {
     fi
 }
 
+verify_checksum() {
+    local _file="$1"
+    local _checksum_style="$2"
+    local _checksum_value="$3"
+    local _calculated_checksum
+
+    if [ -z "$_checksum_value" ]; then
+        return 0
+    fi
+    case "$_checksum_style" in
+        sha256)
+            if ! check_cmd sha256sum; then
+                say "skipping sha256 checksum verification (it requires the 'sha256sum' command)"
+                return 0
+            fi
+            _calculated_checksum="$(sha256sum -b "$_file" | awk '{printf $1}')"
+            ;;
+        sha512)
+            if ! check_cmd sha512sum; then
+                say "skipping sha512 checksum verification (it requires the 'sha512sum' command)"
+                return 0
+            fi
+            _calculated_checksum="$(sha512sum -b "$_file" | awk '{printf $1}')"
+            ;;
+        sha3-256)
+            if ! check_cmd openssl; then
+                say "skipping sha3-256 checksum verification (it requires the 'openssl' command)"
+                return 0
+            fi
+            _calculated_checksum="$(openssl dgst -sha3-256 "$_file" | awk '{printf $NF}')"
+            ;;
+        sha3-512)
+            if ! check_cmd openssl; then
+                say "skipping sha3-512 checksum verification (it requires the 'openssl' command)"
+                return 0
+            fi
+            _calculated_checksum="$(openssl dgst -sha3-512 "$_file" | awk '{printf $NF}')"
+            ;;
+        blake2s)
+            if ! check_cmd b2sum; then
+                say "skipping blake2s checksum verification (it requires the 'b2sum' command)"
+                return 0
+            fi
+            # Test if we have official b2sum with blake2s support
+            local _well_known_blake2s_checksum="93314a61f470985a40f8da62df10ba0546dc5216e1d45847bf1dbaa42a0e97af"
+            local _test_blake2s
+            _test_blake2s="$(printf "can do blake2s" | b2sum -a blake2s | awk '{printf $1}')" || _test_blake2s=""
+
+            if [ "X$_test_blake2s" = "X$_well_known_blake2s_checksum" ]; then
+                _calculated_checksum="$(b2sum -a blake2s "$_file" | awk '{printf $1}')" || _calculated_checksum=""
+            else
+                say "skipping blake2s checksum verification (installed b2sum doesn't support blake2s)"
+                return 0
+            fi
+            ;;
+        blake2b)
+            if ! check_cmd b2sum; then
+                say "skipping blake2b checksum verification (it requires the 'b2sum' command)"
+                return 0
+            fi
+            _calculated_checksum="$(b2sum "$_file" | awk '{printf $1}')"
+            ;;
+        false)
+            ;;
+        *)
+            say "skipping unknown checksum style: $_checksum_style"
+            return 0
+            ;;
+    esac
+
+    if [ "$_calculated_checksum" != "$_checksum_value" ]; then
+        err "checksum mismatch
+            want: $_checksum_value
+            got:  $_calculated_checksum"
+    fi
+}
+
 download_binary_and_run_installer "$@" || exit 1
 
 ================ axolotlsay.rb ================
@@ -1550,6 +1650,22 @@ function Invoke-Installer($artifacts, $platforms) {
   } elseif ($unmanaged_install) {
     $force_install_dir = $unmanaged_install
     $install_layout = "flat"
+  }
+
+  # Check if the install layout should be changed from `flat` to `cargo-home`
+  # for backwards compatible updates of applications that switched layouts.
+  if (($force_install_dir) -and ($install_layout -eq "flat")) {
+    # If the install directory is targeting the Cargo home directory, then
+    # we assume this application was previously installed that layout
+    # Note the installer passes the path with `\\` separators, but here they are
+    # `\` so we normalize for comparison. We don't use `Resolve-Path` because they
+    # may not exist.
+    $cargo_home = if ($env:CARGO_HOME) { $env:CARGO_HOME } else {
+        Join-Path $(if ($HOME) { $HOME } else { "." }) ".cargo"
+    }
+    if ($force_install_dir.Replace('\\', '\') -eq $cargo_home) {
+      $install_layout = "cargo-home"
+    }
   }
 
   # The actual path we're going to install to
@@ -3240,6 +3356,7 @@ run("axolotlsay");
 CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  axolotlsay-npm-package.tar.gz
 CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.gz
 
+
 ================ dist-manifest.json ================
 {
   "dist_version": "CENSORED",
@@ -3600,7 +3717,14 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
               "aarch64-apple-darwin"
             ],
             "runner": "macos-13",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "install_cargo_auditable": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            },
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "cache_provider": "github"
           },
@@ -3609,7 +3733,14 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
               "x86_64-apple-darwin"
             ],
             "runner": "macos-13",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "install_cargo_auditable": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            },
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "cache_provider": "github"
           },
@@ -3618,7 +3749,14 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
               "x86_64-pc-windows-msvc"
             ],
             "runner": "windows-2019",
-            "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex\"",
+            "install_dist": {
+              "shell": "pwsh",
+              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
+            },
+            "install_cargo_auditable": {
+              "shell": "pwsh",
+              "run": "powershell -c \"irm https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.ps1 | iex\""
+            },
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
             "cache_provider": "github"
           },
@@ -3627,7 +3765,14 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
               "x86_64-unknown-linux-gnu"
             ],
             "runner": "ubuntu-20.04",
-            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "install_cargo_auditable": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
+            },
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
             "cache_provider": "github"
           }
@@ -3765,7 +3910,7 @@ jobs:
           key: ${{ join(matrix.targets, '-') }}
           cache-provider: ${{ matrix.cache_provider }}
       - name: Install dist
-        run: ${{ matrix.install_dist }}
+        run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
