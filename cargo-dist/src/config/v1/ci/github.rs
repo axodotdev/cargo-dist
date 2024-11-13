@@ -110,6 +110,7 @@ impl ApplyLayer for GithubCiConfig {
                                                 image: image_name,
                                                 // assume x86_64-unknown-linux-musl if not specified
                                                 host: targets::TARGET_X64_LINUX_MUSL.to_owned(),
+                                                package_manager: None,
                                             }
                                         }
                                         StringLikeOr::Val(container_config) => ContainerConfig {
@@ -117,6 +118,7 @@ impl ApplyLayer for GithubCiConfig {
                                             host: container_config.host.unwrap_or_else(|| {
                                                 targets::TARGET_X64_LINUX_MUSL.to_owned()
                                             }),
+                                            package_manager: container_config.package_manager,
                                         },
                                     });
                                 GithubRunnerConfig {

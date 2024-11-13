@@ -419,6 +419,10 @@ pub struct ContainerConfigInput {
     /// The host triple of the container, something like `x86_64-unknown-linux-gnu`
     /// or `aarch64-unknown-linux-musl` or whatever.
     pub host: Option<TripleName>,
+
+    /// The package manager to use within the container, like `apt`.
+    #[serde(rename = "package-manager")]
+    pub package_manager: Option<PackageManager>,
 }
 
 /// GitHub config that's common between different kinds of jobs (global, local)
@@ -431,6 +435,9 @@ pub struct ContainerConfig {
     /// The host triple of the container, something like `x86_64-unknown-linux-gnu`
     /// or `aarch64-unknown-linux-musl` or whatever.
     pub host: TripleName,
+
+    /// The package manager to use within the container, like `apt`.
+    pub package_manager: Option<PackageManager>,
 }
 
 /// Used in `github/release.yml.j2` to template out "global" build jobs
@@ -1062,6 +1069,7 @@ pub struct Linkage {
 #[derive(
     Clone, Copy, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord,
 )]
+#[serde(rename_all = "lowercase")]
 pub enum PackageManager {
     /// Homebrew (usually for Mac)
     Homebrew,

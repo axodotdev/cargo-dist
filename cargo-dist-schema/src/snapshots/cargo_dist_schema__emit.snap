@@ -686,6 +686,17 @@ snapshot_kind: text
         "image": {
           "description": "The container image to run, something like `ubuntu:20.04` or `quay.io/pypa/manylinux_2_28_x86_64`",
           "type": "string"
+        },
+        "package_manager": {
+          "description": "The package manager to use within the container, like `apt`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PackageManager"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1056,14 +1067,14 @@ snapshot_kind: text
           "description": "Homebrew (usually for Mac)",
           "type": "string",
           "enum": [
-            "Homebrew"
+            "homebrew"
           ]
         },
         {
           "description": "Apt (Debian, Ubuntu, etc)",
           "type": "string",
           "enum": [
-            "Apt"
+            "apt"
           ]
         }
       ]

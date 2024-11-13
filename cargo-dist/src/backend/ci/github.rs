@@ -708,23 +708,31 @@ fn system_deps_install_script(
             }
         }
         OperatingSystem::Linux => {
-            for (name, pkg) in &packages.apt {
-                if !pkg.0.stage_wanted(&DependencyKind::Build) {
-                    continue;
+            // We currently don't support non-apt package managers on Linux
+            // is_none() means a native build, probably on GitHub's
+            // apt-using runners.
+            if rc.container.is_none()
+                || rc.container.as_ref().and_then(|c| c.package_manager)
+                    == Some(cargo_dist_schema::PackageManager::Apt)
+            {
+                for (name, pkg) in &packages.apt {
+                    if !pkg.0.stage_wanted(&DependencyKind::Build) {
+                        continue;
+                    }
+                    if !targets.iter().any(|target| pkg.0.wanted_for_target(target)) {
+                        continue;
+                    }
+                    apt_packages.insert((name.clone(), pkg.0.version.clone()));
                 }
-                if !targets.iter().any(|target| pkg.0.wanted_for_target(target)) {
-                    continue;
-                }
-                apt_packages.insert((name.clone(), pkg.0.version.clone()));
-            }
 
-            let has_musl_target = targets.iter().any(|target| {
-                target.parse().unwrap().environment == target_lexicon::Environment::Musl
-            });
-            if has_musl_target {
-                // musl builds may require musl-tools to build;
-                // necessary for more complex software
-                apt_packages.insert((AptPackageName::new("musl-tools".to_owned()), None));
+                let has_musl_target = targets.iter().any(|target| {
+                    target.parse().unwrap().environment == target_lexicon::Environment::Musl
+                });
+                if has_musl_target {
+                    // musl builds may require musl-tools to build;
+                    // necessary for more complex software
+                    apt_packages.insert((AptPackageName::new("musl-tools".to_owned()), None));
+                }
             }
         }
         OperatingSystem::Windows => {
