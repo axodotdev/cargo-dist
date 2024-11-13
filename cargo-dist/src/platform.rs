@@ -845,13 +845,13 @@ fn native_runtime_conditions_for_artifact(
         }
     };
 
-    // FIXME: in our test suite we're running bare artifacts=global so we're missing
-    // all artifact/linkage info, preventing basic glibc bounds
     if artifact_id.to_string().contains("linux") && artifact_id.to_string().contains("-gnu") {
         if let Some(version) = get_glibc_override(dist, artifact) {
             runtime_conditions.min_glibc_version = Some(version);
         }
 
+        // FIXME: in our test suite we're running bare artifacts=global so we're missing
+        // all artifact/linkage info, preventing basic glibc bounds
         if runtime_conditions.min_glibc_version.is_none() {
             runtime_conditions.min_glibc_version = Some(LibcVersion::default_glibc());
         }
