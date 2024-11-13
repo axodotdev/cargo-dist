@@ -12,12 +12,12 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
 homepage = "https://opensource.axo.dev/cargo-dist/"
-version = "0.25.2-prerelease.1"
+version = "0.25.2-prerelease.3"
 
 [workspace.dependencies]
 # intra-workspace deps (you need to bump these versions when you cut releases too!
-cargo-dist-schema = { version = "=0.25.2-prerelease.1", path = "cargo-dist-schema" }
-axoproject = { version = "=0.25.2-prerelease.1", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
+cargo-dist-schema = { version = "=0.25.2-prerelease.3", path = "cargo-dist-schema" }
+axoproject = { version = "=0.25.2-prerelease.3", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
 
 # first-party deps
 axocli = { version = "0.2.0" }
@@ -52,7 +52,7 @@ uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
 goblin = "0.8.2"
 similar = "2.6.0"
-tokio = { version = "1.41.0", features = ["full"] }
+tokio = { version = "1.41.1", features = ["full"] }
 temp-dir = "0.1.14"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
@@ -60,7 +60,7 @@ insta = { version = "1.41.1", features = ["filters"] }
 tar = "0.4.43"
 flate2 = "1.0.34"
 pathdiff = { version = "0.2.2", features = ["camino"] }
-url = "2.5.0"
+url = "2.5.3"
 parse-changelog = "0.6.10"
 schemars = "0.8.21"
 serde_yml = "0.0.10"
