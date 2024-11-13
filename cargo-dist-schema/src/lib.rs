@@ -403,7 +403,7 @@ impl GithubRunnerConfig {
         }
     }
 
-    /// cf. [`Self::GithubRunnerConfig`], but parsed
+    /// cf. [`Self::real_triple_name`], but parsed
     pub fn real_triple(&self) -> Triple {
         self.real_triple_name().parse().unwrap()
     }

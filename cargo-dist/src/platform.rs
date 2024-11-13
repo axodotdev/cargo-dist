@@ -16,7 +16,7 @@
 //! ("x64 macos binaries can run on arm64 macos under rosetta2" is another good canonical example)
 //!
 //! [`PlatformSupport::platforms`][] is an index
-//! from "target I want to install to" ([`TargetTriple`][])
+//! from "target I want to install to" ([`TripleName`][])
 //! to "list of archives we can potentially use to do that" ([`PlatformEntry`][]).
 //! The list is sorted in decreasing order from best-to-worst options. The basic idea
 //! is that you go down that list and try each option in order until one "works".
