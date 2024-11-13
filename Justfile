@@ -1,5 +1,5 @@
 
-build-all-plaforms:
+build-all-platforms:
   #!/bin/bash -eux
   export AXOASSET_XZ_LEVEL=1
   cargo build
@@ -74,7 +74,7 @@ patch-ps1-installer:
 
 dump:
   #!/bin/bash -eux
-  just build-all-plaforms
+  just build-all-platforms
   just patch-sh-installer
   just patch-ps1-installer
   mc mirror --overwrite ./target/distrib ${DIST_TARGET:-bearcove/dump/dist-cross}

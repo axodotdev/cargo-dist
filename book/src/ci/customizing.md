@@ -232,7 +232,7 @@ container = { image = "quay.io/pypa/manylinux_2_28_x86_64", host = "x86_64-unkno
 container = { image = "quay.io/pypa/manylinux_2_28_x86_64", host = "x86_64-unknown-linux-musl" }
 ```
 
-Note that here, the host triple for those container images is overriden to be `x86_64-unknown-linux-musl`, because dist itself (which must run in the container) might be using a too-recent version of glibc.
+Note that here, the host triple for those container images is overridden to be `x86_64-unknown-linux-musl`, because dist itself (which must run in the container) might be using a too-recent version of glibc.
 
 Because of dist's cross-compilation support, if you have both `cargo-zigbuild` and `cargo-xwin`
 installed on a macOS machine, you can build pretty much every target dist supports, by running
