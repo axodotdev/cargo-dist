@@ -751,8 +751,11 @@ fn system_deps_install_script(
         lines.push(brew_bundle_command(brew_packages.iter()))
     }
 
+    // If we're crossing, we'll most likely be running from a container with
+    // no sudo. We should avoid calling sudo in that case.
+    let sudo = if rc.container.is_some() { "" } else { "sudo " };
     if !apt_packages.is_empty() {
-        lines.push("sudo apt-get update".to_owned());
+        lines.push(format!("{sudo}apt-get update"));
         let args = apt_packages
             .iter()
             .map(|(pkg, version)| {
@@ -763,7 +766,7 @@ fn system_deps_install_script(
                 }
             })
             .join(" ");
-        lines.push(format!("sudo apt-get install {args}"));
+        lines.push(format!("{sudo}apt-get install {args}"));
     }
 
     for (pkg, version) in &chocolatey_packages {
