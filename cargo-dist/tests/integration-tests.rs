@@ -1974,7 +1974,10 @@ container = {{ image = "quay.io/pypa/manylinux_2_28_x86_64", host = "aarch64-unk
         let ci_snap = ci_result.check_all()?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
-        let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
+        // Since this is a cross-compile for a non-local target, we'll
+        // skip trying to actually install the artifact - it won't be
+        // available for our platform in CI.
+        let main_snap = main_result.check_all_no_ruin(&ctx, ".cargo/bin/")?;
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())
