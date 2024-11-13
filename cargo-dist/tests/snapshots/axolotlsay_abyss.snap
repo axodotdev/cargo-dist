@@ -1,7 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
-snapshot_kind: text
 ---
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -523,6 +522,18 @@ install() {
         _force_install_dir="$UNMANAGED_INSTALL"
         _install_layout="flat"
     fi
+
+    # Check if the install layout should be changed from `flat` to `cargo-home`
+    # for backwards compatible updates of applications that switched layouts.
+    if [ -n "${_force_install_dir:-}" ]; then
+        if [ "$_install_layout" = "flat" ]; then
+            # If the install directory is targeting the Cargo home directory, then
+            # we assume this application was previously installed that layout
+            if [ "$_force_install_dir" = "${CARGO_HOME:-${HOME:-}/.cargo}" ]; then
+                _install_layout="cargo-home"
+            fi
+        fi
+     fi
 
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.
@@ -1622,6 +1633,22 @@ function Invoke-Installer($artifacts, $platforms) {
   } elseif ($unmanaged_install) {
     $force_install_dir = $unmanaged_install
     $install_layout = "flat"
+  }
+
+  # Check if the install layout should be changed from `flat` to `cargo-home`
+  # for backwards compatible updates of applications that switched layouts.
+  if (($force_install_dir) -and ($install_layout -eq "flat")) {
+    # If the install directory is targeting the Cargo home directory, then
+    # we assume this application was previously installed that layout
+    # Note the installer passes the path with `\\` separators, but here they are
+    # `\` so we normalize for comparison. We don't use `Resolve-Path` because they
+    # may not exist.
+    $cargo_home = if ($env:CARGO_HOME) { $env:CARGO_HOME } else {
+        Join-Path $(if ($HOME) { $HOME } else { "." }) ".cargo"
+    }
+    if ($force_install_dir.Replace('\\', '\') -eq $cargo_home) {
+      $install_layout = "cargo-home"
+    }
   }
 
   # The actual path we're going to install to

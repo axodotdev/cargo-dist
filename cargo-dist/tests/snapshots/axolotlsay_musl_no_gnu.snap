@@ -1,7 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
-snapshot_kind: text
 ---
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -520,6 +519,18 @@ install() {
         _force_install_dir="$UNMANAGED_INSTALL"
         _install_layout="flat"
     fi
+
+    # Check if the install layout should be changed from `flat` to `cargo-home`
+    # for backwards compatible updates of applications that switched layouts.
+    if [ -n "${_force_install_dir:-}" ]; then
+        if [ "$_install_layout" = "flat" ]; then
+            # If the install directory is targeting the Cargo home directory, then
+            # we assume this application was previously installed that layout
+            if [ "$_force_install_dir" = "${CARGO_HOME:-${HOME:-}/.cargo}" ]; then
+                _install_layout="cargo-home"
+            fi
+        fi
+     fi
 
     # Before actually consulting the configured install strategy, see
     # if we're overriding it.

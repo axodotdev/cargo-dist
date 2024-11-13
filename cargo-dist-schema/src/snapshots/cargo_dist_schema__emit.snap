@@ -261,6 +261,21 @@ snapshot_kind: text
           }
         },
         {
+          "description": "A file that already exists",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "sbom"
+              ]
+            }
+          }
+        },
+        {
           "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
           "type": "object",
           "required": [
@@ -840,6 +855,17 @@ snapshot_kind: text
           "allOf": [
             {
               "$ref": "#/definitions/GhaRunStep"
+            }
+          ]
+        },
+        "install_cargo_cyclonedx": {
+          "description": "Expression to execute to install cargo-cyclonedx",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GhaRunStep"
+            },
+            {
+              "type": "null"
             }
           ]
         },
