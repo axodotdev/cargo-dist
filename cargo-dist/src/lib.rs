@@ -12,7 +12,7 @@
 
 use std::io::Write;
 
-use announce::{TagMode, TagSettings};
+use announce::TagSettings;
 use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use backend::{
@@ -735,7 +735,11 @@ pub fn check_integrity(cfg: &Config) -> DistResult<()> {
         // check the whole system is in a good state
         tag_settings: TagSettings {
             needs_coherence: false,
-            tag: TagMode::Infer,
+            // Keeping the tag ensures if dist is run in library mode, we
+            // actually check things in library mode.
+            // If we don't do this, `dist plan --tag={name}-{version} will
+            // always fail if there's no bins.
+            tag: cfg.tag_settings.tag.clone(),
         },
         // don't do side-effecting networking
         create_hosting: false,
