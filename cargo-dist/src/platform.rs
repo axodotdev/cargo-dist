@@ -248,8 +248,8 @@ use targets::{
     TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
 };
 
-/// values of the form `minimum-glibc-version = { some-target-triple = "2.8" }
-pub type MinimumGlibcVersion = SortedMap<String, LibcVersion>;
+/// values of the form `min-glibc-version = { some-target-triple = "2.8" }
+pub type MinGlibcVersion = SortedMap<String, LibcVersion>;
 
 /// Suffixes of TargetTriples that refer to statically linked linux libcs.
 ///
@@ -861,10 +861,10 @@ fn native_runtime_conditions_for_artifact(
 }
 
 fn get_glibc_override(dist: &DistGraphBuilder, artifact: &Artifact) -> Option<LibcVersion> {
-    let version_map = dist.inner.config.builds.minimum_glibc_version.clone();
+    let version_map = dist.inner.config.builds.min_glibc_version.clone();
 
     version_map.and_then(|vmap| {
-        // if minimum-glibc-version config option is specified at all.
+        // if min-glibc-version config option is specified at all.
         artifact
             .target_triples
             .first()

@@ -46,7 +46,7 @@ npm-scope ="@axodotdev"
 cargo-auditable = true
 cargo-cyclonedx = true
 
-[workspace.metadata.dist.minimum-glibc-version]
+[workspace.metadata.dist.min-glibc-version]
 "*" = "2.17"
 x86_64-unknown-linux-gnu = "2.18"
 
@@ -89,7 +89,7 @@ install-success-msg = ">o_o< everything's installed!"
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-minimum-glibc-version."*" = "2.18"
+min-glibc-version."*" = "2.18"
 
 
 "#
@@ -126,7 +126,7 @@ install-success-msg = ">o_o< everything's installed!"
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
-minimum-glibc-version."*" = "2.18"
+min-glibc-version."*" = "2.18"
 
 "#
         ))?;

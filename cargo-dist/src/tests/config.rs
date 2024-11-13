@@ -81,7 +81,7 @@ install-updater = false
 # Path that installers should place binaries in
 install-path = "CARGO_HOME"
 # The minimum glibc version supported by the package (overrides auto-detection)
-minimum-glibc-version."*" = "2.18"
+min-glibc-version."*" = "2.18"
 
 [[workspace.metadata.dist.extra-artifacts]]
 artifacts = ["dist-manifest-schema.json"]

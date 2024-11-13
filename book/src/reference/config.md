@@ -38,7 +38,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`all-features`](#all-features)
     * [`default-features`](#default-features)
     * [`features`](#features)
-    * [`minimum-glibc-version`](#minimum-glibc-version)
+    * [`min-glibc-version`](#min-glibc-version)
     * [`msvc-crt-static`](#msvc-crt-static)
     * [`precise-builds`](#precise-builds)
     * [`rust-toolchain-version`](#rust-toolchain-version)
@@ -510,14 +510,14 @@ Specifies feature-flags that should be passed to a Cargo package when building i
 
 For instance for packages that are a library and a CLI binary, some developers prefer to make the library the default and the CLI opt-in. In such a case you would want to add `features = ["cli"]` to your config.
 
-#### `minimum-glibc-version`
+#### `min-glibc-version`
 
 > <span style="float:right">since 0.26.0<br>[package-local][]</span>
 > default = `{}`
 >
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
-> [dist.minimum-glibc-version]
+> [dist.min-glibc-version]
 > \# Override glibc version for specific target triplets
 > aarch64-unknown-linux-gnu "2.19"
 > x86_64-unknown-linux-gnu = "2.18"

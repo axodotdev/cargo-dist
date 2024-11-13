@@ -12,7 +12,7 @@ use crate::{
     },
     do_generate,
     errors::{DistError, DistResult},
-    platform::{triple_to_display_name, MinimumGlibcVersion},
+    platform::{triple_to_display_name, MinGlibcVersion},
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
@@ -420,7 +420,7 @@ fn get_new_dist_metadata(
             install_libraries: None,
             github_build_setup: None,
             mac_pkg_config: None,
-            minimum_glibc_version: None,
+            min_glibc_version: None,
             cargo_auditable: None,
             cargo_cyclonedx: None,
         }
@@ -897,7 +897,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         package_libraries,
         install_libraries,
         mac_pkg_config,
-        minimum_glibc_version,
+        min_glibc_version,
         cargo_auditable,
         cargo_cyclonedx,
         // These settings are complex enough that we don't support editing them in init
@@ -1309,9 +1309,9 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_optional_min_glibc_version(
         table,
-        "minimum-glibc-version",
+        "min-glibc-version",
         "# The minimum glibc version supported by the package (overrides auto-detection)\n",
-        minimum_glibc_version.as_ref(),
+        min_glibc_version.as_ref(),
     );
 
     apply_optional_value(
@@ -1429,12 +1429,12 @@ fn apply_optional_mac_pkg(
     }
 }
 
-/// Similar to [`apply_optional_value`][] but specialized to `MinimumGlibcVersion`, since we're not able to work with structs dynamically
+/// Similar to [`apply_optional_value`][] but specialized to `MinGlibcVersion`, since we're not able to work with structs dynamically
 fn apply_optional_min_glibc_version(
     table: &mut toml_edit::Table,
     key: &str,
     desc: &str,
-    val: Option<&MinimumGlibcVersion>,
+    val: Option<&MinGlibcVersion>,
 ) {
     if let Some(min_glibc_version) = val {
         let new_item = &mut table[key];
