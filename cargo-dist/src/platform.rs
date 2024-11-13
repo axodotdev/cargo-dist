@@ -870,7 +870,7 @@ fn get_glibc_override(dist: &DistGraphBuilder, artifact: &Artifact) -> Option<Li
             .target_triples
             .first()
             // if the target triple has a min-glibc-version specified, use it.
-            .and_then(|t: &TargetTriple| vmap.get(&t.to_string()).copied())
+            .and_then(|t: &TripleName| vmap.get(&t.to_string()).copied())
             // or, try using the min-glibc-version for the "*" wildcard.
             .or_else(|| vmap.get("*").copied())
     })
