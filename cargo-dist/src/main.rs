@@ -259,9 +259,13 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
     print(cli, &report, false, Some("host"))
 }
 
-fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
+fn plan_manifest_common(
+    cli: &Cli,
+    args: &ManifestArgs,
+    needs_coherent: bool,
+) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
-        tag_settings: cli.tag_settings(true),
+        tag_settings: cli.tag_settings(needs_coherent),
         create_hosting: false,
         artifact_mode: args.build_args.artifacts.to_lib(),
         no_local_paths: cli.no_local_paths,
@@ -273,6 +277,10 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
     };
     let report = do_manifest(&config)?;
     print(cli, &report, false, Some("manifest"))
+}
+
+fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
+    plan_manifest_common(cli, args, true)
 }
 
 fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
@@ -287,7 +295,7 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
         },
     };
 
-    cmd_manifest(&new_cli, args)
+    plan_manifest_common(&new_cli, args, false)
 }
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
