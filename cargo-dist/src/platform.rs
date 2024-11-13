@@ -240,12 +240,16 @@ use serde::Serialize;
 use crate::{
     backend::installer::{ExecutableZipFragment, UpdaterFragment},
     config::ZipStyle,
+    tasks::Artifact,
     BinaryKind, DistGraphBuilder, ReleaseIdx, SortedMap,
 };
 
 use targets::{
     TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
 };
+
+/// values of the form `min-glibc-version = { some-target-triple = "2.8" }
+pub type MinGlibcVersion = SortedMap<String, LibcVersion>;
 
 /// Suffixes of TargetTriples that refer to statically linked linux libcs.
 ///
@@ -486,8 +490,7 @@ impl PlatformSupport {
             let (artifact, binaries) =
                 dist.make_executable_zip_for_variant(release_idx, variant_idx);
 
-            let native_runtime_conditions =
-                native_runtime_conditions_for_artifact(dist, &artifact.id);
+            let native_runtime_conditions = native_runtime_conditions_for_artifact(dist, &artifact);
 
             let executables = binaries
                 .iter()
@@ -829,31 +832,47 @@ fn max_of_min_libc_versions(
 /// Compute the requirements for running the binaries of this release on its host platform
 fn native_runtime_conditions_for_artifact(
     dist: &DistGraphBuilder,
-    artifact_id: &ArtifactId,
+    artifact: &Artifact,
 ) -> RuntimeConditions {
     let manifest = &dist.manifest;
     let mut runtime_conditions = RuntimeConditions::default();
+    let artifact_id = &artifact.id;
+
     if let Some(artifact) = manifest.artifacts.get(artifact_id) {
         for asset in &artifact.assets {
             let asset_conditions = native_runtime_conditions_for_asset(manifest, &asset.id);
             runtime_conditions.merge(&asset_conditions);
         }
     };
-    // FIXME: in our test suite we're running bare artifacts=global so we're missing
-    // all artifact/linkage info, preventing basic glibc bounds
-    if artifact_id.as_str().contains("linux")
-        && artifact_id.as_str().contains("-gnu")
-        && runtime_conditions.min_glibc_version.is_none()
-    {
-        runtime_conditions.min_glibc_version =
-            if dist.inner.config.builds.minimum_glibc_version.is_some() {
-                dist.inner.config.builds.minimum_glibc_version
-            } else {
-                Some(LibcVersion::default_glibc())
-            }
+
+    if artifact_id.to_string().contains("linux") && artifact_id.to_string().contains("-gnu") {
+        if let Some(version) = get_glibc_override(dist, artifact) {
+            runtime_conditions.min_glibc_version = Some(version);
+        }
+
+        // FIXME: in our test suite we're running bare artifacts=global so we're missing
+        // all artifact/linkage info, preventing basic glibc bounds
+        if runtime_conditions.min_glibc_version.is_none() {
+            runtime_conditions.min_glibc_version = Some(LibcVersion::default_glibc());
+        }
     }
 
     runtime_conditions
+}
+
+fn get_glibc_override(dist: &DistGraphBuilder, artifact: &Artifact) -> Option<LibcVersion> {
+    let version_map = dist.inner.config.builds.min_glibc_version.clone();
+
+    version_map.and_then(|vmap| {
+        // if min-glibc-version config option is specified at all.
+        artifact
+            .target_triples
+            .first()
+            // if the target triple has a min-glibc-version specified, use it.
+            .and_then(|t: &TargetTriple| vmap.get(&t.to_string()).copied())
+            // or, try using the min-glibc-version for the "*" wildcard.
+            .or_else(|| vmap.get("*").copied())
+    })
 }
 
 fn native_runtime_conditions_for_asset(

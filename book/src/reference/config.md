@@ -38,6 +38,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`all-features`](#all-features)
     * [`default-features`](#default-features)
     * [`features`](#features)
+    * [`min-glibc-version`](#min-glibc-version)
     * [`msvc-crt-static`](#msvc-crt-static)
     * [`precise-builds`](#precise-builds)
     * [`rust-toolchain-version`](#rust-toolchain-version)
@@ -508,6 +509,29 @@ Specifies that default features for a Cargo package should be enabled when build
 Specifies feature-flags that should be passed to a Cargo package when building it. This lets you enable features that should be on "in production" but for whatever reason shouldn't be on by default.
 
 For instance for packages that are a library and a CLI binary, some developers prefer to make the library the default and the CLI opt-in. In such a case you would want to add `features = ["cli"]` to your config.
+
+#### `min-glibc-version`
+
+> <span style="float:right">since 0.26.0<br>[package-local][]</span>
+> default = `{}`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist.min-glibc-version]
+> \# Override glibc version for specific target triplets
+> aarch64-unknown-linux-gnu "2.19"
+> x86_64-unknown-linux-gnu = "2.18"
+> \# Override all remaining glibc versions.
+> "*" = "2.17"
+> ```
+
+By default, dist will try to auto-detect the glibc version for each build for targets using glibc.
+
+This setting allows you to override the minimum supported glibc version for specific target triplets, in case dist gets it wrong.
+
+The special-cased `"*"` key will allow you to override the minimum supported glibc version for all targets that are not individually overridden.
+
+Note that this setting only affects builds for Linux targets using the GNU libc (glibc). Non-Linux targets, or targets using another libc are not affected.
 
 #### `msvc-crt-static`
 
