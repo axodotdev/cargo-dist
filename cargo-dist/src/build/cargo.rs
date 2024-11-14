@@ -69,7 +69,7 @@ impl<'a> DistGraphBuilder<'a> {
 
         let mut builds = vec![];
         for (target_triple, binaries) in targets {
-            let target = target_triple.parse().unwrap();
+            let target = target_triple.parse()?;
             let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
 
             // FIXME: is there a more principled way for us to add things to RUSTFLAGS
@@ -104,7 +104,7 @@ impl<'a> DistGraphBuilder<'a> {
                 rustflags.push_str(" -Ctarget-feature=+crt-static -Clink-self-contained=yes");
             }
 
-            let host = cargo.host_target.parse().unwrap();
+            let host = cargo.host_target.parse()?;
 
             // If we're trying to cross-compile, ensure the rustup toolchain is set up!
             if target != host {
@@ -170,7 +170,7 @@ pub fn make_build_cargo_target_command(
     step: &CargoBuildStep,
     auditable: bool,
 ) -> DistResult<Cmd> {
-    let target: Triple = step.target_triple.parse().unwrap();
+    let target: Triple = step.target_triple.parse()?;
 
     eprint!("building {target} target");
     let wrapper = build_wrapper_for_cross(host, &target)?;

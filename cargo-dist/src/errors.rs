@@ -74,6 +74,10 @@ pub enum DistError {
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
 
+    /// random triple parse error
+    #[error(transparent)]
+    TripleError(#[from] cargo_dist_schema::target_lexicon::ParseError),
+
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
     #[diagnostic(

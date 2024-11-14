@@ -317,9 +317,9 @@ impl GithubCiInfo {
 
         // Figure out what Local Artifact tasks we need
         let local_runs = if ci_config.merge_tasks {
-            distribute_targets_to_runners_merged(local_targets, &ci_config.runners)
+            distribute_targets_to_runners_merged(local_targets, &ci_config.runners)?
         } else {
-            distribute_targets_to_runners_split(local_targets, &ci_config.runners)
+            distribute_targets_to_runners_split(local_targets, &ci_config.runners)?
         };
         for (runner, targets) in local_runs {
             use std::fmt::Write;
@@ -579,10 +579,10 @@ fn cache_provider_for_runner(rc: &GithubRunnerConfig) -> Option<String> {
 fn distribute_targets_to_runners_merged<'a>(
     targets: SortedSet<&'a TripleNameRef>,
     custom_runners: &GithubRunners,
-) -> std::vec::IntoIter<(GithubRunnerConfig, Vec<&'a TripleNameRef>)> {
+) -> DistResult<std::vec::IntoIter<(GithubRunnerConfig, Vec<&'a TripleNameRef>)>> {
     let mut groups = SortedMap::<GithubRunnerConfig, Vec<&TripleNameRef>>::new();
     for target in targets {
-        let runner_conf = github_runner_for_target(target, custom_runners);
+        let runner_conf = github_runner_for_target(target, custom_runners)?;
         let runner_conf = runner_conf.unwrap_or_else(|| {
             let fallback = default_global_runner_config();
             warn!(
@@ -595,7 +595,7 @@ fn distribute_targets_to_runners_merged<'a>(
     }
     // This extra into_iter+collect is needed to make this have the same
     // return type as distribute_targets_to_runners_split
-    groups.into_iter().collect::<Vec<_>>().into_iter()
+    Ok(groups.into_iter().collect::<Vec<_>>().into_iter())
 }
 
 /// Given a set of targets we want to build local artifacts for, map them to Github Runners
@@ -603,10 +603,10 @@ fn distribute_targets_to_runners_merged<'a>(
 fn distribute_targets_to_runners_split<'a>(
     targets: SortedSet<&'a TripleNameRef>,
     custom_runners: &GithubRunners,
-) -> std::vec::IntoIter<(GithubRunnerConfig, Vec<&'a TripleNameRef>)> {
+) -> DistResult<std::vec::IntoIter<(GithubRunnerConfig, Vec<&'a TripleNameRef>)>> {
     let mut groups = vec![];
     for target in targets {
-        let runner = github_runner_for_target(target, custom_runners);
+        let runner = github_runner_for_target(target, custom_runners)?;
         let runner = runner.unwrap_or_else(|| {
             let fallback = default_global_runner_config();
             warn!(
@@ -617,7 +617,7 @@ fn distribute_targets_to_runners_split<'a>(
         });
         groups.push((runner, vec![target]));
     }
-    groups.into_iter()
+    Ok(groups.into_iter())
 }
 
 /// Generates a [`GithubRunnerConfig`] from a given github runner name
@@ -639,22 +639,24 @@ fn default_global_runner_config() -> GithubRunnerConfig {
 fn github_runner_for_target(
     target: &TripleNameRef,
     custom_runners: &GithubRunners,
-) -> Option<GithubRunnerConfig> {
+) -> DistResult<Option<GithubRunnerConfig>> {
     if let Some(runner) = custom_runners.get(target) {
-        return Some(runner.clone());
+        return Ok(Some(runner.clone()));
     }
 
-    let target_triple: Triple = target.parse().unwrap();
+    let target_triple: Triple = target.parse()?;
 
     // We want to default to older runners to minimize the places
     // where random system dependencies can creep in and be very
     // recent. This helps with portability!
-    Some(match target_triple.operating_system {
+    let result = Some(match target_triple.operating_system {
         OperatingSystem::Linux => runner_to_config(GithubRunnerRef::from_str("ubuntu-20.04")),
         OperatingSystem::Darwin => runner_to_config(GithubRunnerRef::from_str("macos-13")),
         OperatingSystem::Windows => runner_to_config(GithubRunnerRef::from_str("windows-2019")),
-        _ => return None,
-    })
+        _ => return Ok(None),
+    });
+
+    Ok(result)
 }
 
 fn brewfile_from<'a>(packages: impl Iterator<Item = &'a HomebrewPackageName>) -> String {

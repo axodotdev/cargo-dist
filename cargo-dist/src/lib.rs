@@ -214,7 +214,7 @@ pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) 
     // cargo-xwin can't currently build one of axoupdater's dependencies:
     // https://github.com/rust-cross/cargo-xwin/issues/76
     let host = cargo_dist_schema::target_lexicon::HOST;
-    let target = updater.target_triple.parse().unwrap();
+    let target = updater.target_triple.parse()?;
     if host != target && updater.target_triple == TARGET_ARM64_WINDOWS {
         return Err(DistError::AxoupdaterInvalidCross {
             host: TripleName::new(host.to_string()),
