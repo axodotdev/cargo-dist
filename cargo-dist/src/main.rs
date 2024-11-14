@@ -246,10 +246,8 @@ fn cmd_print_upload_files_from_manifest(
         .map_err(|err| miette!("Failed to parse manifest as JSON: {}", err))?;
 
     let mut out = Term::stdout();
-    for artifact in manifest.artifacts.values() {
-        if let Some(path) = &artifact.path {
-            writeln!(out, "{}", path).into_diagnostic()?;
-        }
+    for path in manifest.upload_files {
+        writeln!(out, "{}", path).into_diagnostic()?;
     }
     Ok(())
 }
