@@ -19,6 +19,7 @@ use console::Term;
 use miette::{miette, IntoDiagnostic};
 use net::ClientSettings;
 
+use crate::announce::{TagMode, TagSettings};
 use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs};
 
 mod cli;
@@ -276,6 +277,25 @@ fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
+    let mut config = cargo_dist::config::Config {
+        tag_settings: cli.tag_settings(false),
+        create_hosting: false,
+        artifact_mode: crate::config::ArtifactMode::All,
+        no_local_paths: cli.no_local_paths,
+        allow_all_dirty: cli.allow_dirty,
+        targets: cli.target.clone(),
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        root_cmd: "plan".to_owned(),
+    };
+
+    let (_graph, manifest) = crate::tasks::gather_work(&config)?;
+    let versions = manifest
+        .releases
+        .iter()
+        .map(|r| r.app_version.clone())
+        .collect::<SortedSet<_>>();
+
     // Force --no-local-paths and --artifacts=all
     // No need to force --output-format=human
     let mut new_cli = cli.clone();
@@ -287,7 +307,70 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
         },
     };
 
-    cmd_manifest(&new_cli, args)
+    // If there's 0-1 versions, it's equivalent to `dist manifest`.
+    if versions.len() < 2 {
+        return cmd_manifest(&new_cli, args);
+    }
+
+    // If there's 2 or more versions, we check each one.
+
+    for version in &versions {
+        config.tag_settings = TagSettings {
+            needs_coherence: true,
+            tag: TagMode::Select(format!("v{version}")),
+        };
+        let report = do_manifest(&config)?;
+        print(cli, &report, false, Some("plan"))?;
+        println!();
+    }
+
+    // Everything after this is notes for people who are running `dist plan`
+    // interactively. So, bail early if it's not being used that way.
+    if cli.output_format != OutputFormat::Human {
+        return Ok(());
+    }
+
+    let mut out = Term::stdout();
+    let message = concat!(
+        "NOTE:\n",
+        "  There are multiple version numbers in your workspace.\n",
+        "  When running 'dist build' locally, you will need to specify --tag.\n",
+        "  When creating a release, the version will be specified by the tag you push or the value provided to the workflow dispatch prompt.\n",
+        "\n",
+        "  You can specify --tag when running 'dist plan' to see all apps that will be released with that tag.\n"
+    );
+
+    let version_map: SortedMap<String, Vec<String>> =
+        manifest
+            .releases
+            .into_iter()
+            .fold(SortedMap::new(), |mut vmap, r| {
+                vmap.entry(r.app_version).or_default().push(r.app_name);
+                vmap
+            });
+
+    writeln!(out, "{}", out.style().yellow().apply_to(message)).into_diagnostic()?;
+
+    for (version, names) in &version_map {
+        let line = format!("  --tag=v{} will match: {}", version, names.join(", "));
+
+        writeln!(out, "{}", out.style().yellow().apply_to(line)).into_diagnostic()?;
+    }
+    println!();
+
+    if let Some((version, names)) = version_map.first_key_value() {
+        if let Some(name) = names.first() {
+            let line = format!(
+                "  You can also filter by name and version. For example, to select '{}' you could specify --tag={}-v{}",
+                name,
+                name,
+                version,
+            );
+            writeln!(out, "{}", out.style().yellow().apply_to(line)).into_diagnostic()?;
+        }
+    }
+
+    Ok(())
 }
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
