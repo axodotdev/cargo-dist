@@ -595,6 +595,18 @@ pub enum DistError {
         /// Version the project uses
         your_version: semver::Version,
     },
+
+    /// axoupdater can't be built for this target from this host
+    #[error("You've requested a cross-compile from {host} to {target}, but axoupdater can't be built for this target")]
+    #[diagnostic(help(
+        "Please either disable this target, or set `install-updater' to `false' in your config."
+    ))]
+    AxoupdaterInvalidCross {
+        /// The host this build is on
+        host: TripleName,
+        /// The target this build is for
+        target: TripleName,
+    },
 }
 
 /// This error indicates we tried to deserialize some YAML with serde_yml
