@@ -2,7 +2,7 @@
 
 use axoproject::PackageId;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{AssetInfo, DistManifest, TargetTripleRef};
+use cargo_dist_schema::{AssetInfo, DistManifest, TripleNameRef};
 use tracing::info;
 
 use crate::{
@@ -195,7 +195,7 @@ impl BuildExpectations {
         dist: &DistGraph,
         manifest: &mut DistManifest,
         src: &ExpectedBinary,
-        target: &TargetTripleRef,
+        target: &TripleNameRef,
     ) -> DistResult<()> {
         let src_path = src
             .src_path

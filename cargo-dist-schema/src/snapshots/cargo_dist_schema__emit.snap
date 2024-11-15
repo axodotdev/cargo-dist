@@ -671,6 +671,35 @@ snapshot_kind: text
         }
       }
     },
+    "ContainerConfig": {
+      "description": "GitHub config that's common between different kinds of jobs (global, local)",
+      "type": "object",
+      "required": [
+        "host",
+        "image"
+      ],
+      "properties": {
+        "host": {
+          "description": "The host triple of the container, something like `x86_64-unknown-linux-gnu` or `aarch64-unknown-linux-musl` or whatever.",
+          "type": "string"
+        },
+        "image": {
+          "description": "The container image to run, something like `ubuntu:20.04` or `quay.io/pypa/manylinux_2_28_x86_64`",
+          "type": "string"
+        },
+        "package_manager": {
+          "description": "The package manager to use within the container, like `apt`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PackageManager"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
     "EnvironmentVariables": {
       "description": "Release-specific environment variables",
       "type": "object",
@@ -815,57 +844,48 @@ snapshot_kind: text
         }
       }
     },
-    "GithubMatrix": {
-      "description": "Github CI Matrix",
-      "type": "object",
-      "properties": {
-        "include": {
-          "description": "define each task manually rather than doing cross-product stuff",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GithubMatrixEntry"
-          }
-        }
-      }
-    },
-    "GithubMatrixEntry": {
-      "description": "Entry for a github matrix",
+    "GithubLocalJobConfig": {
+      "description": "Used in `github/release.yml.j2` to template out \"local\" build jobs",
       "type": "object",
       "required": [
+        "dist_args",
+        "host",
         "install_cargo_auditable",
-        "install_dist"
+        "install_dist",
+        "runner"
       ],
       "properties": {
         "cache_provider": {
-          "description": "what cache provider to use",
+          "description": "What cache provider to use",
           "type": [
             "string",
             "null"
           ]
         },
+        "container": {
+          "description": "Container image to run the job in, using GitHub's builtin container support, see <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/running-jobs-in-a-container>\n\nThis doesn't allow mounting volumes, or anything, because we're only able to set the `container` key to something stringy",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContainerConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "dist_args": {
           "description": "Arguments to pass to dist",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": "string"
+        },
+        "host": {
+          "description": "Host triple of the runner (well-known, custom, or best guess). If the runner is one of GitHub's official runner images, the platform is hardcoded. If it's custom, then we have a `target_triple => runner` in the config",
+          "type": "string"
         },
         "install_cargo_auditable": {
           "description": "Expression to execute to install cargo-auditable",
           "allOf": [
             {
               "$ref": "#/definitions/GhaRunStep"
-            }
-          ]
-        },
-        "install_cargo_cyclonedx": {
-          "description": "Expression to execute to install cargo-cyclonedx",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/GhaRunStep"
-            },
-            {
-              "type": "null"
             }
           ]
         },
@@ -885,20 +905,30 @@ snapshot_kind: text
           ]
         },
         "runner": {
-          "description": "Github Runner to user",
-          "type": [
-            "string",
-            "null"
-          ]
+          "description": "GHA's `runs-on` key: Github Runner image to use, see <https://github.com/actions/runner-images> and <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/choosing-the-runner-for-a-job>\n\nThis is not necessarily a well-known runner, it could be something self-hosted, it could be from BuildJet, Namespace, etc.",
+          "type": "string"
         },
         "targets": {
-          "description": "Targets to build for",
+          "description": "Target triples to build for",
           "type": [
             "array",
             "null"
           ],
           "items": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "GithubMatrix": {
+      "description": "Github CI Matrix",
+      "type": "object",
+      "properties": {
+        "include": {
+          "description": "define each task manually rather than doing cross-product stuff",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GithubLocalJobConfig"
           }
         }
       }
@@ -1037,14 +1067,14 @@ snapshot_kind: text
           "description": "Homebrew (usually for Mac)",
           "type": "string",
           "enum": [
-            "Homebrew"
+            "homebrew"
           ]
         },
         {
           "description": "Apt (Debian, Ubuntu, etc)",
           "type": "string",
           "enum": [
-            "Apt"
+            "apt"
           ]
         }
       ]

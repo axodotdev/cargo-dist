@@ -9,7 +9,7 @@
 use axoproject::errors::AxoprojectError;
 use backtrace::Backtrace;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{ArtifactId, TargetTriple};
+use cargo_dist_schema::{target_lexicon::Triple, ArtifactId, TripleName};
 use color_backtrace::BacktracePrinter;
 use console::style;
 use miette::{Diagnostic, SourceOffset, SourceSpan};
@@ -73,6 +73,10 @@ pub enum DistError {
     /// random parseint error
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
+
+    /// random triple parse error
+    #[error(transparent)]
+    TripleError(#[from] cargo_dist_schema::target_lexicon::ParseError),
 
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
@@ -322,9 +326,9 @@ pub enum DistError {
     #[error("unable to run linkage report for {target} on {host}")]
     LinkageCheckInvalidOS {
         /// The OS the check was run on
-        host: TargetTriple,
+        host: String,
         /// The OS being checked
-        target: TargetTriple,
+        target: TripleName,
     },
 
     /// Linkage report can't be run for this target
@@ -410,7 +414,7 @@ pub enum DistError {
     #[diagnostic(help("try adding --target={host_target}"))]
     CliMissingTargets {
         /// Current host target
-        host_target: TargetTriple,
+        host_target: TripleName,
     },
 
     /// Workspace isn't init
@@ -452,7 +456,7 @@ pub enum DistError {
     #[diagnostic(help("The full list of supported targets can be found here: https://opensource.axo.dev/cargo-dist/book/reference/config.html#targets"))]
     UnrecognizedTarget {
         /// The target in question
-        target: TargetTriple,
+        target: TripleName,
     },
 
     /// Installers requested despite having nothing to install
@@ -522,6 +526,30 @@ pub enum DistError {
         manifest: Utf8PathBuf,
     },
 
+    /// Unsupported cross-compilation host/target combination
+    #[error("Cross-compilation from {host} to {target} is not supported")]
+    #[diagnostic(help("{details}"))]
+    UnsupportedCrossCompile {
+        /// The host system
+        host: Triple,
+        /// The target system
+        target: Triple,
+        /// Additional details about why this combination is unsupported
+        details: String,
+    },
+
+    /// Cannot use cross-compilation with cargo-auditable
+    #[error(
+        "Cross-compilation builds from {host} to {target} cannot be used with cargo-auditable"
+    )]
+    #[diagnostic(help("set cargo-auditable to false or don't do cross-compilation"))]
+    CannotDoCargoAuditableAndCrossCompile {
+        /// The host system
+        host: Triple,
+        /// The target system
+        target: Triple,
+    },
+
     /// missing "build-command" for a package that needs one
     #[error("dist package was missing a build-command\n{manifest}")]
     #[diagnostic(help(
@@ -570,6 +598,18 @@ pub enum DistError {
         minimum: semver::Version,
         /// Version the project uses
         your_version: semver::Version,
+    },
+
+    /// axoupdater can't be built for this target from this host
+    #[error("You've requested a cross-compile from {host} to {target}, but axoupdater can't be built for this target")]
+    #[diagnostic(help(
+        "Please either disable this target, or set `install-updater' to `false' in your config."
+    ))]
+    AxoupdaterInvalidCross {
+        /// The host this build is on
+        host: TripleName,
+        /// The target this build is for
+        target: TripleName,
     },
 }
 

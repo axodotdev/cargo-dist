@@ -21,17 +21,21 @@ use backend::{
         self, macpkg::PkgInstallerInfo, msi::MsiInstallerInfo, HomebrewImpl, InstallerImpl,
     },
 };
-use build::generic::{build_generic_target, run_extra_artifacts_build};
+use build::{
+    cargo::make_build_cargo_target_command,
+    generic::{build_generic_target, run_extra_artifacts_build},
+};
 use build::{
     cargo::{build_cargo_target, rustup_toolchain},
     fake::{build_fake_cargo_target, build_fake_generic_target},
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TargetTriple};
+use cargo_dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TripleName};
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
 use console::Term;
+use platform::targets::TARGET_ARM64_WINDOWS;
 use semver::Version;
 use temp_dir::TempDir;
 use tracing::info;
@@ -172,6 +176,7 @@ fn run_build_step(
 const AXOUPDATER_ASSET_ROOT: &str =
     "https://github.com/axodotdev/axoupdater/releases/latest/download";
 const AXOUPDATER_MINIMUM_VERSION: &str = "0.7.0";
+const AXOUPDATER_GIT_URL: &str = "https://github.com/axodotdev/axoupdater.git";
 
 /// Fetches an installer executable and installs it in the expected target path.
 pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
@@ -206,27 +211,49 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResul
 pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
     let (_tmp_dir, tmp_root) = create_tmp()?;
 
-    // Update this to work from releases, and to fetch prebuilt binaries,
-    // once this has been released at least once.
-    let mut cmd = Cmd::new(
-        "cargo",
-        format!("Fetch installer for {}", updater.target_triple),
-    );
+    // cargo-xwin can't currently build one of axoupdater's dependencies:
+    // https://github.com/rust-cross/cargo-xwin/issues/76
+    let host = cargo_dist_schema::target_lexicon::HOST;
+    let target = updater.target_triple.parse()?;
+    if host != target && updater.target_triple == TARGET_ARM64_WINDOWS {
+        return Err(DistError::AxoupdaterInvalidCross {
+            host: TripleName::new(host.to_string()),
+            target: updater.target_triple.to_owned(),
+        });
+    }
 
-    // Install to a temporary path before moving it to the destination
-    cmd.arg("install")
-        .arg("axoupdater-cli")
-        .arg("--features=tls_native_roots")
-        .arg("--root")
-        .arg(&tmp_root)
-        .current_dir(&tmp_root)
-        .arg("--bin")
-        .arg("axoupdater");
+    let Some(git) = &dist_graph.tools.git else {
+        return Err(DistError::ToolMissing {
+            tool: "git".to_owned(),
+        });
+    };
+    // We can't use `cargo install` due to the cross-compile wrappers,
+    // so fetch the repo ahead of time.
+    let mut cmd = Cmd::new(&git.cmd, "fetch axoupdater");
+    cmd.arg("clone").arg(AXOUPDATER_GIT_URL).arg(&tmp_root);
+    cmd.run()?;
+
+    let features = CargoTargetFeatures {
+        default_features: true,
+        features: CargoTargetFeatureList::List(vec!["tls_native_roots".to_owned()]),
+    };
+    let step = CargoBuildStep {
+        target_triple: updater.target_triple.to_owned(),
+        features,
+        package: CargoTargetPackages::Workspace,
+        profile: "dist".to_string(),
+        rustflags: "".to_owned(),
+        expected_binaries: vec![],
+        working_dir: tmp_root.clone(),
+    };
+    let cargo = dist_graph.tools.cargo()?;
+    let mut cmd = make_build_cargo_target_command(&host, &cargo.cmd, "", &step, false)?;
+    cmd.arg("--bin").arg("axoupdater");
 
     cmd.run()?;
 
     // OK, now we have a binary in the tempdir
-    let mut source = tmp_root.join("bin").join("axoupdater");
+    let mut source = tmp_root.join("target").join("release").join("axoupdater");
     if updater.target_triple.is_windows() {
         source.set_extension("exe");
     }
@@ -799,7 +826,7 @@ fn generate_installer(
 }
 
 /// Get the default list of targets
-pub fn default_desktop_targets() -> Vec<TargetTriple> {
+pub fn default_desktop_targets() -> Vec<TripleName> {
     use crate::platform::targets as t;
 
     vec![
@@ -807,16 +834,15 @@ pub fn default_desktop_targets() -> Vec<TargetTriple> {
         t::TARGET_X64_LINUX_GNU.to_owned(),
         t::TARGET_X64_WINDOWS.to_owned(),
         t::TARGET_X64_MAC.to_owned(),
-        // Apple is really easy to cross from Apple
         t::TARGET_ARM64_MAC.to_owned(),
-        // other cross-compiles not yet supported
-        // targets::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // targets::TARGET_ARM64_WINDOWS.to_owned(),
+        t::TARGET_ARM64_LINUX_GNU.to_owned(),
+        // that one requires a bit of config (use the `messense/cargo-xwin` image)
+        // t::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }
 
 /// Get the list of all known targets
-pub fn known_desktop_targets() -> Vec<TargetTriple> {
+pub fn known_desktop_targets() -> Vec<TripleName> {
     use crate::platform::targets as t;
 
     vec![
@@ -825,10 +851,8 @@ pub fn known_desktop_targets() -> Vec<TargetTriple> {
         t::TARGET_X64_LINUX_MUSL.to_owned(),
         t::TARGET_X64_WINDOWS.to_owned(),
         t::TARGET_X64_MAC.to_owned(),
-        // Apple is really easy to cross from Apple
         t::TARGET_ARM64_MAC.to_owned(),
-        // other cross-compiles not yet supported
-        // t::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // t::TARGET_ARM64_WINDOWS.to_owned(),
+        t::TARGET_ARM64_LINUX_GNU.to_owned(),
+        t::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }

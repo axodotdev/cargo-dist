@@ -58,8 +58,10 @@ use axoasset::AxoClient;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_dist_schema::target_lexicon::{OperatingSystem, Triple};
 use cargo_dist_schema::{
-    ArtifactId, BuildEnvironment, DistManifest, SystemId, SystemInfo, TargetTriple, TargetTripleRef,
+    ArtifactId, BuildEnvironment, DistManifest, HomebrewPackageName, SystemId, SystemInfo,
+    TripleName, TripleNameRef,
 };
 use semver::Version;
 use serde::Serialize;
@@ -151,7 +153,7 @@ pub struct BinaryAliases(BTreeMap<String, Vec<String>>);
 impl BinaryAliases {
     /// Returns a formatted copy of the map, with file extensions added
     /// if necessary.
-    pub fn for_target(&self, target: &TargetTripleRef) -> BTreeMap<String, Vec<String>> {
+    pub fn for_target(&self, target: &TripleNameRef) -> BTreeMap<String, Vec<String>> {
         if target.is_windows() {
             BTreeMap::from_iter(self.0.iter().map(|(k, v)| {
                 (
@@ -168,8 +170,8 @@ impl BinaryAliases {
     /// executable extensions added if necessary.
     pub fn for_targets(
         &self,
-        targets: &[TargetTriple],
-    ) -> BTreeMap<TargetTriple, BTreeMap<String, Vec<String>>> {
+        targets: &[TripleName],
+    ) -> BTreeMap<TripleName, BTreeMap<String, Vec<String>>> {
         BTreeMap::from_iter(
             targets
                 .iter()
@@ -264,7 +266,7 @@ pub struct HostingInfo {
 #[derive(Debug, Clone)]
 pub struct Tools {
     /// Info on the host
-    pub host_target: TargetTriple,
+    pub host_target: TripleName,
     /// Info on cargo
     pub cargo: Option<CargoInfo>,
     /// rustup, useful for getting specific toolchains
@@ -296,7 +298,7 @@ pub struct CargoInfo {
     /// The first line of running cargo with `-vV`, should be version info
     pub version_line: Option<String>,
     /// The host target triple (obtained from `-vV`)
-    pub host_target: TargetTriple,
+    pub host_target: TripleName,
 }
 
 /// A tool we have found installed on the system
@@ -329,7 +331,7 @@ pub struct Binary {
     /// The filename the binary will have
     pub file_name: String,
     /// The target triple to build it for
-    pub target: TargetTriple,
+    pub target: TripleName,
     /// The artifact for this Binary's symbols
     pub symbols_artifact: Option<ArtifactIdx>,
     /// Places the executable needs to be copied to
@@ -394,7 +396,7 @@ pub enum BuildStep {
 #[derive(Debug)]
 pub struct CargoBuildStep {
     /// The --target triple to pass
-    pub target_triple: TargetTriple,
+    pub target_triple: TripleName,
     /// The feature flags to pass
     pub features: CargoTargetFeatures,
     /// What package to build (or "the workspace")
@@ -409,11 +411,101 @@ pub struct CargoBuildStep {
     pub working_dir: Utf8PathBuf,
 }
 
+/// A wrapper to use instead of `cargo build`, generally used for cross-compilation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum CargoBuildWrapper {
+    /// Run 'cargo zigbuild' to cross-compile, e.g. from `x86_64-unknown-linux-gnu` to `aarch64-unknown-linux-gnu`
+    /// cf. <https://github.com/rust-cross/cargo-zigbuild>
+    ZigBuild,
+
+    /// Run 'cargo xwin' to cross-compile, e.g. from `aarch64-apple-darwin` to `x86_64-pc-windows-msvc`
+    /// cf. <https://github.com/rust-cross/cargo-xwin>
+    Xwin,
+}
+
+impl std::fmt::Display for CargoBuildWrapper {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.pad(match self {
+            CargoBuildWrapper::ZigBuild => "cargo-zigbuild",
+            CargoBuildWrapper::Xwin => "cargo-xwin",
+        })
+    }
+}
+
+/// Returns the cargo build wrapper required to perform a certain cross-compilation
+pub fn build_wrapper_for_cross(
+    host: &Triple,
+    target: &Triple,
+) -> DistResult<Option<CargoBuildWrapper>> {
+    if host.operating_system == target.operating_system && host.architecture == target.architecture
+    {
+        // we're not cross-compiling, not really... maybe we're making a GNU binary from a "musl" host but meh.
+        return Ok(None);
+    }
+
+    match target.operating_system {
+        // compiling for macOS (making Mach-O binaries, .dylib files, etc.)
+        OperatingSystem::Darwin => match host.operating_system {
+            OperatingSystem::Darwin => {
+                // from mac to mac, even if we do aarch64 => x86_64, or the other way
+                // around, _all we need_ is to add the target to rustup
+                Ok(None)
+            }
+            _ => {
+                Err(DistError::UnsupportedCrossCompile {
+                    host: host.clone(),
+                    target: target.clone(),
+                    details: "cross-compiling to macOS is a road paved with sadness — we cowardly refuse to walk it.".to_string(),
+                })
+            }
+        },
+        // compiling for Linux (making ELF binaries, .so files, etc.)
+        OperatingSystem::Linux => match host.operating_system {
+            OperatingSystem::Linux | OperatingSystem::Darwin | OperatingSystem::Windows => {
+                // zigbuild works for e.g. x86_64-unknown-linux-gnu => aarch64-unknown-linux-gnu
+                Ok(Some(CargoBuildWrapper::ZigBuild))
+            }
+            _ => {
+                Err(DistError::UnsupportedCrossCompile {
+                    host: host.clone(),
+                    target: target.clone(),
+                    details: format!("no idea how to cross-compile from {host} to linux"),
+                })
+            }
+        },
+        // compiling for Windows (making PE binaries, .dll files, etc.)
+        OperatingSystem::Windows => match host.operating_system {
+            OperatingSystem::Windows => {
+                // this is just cross-arch, hopefully no wrappers are needed?
+                Ok(Some(CargoBuildWrapper::ZigBuild))
+            }
+            OperatingSystem::Linux | OperatingSystem::Darwin => {
+                // cargo-xwin is made for that
+                Ok(Some(CargoBuildWrapper::Xwin))
+            }
+            _ => {
+                Err(DistError::UnsupportedCrossCompile {
+                    host: host.clone(),
+                    target: target.clone(),
+                    details: format!("no idea how to cross-compile from {host} to windows"),
+                })
+            }
+        },
+        _ => {
+            Err(DistError::UnsupportedCrossCompile {
+                host: host.clone(),
+                target: target.clone(),
+                details: format!("no idea how to cross-compile from anything (including the current host, {host}) to {target}"),
+            })
+        }
+    }
+}
+
 /// A cargo build (and copy the outputs to various locations)
 #[derive(Debug)]
 pub struct GenericBuildStep {
     /// The --target triple to pass
-    pub target_triple: TargetTriple,
+    pub target_triple: TripleName,
     /// Binaries we expect from this build
     pub expected_binaries: Vec<BinaryIdx>,
     /// The working directory to run the build in
@@ -441,7 +533,7 @@ pub struct RustupStep {
     /// The rustup to invoke (mostly here to prove you Have rustup)
     pub rustup: Tool,
     /// The target to install
-    pub target: TargetTriple,
+    pub target: TripleName,
 }
 
 /// zip/tarball some directory
@@ -515,7 +607,7 @@ pub struct SourceTarballStep {
 #[derive(Debug, Clone)]
 pub struct UpdaterStep {
     /// The target triple this updater is for
-    pub target_triple: TargetTriple,
+    pub target_triple: TripleName,
     /// The file this should produce
     pub target_filename: Utf8PathBuf,
 }
@@ -552,7 +644,7 @@ pub struct Artifact {
     /// The target platform
     ///
     /// i.e. `x86_64-pc-windows-msvc`
-    pub target_triples: Vec<TargetTriple>,
+    pub target_triples: Vec<TripleName>,
     /// If constructing this artifact involves creating a directory,
     /// copying static files into it, and then zip/tarring it, set this
     /// value to automate those tasks.
@@ -686,7 +778,7 @@ pub struct Release {
     /// misc app-specific config
     pub config: AppConfig,
     /// Targets this Release has artifacts for
-    pub targets: Vec<TargetTriple>,
+    pub targets: Vec<TripleName>,
     /// Binaries that every variant should ostensibly provide
     ///
     /// The string is the name of the binary under that package (without .exe extension)
@@ -721,7 +813,7 @@ pub struct Release {
 #[derive(Debug)]
 pub struct ReleaseVariant {
     /// The target triple this variant is for
-    pub target: TargetTriple,
+    pub target: TripleName,
     /// The unique identifying string used for things related to this variant
     /// (e.g. "my-app-v1.0.0-x86_64-pc-windows-msvc")
     pub id: String,
@@ -1165,7 +1257,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     fn add_variant(
         &mut self,
         to_release: ReleaseIdx,
-        target: TargetTriple,
+        target: TripleName,
     ) -> DistResult<ReleaseVariantIdx> {
         let idx = ReleaseVariantIdx(self.inner.variants.len());
         let Release {
@@ -1910,7 +2002,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .map(|a| a.target_triple.clone())
             .collect::<Vec<_>>();
 
-        let find_fragment = |triple: &TargetTripleRef| -> Option<ExecutableZipFragment> {
+        let find_fragment = |triple: &TripleNameRef| -> Option<ExecutableZipFragment> {
             artifacts
                 .iter()
                 .find(|a| a.target_triple == triple)
@@ -1952,7 +2044,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
-        let dependencies: Vec<String> = release
+        let dependencies: Vec<HomebrewPackageName> = release
             .config
             .builds
             .system_dependencies
@@ -2652,7 +2744,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         &mut self,
         cfg: &Config,
         announcing: &AnnouncementTag,
-        triples: &[TargetTriple],
+        triples: &[TripleName],
         bypass_package_target_prefs: bool,
     ) -> DistResult<()> {
         // Create a Release for each package
@@ -2967,14 +3059,14 @@ pub fn get_cargo_info(cargo: String) -> DistResult<CargoInfo> {
             return Ok(CargoInfo {
                 cmd: cargo,
                 version_line,
-                host_target: TargetTriple::new(target.to_owned()),
+                host_target: TripleName::new(target.to_owned()),
             });
         }
     }
     Err(DistError::FailedCargoVersion)
 }
 
-fn target_symbol_kind(target: &TargetTripleRef) -> Option<SymbolKind> {
+fn target_symbol_kind(target: &TripleNameRef) -> Option<SymbolKind> {
     #[allow(clippy::if_same_then_else)]
     if target.is_windows_msvc() {
         // Temporary disabled pending redesign of symbol handling!
@@ -3005,7 +3097,7 @@ fn tool_info() -> DistResult<Tools> {
         None
     };
     Ok(Tools {
-        host_target: TargetTriple::new(current_platform::CURRENT_PLATFORM.to_owned()),
+        host_target: TripleName::new(current_platform::CURRENT_PLATFORM.to_owned()),
         cargo,
         rustup: find_tool("rustup", "-V"),
         brew: find_tool("brew", "--version"),

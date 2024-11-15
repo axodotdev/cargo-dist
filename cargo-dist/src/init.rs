@@ -1,7 +1,7 @@
 use axoasset::toml_edit;
 use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TargetTripleRef;
+use cargo_dist_schema::TripleNameRef;
 use semver::Version;
 use serde::Deserialize;
 
@@ -491,7 +491,7 @@ fn get_new_dist_metadata(
         }
 
         // Prettify/sort things
-        let desc = move |triple: &TargetTripleRef| -> String {
+        let desc = move |triple: &TripleNameRef| -> String {
             let pretty = triple_to_display_name(triple).unwrap_or("[unknown]");
             format!("{pretty} ({triple})")
         };

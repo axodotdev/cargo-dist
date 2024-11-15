@@ -1,6 +1,11 @@
 //! github ci config
 
-use cargo_dist_schema::{GithubRunner, TargetTriple};
+use cargo_dist_schema::{
+    ContainerConfig, GithubRunner, GithubRunnerConfig, GithubRunnerConfigInput, StringLikeOr,
+    TripleName,
+};
+
+use crate::platform::{github_runners::target_for_github_runner, targets};
 
 use super::*;
 
@@ -14,7 +19,7 @@ pub struct GithubCiLayer {
 
     /// Custom GitHub runners, mapped by triple target
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub runners: Option<SortedMap<TargetTriple, GithubRunner>>,
+    pub runners: Option<SortedMap<TripleName, StringLikeOr<GithubRunner, GithubRunnerConfigInput>>>,
 
     /// Custom permissions for jobs
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -24,15 +29,19 @@ pub struct GithubCiLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build_setup: Option<String>,
 }
+
 /// github ci config (final)
 #[derive(Debug, Default, Clone)]
 pub struct GithubCiConfig {
     /// Common options
     pub common: CommonCiConfig,
+
     /// Custom GitHub runners, mapped by triple target
-    pub runners: SortedMap<TargetTriple, GithubRunner>,
+    pub runners: SortedMap<TripleName, GithubRunnerConfig>,
+
     /// Custom permissions for jobs
     pub permissions: SortedMap<String, GithubPermissionMap>,
+
     /// Custom permissions for jobs
     pub build_setup: Option<String>,
 }
@@ -61,7 +70,68 @@ impl ApplyLayer for GithubCiConfig {
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
-        self.runners.apply_val(runners);
+
+        let mk_default_github_runner = || GithubRunner::new("ubuntu-20.04".to_owned());
+        self.runners.apply_val(runners.map(|runners| {
+            runners
+                .into_iter()
+                .map(|(target_triple, runner)| {
+                    (
+                        target_triple.clone(),
+                        match runner {
+                            StringLikeOr::StringLike(runner) => {
+                                let host = target_for_github_runner(&runner)
+                                    .map(|t| t.to_owned())
+                                    .unwrap_or_else(|| target_triple.clone());
+                                GithubRunnerConfig {
+                                    host,
+                                    runner,
+                                    container: None,
+                                }
+                            }
+                            StringLikeOr::Val(runner_config) => {
+                                let runner = runner_config
+                                    .runner
+                                    .unwrap_or_else(mk_default_github_runner);
+                                let host = runner_config
+                                    .host
+                                    .or_else(|| {
+                                        target_for_github_runner(&runner).map(|t| t.to_owned())
+                                    })
+                                    .unwrap_or_else(|| {
+                                        // if not specified, then assume the custom github runner is
+                                        // the right platform (host == target)
+                                        target_triple.clone()
+                                    });
+                                let container =
+                                    runner_config.container.map(|container| match container {
+                                        StringLikeOr::StringLike(image_name) => {
+                                            ContainerConfig {
+                                                image: image_name,
+                                                // assume x86_64-unknown-linux-musl if not specified
+                                                host: targets::TARGET_X64_LINUX_MUSL.to_owned(),
+                                                package_manager: None,
+                                            }
+                                        }
+                                        StringLikeOr::Val(container_config) => ContainerConfig {
+                                            image: container_config.image,
+                                            host: container_config.host.unwrap_or_else(|| {
+                                                targets::TARGET_X64_LINUX_MUSL.to_owned()
+                                            }),
+                                            package_manager: container_config.package_manager,
+                                        },
+                                    });
+                                GithubRunnerConfig {
+                                    runner,
+                                    host,
+                                    container,
+                                }
+                            }
+                        },
+                    )
+                })
+                .collect()
+        }));
         self.permissions.apply_val(permissions);
         self.build_setup.apply_opt(build_setup);
     }

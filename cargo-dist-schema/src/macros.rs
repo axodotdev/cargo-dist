@@ -110,7 +110,7 @@
 /// ```rust,ignore
 /// declare_strongly_typed_string! {
 ///   /// TargetTriple docs go here
-///   pub const TargetTriple => &TargetTripleRef;
+///   pub const TargetTriple => &TripleNameRef;
 ///
 ///   /// GithubRunner docs go here
 ///   pub const GithubRunner => &GithubRunner;
@@ -133,14 +133,14 @@
 /// }
 /// ```
 ///
-/// If you're only reading from it, then maybe you can take a `&TargetTripleRef` instead:
+/// If you're only reading from it, then maybe you can take a `&TripleNameRef` instead:
 ///
 /// ```rust,ignore
 /// fn is_target_triple_funny(target: &str) -> bool {
 ///   target.contains("loong") // let's be honest: it's kinda funny
 /// }
 /// // 👇 becomes
-/// fn is_target_triple_funny(target: &TargetTripleRef) -> bool {
+/// fn is_target_triple_funny(target: &TripleNameRef) -> bool {
 ///   target.as_str().contains("loong")
 /// }
 /// ```
@@ -173,8 +173,8 @@
 /// let target = TargetTriple::new("x86_64-unknown-linux-gnu");
 /// ```
 ///
-/// What you're getting here is a `&'static TargetTripleRef` — no allocations
-/// involved, and if your functions take `&TargetTripleRef`, then you're already
+/// What you're getting here is a `&'static TripleNameRef` — no allocations
+/// involved, and if your functions take `&TripleNameRef`, then you're already
 /// all set.
 ///
 /// ### Treating it as a string anyway
@@ -234,14 +234,14 @@
 /// This will not work:
 ///
 /// ```rust,ignore
-/// fn i_take_a_slice(targets: &[TargetTripleRef]) { todo!(targets) }
+/// fn i_take_a_slice(targets: &[TripleNameRef]) { todo!(targets) }
 ///
 /// let targets = vec![TargetTriple::new("x86_64-unknown-linux-gnu")];
 /// i_take_a_slice(&targets);
 /// ```
 ///
 /// Because you have a `&Vec<TargetTriple>`, and `Deref` only takes you
-/// as far as `&[TargetTriple]`, but not `&[TargetTripleRef]`. If you
+/// as far as `&[TargetTriple]`, but not `&[TripleNameRef]`. If you
 /// encounter that case, it's probably fine to just take a `&[TargetTriple]`.
 ///
 /// Note that you would have the same problem with `Vec<String>`: it would give
@@ -253,7 +253,7 @@
 /// This will not work:
 ///
 /// ```rust,ignore
-/// fn match_on_target(target: &TargetTripleRef) => &str {
+/// fn match_on_target(target: &TripleNameRef) => &str {
 ///   match target {
 ///     TARGET_X64_WINDOWS => "what's up gamers",
 ///     _ => "good morning",
@@ -261,7 +261,7 @@
 /// }
 /// ```
 ///
-/// Even if `TARGET_X64_WINDOWS` is a `&'static TargetTripleRef` and
+/// Even if `TARGET_X64_WINDOWS` is a `&'static TripleNameRef` and
 /// a `const`. Doesn't matter. rustc says no. Maybe in the future.
 ///
 /// For now, just stick it in a `HashMap`, or use an if-else chain or something. Sorry!

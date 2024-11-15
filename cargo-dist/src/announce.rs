@@ -90,7 +90,7 @@ use std::fmt::Display;
 
 use axoproject::PackageIdx;
 use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
-use cargo_dist_schema::{DistManifest, GithubHosting, TargetTriple, TargetTripleRef};
+use cargo_dist_schema::{DistManifest, GithubHosting, TripleName, TripleNameRef};
 use itertools::Itertools;
 use semver::Version;
 use tracing::info;
@@ -977,7 +977,7 @@ pub fn announcement_github(manifest: &mut DistManifest) {
 }
 
 /// Create a key for Properly sorting a list of target triples
-fn sortable_triples(triples: &[TargetTriple]) -> Vec<Vec<String>> {
+fn sortable_triples(triples: &[TripleName]) -> Vec<Vec<String>> {
     // Make each triple sortable, and then sort the list of triples by those
     // (usually there's only one triple but DETERMINISM)
     let mut output: Vec<Vec<String>> = triples.iter().map(|t| sortable_triple(t)).collect();
@@ -986,7 +986,7 @@ fn sortable_triples(triples: &[TargetTriple]) -> Vec<Vec<String>> {
 }
 
 /// Create a key for Properly sorting target triples
-fn sortable_triple(triple: &TargetTripleRef) -> Vec<String> {
+fn sortable_triple(triple: &TripleNameRef) -> Vec<String> {
     // We want to sort lexically by: os, abi, arch
     // We are given arch, vendor, os, abi
     //
@@ -1018,7 +1018,7 @@ fn sortable_triple(triple: &TargetTripleRef) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use cargo_dist_schema::TargetTripleRef;
+    use cargo_dist_schema::TripleNameRef;
 
     use super::sortable_triple;
     #[test]
@@ -1045,7 +1045,7 @@ mod tests {
             "x86_64-unknown-linux-gnu.2.31",
             "x86_64-unknown-linux-musl-static",
         ];
-        targets.sort_by_cached_key(|t| sortable_triple(TargetTripleRef::from_str(t)));
+        targets.sort_by_cached_key(|t| sortable_triple(TripleNameRef::from_str(t)));
         assert_eq!(
             targets,
             vec![

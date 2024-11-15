@@ -5,7 +5,10 @@ use std::collections::BTreeMap;
 use axoasset::{toml_edit, SourceFile};
 use axoproject::local_repo::LocalRepo;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{ChecksumExtensionRef, TargetTriple, TargetTripleRef};
+use cargo_dist_schema::{
+    AptPackageName, ChecksumExtensionRef, ChocolateyPackageName, HomebrewPackageName,
+    PackageVersion, TripleName, TripleNameRef,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::announce::TagSettings;
@@ -54,7 +57,7 @@ pub struct Config {
     /// If true, override allow-dirty in the config and ignore all dirtiness
     pub allow_all_dirty: bool,
     /// Target triples we want to build for
-    pub targets: Vec<TargetTriple>,
+    pub targets: Vec<TripleName>,
     /// CI kinds we want to support
     pub ci: Vec<CiStyle>,
     /// Installers we want to generate
@@ -748,16 +751,17 @@ pub struct SystemDependencies {
     /// Packages to install in Homebrew
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    // #[serde(with = "sysdep_derive")]
-    pub homebrew: BTreeMap<String, SystemDependency>,
+    pub homebrew: BTreeMap<HomebrewPackageName, SystemDependency>,
+
     /// Packages to install in apt
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub apt: BTreeMap<String, SystemDependency>,
+    pub apt: BTreeMap<AptPackageName, SystemDependency>,
+
     /// Package to install in Chocolatey
     #[serde(default)]
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-    pub chocolatey: BTreeMap<String, SystemDependency>,
+    pub chocolatey: BTreeMap<ChocolateyPackageName, SystemDependency>,
 }
 
 impl SystemDependencies {
@@ -778,18 +782,18 @@ pub struct SystemDependency(pub SystemDependencyComplex);
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct SystemDependencyComplex {
     /// The version to install, as expected by the underlying package manager
-    pub version: Option<String>,
+    pub version: Option<PackageVersion>,
     /// Stages at which the dependency is required
     #[serde(default)]
     pub stage: Vec<DependencyKind>,
     /// One or more targets this package should be installed on; defaults to all targets if not specified
     #[serde(default)]
-    pub targets: Vec<TargetTriple>,
+    pub targets: Vec<TripleName>,
 }
 
 impl SystemDependencyComplex {
     /// Checks if this dependency should be installed on the specified target.
-    pub fn wanted_for_target(&self, target: &TargetTripleRef) -> bool {
+    pub fn wanted_for_target(&self, target: &TripleNameRef) -> bool {
         if self.targets.is_empty() {
             true
         } else {
@@ -851,7 +855,7 @@ impl<'de> Deserialize<'de> for SystemDependency {
             SystemDependencyKind::Untagged(version) => {
                 let v = if version == "*" { None } else { Some(version) };
                 SystemDependencyComplex {
-                    version: v,
+                    version: v.map(PackageVersion::new),
                     stage: vec![],
                     targets: vec![],
                 }

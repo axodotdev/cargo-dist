@@ -1,7 +1,9 @@
 //! v0 config
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{declare_strongly_typed_string, GithubRunner};
+use cargo_dist_schema::{
+    declare_strongly_typed_string, GithubRunner, GithubRunnerConfigInput, StringLikeOr,
+};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
@@ -130,7 +132,7 @@ pub struct DistMetadata {
     ///
     /// FIXME: Allow higher level requests like "[macos, windows, linux] x [x86_64, aarch64]"?
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub targets: Option<Vec<TargetTriple>>,
+    pub targets: Option<Vec<TripleName>>,
 
     /// Include the following static files in bundles like archives.
     ///
@@ -404,7 +406,8 @@ pub struct DistMetadata {
 
     /// Custom GitHub runners, mapped by triple target
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub github_custom_runners: Option<SortedMap<TargetTriple, GithubRunner>>,
+    pub github_custom_runners:
+        Option<SortedMap<TripleName, StringLikeOr<GithubRunner, GithubRunnerConfigInput>>>,
 
     /// Custom permissions for jobs
     #[serde(skip_serializing_if = "Option::is_none")]

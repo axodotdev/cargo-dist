@@ -9,19 +9,26 @@
 //! The root type of the schema is [`DistManifest`][].
 
 pub mod macros;
+pub use target_lexicon;
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, str::FromStr};
 
 use schemars::JsonSchema;
 use semver::Version;
 use serde::{Deserialize, Serialize};
+use target_lexicon::Triple;
 
 declare_strongly_typed_string! {
-    /// A rust target-triple (e.g. "x86_64-pc-windows-msvc")
-    pub struct TargetTriple => &TargetTripleRef;
+    /// A rustc-like target triple/tuple (e.g. "x86_64-pc-windows-msvc")
+    pub struct TripleName => &TripleNameRef;
 }
 
-impl TargetTripleRef {
+impl TripleNameRef {
+    /// Parse as a [`Triple`]
+    pub fn parse(&self) -> Result<Triple, <Triple as FromStr>::Err> {
+        Triple::from_str(self.as_str())
+    }
+
     /// Returns true if this target triple contains the word "musl"
     pub fn is_musl(&self) -> bool {
         self.0.contains("musl")
@@ -70,16 +77,47 @@ impl TargetTripleRef {
         self.0.contains("windows-msvc")
     }
 }
-
 declare_strongly_typed_string! {
     /// The name of a Github Actions Runner, like `ubuntu-20.04` or `macos-13`
     pub struct GithubRunner => &GithubRunnerRef;
+
+    /// A container image, like `quay.io/pypa/manylinux_2_28_x86_64`
+    pub struct ContainerImage => &ContainerImageRef;
 }
+
+/// Github runners configuration (which github image/container should be used
+/// to build which target).
+pub type GithubRunners = BTreeMap<TripleName, GithubRunnerConfig>;
 
 impl GithubRunnerRef {
     /// Does the runner name contain the word "buildjet"?
     pub fn is_buildjet(&self) -> bool {
         self.as_str().contains("buildjet")
+    }
+}
+
+/// A value or just a string
+///
+/// This allows us to have a simple string-based version of a config while still
+/// allowing for a more advanced version to exist.
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(untagged)]
+pub enum StringLikeOr<S, T> {
+    /// They gave the simple string-like value (see `declare_strongly_typed_string!`)
+    StringLike(S),
+    /// They gave a more interesting value
+    Val(T),
+}
+
+impl<S, T> StringLikeOr<S, T> {
+    /// Constructs a new `StringLikeOr` from the string-like value `s`
+    pub fn from_s(s: S) -> Self {
+        Self::StringLike(s)
+    }
+
+    /// Constructs a new `StringLikeOr` from the more interesting value `t`
+    pub fn from_t(t: T) -> Self {
+        Self::Val(t)
     }
 }
 
@@ -249,7 +287,7 @@ pub struct AssetInfo {
     /// * length 0: not a meaningful question, maybe some static file
     /// * length 1: typical of binaries
     /// * length 2+: some kind of universal binary
-    pub target_triples: Vec<TargetTriple>,
+    pub target_triples: Vec<TripleName>,
     /// the linkage of this Asset
     pub linkage: Option<Linkage>,
 }
@@ -284,7 +322,7 @@ pub struct GithubMatrix {
     /// define each task manually rather than doing cross-product stuff
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub include: Vec<GithubMatrixEntry>,
+    pub include: Vec<GithubLocalJobConfig>,
 }
 
 impl GithubMatrix {
@@ -296,29 +334,156 @@ impl GithubMatrix {
     }
 }
 
-/// Entry for a github matrix
+declare_strongly_typed_string! {
+    /// A bit of shell script to install brew/apt/chocolatey/etc. packages
+    pub struct PackageInstallScript => &PackageInstallScriptRef;
+}
+
+/// The version of `GithubRunnerConfig` that's deserialized from the config file: it
+/// has optional fields that are computed later.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct GithubMatrixEntry {
-    /// Targets to build for
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub targets: Option<Vec<TargetTriple>>,
-    /// Github Runner to user
-    #[serde(skip_serializing_if = "Option::is_none")]
+pub struct GithubRunnerConfigInput {
+    /// GHA's `runs-on` key: Github Runner image to use, see <https://github.com/actions/runner-images>
+    /// and <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/choosing-the-runner-for-a-job>
+    ///
+    /// This is not necessarily a well-known runner, it could be something self-hosted, it
+    /// could be from BuildJet, Namespace, etc.
+    ///
+    /// If not specified, `container` has to be set.
     pub runner: Option<GithubRunner>,
+
+    /// Host triple of the runner (well-known, custom, or best guess).
+    /// If the runner is one of GitHub's official runner images, the platform
+    /// is hardcoded. If it's custom, then we have a `target_triple => runner` in the config
+    pub host: Option<TripleName>,
+
+    /// Container image to run the job in, using GitHub's builtin
+    /// container support, see <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/running-jobs-in-a-container>
+    ///
+    /// This doesn't allow mounting volumes, or anything, because we're only able
+    /// to set the `container` key to something stringy
+    ///
+    /// If not specified, `runner` has to be set.
+    pub container: Option<StringLikeOr<ContainerImage, ContainerConfigInput>>,
+}
+
+/// GitHub config that's common between different kinds of jobs (global, local)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord)]
+pub struct GithubRunnerConfig {
+    /// GHA's `runs-on` key: Github Runner image to use, see <https://github.com/actions/runner-images>
+    /// and <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/choosing-the-runner-for-a-job>
+    ///
+    /// This is not necessarily a well-known runner, it could be something self-hosted, it
+    /// could be from BuildJet, Namespace, etc.
+    pub runner: GithubRunner,
+
+    /// Host triple of the runner (well-known, custom, or best guess).
+    /// If the runner is one of GitHub's official runner images, the platform
+    /// is hardcoded. If it's custom, then we have a `target_triple => runner` in the config
+    pub host: TripleName,
+
+    /// Container image to run the job in, using GitHub's builtin
+    /// container support, see <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/running-jobs-in-a-container>
+    ///
+    /// This doesn't allow mounting volumes, or anything, because we're only able
+    /// to set the `container` key to something stringy
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub container: Option<ContainerConfig>,
+}
+
+impl GithubRunnerConfig {
+    /// If the container runs through a container, that container might have a different
+    /// architecture than the outer VM — this returns the container's triple if any,
+    /// and falls back to the "machine"'s triple if not.
+    pub fn real_triple_name(&self) -> &TripleNameRef {
+        if let Some(container) = &self.container {
+            &container.host
+        } else {
+            &self.host
+        }
+    }
+
+    /// cf. [`Self::real_triple_name`], but parsed
+    pub fn real_triple(&self) -> Triple {
+        self.real_triple_name().parse().unwrap()
+    }
+}
+
+/// GitHub config that's common between different kinds of jobs (global, local)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ContainerConfigInput {
+    /// The container image to run, something like `ubuntu:20.04` or
+    /// `quay.io/pypa/manylinux_2_28_x86_64`
+    pub image: ContainerImage,
+
+    /// The host triple of the container, something like `x86_64-unknown-linux-gnu`
+    /// or `aarch64-unknown-linux-musl` or whatever.
+    pub host: Option<TripleName>,
+
+    /// The package manager to use within the container, like `apt`.
+    #[serde(rename = "package-manager")]
+    pub package_manager: Option<PackageManager>,
+}
+
+/// GitHub config that's common between different kinds of jobs (global, local)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ContainerConfig {
+    /// The container image to run, something like `ubuntu:20.04` or
+    /// `quay.io/pypa/manylinux_2_28_x86_64`
+    pub image: ContainerImage,
+
+    /// The host triple of the container, something like `x86_64-unknown-linux-gnu`
+    /// or `aarch64-unknown-linux-musl` or whatever.
+    pub host: TripleName,
+
+    /// The package manager to use within the container, like `apt`.
+    pub package_manager: Option<PackageManager>,
+}
+
+/// Used in `github/release.yml.j2` to template out "global" build jobs
+/// (plan, global assets, announce, etc)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GithubGlobalJobConfig {
+    /// Where to run this job?
+    #[serde(flatten)]
+    pub runner: GithubRunnerConfig,
+
     /// Expression to execute to install dist
     pub install_dist: GhaRunStep,
-    /// Expression to execute to install cargo-auditable
-    pub install_cargo_auditable: GhaRunStep,
+
+    /// Arguments to pass to dist
+    pub dist_args: String,
+
     /// Expression to execute to install cargo-cyclonedx
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_cargo_cyclonedx: Option<GhaRunStep>,
+}
+
+/// Used in `github/release.yml.j2` to template out "local" build jobs
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GithubLocalJobConfig {
+    /// Where to run this job?
+    #[serde(flatten)]
+    pub runner: GithubRunnerConfig,
+
+    /// Expression to execute to install dist
+    pub install_dist: GhaRunStep,
+
     /// Arguments to pass to dist
+    pub dist_args: String,
+
+    /// Target triples to build for
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dist_args: Option<String>,
+    pub targets: Option<Vec<TripleName>>,
+
+    /// Expression to execute to install cargo-auditable
+    pub install_cargo_auditable: GhaRunStep,
+
     /// Command to run to install dependencies
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub packages_install: Option<String>,
-    /// what cache provider to use
+    pub packages_install: Option<PackageInstallScript>,
+
+    /// What cache provider to use
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_provider: Option<String>,
 }
@@ -475,7 +640,7 @@ pub struct Artifact {
     /// The target triple of the bundle
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
-    pub target_triples: Vec<TargetTriple>,
+    pub target_triples: Vec<TripleName>,
     /// The location of the artifact on the local system
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
@@ -904,11 +1069,29 @@ pub struct Linkage {
 #[derive(
     Clone, Copy, Debug, Deserialize, Serialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord,
 )]
+#[serde(rename_all = "lowercase")]
 pub enum PackageManager {
     /// Homebrew (usually for Mac)
     Homebrew,
     /// Apt (Debian, Ubuntu, etc)
     Apt,
+}
+
+declare_strongly_typed_string! {
+    /// A homebrew package name, cf. <https://formulae.brew.sh/>
+    pub struct HomebrewPackageName => &HomebrewPackageNameRef;
+
+    /// An APT package name, cf. <https://en.wikipedia.org/wiki/APT_(software)>
+    pub struct AptPackageName => &AptPackageNameRef;
+
+    /// A chocolatey package name, cf. <https://community.chocolatey.org/packages>
+    pub struct ChocolateyPackageName => &ChocolateyPackageNameRef;
+
+    /// A pip package name
+    pub struct PipPackageName => &PipPackageNameRef;
+
+    /// A package version
+    pub struct PackageVersion => &PackageVersionRef;
 }
 
 /// Represents a dynamic library located somewhere on the system
@@ -921,6 +1104,9 @@ pub struct Library {
     pub source: Option<String>,
     /// Which package manager provided this library
     pub package_manager: Option<PackageManager>,
+    // FIXME: `HomebrewPackageName` and others are now strongly-typed, which makes having this
+    // source/packagemanager thingy problematic. Maybe we could just have an enum, with Apt,
+    // Homebrew, and Chocolatey variants? That would change the schema though.
 }
 
 impl Linkage {
@@ -939,31 +1125,6 @@ impl Linkage {
             .extend(public_unmanaged.iter().cloned());
         self.other.extend(other.iter().cloned());
         self.frameworks.extend(frameworks.iter().cloned());
-    }
-
-    /// Returns a flat list of packages that come from the specific package manager
-    pub fn packages_from(&self, package_manager: PackageManager) -> Vec<String> {
-        let mut packages = vec![];
-        packages.extend(
-            self.system
-                .iter()
-                .filter(|l| l.package_manager == Some(package_manager))
-                .filter_map(|l| l.source.clone()),
-        );
-        packages.extend(
-            self.homebrew
-                .iter()
-                .filter(|l| l.package_manager == Some(package_manager))
-                .filter_map(|l| l.source.clone()),
-        );
-        packages.extend(
-            self.other
-                .iter()
-                .filter(|l| l.package_manager == Some(package_manager))
-                .filter_map(|l| l.source.clone()),
-        );
-
-        packages
     }
 }
 

@@ -5,7 +5,7 @@ use std::{env, process::ExitStatus};
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{DistManifest, TargetTriple, TargetTripleRef};
+use cargo_dist_schema::{DistManifest, TripleName, TripleNameRef};
 
 use crate::{
     build::{package_id_string, BuildExpectations},
@@ -19,7 +19,7 @@ impl<'a> DistGraphBuilder<'a> {
     pub(crate) fn compute_generic_builds(&mut self, workspace_idx: WorkspaceIdx) -> Vec<BuildStep> {
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
-        let mut targets = SortedMap::<TargetTriple, Vec<BinaryIdx>>::new();
+        let mut targets = SortedMap::<TripleName, Vec<BinaryIdx>>::new();
         for (binary_idx, binary) in self.inner.binaries.iter().enumerate() {
             // Only bother with binaries owned by this workspace
             if self.workspaces.workspace_for_package(binary.pkg_idx) != workspace_idx {
@@ -95,7 +95,7 @@ impl<'a> DistGraphBuilder<'a> {
     }
 }
 
-fn platform_appropriate_cc(target: &TargetTripleRef) -> &str {
+fn platform_appropriate_cc(target: &TripleNameRef) -> &str {
     if target.is_darwin() {
         "clang"
     } else if target.is_linux() {
@@ -107,7 +107,7 @@ fn platform_appropriate_cc(target: &TargetTripleRef) -> &str {
     }
 }
 
-fn platform_appropriate_cxx(target: &TargetTripleRef) -> &str {
+fn platform_appropriate_cxx(target: &TripleNameRef) -> &str {
     if target.is_darwin() {
         "clang++"
     } else if target.is_linux() {
@@ -123,7 +123,7 @@ fn run_build(
     dist_graph: &DistGraph,
     build_command: &[String],
     working_dir: &Utf8Path,
-    target: Option<&TargetTriple>,
+    target: Option<&TripleName>,
 ) -> DistResult<ExitStatus> {
     let mut command_string = build_command.to_owned();
 
