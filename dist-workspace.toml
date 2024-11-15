@@ -4,7 +4,7 @@ members = ["cargo:."]
 # Config for 'dist'
 [dist]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.25.2-prerelease.2"
+cargo-dist-version = "0.26.0-prerelease.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
@@ -32,9 +32,13 @@ install-path = "CARGO_HOME"
 artifacts = ["dist-manifest-schema.json"]
 build = ["cargo", "run", "--release", "--", "dist", "manifest-schema", "--output=dist-manifest-schema.json"]
 
-[dist.github-custom-runners]
-aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
-aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
-
 [dist.bin-aliases]
 "dist" = ["cargo-dist"]
+
+[dist.github-custom-runners.aarch64-unknown-linux-gnu.container]
+image = "quay.io/pypa/manylinux_2_28_x86_64"
+host = "x86_64-unknown-linux-musl"
+
+[dist.github-custom-runners.aarch64-unknown-linux-musl.container]
+image = "quay.io/pypa/manylinux_2_28_x86_64"
+host = "x86_64-unknown-linux-musl"
