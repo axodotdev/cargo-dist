@@ -212,6 +212,27 @@ fn print_human_linkage(out: &mut Term, report: &DistManifest) -> Result<(), std:
     writeln!(out, "{}", LinkageDisplay(report))
 }
 
+fn print_multiple(
+    cli: &Cli,
+    reports: Vec<&DistManifest>,
+    print_linkage: bool,
+    warn_cmd: Option<&str>,
+) -> Result<(), miette::Report> {
+    let mut out = Term::stdout();
+    match cli.output_format {
+        OutputFormat::Human => {
+            for report in reports {
+                print(cli, report, print_linkage, warn_cmd)?;
+            }
+        }
+        OutputFormat::Json => {
+            let string = serde_json::to_string_pretty(&reports).unwrap();
+            writeln!(out, "{string}").into_diagnostic()?;
+        }
+    }
+    Ok(())
+}
+
 fn cmd_build(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
     let config = cargo_dist::config::Config {
         tag_settings: cli.tag_settings(true),
@@ -296,39 +317,41 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
         .map(|r| r.app_version.clone())
         .collect::<SortedSet<_>>();
 
-    // Force --no-local-paths and --artifacts=all
+    // Force --no-local-paths
     // No need to force --output-format=human
     let mut new_cli = cli.clone();
     new_cli.no_local_paths = true;
-    let args = &ManifestArgs {
-        build_args: BuildArgs {
-            artifacts: cli::ArtifactMode::All,
-            print: vec![],
-        },
-    };
+    config.no_local_paths = new_cli.no_local_paths;
 
-    // If there's 0-1 versions, it's equivalent to `dist manifest`.
-    if versions.len() < 2 {
-        return cmd_manifest(&new_cli, args);
-    }
-
-    // If there's 2 or more versions, we check each one.
-
-    for version in &versions {
-        config.tag_settings = TagSettings {
-            needs_coherence: true,
-            tag: TagMode::Select(format!("v{version}")),
-        };
+    // If --tag is specified, only print a plan for that one.
+    if let TagMode::Select(_tag) = &config.tag_settings.tag {
         let report = do_manifest(&config)?;
-        print(cli, &report, false, Some("plan"))?;
-        println!();
+        return print_multiple(&new_cli, vec![&report], false, Some("plan"));
     }
+
+    // If there's 2 or more versions, print a plan each one.
+
+    let reports: Vec<DistManifest> = versions
+        .iter()
+        .map(|version| {
+            let mut config = config.clone();
+            config.tag_settings = TagSettings {
+                needs_coherence: true,
+                tag: TagMode::Select(format!("v{version}")),
+            };
+            do_manifest(&config)
+        })
+        .collect::<Result<_, _>>()?;
+
+    print_multiple(&new_cli, reports.iter().collect(), false, Some("plan"))?;
 
     // Everything after this is notes for people who are running `dist plan`
     // interactively. So, bail early if it's not being used that way.
-    if cli.output_format != OutputFormat::Human {
+    if new_cli.output_format != OutputFormat::Human {
         return Ok(());
     }
+
+    println!();
 
     let mut out = Term::stdout();
     let message = concat!(
