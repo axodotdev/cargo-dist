@@ -539,8 +539,13 @@ stdout:
             "cache_provider": "github"
           },
           {
-            "runner": "buildjet-8vcpu-ubuntu-2204-arm",
-            "host": "aarch64-unknown-linux-gnu",
+            "runner": "ubuntu-20.04",
+            "host": "x86_64-unknown-linux-gnu",
+            "container": {
+              "image": "quay.io/pypa/manylinux_2_28_x86_64",
+              "host": "x86_64-unknown-linux-musl",
+              "package_manager": null
+            },
             "install_dist": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
@@ -553,11 +558,17 @@ stdout:
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
             },
-            "cache_provider": "buildjet"
+            "packages_install": "if ! command -v cargo-zigbuild > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-zigbuild\nfi",
+            "cache_provider": "github"
           },
           {
-            "runner": "buildjet-8vcpu-ubuntu-2204-arm",
-            "host": "aarch64-unknown-linux-gnu",
+            "runner": "ubuntu-20.04",
+            "host": "x86_64-unknown-linux-gnu",
+            "container": {
+              "image": "quay.io/pypa/manylinux_2_28_x86_64",
+              "host": "x86_64-unknown-linux-musl",
+              "package_manager": null
+            },
             "install_dist": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
@@ -570,8 +581,8 @@ stdout:
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
             },
-            "packages_install": "sudo apt-get update\nsudo apt-get install musl-tools",
-            "cache_provider": "buildjet"
+            "packages_install": "if ! command -v cargo-zigbuild > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-zigbuild\nfi",
+            "cache_provider": "github"
           },
           {
             "runner": "macos-13",
