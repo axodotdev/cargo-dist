@@ -134,6 +134,8 @@ pub enum Commands {
     /// Report on the dynamic libraries used by the built artifacts.
     #[clap(disable_version_flag = true)]
     Linkage(LinkageArgs),
+    /// List all version tags known by dist.
+    ListTags(ListTagsArgs),
     /// Generate the final build manifest without running any builds.
     ///
     /// This command is designed to match the exact behaviour of
@@ -331,6 +333,9 @@ pub struct LinkageArgs {
     #[clap(long)]
     pub from_json: Option<String>,
 }
+
+#[derive(Args, Clone, Debug)]
+pub struct ListTagsArgs {}
 
 #[derive(Args, Clone, Debug)]
 pub struct HelpMarkdownArgs {}

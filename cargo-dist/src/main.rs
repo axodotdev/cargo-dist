@@ -20,7 +20,7 @@ use console::Term;
 use miette::{miette, IntoDiagnostic};
 use net::ClientSettings;
 
-use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs};
+use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs, ListTagsArgs};
 
 mod cli;
 
@@ -52,6 +52,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::Generate(args) => cmd_generate(config, args),
         Commands::GenerateCi(args) => cmd_generate_ci(config, args),
         Commands::Linkage(args) => cmd_linkage(config, args),
+        Commands::ListTags(args) => cmd_list_tags(config, args),
         Commands::Manifest(args) => cmd_manifest(config, args),
         Commands::Plan(args) => cmd_plan(config, args),
         Commands::HelpMarkdown(args) => cmd_help_md(config, args),
@@ -373,6 +374,48 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
         options.print_output = true;
     }
     cargo_dist::linkage::do_linkage(&config, &options)?;
+    Ok(())
+}
+
+fn cmd_list_tags(cli: &Cli, _args: &ListTagsArgs) -> Result<(), miette::Report> {
+    let config = cargo_dist::config::Config {
+        tag_settings: cli.tag_settings(false),
+        create_hosting: false,
+        artifact_mode: crate::config::ArtifactMode::All,
+        no_local_paths: cli.no_local_paths,
+        allow_all_dirty: cli.allow_dirty,
+        targets: cli.target.clone(),
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        root_cmd: "list-tags".to_owned(),
+    };
+
+    let (_graph, manifest) = crate::tasks::gather_work(&config)?;
+
+    let version_map: SortedMap<String, Vec<String>> =
+        manifest
+            .releases
+            .into_iter()
+            .fold(SortedMap::new(), |mut vmap, r| {
+                let version = format!("v{}", r.app_version);
+                vmap.entry(version).or_default().push(r.app_name);
+                vmap
+            });
+
+    let mut out = Term::stdout();
+
+    match cli.output_format {
+        OutputFormat::Human => {
+            for (version, tags) in version_map {
+                writeln!(out, "{}: {}", version, tags.join(", ")).into_diagnostic()?;
+            }
+        }
+        OutputFormat::Json => {
+            let versions: Vec<String> = version_map.into_keys().collect();
+            let string = serde_json::to_string_pretty(&versions).unwrap();
+            writeln!(out, "{string}").into_diagnostic()?;
+        }
+    }
     Ok(())
 }
 

@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
+snapshot_kind: text
 ---
 stdout:
 # dist CLI manual
@@ -23,6 +24,7 @@ dist <COMMAND>
 * [init](#cargo-dist-init): Setup or update dist
 * [generate](#cargo-dist-generate): Generate one or more pieces of configuration
 * [linkage](#cargo-dist-linkage): Report on the dynamic libraries used by the built artifacts
+* [list-tags](#cargo-dist-list-tags): List all version tags known by dist
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [host](#cargo-dist-host): Host artifacts
@@ -235,6 +237,23 @@ Print help (see a summary with '-h')
 This subcommand accepts all the [global options](#global-options)
 
 <br><br><br>
+## dist list-tags
+List all version tags known by dist
+
+### Usage
+
+```text
+dist list-tags [OPTIONS]
+```
+
+### Options
+#### `-h, --help`
+Print help (see a summary with '-h')
+
+### GLOBAL OPTIONS
+This subcommand accepts all the [global options](#global-options)
+
+<br><br><br>
 ## dist manifest
 Generate the final build manifest without running any builds.
 
@@ -395,6 +414,7 @@ dist help [COMMAND]
 * [init](#cargo-dist-init): Setup or update dist
 * [generate](#cargo-dist-generate): Generate one or more pieces of configuration
 * [linkage](#cargo-dist-linkage): Report on the dynamic libraries used by the built artifacts
+* [list-tags](#cargo-dist-list-tags): List all version tags known by dist
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
 * [plan](#cargo-dist-plan): Get a plan of what to build (and check project status)
 * [host](#cargo-dist-host): Host artifacts
