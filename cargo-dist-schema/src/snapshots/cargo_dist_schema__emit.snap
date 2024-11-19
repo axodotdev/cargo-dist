@@ -276,6 +276,21 @@ snapshot_kind: text
           }
         },
         {
+          "description": "An OmniBOR Artifact ID",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "omnibor-artifact-id"
+              ]
+            }
+          }
+        },
+        {
           "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
           "type": "object",
           "required": [
@@ -896,6 +911,17 @@ snapshot_kind: text
           "allOf": [
             {
               "$ref": "#/definitions/GhaRunStep"
+            }
+          ]
+        },
+        "install_omnibor": {
+          "description": "Expression to execute to install omnibor-cli",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GhaRunStep"
+            },
+            {
+              "type": "null"
             }
           ]
         },

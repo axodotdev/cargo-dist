@@ -423,6 +423,7 @@ fn get_new_dist_metadata(
             min_glibc_version: None,
             cargo_auditable: None,
             cargo_cyclonedx: None,
+            omnibor: None,
         }
     };
 
@@ -900,6 +901,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         min_glibc_version,
         cargo_auditable,
         cargo_cyclonedx,
+        omnibor,
         // These settings are complex enough that we don't support editing them in init
         extra_artifacts: _,
         github_custom_runners: _,
@@ -1326,6 +1328,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "cargo-cyclonedx",
         "# Whether to use cargo-cyclonedx to generate an SBOM\n",
         *cargo_cyclonedx,
+    );
+
+    apply_optional_value(
+        table,
+        "omnibor",
+        "# Whether to use omnibor-cli to generate OmniBOR Artifact IDs\n",
+        *omnibor,
     );
 
     // Finalize the table

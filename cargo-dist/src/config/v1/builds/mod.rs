@@ -19,6 +19,8 @@ pub struct WorkspaceBuildConfig {
     pub macos_sign: bool,
     /// Overrides the minimum supported glibc version.
     pub min_glibc_version: Option<MinGlibcVersion>,
+    /// Whether to generate OmniBOR artifact IDs.
+    pub omnibor: bool,
 }
 
 /// app-scoped build config
@@ -32,6 +34,8 @@ pub struct AppBuildConfig {
     pub system_dependencies: SystemDependencies,
     /// Overrides the minimum supported glibc version.
     pub min_glibc_version: Option<MinGlibcVersion>,
+    /// Whether to generate OmniBOR artifact IDs.
+    pub omnibor: Option<bool>,
 }
 
 /// build config (inheritance not yet folded)
@@ -51,6 +55,8 @@ pub struct BuildConfigInheritable {
     pub system_dependencies: SystemDependencies,
     /// Overrides the minimum supported glibc version.
     pub min_glibc_version: Option<MinGlibcVersion>,
+    /// Whether to generate OmniBOR artifact IDs.
+    pub omnibor: Option<bool>,
 }
 
 /// build config (raw from file)
@@ -82,6 +88,9 @@ pub struct BuildLayer {
     /// Overrides the minimum supported glibc version.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_glibc_version: Option<MinGlibcVersion>,
+    /// Whether to generate OmniBOR artifact IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub omnibor: Option<bool>,
 }
 impl BuildConfigInheritable {
     /// get defaults for a package
@@ -94,6 +103,7 @@ impl BuildConfigInheritable {
             ssldotcom_windows_sign: None,
             macos_sign: None,
             min_glibc_version: None,
+            omnibor: None,
         }
     }
     /// get defaults for a workspace
@@ -106,6 +116,7 @@ impl BuildConfigInheritable {
             ssldotcom_windows_sign: None,
             macos_sign: None,
             min_glibc_version: None,
+            omnibor: None,
         }
     }
     /// apply inheritance to get final workspace config
@@ -119,6 +130,7 @@ impl BuildConfigInheritable {
             ssldotcom_windows_sign,
             macos_sign,
             min_glibc_version,
+            omnibor,
             // local-only
             generic: _,
             system_dependencies: _,
@@ -132,6 +144,7 @@ impl BuildConfigInheritable {
             macos_sign: macos_sign.unwrap_or(false),
             ssldotcom_windows_sign,
             min_glibc_version,
+            omnibor: omnibor.unwrap_or(false),
         }
     }
     /// apply inheritance to get final package config
@@ -146,6 +159,7 @@ impl BuildConfigInheritable {
             generic,
             system_dependencies,
             min_glibc_version,
+            omnibor,
             // local-only
             ssldotcom_windows_sign: _,
             macos_sign: _,
@@ -165,6 +179,7 @@ impl BuildConfigInheritable {
             generic: generic_out,
             system_dependencies,
             min_glibc_version,
+            omnibor,
         }
     }
 }
@@ -180,6 +195,7 @@ impl ApplyLayer for BuildConfigInheritable {
             ssldotcom_windows_sign,
             macos_sign,
             min_glibc_version,
+            omnibor,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -190,6 +206,7 @@ impl ApplyLayer for BuildConfigInheritable {
             .apply_opt(ssldotcom_windows_sign);
         self.macos_sign.apply_opt(macos_sign);
         self.min_glibc_version.apply_opt(min_glibc_version);
+        self.omnibor.apply_opt(omnibor);
     }
 }
 

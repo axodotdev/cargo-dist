@@ -86,6 +86,7 @@ impl DistMetadata {
             min_glibc_version,
             cargo_auditable,
             cargo_cyclonedx,
+            omnibor,
         } = self.clone();
 
         // Archives
@@ -135,7 +136,8 @@ impl DistMetadata {
             || system_dependencies.is_some()
             || ssldotcom_windows_sign.is_some()
             || msvc_crt_static.is_some()
-            || min_glibc_version.is_some();
+            || min_glibc_version.is_some()
+            || omnibor.is_some();
         let build_layer = needs_build_layer.then_some(BuildLayer {
             common: CommonBuildLayer {},
             ssldotcom_windows_sign,
@@ -144,6 +146,7 @@ impl DistMetadata {
             cargo: cargo_layer,
             generic: None,
             min_glibc_version,
+            omnibor,
         });
 
         // CI

@@ -106,6 +106,9 @@ jobs:
           key: ${{ matrix.os }}
       # install pnpm for npm runtests
       - run: npm i -g pnpm
+      # install omnibor-cli for tests
+      - run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/omnibor/omnibor-rs/releases/latest/download/omnibor-cli-installer.sh | sh
       # Currently there is essentially no difference between default and --all-features,
       # with the difference essentially being polyfilling a new stdio API for MSRV.
       # For now avoid --all-features which causes issues with axoproject.

@@ -457,6 +457,10 @@ pub struct GithubGlobalJobConfig {
     /// Expression to execute to install cargo-cyclonedx
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_cargo_cyclonedx: Option<GhaRunStep>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Expression to execute to install omnibor-cli
+    pub install_omnibor: Option<GhaRunStep>,
 }
 
 /// Used in `github/release.yml.j2` to template out "local" build jobs
@@ -479,6 +483,10 @@ pub struct GithubLocalJobConfig {
     /// Expression to execute to install cargo-auditable
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_cargo_auditable: Option<GhaRunStep>,
+
+    /// Expression to execute to install omnibor-cli
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_omnibor: Option<GhaRunStep>,
 
     /// Command to run to install dependencies
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -754,6 +762,9 @@ pub enum ArtifactKind {
     /// A file that already exists
     #[serde(rename = "sbom")]
     SBOM,
+    /// An OmniBOR Artifact ID
+    #[serde(rename = "omnibor-artifact-id")]
+    OmniborArtifactId,
     /// Unknown to this version of cargo-dist-schema
     ///
     /// This is a fallback for forward/backward-compat

@@ -161,6 +161,10 @@ fn run_build_step(
             checksum,
             dest_path,
         }) => generate_unified_checksum(manifest, *checksum, dest_path)?,
+        BuildStep::OmniborArtifactId(OmniborArtifactIdImpl {
+            src_path,
+            dest_path,
+        }) => generate_omnibor_artifact_id(dist_graph, src_path, dest_path)?,
         BuildStep::GenerateSourceTarball(SourceTarballStep {
             committish,
             prefix,
@@ -367,6 +371,10 @@ fn build_fake(
             checksum,
             dest_path,
         }) => generate_unified_checksum(manifest, *checksum, dest_path)?,
+        BuildStep::OmniborArtifactId(OmniborArtifactIdImpl {
+            src_path,
+            dest_path,
+        }) => generate_omnibor_artifact_id(dist_graph, src_path, dest_path)?,
         // Except source tarballs, which are definitely not okay
         // We mock these because it requires:
         // 1. git to be installed;
@@ -412,6 +420,28 @@ fn generate_fake_pkg(
     _manifest: &DistManifest,
 ) -> DistResult<()> {
     LocalAsset::write_new_all("", &pkg.file_path)?;
+
+    Ok(())
+}
+
+fn generate_omnibor_artifact_id(
+    dist_graph: &DistGraph,
+    src_path: &Utf8Path,
+    dest_path: &Utf8Path,
+) -> DistResult<()> {
+    let omnibor = dist_graph.tools.omnibor()?;
+    let mut cmd = Cmd::new(&omnibor.cmd, "generate an OmniBOR Artifact ID");
+    cmd.arg("artifact")
+        .arg("id")
+        .arg("--format")
+        .arg("short")
+        .arg("--path")
+        .arg(src_path);
+
+    let output = cmd.output()?.stdout;
+    let output = String::from_utf8_lossy(&output);
+
+    LocalAsset::write_new_all(&output, dest_path)?;
 
     Ok(())
 }

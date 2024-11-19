@@ -396,6 +396,11 @@ fn add_manifest_artifact(
             description = None;
             kind = cargo_dist_schema::ArtifactKind::SBOM;
         }
+        ArtifactKind::OmniborArtifactId(_) => {
+            install_hint = None;
+            description = None;
+            kind = cargo_dist_schema::ArtifactKind::OmniborArtifactId;
+        }
     };
 
     let checksum = artifact.checksum.map(|idx| dist.artifact(idx).id.clone());

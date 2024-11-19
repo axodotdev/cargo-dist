@@ -398,6 +398,13 @@ jobs:
         run: {{{ global_task.install_cargo_cyclonedx.run }}}
         shell: bash
       {{%- endif %}}
+      {{%- if need_omnibor %}}
+      - name: Install omnibor
+        # we specify bash to get pipefail; it guards against the `curl` command
+        # failing. otherwise `sh` won't catch that `curl` return non-0
+        run: {{{ global_task.install_omnibor.run }}}
+        shell: bash
+      {{%- endif %}}
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
