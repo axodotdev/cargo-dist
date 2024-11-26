@@ -136,7 +136,7 @@ dependencies = [
  "flate2",
  "image",
  "lazy_static",
- "miette 7.2.0",
+ "miette 7.3.0",
  "mime",
  "reqwest",
  "serde",
@@ -161,7 +161,7 @@ dependencies = [
  "backtrace",
  "backtrace-ext",
  "console",
- "miette 7.2.0",
+ "miette 7.3.0",
  "serde",
  "serde_json",
  "thiserror",
@@ -188,7 +188,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4de46920588aef95658797996130bacd542436aee090084646521260a74bda7d"
 dependencies = [
- "miette 7.2.0",
+ "miette 7.3.0",
  "thiserror",
  "tracing",
 ]
@@ -202,7 +202,7 @@ dependencies = [
  "camino",
  "guppy",
  "itertools 0.13.0",
- "miette 7.2.0",
+ "miette 7.3.0",
  "node-semver",
  "oro-common",
  "oro-package-spec",
@@ -221,7 +221,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d888fac0b73e64cbdf36a743fc5a25af5ae955c357535cb420b389bf1e1a6c54"
 dependencies = [
- "miette 7.2.0",
+ "miette 7.3.0",
  "semver",
  "thiserror",
 ]
@@ -238,7 +238,7 @@ dependencies = [
  "camino",
  "gazenot",
  "homedir",
- "miette 7.2.0",
+ "miette 7.3.0",
  "self-replace",
  "serde",
  "tempfile",
@@ -423,7 +423,7 @@ dependencies = [
  "itertools 0.13.0",
  "lazy_static",
  "mach_object",
- "miette 7.2.0",
+ "miette 7.3.0",
  "newline-converter",
  "schemars",
  "semver",
@@ -1009,7 +1009,7 @@ dependencies = [
  "axoasset",
  "backon",
  "camino",
- "miette 7.2.0",
+ "miette 7.3.0",
  "schemars",
  "serde",
  "serde_json",
@@ -1696,14 +1696,14 @@ dependencies = [
 
 [[package]]
 name = "miette"
-version = "7.2.0"
+version = "7.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4edc8853320c2a0dab800fbda86253c8938f6ea88510dc92c5f1ed20e794afc1"
+checksum = "551cefdb9e93e2a40037f24cd139d88009a7660158c9d5d6076afeca5c8cfb82"
 dependencies = [
  "backtrace",
  "backtrace-ext",
  "cfg-if",
- "miette-derive 7.2.0",
+ "miette-derive 7.3.0",
  "owo-colors",
  "supports-color",
  "supports-hyperlinks",
@@ -1727,9 +1727,9 @@ dependencies = [
 
 [[package]]
 name = "miette-derive"
-version = "7.2.0"
+version = "7.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcf09caffaac8068c346b6df2a7fc27a177fd20b39421a39ce0a211bde679a6c"
+checksum = "acd70bb0b631435c30f187b3c2b528d0b78c65654f542ead7857915e37c177da"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2657,12 +2657,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 
 [[package]]
-name = "smawk"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7c388c1b5e93756d0c740965c41e8822f866621d41acbdf6336a6a168f8840c"
-
-[[package]]
 name = "socket2"
 version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2875,12 +2869,12 @@ dependencies = [
 
 [[package]]
 name = "terminal_size"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21bebf2b7c9e0a515f6e0f8c51dc0f8e4696391e6f1ff30379559f8365fb0df7"
+checksum = "4f599bd7ca042cfdf8f4512b277c02ba102247820f9d9d4a9f521f496751a6ef"
 dependencies = [
  "rustix",
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2889,7 +2883,6 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23d434d3f8967a09480fb04132ebe0a3e088c173e6d0ee7897abbdf4eab0f8b9"
 dependencies = [
- "smawk",
  "unicode-linebreak",
  "unicode-width 0.1.12",
 ]
@@ -3468,6 +3461,15 @@ name = "windows-sys"
 version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
+dependencies = [
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.59.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e38bc4d79ed67fd075bcc251a1c39b32a1776bbe92e5bef1f0bf1f8c531853b"
 dependencies = [
  "windows-targets 0.52.6",
 ]
