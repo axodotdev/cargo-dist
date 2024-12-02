@@ -319,6 +319,28 @@ fn generate_manifest(
         root_cmd: "plan".to_owned(),
     };
     let report = do_manifest(&config)?;
+
+    // FIXME: The build-local-artifacts job in generated workflows can't handle
+    //        can't handle incoherent tags, so this makes it fail in the
+    //        `dist plan` stage instead of waiting.
+    if !needs_coherence
+        && (report
+            .ci
+            .as_ref()
+            .and_then(|ci| ci.github.as_ref())
+            .and_then(|gh| gh.pr_run_mode)
+            == Some(cargo_dist_schema::PrRunMode::Upload))
+    {
+        let message = concat!(
+            "  note: Forcing needs_coherence=true, because pr-run-mode=\"upload\" is set.\n",
+            "        If this causes you problems, let us know here:\n",
+            "          https://github.com/axodotdev/cargo-dist/issues/1554\n",
+        );
+        let mut out = Term::stderr();
+        writeln!(out, "{}", out.style().yellow().apply_to(message)).into_diagnostic()?;
+        return generate_manifest(cli, args, true);
+    }
+
     print(cli, &report, false, Some("manifest"))
 }
 
