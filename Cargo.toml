@@ -60,7 +60,7 @@ insta = { version = "1.41.1", features = ["filters"] }
 tar = "0.4.43"
 flate2 = "1.0.35"
 pathdiff = { version = "0.2.2", features = ["camino"] }
-url = "2.5.3"
+url = "2.5.4"
 parse-changelog = "0.6.10"
 schemars = "0.8.21"
 serde_yml = "0.0.10"
