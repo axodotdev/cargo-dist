@@ -3842,10 +3842,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "aarch64-apple-darwin"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "github"
           },
           {
@@ -3859,10 +3855,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "x86_64-apple-darwin"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "github"
           },
           {
@@ -3876,10 +3868,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "x86_64-pc-windows-msvc"
             ],
-            "install_cargo_auditable": {
-              "shell": "pwsh",
-              "run": "powershell -c \"irm https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.ps1 | iex\""
-            },
             "cache_provider": "github"
           },
           {
@@ -3893,10 +3881,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "x86_64-unknown-linux-gnu"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "github"
           }
         ]

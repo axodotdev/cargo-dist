@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
+snapshot_kind: text
 ---
 ================ sha256.sum ================
 CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.gz
@@ -263,10 +264,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "aarch64-unknown-linux-gnu"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "buildjet"
           },
           {
@@ -280,10 +277,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "aarch64-unknown-linux-musl"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "packages_install": "sudo apt-get update\nsudo apt-get install musl-tools",
             "cache_provider": "buildjet"
           },
@@ -298,10 +291,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "x86_64-unknown-linux-gnu"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "buildjet"
           },
           {
@@ -315,10 +304,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "x86_64-unknown-linux-musl"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "packages_install": "sudo apt-get update\nsudo apt-get install musl-tools",
             "cache_provider": "buildjet"
           }

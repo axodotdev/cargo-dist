@@ -339,7 +339,8 @@ impl GithubCiInfo {
                 runner,
                 dist_args,
                 install_dist: install_dist.to_owned(),
-                install_cargo_auditable: install_cargo_auditable.to_owned(),
+                install_cargo_auditable: need_cargo_auditable
+                    .then_some(install_cargo_auditable.to_owned()),
                 packages_install,
             });
         }
