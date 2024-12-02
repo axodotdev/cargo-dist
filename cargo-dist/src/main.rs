@@ -280,19 +280,8 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::config::Config {
-        tag_settings: cli.tag_settings(true),
-        create_hosting: false,
-        artifact_mode: args.build_args.artifacts.to_lib(),
-        no_local_paths: cli.no_local_paths,
-        allow_all_dirty: cli.allow_dirty,
-        targets: cli.target.clone(),
-        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
-        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
-        root_cmd: "plan".to_owned(),
-    };
-    let report = do_manifest(&config)?;
-    print(cli, &report, false, Some("manifest"))
+    let needs_coherence = true;
+    generate_manifest(cli, args, needs_coherence)
 }
 
 fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
@@ -307,7 +296,30 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
         },
     };
 
-    cmd_manifest(&new_cli, args)
+    // Permit tag incoherence, since for `plan` we want to see expected
+    // manifest contents for _all_ distable packages in the workspace.
+    let needs_coherence = false;
+    generate_manifest(&new_cli, args, needs_coherence)
+}
+
+fn generate_manifest(
+    cli: &Cli,
+    args: &ManifestArgs,
+    needs_coherence: bool,
+) -> Result<(), miette::Report> {
+    let config = cargo_dist::config::Config {
+        tag_settings: cli.tag_settings(needs_coherence),
+        create_hosting: false,
+        artifact_mode: args.build_args.artifacts.to_lib(),
+        no_local_paths: cli.no_local_paths,
+        allow_all_dirty: cli.allow_dirty,
+        targets: cli.target.clone(),
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        root_cmd: "plan".to_owned(),
+    };
+    let report = do_manifest(&config)?;
+    print(cli, &report, false, Some("manifest"))
 }
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
