@@ -170,19 +170,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axominijinja"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf2aa3a480e59ac2a5a6a982b3d2528fe50ef19a5a394acf81bae2c5e7e26e16"
-dependencies = [
- "aho-corasick",
- "memo-map",
- "self_cell",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "axoprocess"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -396,7 +383,6 @@ version = "0.26.0-prerelease.2"
 dependencies = [
  "axoasset",
  "axocli",
- "axominijinja",
  "axoprocess",
  "axoproject",
  "axotag",
@@ -424,6 +410,7 @@ dependencies = [
  "lazy_static",
  "mach_object",
  "miette 7.2.0",
+ "minijinja",
  "newline-converter",
  "schemars",
  "semver",
@@ -1741,6 +1728,19 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "minijinja"
+version = "2.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c37e1b517d1dcd0e51dc36c4567b9d5a29262b3ec8da6cb5d35e27a8fb529b5"
+dependencies = [
+ "aho-corasick",
+ "memo-map",
+ "self_cell",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "minimal-lexical"
