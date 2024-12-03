@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
+snapshot_kind: text
 ---
 ================ axolotlsay.rb ================
 class Axolotlsay < Formula
@@ -189,10 +190,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "x86_64-apple-darwin"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "github"
           }
         ]

@@ -850,7 +850,6 @@ snapshot_kind: text
       "required": [
         "dist_args",
         "host",
-        "install_cargo_auditable",
         "install_dist",
         "runner"
       ],
@@ -883,9 +882,12 @@ snapshot_kind: text
         },
         "install_cargo_auditable": {
           "description": "Expression to execute to install cargo-auditable",
-          "allOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/GhaRunStep"
+            },
+            {
+              "type": "null"
             }
           ]
         },

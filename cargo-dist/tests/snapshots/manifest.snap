@@ -532,10 +532,6 @@ stdout:
             "targets": [
               "aarch64-apple-darwin"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "github"
           },
           {
@@ -554,10 +550,6 @@ stdout:
             "targets": [
               "aarch64-unknown-linux-gnu"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "packages_install": "if ! command -v cargo-zigbuild > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-zigbuild\nfi",
             "cache_provider": "github"
           },
@@ -577,10 +569,6 @@ stdout:
             "targets": [
               "aarch64-unknown-linux-musl"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "packages_install": "if ! command -v cargo-zigbuild > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-zigbuild\nfi",
             "cache_provider": "github"
           },
@@ -595,10 +583,6 @@ stdout:
             "targets": [
               "x86_64-apple-darwin"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "github"
           },
           {
@@ -612,10 +596,6 @@ stdout:
             "targets": [
               "x86_64-pc-windows-msvc"
             ],
-            "install_cargo_auditable": {
-              "shell": "pwsh",
-              "run": "powershell -c \"irm https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.ps1 | iex\""
-            },
             "cache_provider": "github"
           },
           {
@@ -629,10 +609,6 @@ stdout:
             "targets": [
               "x86_64-unknown-linux-gnu"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "cache_provider": "github"
           },
           {
@@ -646,10 +622,6 @@ stdout:
             "targets": [
               "x86_64-unknown-linux-musl"
             ],
-            "install_cargo_auditable": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.sh | sh"
-            },
             "packages_install": "sudo apt-get update\nsudo apt-get install musl-tools",
             "cache_provider": "github"
           }

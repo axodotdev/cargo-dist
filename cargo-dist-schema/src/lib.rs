@@ -477,7 +477,8 @@ pub struct GithubLocalJobConfig {
     pub targets: Option<Vec<TripleName>>,
 
     /// Expression to execute to install cargo-auditable
-    pub install_cargo_auditable: GhaRunStep,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_cargo_auditable: Option<GhaRunStep>,
 
     /// Command to run to install dependencies
     #[serde(skip_serializing_if = "Option::is_none")]
