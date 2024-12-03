@@ -38,6 +38,7 @@ impl MsiInstallerInfo {
         info!("building an msi: {}", self.file_path);
 
         let mut b = wix::create::Builder::new();
+        b.input(Some(self.manifest_path.as_str()));
         // Build this specific package
         b.package(Some(&self.pkg_spec));
         // dist already did the build for us
