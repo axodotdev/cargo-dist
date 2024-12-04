@@ -21,10 +21,7 @@ use backend::{
         self, macpkg::PkgInstallerInfo, msi::MsiInstallerInfo, HomebrewImpl, InstallerImpl,
     },
 };
-use build::{
-    cargo::make_build_cargo_target_command,
-    generic::{build_generic_target, run_extra_artifacts_build},
-};
+use build::generic::{build_generic_target, run_extra_artifacts_build};
 use build::{
     cargo::{build_cargo_target, rustup_toolchain},
     fake::{build_fake_cargo_target, build_fake_generic_target},
@@ -35,7 +32,6 @@ use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
 use console::Term;
-use platform::targets::TARGET_ARM64_WINDOWS;
 use semver::Version;
 use temp_dir::TempDir;
 use tracing::info;
@@ -176,7 +172,6 @@ fn run_build_step(
 const AXOUPDATER_ASSET_ROOT: &str =
     "https://github.com/axodotdev/axoupdater/releases/latest/download";
 const AXOUPDATER_MINIMUM_VERSION: &str = "0.7.0";
-const AXOUPDATER_GIT_URL: &str = "https://github.com/axodotdev/axoupdater.git";
 
 /// Fetches an installer executable and installs it in the expected target path.
 pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
@@ -198,68 +193,15 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResul
     // If we have a prebuilt asset, use it
     if resp.status().is_success() {
         fetch_updater_from_binary(dist_graph, updater, &expected_url)
-    // If we got a 404, there's no asset, so we have to build from source
+    // If we got a 404, report that there's no binary for this target
     } else if resp.status() == axoasset::reqwest::StatusCode::NOT_FOUND {
-        fetch_updater_from_source(dist_graph, updater)
+        Err(DistError::NoAxoupdaterForTarget {
+            target: updater.target_triple.to_string(),
+        })
     // Some unexpected result that wasn't 200 or 404
     } else {
         Err(DistError::AxoupdaterReleaseCheckFailed {})
     }
-}
-
-/// Builds an installer executable from source and installs it in the expected target path.
-pub fn fetch_updater_from_source(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
-    let (_tmp_dir, tmp_root) = create_tmp()?;
-
-    // cargo-xwin can't currently build one of axoupdater's dependencies:
-    // https://github.com/rust-cross/cargo-xwin/issues/76
-    let host = cargo_dist_schema::target_lexicon::HOST;
-    let target = updater.target_triple.parse()?;
-    if host != target && updater.target_triple == TARGET_ARM64_WINDOWS {
-        return Err(DistError::AxoupdaterInvalidCross {
-            host: TripleName::new(host.to_string()),
-            target: updater.target_triple.to_owned(),
-        });
-    }
-
-    let Some(git) = &dist_graph.tools.git else {
-        return Err(DistError::ToolMissing {
-            tool: "git".to_owned(),
-        });
-    };
-    // We can't use `cargo install` due to the cross-compile wrappers,
-    // so fetch the repo ahead of time.
-    let mut cmd = Cmd::new(&git.cmd, "fetch axoupdater");
-    cmd.arg("clone").arg(AXOUPDATER_GIT_URL).arg(&tmp_root);
-    cmd.run()?;
-
-    let features = CargoTargetFeatures {
-        default_features: true,
-        features: CargoTargetFeatureList::List(vec!["tls_native_roots".to_owned()]),
-    };
-    let step = CargoBuildStep {
-        target_triple: updater.target_triple.to_owned(),
-        features,
-        package: CargoTargetPackages::Workspace,
-        profile: "dist".to_string(),
-        rustflags: "".to_owned(),
-        expected_binaries: vec![],
-        working_dir: tmp_root.clone(),
-    };
-    let cargo = dist_graph.tools.cargo()?;
-    let mut cmd = make_build_cargo_target_command(&host, &cargo.cmd, "", &step, false)?;
-    cmd.arg("--bin").arg("axoupdater");
-
-    cmd.run()?;
-
-    // OK, now we have a binary in the tempdir
-    let mut source = tmp_root.join("target").join("release").join("axoupdater");
-    if updater.target_triple.is_windows() {
-        source.set_extension("exe");
-    }
-    LocalAsset::copy_file_to_file(source, dist_graph.target_dir.join(&updater.target_filename))?;
-
-    Ok(())
 }
 
 /// Creates a temporary directory, returning the directory and
