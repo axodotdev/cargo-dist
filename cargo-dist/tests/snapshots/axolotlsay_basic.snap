@@ -350,6 +350,9 @@ json_binary_aliases() {
     "aarch64-apple-darwin")
         echo '{}'
         ;;
+    "aarch64-pc-windows-gnu")
+        echo '{}'
+        ;;
     "i686-unknown-linux-gnu")
         echo '{}'
         ;;
@@ -374,6 +377,13 @@ aliases_for_binary() {
 
     case "$_arch" in 
     "aarch64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "aarch64-pc-windows-gnu")
         case "$_bin" in
         *)
             echo ""
@@ -428,6 +438,13 @@ select_archive_for_arch() {
                 return 0
             fi
             _archive="axolotlsay-x86_64-apple-darwin.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "aarch64-pc-windows-gnu")
+            _archive="axolotlsay-x86_64-pc-windows-gnu.tar.gz"
             if [ -n "$_archive" ]; then
                 echo "$_archive"
                 return 0
@@ -1387,6 +1404,7 @@ class Axolotlsay < Formula
 
   BINARY_ALIASES = {
     "aarch64-apple-darwin": {},
+    "aarch64-pc-windows-gnu": {},
     "i686-unknown-linux-gnu": {},
     "x86_64-apple-darwin": {},
     "x86_64-pc-windows-gnu": {},
@@ -1523,6 +1541,16 @@ function Install-Binary($install_args) {
 
   # Platform info injected by dist
   $platforms = @{
+    "aarch64-pc-windows-gnu" = @{
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+      "bins" = @("axolotlsay.exe")
+      "libs" = @()
+      "staticlibs" = @()
+      "zip_ext" = ".tar.gz"
+      "aliases" = @{
+      }
+      "aliases_json" = '{}'
+    }
     "aarch64-pc-windows-msvc" = @{
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = @("axolotlsay.exe")
@@ -3376,6 +3404,13 @@ install(false);
       },
       "zipExt": ".tar.gz"
     },
+    "aarch64-pc-windows-gnu": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
     "aarch64-pc-windows-msvc": {
       "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
       "bins": {
@@ -3641,6 +3676,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "name": "axolotlsay-installer.ps1",
       "kind": "installer",
       "target_triples": [
+        "aarch64-pc-windows-gnu",
         "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
@@ -3657,6 +3693,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
         "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
@@ -3674,6 +3711,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
         "aarch64-pc-windows-msvc",
         "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
@@ -4026,6 +4064,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
         "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",

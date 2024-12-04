@@ -246,7 +246,8 @@ use crate::{
 };
 
 use targets::{
-    TARGET_ARM64_MAC, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_WINDOWS, TARGET_X86_WINDOWS,
+    TARGET_ARM64_MAC, TARGET_ARM64_MINGW, TARGET_ARM64_WINDOWS, TARGET_X64_MAC, TARGET_X64_MINGW,
+    TARGET_X64_WINDOWS, TARGET_X86_MINGW, TARGET_X86_WINDOWS,
 };
 
 /// values of the form `min-glibc-version = { some-target-triple = "2.8" }
@@ -763,6 +764,16 @@ fn supports(
                 },
             ));
         }
+        if target == TARGET_X86_MINGW {
+            res.push((
+                TARGET_X64_MINGW.to_owned(),
+                PlatformEntry {
+                    quality: SupportQuality::ImperfectNative,
+                    runtime_conditions: archive.native_runtime_conditions.clone(),
+                    archive_idx,
+                },
+            ));
+        }
 
         // Windows' equivalent to Rosetta2 (CHPE) is in fact installed-by-default so no need to detect!
         if target == TARGET_X64_WINDOWS || target == TARGET_X86_WINDOWS {
@@ -781,14 +792,24 @@ fn supports(
                 },
             ));
         }
+        if target == TARGET_X64_MINGW || target == TARGET_X86_MINGW {
+            // prefer x64 over x86 if we have the option
+            let quality = if target == TARGET_X86_MINGW {
+                SupportQuality::Hellmulated
+            } else {
+                SupportQuality::Emulated
+            };
+            res.push((
+                TARGET_ARM64_MINGW.to_owned(),
+                PlatformEntry {
+                    quality,
+                    runtime_conditions: archive.native_runtime_conditions.clone(),
+                    archive_idx,
+                },
+            ));
+        }
 
         // windows-msvc binaries should always be acceptable on windows-gnu (mingw)
-        //
-        // FIXME: in theory x64-pc-windows-msvc and i686-pc-windows-msvc can run on
-        // aarch64-pc-windows-gnu, as a hybrid of this rules and the CHPE rule above.
-        // I don't want to think about computing the transitive closure of platform
-        // support and how to do all the tie breaking ("HighwayToHellmulated"?), so
-        // for now all 5 arm64 mingw users can be a little sad.
         if let Some(system) = target.as_str().strip_suffix("windows-msvc") {
             res.push((
                 TripleName::new(format!("{system}windows-gnu")),
