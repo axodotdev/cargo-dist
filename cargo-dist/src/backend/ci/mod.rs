@@ -29,6 +29,13 @@ const BASE_CARGO_CYCLONEDX_FETCH_URL: &str =
 //       This means the "latest" release is sometimes NOT actually cargo-cyclonedx!
 const CARGO_CYCLONEDX_VERSION: &str = "0.5.5";
 
+const BASE_OMNIBOR_FETCH_URL: &str = "https://github.com/omnibor/omnibor-rs/releases/download";
+
+// NOTE: This is hard-coded to a specific version because omnibor-cli,
+//       omnibor-rs, and gitoid are released on the same repo.
+//       This means the "latest" release is sometimes NOT actually omnibor-cli!
+const OMNIBOR_VERSION: &str = "0.7.0";
+
 /// Info about all the enabled CI backends
 #[derive(Debug, Default)]
 pub struct CiInfo {
@@ -178,6 +185,30 @@ impl InstallStrategy for CargoCyclonedxInstallStrategy {
     fn powershell(&self) -> GhaRunStep {
         let installer_url =
             format!("{BASE_CARGO_CYCLONEDX_FETCH_URL}/cargo-cyclonedx-{CARGO_CYCLONEDX_VERSION}/cargo-cyclonedx-installer.ps1");
+        PowershellScript::new(format!(r#"powershell -c "irm {installer_url} | iex""#)).into()
+    }
+}
+
+struct OmniborInstallStrategy;
+
+impl InstallStrategy for OmniborInstallStrategy {
+    /// Return an sh/dash script to install cargo-cyclonedx
+    fn dash(&self) -> GhaRunStep {
+        let installer_url = format!(
+            "{BASE_OMNIBOR_FETCH_URL}/omnibor-cli-v{OMNIBOR_VERSION}/omnibor-cli-installer.sh"
+        );
+        DashScript::new(format!(
+            "curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh"
+        ))
+        .into()
+    }
+
+    /// Return a powershell script to install cargo-cyclonedx.
+    /// This probably isn't being used.
+    fn powershell(&self) -> GhaRunStep {
+        let installer_url = format!(
+            "{BASE_OMNIBOR_FETCH_URL}/omnibor-cli-v{OMNIBOR_VERSION}/omnibor-cli-installer.ps1"
+        );
         PowershellScript::new(format!(r#"powershell -c "irm {installer_url} | iex""#)).into()
     }
 }

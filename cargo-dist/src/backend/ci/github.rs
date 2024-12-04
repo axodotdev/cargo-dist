@@ -32,7 +32,7 @@ use crate::{
 
 use super::{
     CargoAuditableInstallStrategy, CargoCyclonedxInstallStrategy, DistInstallSettings,
-    DistInstallStrategy, InstallStrategy,
+    DistInstallStrategy, InstallStrategy, OmniborInstallStrategy,
 };
 
 #[cfg(not(windows))]
@@ -106,6 +106,8 @@ pub struct GithubCiInfo {
     pub need_cargo_auditable: bool,
     /// Whether to run cargo-cyclonedx
     pub need_cargo_cyclonedx: bool,
+    /// Whether to install and run omnibor-cli
+    pub need_omnibor: bool,
 }
 
 /// Details for github releases
@@ -225,6 +227,7 @@ impl GithubCiInfo {
 
         let need_cargo_auditable = dist.config.builds.cargo.cargo_auditable;
         let need_cargo_cyclonedx = dist.config.builds.cargo.cargo_cyclonedx;
+        let need_omnibor = dist.config.builds.omnibor;
 
         // Figure out what builds we need to do
         let mut local_targets: SortedSet<&TripleNameRef> = SortedSet::new();
@@ -242,6 +245,7 @@ impl GithubCiInfo {
         .install_strategy();
         let cargo_auditable_install_strategy = CargoAuditableInstallStrategy;
         let cargo_cyclonedx_install_strategy = CargoCyclonedxInstallStrategy;
+        let omnibor_install_strategy = OmniborInstallStrategy;
 
         let hosting_providers = dist
             .hosting
@@ -270,6 +274,7 @@ impl GithubCiInfo {
             dist_args: "--artifacts=global".into(),
             install_dist: dist_install_strategy.dash(),
             install_cargo_cyclonedx: Some(cargo_cyclonedx_install_strategy.dash()),
+            install_omnibor: need_omnibor.then_some(omnibor_install_strategy.dash()),
         };
 
         let tap = dist.global_homebrew_tap.clone();
@@ -327,6 +332,7 @@ impl GithubCiInfo {
             let install_dist = dist_install_strategy.for_triple(&real_triple);
             let install_cargo_auditable =
                 cargo_auditable_install_strategy.for_triple(&runner.real_triple());
+            let install_omnibor = omnibor_install_strategy.for_triple(&real_triple);
 
             let mut dist_args = String::from("--artifacts=local");
             for target in &targets {
@@ -341,6 +347,7 @@ impl GithubCiInfo {
                 install_dist: install_dist.to_owned(),
                 install_cargo_auditable: need_cargo_auditable
                     .then_some(install_cargo_auditable.to_owned()),
+                install_omnibor: need_omnibor.then_some(install_omnibor.to_owned()),
                 packages_install,
             });
         }
@@ -389,6 +396,7 @@ impl GithubCiInfo {
             github_release,
             need_cargo_auditable,
             need_cargo_cyclonedx,
+            need_omnibor,
         })
     }
 

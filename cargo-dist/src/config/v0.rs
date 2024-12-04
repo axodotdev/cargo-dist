@@ -467,6 +467,11 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub cargo_cyclonedx: Option<bool>,
+
+    /// Whether to generate OmniBOR artifact IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub omnibor: Option<bool>,
 }
 
 impl DistMetadata {
@@ -539,6 +544,7 @@ impl DistMetadata {
             min_glibc_version: _,
             cargo_auditable: _,
             cargo_cyclonedx: _,
+            omnibor: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -639,6 +645,7 @@ impl DistMetadata {
             min_glibc_version,
             cargo_auditable,
             cargo_cyclonedx,
+            omnibor,
         } = self;
 
         // Check for global settings on local packages
@@ -834,6 +841,9 @@ impl DistMetadata {
         }
         if cargo_cyclonedx.is_none() {
             cargo_cyclonedx.clone_from(&workspace_config.cargo_cyclonedx);
+        }
+        if omnibor.is_none() {
+            omnibor.clone_from(&workspace_config.omnibor);
         }
 
         // This was historically implemented as extend, but I'm not convinced the

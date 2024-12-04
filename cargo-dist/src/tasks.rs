@@ -275,6 +275,8 @@ pub struct Tools {
     pub brew: Option<Tool>,
     /// git, used if the repository is a git repo
     pub git: Option<Tool>,
+    /// omnibor, used for generating OmniBOR Artifact IDs
+    pub omnibor: Option<Tool>,
     /// ssl.com's CodeSignTool, for Windows Code Signing
     ///
     /// <https://www.ssl.com/guide/esigner-codesigntool-command-guide/>
@@ -286,6 +288,13 @@ impl Tools {
     pub fn cargo(&self) -> DistResult<&CargoInfo> {
         self.cargo.as_ref().ok_or(DistError::ToolMissing {
             tool: "cargo".to_owned(),
+        })
+    }
+
+    /// Returns the omnibor info or an error
+    pub fn omnibor(&self) -> DistResult<&Tool> {
+        self.omnibor.as_ref().ok_or(DistError::ToolMissing {
+            tool: "omnibor-cli".to_owned(),
         })
     }
 }
@@ -386,6 +395,8 @@ pub enum BuildStep {
     Checksum(ChecksumImpl),
     /// Generate a unified checksum file, containing multiple entries
     UnifiedChecksum(UnifiedChecksumStep),
+    /// Generate an OmniBOR Artifact ID
+    OmniborArtifactId(OmniborArtifactIdImpl),
     /// Fetch or build an updater binary
     Updater(UpdaterStep),
     // FIXME: For macos universal builds we'll want
@@ -589,6 +600,15 @@ pub struct UnifiedChecksumStep {
     pub dest_path: Utf8PathBuf,
 }
 
+/// Create a file containing the OmniBOR Artifact ID for a specific file.
+#[derive(Debug, Clone)]
+pub struct OmniborArtifactIdImpl {
+    /// file to generate the Artifact ID for
+    pub src_path: Utf8PathBuf,
+    /// file to write the Artifact ID to
+    pub dest_path: Utf8PathBuf,
+}
+
 /// Create a source tarball
 #[derive(Debug, Clone)]
 pub struct SourceTarballStep {
@@ -706,6 +726,8 @@ pub enum ArtifactKind {
     Updater(UpdaterImpl),
     /// An existing file representing a Software Bill Of Materials
     SBOM(SBOMImpl),
+    /// An OmniBOR Artifact ID.
+    OmniborArtifactId(OmniborArtifactIdImpl),
 }
 
 /// An Archive containing binaries (aka ExecutableZip)
@@ -1522,6 +1544,69 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 is_global: true,
             },
         );
+    }
+
+    fn add_omnibor_artifact_id_file(&mut self, to_release: ReleaseIdx) {
+        if !self.global_artifacts_enabled() || !self.inner.config.builds.omnibor {
+            return;
+        }
+
+        let release = self.release(to_release).clone();
+        let global_artifacts = release.global_artifacts;
+        let local_artifacts: Vec<_> = release
+            .variants
+            .into_iter()
+            .flat_map(|vidx| self.variant(vidx).local_artifacts.clone())
+            .collect();
+        let artifacts: Vec<_> = global_artifacts
+            .into_iter()
+            .chain(local_artifacts)
+            .map(|a| self.artifact(a).clone())
+            .collect();
+
+        for artifact in &artifacts {
+            let id = artifact.id.clone();
+            let src_path = artifact.file_path.clone();
+            match &artifact.kind {
+                // Things we need to generate OmniBOR Artifact IDs for.
+                ArtifactKind::ExecutableZip(_)
+                | ArtifactKind::Installer(_)
+                | ArtifactKind::SourceTarball(_)
+                | ArtifactKind::ExtraArtifact(_)
+                | ArtifactKind::Updater(_) => {
+                    let extension = src_path
+                        .extension()
+                        .map_or("omnibor".to_string(), |e| format!("{e}.omnibor"));
+                    let dest_path = src_path.with_extension(extension);
+
+                    let new_id = format!("{}.omnibor", id);
+
+                    self.add_global_artifact(
+                        to_release,
+                        Artifact {
+                            id: ArtifactId::new(new_id),
+                            target_triples: Default::default(),
+                            archive: None,
+                            file_path: dest_path.clone(),
+                            required_binaries: Default::default(),
+                            kind: ArtifactKind::OmniborArtifactId(OmniborArtifactIdImpl {
+                                src_path,
+                                dest_path,
+                            }),
+                            checksum: None,
+                            is_global: true,
+                        },
+                    );
+                }
+
+                // Things we don't need to generate OmniBOR Artifact IDs for.
+                ArtifactKind::Symbols(_)
+                | ArtifactKind::Checksum(_)
+                | ArtifactKind::UnifiedChecksum(_)
+                | ArtifactKind::SBOM(_)
+                | ArtifactKind::OmniborArtifactId(_) => {}
+            }
+        }
     }
 
     fn add_unified_checksum_file(&mut self, to_release: ReleaseIdx) {
@@ -2648,6 +2733,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ArtifactKind::SBOM(_) => {
                     // The SBOM is already generated.
                 }
+                ArtifactKind::OmniborArtifactId(src) => {
+                    let src_path = src.src_path.clone();
+                    let old_extension = src_path.extension().unwrap_or("");
+                    let dest_path = src_path.with_extension(format!("{}.omnibor", old_extension));
+
+                    build_steps.push(BuildStep::OmniborArtifactId(OmniborArtifactIdImpl {
+                        src_path,
+                        dest_path,
+                    }));
+                }
             }
 
             if let Some(archive) = &artifact.archive {
@@ -2830,6 +2925,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     InstallerStyle::Pkg => self.add_pkg_installer(release)?,
                 }
             }
+
+            // Add the OmniBOR Artifact ID.
+            self.add_omnibor_artifact_id_file(release);
 
             // Add SBOM file, if it exists.
             self.add_cyclonedx_sbom_file(info.package_idx, release);
@@ -3102,6 +3200,7 @@ fn tool_info() -> DistResult<Tools> {
         rustup: find_tool("rustup", "-V"),
         brew: find_tool("brew", "--version"),
         git: find_tool("git", "--version"),
+        omnibor: find_tool("omnibor", "--version"),
         // Computed later if needed
         code_sign_tool: None,
     })

@@ -82,6 +82,7 @@ pub fn mock_tools() -> Tools {
         rustup: None,
         brew: None,
         git: None,
+        omnibor: None,
         code_sign_tool: None,
     }
 }
