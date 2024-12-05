@@ -66,10 +66,6 @@ pub enum DistError {
     #[diagnostic(transparent)]
     AxotagError(#[from] axotag::errors::TagError),
 
-    /// Failure to deserialize yml
-    #[error(transparent)]
-    SerdeYml(#[from] serde_yml::Error),
-
     /// random parseint error
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
@@ -479,7 +475,7 @@ pub enum DistError {
     GithubBuildSetupParse {
         /// Inner parse error with path and spans
         #[diagnostic_source]
-        details: AxoassetYamlError,
+        details: axoasset::AxoassetError,
     },
 
     /// github-build-setup file contents are invalid
@@ -611,22 +607,6 @@ pub enum DistError {
         /// The target this build is for
         target: TripleName,
     },
-}
-
-/// This error indicates we tried to deserialize some YAML with serde_yml
-/// but failed.
-#[derive(Debug, Error, Diagnostic)]
-#[error("failed to parse YAML")]
-pub struct AxoassetYamlError {
-    /// The SourceFile we were try to parse
-    #[source_code]
-    pub source: axoasset::SourceFile,
-    /// The range the error was found on
-    #[label]
-    pub span: Option<miette::SourceSpan>,
-    /// Details of the error
-    #[source]
-    pub details: serde_yml::Error,
 }
 
 impl From<minijinja::Error> for DistError {
