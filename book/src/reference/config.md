@@ -657,7 +657,7 @@ Specifies whether to use [`cargo cyclonedx`](https://github.com/CycloneDX/cyclon
 > omnibor = true
 > ```
 
-Specifies whether to use [`omnibor-cli`](https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli) to generate and upload OmniBOR Artifact IDs for each project in a workspace.
+Specifies whether to use [`omnibor-cli`](https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli) to generate and upload [OmniBOR Artifact IDs](https://omnibor.io/docs/artifact-ids/) for artifact in a release.
 
 ## installer settings
 
