@@ -621,6 +621,12 @@ Without this setting, CI won't explicitly setup a toolchain, so whatever's on th
 
 > <span style="float:right">since 0.26.0<br>[package-local][]</span>
 > default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> cargo-auditable = true
+> ```
 
 Specifies whether to use [`cargo auditable`](https://github.com/rust-secure-code/cargo-auditable) to embed metadata about your dependency tree into the built executables.
 When this value is false, dist will run `cargo build`; when it is true, dist will run `cargo auditable build`.
@@ -631,6 +637,12 @@ You can then use [`cargo audit`](https://github.com/rustsec/rustsec/blob/main/ca
 
 > <span style="float:right">since 0.26.0<br>[package-local][]</span>
 > default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> cargo-cyclonedx = true
+> ```
 
 Specifies whether to use [`cargo cyclonedx`](https://github.com/CycloneDX/cyclonedx-rust-cargo) to generate and upload a Software Bill Of Materials (SBOM) for each project in a workspace.
 
@@ -638,6 +650,12 @@ Specifies whether to use [`cargo cyclonedx`](https://github.com/CycloneDX/cyclon
 
 > <span style="float:right">since 0.26.0<br>[package-local][]</span>
 > default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> omnibor = true
+> ```
 
 Specifies whether to use [`omnibor-cli`](https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli) to generate and upload OmniBOR Artifact IDs for each project in a workspace.
 
