@@ -281,14 +281,14 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
 
 fn cmd_manifest(cli: &Cli, args: &ManifestArgs) -> Result<(), miette::Report> {
     let needs_coherence = true;
-    generate_manifest(cli, args, needs_coherence)
+    print_manifest(cli, args, needs_coherence)
 }
 
 fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
     // Force --no-local-paths and --artifacts=all
     // No need to force --output-format=human
-    let mut new_cli = cli.clone();
-    new_cli.no_local_paths = true;
+    let mut cli = cli.clone();
+    cli.no_local_paths = true;
     let args = &ManifestArgs {
         build_args: BuildArgs {
             artifacts: cli::ArtifactMode::All,
@@ -296,17 +296,91 @@ fn cmd_plan(cli: &Cli, _args: &PlanArgs) -> Result<(), miette::Report> {
         },
     };
 
-    // Permit tag incoherence, since for `plan` we want to see expected
-    // manifest contents for _all_ distable packages in the workspace.
+    // For non-human-friendly output, behave the same as `dist manifest`.
+    if cli.output_format != OutputFormat::Human {
+        // Permit tag incoherence, since for `plan` we want to see expected
+        // manifest contents for _all_ distable packages in the workspace.
+        let needs_coherence = false;
+        return print_manifest(&cli, args, needs_coherence);
+    }
+
     let needs_coherence = false;
-    generate_manifest(&new_cli, args, needs_coherence)
+    let manifest = generate_manifest(&cli, args, needs_coherence)?;
+    let version_map: SortedMap<String, Vec<String>> = manifest
+        .releases
+        .into_iter()
+        // start with an empty SortedMap, and for each item in the iter,
+        // mutate it with the function provided.
+        .fold(SortedMap::new(), |mut vmap, r| {
+            // Ensure vmap[r.app_version] is a Vec<String>, then push to it.
+            vmap.entry(r.app_version).or_default().push(r.app_name);
+            vmap
+        });
+
+    let versions: SortedSet<String> = version_map.keys().cloned().collect();
+
+    for version in versions {
+        let needs_coherence = true;
+        cli.tag = Some(format!("v{version}").to_owned());
+        print_manifest(&cli, args, needs_coherence)?;
+        println!();
+    }
+
+    // Everything after this is only relevant if there's multiple versions.
+    // So, if there's 0 or 1 version numbers, just bail immediately.
+    if version_map.len() < 2 {
+        return Ok(());
+    }
+
+    let mut out = Term::stdout();
+    let yellow = out.style().yellow();
+
+    let message = concat!(
+        "NOTE:\n",
+        "  There are multiple version numbers in your workspace.\n",
+        "  When running 'dist build' locally, you will need to specify --tag.\n",
+        "  When creating a release, the version will be specified by the tag you push or the value provided to the workflow dispatch prompt.\n",
+        "\n",
+        "  You can specify --tag when running 'dist plan' to see all apps that will be released with that tag.\n"
+    );
+
+    writeln!(out, "{}", yellow.apply_to(message)).into_diagnostic()?;
+
+    for (version, names) in &version_map {
+        let line = format!("  --tag=v{} will match: {}", version, names.join(", "));
+
+        writeln!(out, "{}", yellow.apply_to(line)).into_diagnostic()?;
+    }
+
+    if let Some((version, names)) = version_map.first_key_value() {
+        if let Some(name) = names.first() {
+            let line = format!(
+                "  You can also filter by name and version. For example, to select '{}' you could specify --tag={}-v{}",
+                name,
+                name,
+                version,
+            );
+            writeln!(out, "\n{}", yellow.apply_to(line)).into_diagnostic()?;
+        }
+    }
+
+    Ok(())
+}
+
+fn print_manifest(
+    cli: &Cli,
+    args: &ManifestArgs,
+    needs_coherence: bool,
+) -> Result<(), miette::Report> {
+    let report = generate_manifest(cli, args, needs_coherence)?;
+    print(cli, &report, false, Some("manifest"))
 }
 
 fn generate_manifest(
     cli: &Cli,
     args: &ManifestArgs,
     needs_coherence: bool,
-) -> Result<(), miette::Report> {
+) -> Result<DistManifest, miette::Report> {
     let config = cargo_dist::config::Config {
         tag_settings: cli.tag_settings(needs_coherence),
         create_hosting: false,
@@ -341,7 +415,7 @@ fn generate_manifest(
         return generate_manifest(cli, args, true);
     }
 
-    print(cli, &report, false, Some("manifest"))
+    Ok(report)
 }
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
