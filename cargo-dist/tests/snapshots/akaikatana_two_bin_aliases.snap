@@ -1537,6 +1537,18 @@ function Install-Binary($install_args) {
       }
       "aliases_json" = '{"akextract.exe":["akextract-link.exe"],"akmetadata.exe":["akmetadata-link.exe"]}'
     }
+    "x86_64-pc-windows-gnu" = @{
+      "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc.zip"
+      "bins" = @("akextract.exe", "akmetadata.exe", "akrepack.exe")
+      "libs" = @()
+      "staticlibs" = @()
+      "zip_ext" = ".zip"
+      "aliases" = @{
+        "akextract.exe" = "akextract-link.exe"
+        "akmetadata.exe" = "akmetadata-link.exe"
+      }
+      "aliases_json" = '{"akextract.exe":["akextract-link.exe"],"akmetadata.exe":["akmetadata-link.exe"]}'
+    }
     "x86_64-pc-windows-msvc" = @{
       "artifact_name" = "akaikatana-repack-x86_64-pc-windows-msvc.zip"
       "bins" = @("akextract.exe", "akmetadata.exe", "akrepack.exe")
@@ -1565,7 +1577,16 @@ $_
   }
 }
 
-function Get-TargetTriple() {
+function Get-TargetTriple($platforms) {
+  $double = Get-Arch
+  if ($platforms.Contains("$double-msvc")) {
+    return "$double-msvc"
+  } else {
+    return "$double-gnu"
+  }
+}
+
+function Get-Arch() {
   try {
     # NOTE: this might return X64 on ARM64 Windows, which is OK since emulation is available.
     # It works correctly starting in PowerShell Core 7.3 and Windows PowerShell in Win 11 22H2.
@@ -1579,10 +1600,10 @@ function Get-TargetTriple() {
     # Rust supported platforms: https://doc.rust-lang.org/stable/rustc/platform-support.html
     switch ($p.GetValue($null).ToString())
     {
-      "X86" { return "i686-pc-windows-msvc" }
-      "X64" { return "x86_64-pc-windows-msvc" }
-      "Arm" { return "thumbv7a-pc-windows-msvc" }
-      "Arm64" { return "aarch64-pc-windows-msvc" }
+      "X86" { return "i686-pc-windows" }
+      "X64" { return "x86_64-pc-windows" }
+      "Arm" { return "thumbv7a-pc-windows" }
+      "Arm64" { return "aarch64-pc-windows" }
     }
   } catch {
     # The above was added in .NET 4.7.1, so Windows PowerShell in versions of Windows
@@ -1594,14 +1615,14 @@ function Get-TargetTriple() {
   # This is available in .NET 4.0. We already checked for PS 5, which requires .NET 4.5.
   Write-Verbose("Get-TargetTriple: falling back to Is64BitOperatingSystem.")
   if ([System.Environment]::Is64BitOperatingSystem) {
-    return "x86_64-pc-windows-msvc"
+    return "x86_64-pc-windows"
   } else {
-    return "i686-pc-windows-msvc"
+    return "i686-pc-windows"
   }
 }
 
 function Download($download_url, $platforms) {
-  $arch = Get-TargetTriple
+  $arch = Get-TargetTriple $platforms
 
   if (-not $platforms.ContainsKey($arch)) {
     $platforms_json = ConvertTo-Json $platforms
@@ -1684,7 +1705,7 @@ function Download($download_url, $platforms) {
 
 function Invoke-Installer($artifacts, $platforms) {
   # Replaces the placeholder binary entry with the actual list of binaries
-  $arch = Get-TargetTriple
+  $arch = Get-TargetTriple $platforms
 
   if (-not $platforms.ContainsKey($arch)) {
     $platforms_json = ConvertTo-Json $platforms
@@ -2075,6 +2096,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-pc-windows-msvc",
+        "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
       ],
       "install_hint": "powershell -ExecutionPolicy ByPass -c \"irm https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0/akaikatana-repack-installer.ps1 | iex\"",

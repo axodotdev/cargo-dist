@@ -201,6 +201,18 @@ download_binary_and_run_installer() {
             _updater_name=""
             _updater_bin=""
             ;;
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz")
+            _arch="x86_64-pc-windows-gnu"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay.exe"
+            _bins_js_array='"axolotlsay.exe"'
+            _libs=""
+            _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
+            _updater_name=""
+            _updater_bin=""
+            ;;
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz")
             _arch="x86_64-pc-windows-msvc"
             _zip_ext=".tar.gz"
@@ -338,6 +350,9 @@ json_binary_aliases() {
     "aarch64-apple-darwin")
         echo '{}'
         ;;
+    "aarch64-pc-windows-gnu")
+        echo '{}'
+        ;;
     "i686-unknown-linux-gnu")
         echo '{}'
         ;;
@@ -362,6 +377,13 @@ aliases_for_binary() {
 
     case "$_arch" in 
     "aarch64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "aarch64-pc-windows-gnu")
         case "$_bin" in
         *)
             echo ""
@@ -421,6 +443,13 @@ select_archive_for_arch() {
                 return 0
             fi
             ;;
+        "aarch64-pc-windows-gnu")
+            _archive="axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
         "aarch64-pc-windows-msvc")
             _archive="axolotlsay-x86_64-pc-windows-msvc.tar.gz"
             if [ -n "$_archive" ]; then
@@ -446,6 +475,11 @@ select_archive_for_arch() {
             fi
             ;;
         "x86_64-pc-windows-gnu")
+            _archive="axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
             _archive="axolotlsay-x86_64-pc-windows-msvc.tar.gz"
             if [ -n "$_archive" ]; then
                 echo "$_archive"
@@ -1370,6 +1404,7 @@ class Axolotlsay < Formula
 
   BINARY_ALIASES = {
     "aarch64-apple-darwin": {},
+    "aarch64-pc-windows-gnu": {},
     "i686-unknown-linux-gnu": {},
     "x86_64-apple-darwin": {},
     "x86_64-pc-windows-gnu": {},
@@ -1506,8 +1541,28 @@ function Install-Binary($install_args) {
 
   # Platform info injected by dist
   $platforms = @{
+    "aarch64-pc-windows-gnu" = @{
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+      "bins" = @("axolotlsay.exe")
+      "libs" = @()
+      "staticlibs" = @()
+      "zip_ext" = ".tar.gz"
+      "aliases" = @{
+      }
+      "aliases_json" = '{}'
+    }
     "aarch64-pc-windows-msvc" = @{
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+      "bins" = @("axolotlsay.exe")
+      "libs" = @()
+      "staticlibs" = @()
+      "zip_ext" = ".tar.gz"
+      "aliases" = @{
+      }
+      "aliases_json" = '{}'
+    }
+    "x86_64-pc-windows-gnu" = @{
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-gnu.tar.gz"
       "bins" = @("axolotlsay.exe")
       "libs" = @()
       "staticlibs" = @()
@@ -1542,7 +1597,16 @@ $_
   }
 }
 
-function Get-TargetTriple() {
+function Get-TargetTriple($platforms) {
+  $double = Get-Arch
+  if ($platforms.Contains("$double-msvc")) {
+    return "$double-msvc"
+  } else {
+    return "$double-gnu"
+  }
+}
+
+function Get-Arch() {
   try {
     # NOTE: this might return X64 on ARM64 Windows, which is OK since emulation is available.
     # It works correctly starting in PowerShell Core 7.3 and Windows PowerShell in Win 11 22H2.
@@ -1556,10 +1620,10 @@ function Get-TargetTriple() {
     # Rust supported platforms: https://doc.rust-lang.org/stable/rustc/platform-support.html
     switch ($p.GetValue($null).ToString())
     {
-      "X86" { return "i686-pc-windows-msvc" }
-      "X64" { return "x86_64-pc-windows-msvc" }
-      "Arm" { return "thumbv7a-pc-windows-msvc" }
-      "Arm64" { return "aarch64-pc-windows-msvc" }
+      "X86" { return "i686-pc-windows" }
+      "X64" { return "x86_64-pc-windows" }
+      "Arm" { return "thumbv7a-pc-windows" }
+      "Arm64" { return "aarch64-pc-windows" }
     }
   } catch {
     # The above was added in .NET 4.7.1, so Windows PowerShell in versions of Windows
@@ -1571,14 +1635,14 @@ function Get-TargetTriple() {
   # This is available in .NET 4.0. We already checked for PS 5, which requires .NET 4.5.
   Write-Verbose("Get-TargetTriple: falling back to Is64BitOperatingSystem.")
   if ([System.Environment]::Is64BitOperatingSystem) {
-    return "x86_64-pc-windows-msvc"
+    return "x86_64-pc-windows"
   } else {
-    return "i686-pc-windows-msvc"
+    return "i686-pc-windows"
   }
 }
 
 function Download($download_url, $platforms) {
-  $arch = Get-TargetTriple
+  $arch = Get-TargetTriple $platforms
 
   if (-not $platforms.ContainsKey($arch)) {
     $platforms_json = ConvertTo-Json $platforms
@@ -1661,7 +1725,7 @@ function Download($download_url, $platforms) {
 
 function Invoke-Installer($artifacts, $platforms) {
   # Replaces the placeholder binary entry with the actual list of binaries
-  $arch = Get-TargetTriple
+  $arch = Get-TargetTriple $platforms
 
   if (-not $platforms.ContainsKey($arch)) {
     $platforms_json = ConvertTo-Json $platforms
@@ -3340,6 +3404,13 @@ install(false);
       },
       "zipExt": ".tar.gz"
     },
+    "aarch64-pc-windows-gnu": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
     "aarch64-pc-windows-msvc": {
       "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
       "bins": {
@@ -3362,7 +3433,7 @@ install(false);
       "zipExt": ".tar.gz"
     },
     "x86_64-pc-windows-gnu": {
-      "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "artifactName": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
       "bins": {
         "axolotlsay": "axolotlsay.exe"
       },
@@ -3408,7 +3479,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.2",
   "announcement_changelog": "```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy ByPass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-aarch64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n| [axolotlsay-i686-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz) | x86 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy ByPass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-aarch64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-pc-windows-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.tar.gz) | x64 MinGW | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-gnu.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.msi) | x64 MinGW | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.msi.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n| [axolotlsay-i686-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz) | x86 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "axolotlsay",
@@ -3440,6 +3511,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "axolotlsay-i686-unknown-linux-gnu.tar.gz.omnibor",
         "axolotlsay-x86_64-apple-darwin.tar.gz.omnibor",
         "axolotlsay-x86_64-apple-darwin.pkg.omnibor",
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz.omnibor",
+        "axolotlsay-x86_64-pc-windows-gnu.msi.omnibor",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz.omnibor",
         "axolotlsay-x86_64-pc-windows-msvc.msi.omnibor",
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.omnibor",
@@ -3455,6 +3528,10 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.pkg",
         "axolotlsay-x86_64-apple-darwin.pkg.sha256",
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256",
+        "axolotlsay-x86_64-pc-windows-gnu.msi",
+        "axolotlsay-x86_64-pc-windows-gnu.msi.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.msi",
@@ -3599,7 +3676,9 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "name": "axolotlsay-installer.ps1",
       "kind": "installer",
       "target_triples": [
+        "aarch64-pc-windows-gnu",
         "aarch64-pc-windows-msvc",
+        "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
       ],
       "install_hint": "powershell -ExecutionPolicy ByPass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"",
@@ -3614,6 +3693,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
         "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
@@ -3631,6 +3711,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
         "aarch64-pc-windows-msvc",
         "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
@@ -3777,6 +3858,81 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "x86_64-apple-darwin"
       ]
     },
+    "axolotlsay-x86_64-pc-windows-gnu.msi": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.msi",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ],
+      "assets": [
+        {
+          "id": "axolotlsay-x86_64-pc-windows-gnu-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "description": "install via msi",
+      "checksum": "axolotlsay-x86_64-pc-windows-gnu.msi.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.msi.omnibor": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.msi.omnibor",
+      "kind": "omnibor-artifact-id"
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.msi.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.msi.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ]
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.tar.gz": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "axolotlsay-x86_64-pc-windows-gnu-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.tar.gz.omnibor": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.tar.gz.omnibor",
+      "kind": "omnibor-artifact-id"
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ]
+    },
     "axolotlsay-x86_64-pc-windows-msvc.msi": {
       "name": "axolotlsay-x86_64-pc-windows-msvc.msi",
       "kind": "installer",
@@ -3908,6 +4064,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
         "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
@@ -4012,6 +4169,27 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "install_omnibor": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/omnibor/omnibor-rs/releases/download/omnibor-cli-v0.7.0/omnibor-cli-installer.sh | sh"
+            },
+            "cache_provider": "github"
+          },
+          {
+            "runner": "windows-2019",
+            "host": "x86_64-pc-windows-msvc",
+            "install_dist": {
+              "shell": "pwsh",
+              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
+            },
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-gnu",
+            "targets": [
+              "x86_64-pc-windows-gnu"
+            ],
+            "install_cargo_auditable": {
+              "shell": "pwsh",
+              "run": "powershell -c \"irm https://github.com/rust-secure-code/cargo-auditable/releases/latest/download/cargo-auditable-installer.ps1 | iex\""
+            },
+            "install_omnibor": {
+              "shell": "pwsh",
+              "run": "powershell -c \"irm https://github.com/omnibor/omnibor-rs/releases/download/omnibor-cli-v0.7.0/omnibor-cli-installer.ps1 | iex\""
             },
             "cache_provider": "github"
           },

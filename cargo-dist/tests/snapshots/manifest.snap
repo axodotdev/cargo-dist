@@ -203,6 +203,7 @@ stdout:
       "kind": "installer",
       "target_triples": [
         "aarch64-pc-windows-msvc",
+        "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
       ],
       "install_hint": "powershell -ExecutionPolicy ByPass -c \"irm https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.ps1 | iex\"",

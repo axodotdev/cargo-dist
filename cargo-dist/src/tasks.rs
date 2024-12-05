@@ -2228,7 +2228,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .platform_support
             .fragments()
             .into_iter()
-            .filter(|a| a.target_triple.is_windows_msvc())
+            .filter(|a| a.target_triple.is_windows())
             .collect::<Vec<_>>();
         let target_triples = artifacts
             .iter()
