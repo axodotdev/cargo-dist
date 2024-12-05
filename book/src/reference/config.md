@@ -44,7 +44,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`rust-toolchain-version`](#rust-toolchain-version)
     * [`cargo-auditable`](#cargo-auditable)
     * [`cargo-cyclonedx`](#cargo-cyclonedx)
-    * [`generate-omnibor-ids`](#generate-omnibor-ids)
+    * [`omnibor`](#omnibor)
 
 [installer settings](#installer-settings)
 * [`installers`](#installers)
@@ -519,10 +519,10 @@ For instance for packages that are a library and a CLI binary, some developers p
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
 > [dist.min-glibc-version]
-> \# Override glibc version for specific target triplets
+> # Override glibc version for specific target triplets
 > aarch64-unknown-linux-gnu "2.19"
 > x86_64-unknown-linux-gnu = "2.18"
-> \# Override all remaining glibc versions.
+> # Override all remaining glibc versions.
 > "*" = "2.17"
 > ```
 
@@ -621,6 +621,12 @@ Without this setting, CI won't explicitly setup a toolchain, so whatever's on th
 
 > <span style="float:right">since 0.26.0<br>[package-local][]</span>
 > default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> cargo-auditable = true
+> ```
 
 Specifies whether to use [`cargo auditable`](https://github.com/rust-secure-code/cargo-auditable) to embed metadata about your dependency tree into the built executables.
 When this value is false, dist will run `cargo build`; when it is true, dist will run `cargo auditable build`.
@@ -631,15 +637,27 @@ You can then use [`cargo audit`](https://github.com/rustsec/rustsec/blob/main/ca
 
 > <span style="float:right">since 0.26.0<br>[package-local][]</span>
 > default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> cargo-cyclonedx = true
+> ```
 
 Specifies whether to use [`cargo cyclonedx`](https://github.com/CycloneDX/cyclonedx-rust-cargo) to generate and upload a Software Bill Of Materials (SBOM) for each project in a workspace.
 
-#### `generate-omnibor-ids`
+#### `omnibor`
 
 > <span style="float:right">since 0.26.0<br>[package-local][]</span>
 > default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> omnibor = true
+> ```
 
-Specifies whether to use [`omnibor-cli`](https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli) to generate and upload OmniBOR Artifact IDs for each project in a workspace.
+Specifies whether to use [`omnibor-cli`](https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli) to generate and upload [OmniBOR Artifact IDs](https://omnibor.io/docs/artifact-ids/) for artifact in a release.
 
 ## installer settings
 
