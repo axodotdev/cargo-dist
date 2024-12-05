@@ -519,10 +519,10 @@ For instance for packages that are a library and a CLI binary, some developers p
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
 > [dist.min-glibc-version]
-> \# Override glibc version for specific target triplets
+> # Override glibc version for specific target triplets
 > aarch64-unknown-linux-gnu "2.19"
 > x86_64-unknown-linux-gnu = "2.18"
-> \# Override all remaining glibc versions.
+> # Override all remaining glibc versions.
 > "*" = "2.17"
 > ```
 
