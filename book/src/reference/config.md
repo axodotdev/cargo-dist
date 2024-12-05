@@ -44,7 +44,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`rust-toolchain-version`](#rust-toolchain-version)
     * [`cargo-auditable`](#cargo-auditable)
     * [`cargo-cyclonedx`](#cargo-cyclonedx)
-    * [`generate-omnibor-ids`](#generate-omnibor-ids)
+    * [`omnibor`](#omnibor)
 
 [installer settings](#installer-settings)
 * [`installers`](#installers)
@@ -634,7 +634,7 @@ You can then use [`cargo audit`](https://github.com/rustsec/rustsec/blob/main/ca
 
 Specifies whether to use [`cargo cyclonedx`](https://github.com/CycloneDX/cyclonedx-rust-cargo) to generate and upload a Software Bill Of Materials (SBOM) for each project in a workspace.
 
-#### `generate-omnibor-ids`
+#### `omnibor`
 
 > <span style="float:right">since 0.26.0<br>[package-local][]</span>
 > default = `false`
