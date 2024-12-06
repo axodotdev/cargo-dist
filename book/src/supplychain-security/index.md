@@ -9,7 +9,7 @@ If you have an integration you are looking for [file an issue](https://github.co
 ## Signing
 
 * [Windows Codesigning](./signing/windows.md)
-* [🔜 macOS Codesigning](https://github.com/axodotdev/cargo-dist/issues/1121)
+* [macOS Codesigning](./signing/macos.md)
 * [🔜 Linux Codesigning](https://github.com/axodotdev/cargo-dist/issues/120)
 * [🔜 Sigstore Signing](https://github.com/axodotdev/cargo-dist/issues/120)
 * [🔜 Windows Trusted Signing](https://github.com/axodotdev/cargo-dist/issues/1122)
