@@ -133,7 +133,7 @@ impl MsiInstallerInfo {
     /// Check that wix GUIDs are set in the package's Cargo.toml
     fn check_wix_guids(&self) -> DistResult<()> {
         // Ok we have changes to make, let's load the toml
-        let mut package_toml = config::load_cargo_toml(&self.manifest_path)?;
+        let mut package_toml = config::load_toml(&self.manifest_path)?;
         if update_wix_metadata(&mut package_toml) {
             Err(DistError::MissingWixGuids {
                 manifest_path: self.manifest_path.clone(),
@@ -146,9 +146,9 @@ impl MsiInstallerInfo {
 
     /// Write wix GUIDs to the package's Cargo.toml
     fn write_wix_guids_to_disk(&self) -> DistResult<()> {
-        let mut package_toml = config::load_cargo_toml(&self.manifest_path)?;
+        let mut package_toml = config::load_toml(&self.manifest_path)?;
         if update_wix_metadata(&mut package_toml) {
-            config::save_cargo_toml(&self.manifest_path, package_toml)?;
+            config::write_toml(&self.manifest_path, package_toml)?;
         }
         Ok(())
     }
