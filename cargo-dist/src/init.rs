@@ -65,6 +65,15 @@ fn copy_cargo_workspace_metadata_dist(
     }
 }
 
+/// Remove [workspace.metadata.dist], if it exists.
+fn prune_cargo_workspace_metadata_dist(workspace: &mut toml_edit::DocumentMut) {
+    workspace
+        .get_mut("workspace")
+        .and_then(|ws| ws.get_mut("metadata"))
+        .and_then(|metadata_item| metadata_item.as_table_mut())
+        .and_then(|table| table.remove("dist"));
+}
+
 fn new_workspace() -> toml_edit::DocumentMut {
     // Always generate a new workspace here for the !initted case
     let mut new_workspace = toml_edit::DocumentMut::new();
@@ -229,12 +238,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // We've been asked to migrate away from Cargo.toml; delete what
     // we've added after writing the new config
     if initted && is_migrating {
-        original_workspace_toml
-            .get_mut("workspace")
-            .and_then(|ws| ws.get_mut("metadata"))
-            .and_then(|metadata_item| metadata_item.as_table_mut())
-            .and_then(|table| table.remove("dist"));
-
+        prune_cargo_workspace_metadata_dist(&mut original_workspace_toml);
         config::write_toml(&root_workspace.manifest_path, original_workspace_toml)?;
     }
 
