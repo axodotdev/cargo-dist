@@ -12,13 +12,13 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
 homepage = "https://opensource.axo.dev/cargo-dist/"
-version = "0.26.0-prerelease.3"
+version = "0.26.0"
 rust-version = "1.70.0"
 
 [workspace.dependencies]
 # intra-workspace deps (you need to bump these versions when you cut releases too!
-cargo-dist-schema = { version = "=0.26.0-prerelease.3", path = "cargo-dist-schema" }
-axoproject = { version = "=0.26.0-prerelease.3", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
+cargo-dist-schema = { version = "=0.26.0", path = "cargo-dist-schema" }
+axoproject = { version = "=0.26.0", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
 
 # first-party deps
 axocli = { version = "0.2.0" }

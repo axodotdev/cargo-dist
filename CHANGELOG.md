@@ -2,6 +2,77 @@
 
 Nothing Yet!
 
+# Version 0.26.0 (20XX-XX-XX)
+
+It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.
+
+## Builtin Rust cross-compilation support
+
+You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild) and Windows (using [cargo-xwin](https://github.com/rust-cross/cargo-xwin).
+
+We're also making use of this feature ourselves: we now build our aarch64 Linux binaries using this new tooling.
+
+(Note: for technical reasons, this feature and cargo-auditable are currently mutually exclusive. Users can only enable one or the other.)
+
+- impl @fasterthanlime [Add cross-compilation support via cargo-zigbuild and cargo-xwin](https://github.com/axodotdev/cargo-dist/pull/1529)
+
+## Checksum verifications in shell installers
+
+While we've always generated checksum information for binary tarballs/ZIPs, we only actually validated those checksums in the Homebrew installer. That changes with this release: we now embed checksum information into the shell installer and validate the tarball before unpacking it.
+
+- impl @fasterthanlime [Verify checksums in install.sh](https://github.com/axodotdev/cargo-dist/pull/1497)
+
+## cargo-auditable support
+
+We've added integrated support for the Rust Secure Code Working Group's [cargo-auditable](https://github.com/rust-secure-code/cargo-auditable), which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see [our docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#cargo-auditable) and the [docs for the cargo-audit tool](https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md).
+
+(Note: for technical reasons, this feature and cross-compilation are currently mutually exclusive. Users can only enable one or the other.)
+
+- impl @duckinator [Add cargo-auditable config option](https://github.com/axodotdev/cargo-dist/pull/1528)
+
+## cargo-cyclonedx support
+
+We've also added support for generating [CyloneDX Software Bill of Materials (SBOM)](https://cyclonedx.org) files for Rust projects. We've implemented this using the [cargo-cyclonedx](https://github.com/CycloneDX/cyclonedx-rust-cargo/blob/main/cargo-cyclonedx/README.md) tool. Unlike the cargo-auditable support above, which embeds dependency information directly into your binaries, this data is stored as a standalone `bom.xml` file which is distributed with your software. Users can then validate that SBOM file using [any compatible CycloneDX tool](https://cyclonedx.org/tool-center/).
+
+- impl @duckinator [Add cargo-cyclonedx config option.](https://github.com/axodotdev/cargo-dist/pull/1531)
+
+## OmniBOR support
+
+Rounding out this release's new security features, we've added support for [generating OmniBOR artifact IDs](https://omnibor.io). We implement this using the [omnibor-cli](https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli) tool. For more information, see [the docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#omnibor).
+
+- impl @duckinator [Add option to generate omnibor artifact IDs.](https://github.com/axodotdev/cargo-dist/pull/1568)
+
+## Strict error catching in template rendering
+
+We've tightened up error handling for undefined values in templates when we create things such as installer scripts and the GitHub Actions YAML config. Any errors that occur here are dist's fault, not users' fault, and stricter error handling ensures we get the information we need to fix dist bugs and make this code more reliable. This was made possible thanks to a contribution by @fasterthanlime to the minijinja project, ensuring that we get actionable messages for these kinds of errors.
+
+- impl @fasterthanlime [Enable jinja "strict undefined behavior", fix templates, improve reporting](https://github.com/axodotdev/cargo-dist/pull/1499)
+
+## Per-target glibc version overrides
+
+Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see [the docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#min-glibc-version).
+
+- impl @duckinator [Allow per-target glibc version overrides.](https://github.com/axodotdev/cargo-dist/pull/1537)
+
+## Tag-parsing and library-only mode improvements
+
+We've tightened up the tag parsing code, ensuring that a few edge cases are handled more predictably. The `dist plan` output is now clearer in workspaces with multiple versions, with better instruction text on how to resolve unclear situations. We've also made a small change to `dist = false` handling, which means that we now refuse to run if a release tag only matches a crate with `dist = false` instead of going ahead with single library mode.
+
+- impl
+  - @duckinator [Avoid discarding tag information, so "dist plan --tag={name}-{version}" works.](https://github.com/axodotdev/cargo-dist/pull/1551)
+  - @mistydemeo [Disable single-library mode for dist=false](https://github.com/axodotdev/cargo-dist/pull/1441)
+  - @alilleybrinker [Permit tag incoherence for dist plan](https://github.com/axodotdev/cargo-dist/pull/1579)
+
+## Improved pc-windows-gnu support
+
+Although we've previously supported `pc-windows-gnu` builds for Rust software, we had a few notable gotchas: we wouldn't install `choco` dependencies, and PowerShell installers couldn't install them. We've fixed both of these issues this release, ensuring these targets are a bit closer to `pc-windows-msvc` in support.
+
+* impl @mistydemeo [feat: add pc-windows-gnu to powershell installers](https://github.com/axodotdev/cargo-dist/pull/1586)
+
+## Fixes
+
+* @pnehrer [Explicitly set manifest path when building MSI with WiX](https://github.com/axodotdev/cargo-dist/pull/1566)
+
 # Version 0.25.1 (2024-11-01)
 
 This release contains a few new features for further customizing the installer experience, both as a packager and the end user.
