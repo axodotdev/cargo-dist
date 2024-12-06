@@ -1,0 +1,626 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>CLI Manual - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html" class="active"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/reference/cli.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="dist-cli-manual"><a class="header" href="#dist-cli-manual">dist CLI Manual</a></h1>
+<ul>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#commands">Commands</a></li>
+<li><a href="#options">Options</a></li>
+<li><a href="#global-options">GLOBAL OPTIONS</a>
+<ul>
+<li><a href="#-v---verbose-verbose"><code>-v, --verbose &lt;VERBOSE&gt;</code></a></li>
+<li><a href="#-o---output-format-output_format"><code>-o, --output-format &lt;OUTPUT_FORMAT&gt;</code></a></li>
+<li><a href="#--no-local-paths"><code>--no-local-paths</code></a></li>
+<li><a href="#-t---target-target"><code>-t, --target &lt;TARGET&gt;</code></a></li>
+<li><a href="#-i---installer-installer"><code>-i, --installer &lt;INSTALLER&gt;</code></a></li>
+<li><a href="#-c---ci-ci"><code>-c, --ci &lt;CI&gt;</code></a></li>
+<li><a href="#--tag-tag"><code>--tag &lt;TAG&gt;</code></a></li>
+<li><a href="#--force-tag"><code>--force-tag</code></a></li>
+<li><a href="#--allow-dirty"><code>--allow-dirty</code></a></li>
+</ul>
+</li>
+<li><a href="#dist-build">dist build</a>
+<ul>
+<li><a href="#usage-1">Usage</a></li>
+<li><a href="#options-1">Options</a>
+<ul>
+<li><a href="#-a---artifacts-artifacts"><code>-a, --artifacts &lt;ARTIFACTS&gt;</code></a></li>
+<li><a href="#-p---print-print"><code>-p, --print &lt;PRINT&gt;</code></a></li>
+<li><a href="#-h---help"><code>-h, --help</code></a></li>
+</ul>
+</li>
+<li><a href="#global-options-1">GLOBAL OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#dist-init">dist init</a>
+<ul>
+<li><a href="#usage-2">Usage</a></li>
+<li><a href="#options-2">Options</a>
+<ul>
+<li><a href="#-y---yes"><code>-y, --yes</code></a></li>
+<li><a href="#--skip-generate"><code>--skip-generate</code></a></li>
+<li><a href="#--with-json-config-with_json_config"><code>--with-json-config &lt;WITH_JSON_CONFIG&gt;</code></a></li>
+<li><a href="#--hosting-hosting"><code>--hosting &lt;HOSTING&gt;</code></a></li>
+<li><a href="#-h---help-1"><code>-h, --help</code></a></li>
+</ul>
+</li>
+<li><a href="#global-options-2">GLOBAL OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#dist-generate">dist generate</a>
+<ul>
+<li><a href="#usage-3">Usage</a></li>
+<li><a href="#options-3">Options</a>
+<ul>
+<li><a href="#--mode-mode"><code>--mode &lt;MODE&gt;</code></a></li>
+<li><a href="#--check"><code>--check</code></a></li>
+<li><a href="#-h---help-2"><code>-h, --help</code></a></li>
+</ul>
+</li>
+<li><a href="#global-options-3">GLOBAL OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#dist-linkage">dist linkage</a>
+<ul>
+<li><a href="#usage-4">Usage</a></li>
+<li><a href="#options-4">Options</a>
+<ul>
+<li><a href="#--print-output"><code>--print-output</code></a></li>
+<li><a href="#--print-json"><code>--print-json</code></a></li>
+<li><a href="#--from-json-from_json"><code>--from-json &lt;FROM_JSON&gt;</code></a></li>
+<li><a href="#-h---help-3"><code>-h, --help</code></a></li>
+</ul>
+</li>
+<li><a href="#global-options-4">GLOBAL OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#dist-manifest">dist manifest</a>
+<ul>
+<li><a href="#usage-5">Usage</a></li>
+<li><a href="#options-5">Options</a>
+<ul>
+<li><a href="#-a---artifacts-artifacts-1"><code>-a, --artifacts &lt;ARTIFACTS&gt;</code></a></li>
+<li><a href="#-p---print-print-1"><code>-p, --print &lt;PRINT&gt;</code></a></li>
+<li><a href="#-h---help-4"><code>-h, --help</code></a></li>
+</ul>
+</li>
+<li><a href="#global-options-5">GLOBAL OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#dist-plan">dist plan</a>
+<ul>
+<li><a href="#usage-6">Usage</a></li>
+<li><a href="#options-6">Options</a>
+<ul>
+<li><a href="#-h---help-5"><code>-h, --help</code></a></li>
+</ul>
+</li>
+<li><a href="#global-options-6">GLOBAL OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#dist-host">dist host</a>
+<ul>
+<li><a href="#usage-7">Usage</a></li>
+<li><a href="#options-7">Options</a>
+<ul>
+<li><a href="#--steps-steps"><code>--steps &lt;STEPS&gt;</code></a></li>
+<li><a href="#-h---help-6"><code>-h, --help</code></a></li>
+</ul>
+</li>
+<li><a href="#global-options-7">GLOBAL OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#dist-selfupdate">dist selfupdate</a>
+<ul>
+<li><a href="#usage-8">Usage</a></li>
+<li><a href="#options-8">Options</a>
+<ul>
+<li><a href="#--version-version"><code>--version &lt;VERSION&gt;</code></a></li>
+<li><a href="#--prerelease"><code>--prerelease</code></a></li>
+<li><a href="#-y---yes-1"><code>-y, --yes</code></a></li>
+<li><a href="#--skip-init"><code>--skip-init</code></a></li>
+<li><a href="#--skip-generate-1"><code>--skip-generate</code></a></li>
+<li><a href="#--with-json-config-with_json_config-1"><code>--with-json-config &lt;WITH_JSON_CONFIG&gt;</code></a></li>
+<li><a href="#--hosting-hosting-1"><code>--hosting &lt;HOSTING&gt;</code></a></li>
+<li><a href="#-h---help-7"><code>-h, --help</code></a></li>
+</ul>
+</li>
+<li><a href="#global-options-8">GLOBAL OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#dist-help">dist help</a>
+<ul>
+<li><a href="#usage-9">Usage</a></li>
+<li><a href="#commands-1">Commands</a></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>This manual can be regenerated with <code>dist help-markdown</code></p>
+</blockquote>
+<p>Professional packaging and distribution for ambitious developers.</p>
+<p>See 'init', 'build' and 'plan' for the 3 most important subcommands.</p>
+<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
+<pre><code class="language-text">dist [OPTIONS]
+</code></pre>
+<p>dist <COMMAND></p>
+<h3 id="commands"><a class="header" href="#commands">Commands</a></h3>
+<ul>
+<li><a href="#cargo-dist-build">build</a>: Build artifacts</li>
+<li><a href="#cargo-dist-init">init</a>: Setup or update dist</li>
+<li><a href="#cargo-dist-generate">generate</a>: Generate one or more pieces of configuration</li>
+<li><a href="#cargo-dist-linkage">linkage</a>: Report on the dynamic libraries used by the built artifacts</li>
+<li><a href="#cargo-dist-manifest">manifest</a>: Generate the final build manifest without running any builds</li>
+<li><a href="#cargo-dist-plan">plan</a>: Get a plan of what to build (and check project status)</li>
+<li><a href="#cargo-dist-host">host</a>: Host artifacts</li>
+<li><a href="#cargo-dist-selfupdate">selfupdate</a>: Performs a self-update, if a new version is available, and then 'init'</li>
+<li><a href="#cargo-dist-help">help</a>: Print this message or the help of the given subcommand(s)</li>
+</ul>
+<h3 id="options"><a class="header" href="#options">Options</a></h3>
+<h3 id="global-options"><a class="header" href="#global-options">GLOBAL OPTIONS</a></h3>
+<h4 id="-v---verbose-verbose"><a class="header" href="#-v---verbose-verbose"><code>-v, --verbose &lt;VERBOSE&gt;</code></a></h4>
+<p>How verbose logging should be (log level)</p>
+<p>[default: warn]<br />
+[possible values: off, error, warn, info, debug, trace]</p>
+<h4 id="-o---output-format-output_format"><a class="header" href="#-o---output-format-output_format"><code>-o, --output-format &lt;OUTPUT_FORMAT&gt;</code></a></h4>
+<p>The format of the output</p>
+<p>[default: human]<br />
+[possible values: human, json]</p>
+<h4 id="--no-local-paths"><a class="header" href="#--no-local-paths"><code>--no-local-paths</code></a></h4>
+<p>Strip local paths from output (e.g. in the dist manifest json)</p>
+<p>This is useful for generating a clean "full" manifest as follows:</p>
+<p><code>dist manifest --artifacts=all --output-format=json --no-local-paths</code></p>
+<h4 id="-t---target-target"><a class="header" href="#-t---target-target"><code>-t, --target &lt;TARGET&gt;</code></a></h4>
+<p>Target triples we want to build</p>
+<p>If left unspecified we will use the values in <a href="./config.html#metadatadist">workspace.metadata.dist</a>, except for <code>dist init</code> which will select some "good defaults" for you.</p>
+<h4 id="-i---installer-installer"><a class="header" href="#-i---installer-installer"><code>-i, --installer &lt;INSTALLER&gt;</code></a></h4>
+<p>Installers we want to build</p>
+<p>If left unspecified we will use the values in <a href="./config.html#metadatadist">workspace.metadata.dist</a>. <code>dist init</code> will persist the values you pass to that location.</p>
+<p>Possible values:</p>
+<ul>
+<li>shell:      Generates a shell script that fetches/installs the right build</li>
+<li>powershell: Generates a powershell script that fetches/installs the right build</li>
+<li>npm:        Generates an npm project that fetches the right build to your node_modules</li>
+<li>homebrew:   Generates a Homebrew formula</li>
+<li>msi:        Generates an msi for each windows platform</li>
+</ul>
+<h4 id="-c---ci-ci"><a class="header" href="#-c---ci-ci"><code>-c, --ci &lt;CI&gt;</code></a></h4>
+<p>CI we want to support</p>
+<p>If left unspecified we will use the value in <a href="./config.html#metadatadist">workspace.metadata.dist</a>. <code>dist init</code> will persist the values you pass to that location.</p>
+<p>Possible values:</p>
+<ul>
+<li>github: Generate github CI that uploads to github releases</li>
+</ul>
+<h4 id="--tag-tag"><a class="header" href="#--tag-tag"><code>--tag &lt;TAG&gt;</code></a></h4>
+<p>The (git) tag to use for the Announcement that each invocation of dist is performing.</p>
+<p>This tag serves two purposes: defining which apps we are Announcing new Releases for (and therefore building binaries and installers for); and picking an id to use for certain URLs. For instance the git tag associated with a Github Release is part of the URL to fetch artifacts from that release, which needs to be known by some installers!</p>
+<p>Unified Announcement: VERSION selects all packages with the given version (v1.0.0, 0.1.0-prerelease.1, releases/1.2.3, ...)</p>
+<p>Singular Announcement: PACKAGE-VERSION or PACKAGE/VERSION selects only the given package (my-app-v1.0.0, my-app/1.0.0, release/my-app/v1.2.3-alpha, ...)</p>
+<p>If you use the singular version then we will only Announce/Release that package's apps (and return an error if that is not in fact the package's current version). This is appropriate for workspaces that have more than one app.</p>
+<p>If you use the unified version then we will assume you're Announcing/Releasing all packages in the workspace that have that version. This is appropriate for workspaces that only have one app, or for monorepos that version all their apps in lockstep.</p>
+<p>If you do not specify this tag we will attempt to infer it by trying to Announce/Release every app in the workspace, succeeding only if they all have the same version. The tag selected will be "v{VERSION}".</p>
+<p>In the future we may try to make this look at the current git tags or something?</p>
+<h4 id="--force-tag"><a class="header" href="#--force-tag"><code>--force-tag</code></a></h4>
+<p>Force package versions to match the tag</p>
+<h4 id="--allow-dirty"><a class="header" href="#--allow-dirty"><code>--allow-dirty</code></a></h4>
+<p>Allow generated files like CI scripts to be out of date</p>
+<p><br><br><br></p>
+<h2 id="dist-build"><a class="header" href="#dist-build">dist build</a></h2>
+<p>Build artifacts</p>
+<h3 id="usage-1"><a class="header" href="#usage-1">Usage</a></h3>
+<pre><code class="language-text">dist build [OPTIONS]
+</code></pre>
+<h3 id="options-1"><a class="header" href="#options-1">Options</a></h3>
+<h4 id="-a---artifacts-artifacts"><a class="header" href="#-a---artifacts-artifacts"><code>-a, --artifacts &lt;ARTIFACTS&gt;</code></a></h4>
+<p>Which subset of the Artifacts to build</p>
+<p>Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (archives, symbols, msi installers...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).</p>
+<p>Having this distinction lets us run dist independently on multiple machines without collisions between the outputs.</p>
+<p>If let unspecified, we will pick a fuzzier "host" mode that builds "as much as possible" for the local system. This mode is appropriate for local testing/debugging/demoing. If no --target flags are passed on the CLI then "host" mode will try to intelligently guess which targets to build for, which may include building targets that aren't defined in your metadata.dist config (since that config may exclude the current machine!).</p>
+<p>The specifics of "host" mode are intentionally unspecified to enable us to provider better out-of-the-box UX for local usage. In CI environments you should always specify "global" or "local" to get consistent behaviour!</p>
+<p>[default: host]</p>
+<p>Possible values:</p>
+<ul>
+<li>local:  Build target-specific artifacts like archives and msi installers</li>
+<li>global: Build unique artifacts like curl-sh installers and npm packages</li>
+<li>host:   Fuzzily build "as much as possible" for the host system</li>
+<li>all:    Build all the artifacts; useful for <code>dist manifest</code></li>
+<li>lies:   Fake all the artifacts; useful for testing/mocking/staging</li>
+</ul>
+<h4 id="-p---print-print"><a class="header" href="#-p---print-print"><code>-p, --print &lt;PRINT&gt;</code></a></h4>
+<p>What extra information to print, if anything. Currently supported:</p>
+<ul>
+<li>linkage: prints information on dynamic libraries used by build artifacts</li>
+</ul>
+<h4 id="-h---help"><a class="header" href="#-h---help"><code>-h, --help</code></a></h4>
+<p>Print help (see a summary with '-h')</p>
+<h3 id="global-options-1"><a class="header" href="#global-options-1">GLOBAL OPTIONS</a></h3>
+<p>This subcommand accepts all the <a href="#global-options">global options</a></p>
+<p><br><br><br></p>
+<h2 id="dist-init"><a class="header" href="#dist-init">dist init</a></h2>
+<p>Setup or update dist</p>
+<p>This will interactively guide you through the process of selecting configuration options and will also automatically run 'dist generate' afterwards as necessary. It will also handle updating your project to a new version of dist if you're running one.</p>
+<h3 id="usage-2"><a class="header" href="#usage-2">Usage</a></h3>
+<pre><code class="language-text">dist init [OPTIONS]
+</code></pre>
+<h3 id="options-2"><a class="header" href="#options-2">Options</a></h3>
+<h4 id="-y---yes"><a class="header" href="#-y---yes"><code>-y, --yes</code></a></h4>
+<p>Automatically accept all recommended/default values</p>
+<p>This is equivalent to just mashing ENTER over and over during the interactive prompts.</p>
+<h4 id="--skip-generate"><a class="header" href="#--skip-generate"><code>--skip-generate</code></a></h4>
+<p>Skip running 'dist generate' at the end</p>
+<h4 id="--with-json-config-with_json_config"><a class="header" href="#--with-json-config-with_json_config"><code>--with-json-config &lt;WITH_JSON_CONFIG&gt;</code></a></h4>
+<p>A path to a json file containing values to set in workspace.metadata.dist and package.metadata.dist, for building tools that edit these configs.</p>
+<p>This is the same toml =&gt; json format that <code>cargo metadata</code> produces when reporting <code>workspace.metadata.dist</code>. There is some additional hierarchy for specifying which values go to which packages, but this is currently intentionally undocumented to give us some flexibility to change it.</p>
+<h4 id="--hosting-hosting"><a class="header" href="#--hosting-hosting"><code>--hosting &lt;HOSTING&gt;</code></a></h4>
+<p>releases hosting backends we want to support</p>
+<p>If left unspecified we will use the value in <a href="./config.html#metadatadist">workspace.metadata.dist</a>. (If no such value exists we will use the one "native" to your CI provider) <code>dist init</code> will persist the values you pass to that location.</p>
+<p>Possible values:</p>
+<ul>
+<li>github:    Host on Github Releases</li>
+<li>axodotdev: Host on Axo Releases ("Abyss")</li>
+</ul>
+<h4 id="-h---help-1"><a class="header" href="#-h---help-1"><code>-h, --help</code></a></h4>
+<p>Print help (see a summary with '-h')</p>
+<h3 id="global-options-2"><a class="header" href="#global-options-2">GLOBAL OPTIONS</a></h3>
+<p>This subcommand accepts all the <a href="#global-options">global options</a></p>
+<p><br><br><br></p>
+<h2 id="dist-generate"><a class="header" href="#dist-generate">dist generate</a></h2>
+<p>Generate one or more pieces of configuration</p>
+<h3 id="usage-3"><a class="header" href="#usage-3">Usage</a></h3>
+<pre><code class="language-text">dist generate [OPTIONS]
+</code></pre>
+<h3 id="options-3"><a class="header" href="#options-3">Options</a></h3>
+<h4 id="--mode-mode"><a class="header" href="#--mode-mode"><code>--mode &lt;MODE&gt;</code></a></h4>
+<p>Which type of configuration to generate</p>
+<p>Possible values:</p>
+<ul>
+<li>ci:  Generate CI scripts for orchestrating dist</li>
+<li>msi: Generate .wxs templates for msi installers</li>
+</ul>
+<h4 id="--check"><a class="header" href="#--check"><code>--check</code></a></h4>
+<p>Check if the generated output differs from on-disk config without writing it</p>
+<h4 id="-h---help-2"><a class="header" href="#-h---help-2"><code>-h, --help</code></a></h4>
+<p>Print help (see a summary with '-h')</p>
+<h3 id="global-options-3"><a class="header" href="#global-options-3">GLOBAL OPTIONS</a></h3>
+<p>This subcommand accepts all the <a href="#global-options">global options</a></p>
+<p><br><br><br></p>
+<h2 id="dist-linkage"><a class="header" href="#dist-linkage">dist linkage</a></h2>
+<p>Report on the dynamic libraries used by the built artifacts</p>
+<h3 id="usage-4"><a class="header" href="#usage-4">Usage</a></h3>
+<pre><code class="language-text">dist linkage [OPTIONS]
+</code></pre>
+<h3 id="options-4"><a class="header" href="#options-4">Options</a></h3>
+<h4 id="--print-output"><a class="header" href="#--print-output"><code>--print-output</code></a></h4>
+<p>Print human-readable output</p>
+<h4 id="--print-json"><a class="header" href="#--print-json"><code>--print-json</code></a></h4>
+<p>Print output as JSON</p>
+<h4 id="--from-json-from_json"><a class="header" href="#--from-json-from_json"><code>--from-json &lt;FROM_JSON&gt;</code></a></h4>
+<p>Read linkage data from JSON rather than parsing from binaries</p>
+<h4 id="-h---help-3"><a class="header" href="#-h---help-3"><code>-h, --help</code></a></h4>
+<p>Print help (see a summary with '-h')</p>
+<h3 id="global-options-4"><a class="header" href="#global-options-4">GLOBAL OPTIONS</a></h3>
+<p>This subcommand accepts all the <a href="#global-options">global options</a></p>
+<p><br><br><br></p>
+<h2 id="dist-manifest"><a class="header" href="#dist-manifest">dist manifest</a></h2>
+<p>Generate the final build manifest without running any builds.</p>
+<p>This command is designed to match the exact behaviour of 'dist build' when passed the same flags, which is nice for consistency but annoying for anyone who doesn't understand dist's design really well.</p>
+<p>Notably it will default to only talking about artifacts for the host system, and will produce paths to the build dir that may not exist (since the build wasn't run).</p>
+<p>'dist plan' is an alias for this command that picks nicer defaults by forcing a couple flags to have specific values. You probably want that.</p>
+<h3 id="usage-5"><a class="header" href="#usage-5">Usage</a></h3>
+<pre><code class="language-text">dist manifest [OPTIONS]
+</code></pre>
+<h3 id="options-5"><a class="header" href="#options-5">Options</a></h3>
+<h4 id="-a---artifacts-artifacts-1"><a class="header" href="#-a---artifacts-artifacts-1"><code>-a, --artifacts &lt;ARTIFACTS&gt;</code></a></h4>
+<p>Which subset of the Artifacts to build</p>
+<p>Artifacts can be broken up into two major classes: "local" ones, which are made for each target system (archives, symbols, msi installers...); and "global" ones, which are made once per app (curl-sh installers, npm package, metadata...).</p>
+<p>Having this distinction lets us run dist independently on multiple machines without collisions between the outputs.</p>
+<p>If let unspecified, we will pick a fuzzier "host" mode that builds "as much as possible" for the local system. This mode is appropriate for local testing/debugging/demoing. If no --target flags are passed on the CLI then "host" mode will try to intelligently guess which targets to build for, which may include building targets that aren't defined in your metadata.dist config (since that config may exclude the current machine!).</p>
+<p>The specifics of "host" mode are intentionally unspecified to enable us to provider better out-of-the-box UX for local usage. In CI environments you should always specify "global" or "local" to get consistent behaviour!</p>
+<p>[default: host]</p>
+<p>Possible values:</p>
+<ul>
+<li>local:  Build target-specific artifacts like archives and msi installers</li>
+<li>global: Build unique artifacts like curl-sh installers and npm packages</li>
+<li>host:   Fuzzily build "as much as possible" for the host system</li>
+<li>all:    Build all the artifacts; useful for <code>dist manifest</code></li>
+<li>lies:   Fake all the artifacts; useful for testing/mocking/staging</li>
+</ul>
+<h4 id="-p---print-print-1"><a class="header" href="#-p---print-print-1"><code>-p, --print &lt;PRINT&gt;</code></a></h4>
+<p>What extra information to print, if anything. Currently supported:</p>
+<ul>
+<li>linkage: prints information on dynamic libraries used by build artifacts</li>
+</ul>
+<h4 id="-h---help-4"><a class="header" href="#-h---help-4"><code>-h, --help</code></a></h4>
+<p>Print help (see a summary with '-h')</p>
+<h3 id="global-options-5"><a class="header" href="#global-options-5">GLOBAL OPTIONS</a></h3>
+<p>This subcommand accepts all the <a href="#global-options">global options</a></p>
+<p><br><br><br></p>
+<h2 id="dist-plan"><a class="header" href="#dist-plan">dist plan</a></h2>
+<p>Get a plan of what to build (and check project status)</p>
+<p>If you want to know what running your dist CI will produce, this is the command for you! This is the exact command that CI will run to make its build plan and generate dist-manifest.json (although it adds --output-format=json so that it's machine-readable).</p>
+<p>This is an alias for the lower-level 'manifest' command with the appropriate flags forced for asking for "everything"</p>
+<p>dist manifest --artifacts=all --no-local-paths</p>
+<h3 id="usage-6"><a class="header" href="#usage-6">Usage</a></h3>
+<pre><code class="language-text">dist plan [OPTIONS]
+</code></pre>
+<h3 id="options-6"><a class="header" href="#options-6">Options</a></h3>
+<h4 id="-h---help-5"><a class="header" href="#-h---help-5"><code>-h, --help</code></a></h4>
+<p>Print help (see a summary with '-h')</p>
+<h3 id="global-options-6"><a class="header" href="#global-options-6">GLOBAL OPTIONS</a></h3>
+<p>This subcommand accepts all the <a href="#global-options">global options</a></p>
+<p><br><br><br></p>
+<h2 id="dist-host"><a class="header" href="#dist-host">dist host</a></h2>
+<p>Host artifacts</p>
+<h3 id="usage-7"><a class="header" href="#usage-7">Usage</a></h3>
+<pre><code class="language-text">dist host [OPTIONS]
+</code></pre>
+<h3 id="options-7"><a class="header" href="#options-7">Options</a></h3>
+<h4 id="--steps-steps"><a class="header" href="#--steps-steps"><code>--steps &lt;STEPS&gt;</code></a></h4>
+<p>The hosting steps to perform</p>
+<p>Possible values:</p>
+<ul>
+<li>check:    Check that hosting is properly setup without doing other effects</li>
+<li>create:   Create a location to host artifacts</li>
+<li>upload:   Upload artifacts</li>
+<li>release:  Release artifacts</li>
+<li>announce: Announce artifacts</li>
+</ul>
+<h4 id="-h---help-6"><a class="header" href="#-h---help-6"><code>-h, --help</code></a></h4>
+<p>Print help (see a summary with '-h')</p>
+<h3 id="global-options-7"><a class="header" href="#global-options-7">GLOBAL OPTIONS</a></h3>
+<p>This subcommand accepts all the <a href="#global-options">global options</a></p>
+<p><br><br><br></p>
+<h2 id="dist-selfupdate"><a class="header" href="#dist-selfupdate">dist selfupdate</a></h2>
+<p>Performs a self-update, if a new version is available, and then 'init'</p>
+<h3 id="usage-8"><a class="header" href="#usage-8">Usage</a></h3>
+<pre><code class="language-text">dist selfupdate [OPTIONS]
+</code></pre>
+<h3 id="options-8"><a class="header" href="#options-8">Options</a></h3>
+<h4 id="--version-version"><a class="header" href="#--version-version"><code>--version &lt;VERSION&gt;</code></a></h4>
+<p>Upgrade to a specific version, instead of "latest"</p>
+<h4 id="--prerelease"><a class="header" href="#--prerelease"><code>--prerelease</code></a></h4>
+<p>Allow upgrading to prereleases when picking "latest"</p>
+<h4 id="-y---yes-1"><a class="header" href="#-y---yes-1"><code>-y, --yes</code></a></h4>
+<p>Automatically accept all recommended/default values</p>
+<p>This is equivalent to just mashing ENTER over and over during the interactive prompts.</p>
+<h4 id="--skip-init"><a class="header" href="#--skip-init"><code>--skip-init</code></a></h4>
+<p>Skip running 'dist init' after performing an upgrade</p>
+<h4 id="--skip-generate-1"><a class="header" href="#--skip-generate-1"><code>--skip-generate</code></a></h4>
+<p>Skip running 'dist generate' at the end</p>
+<h4 id="--with-json-config-with_json_config-1"><a class="header" href="#--with-json-config-with_json_config-1"><code>--with-json-config &lt;WITH_JSON_CONFIG&gt;</code></a></h4>
+<p>A path to a json file containing values to set in workspace.metadata.dist and package.metadata.dist, for building tools that edit these configs.</p>
+<p>This is the same toml =&gt; json format that <code>cargo metadata</code> produces when reporting <code>workspace.metadata.dist</code>. There is some additional hierarchy for specifying which values go to which packages, but this is currently intentionally undocumented to give us some flexibility to change it.</p>
+<h4 id="--hosting-hosting-1"><a class="header" href="#--hosting-hosting-1"><code>--hosting &lt;HOSTING&gt;</code></a></h4>
+<p>releases hosting backends we want to support</p>
+<p>If left unspecified we will use the value in <a href="./config.html#metadatadist">workspace.metadata.dist</a>. (If no such value exists we will use the one "native" to your CI provider) <code>dist init</code> will persist the values you pass to that location.</p>
+<p>Possible values:</p>
+<ul>
+<li>github:    Host on Github Releases</li>
+<li>axodotdev: Host on Axo Releases ("Abyss")</li>
+</ul>
+<h4 id="-h---help-7"><a class="header" href="#-h---help-7"><code>-h, --help</code></a></h4>
+<p>Print help (see a summary with '-h')</p>
+<h3 id="global-options-8"><a class="header" href="#global-options-8">GLOBAL OPTIONS</a></h3>
+<p>This subcommand accepts all the <a href="#global-options">global options</a></p>
+<p><br><br><br></p>
+<h2 id="dist-help"><a class="header" href="#dist-help">dist help</a></h2>
+<p>Print this message or the help of the given subcommand(s)</p>
+<h3 id="usage-9"><a class="header" href="#usage-9">Usage</a></h3>
+<pre><code class="language-text">dist help [COMMAND]
+</code></pre>
+<h3 id="commands-1"><a class="header" href="#commands-1">Commands</a></h3>
+<ul>
+<li><a href="#cargo-dist-build">build</a>: Build artifacts</li>
+<li><a href="#cargo-dist-init">init</a>: Setup or update dist</li>
+<li><a href="#cargo-dist-generate">generate</a>: Generate one or more pieces of configuration</li>
+<li><a href="#cargo-dist-linkage">linkage</a>: Report on the dynamic libraries used by the built artifacts</li>
+<li><a href="#cargo-dist-manifest">manifest</a>: Generate the final build manifest without running any builds</li>
+<li><a href="#cargo-dist-plan">plan</a>: Get a plan of what to build (and check project status)</li>
+<li><a href="#cargo-dist-host">host</a>: Host artifacts</li>
+<li><a href="#cargo-dist-selfupdate">selfupdate</a>: Performs a self-update, if a new version is available, and then 'init'</li>
+<li><a href="#cargo-dist-help">help</a>: Print this message or the help of the given subcommand(s)</li>
+</ul>
+<p>stderr:</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/config.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../reference/schema.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/config.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../reference/schema.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

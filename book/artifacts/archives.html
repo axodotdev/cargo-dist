@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>archives - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html" class="active"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/artifacts/archives.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="archives"><a class="header" href="#archives">Archives</a></h1>
+<p>Archives are the primary output of dist: a single file (zip or tarball) containing prebuilt executables/binaries for an app, along with additional static files like READMEs, LICENSEs, and CHANGELOGs. The docs previously referred to these as "executable-zips", so if you ever see that term floating around, this is what's being talked about.</p>
+<p>When you <a href="../reference/concepts.html#defining-your-apps">tell us to build an app</a> for <a href="../reference/config.html#targets">a platform</a> we will always make an archive for it.</p>
+<p><a href="../installers/index.html#fetching-installers">Fetching installers</a> will fetch and unpack archives from wherever you <a href="../reference/artifact-url.html">uploaded them</a>. <a href="../installers/index.html#bundling-installers">Bundling installers</a> will use an exact copy of the binary stored in the archive, but may differ on other included files.</p>
+<h2 id="auto-detected-files"><a class="header" href="#auto-detected-files">Auto-Detected Files</a></h2>
+<p>We will always auto-detect READMEs, LICENSES, and CHANGELOGs with the following logic (described more below):</p>
+<ul>
+<li>README: <a href="../reference/config.html#readme">package.readme</a>, or find <code>README*</code></li>
+<li>LICENSE: <a href="../reference/config.html#license-file">package.license-file</a>, or find <code>LICENSE*</code>/<code>UNLICENSE*</code></li>
+<li>CHANGELOG: find <code>CHANGELOG*</code>/<code>RELEASES*</code></li>
+</ul>
+<p>"Find <code>XYZ*</code>" means we will look for a file whose name starts with "XYZ" in the same directory as the Cargo.toml for a package that defines the app. If no such file is found, we will also search for it in the same directory as the workspace's Cargo.toml (so packages "inherit" these files from the workspace).</p>
+<p>It is generally assumed that a directory only contains one of each kind of file. If multiple possible matches are in the same directory we will arbitrarily pick the first one we saw, so don't rely on that.</p>
+<p>Auto-detected files are first and foremost <a href="#archive-contents">auto-included into the archive</a>, however they can also be used for other things. For instance, the autodetected CHANGELOG is fed into our CHANGELOG features.</p>
+<h2 id="archive-contents"><a class="header" href="#archive-contents">Archive Contents</a></h2>
+<p>The "root" of an archive is either the actual root directory of the archive (zips); or a directory with the same name as the archive, but without the extension (tarballs). This difference is for compatibility/legacy reasons, and can be smoothed away by unpacking tarballs with tar's <code>--strip-components=1</code>.</p>
+<p>An app's archive always includes its binaries at the root.</p>
+<p>By default <a href="#auto-detected-files">auto-detected files</a> for a package are auto-included into its archives at the root of the package. The <a href="../reference/config.html#auto-includes">auto-includes</a> config controls this behaviour.</p>
+<p>The <a href="../reference/config.html#include">include</a> can be used to manually add specific files/directories to the root of the archive.</p>
+<h2 id="archive-formats"><a class="header" href="#archive-formats">Archive Formats</a></h2>
+<p>Archives can be zips or tarballs (gz, xz, or zstd).</p>
+<p>By default we make .zip on windows and .tar.xz elsewhere, but this can be configured with <a href="../reference/config.html#windows-archive">windows-archive</a> and <a href="../reference/config.html#unix-archive">unix-archive</a> features.</p>
+<h2 id="build-flags"><a class="header" href="#build-flags">Build Flags</a></h2>
+<p>We currently <a href="../workspaces/simple-guide.html#the-dist-profile">always build with <code>--profile=dist</code></a></p>
+<p>By default we build with <code>--workspace</code> <a href="https://docs.rs/cargo-hakari/latest/cargo_hakari/about/index.html#what-are-workspace-hack-crates">to keep things consistent</a>, but this can be configured with the <a href="../reference/config.html#precise-builds">precise-builds config</a> (see those docs for details on when precise-builds will be force-enabled).</p>
+<p>By default we build your packages with default features, but this can be configured with the <a href="../reference/config.html#features">features</a>, <a href="../reference/config.html#default-features">default-features</a>, and <a href="../reference/config.html#all-features">all-features</a> configs.</p>
+<p>When targeting windows-msvc we will unconditionally <a href="https://rust-lang.github.io/rfcs/1721-crt-static.html">append "-Ctarget-feature=+crt-static"</a> to your RUSTFLAGS, which should just be the default for rustc but isn't for legacy reasons.</p>
+<p>We don't really <a href="https://github.com/axodotdev/cargo-dist/issues/74">support cross-compilation</a>, but we'll faithfully attempt the compile by telling rustup to install the toolchain and passing <code>--target</code> to cargo as instructed -- it will probably just fail. On macOS cross-compiles between Intel and Apple Silicon will work. <a href="https://github.com/axodotdev/cargo-dist/issues/75">linux-musl is slated for a future version</a>.</p>
+<h2 id="code-signing"><a class="header" href="#code-signing">Code Signing</a></h2>
+<p>"Code Signing" is a very overloaded term, with wildly varying implementations that accomplish different goals. For instance, Linux users are currently very big on <a href="https://github.com/axodotdev/cargo-dist/issues/120">sigstore</a> as a fairly turn-key code signing solution, but <a href="https://github.com/axodotdev/cargo-dist/issues/21">neither Windows nor macOS</a> acknowledge its existence (and likely never will, as the benefits of sigstore completely defeat the stated purpose of code signing requirements on those platforms).</p>
+<p>Roughly speaking, codesigning can be broken up into "Is this app made by the developer?" and "Can I trust apps made by this developer?". Tools like sigstore are focused on the former, while Windows/macOS only care about the latter. They want you to pay some money and jump through administrative hoops. They also expect you to pay completely different groups and go through completely different hoops, so each platform requires a completely different solution.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../artifacts/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../artifacts/checksums.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../artifacts/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../artifacts/checksums.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
