@@ -278,8 +278,7 @@ pub struct InitArgs {
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct MigrateArgs {
-}
+pub struct MigrateArgs {}
 
 /// Which style(s) of configuration to generate
 #[derive(ValueEnum, Copy, Clone, Debug)]

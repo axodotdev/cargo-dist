@@ -55,12 +55,12 @@ fn theme() -> dialoguer::theme::ColorfulTheme {
 /// Copy [workspace.metadata.dist] from one workspace to [dist] in another.
 fn copy_cargo_workspace_metadata_dist(
     new_workspace: &mut toml_edit::DocumentMut,
-    workspace_toml: toml_edit::DocumentMut
+    workspace_toml: toml_edit::DocumentMut,
 ) {
     if let Some(dist) = workspace_toml
         .get("workspace")
-            .and_then(|t| t.get("metadata"))
-            .and_then(|t| t.get("dist"))
+        .and_then(|t| t.get("metadata"))
+        .and_then(|t| t.get("dist"))
     {
         new_workspace.insert("dist", dist.to_owned());
     }
@@ -96,7 +96,7 @@ fn do_migrate_from_rust_workspace() -> DistResult<()> {
     let root_workspace = workspaces.root_workspace();
     let initted = has_metadata_table(root_workspace);
 
-    if root_workspace.kind != WorkspaceKind::Rust{
+    if root_workspace.kind != WorkspaceKind::Rust {
         // we're not using a Rust workspace, so no migration needed.
         return Ok(());
     }
@@ -192,18 +192,16 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         let prompt = r#"Would you like to opt in to the new configuration format?
     Future versions of dist will feature major changes to the
     configuration format, including a new dist-specific configuration file."#;
-        let is_migrating =
-            dialoguer::Confirm::with_theme(&theme())
-                .with_prompt(prompt)
-                .default(false)
-                .interact()?;
+        let is_migrating = dialoguer::Confirm::with_theme(&theme())
+            .with_prompt(prompt)
+            .default(false)
+            .interact()?;
 
         if is_migrating {
             do_migrate()?;
             return do_init(cfg, args);
         }
     }
-
 
     // If this is a Cargo.toml, offer to either write their config to
     // a dist-workspace.toml, or migrate existing config there
