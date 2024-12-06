@@ -991,14 +991,14 @@ pub fn get_project() -> Result<axoproject::WorkspaceGraph, axoproject::errors::P
 }
 
 /// Load a Cargo.toml into toml-edit form
-pub fn load_cargo_toml(manifest_path: &Utf8Path) -> DistResult<toml_edit::DocumentMut> {
+pub fn load_toml(manifest_path: &Utf8Path) -> DistResult<toml_edit::DocumentMut> {
     let src = axoasset::SourceFile::load_local(manifest_path)?;
     let toml = src.deserialize_toml_edit()?;
     Ok(toml)
 }
 
 /// Save a Cargo.toml from toml-edit form
-pub fn save_cargo_toml(manifest_path: &Utf8Path, toml: toml_edit::DocumentMut) -> DistResult<()> {
+pub fn write_toml(manifest_path: &Utf8Path, toml: toml_edit::DocumentMut) -> DistResult<()> {
     let toml_text = toml.to_string();
     axoasset::LocalAsset::write_new(&toml_text, manifest_path)?;
     Ok(())

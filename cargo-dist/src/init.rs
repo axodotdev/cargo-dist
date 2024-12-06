@@ -87,9 +87,9 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     for workspace_idx in workspaces.all_workspace_indices() {
         let workspace = workspaces.workspace(workspace_idx);
         if workspace.kind == WorkspaceKind::Rust {
-            let mut workspace_toml = config::load_cargo_toml(&workspace.manifest_path)?;
+            let mut workspace_toml = config::load_toml(&workspace.manifest_path)?;
             did_add_profile |= init_dist_profile(cfg, &mut workspace_toml)?;
-            config::save_cargo_toml(&workspace.manifest_path, workspace_toml)?;
+            config::write_toml(&workspace.manifest_path, workspace_toml)?;
         }
     }
 
@@ -98,7 +98,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     }
 
     // Load in the root workspace toml to edit and write back
-    let workspace_toml = config::load_cargo_toml(&root_workspace.manifest_path)?;
+    let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
     let mut original_workspace_toml = workspace_toml.clone();
     let initted = has_metadata_table(root_workspace);
 
@@ -207,7 +207,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     };
 
     // Save the workspace toml (potentially an effective no-op if we made no edits)
-    config::save_cargo_toml(&destination, workspace_toml)?;
+    config::write_toml(&destination, workspace_toml)?;
     let key = if desired_workspace_kind == WorkspaceKind::Rust {
         "[workspace.metadata.dist]"
     } else {
@@ -224,7 +224,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
             .and_then(|metadata_item| metadata_item.as_table_mut())
             .and_then(|table| table.remove("dist"));
 
-        config::save_cargo_toml(&root_workspace.manifest_path, original_workspace_toml)?;
+        config::write_toml(&root_workspace.manifest_path, original_workspace_toml)?;
     }
 
     // Now that we've done the stuff that's definitely part of the root Cargo.toml,
@@ -236,7 +236,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
         if needs_edit {
             // Ok we have changes to make, let's load the toml
-            let mut package_toml = config::load_cargo_toml(&package.manifest_path)?;
+            let mut package_toml = config::load_toml(&package.manifest_path)?;
             let metadata = config::get_toml_metadata(&mut package_toml, false);
 
             // Apply [package.metadata.dist]
@@ -247,7 +247,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
             }
 
             // Save the result
-            config::save_cargo_toml(&package.manifest_path, package_toml)?;
+            config::write_toml(&package.manifest_path, package_toml)?;
             if writing_metadata {
                 eprintln!(
                     "{check} added [package.metadata.dist] to {}'s Cargo.toml",
