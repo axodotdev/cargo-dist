@@ -41,7 +41,7 @@ use temp_dir::TempDir;
 use tracing::info;
 
 use errors::*;
-pub use init::{do_init, InitArgs};
+pub use init::{do_init, do_migrate, InitArgs};
 pub use tasks::*;
 
 pub mod announce;

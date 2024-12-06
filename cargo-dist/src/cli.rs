@@ -124,6 +124,8 @@ pub enum Commands {
     /// also handle updating your project to a new version of dist if you're running one.
     #[clap(disable_version_flag = true)]
     Init(InitArgs),
+    /// Migrate to the latest configuration variant.
+    Migrate(MigrateArgs),
     /// Generate one or more pieces of configuration
     #[clap(disable_version_flag = true)]
     Generate(GenerateArgs),
@@ -273,6 +275,10 @@ pub struct InitArgs {
     /// `dist init` will persist the values you pass to that location.
     #[clap(long, value_delimiter(','))]
     pub hosting: Vec<HostingStyle>,
+}
+
+#[derive(Args, Clone, Debug)]
+pub struct MigrateArgs {
 }
 
 /// Which style(s) of configuration to generate

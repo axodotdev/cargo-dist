@@ -91,7 +91,7 @@ fn new_workspace() -> toml_edit::DocumentMut {
     new_workspace
 }
 
-fn do_migrate_from_rust_workspace(cfg: &Config) -> DistResult<()> {
+fn do_migrate_from_rust_workspace() -> DistResult<()> {
     let workspaces = config::get_project()?;
     let root_workspace = workspaces.root_workspace();
     let initted = has_metadata_table(root_workspace);
@@ -131,8 +131,9 @@ fn do_migrate_from_rust_workspace(cfg: &Config) -> DistResult<()> {
     Ok(())
 }
 
-pub fn do_migrate(cfg: &Config) -> DistResult<()> {
-    do_migrate_from_rust_workspace(cfg)?;
+/// Run `dist migrate`
+pub fn do_migrate() -> DistResult<()> {
+    do_migrate_from_rust_workspace()?;
     //do_migrate_from_v0()?;
     Ok(())
 }
@@ -198,7 +199,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
                 .interact()?;
 
         if is_migrating {
-            do_migrate(cfg)?;
+            do_migrate()?;
             return do_init(cfg, args);
         }
     }
