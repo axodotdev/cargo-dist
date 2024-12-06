@@ -205,13 +205,9 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     let filename;
     let destination;
-    // If we're migrating, *or* if we're doing a first-time init,
-    // calculate the filename to write to
     if is_migrating || newly_initted_generic {
-        filename = match desired_workspace_kind {
-            WorkspaceKind::Rust => "Cargo.toml",
-            WorkspaceKind::Generic | WorkspaceKind::Javascript => "dist-workspace.toml",
-        };
+        // Migrations and newly-initted setups always use dist-workspace.toml.
+        filename = "dist-workspace.toml";
         destination = root_workspace.workspace_dir.join(filename);
     } else {
         filename = root_workspace
