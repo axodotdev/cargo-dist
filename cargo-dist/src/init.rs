@@ -52,6 +52,35 @@ fn theme() -> dialoguer::theme::ColorfulTheme {
     }
 }
 
+fn copy_cargo_workspace_metadata_dist(
+    new_workspace: &mut toml_edit::DocumentMut,
+    workspace_toml: toml_edit::DocumentMut
+) {
+    if let Some(dist) = workspace_toml
+        .get("workspace")
+            .and_then(|t| t.get("metadata"))
+            .and_then(|t| t.get("dist"))
+    {
+        new_workspace.insert("dist", dist.to_owned());
+    }
+}
+
+fn new_workspace() -> toml_edit::DocumentMut {
+    // Always generate a new workspace here for the !initted case
+    let mut new_workspace = toml_edit::DocumentMut::new();
+
+    // Write generic workspace config
+    let mut table = toml_edit::table();
+    if let Some(t) = table.as_table_mut() {
+        let mut array = toml_edit::Array::new();
+        array.push("cargo:.");
+        t["members"] = toml_edit::value(array);
+    }
+    new_workspace.insert("workspace", table);
+
+    new_workspace
+}
+
 /// Run 'dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // on ctrl-c,  dialoguer/console will clean up the rest of its
@@ -157,24 +186,10 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // generic workspace specification, and will have some
     // extraneous cargo-specific stuff that we don't want.
     let mut workspace_toml = if is_migrating || newly_initted_generic {
-        // Always generate a new workspace here for the !initted case
-        let mut new_workspace = toml_edit::DocumentMut::new();
+        let mut new_workspace = new_workspace();
 
-        // Write generic workspace config
-        let mut table = toml_edit::table();
-        if let Some(t) = table.as_table_mut() {
-            let mut array = toml_edit::Array::new();
-            array.push("cargo:.");
-            t["members"] = toml_edit::value(array);
-        }
-        new_workspace.insert("workspace", table);
-
-        if let Some(dist) = workspace_toml
-            .get("workspace")
-            .and_then(|t| t.get("metadata"))
-            .and_then(|t| t.get("dist"))
-        {
-            new_workspace.insert("dist", dist.to_owned());
+        if is_migrating {
+            copy_cargo_workspace_metadata_dist(&mut new_workspace, workspace_toml);
         }
 
         new_workspace
