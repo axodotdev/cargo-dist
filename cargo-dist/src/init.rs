@@ -52,6 +52,7 @@ fn theme() -> dialoguer::theme::ColorfulTheme {
     }
 }
 
+/// Copy [workspace.metadata.dist] from one workspace to [dist] in another.
 fn copy_cargo_workspace_metadata_dist(
     new_workspace: &mut toml_edit::DocumentMut,
     workspace_toml: toml_edit::DocumentMut
@@ -74,8 +75,8 @@ fn prune_cargo_workspace_metadata_dist(workspace: &mut toml_edit::DocumentMut) {
         .and_then(|table| table.remove("dist"));
 }
 
+/// Create a toml-edit document set up for a cargo workspace.
 fn new_workspace() -> toml_edit::DocumentMut {
-    // Always generate a new workspace here for the !initted case
     let mut new_workspace = toml_edit::DocumentMut::new();
 
     // Write generic workspace config
@@ -195,6 +196,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // generic workspace specification, and will have some
     // extraneous cargo-specific stuff that we don't want.
     let mut workspace_toml = if is_migrating || newly_initted_generic {
+        // Always generate a new workspace here for the !initted case
         let mut new_workspace = new_workspace();
 
         if is_migrating {
