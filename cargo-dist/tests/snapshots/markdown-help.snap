@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
+snapshot_kind: text
 ---
 stdout:
 # dist CLI manual
@@ -21,6 +22,7 @@ dist <COMMAND>
 ### Commands
 * [build](#cargo-dist-build): Build artifacts
 * [init](#cargo-dist-init): Setup or update dist
+* [migrate](#cargo-dist-migrate): Migrate to the latest configuration variant
 * [generate](#cargo-dist-generate): Generate one or more pieces of configuration
 * [linkage](#cargo-dist-linkage): Report on the dynamic libraries used by the built artifacts
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
@@ -175,6 +177,23 @@ Possible values:
 - github:    Host on Github Releases
 - axodotdev: Host on Axo Releases ("Abyss")
 
+#### `-h, --help`
+Print help (see a summary with '-h')
+
+### GLOBAL OPTIONS
+This subcommand accepts all the [global options](#global-options)
+
+<br><br><br>
+## dist migrate
+Migrate to the latest configuration variant
+
+### Usage
+
+```text
+dist migrate [OPTIONS]
+```
+
+### Options
 #### `-h, --help`
 Print help (see a summary with '-h')
 
@@ -393,6 +412,7 @@ dist help [COMMAND]
 ### Commands
 * [build](#cargo-dist-build): Build artifacts
 * [init](#cargo-dist-init): Setup or update dist
+* [migrate](#cargo-dist-migrate): Migrate to the latest configuration variant
 * [generate](#cargo-dist-generate): Generate one or more pieces of configuration
 * [linkage](#cargo-dist-linkage): Report on the dynamic libraries used by the built artifacts
 * [manifest](#cargo-dist-manifest): Generate the final build manifest without running any builds
