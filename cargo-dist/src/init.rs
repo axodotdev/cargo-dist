@@ -800,14 +800,21 @@ fn get_new_dist_metadata(
                 installer == &InstallerStyle::Shell || installer == &InstallerStyle::Powershell
             })
     {
-        let prompt = r#"Would you like to include an updater program with your binaries?"#;
-        let res = Confirm::with_theme(&theme)
-            .with_prompt(prompt)
-            .default(false)
-            .interact()?;
-        eprintln!();
+        let default = false;
+        let install_updater = if args.yes {
+            default
+        } else {
+            let prompt = r#"Would you like to include an updater program with your binaries?"#;
+            let res = Confirm::with_theme(&theme)
+                .with_prompt(prompt)
+                .default(default)
+                .interact()?;
+            eprintln!();
 
-        meta.install_updater = Some(res);
+            res
+        };
+
+        meta.install_updater = Some(install_updater);
     }
 
     Ok(meta)
