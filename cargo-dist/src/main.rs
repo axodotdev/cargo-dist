@@ -20,7 +20,7 @@ use console::Term;
 use miette::{miette, IntoDiagnostic};
 use net::ClientSettings;
 
-use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs};
+use crate::cli::{BuildArgs, GenerateArgs, GenerateCiArgs, InitArgs, LinkageArgs, MigrateArgs};
 
 mod cli;
 
@@ -49,6 +49,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
     let config = &cli.config;
     match &config.command {
         Commands::Init(args) => cmd_init(config, args),
+        Commands::Migrate(args) => cmd_migrate(config, args),
         Commands::Generate(args) => cmd_generate(config, args),
         Commands::GenerateCi(args) => cmd_generate_ci(config, args),
         Commands::Linkage(args) => cmd_linkage(config, args),
@@ -416,6 +417,11 @@ fn generate_manifest(
     }
 
     Ok(report)
+}
+
+fn cmd_migrate(_cli: &Cli, _args: &MigrateArgs) -> Result<(), miette::Report> {
+    do_migrate()?;
+    Ok(())
 }
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {

@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
+snapshot_kind: text
 ---
 stdout:
 Professional packaging and distribution for ambitious developers.
@@ -13,6 +14,7 @@ Usage: dist [OPTIONS]
 Commands:
   build       Build artifacts
   init        Setup or update dist
+  migrate     Migrate to the latest configuration variant
   generate    Generate one or more pieces of configuration
   linkage     Report on the dynamic libraries used by the built artifacts
   manifest    Generate the final build manifest without running any builds
