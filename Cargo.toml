@@ -13,7 +13,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
 homepage = "https://opensource.axo.dev/cargo-dist/"
 version = "0.26.0-prerelease.3"
-rust-version = "1.73"
+rust-version = "1.74"
 
 [workspace.dependencies]
 # intra-workspace deps (you need to bump these versions when you cut releases too!
