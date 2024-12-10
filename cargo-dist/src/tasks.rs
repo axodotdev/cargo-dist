@@ -2650,8 +2650,10 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         for workspace_idx in self.workspaces.all_workspace_indices() {
             let workspace_kind = self.workspaces.workspace(workspace_idx).kind;
             let builds = match workspace_kind {
-                axoproject::WorkspaceKind::Javascript => self.compute_generic_builds(workspace_idx),
-                axoproject::WorkspaceKind::Generic => self.compute_generic_builds(workspace_idx),
+                axoproject::WorkspaceKind::Javascript => {
+                    self.compute_generic_builds(workspace_idx)?
+                }
+                axoproject::WorkspaceKind::Generic => self.compute_generic_builds(workspace_idx)?,
                 axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(workspace_idx)?,
             };
             local_build_steps.extend(builds);

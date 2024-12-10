@@ -556,6 +556,14 @@ pub enum DistError {
         target: Triple,
     },
 
+    /// Generic build with Cargo-only build options
+    #[error("You're building a generic package but have a Cargo-only option enabled")]
+    #[diagnostic(help("Please disable the following from your configuration: {}", options.join(", ")))]
+    CargoOnlyBuildOptions {
+        /// The names of the invalid options
+        options: Vec<String>,
+    },
+
     /// missing "build-command" for a package that needs one
     #[error("dist package was missing a build-command\n{manifest}")]
     #[diagnostic(help(
