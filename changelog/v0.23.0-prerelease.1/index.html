@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.23.0-prerelease.1</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release pre-release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.23.0-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Sep 11 2024 at 22:20 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>We're back from a longer-than-usual break between releases with a feature-filled release!</p>
+<h2>The new config format emerges</h2>
+<p>Over the past few months, we've been working towards a new config format. Up to now, aside from a few references in the documentation, these changes have been internal and haven't been visible to users. This release marks the first user-facing side of the new config format.</p>
+<p>This new config format uses the <code>dist-workspace.toml</code> and <code>dist.toml</code> files that were originally created for non-Rust projects. It allows us to unify project configuration formats between languages, and allows you to configure cargo-dist without adding content to your root <code>Cargo.toml</code>. In this release, newly <code>cargo init</code>ted Rust projects will use the new format. Existing projects will be given the option to opt into the new format, but by default will keep their existing format for now.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/workspaces/structure.html" rel="noopener noreferrer">workspace docs</a>.</p>
+<ul>
+<li>impl
+<ul>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1422" rel="noopener noreferrer">doc: address most config TODOs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1426" rel="noopener noreferrer">feat: adjust new config opt-in</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1430" rel="noopener noreferrer">fix: handle final config todo</a></li>
+</ul>
+</li>
+</ul>
+<h2>Installer improvements</h2>
+<p>This release contains a suite of improvements to our installers.</p>
+<h3>"Unmanaged" install type</h3>
+<p>We now support a new install type, "unmanaged" installs. This is intended for users installing in ephemeral install methods such as CI, and disables several features that are unneeded in those environments. Specifically, it:</p>
+<ul>
+<li>Disables updater-related tooling, including install receipt creation</li>
+<li>Disables modification of the user's <code>PATH</code>, including modification of dotfiles</li>
+<li>Forces a flat installation layout, installing all files into a single directory</li>
+</ul>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html" rel="noopener noreferrer">installer usage docs</a>.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1410" rel="noopener noreferrer">feat: unmanaged installs</a></li>
+</ul>
+<h3>Improved path modification options</h3>
+<p>While we've always provided options to turn off modifying the user's <code>PATH</code> in the installer, this behaviour was inconsistent between the shell and PowerShell installers. In this release, we've unified the behaviour. The current recommended path is to use environment variables; the variable controlling this is <code>APPNAME_NO_MODIFY_PATH</code>, where <code>APPNAME</code> is the name of your application. For example, <code>AXOLOTLSAY_NO_MODIFY_PATH</code> for an app named <code>axolotlsay</code>. The commandline flag, which was named inconsistently between platforms, has been deprecated.</p>
+<p>We've also made a change to ensure that the user's preference for the "don't modify <code>PATH</code>" option is persisted across upgrades. This fixes an issue present in previous versions where it would only be respected on initial installation, not in calls to axoupdater.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html" rel="noopener noreferrer">installer usage docs</a>.</p>
+<ul>
+<li>impl
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1410" rel="noopener noreferrer">feat: unmanaged installs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1415" rel="noopener noreferrer">feat: deprecate --no-modify-path</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1421" rel="noopener noreferrer">feat: track NO_MODIFY_PATH for updates</a></li>
+</ul>
+</li>
+</ul>
+<h2>npm packages can now use any archive format</h2>
+<p>In previous versions, enabling the npm installer would require your package to be distributed using <code>.tar.gz</code> archives on all platforms, including Windows. This release removes that restriction by rewriting a section of the npm installer code.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1423" rel="noopener noreferrer">feat: support any format in npm</a></li>
+</ul>
+<h2>Axoupdater version checking</h2>
+<p>Users who implement an updater by using axoupdater as a library always need to make sure that library is up to date so that they're able to make use of the latest features. This release contains a version checker which detects if your software is using an out-of-date version of axoupdater which may cause problems, and will alert you that an update is needed during builds. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-version-checking" rel="noopener noreferrer">the documentation</a>.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1432" rel="noopener noreferrer">feat: add minimum supported axoupdater check (library)</a></li>
+</ul>
+<h2>Standalone axoupdater installation fix</h2>
+<p>cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which caused the standalone installer to fail to install when using the shell installer. End users who installed your software via installers generated with these versions will not have received a standalone installer along with your software. This bug is fixed beginning with this release. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html#releases-with-issues-surrounding-the-standalone-updater" rel="noopener noreferrer">the documentation</a>.</p>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1444" rel="noopener noreferrer">fix: standalone updater installation</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1451" rel="noopener noreferrer">fix: invalid updater for first in array</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="utf-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>cargo-dist Changelog</title><link>http://127.0.0.1:7979/cargo-dist/changelog</link><description>Changelog information for cargo-dist</description><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><atom:link href="http://127.0.0.1:7979/cargo-dist/changelog.rss" rel="self"/><item><title>Version 0.26.0-prerelease.3</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.3</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.3</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.26.0-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.2</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.26.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.1</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.25.2-prerelease.3</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.2-prerelease.3</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.2-prerelease.3</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.25.2-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.2-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.2-prerelease.2</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.25.2-prerelease.0</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.2-prerelease.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.2-prerelease.0</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.25.1 (2024-11-01)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.1</guid><content:encoded><![CDATA[<p>This release contains a few new features for further customizing the installer experience, both as a packager and the end user.</p>
+<h2>Artifact location installer customization</h2>
+<p>We now provide two new environment variables making it possible to customize just the base URL for fetching installers. Previously, the only customization for overriding the install URL overrode the full URL, including version-specific paths, which made it difficult to use for users who were proxying or mirroring GitHub paths. These new variables are branded with your app's name. For example:</p>
+<ul>
+<li><code>{app_name}_INSTALLER_GITHUB_BASE_URL</code></li>
+<li><code>{app_name}_INSTALLER_GHE_BASE_URL</code></li>
+</ul>
+<p>These two variables will also be supported by a new version of axoupdater in order to allow overriding the GitHub API URL. Thank you to user @gaborbernat for inspiring this change and writing the axoupdater side!</p>
+<ul>
+<li>impl @mistydemeo [feat: allow installer domain to be overridden](feat: allow installer domain to be overridden)</li>
+</ul>
+<p>You can learn more about this feature in the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html#artifact-location" rel="noopener noreferrer">artifact location installer usage documentation</a>.</p>
+<h2>Default glibc version override</h2>
+<p>Ordinarily, dist automatically detects the version of glibc used by your <code>linux-gnu</code> builds and uses this in the installers to detect if the end user's system will be compatible. In certain specific build environments, this autodetection isn't possible, so we've introduced a feature allowing the glibc version to be manually specified in the dist configuration. If provided, this replaces the fallback version that would otherwise be used.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1496" rel="noopener noreferrer">Allow overriding minimum supported glibc version.</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.25.0-prerelease.1 (2024-10-31)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.25.0-prerelease.1</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.24.1 (2024-10-29)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.24.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.24.1</guid><content:encoded><![CDATA[<p>Loosens the "cargo is broken" error reporting condition, letting us be more
+precise about cases where Cargo is present but Cargo metadata can't be parsed.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1501" rel="noopener noreferrer">Distinguish "cargo metadata failed" from "cargo is not installed"</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.24.0 (2024-10-28)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.24.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.24.0</guid><content:encoded><![CDATA[<p>It's been less than two weeks, and we're already back with a big dist release for you. This release has several major features, beginning with the biggest news that:</p>
+<h2>dist has a new name</h2>
+<p>Did the last paragraph give it away? Well, it's true: <code>cargo-dist</code> is now just <code>dist</code>. This reflects our growing support for packaging software built by tools beyond just Cargo. Our support for Cargo isn't going away of course, or becoming any less of a focus.</p>
+<p>As a part of this, <code>dist</code> has moved towards a standalone CLI tool that doesn't have to be run as a <code>cargo</code> subcommand. You can now run <code>dist init</code>, <code>dist build</code> and more without needing to prefix it with <code>cargo</code>. We still install the Cargo plugin, though, so you're welcome to keep using <code>cargo dist</code> like always. As a part of being able to run without the Cargo plugin, there's one more big change:</p>
+<h2>dist runs without Cargo</h2>
+<p><code>dist</code> no longer requires Cargo if you're not building Rust projects! This is a major change which should make it much more ergonomic for users of other languages. We do still require Cargo if your workspace contains at least one Rust project; this includes commands such as <code>dist init</code> and <code>dist plan</code>.</p>
+<ul>
+<li>impl @Gankra, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1267" rel="noopener noreferrer">feat: make cargo optional</a></li>
+</ul>
+<h2>Unified checksum file</h2>
+<p>This change is completely unrelated to the new name, but it's a very nice one. We've always shipped individual checksum files for each artifact, but in this release we now also ship a unified checksum file which contains all of your hashes in a single place. It's named <code>$HASH_STYLE.sum</code>, for example <code>sha256.sum</code>, and is designed to be compatible with tools such as <code>shasum</code> and <code>sha256sum</code>.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1465" rel="noopener noreferrer">Introduce unified manifest file</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1457" rel="noopener noreferrer">fix: print Windows paths correctly</a></li>
+<li>impl @pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1454" rel="noopener noreferrer">Specify path to Cargo.toml when generating wix for package</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.24.0-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.24.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.24.0-prerelease.2</guid><content:encoded><![CDATA[<p>It's been less than two weeks, and we're already back with a big dist release for you. This release has several major features, beginning with the biggest news that:</p>
+<h2>dist has a new name</h2>
+<p>Did the last paragraph give it away? Well, it's true: <code>cargo-dist</code> is now just <code>dist</code>. This reflects our growing support for packaging software built by tools beyond just Cargo. Our support for Cargo isn't going away of course, or becoming any less of a focus.</p>
+<p>As a part of this, <code>dist</code> has moved towards a standalone CLI tool that doesn't have to be run as a <code>cargo</code> subcommand. You can now run <code>dist init</code>, <code>dist build</code> and more without needing to prefix it with <code>cargo</code>. We still install the Cargo plugin, though, so you're welcome to keep using <code>cargo dist</code> like always. As a part of being able to run without the Cargo plugin, there's one more big change:</p>
+<h2>dist runs without Cargo</h2>
+<p><code>dist</code> no longer requires Cargo if you're not building Rust projects! This is a major change which should make it much more ergonomic for users of other languages. We do still require Cargo if your workspace contains at least one Rust project; this includes commands such as <code>dist init</code> and <code>dist plan</code>.</p>
+<ul>
+<li>impl @Gankra, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1267" rel="noopener noreferrer">feat: make cargo optional</a></li>
+</ul>
+<h2>Unified checksum file</h2>
+<p>This change is completely unrelated to the new name, but it's a very nice one. We've always shipped individual checksum files for each artifact, but in this release we now also ship a unified checksum file which contains all of your hashes in a single place. It's named <code>$HASH_STYLE.sum</code>, for example <code>sha256.sum</code>, and is designed to be compatible with tools such as <code>shasum</code> and <code>sha256sum</code>.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1465" rel="noopener noreferrer">Introduce unified manifest file</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1457" rel="noopener noreferrer">fix: print Windows paths correctly</a></li>
+<li>impl @pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1454" rel="noopener noreferrer">Specify path to Cargo.toml when generating wix for package</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.24.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.24.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.24.0-prerelease.1</guid><content:encoded><![CDATA[<p>It's been less than two weeks, and we're already back with a big dist release for you. This release has several major features, beginning with the biggest news that:</p>
+<h2>dist has a new name</h2>
+<p>Did the last paragraph give it away? Well, it's true: <code>cargo-dist</code> is now just <code>dist</code>. This reflects our growing support for packaging software built by tools beyond just Cargo. Our support for Cargo isn't going away of course, or becoming any less of a focus.</p>
+<p>As a part of this, <code>dist</code> has moved towards a standalone CLI tool that doesn't have to be run as a <code>cargo</code> subcommand. You can now run <code>dist init</code>, <code>dist build</code> and more without needing to prefix it with <code>cargo</code>. We still install the Cargo plugin, though, so you're welcome to keep using <code>cargo dist</code> like always. As a part of being able to run without the Cargo plugin, there's one more big change:</p>
+<h2>dist runs without Cargo</h2>
+<p><code>dist</code> no longer requires Cargo if you're not building Rust projects! This is a major change which should make it much more ergonomic for users of other languages. We do still require Cargo if your workspace contains at least one Rust project; this includes commands such as <code>dist init</code> and <code>dist plan</code>.</p>
+<ul>
+<li>impl @Gankra, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1267" rel="noopener noreferrer">feat: make cargo optional</a></li>
+</ul>
+<h2>Unified checksum file</h2>
+<p>This change is completely unrelated to the new name, but it's a very nice one. We've always shipped individual checksum files for each artifact, but in this release we now also ship a unified checksum file which contains all of your hashes in a single place. It's named <code>$HASH_STYLE.sum</code>, for example <code>sha256.sum</code>, and is designed to be compatible with tools such as <code>shasum</code> and <code>sha256sum</code>.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1465" rel="noopener noreferrer">Introduce unified manifest file</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1457" rel="noopener noreferrer">fix: print Windows paths correctly</a></li>
+<li>impl @pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1454" rel="noopener noreferrer">Specify path to Cargo.toml when generating wix for package</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.23.0 (2024-10-15)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.23.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.23.0</guid><content:encoded><![CDATA[<p>We're back from a longer-than-usual break between releases with a feature-filled release!</p>
+<h2>The new config format emerges</h2>
+<p>Over the past few months, we've been working towards a new config format. Up to now, aside from a few references in the documentation, these changes have been internal and haven't been visible to users. This release marks the first user-facing side of the new config format.</p>
+<p>This new config format uses the <code>dist-workspace.toml</code> and <code>dist.toml</code> files that were originally created for non-Rust projects. It allows us to unify project configuration formats between languages, and allows you to configure cargo-dist without adding content to your root <code>Cargo.toml</code>. In this release, newly <code>cargo init</code>ted Rust projects will use the new format. Existing projects will be given the option to opt into the new format, but by default will keep their existing format for now.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/workspaces/structure.html" rel="noopener noreferrer">workspace docs</a>.</p>
+<ul>
+<li>impl
+<ul>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1422" rel="noopener noreferrer">doc: address most config TODOs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1426" rel="noopener noreferrer">feat: adjust new config opt-in</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1430" rel="noopener noreferrer">fix: handle final config todo</a></li>
+</ul>
+</li>
+</ul>
+<h2>Installer improvements</h2>
+<p>This release contains a suite of improvements to our installers.</p>
+<h3>"Unmanaged" install type</h3>
+<p>We now support a new install type, "unmanaged" installs. This is intended for users installing in ephemeral install methods such as CI, and disables several features that are unneeded in those environments. Specifically, it:</p>
+<ul>
+<li>Disables updater-related tooling, including install receipt creation</li>
+<li>Disables modification of the user's <code>PATH</code>, including modification of dotfiles</li>
+<li>Forces a flat installation layout, installing all files into a single directory</li>
+</ul>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html" rel="noopener noreferrer">installer usage docs</a>.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1410" rel="noopener noreferrer">feat: unmanaged installs</a></li>
+</ul>
+<h3>Improved path modification options</h3>
+<p>While we've always provided options to turn off modifying the user's <code>PATH</code> in the installer, this behaviour was inconsistent between the shell and PowerShell installers. In this release, we've unified the behaviour. The current recommended path is to use environment variables; the variable controlling this is <code>APPNAME_NO_MODIFY_PATH</code>, where <code>APPNAME</code> is the name of your application. For example, <code>AXOLOTLSAY_NO_MODIFY_PATH</code> for an app named <code>axolotlsay</code>. The commandline flag, which was named inconsistently between platforms, has been deprecated.</p>
+<p>We've also made a change to ensure that the user's preference for the "don't modify <code>PATH</code>" option is persisted across upgrades. This fixes an issue present in previous versions where it would only be respected on initial installation, not in calls to axoupdater.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html" rel="noopener noreferrer">installer usage docs</a>.</p>
+<ul>
+<li>impl
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1410" rel="noopener noreferrer">feat: unmanaged installs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1415" rel="noopener noreferrer">feat: deprecate --no-modify-path</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1421" rel="noopener noreferrer">feat: track NO_MODIFY_PATH for updates</a></li>
+</ul>
+</li>
+</ul>
+<h2>npm packages can now use any archive format</h2>
+<p>In previous versions, enabling the npm installer would require your package to be distributed using <code>.tar.gz</code> archives on all platforms, including Windows. This release removes that restriction by rewriting a section of the npm installer code.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1423" rel="noopener noreferrer">feat: support any format in npm</a></li>
+</ul>
+<h2>Axoupdater version checking</h2>
+<p>Users who implement an updater by using axoupdater as a library always need to make sure that library is up to date so that they're able to make use of the latest features. This release contains a version checker which detects if your software is using an out-of-date version of axoupdater which may cause problems, and will alert you that an update is needed during builds. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-version-checking" rel="noopener noreferrer">the documentation</a>.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1432" rel="noopener noreferrer">feat: add minimum supported axoupdater check (library)</a></li>
+</ul>
+<h2>Standalone axoupdater installation fix</h2>
+<p>cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which caused the standalone installer to fail to install when using the shell installer. End users who installed your software via installers generated with these versions will not have received a standalone installer along with your software. This bug is fixed beginning with this release. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html#releases-with-issues-surrounding-the-standalone-updater" rel="noopener noreferrer">the documentation</a>.</p>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1444" rel="noopener noreferrer">fix: standalone updater installation</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1451" rel="noopener noreferrer">fix: invalid updater for first in array</a></li>
+</ul>
+</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.23.0-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.23.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.23.0-prerelease.2</guid><content:encoded><![CDATA[<p>We're back from a longer-than-usual break between releases with a feature-filled release!</p>
+<h2>The new config format emerges</h2>
+<p>Over the past few months, we've been working towards a new config format. Up to now, aside from a few references in the documentation, these changes have been internal and haven't been visible to users. This release marks the first user-facing side of the new config format.</p>
+<p>This new config format uses the <code>dist-workspace.toml</code> and <code>dist.toml</code> files that were originally created for non-Rust projects. It allows us to unify project configuration formats between languages, and allows you to configure cargo-dist without adding content to your root <code>Cargo.toml</code>. In this release, newly <code>cargo init</code>ted Rust projects will use the new format. Existing projects will be given the option to opt into the new format, but by default will keep their existing format for now.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/workspaces/structure.html" rel="noopener noreferrer">workspace docs</a>.</p>
+<ul>
+<li>impl
+<ul>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1422" rel="noopener noreferrer">doc: address most config TODOs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1426" rel="noopener noreferrer">feat: adjust new config opt-in</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1430" rel="noopener noreferrer">fix: handle final config todo</a></li>
+</ul>
+</li>
+</ul>
+<h2>Installer improvements</h2>
+<p>This release contains a suite of improvements to our installers.</p>
+<h3>"Unmanaged" install type</h3>
+<p>We now support a new install type, "unmanaged" installs. This is intended for users installing in ephemeral install methods such as CI, and disables several features that are unneeded in those environments. Specifically, it:</p>
+<ul>
+<li>Disables updater-related tooling, including install receipt creation</li>
+<li>Disables modification of the user's <code>PATH</code>, including modification of dotfiles</li>
+<li>Forces a flat installation layout, installing all files into a single directory</li>
+</ul>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html" rel="noopener noreferrer">installer usage docs</a>.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1410" rel="noopener noreferrer">feat: unmanaged installs</a></li>
+</ul>
+<h3>Improved path modification options</h3>
+<p>While we've always provided options to turn off modifying the user's <code>PATH</code> in the installer, this behaviour was inconsistent between the shell and PowerShell installers. In this release, we've unified the behaviour. The current recommended path is to use environment variables; the variable controlling this is <code>APPNAME_NO_MODIFY_PATH</code>, where <code>APPNAME</code> is the name of your application. For example, <code>AXOLOTLSAY_NO_MODIFY_PATH</code> for an app named <code>axolotlsay</code>. The commandline flag, which was named inconsistently between platforms, has been deprecated.</p>
+<p>We've also made a change to ensure that the user's preference for the "don't modify <code>PATH</code>" option is persisted across upgrades. This fixes an issue present in previous versions where it would only be respected on initial installation, not in calls to axoupdater.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html" rel="noopener noreferrer">installer usage docs</a>.</p>
+<ul>
+<li>impl
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1410" rel="noopener noreferrer">feat: unmanaged installs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1415" rel="noopener noreferrer">feat: deprecate --no-modify-path</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1421" rel="noopener noreferrer">feat: track NO_MODIFY_PATH for updates</a></li>
+</ul>
+</li>
+</ul>
+<h2>npm packages can now use any archive format</h2>
+<p>In previous versions, enabling the npm installer would require your package to be distributed using <code>.tar.gz</code> archives on all platforms, including Windows. This release removes that restriction by rewriting a section of the npm installer code.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1423" rel="noopener noreferrer">feat: support any format in npm</a></li>
+</ul>
+<h2>Axoupdater version checking</h2>
+<p>Users who implement an updater by using axoupdater as a library always need to make sure that library is up to date so that they're able to make use of the latest features. This release contains a version checker which detects if your software is using an out-of-date version of axoupdater which may cause problems, and will alert you that an update is needed during builds. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-version-checking" rel="noopener noreferrer">the documentation</a>.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1432" rel="noopener noreferrer">feat: add minimum supported axoupdater check (library)</a></li>
+</ul>
+<h2>Standalone axoupdater installation fix</h2>
+<p>cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which caused the standalone installer to fail to install when using the shell installer. End users who installed your software via installers generated with these versions will not have received a standalone installer along with your software. This bug is fixed beginning with this release. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html#releases-with-issues-surrounding-the-standalone-updater" rel="noopener noreferrer">the documentation</a>.</p>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1444" rel="noopener noreferrer">fix: standalone updater installation</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1451" rel="noopener noreferrer">fix: invalid updater for first in array</a></li>
+</ul>
+</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.23.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.23.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.23.0-prerelease.1</guid><content:encoded><![CDATA[<p>We're back from a longer-than-usual break between releases with a feature-filled release!</p>
+<h2>The new config format emerges</h2>
+<p>Over the past few months, we've been working towards a new config format. Up to now, aside from a few references in the documentation, these changes have been internal and haven't been visible to users. This release marks the first user-facing side of the new config format.</p>
+<p>This new config format uses the <code>dist-workspace.toml</code> and <code>dist.toml</code> files that were originally created for non-Rust projects. It allows us to unify project configuration formats between languages, and allows you to configure cargo-dist without adding content to your root <code>Cargo.toml</code>. In this release, newly <code>cargo init</code>ted Rust projects will use the new format. Existing projects will be given the option to opt into the new format, but by default will keep their existing format for now.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/workspaces/structure.html" rel="noopener noreferrer">workspace docs</a>.</p>
+<ul>
+<li>impl
+<ul>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1422" rel="noopener noreferrer">doc: address most config TODOs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1426" rel="noopener noreferrer">feat: adjust new config opt-in</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1430" rel="noopener noreferrer">fix: handle final config todo</a></li>
+</ul>
+</li>
+</ul>
+<h2>Installer improvements</h2>
+<p>This release contains a suite of improvements to our installers.</p>
+<h3>"Unmanaged" install type</h3>
+<p>We now support a new install type, "unmanaged" installs. This is intended for users installing in ephemeral install methods such as CI, and disables several features that are unneeded in those environments. Specifically, it:</p>
+<ul>
+<li>Disables updater-related tooling, including install receipt creation</li>
+<li>Disables modification of the user's <code>PATH</code>, including modification of dotfiles</li>
+<li>Forces a flat installation layout, installing all files into a single directory</li>
+</ul>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html" rel="noopener noreferrer">installer usage docs</a>.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1410" rel="noopener noreferrer">feat: unmanaged installs</a></li>
+</ul>
+<h3>Improved path modification options</h3>
+<p>While we've always provided options to turn off modifying the user's <code>PATH</code> in the installer, this behaviour was inconsistent between the shell and PowerShell installers. In this release, we've unified the behaviour. The current recommended path is to use environment variables; the variable controlling this is <code>APPNAME_NO_MODIFY_PATH</code>, where <code>APPNAME</code> is the name of your application. For example, <code>AXOLOTLSAY_NO_MODIFY_PATH</code> for an app named <code>axolotlsay</code>. The commandline flag, which was named inconsistently between platforms, has been deprecated.</p>
+<p>We've also made a change to ensure that the user's preference for the "don't modify <code>PATH</code>" option is persisted across upgrades. This fixes an issue present in previous versions where it would only be respected on initial installation, not in calls to axoupdater.</p>
+<p>For more information, see the <a href="https://opensource.axo.dev/cargo-dist/book/installers/usage.html" rel="noopener noreferrer">installer usage docs</a>.</p>
+<ul>
+<li>impl
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1410" rel="noopener noreferrer">feat: unmanaged installs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1415" rel="noopener noreferrer">feat: deprecate --no-modify-path</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1421" rel="noopener noreferrer">feat: track NO_MODIFY_PATH for updates</a></li>
+</ul>
+</li>
+</ul>
+<h2>npm packages can now use any archive format</h2>
+<p>In previous versions, enabling the npm installer would require your package to be distributed using <code>.tar.gz</code> archives on all platforms, including Windows. This release removes that restriction by rewriting a section of the npm installer code.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1423" rel="noopener noreferrer">feat: support any format in npm</a></li>
+</ul>
+<h2>Axoupdater version checking</h2>
+<p>Users who implement an updater by using axoupdater as a library always need to make sure that library is up to date so that they're able to make use of the latest features. This release contains a version checker which detects if your software is using an out-of-date version of axoupdater which may cause problems, and will alert you that an update is needed during builds. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-version-checking" rel="noopener noreferrer">the documentation</a>.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1432" rel="noopener noreferrer">feat: add minimum supported axoupdater check (library)</a></li>
+</ul>
+<h2>Standalone axoupdater installation fix</h2>
+<p>cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which caused the standalone installer to fail to install when using the shell installer. End users who installed your software via installers generated with these versions will not have received a standalone installer along with your software. This bug is fixed beginning with this release. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/installers/updater.html#releases-with-issues-surrounding-the-standalone-updater" rel="noopener noreferrer">the documentation</a>.</p>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1444" rel="noopener noreferrer">fix: standalone updater installation</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1451" rel="noopener noreferrer">fix: invalid updater for first in array</a></li>
+</ul>
+</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.22.1 (2024-09-04)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.1</guid><content:encoded><![CDATA[<p>This is a small patch release that incidentally includes some initial groundwork for a new feature.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1382" rel="noopener noreferrer">fix: give PATH update instructions for cmd too</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1390" rel="noopener noreferrer">fix: make linkage truly infallible</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1312" rel="noopener noreferrer">feat: initial impl of Mac .pkg installer</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.22.1-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.1-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.1-prerelease.2</guid><content:encoded><![CDATA[<p>This is a small patch release that incidentally includes some initial groundwork for a new feature.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1382" rel="noopener noreferrer">fix: give PATH update instructions for cmd too</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1390" rel="noopener noreferrer">fix: make linkage truly infallible</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1312" rel="noopener noreferrer">feat: initial impl of Mac .pkg installer</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.22.1-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.1-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.1-prerelease.1</guid><content:encoded><![CDATA[<p>This is a small patch release that incidentally includes some initial groundwork for a new feature.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1382" rel="noopener noreferrer">fix: give PATH update instructions for cmd too</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1390" rel="noopener noreferrer">fix: make linkage truly infallible</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1312" rel="noopener noreferrer">feat: initial impl of Mac .pkg installer</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.22.0 (2024-08-28)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.0</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some nice quality of life improvements. These fixes are largely related to our installers, shell, powershell, and homebrew as well as managing some papercuts in the <code>dist init</code> command and error handling.</p>
+<h2>App-branded installer environment variables</h2>
+<p>We generate installers for our users- and then our <em>users' users</em> use those installers. Those users don't know they are using <code>dist</code> and, if we do our job right, should never have to.</p>
+<p>While we had implemented some environment variables that enable users to control the behavior of installers, previously they were largely designed for internal use, and therefore namespaced with <code>DIST</code>. However, we quickly realized that this isn't suitable for having our users communicate with their users- so we've enabled the generation of app-branded installer customization environment variables- so that installer users can leverage environment variables that are branded to the application they are trying to install.</p>
+<p>Right now, the only customization we allow for installers is the install directory- so instead of <code>CARGO_DIST_FORCE_INSTALL_DIR</code>, you can tell your users to use <code>AXOLOTLSAY_INSTALL_DIR</code> (if your app is named <code>axolotlsay</code>). If you have a name with hyphens or other characters, we normalize it for you, and you can find this value at the <code>install_dir_env_var</code> field in the <code>dist-manifest.json</code> that is generated with each of your releases.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1377" rel="noopener noreferrer">add app branded env var for custom dir to installers</a></li>
+</ul>
+<h2>Homebrew license metadata</h2>
+<p>Currently, when publishing to a Homebrew tap, whatever string is in the project's license field (usually a SPDX license expression) gets passed into license in the Homebrew formula. However, rather than using SPDX syntax, Homebrew has its own ruby syntax for specifying licenses. So, when passed an SPDX expression, Homebrew:</p>
+<ul>
+<li>Cannot provide as detailed information about the package's licensing.</li>
+<li>Throws errors when linting the formula with brew audit/brew test-bot.</li>
+</ul>
+<p>This PR translates the SPDX expression to the Homebrew license DSL.</p>
+<ul>
+<li>impl @cxreiff <a href="https://github.com/axodotdev/cargo-dist/pull/1345" rel="noopener noreferrer">translate SPDX expressions to Homebrew license DSL to produce better Homebrew package metadata</a></li>
+</ul>
+<h2>Homebrew compliance (<code>brew style</code>)</h2>
+<p>Creating a personal tap with brew tap-new creates a default Github Actions workflow that runs a homebrew-specific style check (brew style ) on the repo. Cargo-dist's generated homebrew formulas fail this style check. This does not block the core functionality of cargo-dist's homebrew publishing functionality (formula still functions), but does mean that users whorun <code>brew style</code> (which is a side effect of creating a tap with <code>brew tap-new</code>) would get frustrating errors.</p>
+<p>Rather than separately chasing formatting issues as they come up, this PR updates the homebrew publish workflow to install and run <code>brew style --fix</code> on each formula before committing it.</p>
+<ul>
+<li>impl
+<ul>
+<li>@cxreiff <a href="https://github.com/axodotdev/cargo-dist/pull/1340" rel="noopener noreferrer">format homebrew formulas with brew style --fix</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1354" rel="noopener noreferrer">enable brew style linters in tests</a></li>
+</ul>
+</li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1379" rel="noopener noreferrer">enable powershell installer to respect NoModifyPath from env</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1373" rel="noopener noreferrer">improve powershell installer portability by updating ExecutionPolicy flag and offering better hints</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1357" rel="noopener noreferrer">handle <code>ar</code> archives when parsing Windows objects, ensure unsupported binary linkage checks are non-fatal, and improve linkage checker errors</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1360" rel="noopener noreferrer">improve <code>init</code> errors for custom projects, and ensure prompts are more contextual</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1358" rel="noopener noreferrer">update reference to renamed config in error message</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.2-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.2-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.2-prerelease.2</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.21.2-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.2-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.2-prerelease.1</guid><content:encoded><![CDATA[<p>Nothing Yet!</p>
+]]></content:encoded></item><item><title>Version 0.22.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.22.0-prerelease.1</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some nice quality of life improvements. These fixes are largely related to our installers, shell, powershell, and homebrew as well as managing some papercuts in the <code>dist init</code> command and error handling.</p>
+<h2>App-branded installer environment variables</h2>
+<p>We generate installers for our users- and then our <em>users' users</em> use those installers. Those users don't know they are using <code>dist</code> and, if we do our job right, should never have to.</p>
+<p>While we had implemented some environment variables that enable users to control the behavior of installers, previously they were largely designed for internal use, and therefore namespaced with <code>DIST</code>. However, we quickly realized that this isn't suitable for having our users communicate with their users- so we've enabled the generation of app-branded installer customization environment variables- so that installer users can leverage environment variables that are branded to the application they are trying to install.</p>
+<p>Right now, the only customization we allow for installers is the install directory- so instead of <code>CARGO_DIST_FORCE_INSTALL_DIR</code>, you can tell your users to use <code>AXOLOTLSAY_INSTALL_DIR</code> (if your app is named <code>axolotlsay</code>). If you have a name with hyphens or other characters, we normalize it for you, and you can find this value at the <code>install_dir_env_var</code> field in the <code>dist-manifest.json</code> that is generated with each of your releases.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1377" rel="noopener noreferrer">add app branded env var for custom dir to installers</a></li>
+</ul>
+<h2>Homebrew license metadata</h2>
+<p>Currently, when publishing to a Homebrew tap, whatever string is in the project's license field (usually a SPDX license expression) gets passed into license in the Homebrew formula. However, rather than using SPDX syntax, Homebrew has its own ruby syntax for specifying licenses. So, when passed an SPDX expression, Homebrew:</p>
+<ul>
+<li>Cannot provide as detailed information about the package's licensing.</li>
+<li>Throws errors when linting the formula with brew audit/brew test-bot.</li>
+</ul>
+<p>This PR translates the SPDX expression to the Homebrew license DSL.</p>
+<ul>
+<li>impl @cxreiff <a href="https://github.com/axodotdev/cargo-dist/pull/1345" rel="noopener noreferrer">translate SPDX expressions to Homebrew license DSL to produce better Homebrew package metadata</a></li>
+</ul>
+<h2>Homebrew compliance (<code>brew style</code>)</h2>
+<p>Creating a personal tap with brew tap-new creates a default Github Actions workflow that runs a homebrew-specific style check (brew style ) on the repo. Cargo-dist's generated homebrew formulas fail this style check. This does not block the core functionality of cargo-dist's homebrew publishing functionality (formula still functions), but does mean that users whorun <code>brew style</code> (which is a side effect of creating a tap with <code>brew tap-new</code>) would get frustrating errors.</p>
+<p>Rather than separately chasing formatting issues as they come up, this PR updates the homebrew publish workflow to install and run <code>brew style --fix</code> on each formula before committing it.</p>
+<ul>
+<li>impl
+<ul>
+<li>@cxreiff <a href="https://github.com/axodotdev/cargo-dist/pull/1340" rel="noopener noreferrer">format homebrew formulas with brew style --fix</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1354" rel="noopener noreferrer">enable brew style linters in tests</a></li>
+</ul>
+</li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1379" rel="noopener noreferrer">enable powershell installer to respect NoModifyPath from env</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1373" rel="noopener noreferrer">improve powershell installer portability by updating ExecutionPolicy flag and offering better hints</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1357" rel="noopener noreferrer">handle <code>ar</code> archives when parsing Windows objects, ensure unsupported binary linkage checks are non-fatal, and improve linkage checker errors</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1360" rel="noopener noreferrer">improve <code>init</code> errors for custom projects, and ensure prompts are more contextual</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1358" rel="noopener noreferrer">update reference to renamed config in error message</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.1 (2024-08-20)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1346" rel="noopener noreferrer">make glibc version reqs per-platform in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1347" rel="noopener noreferrer">cleanup error handling in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1322" rel="noopener noreferrer">remove overzealous cargo version check</a></li>
+<li>@ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1324" rel="noopener noreferrer">add generated note at top of workflow</a></li>
+<li>@alexanderjophus <a href="https://github.com/axodotdev/cargo-dist/pull/1329" rel="noopener noreferrer">improved init when user unchecks homebrew installer</a></li>
+<li>@sts10 <a href="https://github.com/axodotdev/cargo-dist/pull/1319" rel="noopener noreferrer">fix grammar in readme</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1348" rel="noopener noreferrer">fix installing sysdeps with Homebrew using Homebrew 4.3.17</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.1-prerelease.9</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.9</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.9</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1346" rel="noopener noreferrer">make glibc version reqs per-platform in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1347" rel="noopener noreferrer">cleanup error handling in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1322" rel="noopener noreferrer">remove overzealous cargo version check</a></li>
+<li>@ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1324" rel="noopener noreferrer">add generated note at top of workflow</a></li>
+<li>@alexanderjophus <a href="https://github.com/axodotdev/cargo-dist/pull/1329" rel="noopener noreferrer">improved init when user unchecks homebrew installer</a></li>
+<li>@sts10 <a href="https://github.com/axodotdev/cargo-dist/pull/1319" rel="noopener noreferrer">fix grammar in readme</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1348" rel="noopener noreferrer">fix installing sysdeps with Homebrew using Homebrew 4.3.17</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.1-prerelease.10</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.10</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.10</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1346" rel="noopener noreferrer">make glibc version reqs per-platform in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1347" rel="noopener noreferrer">cleanup error handling in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1322" rel="noopener noreferrer">remove overzealous cargo version check</a></li>
+<li>@ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1324" rel="noopener noreferrer">add generated note at top of workflow</a></li>
+<li>@alexanderjophus <a href="https://github.com/axodotdev/cargo-dist/pull/1329" rel="noopener noreferrer">improved init when user unchecks homebrew installer</a></li>
+<li>@sts10 <a href="https://github.com/axodotdev/cargo-dist/pull/1319" rel="noopener noreferrer">fix grammar in readme</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1348" rel="noopener noreferrer">fix installing sysdeps with Homebrew using Homebrew 4.3.17</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.1-prerelease.8</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.8</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.8</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1346" rel="noopener noreferrer">make glibc version reqs per-platform in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1347" rel="noopener noreferrer">cleanup error handling in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1322" rel="noopener noreferrer">remove overzealous cargo version check</a></li>
+<li>@ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1324" rel="noopener noreferrer">add generated note at top of workflow</a></li>
+<li>@alexanderjophus <a href="https://github.com/axodotdev/cargo-dist/pull/1329" rel="noopener noreferrer">improved init when user unchecks homebrew installer</a></li>
+<li>@sts10 <a href="https://github.com/axodotdev/cargo-dist/pull/1319" rel="noopener noreferrer">fix grammar in readme</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1348" rel="noopener noreferrer">fix installing sysdeps with Homebrew using Homebrew 4.3.17</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.1-prerelease.7</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.7</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.7</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1346" rel="noopener noreferrer">make glibc version reqs per-platform in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1347" rel="noopener noreferrer">cleanup error handling in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1322" rel="noopener noreferrer">remove overzealous cargo version check</a></li>
+<li>@ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1324" rel="noopener noreferrer">add generated note at top of workflow</a></li>
+<li>@alexanderjophus <a href="https://github.com/axodotdev/cargo-dist/pull/1329" rel="noopener noreferrer">improved init when user unchecks homebrew installer</a></li>
+<li>@sts10 <a href="https://github.com/axodotdev/cargo-dist/pull/1319" rel="noopener noreferrer">fix grammar in readme</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1348" rel="noopener noreferrer">fix installing sysdeps with Homebrew using Homebrew 4.3.17</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.1-prerelease.6</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.6</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.6</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1346" rel="noopener noreferrer">make glibc version reqs per-platform in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1347" rel="noopener noreferrer">cleanup error handling in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1322" rel="noopener noreferrer">remove overzealous cargo version check</a></li>
+<li>@ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1324" rel="noopener noreferrer">add generated note at top of workflow</a></li>
+<li>@alexanderjophus <a href="https://github.com/axodotdev/cargo-dist/pull/1329" rel="noopener noreferrer">improved init when user unchecks homebrew installer</a></li>
+<li>@sts10 <a href="https://github.com/axodotdev/cargo-dist/pull/1319" rel="noopener noreferrer">fix grammar in readme</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1348" rel="noopener noreferrer">fix installing sysdeps with Homebrew using Homebrew 4.3.17</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.1-prerelease.5</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.5</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.5</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1346" rel="noopener noreferrer">make glibc version reqs per-platform in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1347" rel="noopener noreferrer">cleanup error handling in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1322" rel="noopener noreferrer">remove overzealous cargo version check</a></li>
+<li>@ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1324" rel="noopener noreferrer">add generated note at top of workflow</a></li>
+<li>@alexanderjophus <a href="https://github.com/axodotdev/cargo-dist/pull/1329" rel="noopener noreferrer">improved init when user unchecks homebrew installer</a></li>
+<li>@sts10 <a href="https://github.com/axodotdev/cargo-dist/pull/1319" rel="noopener noreferrer">fix grammar in readme</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1348" rel="noopener noreferrer">fix installing sysdeps with Homebrew using Homebrew 4.3.17</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.21.1-prerelease.4</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.4</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.21.1-prerelease.4</guid><content:encoded><![CDATA[<p>This patch release fixes several bugs and provides some quality of life improvements. The most substantial changes are to the shell installer, which now does more precise glibc version checks based on exactly which platform each binary was built on.</p>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1346" rel="noopener noreferrer">make glibc version reqs per-platform in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1347" rel="noopener noreferrer">cleanup error handling in shell installer</a></li>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1322" rel="noopener noreferrer">remove overzealous cargo version check</a></li>
+<li>@ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1324" rel="noopener noreferrer">add generated note at top of workflow</a></li>
+<li>@alexanderjophus <a href="https://github.com/axodotdev/cargo-dist/pull/1329" rel="noopener noreferrer">improved init when user unchecks homebrew installer</a></li>
+<li>@sts10 <a href="https://github.com/axodotdev/cargo-dist/pull/1319" rel="noopener noreferrer">fix grammar in readme</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1348" rel="noopener noreferrer">fix installing sysdeps with Homebrew using Homebrew 4.3.17</a></li>
+</ul>
+]]></content:encoded></item></channel></rss>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <div class="package-managers-downloads">
+      
+        
+          
+          <div>
+            <h3>crates.io</h3>
+            <div class="install-code-wrapper">
+  <pre style="background-color:#263238;">
+<span style="color:#82aaff;">cargo install cargo-dist</span></pre>
+
+  <button class="button copy-clipboard-button primary" data-copy="cargo install cargo-dist">
+    <svg stroke='currentColor' fill='currentColor' stroke-width='0' viewBox='0 0 20 20' height='1em' width='1em' xmlns='http://www.w3.org/2000/svg'><path d='M8 2a1 1 0 000 2h2a1 1 0 100-2H8z'></path><path d='M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z'></path></svg>
+  </button>
+  
+  
+</div>
+          </div>
+        
+      
+        
+          
+          <div>
+            <h3>powershell</h3>
+            <div class="install-code-wrapper">
+  <pre style="background-color:#263238;">
+<span style="color:#82aaff;">powershell</span><span style="color:#89ddff;"> -</span><span style="color:#f78c6c;">c </span><span style="color:#89ddff;">&quot;</span><span style="color:#c3e88d;">irm https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-installer.ps1 | iex</span><span style="color:#89ddff;">&quot;</span></pre>
+
+  <button class="button copy-clipboard-button primary" data-copy="powershell -c "irm https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-installer.ps1 | iex"">
+    <svg stroke='currentColor' fill='currentColor' stroke-width='0' viewBox='0 0 20 20' height='1em' width='1em' xmlns='http://www.w3.org/2000/svg'><path d='M8 2a1 1 0 000 2h2a1 1 0 100-2H8z'></path><path d='M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z'></path></svg>
+  </button>
+  
+  
+    
+    
+      
+    
+    <a class="button primary" href="/cargo-dist/cargo-dist-installer.ps1.txt">Source</a>
+  
+</div>
+          </div>
+        
+      
+        
+          
+          <div>
+            <h3>shell</h3>
+            <div class="install-code-wrapper">
+  <pre style="background-color:#263238;">
+<span style="color:#82aaff;">curl</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">proto </span><span style="color:#89ddff;">&#39;</span><span style="color:#c3e88d;">=https</span><span style="color:#89ddff;">&#39; --</span><span style="color:#f78c6c;">tlsv1</span><span style="color:#82aaff;">.2</span><span style="color:#89ddff;"> -</span><span style="color:#f78c6c;">LsSf</span><span style="color:#82aaff;"> https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-installer.sh </span><span style="color:#89ddff;">| </span><span style="color:#82aaff;">sh</span></pre>
+
+  <button class="button copy-clipboard-button primary" data-copy="curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-installer.sh | sh">
+    <svg stroke='currentColor' fill='currentColor' stroke-width='0' viewBox='0 0 20 20' height='1em' width='1em' xmlns='http://www.w3.org/2000/svg'><path d='M8 2a1 1 0 000 2h2a1 1 0 100-2H8z'></path><path d='M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z'></path></svg>
+  </button>
+  
+  
+    
+    
+      
+    
+    <a class="button primary" href="/cargo-dist/cargo-dist-installer.sh.txt">Source</a>
+  
+</div>
+          </div>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div>
+      <h3>Downloads</h3>
+      <table class="artifacts-table">
+        <tbody>
+          <tr>
+            <th>File</th>
+            <th>Platform</th>
+            
+          </tr>
+          
+            
+            
+            <tr>
+              <td><a href="https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-aarch64-apple-darwin.tar.xz">cargo-dist-aarch64-apple-darwin.tar.xz</a></td>
+              <td>
+                
+                  
+                    macOS Apple Silicon
+                  
+                
+              </td>
+              
+            </tr>
+          
+            
+            
+            <tr>
+              <td><a href="https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-aarch64-unknown-linux-gnu.tar.xz">cargo-dist-aarch64-unknown-linux-gnu.tar.xz</a></td>
+              <td>
+                
+                  
+                    Linux arm64
+                  
+                
+              </td>
+              
+            </tr>
+          
+            
+            
+            <tr>
+              <td><a href="https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-aarch64-unknown-linux-musl.tar.xz">cargo-dist-aarch64-unknown-linux-musl.tar.xz</a></td>
+              <td>
+                
+                  
+                    musl Linux arm64
+                  
+                
+              </td>
+              
+            </tr>
+          
+            
+            
+            <tr>
+              <td><a href="https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-x86_64-apple-darwin.tar.xz">cargo-dist-x86_64-apple-darwin.tar.xz</a></td>
+              <td>
+                
+                  
+                    macOS Intel
+                  
+                
+              </td>
+              
+            </tr>
+          
+            
+            
+            <tr>
+              <td><a href="https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-x86_64-pc-windows-msvc.zip">cargo-dist-x86_64-pc-windows-msvc.zip</a></td>
+              <td>
+                
+                  
+                    Windows x64
+                  
+                
+              </td>
+              
+            </tr>
+          
+            
+            
+            <tr>
+              <td><a href="https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-x86_64-unknown-linux-gnu.tar.xz">cargo-dist-x86_64-unknown-linux-gnu.tar.xz</a></td>
+              <td>
+                
+                  
+                    Linux x64
+                  
+                
+              </td>
+              
+            </tr>
+          
+            
+            
+            <tr>
+              <td><a href="https://github.com/axodotdev/cargo-dist/releases/download/v0.25.1/cargo-dist-x86_64-unknown-linux-musl.tar.xz">cargo-dist-x86_64-unknown-linux-musl.tar.xz</a></td>
+              <td>
+                
+                  
+                    musl Linux x64
+                  
+                
+              </td>
+              
+            </tr>
+          
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  <script src="/cargo-dist/artifacts.js"></script>
+
+  </body>
+</html>
