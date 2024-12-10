@@ -361,6 +361,16 @@ pub enum DistError {
         tool: String,
     },
 
+    /// Unknown target requested
+    #[error(
+        "A build was requested for {target}, but the standalone updater isn't available for it."
+    )]
+    #[diagnostic(help("At the moment, we can only provide updater binaries for the core set of most common target triples. Please set `install-updater = false` in your config."))]
+    NoAxoupdaterForTarget {
+        /// The target triple being built for
+        target: String,
+    },
+
     /// reqwest returned non-2xx/404 when checking axoupdater releases
     #[error("Failed to check the latest release of axoupdater")]
     #[diagnostic(help(
@@ -594,18 +604,6 @@ pub enum DistError {
         minimum: semver::Version,
         /// Version the project uses
         your_version: semver::Version,
-    },
-
-    /// axoupdater can't be built for this target from this host
-    #[error("You've requested a cross-compile from {host} to {target}, but axoupdater can't be built for this target")]
-    #[diagnostic(help(
-        "Please either disable this target, or set `install-updater' to `false' in your config."
-    ))]
-    AxoupdaterInvalidCross {
-        /// The host this build is on
-        host: TripleName,
-        /// The target this build is for
-        target: TripleName,
     },
 }
 
