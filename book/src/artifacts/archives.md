@@ -55,8 +55,6 @@ By default we build your packages with default features, but this can be configu
 
 When targeting windows-msvc we will unconditionally [append "-Ctarget-feature=+crt-static"][crt-static] to your RUSTFLAGS, which should just be the default for rustc but isn't for legacy reasons.
 
-We don't really [support cross-compilation][issue-cross], but we'll faithfully attempt the compile by telling rustup to install the toolchain and passing `--target` to cargo as instructed -- it will probably just fail. On macOS cross-compiles between Intel and Apple Silicon will work. [linux-musl is slated for a future version][issue-musl].
-
 
 
 ## Code Signing
@@ -79,7 +77,6 @@ Roughly speaking, codesigning can be broken up into "Is this app made by the dev
 [config-targets]:  ../reference/config.md#targets
 
 [issue-musl]: https://github.com/axodotdev/cargo-dist/issues/75
-[issue-cross]: https://github.com/axodotdev/cargo-dist/issues/74
 [issue-sigstore]: https://github.com/axodotdev/cargo-dist/issues/120
 [issue-native-sign]: https://github.com/axodotdev/cargo-dist/issues/21
 
