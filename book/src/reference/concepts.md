@@ -202,8 +202,6 @@ Host mode is the default "do something useful on my machine" mode. It's intended
 
 It's currently roughly equivalent to `--artifacts=all --target=HOST_TARGET`, but HOST_TARGET is allowed to fall outside the set of targets defined in your Cargo.toml, because it's not terribly useful to tell someone trying out dist on ARM64 Linux that their platform isn't defined in the config.
 
-In principle when we have better support for cross-compilation we might also try to build "nice" crosses like "intel apple => arm64 apple". Do not rely on the behaviour of this mode, always use one of the 3 other modes in your infra/scripts!
-
 If you *do* pass `--target` in host mode then we won't do fuzzy target selection and will just build the targets you ask for like normal.
 
 
