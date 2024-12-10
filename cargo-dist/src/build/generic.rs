@@ -16,7 +16,10 @@ use crate::{
 };
 
 impl<'a> DistGraphBuilder<'a> {
-    pub(crate) fn compute_generic_builds(&mut self, workspace_idx: WorkspaceIdx) -> Vec<BuildStep> {
+    pub(crate) fn compute_generic_builds(
+        &mut self,
+        workspace_idx: WorkspaceIdx,
+    ) -> DistResult<Vec<BuildStep>> {
         // For now we can be really simplistic and just do a workspace build for every
         // target-triple we have a binary-that-needs-a-real-build for.
         let mut targets = SortedMap::<TripleName, Vec<BinaryIdx>>::new();
@@ -60,7 +63,15 @@ impl<'a> DistGraphBuilder<'a> {
                 }));
             }
         }
-        builds
+
+        if !builds.is_empty() {
+            let options = cargo_only_options(&self.inner);
+            if !options.is_empty() {
+                return Err(DistError::CargoOnlyBuildOptions { options });
+            }
+        }
+
+        Ok(builds)
     }
 
     pub(crate) fn compute_extra_builds(&mut self) -> Vec<BuildStep> {
@@ -117,6 +128,18 @@ fn platform_appropriate_cxx(target: &TripleNameRef) -> &str {
     } else {
         "c++"
     }
+}
+
+fn cargo_only_options(dist_graph: &DistGraph) -> Vec<String> {
+    let mut out = vec![];
+    if dist_graph.config.builds.cargo.cargo_auditable {
+        out.push("cargo-auditable".to_owned());
+    }
+    if dist_graph.config.builds.cargo.cargo_cyclonedx {
+        out.push("cargo-cyclonedx".to_owned());
+    }
+
+    out
 }
 
 fn run_build(
