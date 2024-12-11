@@ -3501,43 +3501,34 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "axolotlsay-installer.ps1",
         "axolotlsay.rb",
         "axolotlsay-npm-package.tar.gz",
-        "source.tar.gz.omnibor",
-        "axolotlsay-installer.sh.omnibor",
-        "axolotlsay-installer.ps1.omnibor",
-        "axolotlsay.rb.omnibor",
-        "axolotlsay-npm-package.tar.gz.omnibor",
-        "axolotlsay-aarch64-apple-darwin.tar.gz.omnibor",
-        "axolotlsay-aarch64-apple-darwin.pkg.omnibor",
-        "axolotlsay-i686-unknown-linux-gnu.tar.gz.omnibor",
-        "axolotlsay-x86_64-apple-darwin.tar.gz.omnibor",
-        "axolotlsay-x86_64-apple-darwin.pkg.omnibor",
-        "axolotlsay-x86_64-pc-windows-gnu.tar.gz.omnibor",
-        "axolotlsay-x86_64-pc-windows-gnu.msi.omnibor",
-        "axolotlsay-x86_64-pc-windows-msvc.tar.gz.omnibor",
-        "axolotlsay-x86_64-pc-windows-msvc.msi.omnibor",
-        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.omnibor",
         "axolotlsay.cdx.xml",
         "sha256.sum",
         "axolotlsay-aarch64-apple-darwin.tar.gz",
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-aarch64-apple-darwin.pkg",
         "axolotlsay-aarch64-apple-darwin.pkg.sha256",
+        "axolotlsay-aarch64-apple-darwin.tar.gz.omnibor",
         "axolotlsay-i686-unknown-linux-gnu.tar.gz",
         "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256",
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz.omnibor",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.pkg",
         "axolotlsay-x86_64-apple-darwin.pkg.sha256",
+        "axolotlsay-x86_64-apple-darwin.tar.gz.omnibor",
         "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
         "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256",
         "axolotlsay-x86_64-pc-windows-gnu.msi",
         "axolotlsay-x86_64-pc-windows-gnu.msi.sha256",
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz.omnibor",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.msi",
         "axolotlsay-x86_64-pc-windows-msvc.msi.sha256",
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz.omnibor",
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
-        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256",
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.omnibor"
       ],
       "hosting": {
         "github": {
@@ -3566,10 +3557,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       ],
       "description": "install via pkg",
       "checksum": "axolotlsay-aarch64-apple-darwin.pkg.sha256"
-    },
-    "axolotlsay-aarch64-apple-darwin.pkg.omnibor": {
-      "name": "axolotlsay-aarch64-apple-darwin.pkg.omnibor",
-      "kind": "omnibor-artifact-id"
     },
     "axolotlsay-aarch64-apple-darwin.pkg.sha256": {
       "name": "axolotlsay-aarch64-apple-darwin.pkg.sha256",
@@ -3684,10 +3671,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "install_hint": "powershell -ExecutionPolicy ByPass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
-    "axolotlsay-installer.ps1.omnibor": {
-      "name": "axolotlsay-installer.ps1.omnibor",
-      "kind": "omnibor-artifact-id"
-    },
     "axolotlsay-installer.sh": {
       "name": "axolotlsay-installer.sh",
       "kind": "installer",
@@ -3701,10 +3684,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
-    },
-    "axolotlsay-installer.sh.omnibor": {
-      "name": "axolotlsay-installer.sh.omnibor",
-      "kind": "omnibor-artifact-id"
     },
     "axolotlsay-npm-package.tar.gz": {
       "name": "axolotlsay-npm-package.tar.gz",
@@ -3779,10 +3758,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "install_hint": "npm install @axodotdev/axolotlsay@0.2.2",
       "description": "Install prebuilt binaries into your npm project"
     },
-    "axolotlsay-npm-package.tar.gz.omnibor": {
-      "name": "axolotlsay-npm-package.tar.gz.omnibor",
-      "kind": "omnibor-artifact-id"
-    },
     "axolotlsay-x86_64-apple-darwin.pkg": {
       "name": "axolotlsay-x86_64-apple-darwin.pkg",
       "kind": "installer",
@@ -3799,10 +3774,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       ],
       "description": "install via pkg",
       "checksum": "axolotlsay-x86_64-apple-darwin.pkg.sha256"
-    },
-    "axolotlsay-x86_64-apple-darwin.pkg.omnibor": {
-      "name": "axolotlsay-x86_64-apple-darwin.pkg.omnibor",
-      "kind": "omnibor-artifact-id"
     },
     "axolotlsay-x86_64-apple-darwin.pkg.sha256": {
       "name": "axolotlsay-x86_64-apple-darwin.pkg.sha256",
@@ -3875,10 +3846,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "description": "install via msi",
       "checksum": "axolotlsay-x86_64-pc-windows-gnu.msi.sha256"
     },
-    "axolotlsay-x86_64-pc-windows-gnu.msi.omnibor": {
-      "name": "axolotlsay-x86_64-pc-windows-gnu.msi.omnibor",
-      "kind": "omnibor-artifact-id"
-    },
     "axolotlsay-x86_64-pc-windows-gnu.msi.sha256": {
       "name": "axolotlsay-x86_64-pc-windows-gnu.msi.sha256",
       "kind": "checksum",
@@ -3949,10 +3916,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       ],
       "description": "install via msi",
       "checksum": "axolotlsay-x86_64-pc-windows-msvc.msi.sha256"
-    },
-    "axolotlsay-x86_64-pc-windows-msvc.msi.omnibor": {
-      "name": "axolotlsay-x86_64-pc-windows-msvc.msi.omnibor",
-      "kind": "omnibor-artifact-id"
     },
     "axolotlsay-x86_64-pc-windows-msvc.msi.sha256": {
       "name": "axolotlsay-x86_64-pc-windows-msvc.msi.sha256",
@@ -4073,10 +4036,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "install_hint": "brew install axodotdev/packages/axolotlsay",
       "description": "Install prebuilt binaries via Homebrew"
     },
-    "axolotlsay.rb.omnibor": {
-      "name": "axolotlsay.rb.omnibor",
-      "kind": "omnibor-artifact-id"
-    },
     "sha256.sum": {
       "name": "sha256.sum",
       "kind": "unified-checksum"
@@ -4085,10 +4044,6 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "name": "source.tar.gz",
       "kind": "source-tarball",
       "checksum": "source.tar.gz.sha256"
-    },
-    "source.tar.gz.omnibor": {
-      "name": "source.tar.gz.omnibor",
-      "kind": "omnibor-artifact-id"
     },
     "source.tar.gz.sha256": {
       "name": "source.tar.gz.sha256",
@@ -4383,6 +4338,11 @@ jobs:
           merge-multiple: true
       - name: Install cargo-auditable
         run: ${{ matrix.install_cargo_auditable.run }}
+      - name: Install omnibor
+        # we specify bash to get pipefail; it guards against the `curl` command
+        # failing. otherwise `sh` won't catch that `curl` return non-0
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/omnibor/omnibor-rs/releases/download/omnibor-cli-v0.7.0/omnibor-cli-installer.sh | sh"
+        shell: bash
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
@@ -4435,11 +4395,6 @@ jobs:
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` return non-0
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/CycloneDX/cyclonedx-rust-cargo/releases/download/cargo-cyclonedx-0.5.5/cargo-cyclonedx-installer.sh | sh"
-        shell: bash
-      - name: Install omnibor
-        # we specify bash to get pipefail; it guards against the `curl` command
-        # failing. otherwise `sh` won't catch that `curl` return non-0
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/omnibor/omnibor-rs/releases/download/omnibor-cli-v0.7.0/omnibor-cli-installer.sh | sh"
         shell: bash
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts

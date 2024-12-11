@@ -1547,64 +1547,57 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     }
 
     fn add_omnibor_artifact_id_file(&mut self, to_release: ReleaseIdx) {
-        if !self.global_artifacts_enabled() || !self.inner.config.builds.omnibor {
+        if !self.inner.config.builds.omnibor {
             return;
         }
 
         let release = self.release(to_release).clone();
-        let global_artifacts = release.global_artifacts;
-        let local_artifacts: Vec<_> = release
-            .variants
-            .into_iter()
-            .flat_map(|vidx| self.variant(vidx).local_artifacts.clone())
-            .collect();
-        let artifacts: Vec<_> = global_artifacts
-            .into_iter()
-            .chain(local_artifacts)
-            .map(|a| self.artifact(a).clone())
-            .collect();
 
-        for artifact in &artifacts {
-            let id = artifact.id.clone();
-            let src_path = artifact.file_path.clone();
-            match &artifact.kind {
-                // Things we need to generate OmniBOR Artifact IDs for.
-                ArtifactKind::ExecutableZip(_)
-                | ArtifactKind::Installer(_)
-                | ArtifactKind::SourceTarball(_)
-                | ArtifactKind::ExtraArtifact(_)
-                | ArtifactKind::Updater(_) => {
-                    let extension = src_path
-                        .extension()
-                        .map_or("omnibor".to_string(), |e| format!("{e}.omnibor"));
-                    let dest_path = src_path.with_extension(extension);
+        for variant_id in &release.variants {
+            let variant = self.variant(*variant_id);
+            for idx in variant.local_artifacts.clone() {
+                let artifact = self.artifact(idx);
+                let id = artifact.id.clone();
+                let src_path = artifact.file_path.clone();
+                match &artifact.kind {
+                    // Things we need to generate OmniBOR Artifact IDs for.
+                    ArtifactKind::ExecutableZip(_) => {
+                        let extension = src_path
+                            .extension()
+                            .map_or("omnibor".to_string(), |e| format!("{e}.omnibor"));
+                        let dest_path = src_path.with_extension(extension);
 
-                    let new_id = format!("{}.omnibor", id);
+                        let new_id = format!("{}.omnibor", id);
 
-                    self.add_global_artifact(
-                        to_release,
-                        Artifact {
-                            id: ArtifactId::new(new_id),
-                            target_triples: Default::default(),
-                            archive: None,
-                            file_path: dest_path.clone(),
-                            required_binaries: Default::default(),
-                            kind: ArtifactKind::OmniborArtifactId(OmniborArtifactIdImpl {
-                                src_path,
-                                dest_path,
-                            }),
-                            checksum: None,
-                            is_global: true,
-                        },
-                    );
+                        self.add_local_artifact(
+                            *variant_id,
+                            Artifact {
+                                id: ArtifactId::new(new_id),
+                                target_triples: Default::default(),
+                                archive: None,
+                                file_path: dest_path.clone(),
+                                required_binaries: Default::default(),
+                                kind: ArtifactKind::OmniborArtifactId(OmniborArtifactIdImpl {
+                                    src_path,
+                                    dest_path,
+                                }),
+                                checksum: None,
+                                is_global: false,
+                            },
+                        );
+                    }
+
+                    // Things we don't need to generate OmniBOR Artifact IDs for.
+                    ArtifactKind::Symbols(_)
+                    | ArtifactKind::Checksum(_)
+                    | ArtifactKind::UnifiedChecksum(_)
+                    | ArtifactKind::SBOM(_)
+                    | ArtifactKind::OmniborArtifactId(_)
+                    | ArtifactKind::Installer(_)
+                    | ArtifactKind::SourceTarball(_)
+                    | ArtifactKind::ExtraArtifact(_)
+                    | ArtifactKind::Updater(_) => {}
                 }
-
-                // Things we don't need to generate OmniBOR Artifact IDs for.
-                ArtifactKind::Symbols(_)
-                | ArtifactKind::Checksum(_)
-                | ArtifactKind::UnifiedChecksum(_)
-                | ArtifactKind::SBOM(_)
-                | ArtifactKind::OmniborArtifactId(_) => {}
             }
         }
     }
