@@ -486,10 +486,6 @@ pub fn build_wrapper_for_cross(
         },
         // compiling for Windows (making PE binaries, .dll files, etc.)
         OperatingSystem::Windows => match host.operating_system {
-            OperatingSystem::Windows => {
-                // this is just cross-arch, hopefully no wrappers are needed?
-                Ok(Some(CargoBuildWrapper::ZigBuild))
-            }
             OperatingSystem::Linux | OperatingSystem::Darwin => {
                 // cargo-xwin is made for that
                 Ok(Some(CargoBuildWrapper::Xwin))
@@ -498,7 +494,7 @@ pub fn build_wrapper_for_cross(
                 Err(DistError::UnsupportedCrossCompile {
                     host: host.clone(),
                     target: target.clone(),
-                    details: format!("no idea how to cross-compile from {host} to windows"),
+                    details: format!("no idea how to cross-compile from {host} to windows with architecture {}", target.architecture),
                 })
             }
         },
