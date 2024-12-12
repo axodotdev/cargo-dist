@@ -814,35 +814,15 @@ fn system_deps_install_script(
     }
 
     if !pip_pkgs.is_empty() {
-        let push_pip_install_lines = |lines: &mut Vec<String>| {
-            if host.operating_system == OperatingSystem::Linux {
-                // make sure pip is installed — on dnf-based distros we might need to install
-                // it (true for e.g. the `quay.io/pypa/manylinux_2_28_x86_64` image)
-                //
-                // this doesn't work for all distros of course — others might need to be added
-                // later. there's no universal way to install tooling in dist right now anyway.
-                lines.push("  if ! command -v pip3 > /dev/null 2>&1; then".to_owned());
-                lines.push("    dnf install --assumeyes python3-pip".to_owned());
-                lines.push("    pip3 install --upgrade pip".to_owned());
-                lines.push("  fi".to_owned());
-            }
-        };
-
         for pip_pkg in pip_pkgs {
             match pip_pkg.as_str() {
                 "cargo-xwin" => {
                     // that one could already be installed
-                    lines.push("if ! command -v cargo-xwin > /dev/null 2>&1; then".to_owned());
-                    push_pip_install_lines(&mut lines);
-                    lines.push("  pip3 install cargo-xwin".to_owned());
-                    lines.push("fi".to_owned());
+                    lines.extend(generate_install_if_missing_script("cargo-xwin", &host));
                 }
                 "cargo-zigbuild" => {
                     // that one could already be installed
-                    lines.push("if ! command -v cargo-zigbuild > /dev/null 2>&1; then".to_owned());
-                    push_pip_install_lines(&mut lines);
-                    lines.push("  pip3 install cargo-zigbuild".to_owned());
-                    lines.push("fi".to_owned());
+                    lines.extend(generate_install_if_missing_script("cargo-zigbuild", &host));
                 }
                 _ => {
                     lines.push(format!("pip3 install {pip_pkg}"));
@@ -856,6 +836,44 @@ fn system_deps_install_script(
     } else {
         Some(PackageInstallScript::new(lines.join("\n")))
     })
+}
+
+fn pip_install_lines(host: &Triple) -> Vec<String> {
+    if host.operating_system == OperatingSystem::Linux {
+        // make sure pip is installed — on dnf-based distros we might need to install
+        // it (true for e.g. the `quay.io/pypa/manylinux_2_28_x86_64` image)
+        //
+        // this doesn't work for all distros of course — others might need to be added
+        // later. there's no universal way to install tooling in dist right now anyway.
+        vec![
+            "  if ! command -v pip3 > /dev/null 2>&1; then".to_owned(),
+            "    dnf install --assumeyes python3-pip".to_owned(),
+            "    pip3 install --upgrade pip".to_owned(),
+            "  fi".to_owned(),
+        ]
+    } else {
+        vec![]
+    }
+}
+
+fn generate_install_if_missing_script(package: &str, host: &Triple) -> Vec<String> {
+    let mut result = vec![];
+    let line1 = match host.operating_system {
+        OperatingSystem::Windows => {
+            format!("if (-not (Get-Command \"{package}\" -All -ErrorAction SilentlyContinue)) {{")
+        }
+        _ => format!("if ! command -v {package} > /dev/null 2>&1; then"),
+    };
+    result.push(line1);
+    result.extend(pip_install_lines(host));
+    result.push(format!("  pip3 install {package}"));
+    let line3 = match host.operating_system {
+        OperatingSystem::Windows => "}".to_owned(),
+        _ => "fi".to_owned(),
+    };
+    result.push(line3);
+
+    result
 }
 
 /// Builder for looking up and reporting errors in the steps provided by the
