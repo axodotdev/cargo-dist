@@ -2,6 +2,12 @@
 
 Nothing Yet!
 
+# Version 0.26.1 (2024-12-12)
+
+This is a bugfix release which fixes an issue where aarch64 Windows cross-compilation wouldn't work out of the box. We've updated the default configuration to ensure that this target just works without additional configuration.
+
+- impl @mistydemeo [fix: always cross-compile to windows via xwin](https://github.com/axodotdev/cargo-dist/pull/1635)
+
 # Version 0.26.0 (2024-12-12)
 
 It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.
