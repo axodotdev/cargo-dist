@@ -304,6 +304,13 @@ jobs:
       - name: Install cargo-auditable
         run: ${{ matrix.install_cargo_auditable.run }}
       {{%- endif %}}
+      {{%- if need_omnibor %}}
+      - name: Install omnibor
+        # we specify bash to get pipefail; it guards against the `curl` command
+        # failing. otherwise `sh` won't catch that `curl` return non-0
+        run: {{{ global_task.install_omnibor.run }}}
+        shell: bash
+      {{%- endif %}}
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
