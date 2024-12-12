@@ -2,7 +2,7 @@
 
 Nothing Yet!
 
-# Version 0.26.0 (20XX-XX-XX)
+# Version 0.26.0 (2024-12-12)
 
 It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.
 
