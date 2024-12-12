@@ -8,10 +8,10 @@ use axoasset::{LocalAsset, SourceFile};
 use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
-    target_lexicon::{self, OperatingSystem, Triple},
-    AptPackageName, ChocolateyPackageName, GhaRunStep, GithubGlobalJobConfig, GithubLocalJobConfig,
-    GithubMatrix, GithubRunnerConfig, GithubRunnerRef, GithubRunners, HomebrewPackageName,
-    PackageInstallScript, PackageVersion, PipPackageName, TripleNameRef,
+    target_lexicon::{self, Architecture, OperatingSystem, Triple},
+    AptPackageName, ChocolateyPackageName, ContainerImageRef, GhaRunStep, GithubGlobalJobConfig,
+    GithubLocalJobConfig, GithubMatrix, GithubRunnerConfig, GithubRunnerRef, GithubRunners,
+    HomebrewPackageName, PackageInstallScript, PackageVersion, PipPackageName, TripleNameRef,
 };
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ use crate::{
         JinjaGithubRepoPair, JobStyle, ProductionMode, PublishStyle, SystemDependencies,
     },
     errors::DistResult,
-    platform::github_runners::target_for_github_runner_or_default,
+    platform::{github_runners::target_for_github_runner_or_default, targets},
     CargoBuildWrapper, DistError, DistGraph, SortedMap, SortedSet,
 };
 
@@ -661,11 +661,30 @@ fn github_runner_for_target(
     let result = Some(match target_triple.operating_system {
         OperatingSystem::Linux => runner_to_config(GithubRunnerRef::from_str("ubuntu-20.04")),
         OperatingSystem::Darwin => runner_to_config(GithubRunnerRef::from_str("macos-13")),
-        OperatingSystem::Windows => runner_to_config(GithubRunnerRef::from_str("windows-2019")),
+        OperatingSystem::Windows => {
+            // Default to cargo-xwin for Windows cross-compiles
+            if target_triple.architecture != Architecture::X86_64 {
+                cargo_xwin()
+            } else {
+                runner_to_config(GithubRunnerRef::from_str("windows-2019"))
+            }
+        }
         _ => return Ok(None),
     });
 
     Ok(result)
+}
+
+fn cargo_xwin() -> GithubRunnerConfig {
+    GithubRunnerConfig {
+        runner: GithubRunnerRef::from_str("ubuntu-20.04").to_owned(),
+        host: targets::TARGET_X64_LINUX_GNU.to_owned(),
+        container: Some(cargo_dist_schema::ContainerConfig {
+            image: ContainerImageRef::from_str("messense/cargo-xwin").to_owned(),
+            host: targets::TARGET_X64_LINUX_MUSL.to_owned(),
+            package_manager: None,
+        }),
+    }
 }
 
 fn brewfile_from<'a>(packages: impl Iterator<Item = &'a HomebrewPackageName>) -> String {

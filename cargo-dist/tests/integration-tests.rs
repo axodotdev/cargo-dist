@@ -1997,7 +1997,7 @@ fn axolotlsay_cross2() -> Result<(), miette::Report> {
 [workspace.metadata.dist]
 cargo-dist-version = "{dist_version}"
 installers = ["shell", "powershell"]
-targets = ["aarch64-unknown-linux-gnu"]
+targets = ["aarch64-unknown-linux-gnu", "aarch64-pc-windows-msvc"]
 ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
