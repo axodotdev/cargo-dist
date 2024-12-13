@@ -84,6 +84,10 @@ pub fn mock_tools() -> Tools {
         git: None,
         omnibor: None,
         code_sign_tool: None,
+        cargo_auditable: None,
+        cargo_cyclonedx: None,
+        cargo_xwin: None,
+        cargo_zigbuild: None,
     }
 }
 

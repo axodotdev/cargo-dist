@@ -361,6 +361,14 @@ pub enum DistError {
         tool: String,
     },
 
+    /// One or more required tools are missing.
+    #[error("The following tools are required to run this task, but are missing:\n- {}", tools.join("\n- "))]
+    #[diagnostic(help("Please install the tools mentioned above and try again."))]
+    EnvToolsMissing {
+        /// the names of the missing tools
+        tools: Vec<String>,
+    },
+
     /// Unknown target requested
     #[error(
         "A build was requested for {target}, but the standalone updater isn't available for it."

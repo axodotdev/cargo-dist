@@ -281,6 +281,14 @@ pub struct Tools {
     ///
     /// <https://www.ssl.com/guide/esigner-codesigntool-command-guide/>
     pub code_sign_tool: Option<Tool>,
+    /// cargo-auditable, used for auditable builds
+    pub cargo_auditable: Option<Tool>,
+    /// cargo-cyclonedx, for generating CycloneDX artifacts
+    pub cargo_cyclonedx: Option<Tool>,
+    /// cargo-xwin, for some cross builds
+    pub cargo_xwin: Option<Tool>,
+    /// cargo-zigbuild, for some cross builds
+    pub cargo_zigbuild: Option<Tool>,
 }
 
 impl Tools {
@@ -295,6 +303,34 @@ impl Tools {
     pub fn omnibor(&self) -> DistResult<&Tool> {
         self.omnibor.as_ref().ok_or(DistError::ToolMissing {
             tool: "omnibor-cli".to_owned(),
+        })
+    }
+
+    /// Returns cargo-auditable info or an error
+    pub fn cargo_auditable(&self) -> DistResult<&Tool> {
+        self.cargo_auditable.as_ref().ok_or(DistError::ToolMissing {
+            tool: "cargo-auditable".to_owned(),
+        })
+    }
+
+    /// Returns cargo-cyclonedx info or an error
+    pub fn cargo_cyclonedx(&self) -> DistResult<&Tool> {
+        self.cargo_cyclonedx.as_ref().ok_or(DistError::ToolMissing {
+            tool: "cargo-cyclonedx".to_owned(),
+        })
+    }
+
+    /// Returns cargo-xwin info or an error
+    pub fn cargo_xwin(&self) -> DistResult<&Tool> {
+        self.cargo_xwin.as_ref().ok_or(DistError::ToolMissing {
+            tool: "cargo-xwin".to_owned(),
+        })
+    }
+
+    /// Returns cargo-zigbuild info or an error
+    pub fn cargo_zigbuild(&self) -> DistResult<&Tool> {
+        self.cargo_zigbuild.as_ref().ok_or(DistError::ToolMissing {
+            tool: "cargo-zigbuild".to_owned(),
         })
     }
 }
@@ -3180,6 +3216,29 @@ fn tool_info() -> DistResult<Tools> {
         omnibor: find_tool("omnibor", "--version"),
         // Computed later if needed
         code_sign_tool: None,
+
+        // NOTE: This doesn't actually give us cargo-auditable's version info,
+        // but it does confirm it's installed, which is what we care about.
+        cargo_auditable: find_cargo_subcommand("cargo", "auditable", "--version"),
+
+        cargo_cyclonedx: find_cargo_subcommand("cargo", "cyclonedx", "--version"),
+        cargo_xwin: find_cargo_subcommand("cargo", "xwin", "--version"),
+        cargo_zigbuild: find_tool("cargo-zigbuild", "--version"),
+    })
+}
+
+fn find_cargo_subcommand(name: &str, arg: &str, test_flag: &str) -> Option<Tool> {
+    let output = Cmd::new(name, "detect tool")
+        .arg(arg)
+        .arg(test_flag)
+        .check(false)
+        .output()
+        .ok()?;
+    let string_output = String::from_utf8(output.stdout).ok()?;
+    let version = string_output.lines().next()?;
+    Some(Tool {
+        cmd: format!("{} {}", name, arg),
+        version: version.to_owned(),
     })
 }
 

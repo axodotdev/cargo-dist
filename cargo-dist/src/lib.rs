@@ -57,8 +57,86 @@ pub mod tasks;
 #[cfg(test)]
 mod tests;
 
+/// dist env test -- make sure we have everything we need for a build.
+pub fn do_env_test(cfg: &Config) -> DistResult<()> {
+    let (dist, _manifest) = tasks::gather_work(cfg)?;
+
+    let global_builds = cfg.artifact_mode == ArtifactMode::Global;
+
+    let builds = dist.config.builds;
+
+    let need_cargo_auditable = builds.cargo.cargo_auditable && !global_builds;
+    let need_cargo_cyclonedx = builds.cargo.cargo_cyclonedx && !global_builds;
+    let need_omnibor = builds.omnibor;
+    let mut need_xwin = false;
+    let mut need_zigbuild = false;
+
+    let tools = dist.tools;
+    let host = tools.host_target.parse()?;
+
+    for step in dist.local_build_steps.iter() {
+        // Can't require cross-compilation tools if we aren't compiling.
+        if cfg.artifact_mode == ArtifactMode::Lies {
+            break;
+        }
+
+        match step {
+            BuildStep::Cargo(step) => {
+                let target = step.target_triple.parse()?;
+                let wrapper = tasks::build_wrapper_for_cross(&host, &target)?;
+
+                match wrapper {
+                    Some(CargoBuildWrapper::Xwin) => {
+                        need_xwin = true;
+                    }
+                    Some(CargoBuildWrapper::ZigBuild) => {
+                        need_zigbuild = true;
+                    }
+                    None => {}
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // These are all of the tools we can check for.
+    //
+    // bool::then(f) returns an Option, so we start with a
+    // Vec<Option<Result<&Tool, DistResult>>>.
+    let all_tools: Vec<Option<DistResult<&Tool>>> = vec![
+        need_cargo_auditable.then(|| tools.cargo_auditable()),
+        need_cargo_cyclonedx.then(|| tools.cargo_cyclonedx()),
+        need_omnibor.then(|| tools.omnibor()),
+        need_xwin.then(|| tools.cargo_xwin()),
+        need_zigbuild.then(|| tools.cargo_zigbuild()),
+    ];
+
+    // Drop `None`s, then extract the values from the remaining `Option`s.
+    let needed_tools = all_tools.into_iter().flatten();
+
+    let missing: Vec<String> = needed_tools
+        .filter_map(|t| match t {
+            // The tool was found.
+            Ok(_) => None,
+            // The tool is missing
+            Err(DistError::ToolMissing { tool: ref name }) => Some(name.to_owned()),
+            // This should never happen, but I can't find a way to enforce
+            // it at the type system level. ;~; -@duckinator
+            Err(_) => unreachable!(
+                "do_env_test() got an Err that wasn't DistError::ToolMissing. This is a dist bug."
+            ),
+        })
+        .collect();
+
+    missing
+        .is_empty()
+        .then_some(())
+        .ok_or(DistError::EnvToolsMissing { tools: missing })
+}
+
 /// dist build -- actually build binaries and installers!
 pub fn do_build(cfg: &Config) -> DistResult<DistManifest> {
+    do_env_test(cfg)?;
     check_integrity(cfg)?;
 
     let (dist, mut manifest) = tasks::gather_work(cfg)?;
