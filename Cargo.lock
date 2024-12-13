@@ -198,7 +198,7 @@ dependencies = [
  "pathdiff",
  "semver",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.6",
  "tracing",
  "url",
 ]
@@ -423,7 +423,7 @@ dependencies = [
  "spdx",
  "tar",
  "temp-dir",
- "thiserror 1.0.69",
+ "thiserror 2.0.6",
  "tokio",
  "tracing",
  "uuid",
