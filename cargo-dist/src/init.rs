@@ -769,12 +769,6 @@ fn get_new_dist_metadata(
         }
     }
 
-    meta.publish_jobs = if publish_jobs.is_empty() {
-        None
-    } else {
-        Some(publish_jobs)
-    };
-
     // Special handling of the npm installer
     if meta
         .installers
@@ -830,7 +824,23 @@ fn get_new_dist_metadata(
             }
             eprintln!();
         }
+    } else {
+        let npm_toggled_off = orig_meta
+            .installers
+            .as_deref()
+            .unwrap_or_default()
+            .contains(&InstallerStyle::Npm);
+        if npm_toggled_off {
+            meta.npm_scope = None;
+            publish_jobs.retain(|job| job != &PublishStyle::Npm);
+        }
     }
+
+    meta.publish_jobs = if publish_jobs.is_empty() {
+        None
+    } else {
+        Some(publish_jobs)
+    };
 
     if orig_meta.install_updater.is_none()
         && meta
