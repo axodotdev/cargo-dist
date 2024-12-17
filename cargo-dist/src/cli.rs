@@ -1,12 +1,12 @@
 //! All the clap stuff for parsing/documenting the cli
 
 use camino::Utf8PathBuf;
-use cargo_dist::announce::{TagMode, TagSettings};
 use cargo_dist_schema::TripleName;
 use clap::{
     builder::{PossibleValuesParser, TypedValueParser},
     Args, Parser, Subcommand, ValueEnum,
 };
+use dist::announce::{TagMode, TagSettings};
 use tracing::level_filters::LevelFilter;
 
 #[derive(Parser, Clone, Debug)]
@@ -233,13 +233,13 @@ pub enum ArtifactMode {
 
 impl ArtifactMode {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::config::ArtifactMode {
+    pub fn to_lib(self) -> dist::config::ArtifactMode {
         match self {
-            ArtifactMode::Local => cargo_dist::config::ArtifactMode::Local,
-            ArtifactMode::Global => cargo_dist::config::ArtifactMode::Global,
-            ArtifactMode::Host => cargo_dist::config::ArtifactMode::Host,
-            ArtifactMode::All => cargo_dist::config::ArtifactMode::All,
-            ArtifactMode::Lies => cargo_dist::config::ArtifactMode::Lies,
+            ArtifactMode::Local => dist::config::ArtifactMode::Local,
+            ArtifactMode::Global => dist::config::ArtifactMode::Global,
+            ArtifactMode::Host => dist::config::ArtifactMode::Host,
+            ArtifactMode::All => dist::config::ArtifactMode::All,
+            ArtifactMode::Lies => dist::config::ArtifactMode::Lies,
         }
     }
 }
@@ -291,10 +291,10 @@ pub enum GenerateMode {
 
 impl GenerateMode {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::config::GenerateMode {
+    pub fn to_lib(self) -> dist::config::GenerateMode {
         match self {
-            GenerateMode::Ci => cargo_dist::config::GenerateMode::Ci,
-            GenerateMode::Msi => cargo_dist::config::GenerateMode::Msi,
+            GenerateMode::Ci => dist::config::GenerateMode::Ci,
+            GenerateMode::Msi => dist::config::GenerateMode::Msi,
         }
     }
 }
@@ -391,9 +391,9 @@ pub enum CiStyle {
 
 impl CiStyle {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::config::CiStyle {
+    pub fn to_lib(self) -> dist::config::CiStyle {
         match self {
-            CiStyle::Github => cargo_dist::config::CiStyle::Github,
+            CiStyle::Github => dist::config::CiStyle::Github,
         }
     }
 }
@@ -415,13 +415,13 @@ pub enum InstallerStyle {
 
 impl InstallerStyle {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::config::InstallerStyle {
+    pub fn to_lib(self) -> dist::config::InstallerStyle {
         match self {
-            InstallerStyle::Shell => cargo_dist::config::InstallerStyle::Shell,
-            InstallerStyle::Powershell => cargo_dist::config::InstallerStyle::Powershell,
-            InstallerStyle::Npm => cargo_dist::config::InstallerStyle::Npm,
-            InstallerStyle::Homebrew => cargo_dist::config::InstallerStyle::Homebrew,
-            InstallerStyle::Msi => cargo_dist::config::InstallerStyle::Msi,
+            InstallerStyle::Shell => dist::config::InstallerStyle::Shell,
+            InstallerStyle::Powershell => dist::config::InstallerStyle::Powershell,
+            InstallerStyle::Npm => dist::config::InstallerStyle::Npm,
+            InstallerStyle::Homebrew => dist::config::InstallerStyle::Homebrew,
+            InstallerStyle::Msi => dist::config::InstallerStyle::Msi,
         }
     }
 }
@@ -465,13 +465,13 @@ pub struct HostArgs {
 
 impl HostStyle {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::config::HostStyle {
+    pub fn to_lib(self) -> dist::config::HostStyle {
         match self {
-            HostStyle::Check => cargo_dist::config::HostStyle::Check,
-            HostStyle::Create => cargo_dist::config::HostStyle::Create,
-            HostStyle::Upload => cargo_dist::config::HostStyle::Upload,
-            HostStyle::Release => cargo_dist::config::HostStyle::Release,
-            HostStyle::Announce => cargo_dist::config::HostStyle::Announce,
+            HostStyle::Check => dist::config::HostStyle::Check,
+            HostStyle::Create => dist::config::HostStyle::Create,
+            HostStyle::Upload => dist::config::HostStyle::Upload,
+            HostStyle::Release => dist::config::HostStyle::Release,
+            HostStyle::Announce => dist::config::HostStyle::Announce,
         }
     }
 }
@@ -493,10 +493,10 @@ pub enum HostStyle {
 
 impl HostingStyle {
     /// Convert the application version of this enum to the library version
-    pub fn to_lib(self) -> cargo_dist::config::HostingStyle {
+    pub fn to_lib(self) -> dist::config::HostingStyle {
         match self {
-            HostingStyle::Github => cargo_dist::config::HostingStyle::Github,
-            HostingStyle::Axodotdev => cargo_dist::config::HostingStyle::Axodotdev,
+            HostingStyle::Github => dist::config::HostingStyle::Github,
+            HostingStyle::Axodotdev => dist::config::HostingStyle::Axodotdev,
         }
     }
 }

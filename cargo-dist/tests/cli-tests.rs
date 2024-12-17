@@ -40,7 +40,7 @@ fn test_version() {
     assert_eq!(stderr, "");
 
     let (name, ver) = stdout.split_once(' ').unwrap();
-    assert_eq!(name, "cargo-dist");
+    assert_eq!(name, "dist");
     let mut ver_parts = ver.trim().split('.');
     ver_parts.next().unwrap().parse::<u8>().unwrap();
     ver_parts.next().unwrap().parse::<u8>().unwrap();
@@ -267,6 +267,7 @@ fn generate_installer(version: &axotag::Version, release_type: ReleaseSourceType
 }
 
 #[test]
+#[ignore = "can't be reenabled until after the rename"]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
     if std::env::var(ENV_RUIN_ME)
