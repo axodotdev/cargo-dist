@@ -426,6 +426,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub install_updater: Option<bool>,
 
+    /// Whether to always use the latest axoupdater instead of a known-good version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub always_use_latest_updater: Option<bool>,
+
     /// Whether artifacts/installers for this app should be displayed in release bodies
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display: Option<bool>,
@@ -533,6 +537,7 @@ impl DistMetadata {
             bin_aliases: _,
             tag_namespace: _,
             install_updater: _,
+            always_use_latest_updater: _,
             github_releases_repo: _,
             github_releases_submodule_path: _,
             display: _,
@@ -634,6 +639,7 @@ impl DistMetadata {
             bin_aliases,
             tag_namespace,
             install_updater,
+            always_use_latest_updater,
             github_releases_repo,
             github_releases_submodule_path,
             display,
@@ -817,6 +823,9 @@ impl DistMetadata {
         }
         if install_updater.is_none() {
             *install_updater = workspace_config.install_updater;
+        }
+        if always_use_latest_updater.is_none() {
+            *always_use_latest_updater = workspace_config.always_use_latest_updater;
         }
         if display.is_none() {
             *display = workspace_config.display;

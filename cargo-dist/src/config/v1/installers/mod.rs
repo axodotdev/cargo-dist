@@ -21,6 +21,8 @@ use shell::*;
 pub struct WorkspaceInstallerConfig {
     /// Whether to install an updater program alongside the software
     pub updater: bool,
+    /// Whether to always use the latest version instead of a known-good version
+    pub always_use_latest_updater: bool,
 }
 /// package installer config (final)
 #[derive(Debug, Default, Clone)]
@@ -58,6 +60,8 @@ pub struct InstallerConfigInheritable {
     pub pkg: Option<PkgInstallerLayer>,
     /// Whether to install an updater program alongside the software
     pub updater: bool,
+    /// Whether to always use the latest version instead of a fixed version
+    pub always_use_latest_updater: bool,
 }
 
 /// installer config (raw from file)
@@ -82,6 +86,9 @@ pub struct InstallerLayer {
     /// Whether to install an updater program alongside the software
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updater: Option<bool>,
+    /// Whether to always use the latest updater version instead of a fixed version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub always_use_latest_updater: Option<bool>,
 }
 impl InstallerConfigInheritable {
     /// defaults for a workspace
@@ -103,6 +110,7 @@ impl InstallerConfigInheritable {
             shell: None,
             pkg: None,
             updater: false,
+            always_use_latest_updater: false,
         }
     }
     /// apply inheritance to and get final workspace config
@@ -113,6 +121,7 @@ impl InstallerConfigInheritable {
         let Self {
             // global
             updater,
+            always_use_latest_updater,
             // local-only
             common: _,
             homebrew: _,
@@ -123,7 +132,10 @@ impl InstallerConfigInheritable {
             pkg: _,
         } = self;
 
-        WorkspaceInstallerConfig { updater }
+        WorkspaceInstallerConfig {
+            updater,
+            always_use_latest_updater,
+        }
     }
     /// apply inheritance to get final package config
     pub fn apply_inheritance_for_package(
@@ -141,6 +153,7 @@ impl InstallerConfigInheritable {
             pkg,
             // global-only
             updater: _,
+            always_use_latest_updater: _,
         } = self;
         let homebrew = homebrew.map(|homebrew| {
             let mut default =
@@ -201,6 +214,7 @@ impl ApplyLayer for InstallerConfigInheritable {
             shell,
             pkg,
             updater,
+            always_use_latest_updater,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -211,6 +225,8 @@ impl ApplyLayer for InstallerConfigInheritable {
         self.shell.apply_bool_layer(shell);
         self.pkg.apply_bool_layer(pkg);
         self.updater.apply_val(updater);
+        self.always_use_latest_updater
+            .apply_val(always_use_latest_updater);
     }
 }
 
