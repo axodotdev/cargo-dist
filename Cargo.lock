@@ -217,8 +217,7 @@ dependencies = [
 [[package]]
 name = "axoupdater"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a70b7d3a9ea86ef8d17dada23f2c42518ed4b75dd6a8ff761f8988b448db8454"
+source = "git+https://github.com/axodotdev/axoupdater?rev=18bcd3e8937f05c24dec786860641f77e7931523#18bcd3e8937f05c24dec786860641f77e7931523"
 dependencies = [
  "axoasset",
  "axoprocess",
@@ -230,7 +229,7 @@ dependencies = [
  "self-replace",
  "serde",
  "tempfile",
- "thiserror 1.0.69",
+ "thiserror 2.0.6",
  "url",
 ]
 
