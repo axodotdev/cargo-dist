@@ -1,5 +1,5 @@
 [package]
-name = "cargo-dist"
+name = "dist"
 description = "Shippable application packaging for Rust"
 version.workspace = true
 edition.workspace = true
