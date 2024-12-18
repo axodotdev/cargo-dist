@@ -12,6 +12,7 @@ use cargo_dist_schema::{
 use serde::{Deserialize, Serialize};
 
 use crate::announce::TagSettings;
+use crate::config::v1::DistWorkspaceConfig;
 use crate::SortedMap;
 use crate::{
     errors::{DistError, DistResult},
@@ -929,6 +930,21 @@ impl std::fmt::Display for ProductionMode {
     }
 }
 
+pub(crate) fn load_config(dist_manifest_path: &Utf8Path) -> DistResult<DistWorkspaceConfig> {
+    let src = SourceFile::load_local(dist_manifest_path)?;
+    parse_config(src)
+}
+
+pub(crate) fn parse_config(src: SourceFile) -> DistResult<DistWorkspaceConfig> {
+    let config: DistWorkspaceConfig = src.deserialize_toml()?;
+    Ok(config)
+}
+
+pub(crate) fn load_generic_v0_config(dist_manifest_path: &Utf8Path) -> DistResult<DistMetadata> {
+    let src = SourceFile::load_local(dist_manifest_path)?;
+    parse_generic_config(src)
+}
+
 pub(crate) fn parse_metadata_table_or_manifest(
     manifest_path: &Utf8Path,
     dist_manifest_path: Option<&Utf8Path>,
@@ -937,8 +953,7 @@ pub(crate) fn parse_metadata_table_or_manifest(
     if let Some(dist_manifest_path) = dist_manifest_path {
         reject_metadata_table(manifest_path, dist_manifest_path, metadata_table)?;
         // Generic dist.toml
-        let src = SourceFile::load_local(dist_manifest_path)?;
-        parse_generic_config(src)
+        load_generic_v0_config(dist_manifest_path)
     } else {
         // Pre-parsed Rust metadata table
         parse_metadata_table(manifest_path, metadata_table)
