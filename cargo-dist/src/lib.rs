@@ -61,12 +61,16 @@ mod tests;
 pub fn do_env_test(cfg: &Config) -> DistResult<()> {
     let (dist, _manifest) = tasks::gather_work(cfg)?;
 
-    let global_builds = cfg.artifact_mode == ArtifactMode::Global;
+    let local_builds = matches!(
+        cfg.artifact_mode,
+        ArtifactMode::Local | ArtifactMode::All | ArtifactMode::Host
+    );
 
     let builds = dist.config.builds;
 
-    let need_cargo_auditable = builds.cargo.cargo_auditable && !global_builds;
-    let need_cargo_cyclonedx = builds.cargo.cargo_cyclonedx && !global_builds;
+    // cargo-auditable is used only in local builds
+    let need_cargo_auditable = builds.cargo.cargo_auditable && local_builds;
+    // omnibor is used in both local and global builds
     let need_omnibor = builds.omnibor;
     let mut need_xwin = false;
     let mut need_zigbuild = false;
@@ -105,7 +109,6 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
     // Vec<Option<Result<&Tool, DistResult>>>.
     let all_tools: Vec<Option<DistResult<&Tool>>> = vec![
         need_cargo_auditable.then(|| tools.cargo_auditable()),
-        need_cargo_cyclonedx.then(|| tools.cargo_cyclonedx()),
         need_omnibor.then(|| tools.omnibor()),
         need_xwin.then(|| tools.cargo_xwin()),
         need_zigbuild.then(|| tools.cargo_zigbuild()),
