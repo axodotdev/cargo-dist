@@ -70,8 +70,6 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
 
     // cargo-auditable is used only in local builds
     let need_cargo_auditable = builds.cargo.cargo_auditable && local_builds;
-    // cyclonedx is used only in global builds
-    let need_cargo_cyclonedx = builds.cargo.cargo_cyclonedx && !local_builds;
     // omnibor is used in both local and global builds
     let need_omnibor = builds.omnibor;
     let mut need_xwin = false;
@@ -111,7 +109,6 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
     // Vec<Option<Result<&Tool, DistResult>>>.
     let all_tools: Vec<Option<DistResult<&Tool>>> = vec![
         need_cargo_auditable.then(|| tools.cargo_auditable()),
-        need_cargo_cyclonedx.then(|| tools.cargo_cyclonedx()),
         need_omnibor.then(|| tools.omnibor()),
         need_xwin.then(|| tools.cargo_xwin()),
         need_zigbuild.then(|| tools.cargo_zigbuild()),
