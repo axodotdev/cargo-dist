@@ -275,7 +275,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
             .interact()?;
 
         if is_migrating {
-            do_migrate()?;
+            do_migrate_from_rust_workspace()?;
             return do_init(cfg, args);
         }
     }
