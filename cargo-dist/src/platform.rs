@@ -232,7 +232,7 @@ pub mod targets;
 
 use std::collections::HashMap;
 
-use cargo_dist_schema::{
+use dist_schema::{
     ArtifactId, AssetId, BuildEnvironment, ChecksumExtension, ChecksumValue, DistManifest,
     GlibcVersion, Linkage, SystemInfo, TripleName, TripleNameRef,
 };

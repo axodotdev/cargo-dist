@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{ArtifactId, EnvironmentVariables, Hosting, TripleName};
+use dist_schema::{ArtifactId, EnvironmentVariables, Hosting, TripleName};
 use homebrew::HomebrewFragments;
 use macpkg::PkgInstallerInfo;
 use serde::Serialize;
