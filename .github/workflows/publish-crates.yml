@@ -31,7 +31,7 @@ jobs:
       - run: cargo publish -p axoproject --token ${CRATES_TOKEN}
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
-      - run: cargo publish -p cargo-dist-schema --token ${CRATES_TOKEN}
+      - run: cargo publish -p dist-schema --token ${CRATES_TOKEN}
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
       - run: cargo publish -p dist --token ${CRATES_TOKEN}

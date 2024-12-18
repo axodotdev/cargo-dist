@@ -1,12 +1,12 @@
 //! All the clap stuff for parsing/documenting the cli
 
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TripleName;
 use clap::{
     builder::{PossibleValuesParser, TypedValueParser},
     Args, Parser, Subcommand, ValueEnum,
 };
 use dist::announce::{TagMode, TagSettings};
+use dist_schema::TripleName;
 use tracing::level_filters::LevelFilter;
 
 #[derive(Parser, Clone, Debug)]

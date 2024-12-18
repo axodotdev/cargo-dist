@@ -1,7 +1,7 @@
 use axoasset::{toml_edit, LocalAsset};
 use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TripleNameRef;
+use dist_schema::TripleNameRef;
 use semver::Version;
 use serde::Deserialize;
 

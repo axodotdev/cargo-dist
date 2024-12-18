@@ -512,7 +512,7 @@ impl PlanResult {
         self.snapshot()
     }
 
-    pub fn parse(&self) -> Result<cargo_dist_schema::DistManifest> {
+    pub fn parse(&self) -> Result<dist_schema::DistManifest> {
         let src = SourceFile::new("dist-manifest.json", self.raw_json.clone());
         let val = src.deserialize_json()?;
         Ok(val)

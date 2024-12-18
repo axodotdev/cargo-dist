@@ -5,7 +5,7 @@ use std::os::unix::fs::PermissionsExt;
 
 use axoasset::AxoClient;
 use camino::Utf8Path;
-use cargo_dist_schema::TripleNameRef;
+use dist_schema::TripleNameRef;
 
 use crate::{config::ProductionMode, DistResult};
 
