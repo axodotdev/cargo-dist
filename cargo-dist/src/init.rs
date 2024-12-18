@@ -76,7 +76,7 @@ fn prune_cargo_workspace_metadata_dist(workspace: &mut toml_edit::DocumentMut) {
 }
 
 /// Create a toml-edit document set up for a cargo workspace.
-fn new_workspace() -> toml_edit::DocumentMut {
+fn new_cargo_workspace() -> toml_edit::DocumentMut {
     let mut new_workspace = toml_edit::DocumentMut::new();
 
     // Write generic workspace config
@@ -84,6 +84,22 @@ fn new_workspace() -> toml_edit::DocumentMut {
     if let Some(t) = table.as_table_mut() {
         let mut array = toml_edit::Array::new();
         array.push("cargo:.");
+        t["members"] = toml_edit::value(array);
+    }
+    new_workspace.insert("workspace", table);
+
+    new_workspace
+}
+
+/// Create a toml-edit document set up for a cargo workspace.
+fn new_generic_workspace() -> toml_edit::DocumentMut {
+    let mut new_workspace = toml_edit::DocumentMut::new();
+
+    // Write generic workspace config
+    let mut table = toml_edit::table();
+    if let Some(t) = table.as_table_mut() {
+        let mut array = toml_edit::Array::new();
+        array.push("dist:.");
         t["members"] = toml_edit::value(array);
     }
     new_workspace.insert("workspace", table);
@@ -111,7 +127,7 @@ fn do_migrate_from_rust_workspace() -> DistResult<()> {
     let mut original_workspace_toml = workspace_toml.clone();
 
     // Generate a new workspace, then populate it using config from Cargo.toml.
-    let mut new_workspace_toml = new_workspace();
+    let mut new_workspace_toml = new_cargo_workspace();
     copy_cargo_workspace_metadata_dist(&mut new_workspace_toml, workspace_toml);
 
     // Determine config file location.
@@ -129,9 +145,48 @@ fn do_migrate_from_rust_workspace() -> DistResult<()> {
     Ok(())
 }
 
+fn do_migrate_from_dist_toml() -> DistResult<()> {
+    let workspaces = config::get_project()?;
+    let root_workspace = workspaces.root_workspace();
+    let initted = has_metadata_table(root_workspace);
+
+    if !initted {
+        return Ok(());
+    }
+
+    if root_workspace.kind != WorkspaceKind::Generic
+        && root_workspace.manifest_path.file_name() != Some("dist.toml")
+    {
+        return Ok(());
+    }
+
+    // OK, now we know we have a root-level dist.toml. Time to fix that.
+    let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
+    let mut original_workspace_toml = workspace_toml.clone();
+
+    // Init a generic workspace with the appropriate members
+    let mut new_workspace_toml = new_generic_workspace();
+    // Copy the [dist] section
+    if let Some(dist) = workspace_toml.get("dist") {
+        new_workspace_toml.insert("dist", dist.to_owned());
+    }
+    // Then prune it from the old copy
+    original_workspace_toml.remove("dist");
+
+    // Finally, write out the new config...
+    let filename = "dist-workspace.toml";
+    let destination = root_workspace.workspace_dir.join(filename);
+    config::write_toml(&destination, new_workspace_toml)?;
+    // ...and write the modified config
+    config::write_toml(&root_workspace.manifest_path, original_workspace_toml)?;
+
+    Ok(())
+}
+
 /// Run `dist migrate`
 pub fn do_migrate() -> DistResult<()> {
     do_migrate_from_rust_workspace()?;
+    do_migrate_from_dist_toml()?;
     //do_migrate_from_v0()?;
     Ok(())
 }
@@ -185,6 +240,14 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
     let initted = has_metadata_table(root_workspace);
 
+    if root_workspace.kind == WorkspaceKind::Generic
+        && initted
+        && root_workspace.manifest_path.file_name() == Some("dist.toml")
+    {
+        do_migrate()?;
+        return do_init(cfg, args);
+    }
+
     // Already-initted users should be asked whether to migrate.
     if root_workspace.kind == WorkspaceKind::Rust && initted && !args.yes {
         let prompt = r#"Would you like to opt in to the new configuration format?
@@ -235,7 +298,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // generic workspace specification, and will have some
     // extraneous cargo-specific stuff that we don't want.
     let mut workspace_toml = if newly_initted_generic {
-        new_workspace()
+        new_cargo_workspace()
     } else {
         workspace_toml
     };
