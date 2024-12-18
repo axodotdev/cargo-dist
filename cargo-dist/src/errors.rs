@@ -74,6 +74,10 @@ pub enum DistError {
     #[error(transparent)]
     TripleError(#[from] cargo_dist_schema::target_lexicon::ParseError),
 
+    /// error when using axoasset::toml::to_string() or similar
+    #[error(transparent)]
+    AxoassetTomlSerErr(#[from] axoasset::toml::ser::Error),
+
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
     #[diagnostic(

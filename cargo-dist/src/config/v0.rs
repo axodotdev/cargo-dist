@@ -12,6 +12,19 @@ use super::*;
 use crate::platform::MinGlibcVersion;
 use crate::SortedMap;
 
+use crate::config::v1::{WorkspaceTable, PackageTable};
+
+/// A container to assist deserializing the entirety of `dist-workspace.toml`.
+#[derive(Debug, Deserialize)]
+pub struct V0WorkspaceConfig {
+    /// the `[workspace]` table.
+    pub workspace: Option<WorkspaceTable>,
+    /// the `[package]` table.
+    pub package: Option<PackageTable>,
+    /// the `[dist]` table.
+    pub dist: Option<DistMetadata>,
+}
+
 /// A container to assist deserializing metadata from dist(-workspace).tomls
 #[derive(Debug, Deserialize)]
 pub struct GenericConfig {

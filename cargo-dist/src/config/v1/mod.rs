@@ -373,6 +373,78 @@ impl ApplyLayer for AppConfigInheritable {
     }
 }
 
+/// The internal representation of the [package] table from dist[-workspace].toml.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct PackageTable {
+    /// The name of the package.
+    pub name: String,
+    /// The version of the package. Syntax must be a valid Cargo SemVer Version.
+    pub version: String,
+    /// A brief description of the package.
+    pub description: Option<String>,
+    /// The authors of the package.
+    pub authors: Option<Vec<String>>,
+    /// A URL to the repository hosting this package.
+    pub repository: Option<String>,
+    /// A URL to the homepage of the package.
+    pub homepage: Option<String>,
+    /// A URL to the documentation of the package.
+    pub documentation: Option<String>,
+    /// A relative path to the changelog file for your package.
+    pub changelog: Option<String>,
+    /// A relative path to the readme file for your package.
+    pub readme: Option<String>,
+    /// The license(s) of your package, in SPDX format.
+    pub license: Option<String>,
+    /// Relative paths to the license files for your package.
+    pub license_files: Option<Vec<String>>,
+    /// Names of binaries (without the extension) your package is expected
+    /// to build and distribute.
+    pub binaries: Option<Vec<String>>,
+    /// Names of c-style static libraries (without the extension) your
+    /// package is expected to build and distribute.
+    pub cstaticlibs: Option<Vec<String>>,
+    /// Names of c-style dynamic libraries (without the extension) your
+    /// package is expected to build and distribute.
+    pub cdylibs: Option<Vec<String>>,
+    /// A command to run in your package's root directory to build its
+    /// binaries, cstaticlibs, and cdylibs.
+    pub build_command: Option<Vec<String>>,
+}
+
+/// The internal representation of dist.toml.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct DistConfig {
+    /// The `[package]` table from dist.toml.
+    pub package: Option<PackageTable>,
+    /// The `[dist]` table from dist.toml.
+    pub dist: TomlLayer,
+}
+
+/// The internal representation of the [workspace] table from dist-workspace.toml.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct WorkspaceTable {
+    /// The various projects/workspaces/packages to be managed by dist.
+    pub members: Vec<String>,
+}
+
+/// The internal representation of dist-workspace.toml.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct DistWorkspaceConfig {
+    /// The `[workspace]` table.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<WorkspaceTable>,
+    /// The `[dist]` table
+    pub dist: TomlLayer,
+    /// The `[package]` table.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub package: Option<PackageTable>,
+}
+
 /// The "raw" input from a toml file containing config
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
