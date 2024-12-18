@@ -54,7 +54,7 @@ fi
 read -r RECEIPT <<EORECEIPT
 {{ receipt | tojson }}
 EORECEIPT
-RECEIPT_HOME="${HOME}/.config/{{ app_name }}"
+RECEIPT_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/{{ app_name }}"
 
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
