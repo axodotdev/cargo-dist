@@ -4,7 +4,7 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use camino::Utf8Path;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::TripleNameRef;
+use dist_schema::TripleNameRef;
 use tracing::info;
 use tracing::warn;
 

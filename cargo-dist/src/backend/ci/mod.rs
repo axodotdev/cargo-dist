@@ -1,6 +1,6 @@
 //! Support for generating CI scripts for running dist
 
-use cargo_dist_schema::{
+use dist_schema::{
     target_lexicon::{OperatingSystem, Triple},
     DashScript, GhaRunStep, PowershellScript,
 };
@@ -101,7 +101,7 @@ impl DistInstallSettings<'_> {
         }
 
         let version = self.version;
-        let format = cargo_dist_schema::format_of_version(version);
+        let format = dist_schema::format_of_version(version);
         let installer_name = if format.unsupported() {
             // FIXME: we should probably do this check way higher up and produce a proper err...
             panic!("requested dist v{version}, which is not supported by the this copy of dist ({SELF_DIST_VERSION})");

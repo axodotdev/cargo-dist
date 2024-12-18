@@ -2,7 +2,7 @@
 
 use axoasset::{toml_edit, LocalAsset};
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::TripleName;
+use dist_schema::TripleName;
 use tracing::info;
 use wix::print::{wxs::WxsRenders, RenderOutput};
 

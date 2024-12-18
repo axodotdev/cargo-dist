@@ -9,9 +9,9 @@
 use axoproject::errors::AxoprojectError;
 use backtrace::Backtrace;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{target_lexicon::Triple, ArtifactId, TripleName};
 use color_backtrace::BacktracePrinter;
 use console::style;
+use dist_schema::{target_lexicon::Triple, ArtifactId, TripleName};
 use miette::{Diagnostic, SourceOffset, SourceSpan};
 use thiserror::Error;
 
@@ -72,7 +72,7 @@ pub enum DistError {
 
     /// random triple parse error
     #[error(transparent)]
-    TripleError(#[from] cargo_dist_schema::target_lexicon::ParseError),
+    TripleError(#[from] dist_schema::target_lexicon::ParseError),
 
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]

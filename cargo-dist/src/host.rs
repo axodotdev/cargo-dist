@@ -14,7 +14,7 @@ use crate::{
     DistError, DistGraph, DistGraphBuilder, HostingInfo,
 };
 use axoproject::WorkspaceGraph;
-use cargo_dist_schema::{ArtifactIdRef, DistManifest, Hosting};
+use dist_schema::{ArtifactIdRef, DistManifest, Hosting};
 use gazenot::{AnnouncementKey, Gazenot};
 
 /// Do hosting
@@ -190,7 +190,7 @@ impl<'a> DistGraphBuilder<'a> {
                         self.manifest
                             .ensure_release(name.clone(), version.clone())
                             .hosting
-                            .github = Some(cargo_dist_schema::GithubHosting {
+                            .github = Some(dist_schema::GithubHosting {
                             artifact_base_url: hosting.domain.clone(),
                             artifact_download_path: format!("{repo_path}/releases/download/{tag}"),
                             owner: hosting.owner.clone(),
