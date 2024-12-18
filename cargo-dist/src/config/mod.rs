@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use axoasset::{toml_edit, SourceFile};
 use axoproject::local_repo::LocalRepo;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{
+use dist_schema::{
     AptPackageName, ChecksumExtensionRef, ChocolateyPackageName, HomebrewPackageName,
     PackageVersion, TripleName, TripleNameRef,
 };
@@ -175,13 +175,13 @@ impl std::str::FromStr for LibraryStyle {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum InstallerStyle {
-    /// Generate a shell script that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
+    /// Generate a shell script that fetches from [`dist_schema::Release::artifact_download_url`][]
     Shell,
-    /// Generate a powershell script that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
+    /// Generate a powershell script that fetches from [`dist_schema::Release::artifact_download_url`][]
     Powershell,
-    /// Generate an npm project that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
+    /// Generate an npm project that fetches from [`dist_schema::Release::artifact_download_url`][]
     Npm,
-    /// Generate a Homebrew formula that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
+    /// Generate a Homebrew formula that fetches from [`dist_schema::Release::artifact_download_url`][]
     Homebrew,
     /// Generate an msi installer that embeds the binary
     Msi,

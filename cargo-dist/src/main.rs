@@ -9,7 +9,6 @@ use axoprocess::Cmd;
 use axoupdater::AxoUpdater;
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
-use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{
     Cli, Commands, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat, PlanArgs,
@@ -17,6 +16,7 @@ use cli::{
 };
 use console::Term;
 use dist::{linkage::LinkageDisplay, *};
+use dist_schema::{AssetKind, DistManifest};
 use miette::{miette, IntoDiagnostic};
 use net::ClientSettings;
 
@@ -116,7 +116,7 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
         )?;
         for artifact_id in &release.artifacts {
             let artifact = &manifest.artifacts[artifact_id];
-            if let cargo_dist_schema::ArtifactKind::Checksum = &artifact.kind {
+            if let dist_schema::ArtifactKind::Checksum = &artifact.kind {
                 // Don't print shasums at top-level
                 continue;
             }
@@ -186,7 +186,7 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
 
 fn print_human_artifact_path(
     out: &mut Term,
-    artifact: &cargo_dist_schema::Artifact,
+    artifact: &dist_schema::Artifact,
 ) -> Result<(), std::io::Error> {
     // Print out the name or path of the artifact (path is more useful by noisier)
     if let Some(path) = &artifact.path {
@@ -242,7 +242,7 @@ fn cmd_print_upload_files_from_manifest(
     args: &PrintUploadFilesFromManifestArgs,
 ) -> Result<(), miette::Report> {
     let manifest_str = axoasset::LocalAsset::load_string(&args.manifest)?;
-    let manifest = serde_json::from_str::<cargo_dist_schema::DistManifest>(&manifest_str)
+    let manifest = serde_json::from_str::<dist_schema::DistManifest>(&manifest_str)
         .into_diagnostic()
         .map_err(|err| miette!("Failed to parse manifest as JSON: {}", err))?;
 
@@ -404,7 +404,7 @@ fn generate_manifest(
             .as_ref()
             .and_then(|ci| ci.github.as_ref())
             .and_then(|gh| gh.pr_run_mode)
-            == Some(cargo_dist_schema::PrRunMode::Upload))
+            == Some(dist_schema::PrRunMode::Upload))
     {
         let message = concat!(
             "  note: Forcing needs_coherence=true, because pr-run-mode=\"upload\" is set.\n",
@@ -661,7 +661,7 @@ fn cmd_manifest_schema(
     _config: &Cli,
     args: &cli::ManifestSchemaArgs,
 ) -> Result<(), miette::ErrReport> {
-    let schema = cargo_dist_schema::DistManifest::json_schema();
+    let schema = dist_schema::DistManifest::json_schema();
     let json_schema = serde_json::to_string_pretty(&schema).expect("failed to stringify schema!?");
 
     if let Some(destination) = args.output.to_owned() {

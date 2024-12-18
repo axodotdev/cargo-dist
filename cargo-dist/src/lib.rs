@@ -27,11 +27,11 @@ use build::{
     fake::{build_fake_cargo_target, build_fake_generic_target},
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TripleName};
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
 use console::Term;
+use dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TripleName};
 use semver::Version;
 use temp_dir::TempDir;
 use tracing::info;

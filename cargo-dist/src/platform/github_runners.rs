@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use crate::platform::targets as t;
-use cargo_dist_schema::{target_lexicon::Triple, GithubRunnerRef, TripleNameRef};
+use dist_schema::{target_lexicon::Triple, GithubRunnerRef, TripleNameRef};
 use tracing::warn;
 
 lazy_static::lazy_static! {

@@ -8,11 +8,11 @@ use std::{
 use axoasset::SourceFile;
 use axoprocess::Cmd;
 use camino::Utf8PathBuf;
-use cargo_dist_schema::{
+use comfy_table::{presets::UTF8_FULL, Table};
+use dist_schema::{
     AssetInfo, BuildEnvironment, DistManifest, GlibcVersion, Library, Linkage, PackageManager,
     TripleNameRef,
 };
-use comfy_table::{presets::UTF8_FULL, Table};
 use goblin::Object;
 use mach_object::{LoadCommand, OFile};
 use tracing::warn;
