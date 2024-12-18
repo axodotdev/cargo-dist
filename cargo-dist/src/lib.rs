@@ -251,9 +251,16 @@ fn run_build_step(
     Ok(())
 }
 
-const AXOUPDATER_ASSET_ROOT: &str =
-    "https://github.com/axodotdev/axoupdater/releases/latest/download";
+const AXOUPDATER_ASSET_ROOT: &str = "https://github.com/axodotdev/axoupdater/releases";
 const AXOUPDATER_MINIMUM_VERSION: &str = "0.7.0";
+
+fn axoupdater_latest_asset_root() -> String {
+    format!("{AXOUPDATER_ASSET_ROOT}/latest/download")
+}
+
+fn axoupdater_asset_root() -> String {
+    format!("{AXOUPDATER_ASSET_ROOT}/download/v{}", axoupdater::VERSION)
+}
 
 /// Fetches an installer executable and installs it in the expected target path.
 pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResult<()> {
@@ -262,9 +269,16 @@ pub fn fetch_updater(dist_graph: &DistGraph, updater: &UpdaterStep) -> DistResul
     } else {
         ".tar.xz"
     };
+
+    let asset_root = if updater.use_latest {
+        axoupdater_latest_asset_root()
+    } else {
+        axoupdater_asset_root()
+    };
+
     let expected_url = format!(
-        "{AXOUPDATER_ASSET_ROOT}/axoupdater-cli-{}{ext}",
-        updater.target_triple
+        "{}/axoupdater-cli-{}{ext}",
+        asset_root, updater.target_triple
     );
 
     let handle = tokio::runtime::Handle::current();

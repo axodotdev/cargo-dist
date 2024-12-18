@@ -78,6 +78,7 @@ impl DistMetadata {
             bin_aliases,
             tag_namespace,
             install_updater,
+            always_use_latest_updater,
             display,
             display_name,
             package_libraries,
@@ -314,7 +315,8 @@ impl DistMetadata {
             || install_success_msg.is_some()
             || install_libraries.is_some()
             || bin_aliases.is_some()
-            || install_updater.is_some();
+            || install_updater.is_some()
+            || always_use_latest_updater.is_some();
         let installer_layer = needs_installer_layer.then_some(InstallerLayer {
             common: CommonInstallerLayer {
                 install_path,
@@ -329,6 +331,7 @@ impl DistMetadata {
             shell: shell_installer_layer,
             pkg: pkg_installer_layer,
             updater: install_updater,
+            always_use_latest_updater,
         });
 
         // publish

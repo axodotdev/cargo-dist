@@ -456,6 +456,7 @@ fn get_new_dist_metadata(
             bin_aliases: None,
             tag_namespace: None,
             install_updater: None,
+            always_use_latest_updater: None,
             display: None,
             display_name: None,
             package_libraries: None,
@@ -951,6 +952,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         hosting,
         tag_namespace,
         install_updater,
+        always_use_latest_updater,
         display,
         display_name,
         github_release,
@@ -1338,6 +1340,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "install-updater",
         "# Whether to install an updater program\n",
         *install_updater,
+    );
+
+    apply_optional_value(
+        table,
+        "always-use-latest-updater",
+        "# Whether to always use the latest updater instead of a specific known-good version\n",
+        *always_use_latest_updater,
     );
 
     apply_optional_value(

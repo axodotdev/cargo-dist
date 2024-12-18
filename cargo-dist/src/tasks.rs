@@ -662,6 +662,8 @@ pub struct UpdaterStep {
     pub target_triple: TripleName,
     /// The file this should produce
     pub target_filename: Utf8PathBuf,
+    /// Whether to use the latest release instead of a fixed version
+    pub use_latest: bool,
 }
 
 /// A kind of symbols (debuginfo)
@@ -802,7 +804,10 @@ pub struct ExtraArtifactImpl {
 
 /// An updater executable
 #[derive(Clone, Debug)]
-pub struct UpdaterImpl {}
+pub struct UpdaterImpl {
+    /// Whether to use the latest or a specific known-good version
+    pub use_latest: bool,
+}
 
 /// A file containing a Software Bill Of Materials
 #[derive(Clone, Debug)]
@@ -1811,7 +1816,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             file_path: target_path.to_owned(),
             required_binaries: FastMap::new(),
             archive: None,
-            kind: ArtifactKind::Updater(UpdaterImpl {}),
+            kind: ArtifactKind::Updater(UpdaterImpl {
+                use_latest: self.inner.config.installers.always_use_latest_updater,
+            }),
             checksum: None,
             is_global: false,
         }
@@ -2739,11 +2746,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 ArtifactKind::ExtraArtifact(_) => {
                     // compute_extra_builds handles this
                 }
-                ArtifactKind::Updater(_) => {
+                ArtifactKind::Updater(UpdaterImpl { use_latest }) => {
                     build_steps.push(BuildStep::Updater(UpdaterStep {
                         // There should only be one triple per artifact
                         target_triple: artifact.target_triples.first().unwrap().to_owned(),
                         target_filename: artifact.file_path.to_owned(),
+                        use_latest: *use_latest,
                     }))
                 }
                 ArtifactKind::SBOM(_) => {
