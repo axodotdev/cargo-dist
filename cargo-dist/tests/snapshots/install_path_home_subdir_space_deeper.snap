@@ -519,6 +519,8 @@ install() {
     local _force_install_dir
     # Which install layout to use - "flat" or "hierarchical"
     local _install_layout="unspecified"
+    # A list of binaries which are shadowed in the PATH
+    local _shadowed_bins=""
 
     # Check the newer app-specific variable before falling back
     # to the older generic one
@@ -677,6 +679,24 @@ install() {
             say "    source $_fish_env_script_path_expr (fish)"
         fi
     fi
+
+    _shadowed_bins="$(check_for_shadowed_bins "$_install_dir" "$_bins")"
+    if [ -n "$_shadowed_bins" ]; then
+        say "WARNING: The following commands are shadowed by other commands in your PATH:$_shadowed_bins"
+    fi
+}
+
+check_for_shadowed_bins() {
+    local _install_dir="$1"
+    local _bins="$2"
+
+    for _bin_name in $_bins; do
+        if [ "$(command -v "$_bin_name")" != "$_install_dir/$_bin_name" ]; then
+            _shadowed_bins="$_shadowed_bins $_bin_name"
+        fi
+    done
+
+    echo "$_shadowed_bins"
 }
 
 print_home_for_script() {
