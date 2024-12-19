@@ -1,0 +1,1569 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Config - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html" class="active"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/reference/config.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="config"><a class="header" href="#config">Config</a></h1>
+<p>These are the reference docs for configuring dist. <a href="../updating.html">dist init</a> manages the most important of these for you, but if you ever need advanced configuration, this is where to look!</p>
+<p>Configuration is currently read from the following sources, in increasing preference:</p>
+<ol>
+<li>Your language-specific project manifests like <a href="../quickstart/rust.html">Cargo.toml</a> or <a href="../quickstart/javascript.html">package.json</a></li>
+<li>Your workspace dist config in <a href="../quickstart/javascript.html">dist-workspace.toml</a> or <a href="../custom-builds.html">dist.toml</a></li>
+<li>Your package dist config in <a href="../custom-builds.html">dist.toml</a></li>
+</ol>
+<p>We're currently in the middle of <a href="https://github.com/axodotdev/cargo-dist/pull/1247">a major config migration</a>. For <a href="../quickstart/rust.html">existing Rust users</a>, all references to the <code>[dist]</code> section in dist-workspace.toml and dist.toml may also refer to <code>[workspace.metadata.dist]</code> or <code>[package.metadata.dist]</code> in your Cargo.toml.</p>
+<p><a href="#the-dist-section"><code>[dist]</code></a></p>
+<ul>
+<li><a href="#allow-dirty"><code>allow-dirty</code></a></li>
+<li><a href="#cargo-dist-version"><code>cargo-dist-version</code></a></li>
+<li><a href="#dist"><code>dist</code></a></li>
+<li><a href="#targets"><code>targets</code></a></li>
+</ul>
+<p><a href="#artifact-settings">artifact settings</a></p>
+<ul>
+<li><a href="#checksum"><code>checksum</code></a></li>
+<li><a href="#extra-artifacts"><code>extra-artifacts</code></a></li>
+<li><a href="#source-tarball"><code>source-tarball</code></a></li>
+<li><a href="#ssldotcom-windows-sign"><code>ssldotcom-windows-sign</code></a></li>
+<li><a href="#artifact-settings">archive settings</a>
+<ul>
+<li><a href="#auto-includes"><code>auto-includes</code></a></li>
+<li><a href="#include"><code>include</code></a></li>
+<li><a href="#package-libraries"><code>package-libraries</code></a></li>
+<li><a href="#unix-archive"><code>unix-archive</code></a></li>
+<li><a href="#windows-archive"><code>windows-archive</code></a></li>
+</ul>
+</li>
+</ul>
+<p><a href="#build-settings">build settings</a></p>
+<ul>
+<li><a href="#dependencies"><code>dependencies</code></a></li>
+<li><a href="#cargo-build-settings">cargo build settings</a>
+<ul>
+<li><a href="#all-features"><code>all-features</code></a></li>
+<li><a href="#default-features"><code>default-features</code></a></li>
+<li><a href="#features"><code>features</code></a></li>
+<li><a href="#min-glibc-version"><code>min-glibc-version</code></a></li>
+<li><a href="#msvc-crt-static"><code>msvc-crt-static</code></a></li>
+<li><a href="#precise-builds"><code>precise-builds</code></a></li>
+<li><a href="#rust-toolchain-version"><code>rust-toolchain-version</code></a></li>
+<li><a href="#cargo-auditable"><code>cargo-auditable</code></a></li>
+<li><a href="#cargo-cyclonedx"><code>cargo-cyclonedx</code></a></li>
+<li><a href="#omnibor"><code>omnibor</code></a></li>
+</ul>
+</li>
+</ul>
+<p><a href="#installer-settings">installer settings</a></p>
+<ul>
+<li><a href="#installers"><code>installers</code></a></li>
+<li><a href="#install-libraries"><code>install-libraries</code></a></li>
+<li><a href="#bin-aliases"><code>bin-aliases</code></a></li>
+<li><a href="#shell-and-powershell-installer-settings">shell and powershell installer settings</a>
+<ul>
+<li><a href="#custom-success-msg"><code>custom-success-msg</code></a></li>
+<li><a href="#install-path"><code>install-path</code></a></li>
+<li><a href="#install-updater"><code>install-updater</code></a></li>
+</ul>
+</li>
+<li><a href="#npm-installer-settings">npm installer settings</a>
+<ul>
+<li><a href="#npm-scope"><code>npm-scope</code></a></li>
+<li><a href="#npm-package"><code>npm-package</code></a></li>
+</ul>
+</li>
+<li><a href="#homebrew-installer-settings">homebrew installer settings</a>
+<ul>
+<li><a href="#tap"><code>tap</code></a></li>
+<li><a href="#formula"><code>formula</code></a></li>
+</ul>
+</li>
+</ul>
+<p><a href="#publisher-settings">publisher settings</a></p>
+<ul>
+<li><a href="#publish-jobs"><code>publish-jobs</code></a></li>
+<li><a href="#publish-prereleases"><code>publish-prereleases</code></a></li>
+</ul>
+<p><a href="#hosting-settings">hosting settings</a></p>
+<ul>
+<li><a href="#hosting"><code>hosting</code></a></li>
+<li><a href="#display"><code>display</code></a></li>
+<li><a href="#display-name"><code>display-name</code></a></li>
+<li><a href="#force-latest"><code>force-latest</code></a></li>
+<li><a href="#github-hosting-settings">github hosting settings</a>
+<ul>
+<li><a href="#create-release"><code>create-release</code></a></li>
+<li><a href="#github-attestations"><code>github-attestations</code></a></li>
+<li><a href="#github-release"><code>github-release</code></a></li>
+<li><a href="#github-releases-repo"><code>github-releases-repo</code></a></li>
+<li><a href="#github-releases-submodule-path"><code>github-releases-submodule-path</code></a></li>
+</ul>
+</li>
+</ul>
+<p><a href="#ci-settings">ci settings</a></p>
+<ul>
+<li><a href="#ci"><code>ci</code></a></li>
+<li><a href="#build-local-artifacts"><code>build-local-artifacts</code></a></li>
+<li><a href="#cache-builds"><code>cache-builds</code></a></li>
+<li><a href="#dispatch-releases"><code>dispatch-releases</code></a></li>
+<li><a href="#all-features"><code>fail-fast</code></a></li>
+<li><a href="#merge-tasks"><code>merge-tasks</code></a></li>
+<li><a href="#pr-run-mode"><code>pr-run-mode</code></a></li>
+<li><a href="#tag-namespace"><code>tag-namespace</code></a></li>
+<li><a href="#github-ci-settings">github ci settings</a>
+<ul>
+<li><a href="#github-custom-job-permissions"><code>github-custom-job-permissions</code></a></li>
+<li><a href="#github-custom-runners"><code>github-custom-runners</code></a></li>
+<li><a href="#github-build-setup"><code>github-build-setup</code></a></li>
+</ul>
+</li>
+<li><a href="#custom-ci-jobs">custom ci jobs</a>
+<ul>
+<li><a href="#plan-jobs"><code>plan-jobs</code></a></li>
+<li><a href="#local-artifacts-jobs"><code>local-artifacts-jobs</code></a></li>
+<li><a href="#global-artifacts-jobs"><code>global-artifacts-jobs</code></a></li>
+<li><a href="#host-jobs"><code>host-jobs</code></a></li>
+<li><a href="#publish-jobs"><code>publish-jobs</code></a></li>
+<li><a href="#post-announce-jobs"><code>post-announce-jobs</code></a></li>
+</ul>
+</li>
+</ul>
+<p><a href="#the-workspace-section"><code>[workspace]</code></a></p>
+<ul>
+<li><a href="#workspacemembers"><code>members</code></a></li>
+</ul>
+<p><a href="#the-package-section"><code>[package]</code></a></p>
+<ul>
+<li><a href="#packagename"><code>name</code></a></li>
+<li><a href="#packageversion"><code>version</code></a></li>
+<li><a href="#packagedescription"><code>description</code></a></li>
+<li><a href="#packageauthors"><code>authors</code></a></li>
+<li><a href="#packagerepository"><code>repository</code></a></li>
+<li><a href="#packagehomepage"><code>homepage</code></a></li>
+<li><a href="#packagedocumentation"><code>documentation</code></a></li>
+<li><a href="#packagechangelog"><code>changelog</code></a></li>
+<li><a href="#packagereadme"><code>readme</code></a></li>
+<li><a href="#packagelicense"><code>license</code></a></li>
+<li><a href="#packagelicense-files"><code>license-files</code></a></li>
+<li><a href="#packagebinaries"><code>binaries</code></a></li>
+<li><a href="#packagecstaticlibs"><code>cstaticlibs</code></a></li>
+<li><a href="#packagecdylibs"><code>cdylibs</code></a></li>
+<li><a href="#packagebuild-command"><code>build-command</code></a></li>
+</ul>
+<hr />
+<h1 id="the-dist-section"><a class="header" href="#the-dist-section">the <code>[dist]</code> section</a></h1>
+<p>This section represents all the configuration for how dist should build and publish your applications. The <code>[dist]</code> section is a temporary placeholder which will soon be replaced (and automatically migrated) to a new hierarchy in <a href="https://github.com/axodotdev/cargo-dist/pull/1247">Config 1.0</a>.</p>
+<h2 id="allow-dirty"><a class="header" href="#allow-dirty"><code>allow-dirty</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.3.0<br><a href="#setting-availabilities">global-only</a></span>
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+allow-dirty = ["ci", "msi"]
+</code></pre>
+</blockquote>
+<p>This is a list of <a href="../reference/cli.html#dist-generate"><code>generate</code></a> tasks for dist to ignore when checking if generated configuration is up to date.</p>
+<p><strong>We recommend avoiding setting this, as it prevents dist from updating these files for you whenever you update or change your configuration. If you think you need this, please <a href="https://github.com/axodotdev/cargo-dist/issues/new">do file an issue</a> or ask us about it, so we know what settings we're missing that necessitates this (or ideally, can point you to the existing settings).</strong></p>
+<p>Nevertheless, setting can be necessary for users who customize their own configuration beyond dist's generated defaults and want to avoid dist overwriting it.</p>
+<p>Possible values are:</p>
+<ul>
+<li>"ci": don't check/regenerate ci scripts (release.yml)</li>
+<li>"msi": don't check/regenerate msi templates (main.wxs)</li>
+</ul>
+<h2 id="cargo-dist-version"><a class="header" href="#cargo-dist-version"><code>cargo-dist-version</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.3.0<br><a href="#setting-availabilities">global-only</a></span>
+default = <code>&lt;none&gt;</code> (this is mandatory!)</p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+cargo-dist-version = "0.10.0"
+</code></pre>
+</blockquote>
+<p>This is added automatically by <a href="../updating.html"><code>dist init</code></a>, and is a recording of its own version for the sake of reproducibility and documentation.</p>
+<p>Your <a href="../ci/index.html">release CI</a> will fetch and use the given version of dist to build and publish your project.</p>
+<p>The syntax must be a valid <a href="https://docs.rs/semver/latest/semver/struct.Version.html">Cargo-style SemVer Version</a> (not a VersionReq!).</p>
+<h2 id="dist"><a class="header" href="#dist"><code>dist</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.3.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/index.html">📖 read the guide for this feature!</a> <br />
+default = <code>&lt;none&gt;</code> (infer it)</p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+dist = true
+</code></pre>
+</blockquote>
+<p>Specifies whether dist <a href="../artifacts/index.html">should distribute (build and publish) a package</a>, overriding all other rules for deciding if a package is eligible.</p>
+<p>There are 3 major cases where you might use this:</p>
+<ul>
+<li><code>dist = false</code> on a package can be used to force dist to ignore it</li>
+<li><code>dist = true</code> on a package can be used to force dist to distribute it in spite of signals like Cargo's <code>publish = false</code> that would suggest otherwise.</li>
+<li><code>dist = false</code> on a whole workspace defaults all packages to do-not-distribute, forcing you to manually allow-list packages with <code>dist = true</code> (large monorepos often find this to be a better way of managing project distribution when most developers aren't release engineers).</li>
+</ul>
+<h2 id="targets"><a class="header" href="#targets"><code>targets</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.0.3<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/index.html">📖 read the guide for this feature!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+targets = [
+   "x86_64-pc-windows-msvc",
+   "x86_64-unknown-linux-gnu",
+   "x86_64-apple-darwin",
+   "aarch64-apple-darwin",
+]
+</code></pre>
+</blockquote>
+<p>This is a list of <a href="https://doc.rust-lang.org/nightly/rustc/platform-support.html">target platforms</a> you want your packages to be built for.</p>
+<p>The supported choices are:</p>
+<ul>
+<li>x64 macOS: "x86_64-apple-darwin"</li>
+<li>x64 Windows: "x86_64-pc-windows-msvc"</li>
+<li>x64 Linux: "x86_64-unknown-linux-gnu"</li>
+<li>arm64 macOS (Apple silicon): "aarch64-apple-darwin"</li>
+<li>arm64 Linux: "aarch64-unknown-linux-gnu"</li>
+<li>x64 Linux (static musl): "x86_64-unknown-linux-musl"</li>
+<li>arm64 Linux (static musl): "aarch64-unknown-linux-musl"</li>
+</ul>
+<p>By default all runs of <code>dist</code> will be trying to handle all platforms specified here at once. If you specify <code>--target=...</code> on the CLI this will focus the run to only those platforms. As discussed in <a href="../reference/concepts.html">concepts</a>, this cannot be used to specify platforms that are not listed in <code>metadata.dist</code>, to ensure different runs agree on the maximum set of platforms.</p>
+<h2 id="artifact-settings"><a class="header" href="#artifact-settings">artifact settings</a></h2>
+<p><a href="../artifacts/index.html">Artifacts</a> are the files that will be uploaded to <a href="../ci/index.html">your hosting</a>. These settings affect what files those are, and what they contain. See also <a href="#installer-settings">installers</a> which are important enough to be separated out from other artifacts.</p>
+<h3 id="checksum"><a class="header" href="#checksum"><code>checksum</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.1.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../artifacts/checksums.html">📖 read the checksum guide!</a> <br />
+default = <code>"sha256"</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+checksum = "sha512"
+</code></pre>
+</blockquote>
+<p>Specifies how to checksum other <a href="../artifacts/index.html">artifacts</a>. Supported values:</p>
+<ul>
+<li>"sha256" - generate a .sha256 file for each archive</li>
+<li>"sha512" - generate a .sha512 file for each archive</li>
+<li>"sha3-256" - generate a .sha3-256 file for each archive</li>
+<li>"sha3-512" - generate a .sha3-512 file for each archive</li>
+<li>"blake2s" - generate a .blake2s file for each archive</li>
+<li>"blake2b" - generate a .blake2b file for each archive</li>
+<li>"false" - do not generate any checksums</li>
+</ul>
+<p>The hashes should match the result that sha256sum, sha512sum, etc. generate, and the file should be readable by those sorts of commands.</p>
+<p>Future work is planned to <a href="https://github.com/axodotdev/cargo-dist/issues/120">support more robust signed checksums</a>.</p>
+<h3 id="extra-artifacts"><a class="header" href="#extra-artifacts"><code>extra-artifacts</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.6.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/index.html">📖 read the artifacts guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[[dist.extra-artifacts]]
+artifacts = ["schema.json"]
+build = ["cargo", "run", "--", "generate-schema"]
+
+[[dist.extra-artifacts]]
+artifacts = ["target/coolsignature.txt", "target/importantfile.xml"]
+build = ["make"]
+</code></pre>
+</blockquote>
+<p>(Note the <code>[[double-square-brackets]]</code>, you can specify multiple extra-artifacts entries!)</p>
+<p>This specifies extra artifacts to build and upload to your <a href="../ci/index.html">hosting</a>. Users can download these directly alongside other <a href="../artifacts/index.html">artifacts</a> like <a href="../artifacts/archives.html">archives</a> or <a href="../installers/index.html">installers</a>.</p>
+<p>Each extra-artifacts entry takes the following settings:</p>
+<ul>
+<li><code>build</code>: A command or script to run to produce these artifacts. This is an array of one or more strings; the first string is the command to run, and any subsequent strings are arguments to pass to that command.</li>
+<li><code>artifacts</code>: An array of relative paths to files that dist expects to exist after the <code>build</code> command is run. Every file in this list will be uploaded individually to your release as its own artifact.</li>
+</ul>
+<p>dist uses this feature to distribute its <a href="./schema.html"><code>dist-manifest-schema.json</code></a> as part of every release.</p>
+<h3 id="source-tarball"><a class="header" href="#source-tarball"><code>source-tarball</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.14.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../artifacts/index.html">📖 read the artifacts guide!</a> <br />
+default = <code>true</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+source-tarball = false
+</code></pre>
+</blockquote>
+<p>By default, dist creates and uploads source tarballs from your repository. This setting disables that behaviour. This is especially useful for users who distribute closed-source software to hosts outside their git repos and who would prefer not to distribute source code to their users.</p>
+<h3 id="ssldotcom-windows-sign"><a class="header" href="#ssldotcom-windows-sign"><code>ssldotcom-windows-sign</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.14.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../supplychain-security/signing/windows.html">📖 read the windows signing guide!</a> <br />
+default = <code>&lt;none&gt;</code> (disabled)</p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+ssldotcom-windows-sign = "prod"
+</code></pre>
+</blockquote>
+<p>If you wish to sign your Windows artifacts (<a href="../artifacts/index.html">EXEs</a> and <a href="../installers/msi.html">MSIs</a>) such that Windows SmartScreen won't complain about them, this is the feature for you.</p>
+<p>This setting takes one of two values:</p>
+<ul>
+<li>"prod": use the production ssl.com signing service</li>
+<li>"test": use the testing ("sandbox") ssl.com signing service</li>
+</ul>
+<p>These strings match the <a href="https://github.com/SSLcom/esigner-codesign/blob/32825070bd8ca335577862dc735343ae155f2652/README.md#L48">environment_name setting</a> that <a href="https://github.com/SSLcom/esigner-codesign">SSL.com's code signing action uses</a> uses.</p>
+<h3 id="archive-settings"><a class="header" href="#archive-settings">archive settings</a></h3>
+<h4 id="auto-includes"><a class="header" href="#auto-includes"><code>auto-includes</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.0.3<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/archives.html">📖 read the archives guide!</a> <br />
+default = <code>true</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+auto-includes = false
+</code></pre>
+</blockquote>
+<p>Specifies whether dist should auto-include README, (UN)LICENSE, and CHANGELOG/RELEASES files in <a href="../artifacts/archives.html">archives</a> and <a href="../installers/index.html">installers</a>.</p>
+<p>See also: <a href="#include"><code>include</code></a></p>
+<h4 id="include"><a class="header" href="#include"><code>include</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.0.3<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/archives.html">📖 read the archives guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+include = [
+   "my-cool-file.txt",
+   "../other-cool-file.txt",
+   "./some/dir/"
+]
+</code></pre>
+</blockquote>
+<p>This is a list of additional <em>files</em> or <em>directories</em> to copy into the root of all <a href="../artifacts/archives.html">archives</a> and <a href="../installers/index.html">installers</a>. Paths are relative to the config file. Globs are not supported.</p>
+<p>All items specified will be placed in the root of the archive/installer (so in the above example <code>my-cool-file.txt</code>, <code>other-cool-file.txt</code>, and <code>dir</code> would be side-by-side with your binaries in an archive).</p>
+<p>See also: <a href="#auto-includes"><code>auto-includes</code></a></p>
+<h4 id="package-libraries"><a class="header" href="#package-libraries"><code>package-libraries</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.20.0<br><a href="#setting-availabilities">package-local</a></span>
+🔧 this is an experimental feature! <br />
+<a href="../artifacts/archives.html">📖 read the archives guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+package-libraries = ["cdylib", "cstaticlib"]
+</code></pre>
+</blockquote>
+<p>Which kinds of <a href="../artifacts/index.html">compiled libraries</a> to include in <a href="../artifacts/archives.html">archives</a>. By default only <a href="../artifacts/index.html">binaries</a> will be included in <a href="../artifacts/archives.html">archives</a> and used to decide if a package should be <a href="../artifacts/index.html">distributed</a>. This feature allows you to opt into bundling static and dynamic libraries that your package builds.</p>
+<p>When enabled, libraries will be included in your <a href="../artifacts/archives.html">archives</a> alongside your binaries, but <a href="../installers/index.html">installers</a> will still ignore them. That can be changed using the <a href="#install-libraries"><code>install-libraries</code></a> setting.</p>
+<h4 id="unix-archive"><a class="header" href="#unix-archive"><code>unix-archive</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.0.5<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/archives.html">📖 read the archives guide!</a> <br />
+default = <code>".tar.xz"</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+unix-archive = ".tar.gz"
+</code></pre>
+</blockquote>
+<p>Specifies the file format to use for <a href="../artifacts/archives.html">archives</a> that target not-windows.</p>
+<p>See <a href="#windows-archive">windows-archive</a> for a complete list of supported values.</p>
+<h4 id="windows-archive"><a class="header" href="#windows-archive"><code>windows-archive</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.0.5<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/archives.html">📖 read the archives guide!</a> <br />
+default = <code>".zip"</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+windows-archive = ".tar.gz"
+</code></pre>
+</blockquote>
+<p>Allows you to specify the file format to use for <a href="../artifacts/archives.html">archives</a> that target windows.</p>
+<p>Supported values:</p>
+<ul>
+<li>".zip"</li>
+<li>".tar.gz"</li>
+<li>".tar.xz"</li>
+<li>".tar.zstd" (deprecated for Zstd)</li>
+<li>".tar.zst" (recommended for Zstd)</li>
+</ul>
+<p>See also: <a href="#unix-archive">unix-archive</a></p>
+<h2 id="build-settings"><a class="header" href="#build-settings">build settings</a></h2>
+<p>These settings configure <a href="../artifacts/index.html">your builds</a>.</p>
+<h3 id="dependencies"><a class="header" href="#dependencies"><code>dependencies</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.4.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/index.html">📖 read the guide for this feature!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist.dependencies.homebrew]
+cmake = '*'
+libcue = { stage = ["build", "run"] }
+
+[dist.dependencies.apt]
+cmake = '*'
+libcue-dev = { version = "2.2.1-2" }
+
+[dist.dependencies.chocolatey]
+lftp = '*'
+cmake = { version = '3.27.6', targets = ["aarch64-pc-windows-msvc"] }
+</code></pre>
+</blockquote>
+<p>Allows specifying dependencies to be installed from a system package manager before the build begins. This is useful if your tool needs certain build tools (say, cmake) or links against C libraries provided by the package manager. This is specified in a Cargo-like format. Dependencies can be specified in two forms:</p>
+<ul>
+<li>A simple form, in which only a version is specified. If any version will do, use <code>'*'</code>.</li>
+<li>A complex form, in several extra options can be specified.</li>
+</ul>
+<p>Supported options are:</p>
+<ul>
+<li><code>version</code> - A specific version of the package to install. This must be specified in the format that the package manager itself uses. Not used on Homebrew, since Homebrew does not support any method to specify installing specific versions of software.</li>
+<li><code>stage</code> - When exactly dist should make use of this package. Two values are supported: <code>build</code>, which specifies that the package should be installed before the build occurs; and <code>run</code>, which specifies that the package should be installed alongside your software at the time end users run it. The default is <code>build</code>. If <code>run</code> is specified for Homebrew dependencies, and you've enabled the Homebrew installer, the Homebrew installer will specify those packages as dependencies.</li>
+<li><code>targets</code> - A set of one or more targets to install the package on, in Rust target-triple format. If not specified, the package is installed on all targets. This is meant as an override to allow a package to be conditionally installed on only certain platforms; for example, a platform may need a build dependency only on Apple Silicon macOS, or have different build dependencies between x86_64 and ARM Windows.</li>
+</ul>
+<p>Supported package managers:</p>
+<ul>
+<li>Apt (Linux)</li>
+<li>Chocolatey (Windows)</li>
+<li>Homebrew (macOS)</li>
+</ul>
+<h3 id="cargo-build-settings"><a class="header" href="#cargo-build-settings">cargo build settings</a></h3>
+<p>These settings are specific to how we <a href="../artifacts/index.html">build your Cargo projects</a>.</p>
+<h4 id="all-features"><a class="header" href="#all-features"><code>all-features</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.2.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/index.html">📖 read the Cargo project guide!</a> <br />
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+all-features = true
+</code></pre>
+</blockquote>
+<p>Specifies that all features for a Cargo package should be enabled when building it (when set to true this tells us to pass <code>--all-features</code> to Cargo).</p>
+<h4 id="default-features"><a class="header" href="#default-features"><code>default-features</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.2.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/index.html">📖 read the Cargo project guide!</a> <br />
+default = <code>true</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+default-features = false
+</code></pre>
+</blockquote>
+<p>Specifies that default features for a Cargo package should be enabled when building it (when set to false, this tells us to pass <code>--no-default-features</code> to Cargo).</p>
+<h4 id="features"><a class="header" href="#features"><code>features</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.2.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/index.html">📖 read the Cargo project guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+features = ["serde-support", "fancy-output"]
+</code></pre>
+</blockquote>
+<p>Specifies feature-flags that should be passed to a Cargo package when building it. This lets you enable features that should be on "in production" but for whatever reason shouldn't be on by default.</p>
+<p>For instance for packages that are a library and a CLI binary, some developers prefer to make the library the default and the CLI opt-in. In such a case you would want to add <code>features = ["cli"]</code> to your config.</p>
+<h4 id="min-glibc-version"><a class="header" href="#min-glibc-version"><code>min-glibc-version</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.26.0<br><a href="#setting-availabilities">package-local</a></span>
+default = <code>{}</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist.min-glibc-version]
+# Override glibc version for specific target triplets
+aarch64-unknown-linux-gnu = "2.19"
+x86_64-unknown-linux-gnu = "2.18"
+# Override all remaining glibc versions.
+"*" = "2.17"
+</code></pre>
+</blockquote>
+<p>By default, dist will try to auto-detect the glibc version for each build for targets using glibc.</p>
+<p>This setting allows you to override the minimum supported glibc version for specific target triplets, in case dist gets it wrong.</p>
+<p>The special-cased <code>"*"</code> key will allow you to override the minimum supported glibc version for all targets that are not individually overridden.</p>
+<p>Note that this setting only affects builds for Linux targets using the GNU libc (glibc). Non-Linux targets, or targets using another libc are not affected.</p>
+<h4 id="msvc-crt-static"><a class="header" href="#msvc-crt-static"><code>msvc-crt-static</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.4.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../artifacts/index.html">📖 read the Cargo project guide!</a> <br />
+default = <code>true</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+msvc-crt-static = false
+</code></pre>
+</blockquote>
+<p>Specifies how The C Runtime (CRT) should be linked when building a Cargo package for Windows. Rust defaults to this being <code>= false</code> (dynamically link the CRT), but dist actually defaults to making this <code>= true</code> (statically link the CRT). <a href="https://github.com/rust-lang/rfcs/blob/master/text/1721-crt-static.md#future-work">The Rust default is mostly a historical accident, and it's widely regarded to be an error that should one day be changed</a>. Specifically it's a mistake for the typical Rust application which statically links everything else, because Windows doesn't actually guarantee that the desired things are installed on all machines by default, and statically linking the CRT is a supported solution to this issue.</p>
+<p>However when you <em>do</em> want a Rust application that dynamically links more things, it then becomes correct to dynamically link the CRT so that your app and the DLLs it uses can agree on things like malloc. However Rust's default is still insufficient for reliably shipping such a binary, because you really should also bundle a "Visual C(++) Redistributable" with your app that installs your required version of the CRT. The only case where it's <em>probably</em> fine to not do this is when shipping tools for programmers who probably already have all of that stuff installed (i.e. anyone who installs the Rust toolchain will have that stuff installed).</p>
+<p>This config exists as a blunt way to return to the default Rust behaviour of dynamically linking the CRT if you really want it, but more work is needed to handle Redistributables for that usecase.</p>
+<p><a href="https://github.com/axodotdev/cargo-dist/issues/496">See this issue for details and discussion</a>.</p>
+<h4 id="precise-builds"><a class="header" href="#precise-builds"><code>precise-builds</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.1.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../artifacts/index.html">📖 read the Cargo project guide!</a> <br />
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+precise-builds = true
+</code></pre>
+</blockquote>
+<p>Build only the required Cargo packages, and individually.</p>
+<p><a href="#inferring-precise-builds">See "inferring precise-builds" for the default behaviour.</a></p>
+<p>By default when we need to build anything in your workspace, we try to build your entire workspace with <code>--workspace</code>. This setting tells dist to instead build each app individually.</p>
+<p>On balance, the Rust experts we've consulted with find building with --workspace to be a safer/better default, as it provides some of the benefits of a more manual <a href="https://docs.rs/cargo-hakari/latest/cargo_hakari/about/index.html">workspace-hack</a>, without the user needing to be aware that this is a thing.</p>
+<p>TL;DR: cargo prefers building one copy of each dependency in a build, so if two apps in your workspace depend on e.g. serde with different features, building with --workspace, will build serde once with the features unioned together. However if you build each package individually it will more precisely build two copies of serde with different feature sets.</p>
+<p>The downside of using --workspace is that if your workspace has lots of example/test crates, or if you release only parts of your workspace at a time, we build a lot of gunk that's not needed, and potentially bloat up your app with unnecessary features.</p>
+<p>If that downside is big enough for you, this setting is a good idea.</p>
+<h5 id="inferring-precise-builds"><a class="header" href="#inferring-precise-builds">inferring precise-builds</a></h5>
+<p>Although dist prefers <code>--workspace</code> builds (<a href="#precise-builds">precise-builds</a> = <code>false</code>) for the reasons stated above, it <em>will</em> attempt to check if that's possible, and use <code>--package</code> builds if necessary (<code>precise-builds = true</code>).</p>
+<p>If you explicitly set <code>precise-builds = false</code> and we determine <code>--package</code> builds are required, dist will produce an error. <code>precise-builds = true</code> will never produce an error.</p>
+<p>Precise-builds are considered required when you use any of <a href="#features">features</a>, <a href="#all-features">all-features</a>, or <a href="#default-features">default-features</a> <em>and</em> not all of the packages in your workspace have the same values set.</p>
+<p>So for instance if you have several packages in your workspace and only one sets <code>all-features = true</code>, then we will require precise-builds, and will pass <code>--all-features</code> to only the <code>cargo build</code> for that package.</p>
+<p>If we instead set <code>all-features = true</code> on the workspace, then we will just pass <code>--all-features</code> to <code>cargo build --workspace</code>.</p>
+<h4 id="rust-toolchain-version"><a class="header" href="#rust-toolchain-version"><code>rust-toolchain-version</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.0.3<br><a href="#setting-availabilities">global-only</a></span>
+⚠️ deprecated in 0.1.0 <br />
+<a href="../artifacts/index.html">📖 read the Cargo project guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+rust-toolchain-version = "1.67.1"
+</code></pre>
+</blockquote>
+<blockquote>
+<p>Deprecation reason: <a href="https://rust-lang.github.io/rustup/overrides.html#the-toolchain-file">rust-toolchain.toml</a> is a more standard/universal mechanism for pinning toolchain versions for reproducibility. Teams without dedicated release engineers will likely benefit from unpinning their toolchain and letting the underlying CI vendor silently update them to "some recent stable toolchain", as they will get updates/improvements and are unlikely to have regressions.</p>
+</blockquote>
+<p>This represents the "ideal" Rust toolchain to build your Cargo packages with. This is in contrast to the builtin Cargo <a href="https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field">rust-version</a> which is used to specify the <em>minimum</em> supported Rust version. Your CI scripts will install that version of the Rust toolchain with <a href="https://rust-lang.github.io/rustup/">rustup</a>.</p>
+<p>The syntax must be a valid rustup toolchain like "1.60.0" or "stable" (should not specify the platform, we want to install this toolchain on all platforms).</p>
+<p>Without this setting, CI won't explicitly setup a toolchain, so whatever's on the machine will be used (with things like rust-toolchain.toml behaving as normal).</p>
+<h4 id="cargo-auditable"><a class="header" href="#cargo-auditable"><code>cargo-auditable</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.26.0<br><a href="#setting-availabilities">package-local</a></span>
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+cargo-auditable = true
+</code></pre>
+</blockquote>
+<p>Specifies whether to use <a href="https://github.com/rust-secure-code/cargo-auditable"><code>cargo auditable</code></a> to embed metadata about your dependency tree into the built executables.
+When this value is false, dist will run <code>cargo build</code>; when it is true, dist will run <code>cargo auditable build</code>.</p>
+<p>You can then use <a href="https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md"><code>cargo audit</code></a> to audit your dependencies for security vulnerabilities that have been reported to the <a href="https://rustsec.org/">RustSec Vulnerability Database</a>.</p>
+<h4 id="cargo-cyclonedx"><a class="header" href="#cargo-cyclonedx"><code>cargo-cyclonedx</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.26.0<br><a href="#setting-availabilities">package-local</a></span>
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+cargo-cyclonedx = true
+</code></pre>
+</blockquote>
+<p>Specifies whether to use <a href="https://github.com/CycloneDX/cyclonedx-rust-cargo"><code>cargo cyclonedx</code></a> to generate and upload a Software Bill Of Materials (SBOM) for each project in a workspace.</p>
+<h4 id="omnibor"><a class="header" href="#omnibor"><code>omnibor</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.26.0<br><a href="#setting-availabilities">package-local</a></span>
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+omnibor = true
+</code></pre>
+</blockquote>
+<p>Specifies whether to use <a href="https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli"><code>omnibor-cli</code></a> to generate and upload <a href="https://omnibor.io/docs/artifact-ids/">OmniBOR Artifact IDs</a> for artifact in a release.</p>
+<h2 id="installer-settings"><a class="header" href="#installer-settings">installer settings</a></h2>
+<p>Installers <a href="../installers/index.html">main installer docs</a>!</p>
+<h3 id="installers"><a class="header" href="#installers"><code>installers</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.0.3<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../installers/index.html">📖 read the installer guides!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+installers = [
+  "shell",
+  "powershell",
+  "npm",
+  "homebrew",
+  "msi"
+]
+</code></pre>
+</blockquote>
+<p>This is a list of <a href="../installers/index.html">installers</a> you want for your packages.</p>
+<p>Possible values:</p>
+<ul>
+<li><a href="../installers/shell.html">"shell": a curl-sh script for unixy systems</a></li>
+<li><a href="../installers/powershell.html">"powershell": an irm-iex script for Windows</a></li>
+<li><a href="../installers/npm.html">"npm": an npm package that runs prebuilt binaries</a></li>
+<li><a href="../installers/homebrew.html">"homebrew": a Homebrew formula</a></li>
+<li><a href="../installers/msi.html">"msi": a Windows MSI installer</a></li>
+</ul>
+<h3 id="bin-aliases"><a class="header" href="#bin-aliases"><code>bin-aliases</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.14.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../artifacts/index.html">📖 read the guide for this feature!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist.bin-aliases]
+mybin = ["somealias"]
+myotherbin = ["someotheralias", "anotheralias"]
+</code></pre>
+</blockquote>
+<p>This is a map of binary names to aliases that your <a href="../installers/index.html">installers</a> should create for those <a href="../artifacts/index.html">binaries</a>. These aliases aren't included in your <a href="../artifacts/archives.html">archives</a>, and are only created by the installers themselves. The way the alias is created is installer-specific, and may change in the future. Currently:</p>
+<ul>
+<li><a href="../installers/shell.html">shell</a>: symlink</li>
+<li><a href="../installers/powershell.html">powershell</a>: hardlink</li>
+<li><a href="../installers/npm.html">npm</a>: extra "bins" pointing at the same command</li>
+<li><a href="../installers/homebrew.html">homebrew</a>: bin.install_symlink</li>
+<li><a href="../installers/msi.html">msi</a>: <strong>not currently supported</strong></li>
+</ul>
+<h3 id="install-libraries"><a class="header" href="#install-libraries"><code>install-libraries</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.20.0<br><a href="#setting-availabilities">package-local</a></span>
+🔧 this is an experimental feature! <br />
+<a href="../artifacts/index.html">📖 read the guide for this feature!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+install-libraries = ["cdylib", "cstaticlib"]
+</code></pre>
+</blockquote>
+<p><strong>To use this feature, you must also enable the <a href="#package-libraries">package-libraries</a> setting.</strong></p>
+<p>Which kinds of <a href="../artifacts/index.html">compiled libraries</a> to unpack and installer with your <a href="../installers/index.html">installers</a>.  When enabled, libraries will be installed alongside a package's <a href="../artifacts/index.html">binaries</a>.</p>
+<p>When using <a href="../installers/shell.html">shell</a> and <a href="../installers/powershell.html">powershell</a> installers The currently-supported <a href="#install-path">install-paths</a> will place libraries alongside binaries. This means they may appear in the user's <code>$PATH</code>, which you may find undesirable, and we may change it.</p>
+<h3 id="shell-and-powershell-installer-settings"><a class="header" href="#shell-and-powershell-installer-settings">shell and powershell installer settings</a></h3>
+<p>These settings are specific to the <a href="../installers/shell.html">shell</a> and <a href="../installers/powershell.html">powershell</a> installers, which provide a <code>curl | sh</code> installer for unix, and the equivalent <code>irm | iex</code> for windows. The two largely support the same things and behave the same, and typically want to be configured and enabled together.</p>
+<h4 id="custom-success-msg"><a class="header" href="#custom-success-msg"><code>custom-success-msg</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.15.0<br><a href="#setting-availabilities">package-local</a></span>
+📖 read the <a href="../installers/shell.html">shell</a> and <a href="../installers/powershell.html">powershell</a> installer guides!<br />
+default = <code>"everything's installed!"</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+custom-success-msg = "axolotlsay is ready to rumble! &gt;o_o&lt;"
+</code></pre>
+</blockquote>
+<p>The message to display on success in the <a href="../installers/shell.html">shell</a> and <a href="../installers/powershell.html">powershell</a> installers.</p>
+<h4 id="install-path"><a class="header" href="#install-path"><code>install-path</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.1.0<br><a href="#setting-availabilities">package-local</a></span>
+📖 read the <a href="../installers/shell.html">shell</a> and <a href="../installers/powershell.html">powershell</a> installer guides!<br />
+default = <code>"CARGO_HOME"</code></p>
+<p>*in your dist-workspace.toml or dist.toml:*s</p>
+<pre><code class="language-toml">[dist]
+install-path = "~/.my-app/"
+</code></pre>
+<pre><code class="language-toml">[dist]
+install-path = ["$MY_APP_HOME/bin", "~/.my-app/bin"]
+</code></pre>
+</blockquote>
+<p>The strategy that script installers (<a href="../installers/shell.html">shell</a>, <a href="../installers/powershell.html">powershell</a>) should use for selecting a path to install things at, with 3 possible syntaxes:</p>
+<ul>
+<li>
+<p>"CARGO_HOME": installs as if <code>cargo install</code> did it (tries <code>$CARGO_HOME/bin/</code>, but if <code>$CARGO_HOME</code> isn't set uses <code>$HOME/.cargo/bin/</code>). Note that we do not (yet) properly update some of the extra metadata files Cargo maintains, so Cargo may be confused if you ask it to manage the binary.</p>
+</li>
+<li>
+<p>"~/some/subdir/": installs to the given subdir of the user's <code>$HOME</code></p>
+</li>
+<li>
+<p>"$SOME_VAR/some/subdir": installs to the given subdir of the dir defined by <code>$SOME_VAR</code></p>
+</li>
+</ul>
+<blockquote>
+<p>NOTE: <code>$HOME/some/subdir</code> is technically valid syntax but it won't behave the way you want on Windows, because <code>$HOME</code> isn't a proper environment variable. Let us handle those details for you and just use <code>~/subdir/</code>.</p>
+</blockquote>
+<p>All of these error out if none of the required env-vars are set to a non-empty value. Since 0.14.0 you can provide an array of options to try if all the previous ones fail. Such an "install-path cascade" would typically be used to provide an environment variable for changing the install dir, with a more hardcoded home subdir as a fallback:</p>
+<pre><code class="language-toml">install-path = ["$MY_APP_HOME/bin", "~/.my-app/bin"]
+</code></pre>
+<p>It hasn't yet been tested whether this is appropriate to pair with things like <code>$XDG_BIN_HOME</code>, but we'd sure like it to be.</p>
+<p>We do not currently sanitize/escape the path components (it's not really a security concern when the user is about to download+run an opaque binary anyway). In the future validation/escaping of this input will become more strict. We do appear to correctly handle spaces in paths on both windows and unix (i.e. <code>~/My dist Documents/bin/</code> works), but we won't be surprised if things misbehave on Interesting Inputs.</p>
+<p>Future Improvements:</p>
+<ul>
+<li>In the future <a href="https://github.com/axodotdev/cargo-dist/issues/287">we may support XDG dirs</a></li>
+<li>In the future <a href="https://github.com/axodotdev/cargo-dist/issues/288">we may support %windows dirs%</a></li>
+<li>For historical reasons <code>CARGO_HOME</code> <a href="https://github.com/axodotdev/cargo-dist/issues/934">uses a slightly different install dir structure from the others</a>, and so for safety cannot be paired with the others strategies in an install-path cascade.</li>
+</ul>
+<p>(Please file an issue if you have other requirements!)</p>
+<h4 id="install-updater"><a class="header" href="#install-updater"><code>install-updater</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../installers/updater.html">📖 read the updater guide!</a> <br />
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+install-updater = true
+</code></pre>
+</blockquote>
+<p>Determines whether to install a standalone updater program alongside your program when using the <a href="../installers/shell.html">shell</a> or <a href="../installers/powershell.html">powershell</a> installers. This program will be named <code>yourpackage-update</code>, and can be run by the user to automatically check for newer versions and install them without needing to visit your website.</p>
+<p>Users who received your package from a package manager, such as <a href="../installers/homebrew.html">Homebrew</a> or <a href="../installers/npm.html">npm</a>, will need to use the same package manager to perform upgrades.</p>
+<p>This updater is the commandline tool contained in the open source <a href="https://github.com/axodotdev/axoupdater">axoupdater</a> package.</p>
+<h3 id="npm-installer-settings"><a class="header" href="#npm-installer-settings">npm installer settings</a></h3>
+<p>These settings are specific to the <a href="../installers/npm.html">npm installer</a>.</p>
+<h4 id="npm-scope"><a class="header" href="#npm-scope"><code>npm-scope</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.0.6<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../installers/npm.html">📖 read the npm installer guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+npm-scope = "@axodotdev"
+</code></pre>
+</blockquote>
+<p>Specifies that <a href="../installers/npm.html">npm installers</a> should be published under the given <a href="https://docs.npmjs.com/cli/v9/using-npm/scope">scope</a>. The leading <code>@</code> is mandatory. If you newly enable the npm installer in <code>dist init</code>'s interactive UI, then it will give you an opportunity to add the scope.</p>
+<p>If no scope is specified the package will be global.</p>
+<p>See also: <a href="#npm-package">npm-package</a></p>
+<h4 id="npm-package"><a class="header" href="#npm-package"><code>npm-package</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.14.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../installers/npm.html">📖 read the npm installer guide!</a> <br />
+default = <a href="#packagename">package.name</a></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+npm-package = "mycoolapp"
+</code></pre>
+</blockquote>
+<p>Specifies that an <a href="../installers/npm.html">npm installer</a> should be published under the given name, as opposed to the <a href="#packagename">name of the package</a> they are defined by.</p>
+<p>This does not set the <a href="https://docs.npmjs.com/cli/v9/using-npm/scope">scope</a> the package is published under, for that see <a href="#npm-scope">npm-scope</a>.</p>
+<h3 id="homebrew-installer-settings"><a class="header" href="#homebrew-installer-settings">homebrew installer settings</a></h3>
+<p>These settings are specific to the <a href="../installers/homebrew.html">homebrew installer</a>.</p>
+<h4 id="tap"><a class="header" href="#tap"><code>tap</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.2.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../installers/homebrew.html">📖 read the homebrew installer guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+tap = "axodotdev/homebrew-tap"
+</code></pre>
+</blockquote>
+<p>This is the name of a GitHub repository which dist should publish the Homebrew installer to. It must already exist, and the token which creates releases must have write access.</p>
+<p>It's conventional for the repo name to start with <code>homebrew-</code>.</p>
+<h4 id="formula"><a class="header" href="#formula"><code>formula</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.11.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../installers/homebrew.html">📖 read the homebrew installer guide!</a> <br />
+default = <a href="#packagename">package.name</a></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+formula = "axolotlbrew"
+</code></pre>
+</blockquote>
+<p>Specifies the Homebrew formula name for a package, as opposed to the <a href="#packagename">package's name</a>.</p>
+<p>This works well specifically for folks who are customizing their bin name and would like the Homebrew formula to match the bin name as opposed to the package name.</p>
+<h2 id="publisher-settings"><a class="header" href="#publisher-settings">publisher settings</a></h2>
+<p>These settings are specific to how we publish your packages to package managers like <a href="../installers/homebrew.html">homebrew taps</a> and <a href="../installers/npm.html">npm</a>.</p>
+<h3 id="publish-prereleases"><a class="header" href="#publish-prereleases"><code>publish-prereleases</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.2.0<br><a href="#setting-availabilities">global-only</a></span>
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+publish-preleases = true
+</code></pre>
+</blockquote>
+<p>If you set <code>publish-prereleases = true</code>, dist will <a href="#publish-jobs">publish</a> prerelease versions to package managers such as <a href="../installers/homebrew.html">homebrew</a> and <a href="../installers/npm.html">npm</a>. By default, dist will only publish stable versions to avoid polluting your releases. This is especially important for things like Homebrew which don't really have a proper notion of "prereleases" or "literally having more than one published version of a package".</p>
+<h2 id="hosting-settings"><a class="header" href="#hosting-settings">hosting settings</a></h2>
+<p>These settings govern how we host your files with platforms like <a href="../ci/index.html">GitHub Releases</a> and axo Releases, and the text we tell them to display about your releases.</p>
+<h3 id="hosting"><a class="header" href="#hosting"><code>hosting</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.5.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the releases guide!</a> <br />
+default = <code>&lt;none&gt;</code> (infer based on <a href="#ci">ci</a>)</p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+hosting = ["axodotdev", "github"]
+</code></pre>
+</blockquote>
+<p>Possible values:</p>
+<ul>
+<li><code>axodotdev</code>: Use axo Releases (currently in closed beta)</li>
+<li><code>github</code>: Use GitHub Releases (default if ci = "github")</li>
+</ul>
+<p>Specifies what hosting provider to use when hosting/announcing new releases.</p>
+<p>By default we will automatically use the native hosting of your CI provider, so when running on GitHub CI, we'll default to using GitHub Releases for hosting/announcing.</p>
+<p>If axo Releases and GitHub Releases are both enabled, we will host/announce on both platforms, but the GitHub Release's contents will regard the axo Release as the canonical source for the files. Specifically if you have a <a href="../installers/shell.html">shell installer</a>, the GitHub Release will contain a shell installer that fetches from axo Releases and it will tell you to <code>curl | sh</code> with a URL to axo Releases.</p>
+<p>(Ideally files uploaded to both hosts should be bitwise identical, which means we have to "pick"
+a host to win for fetching installers, and if you're using axo Releases at all you <em>probably</em> want that one to win.)</p>
+<h3 id="display"><a class="header" href="#display"><code>display</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.16.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../ci/index.html">📖 read the releases guide!</a> <br />
+default = <code>true</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+display = false
+</code></pre>
+</blockquote>
+<p>Specifies whether this package should be displayed in release bodies of <a href="#hosting">hosting providers</a> (like GitHub Releases). This is useful for hiding things that aren't the "primary" or "featured" application but still need to be included in the release for logistical reasons.</p>
+<h3 id="display-name"><a class="header" href="#display-name"><code>display-name</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.16.0<br><a href="#setting-availabilities">package-local</a></span>
+<a href="../ci/index.html">📖 read the releases guide!</a> <br />
+default = <a href="#packagename">package.name</a></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+display-name = "my cool app"
+</code></pre>
+</blockquote>
+<p>Specifies how to refer to the package in release bodies of <a href="#hosting">hosting providers</a> (like GitHub Releases). This is useful for situations where the package name <em>must</em> have a certain value for logistical reasons but you want to refer to it by a nicer name in marketing materials.</p>
+<h3 id="force-latest"><a class="header" href="#force-latest"><code>force-latest</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.16.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the releases guide!</a> <br />
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+force-latest = true
+</code></pre>
+</blockquote>
+<p>Overrides dist's default handling of prerelease versions. Ordinarily, dist uses <a href="https://semver.org">semver</a> rules to determine if a version number is a prerelease or not and has some special handling if it is. With this setting, dist will always consider a version to be the latest no matter what its version number is.</p>
+<p>This means that the following prerelease handling behaviour will <strong>no longer apply</strong>:</p>
+<ul>
+<li>If dist interprets a version as a prerelease, it will <a href="#hosting">publish it to GitHub Releases</a> as a "prerelease" instead of the "latest" release.</li>
+<li>dist will not publish prereleases to <a href="../installers/homebrew.html">Homebrew</a> or <a href="../installers/npm.html">npm</a> by default.</li>
+</ul>
+<p>See also: <a href="#publish-prereleases"><code>publish-prereleases</code></a></p>
+<h3 id="github-hosting-settings"><a class="header" href="#github-hosting-settings">github hosting settings</a></h3>
+<p>These settings govern how we host your files on <a href="../ci/index.html">GitHub Releases</a> and the text we tell them to display.</p>
+<h4 id="github-attestations"><a class="header" href="#github-attestations"><code>github-attestations</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.16.0<br><a href="#setting-availabilities">global-only</a></span>
+🔧 this is an experimental feature! <br />
+<a href="../supplychain-security/attestations/github.html">📖 read the guide for this feature!</a> <br />
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+github-attestations = true
+</code></pre>
+</blockquote>
+<p>If you're using GitHub Releases, this will enable GitHub's experimental artifact attestation feature.</p>
+<h4 id="github-release"><a class="header" href="#github-release"><code>github-release</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.17.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the releases guide!</a> <br />
+default = "auto"</p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+github-release = "announce"
+</code></pre>
+</blockquote>
+<p>Possible values:</p>
+<ul>
+<li><code>auto</code>: create the GitHub Release whenever is best</li>
+<li><code>host</code>: create the GitHub Release during the host step</li>
+<li><code>announce</code>: create the GitHub Release during the announce step</li>
+</ul>
+<p>Controls which stage of the release process the GitHub Release will be created in.</p>
+<p>By default, the GitHub Release is created during the "host" phase, as it hosts the files some installers will try to download. If axo Releases is also enabled, it will be moved back to the "announce" phase, as the files will be primarily hosted on axo Releases, and GitHub Releases will be treated like a backup and announcement of the release.</p>
+<p><strong>Most users should be well-served by the default setting, and changing it is likely to introduce undesirable publishing race conditions.</strong> The only reason you might want to override this setting is if you're using <a href="#dispatch-releases"><code>dispatch-releases = true</code></a> and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist). In this case setting github-release = "announce" will accomplish that, but see below for what race conditions this might introduce.</p>
+<p>If using only GitHub Releases, and you force it to run during "announce", there will be a very brief window (~30 seconds) during which generated <a href="../installers/homebrew.html">Homebrew</a> and <a href="../installers/npm.html">npm</a> installers are live and referencing URLs that will only exist when the GitHub Release is created, causing the packages to error out when installed.</p>
+<p>However, if you're publishing only packages that don't reference hosted artifacts (such as Cargo crates, or any custom publish job that fully embeds the binaries), then there is no race, and you could consider changing the default. That said, it would be a looming footgun if you ever introduce new publish jobs and forget about this.</p>
+<h4 id="github-releases-repo"><a class="header" href="#github-releases-repo"><code>github-releases-repo</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.14.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the releases guide!</a> <br />
+default = <code>&lt;none&gt;</code> (use the project's own repository)</p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+github-releases-repo = "myorg/public"
+</code></pre>
+</blockquote>
+<p>Allows specifying a different repo to publish GitHub Releases to than the current one. This can be used to publish to a public repo from a private one. Let's assume you want to publish to <code>myorg/public</code> from <code>myorg/private</code>. Then in your config in <code>myorg/private</code>, you'd set <code>github-releases-repo = "myorg/public"</code>.</p>
+<p>To ensure the workflow has permission to do this, you need to create a <a href="https://github.com/settings/tokens/new?scopes=repo">GitHub Personal Access Token with the "repo" scope</a> that can access <code>myorg/public</code>. This must be added as a GitHub SECRET called <code>GH_RELEASES_TOKEN</code> on <code>myorg/private</code>.</p>
+<p>GitHub Releases isn't really designed for this, so there's a few strange things that will happen here:</p>
+<ul>
+<li>
+<p>GitHub Releases always requires a commit to be tagged, and in this case the tag would be on <code>myorg/public</code> even though the workflow is running on <code>myorg/private</code>, which (presumably) has unrelated commits. Currently <strong>we will tag the latest commit on the <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-branches#about-the-default-branch">default branch</a> of <code>myorg/public</code></strong>. If you're using <a href="#dispatch-releases">the dispatch-releases flow</a>, no tag will be created on <code>myorg/private</code>.</p>
+</li>
+<li>
+<p>GitHub Releases will provide a source tarball pointing at the tagged commit on <code>myorg/public</code>, but that's (presumably) not the source that your release was actually built from. This cannot be disabled, but it's also essentially harmless. However <strong>dist uploads its own source tarball and that <em>WILL</em> contain the source of the private repo</strong>. If you don't want this, use <a href="#source-tarball">the <code>source-tarball = false</code> setting</a>.</p>
+</li>
+</ul>
+<h4 id="github-releases-submodule-path"><a class="header" href="#github-releases-submodule-path"><code>github-releases-submodule-path</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.15.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the releases guide!</a> <br />
+default = <code>&lt;none&gt;</code> (use the project's root repository)</p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+github-releases-submodule-path = "rel/path/to/submodule"
+</code></pre>
+</blockquote>
+<p>Designed for use with <a href="#github-releases-repo">github-releases-repo</a> setting. When specified, the cached commit of the submodule at this path will be used as the commit to tag in the target repository. If not specified, the latest commit in the target repository will be used instead.</p>
+<h4 id="create-release"><a class="header" href="#create-release"><code>create-release</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.2.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the releases guide!</a> <br />
+default = <code>true</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+create-release = false
+</code></pre>
+</blockquote>
+<p>Whether we should create the GitHub Release for you in your Release CI.</p>
+<p>If true, dist will create a new GitHub Release and generate
+a title/body for it based on your changelog.</p>
+<p>If false, dist will assume a draft GitHub Release for the current git tag
+already exists with the title/body you want, and just upload artifacts to it, undrafting when all artifacts are uploaded.</p>
+<p>See also: <a href="#github-release"><code>github-release</code></a></p>
+<h2 id="ci-settings"><a class="header" href="#ci-settings">ci settings</a></h2>
+<p>These settings govern how <a href="../ci/index.html">your CI should work</a>, including how to trigger the release process and custom tasks to run.</p>
+<h3 id="ci"><a class="header" href="#ci"><code>ci</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.0.3<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+ci = ["github"]
+</code></pre>
+</blockquote>
+<p>This is a list of CI backends you want to support, allowing dist to know what CI scripts to generate. Most dist features require this to be enabled!</p>
+<p><a href="../ci/index.html">"github"</a> is currently the only supported CI backend.</p>
+<h3 id="build-local-artifacts"><a class="header" href="#build-local-artifacts"><code>build-local-artifacts</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.8.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>true</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+build-local-artifacts = false
+</code></pre>
+</blockquote>
+<p><code>build-local-artifacts = false</code> disables the builtin CI jobs that would build your binaries and archives (and MSI installers). This allows a Sufficiently Motivated user to use custom <code>build-local-jobs</code> to completely replace dist's binary building with something like maturin.</p>
+<p>The requirements are simply that you need your custom actions to:</p>
+<ul>
+<li>build archives (tarballs/zips) and checksums that the local CI was expected to produce</li>
+<li>use the github upload-artifacts action to upload all of those to an artifact named <code>artifacts</code></li>
+</ul>
+<p>You can get a listing of the exact artifact names to use and their expected contents with:</p>
+<pre><code>dist manifest --artifacts=local --no-local-paths
+</code></pre>
+<p>(<code>[checksum]</code> entries are separate artifacts and not actually stored in the archives.)</p>
+<p>Also note that for legacy reasons a tarball is expected to have all the contents nested under a root dir with the same name as the tarball (sans extension), while zips are expected to have all the files directly in the root (installers pass <code>--strip-components=1</code> to tar when extracting).</p>
+<h3 id="cache-builds"><a class="header" href="#cache-builds"><code>cache-builds</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.18.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>&lt;none&gt;</code> (inferred, probably <code>false</code>)</p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+cache-builds = true
+</code></pre>
+</blockquote>
+<p>Determines whether CI will try to cache work between builds. Defaults false, unless <a href="#release-branch"><code>release-branch</code></a> or <a href="#pr-run-mode"><code>pr-run-mode = "upload"</code></a> are enabled.</p>
+<p>This is unlikely to be productive because for safety the cache aggressively invalidates based on things like "Cargo.toml or Cargo.lock changed" (which is always true if you change the version of a Rust project), and a noop cache run can randomly take over 2 minutes (typically more like 10 seconds).</p>
+<p>The cases where we enable it by default are the only ones we know where you <em>might</em> want to enable it.</p>
+<h3 id="dispatch-releases"><a class="header" href="#dispatch-releases"><code>dispatch-releases</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.8.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+dispatch-releases = true
+</code></pre>
+</blockquote>
+<p>When enabled, your release CI is triggered with workflow_dispatch instead of tag-push (relying on creating a GitHub release implicitly tagging).</p>
+<p>Enabling this disables tag-push releases, but keeps pr checks enabled.</p>
+<p>By default the workflow dispatch form will have "dry-run" populated as the tag, which is taken to have the same meaning as <a href="#pr-run-mode"><code>pr-run-mode = "upload"</code></a>: run the plan and build steps, but not the publish or announce ones. Currently hosting is also disabled, but future versions may add some forms of hosting in this mode.</p>
+<h3 id="fail-fast"><a class="header" href="#fail-fast"><code>fail-fast</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.1.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+fail-fast = true
+</code></pre>
+</blockquote>
+<p>Whether failing builds tasks should make us give up on all other build tasks.</p>
+<p>When building a release in CI, you might discover that one platform's build is broken. When this happens you have two options: kill all other builds immediately (<code>fail-fast = true</code>), or keep trying to build all the other platforms anyway (<code>fail-fast = false</code>) to see what other platforms might have problems.</p>
+<p>Either way, the global build task will refuse to run if any of these tasks fail, so you can't get any kind of partial release. However, if the build failure was spurious, resuming all failed tasks should resume without issue.</p>
+<h3 id="pr-run-mode"><a class="header" href="#pr-run-mode"><code>pr-run-mode</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.3.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>"plan"</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+pr-run-mode = "upload"
+</code></pre>
+</blockquote>
+<p>This setting determines to what extent we run your Release CI on pull-requests:</p>
+<ul>
+<li>"skip": don't check the release process in PRs</li>
+<li>"plan": run 'dist plan' on PRs (recommended, also the default)</li>
+<li>"upload": build and upload an artifacts to the PR (expensive)</li>
+</ul>
+<h3 id="tag-namespace"><a class="header" href="#tag-namespace"><code>tag-namespace</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.10.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+tag-namespace = "some-prefix"
+</code></pre>
+</blockquote>
+<p>Setting <code>tag-namespace = "owo"</code> will change the tag matching expression we put in your GitHub CI, to require the tag to start with "owo" for dist to care about it. This can be useful for situations where you have several things with different tag/release workflows in the same workspace. It also renames <code>release.yaml</code> to <code>owo-release.yml</code> to make it clear it's just one of many release workflows.</p>
+<p><strong>NOTE</strong>: if you change tag-namespace, dist will generate the new <code>owo-release.yml</code> file, but not delete the old one. Be sure to manually delete the old <code>release.yml</code>!</p>
+<h3 id="merge-tasks"><a class="header" href="#merge-tasks"><code>merge-tasks</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.1.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>false</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+merge-tasks = true
+</code></pre>
+</blockquote>
+<p>Whether we should try to merge otherwise-parallelizable tasks onto the same machine, sacrificing latency and fault-isolation for the sake of minor efficiency gains.</p>
+<p>For example, if you build for x64 macos and arm64 macos, by default we will generate ci which builds those independently on separate logical machines. With this enabled we will build both of those platforms together on the same machine, making it take twice as long as any other build and making it impossible for only one of them to succeed.</p>
+<p>The default is <code>false</code>. Before 0.1.0 it was always <code>true</code> and couldn't be changed, making releases annoyingly slow (and technically less fault-isolated). This setting was added to allow you to restore the old behaviour, if you really want.</p>
+<h3 id="github-ci-settings"><a class="header" href="#github-ci-settings">github ci settings</a></h3>
+<p>These settings are specific to <a href="../ci/index.html">your dist GitHub CI</a>.</p>
+<h4 id="github-build-setup"><a class="header" href="#github-build-setup"><code>github-build-setup</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.20.0<br><a href="#setting-availabilities">global-only</a></span>
+🔧 this is an experimental feature! <br />
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+github-build-setup = "path/to/build-setup.yml"
+</code></pre>
+</blockquote>
+<p>This configuration value should be a path relative to the repository your <code>.github/workflows</code> directory.
+The file located at that path should contain a yaml array of <a href="https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsid">steps</a> which will be
+performed before we call <code>dist build</code>.</p>
+<h4 id="github-custom-job-permissions"><a class="header" href="#github-custom-job-permissions"><code>github-custom-job-permissions</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.18.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+publish-jobs = ["npm", "./my-custom-publish"]
+github-custom-job-permissions = { "my-custom-publish" = { packages = "admin" } }
+</code></pre>
+</blockquote>
+<p>Allows you to customize the permissions given to your custom CI jobs.</p>
+<p>By default all custom <code>publish-jobs</code> get <code>{ id-token = "write", packages = "write" }</code>.
+If you override a publish job's permissions, the default permissions will be removed.
+All other custom jobs default to no special permissions.</p>
+<h4 id="github-custom-runners"><a class="header" href="#github-custom-runners"><code>github-custom-runners</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.6.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
+aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
+</code></pre>
+</blockquote>
+<p>Allows specifying which runner to use for a target. The keys within this table are target triples in the same format as the <a href="#targets">"targets"</a> setting. Any targets not specified in this table will use the defaults.</p>
+<p>In addition to defining runners for a target, it's also possible to specify a runner for the global, non-target-specific tasks using the <code>global</code> key. This runner will be used for tasks like <code>plan</code>, <code>host</code>, generating installers, and so on.</p>
+<h3 id="custom-ci-jobs"><a class="header" href="#custom-ci-jobs">custom ci jobs</a></h3>
+<p>These settings all similarly extend <a href="../ci/index.html">your dist GitHub CI</a> with custom jobs to run at specific steps of the release process, which looks like:</p>
+<ol>
+<li>plan: check settings, decide what we're releasing</li>
+<li>build-local: compile things for each platform</li>
+<li>build-global: combine things and generate installers</li>
+<li>host: upload files to hosting, make URLs live</li>
+<li>publish: publish to package managers</li>
+<li>announce: announce to the world that the release was a success</li>
+</ol>
+<h4 id="plan-jobs"><a class="header" href="#plan-jobs"><code>plan-jobs</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.7.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+plan-jobs = ["./my-job"]
+</code></pre>
+</blockquote>
+<p>This setting determines which custom jobs to run during the "plan" phase, which happens at the very start of the build.</p>
+<h4 id="local-artifacts-jobs"><a class="header" href="#local-artifacts-jobs"><code>local-artifacts-jobs</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.7.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+local-artifacts-jobs = ["./my-job"]
+</code></pre>
+</blockquote>
+<p>This setting determines which custom jobs to run during the "build local artifacts" phase, during which binaries are built.</p>
+<h4 id="global-artifacts-jobs"><a class="header" href="#global-artifacts-jobs"><code>global-artifacts-jobs</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.7.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+global-artifacts-jobs = ["./my-job"]
+</code></pre>
+</blockquote>
+<p>This setting determines which custom jobs to run during the "build global artifacts" phase, during which installers are built.</p>
+<h4 id="host-jobs"><a class="header" href="#host-jobs"><code>host-jobs</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.7.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+host-jobs = ["./my-job"]
+</code></pre>
+</blockquote>
+<p>This setting determines which custom jobs to run during the "host" phase, during which dist decides whether to proceed with publishing the release.</p>
+<h4 id="publish-jobs"><a class="header" href="#publish-jobs"><code>publish-jobs</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.2.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+publish-jobs = ["homebrew", "npm", "./my-custom-job"]
+</code></pre>
+</blockquote>
+<p>This setting determines which publish jobs to run. It accepts 3 kinds of value:</p>
+<ul>
+<li><a href="../installers/homebrew.html">"homebrew", for builtin homebrew publishes</a> (since 0.2.0)</li>
+<li><a href="../installers/npm.html">"npm", for builtin npm publishes</a> (since 0.14.0)</li>
+<li><a href="../ci/customizing.html#custom-jobs">"./my-custom-job" for custom jobs</a> (since 0.3.0)</li>
+</ul>
+<h4 id="post-announce-jobs"><a class="header" href="#post-announce-jobs"><code>post-announce-jobs</code></a></h4>
+<blockquote>
+<p><span style="float:right">since 0.7.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../ci/index.html">📖 read the ci customization guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[dist]
+post-announce-jobs = ["./my-job"]
+</code></pre>
+</blockquote>
+<p>This setting determines which custom jobs to run after the "announce" phase. "Announce" is the final phase during which dist schedules any jobs, so any custom jobs specified here are guaranteed to run after everything else.</p>
+<h1 id="the-workspace-section"><a class="header" href="#the-workspace-section">the <code>[workspace]</code> section</a></h1>
+<p>This section is only available in <code>dist-workspace.toml</code> files.</p>
+<h3 id="workspacemembers"><a class="header" href="#workspacemembers"><code>workspace.members</code></a></h3>
+<blockquote>
+<p><span style="float:right">since 0.20.0<br><a href="#setting-availabilities">global-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>[]</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[workspace]
+members = [
+    "cargo:rel/path/to/rust/workspace",
+    "npm:some/js/project/",
+    "npm:some/other/js/project/",
+    "dist:a/generic/project/"
+]
+</code></pre>
+</blockquote>
+<p>In a dist-workspace.toml, this specifies the various projects/workspaces/packages that should
+be managed by dist. Each member is of the format <code>&lt;project-type&gt;:&lt;relative-path&gt;</code> where
+<code>relative-path</code> is a path relative to the dist-workspace.toml to a directory containing that type of project, and <code>project-type</code> can be one of:</p>
+<ul>
+<li>cargo: expect a Cargo.toml for a cargo-based Rust project in that dir</li>
+<li>npm: expect a package.json for an npm-based JavaScript project in that dir</li>
+<li>dist: expect a dist.toml for a dist-based generic project in that dir</li>
+</ul>
+<h1 id="the-package-section"><a class="header" href="#the-package-section">the <code>[package]</code> section</a></h1>
+<p>This section is available in <code>dist.toml</code> and <code>dist-workspace.toml</code> files.</p>
+<h2 id="packagename"><a class="header" href="#packagename"><code>package.name</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+name = "my-cool-app"
+</code></pre>
+</blockquote>
+<p>The name of the package.</p>
+<p>All packages must have a name, either sourced from a dist.toml or inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>The name is used in a myriad of places to refer to your application and its releases.</p>
+<h2 id="packageversion"><a class="header" href="#packageversion"><code>package.version</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+version = "1.2.0-prerelease.2"
+</code></pre>
+</blockquote>
+<p>The version of the package. Syntax must be a valid <a href="https://docs.rs/semver/latest/semver/struct.Version.html">Cargo SemVer Version</a>.</p>
+<p>All packages must have a version, either sourced from a dist.toml or inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>The version is used in a myriad of places to refer to your application and its releases.</p>
+<h2 id="packagedescription"><a class="header" href="#packagedescription"><code>package.description</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+version = "A cool application that solves all your problems!"
+</code></pre>
+</blockquote>
+<p>A brief description of the package.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This may be used in the metadata of various <a href="../installers/index.html">installers</a>.</p>
+<h2 id="packageauthors"><a class="header" href="#packageauthors"><code>package.authors</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+authors = ["axodotdev &lt;hello@axo.dev&gt;"]
+</code></pre>
+</blockquote>
+<p>The authors of the package.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This may be used in the metadata of various <a href="../installers/index.html">installers</a>. We recommend keeping it fairly generic to avoid needless hassles from people changing their names.</p>
+<h2 id="packagerepository"><a class="header" href="#packagerepository"><code>package.repository</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+repository = "https://github.com/axodotdev/axolotolsay"
+</code></pre>
+</blockquote>
+<p>A URL to the repository hosting this package.</p>
+<p>The following formats are all supported and treated as equivalent:</p>
+<ul>
+<li><code>"https://github.com/axodotdev/axolotolsay"</code></li>
+<li><code>"https://github.com/axodotdev/axolotolsay.git"</code></li>
+<li><code>"git@github.com:axodotdev/axolotlsay.git"</code></li>
+</ul>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This is <em>essentially</em> required as almost all dist features are blocked behind knowing where your project is hosted. All <a href="#dist">distable</a> packages must agree on this value.</p>
+<h2 id="packagehomepage"><a class="header" href="#packagehomepage"><code>package.homepage</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+homepage = "https://opensource.axo.dev/axolotlsay"
+</code></pre>
+</blockquote>
+<p>A URL to the homepage of the package.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This may be used in the metadata of various <a href="../installers/index.html">installers</a>.</p>
+<h2 id="packagedocumentation"><a class="header" href="#packagedocumentation"><code>package.documentation</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+documentation = "https://docs.rs/axolotlsay"
+</code></pre>
+</blockquote>
+<p>A URL to the documentation of the package.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This may be used in the metadata of various <a href="../installers/index.html">installers</a>.</p>
+<h2 id="packagechangelog"><a class="header" href="#packagechangelog"><code>package.changelog</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+changelog = "../CHANGELOG.md"
+</code></pre>
+</blockquote>
+<p>A relative path to the changelog file for your package.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This can be used by various dist features that use your changelog, such as <a href="#auto-includes">auto-includes</a> and <a href="../ci/index.html">release-bodies</a>. We will often <a href="../artifacts/archives.html">autodetect this for you</a>, so this setting is only needed if your changelog has a special name/location/format we can't find.</p>
+<h2 id="packagereadme"><a class="header" href="#packagereadme"><code>package.readme</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+readme = "../README.md"
+</code></pre>
+</blockquote>
+<p>A relative path to the readme file for your package.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This can be used by various dist features that use your readme, such as <a href="#auto-includes">auto-includes</a>. We will often <a href="../artifacts/archives.html">autodetect this for you</a>, so this setting is only needed if your readme has a special name/location/format we can't find.</p>
+<h2 id="packagelicense"><a class="header" href="#packagelicense"><code>package.license</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+license = "MIT OR Apache-2.0"
+</code></pre>
+</blockquote>
+<p>The license(s) of your package, in <a href="https://spdx.org/licenses">SPDX format</a>.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This may be used in the metadata of various <a href="../installers/index.html">installers</a>.</p>
+<h2 id="packagelicense-files"><a class="header" href="#packagelicense-files"><code>package.license-files</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+readme = ["../LICENSE-MIT", "../LICENSE-APACHE"]
+</code></pre>
+</blockquote>
+<p>Relative paths to the license files for your package.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>This can be used by various dist features that use your license files, such as <a href="#auto-includes">auto-includes</a>. We will often <a href="../artifacts/archives.html">autodetect this for you</a>, so this setting is only needed if your licenses have a special name/location/format we can't find.</p>
+<h2 id="packagebinaries"><a class="header" href="#packagebinaries"><code>package.binaries</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+binaries = ["my-app", "my-other-app"]
+</code></pre>
+</blockquote>
+<p>Names of binaries (without the extension) your package is expected to build and distribute.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>Including binaries by default opts your package into being <a href="#dist">distable</a>.</p>
+<p>See also: <a href="#bin-aliases">bin-aliases</a>, <a href="#packagecstaticlibs">cstaticlibs</a>, <a href="#packagecdylibs">cdylibs</a></p>
+<h2 id="packagecstaticlibs"><a class="header" href="#packagecstaticlibs"><code>package.cstaticlibs</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+cstaticlibs = ["mystaticlib", "some-helper"]
+</code></pre>
+</blockquote>
+<p>Names of c-style static libraries (without the extension) your package is expected to build and distribute.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>Including cstaticlibs opts your package into being <a href="#dist">distable</a> if <a href="#package-libraries"><code>package-libraries = ["cstaticlibs"]</code></a> is set.</p>
+<p>See also: <a href="#packagebinaries">binaries</a>, <a href="#packagecdylibs">cdylibs</a></p>
+<h2 id="packagecdylibs"><a class="header" href="#packagecdylibs"><code>package.cdylibs</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+cdylibs = ["mydylib", "some-other-helper"]
+</code></pre>
+</blockquote>
+<p>Names of c-style dynamic libraries (without the extension) your package is expected to build and distribute.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc.</p>
+<p>Including cdylibs opts your package into being <a href="#dist">distable</a> if <a href="#package-libraries"><code>package-libraries = ["cdylibs"]</code></a> is set.</p>
+<p>See also: <a href="#packagebinaries">binaries</a>, <a href="#packagecstaticlibs">cstaticlibs</a></p>
+<h2 id="packagebuild-command"><a class="header" href="#packagebuild-command"><code>package.build-command</code></a></h2>
+<blockquote>
+<p><span style="float:right">since 0.12.0<br><a href="#setting-availabilities">package-only</a></span>
+🔧 this is an experimental feature! <br />
+<a href="../custom-builds.html">📖 read the project structure guide!</a> <br />
+default = <code>&lt;none&gt;</code></p>
+<p><em>in your dist-workspace.toml or dist.toml:</em></p>
+<pre><code class="language-toml">[package]
+build-command = ["make", "dist"]
+</code></pre>
+</blockquote>
+<p>A command to run in your package's root directory to build its <a href="#packagebinaries">binaries</a>, <a href="#packagecstaticlibs">cstaticlibs</a>, and <a href="#packagecdylibs">cdylibs</a>.</p>
+<p>If not specified, this can be inherited from a language's native package format like a <a href="../quickstart/rust.html">Cargo.toml</a>, <a href="../quickstart/javascript.html">package.json</a>, etc. (This is often preferred since we can natively understand e.g. <a href="#cargo-build-settings">Cargo builds</a>).</p>
+<h2 id="setting-availabilities"><a class="header" href="#setting-availabilities">setting availabilities</a></h2>
+<p>Throughout the above docs, different settings will have different rules for where they can be specified (root workspace config file or package config file), and how they'll be inherited.</p>
+<ul>
+<li>global-only: this setting can only be set in the root workspace config (<a href="../quickstart/javascript.html">dist-workspace.toml</a> or <a href="../custom-builds.html">dist.toml</a>)</li>
+<li>package-only: this setting can only be set in a package config (<a href="../custom-builds.html">dist.toml</a>)</li>
+<li>package-local: this setting can be set in either, with the package overriding the workspace value if it provides one (and otherwise inheriting it).</li>
+</ul>
+<p>When you override a package-local setting, the workspace value will be discarded completely. So for instance if the workspace sets <code>features = ["feature1", "feature2"]</code> and a package sets <code>features = ["feature2", "feature3"]</code>, then that package will only get feature2 and feature3.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/artifact-url.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../reference/cli.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/artifact-url.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../reference/cli.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

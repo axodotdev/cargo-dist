@@ -1,0 +1,507 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Customizing - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html" class="active"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/ci/customizing.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="customizing-github-actions"><a class="header" href="#customizing-github-actions">Customizing GitHub Actions</a></h1>
+<ul>
+<li><a href="#install-extra-packages">Install extra packages</a>
+<ul>
+<li><a href="#limitations">Limitations</a></li>
+</ul>
+</li>
+<li><a href="#custom-jobs">Custom jobs</a></li>
+<li><a href="#custom-runners">Custom runners</a></li>
+<li><a href="#cross-compilation">Cross-compilation</a>
+<ul>
+<li><a href="#build-and-upload-artifacts-on-every-pull-request">Build and upload artifacts on every pull request</a></li>
+</ul>
+</li>
+<li><a href="#advanced-and-esoteric-features">Advanced and esoteric features</a>
+<ul>
+<li><a href="#customizing-build-setup">Customizing Build Setup</a>
+<ul>
+<li><a href="#limitations-1">Limitations</a></li>
+</ul>
+</li>
+<li><a href="#bring-your-own-release">Bring your own release</a></li>
+<li><a href="#publish-github-release-to-another-repository">Publish GitHub Release To Another Repository</a></li>
+<li><a href="#hand-editing-releaseyml">Hand-editing release.yml</a></li>
+<li><a href="#fiddly-build-task-settings">Fiddly build task settings</a></li>
+</ul>
+</li>
+</ul>
+<p>dist's generated CI configuration can be extended in several ways: it can be configured to install extra packages before the build begins, and it's possible to add extra jobs to run at specific lifecycle moments.</p>
+<h2 id="install-extra-packages"><a class="header" href="#install-extra-packages">Install extra packages</a></h2>
+<blockquote>
+<p>since 0.4.0</p>
+</blockquote>
+<p>Sometimes, you may need extra packages from the system package manager to be installed before in the builder before dist begins building your software. dist can do this for you by adding the <code>dependencies</code> setting to your dist config. When set, the packages you request will be fetched and installed in the step before <code>build</code>. Additionally, on macOS, the <code>cargo build</code> process will be wrapped in <code>brew bundle exec</code> to ensure that your dependencies can be found no matter where Homebrew placed them.</p>
+<p>By default, we run Apple silicon (aarch64) builds for macOS on the <code>macos-13</code> runner, which is Intel-based. If your build process needs to link against C libraries from Homebrew using the <code>dependencies</code> feature, you will need to switch to an Apple silicon-native runner to ensure that you have access to Apple silicon-native dependencies from Homebrew. You can do this using the <a href="#custom-runners">custom runners</a> feature. Currently, <code>macos-14</code> is the oldest GitHub-provided runner for Apple silicon.</p>
+<p>Sometimes, you may want to make sure your users also have these dependencies available when they install your software. If you use a package manager-based installer, dist has the ability to specify these dependencies. By default, dist will examine your program to try to detect which dependencies it thinks will be necessary. At the moment, <a href="../installers/homebrew.html">Homebrew</a> is the only supported package manager installer. You can also specify these dependencies manually.</p>
+<p>For more information, see the <a href="../reference/config.html#dependencies">configuration syntax</a>.</p>
+<h3 id="limitations"><a class="header" href="#limitations">Limitations</a></h3>
+<ul>
+<li>Currently, the only supported package managers are Apt (Linux), Chocolatey (Windows) and Homebrew (macOS).</li>
+</ul>
+<h2 id="custom-jobs"><a class="header" href="#custom-jobs">Custom jobs</a></h2>
+<blockquote>
+<p>since 0.3.0 (publish-jobs) and 0.7.0 (other steps)</p>
+</blockquote>
+<p>dist's CI can be configured to call additional jobs on top of the ones it has builtin. Currently, we support adding extra jobs to the the following list of steps:</p>
+<ul>
+<li><a href="../reference/config.html#plan-jobs"><code>plan-jobs</code></a> (the beginning of the build process)</li>
+<li><a href="../reference/config.html#build-local-artifacts-jobs"><code>build-local-artifacts-jobs</code></a></li>
+<li><a href="../reference/config.html#build-global-artifacts-jobs"><code>build-global-artifacts-jobs</code></a></li>
+<li><a href="../reference/config.html#host-jobs"><code>host-jobs</code></a> (pre-publish)</li>
+<li><a href="../reference/config.html#publish-jobs"><code>publish-jobs</code></a></li>
+<li><a href="../reference/config.html#post-announce-jobs"><code>post-announce-jobs</code></a> (after the release is created)</li>
+</ul>
+<p>Custom jobs have access to the plan, produced via the "plan" step. This is a JSON document containing information about the project, planned steps, and its outputs. It's the same format contained as the "dist-manifest.json" that will be included with your release. You can use this in your custom jobs to obtain information about what will be built. For more details on the format of this file, see the <a href="../reference/schema.html">schema reference</a>.</p>
+<p>To add a custom job, you need to follow two steps:</p>
+<ol>
+<li>Define the new job as a reusable workflow using the standard method defined by your CI system. For GitHub actions, see the documentation on <a href="https://docs.github.com/en/actions/using-workflows/reusing-workflows#creating-a-reusable-workflow">reusable workflows</a>.</li>
+<li>Add the name of your new workflow file to the appropriate array in your dist config, prefixed with a <code>./</code>. For example, if your job name is <code>.github/workflows/my-publish.yml</code>, you would write it like this:</li>
+</ol>
+<pre><code class="language-toml">publish-jobs = ["./my-publish"]
+</code></pre>
+<p>Here's an example reusable workflow written using GitHub Actions. It won't do any real publishing, just echo text to the CI output. First, create a file named <code>.github/workflows/publish-greeter.yml</code> with these contents:</p>
+<pre><code class="language-yaml">name: Greeter
+
+on:
+  # Defining workflow_call means that this workflow can be called from
+  # your main workflow job
+  workflow_call:
+    # dist exposes the plan from the plan step, as a JSON string,
+    # to your job if it needs it
+    inputs:
+      plan:
+        required: true
+        type: string
+
+jobs:
+  greeter:
+    runs-on: ubuntu-latest
+    # This is optional; it exposes the plan to your job as an environment variable
+    env:
+      PLAN: ${{ inputs.plan }}
+    steps:
+      - name: Step 1
+        run: |
+          echo "Hello!"
+          echo "Plan is: ${PLAN}"
+</code></pre>
+<p>Then, add the following to your <code>publish-jobs</code> array:</p>
+<pre><code class="language-toml">publish-jobs = ["./publish-greeter"]
+</code></pre>
+<p>Running <code>dist init</code> for your tool will update your GitHub Actions configuration to make use of the new reusable workflow during the publish step.</p>
+<h2 id="custom-runners"><a class="header" href="#custom-runners">Custom runners</a></h2>
+<blockquote>
+<p>since 0.6.0</p>
+</blockquote>
+<p>By default, dist uses the following runners:</p>
+<ul>
+<li>Linux (x86_64): <code>ubuntu-20.04</code></li>
+<li>macOS (x86_64): <code>macos-13</code></li>
+<li>macOS (Apple Silicon): <code>macos-13</code></li>
+<li>Windows (x86_64): <code>windows-2019</code></li>
+</ul>
+<p>It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the <a href="../reference/config.html#github-custom-runners"><code>github-custom-runners</code></a> configuration setting in your dist config. Here's an example which adds support for Linux (aarch64) using runners from <a href="https://buildjet.com/for-github-actions">Buildjet</a>:</p>
+<pre><code class="language-toml"># in `dist-workspace.toml`
+
+[dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
+aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
+</code></pre>
+<p>In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to opt into building for Apple Silicon from a native runner by using the <code>macos-14</code> runner. Here's an example which uses <code>macos-14</code> for native Apple Silicon builds:</p>
+<pre><code class="language-toml"># in `dist-workspace.toml`
+
+[dist.github-custom-runners]
+aarch64-apple-darwin = "macos-14"
+</code></pre>
+<h2 id="cross-compilation"><a class="header" href="#cross-compilation">Cross-compilation</a></h2>
+<blockquote>
+<p>since 0.26.0</p>
+</blockquote>
+<p>dist will transparently use either of:</p>
+<ul>
+<li><a href="https://github.com/rust-cross/cargo-zigbuild">cargo-zigbuild</a></li>
+<li><a href="https://github.com/rust-cross/cargo-xwin">cargo-xwin</a></li>
+</ul>
+<p>To try and build for the target you specified, from the host you specified.</p>
+<p>dist hardcodes knowledge of which cargo wrappers are better suited for which cross: <code>cargo-zigbuild</code>
+handles <code>x86_64-unknown-linux-gnu</code> to <code>aarch64-unknown-linux-gnu</code> handsomely, for example.</p>
+<p>So if you ask for <code>aarch64-unknown-linux-gnu</code> artifacts, because at the time of this writing
+there are no free <code>aarch64</code> GitHub runners, dist will assume you meant this:</p>
+<pre><code class="language-toml">[dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "ubuntu-20.04"
+</code></pre>
+<p>Which really means this:</p>
+<pre><code class="language-toml">[dist.github-custom-runners.aarch64-unknown-linux-gnu]
+runner = "ubuntu-20.04"
+host = "x86_64-unknown-linux-gnu"
+</code></pre>
+<p>...since dist knows which platform GitHub's own <a href="https://github.com/actions/runner-images">runner
+images</a> are.</p>
+<p>So you really only need to specify the <code>host</code> if you use <a href="https://github.com/neysofu/awesome-github-actions-runners?tab=readme-ov-file#list-of-providers">third-party GitHub Actions
+runners</a> (Namespace, Buildjet, etc.)</p>
+<p>If you don't specify the host, dist will just assume it's the same platform as
+the target, which is why this works:</p>
+<pre><code class="language-toml">[dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
+</code></pre>
+<p>Building <code>aarch64-pc-windows-msvc</code> binaries from a <code>x86_64-pc-windows-msvc</code> runner (like
+<code>windows-2019</code>) is surprisingly hard. But building both binaries from an <code>x86_64-unknown-linux-gnu</code>
+runner is surprisingly easy via <code>cargo-xwin</code></p>
+<p>This will work, eventually:</p>
+<pre><code class="language-toml"># in `dist-workspace.toml`
+
+[dist]
+targets = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+
+[dist.github-custom-runners.x86_64-pc-windows-msvc]
+runner = "ubuntu-20.04"
+
+[dist.github-custom-runners.aarch64-pc-windows-msvc]
+runner = "ubuntu-20.04"
+</code></pre>
+<p>...because dist can install <code>cargo-xwin</code> via <code>pip</code>. However, it will take
+forever. It's probably best to use a docker image that already has
+<code>cargo-xwin</code> installed, and other dependencies you probably want:</p>
+<pre><code class="language-toml"># in `dist-workspace.toml`
+
+[dist]
+targets = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+
+[dist.github-custom-runners.x86_64-pc-windows-msvc]
+container = "messense/cargo-xwin"
+
+[dist.github-custom-runners.aarch64-pc-windows-msvc]
+container = "messense/cargo-xwin"
+</code></pre>
+<p>Which is short for:</p>
+<pre><code class="language-toml"># cut: the rest of the config file
+
+[dist.github-custom-runners.x86_64-pc-windows-msvc]
+container = { image = "messense/cargo-xwin", host = "x86_64-unknown-linux-gnu" }
+
+# etc.
+</code></pre>
+<p>...but unfortunately, GitHub Actions's "run workflows in container" feature doesn't
+support emulation yet. We'd have to set up qemu, run docker manually, etc. — which
+dist doesn't do as of now. So the <code>host</code> just defaults to <code>x86_64-unknown-linux-gnu</code>
+right now, because that's all the GitHub runners support anywyay.</p>
+<p>So, because we're only specifying one feature, it's probably easier to just write this:</p>
+<pre><code class="language-toml">[dist]
+targets = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+
+[dist.github-custom-runners]
+x86_64-pc-windows-msvc.container = "messense/cargo-xwin"
+aarch64-pc-windows-msvc.container = "messense/cargo-xwin"
+
+# (yes, that /is/ valid TOML)
+</code></pre>
+<p>Note that you can use containers for non-cross reasons: maybe you want your binaries to be
+compatible with really old versions of glibc, older than Ubuntu 20.04: in this case, you
+can do something like:</p>
+<pre><code class="language-toml">[dist.github-custom-runners.x86_64-unknown-linux-gnu]
+container = { image = "quay.io/pypa/manylinux_2_28_x86_64", host = "x86_64-unknown-linux-musl" }
+
+[dist.github-custom-runners.aarch64-unknown-linux-gnu]
+container = { image = "quay.io/pypa/manylinux_2_28_x86_64", host = "x86_64-unknown-linux-musl" }
+</code></pre>
+<p>Note that here, the host triple for those container images is overridden to be <code>x86_64-unknown-linux-musl</code>, because dist itself (which must run in the container) might be using a too-recent version of glibc.</p>
+<p>Because of dist's cross-compilation support, if you have both <code>cargo-zigbuild</code> and <code>cargo-xwin</code>
+installed on a macOS machine, you can build pretty much every target dist supports, by running
+<code>dist build --artifacts all</code> — in fact, this is used to develop dist itself!</p>
+<h3 id="build-and-upload-artifacts-on-every-pull-request"><a class="header" href="#build-and-upload-artifacts-on-every-pull-request">Build and upload artifacts on every pull request</a></h3>
+<blockquote>
+<p>since 0.3.0</p>
+</blockquote>
+<p>By default, dist will run the plan step on every pull request but won't perform a full release build. If these builds are turned on, the resulting pull request artifacts won't be uploaded to a release but will be available as a download from within the CI job. To enable this, select the "upload" option from the "check your release process in pull requests" question in <code>dist init</code> or set <a href="../reference/config.html#pr-run-mode">the <code>pr-run-mode</code> key</a> to <code>"upload"</code> in <code>Cargo.toml</code>'s dist config. For example:</p>
+<pre><code class="language-toml">pr-run-mode = "upload"
+</code></pre>
+<h2 id="advanced-and-esoteric-features"><a class="header" href="#advanced-and-esoteric-features">Advanced and esoteric features</a></h2>
+<p>These features are specialized to very particular usecases, but may be useful for some users.</p>
+<h3 id="customizing-build-setup"><a class="header" href="#customizing-build-setup">Customizing Build Setup</a></h3>
+<blockquote>
+<p>since 0.20.0</p>
+</blockquote>
+<p>This is an experimental feature.</p>
+<p>In the event that installing platform dependencies using dist's system dependency feature
+doesn't work for your needs, for example a build dependency for your project isn't provided by the
+system's package manager, dist provides a method for injecting build steps into the
+<code>build-local-artifacts</code> job to prepare the container.</p>
+<p>To do this, use the <a href="../reference/config.html#github-build-setup">github-build-setup setting</a> which
+should be a path relative to your <code>.github/workflows/</code> directory, and which should point to a
+<code>.yml</code> file containing the github workflow steps just as you would normally write them in a workflow.
+(don't forget that leading <code>-</code>!)</p>
+<p>For example, if you needed the Lua programming language installed you could update your <code>Cargo.toml</code> with the following:</p>
+<pre><code class="language-toml">[workspace.metadata.dist]
+# ...
+github-build-setup = "build-setup.yml"
+</code></pre>
+<p>An then include in the root of your repository a file named <code>.github/workflows/build-setup.yml</code> containing the
+following.</p>
+<pre><code class="language-yml">- name: Install Lua
+  uses: xpol/setup-lua@v1
+  with:
+    lua-version: "5.3"
+- name: Check lua installation
+  run: lua -e "print('hello world!')"
+</code></pre>
+<p>This would generate a <code>build-local-artifacts</code> job with the following modifications.</p>
+<pre><code class="language-yml"># ...
+jobs:
+# ...
+  build-local-artifacts:
+    # ...
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Lua
+        uses: xpol/setup-lua@v1
+          with:
+            lua-version: "5.3"
+      - name: Check lua installation
+        run: lua -e "print('hello world!')"
+# ...
+</code></pre>
+<p>Notice that we include the steps right after the <code>actions/checkout</code> step meaning that we are doing
+this as early in the build job as possible.</p>
+<h4 id="limitations-1"><a class="header" href="#limitations-1">Limitations</a></h4>
+<h5 id="multi-line-strings"><a class="header" href="#multi-line-strings">Multi-line strings</a></h5>
+<p>Currently the use of <a href="https://yaml.org/spec/1.2.2/#813-folded-style">folding</a> (<code>&gt;</code>) and
+<a href="https://yaml.org/spec/1.2.2/#8112-block-chomping-indicator">chomping</a> (<code>-</code>) multi-line string
+modifiers will probably generate a surprising outputs. This is particularly important for any
+actions that use the <code>run</code> keyword and it is recommended to use the literal (<code>|</code>) string modifier for
+multi-line strings.</p>
+<h3 id="bring-your-own-release"><a class="header" href="#bring-your-own-release">Bring your own release</a></h3>
+<blockquote>
+<p>since 0.2.0</p>
+</blockquote>
+<p>By default, dist will want to create its own GitHub Release and set the title/body with things like your CHANGELOG/RELEASES and some info about how to install the release. However if you have your own process for generating the contents of GitHub Release, we support that.</p>
+<p>If you set <a href="../reference/config.html#create-release"><code>create-release = false</code></a> in your dist config, dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the GitHub Release for you.</p>
+<h3 id="publish-github-release-to-another-repository"><a class="header" href="#publish-github-release-to-another-repository">Publish GitHub Release To Another Repository</a></h3>
+<blockquote>
+<p>since 0.14.0</p>
+</blockquote>
+<p>You can change which repository a GitHub Release gets published to with the <a href="../reference/config.html#github-releases-repo">github-releases-repo setting</a>.</p>
+<h3 id="hand-editing-releaseyml"><a class="header" href="#hand-editing-releaseyml">Hand-editing release.yml</a></h3>
+<blockquote>
+<p>since 0.3.0</p>
+</blockquote>
+<p>The happy-path of dist has us completely managing release.yml, and since 0.3.0 we will actually consider it an error for there to be any edits or out of date information in release.yml.</p>
+<p>If there's something that dist can't do that makes you want to hand-edit the file, we'd love to hear about it so that you can stay on the happy-path!</p>
+<p>However we know you sometimes really need to do those hand-edits, so there is a way to opt into it. If you <a href="../reference/config.html#allow-dirty">set <code>allow-dirty = ["ci"]</code> in your dist config</a>, dist will stop trying to update the file and stop checking if it's out of date.</p>
+<p>Although you're not "using dist wrong" if you do this, <strong>be aware that you are losing access to a lot of the convenience and UX benefits of dist</strong>. Every piece of documentation that says "just run dist init" may not work correctly, as a new feature may require the CI template to be updated. Even things as simple as "updating dist" will stop working.</p>
+<p>We have put a lot of effort into minimizing those situations, with <code>plan</code> increasingly being responsible for dynamically computing what the CI should do, but that's not perfect, and there's no guarantees that future versions of dist won't completely change the way CI is structured.</p>
+<h3 id="fiddly-build-task-settings"><a class="header" href="#fiddly-build-task-settings">Fiddly build task settings</a></h3>
+<blockquote>
+<p>since 0.0.1</p>
+</blockquote>
+<p>Here's a grab-bag of more random settings you probably don't want to use, but exist in case you need them.</p>
+<p>By default dist lets all the build tasks keep running even if one of them fails, to try to get you as much as possible when things go wrong. <a href="../reference/config.html#fail-fast"><code>fail-fast = true</code> can be set to disable this</a>.</p>
+<p>By default dist breaks build tasks onto more machines than strictly necessary to create the maximum opportunities for concurrency and to increase fault-tolerance. For instance if you want to build for both arm64 macOS and x64 macOS, that <em>could</em> be done on the same machine, but we put it on two machines so they can be in parallel and succeed/fail independently. <a href="../reference/config.html#merge-tasks"><code>merge-tasks = true</code> can be set to disable this</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../ci/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../workspaces/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../ci/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../workspaces/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
