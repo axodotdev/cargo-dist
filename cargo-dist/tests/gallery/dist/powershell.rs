@@ -105,6 +105,7 @@ impl AppResult {
                     .env("LOCALAPPDATA", &appdata)
                     .env("MY_ENV_VAR", &app_home)
                     .env_remove("CARGO_HOME")
+                    .env_remove("XDG_CONFIG_HOME")
                     .env_remove("PSModulePath")
             })?;
             eprintln!(
