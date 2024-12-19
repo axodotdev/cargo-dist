@@ -1791,7 +1791,7 @@ function Invoke-Installer($artifacts, $platforms) {
     Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {
         Write-Information ""
-        Write-Information "To add $dest_dir to your PATH, either restart your system or run:"
+        Write-Information "To add $dest_dir to your PATH, either restart your shell or run:"
         Write-Information ""
         Write-Information "    set Path=$dest_dir;%Path%   (cmd)"
         Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`"   (powershell)"
@@ -1859,8 +1859,84 @@ function Add-Path($OrigPathToAdd) {
     $NewPath = $PathToAdd + $OldPath
     # We use -Force here to make the value already existing not be an error
     $Item | New-ItemProperty -Name $PropertyName -Value $NewPath -PropertyType String -Force | Out-Null
+    # Notify running processes that they should update their environment variables (in particular, explorer.exe)
+    # This ensures we only need a shell restart, rather than a system restart
+    Update-EnvironmentVariables
     return $true
   }
+}
+
+<#
+Source: https://www.powershellgallery.com/packages/PSCI/1.0.4/Content/core%5Cutils%5CUpdate-EnvironmentVariables.ps1
+Version 1.0.4
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Objectivity Bespoke Software Specialists
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+#>
+function Update-EnvironmentVariables {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '',
+        Justification='Function name is accurate')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
+        Justification='Keeping function identical to upstream')]
+
+    <#
+    .SYNOPSIS
+    Reloads environment variables.
+
+    .DESCRIPTION
+    Need to be run after changing global environment variables.
+    For details see http://stackoverflow.com/questions/6979741/setting-environment-variables-requires-reboot-on-64-bit
+
+    .EXAMPLE
+    Update-EnvironmentVariables
+    #>
+
+    [CmdletBinding()]
+    [OutputType([void])]
+    param()
+
+    Write-Verbose "Reloading environment variables."
+    if (-not ("win32.nativemethods" -As [type])) {
+        # import sendmessagetimeout from win32
+        Add-Type -Namespace Win32 -Name NativeMethods -MemberDefinition @"
+[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+public static extern IntPtr SendMessageTimeout(
+IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam,
+uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+"@
+    }
+
+    $HWND_BROADCAST = [intptr]0xffff;
+    $WM_SETTINGCHANGE = 0x1a;
+    $result = [uintptr]::zero
+
+    # Notify all windows of environment block change
+    [void]([win32.nativemethods]::SendMessageTimeout($HWND_BROADCAST, $WM_SETTINGCHANGE, [uintptr]::Zero, "Environment", 2, 5000, [ref]$result))
+
+    if ($result -eq 0) {
+        throw "Failed to reload environment variables."
+    } else {
+        Write-Verbose "Environment variables have been reloaded."
+    }
 }
 
 function Initialize-Environment() {
