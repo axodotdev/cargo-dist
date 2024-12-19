@@ -621,6 +621,7 @@ install() {
     local _libs="$3"
     local _staticlibs="$4"
     local _arch="$5"
+    local _shadowed_bins=""
     for _bin_name in $_bins; do
         local _bin="$_src_dir/$_bin_name"
         ensure mv "$_bin" "$_install_dir"
@@ -630,6 +631,11 @@ install() {
             ln -sf "$_install_dir/$_bin_name" "$_install_dir/$_dest"
         done
         say "  $_bin_name"
+
+        # Binary found, but shadowed in path
+        if [ "$(command -v "$_bin_name")" != "$_install_dir/$_bin_name" ]; then
+            _shadowed_bins="$_shadowed_bins $_bin_name"
+        fi
     done
     # Like the above, but no aliases
     for _lib_name in $_libs; do
@@ -675,6 +681,10 @@ install() {
             say ""
             say "    source $_env_script_path_expr (sh, bash, zsh)"
             say "    source $_fish_env_script_path_expr (fish)"
+
+            if [ -n "$_shadowed_bins" ]; then
+                say "WARNING: The following commands are shadowed by other commands in your PATH:$_shadowed_bins"
+            fi
         fi
     fi
 }
