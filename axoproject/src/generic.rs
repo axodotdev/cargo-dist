@@ -165,18 +165,17 @@ fn workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
     let source = SourceFile::new(manifest_path.as_str(), String::new());
     let span = source.span_for_line_col(1, 1);
 
-    if manifest.workspace.is_some() && manifest.package.is_some() {
-        Err(AxoassetError::Toml {
-            source,
-            span,
-            details: axoasset::toml::de::Error::custom(
-                "dist-workspace.toml can't have both [workspace] and [package]",
-            ),
-        })?
-    } else if let Some(workspace) = manifest.workspace {
-        process_virtual_workspace(manifest_path, workspace)
+    if let Some(workspace) = manifest.workspace {
+        // dist-workspace.toml for generic projects with
+        // both [workspace] and [package]
+        if let Some(package) = manifest.package {
+            let package = process_package(manifest_path, package, false)?;
+            upgrade_package_to_workspace(package)
+        } else {
+            process_virtual_workspace(manifest_path, workspace)
+        }
     } else if let Some(package) = manifest.package {
-        let package = process_package(manifest_path, package)?;
+        let package = process_package(manifest_path, package, true)?;
         upgrade_package_to_workspace(package)
     } else {
         Err(AxoassetError::Toml {
@@ -281,7 +280,7 @@ fn single_package_workspace_from(manifest_path: &Utf8Path) -> Result<WorkspaceSt
             ),
         })?
     } else if let Some(package) = manifest.package {
-        let package = process_package(manifest_path, package)?;
+        let package = process_package(manifest_path, package, true)?;
         upgrade_package_to_workspace(package)
     } else {
         Err(AxoassetError::Toml {
@@ -322,10 +321,14 @@ fn raw_package_from(manifest_path: &Utf8Path) -> Result<Package> {
 // Load and process a dist.toml
 fn package_from(manifest_path: &Utf8Path) -> Result<PackageInfo> {
     let package = raw_package_from(manifest_path)?;
-    process_package(manifest_path, package)
+    process_package(manifest_path, package, true)
 }
 
-fn process_package(manifest_path: &Utf8Path, package: Package) -> Result<PackageInfo> {
+fn process_package(
+    manifest_path: &Utf8Path,
+    package: Package,
+    use_workspace_manifest: bool,
+) -> Result<PackageInfo> {
     use serde::de::Error;
 
     let version = package.version.map(Version::Generic);
@@ -350,11 +353,13 @@ fn process_package(manifest_path: &Utf8Path, package: Package) -> Result<Package
         })?;
     };
 
+    let dist_manifest_path = use_workspace_manifest.then(|| manifest_path.clone());
+
     let mut info = PackageInfo {
         true_name: name.clone(),
         true_version: version.clone(),
         manifest_path: manifest_path.clone(),
-        dist_manifest_path: Some(manifest_path.clone()),
+        dist_manifest_path,
         package_root: manifest_path.parent().unwrap().to_owned(),
         name,
         version,
