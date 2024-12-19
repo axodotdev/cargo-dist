@@ -273,6 +273,8 @@ fn test_self_update() {
         .map(|s| s == "selfupdate" || s == "all")
         .unwrap_or(false)
     {
+        std::env::remove_var("XDG_CONFIG_HOME");
+
         let mut args = RuntestArgs {
             app_name: "cargo-dist".to_owned(),
             package: "cargo-dist".to_owned(),
