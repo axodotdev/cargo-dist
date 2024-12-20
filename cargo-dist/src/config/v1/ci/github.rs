@@ -1,6 +1,6 @@
 //! github ci config
 
-use cargo_dist_schema::{
+use dist_schema::{
     ContainerConfig, GithubRunner, GithubRunnerConfig, GithubRunnerConfigInput, StringLikeOr,
     TripleName,
 };

@@ -1,5 +1,5 @@
 [package]
-name = "cargo-dist-schema"
+name = "dist-schema"
 description = "Schema information for cargo-dist's dist-manifest.json"
 version.workspace = true
 edition.workspace = true

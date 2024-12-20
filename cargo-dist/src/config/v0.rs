@@ -1,7 +1,7 @@
 //! v0 config
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{
+use dist_schema::{
     declare_strongly_typed_string, GithubRunner, GithubRunnerConfigInput, StringLikeOr,
 };
 use semver::Version;
@@ -78,7 +78,7 @@ pub struct DistMetadata {
     /// only plan out the release without running builds and "skip" will disable
     /// pull request runs entirely.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
+    pub pr_run_mode: Option<dist_schema::PrRunMode>,
 
     /// Generate targets whose dist should avoid checking for up-to-dateness.
     #[serde(skip_serializing_if = "Option::is_none")]
