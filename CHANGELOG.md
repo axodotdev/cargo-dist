@@ -2,6 +2,36 @@
 
 Nothing Yet!
 
+# Version 0.27.0 (2024-12-19)
+
+We're back once more with a little holiday gift for you. This release contains a few new features and fixes.
+
+## Support for XDG_CONFIG_HOME
+
+We've always supported standard OS configuration paths. This release adds support for `XDG_CONFIG_HOME`, an [environment variable defined in the XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/#variables), in order to allow users to override that default. We support this on all platforms, even Windows. Installers created with dist 0.27.0 or later will respect this environment variable and place install receipts in that path; updaters using axoupdater 0.9.0 or later will respect that variable when searching for the receipt.
+
+- impl @brennanfee, @mistydemeo [feat: support XDG_CONFIG_HOME](https://github.com/axodotdev/cargo-dist/pull/1655)
+
+## Improved handling of missing build dependencies
+
+While we've always reported if mandatory tools are missing, we previously would only check for their existence right before we'd use them. This made it hard to judge exactly when required tools might be absent, and meant we'd only report about a single tool at a time. With this release, we now check for these tools up front and we check for every tool your build will need simultaneously. This allows us to tell you about *every* missing tool in one message, and before the builds themselves begin.
+
+- impl @duckinator [Fail early if required tools can't be found.](https://github.com/axodotdev/cargo-dist/pull/1640)
+
+## Improved generic config handling
+
+Since we shipped the new config format, `dist-workspace.toml`, we've been providing some spurious messages for non-Rust builds using just a `dist.toml` file. In this release, we now migrate users with `dist.toml`-alone apps to `dist-workspace.toml`. This conversion is automatic and requires no user input; it will happen when using `dist init` to upgrade to a new release.
+
+- impl @mistydemeo [feat: migrate dist.toml to dist-workspace.toml](https://github.com/axodotdev/cargo-dist/pull/1656)
+
+## Stabilizing the standalone updater we ship
+
+In the past, we always shipped the latest version of the standalone updater provided via [axoupdater](https://github.com/axodotdev/axoupdater). This meant that, if a new version of axoupdater was released after a given version of dist, your app would receive that latest version. As we've stabilized the updater's feature set, we feel that end users are deriving less benefit from this rolling release schedule and it would be more helpful to provide a fixed, known-good stable release instead.
+
+Beginning with this release, dist will always package the same version of axoupdater when building and shipping your app. If you prefer the old behaviour, and would like to receive whatever's the latest, you can set `always-use-latest-updater = true` in your configuration.
+
+- impl @mistydemeo [feat: update axoupdater, fetch known-good version](https://github.com/axodotdev/cargo-dist/pull/1598)
+
 # Version 0.26.1 (2024-12-12)
 
 This is a bugfix release which fixes an issue where aarch64 Windows cross-compilation wouldn't work out of the box. We've updated the default configuration to ensure that this target just works without additional configuration.
