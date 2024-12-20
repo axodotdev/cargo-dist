@@ -9,6 +9,7 @@ use crate::{
     config::{
         self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
         MacPkgConfig, PublishStyle,
+        v1::TomlLayer,
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -506,87 +507,27 @@ fn get_new_dist_metadata(
     cfg: &Config,
     args: &InitArgs,
     workspaces: &WorkspaceGraph,
-) -> DistResult<DistMetadata> {
+) -> DistResult<TomlLayer> {
     use dialoguer::{Confirm, Input, MultiSelect};
     let root_workspace = workspaces.root_workspace();
     let has_config = has_metadata_table(root_workspace);
 
     let mut meta = if has_config {
-        config::parse_metadata_table_or_manifest(
-            &root_workspace.manifest_path,
-            root_workspace.dist_manifest_path.as_deref(),
-            root_workspace.cargo_metadata_table.as_ref(),
-        )?
+        config::load_config(&root_workspace.manifest_path)?.dist
     } else {
-        DistMetadata {
+        TomlLayer {
             // If they init with this version we're gonna try to stick to it!
-            cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
-            cargo_dist_url_override: None,
-            // deprecated, default to not emitting it
-            rust_toolchain_version: None,
-            ci: None,
-            installers: None,
-            install_success_msg: None,
-            tap: None,
-            formula: None,
-            system_dependencies: None,
-            targets: None,
+            dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
+            dist_url_override: None,
             dist: None,
-            include: None,
-            auto_includes: None,
-            windows_archive: None,
-            unix_archive: None,
-            npm_scope: None,
-            npm_package: None,
-            checksum: None,
-            precise_builds: None,
-            merge_tasks: None,
-            fail_fast: None,
-            cache_builds: None,
-            build_local_artifacts: None,
-            dispatch_releases: None,
-            release_branch: None,
-            install_path: None,
-            features: None,
-            default_features: None,
-            all_features: None,
-            plan_jobs: None,
-            local_artifacts_jobs: None,
-            global_artifacts_jobs: None,
-            source_tarball: None,
-            host_jobs: None,
-            publish_jobs: None,
-            post_announce_jobs: None,
-            publish_prereleases: None,
-            force_latest: None,
-            create_release: None,
-            github_releases_repo: None,
-            github_releases_submodule_path: None,
-            github_release: None,
-            pr_run_mode: None,
             allow_dirty: None,
-            ssldotcom_windows_sign: None,
-            macos_sign: None,
-            github_attestations: None,
-            msvc_crt_static: None,
-            hosting: None,
-            extra_artifacts: None,
-            github_custom_runners: None,
-            github_custom_job_permissions: None,
-            bin_aliases: None,
-            tag_namespace: None,
-            install_updater: None,
-            always_use_latest_updater: None,
-            display: None,
-            display_name: None,
-            package_libraries: None,
-            install_libraries: None,
-            github_build_setup: None,
-            mac_pkg_config: None,
-            min_glibc_version: None,
-            cargo_auditable: None,
-            cargo_cyclonedx: None,
-            omnibor: None,
+            targets: None,
+            artifacts: None,
+            builds: None,
+            ci: None,
+            hosts: None,
+            installers: None,
+            publishers: None,
         }
     };
 
@@ -607,7 +548,7 @@ fn get_new_dist_metadata(
 
     // Set cargo-dist-version
     let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
-    if let Some(desired_version) = &meta.cargo_dist_version {
+    if let Some(desired_version) = &meta.dist_version {
         if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
             let default = true;
             let prompt = format!(
@@ -627,7 +568,7 @@ fn get_new_dist_metadata(
             };
 
             if response {
-                meta.cargo_dist_version = Some(current_version);
+                meta.dist_version = Some(current_version);
             } else {
                 Err(DistError::NoUpdateVersion {
                     project_version: desired_version.clone(),
@@ -637,7 +578,7 @@ fn get_new_dist_metadata(
         }
     } else {
         // Really not allowed, so just force them onto the current version
-        meta.cargo_dist_version = Some(current_version);
+        meta.dist_version = Some(current_version);
     }
 
     {
