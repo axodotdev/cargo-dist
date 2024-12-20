@@ -48,6 +48,7 @@ impl AppResult {
                     .env("ZDOTDIR", &tempdir)
                     .env("MY_ENV_VAR", &app_home)
                     .env_remove("CARGO_HOME")
+                    .env_remove("XDG_CONFIG_HOME")
             })?;
             // we could theoretically look at the above output and parse out the `source` line...
 

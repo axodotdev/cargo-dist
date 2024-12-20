@@ -255,7 +255,7 @@ fn run_build_step(
 }
 
 const AXOUPDATER_ASSET_ROOT: &str = "https://github.com/axodotdev/axoupdater/releases";
-const AXOUPDATER_MINIMUM_VERSION: &str = "0.7.0";
+const AXOUPDATER_MINIMUM_VERSION: &str = "0.9.0";
 
 fn axoupdater_latest_asset_root() -> String {
     format!("{AXOUPDATER_ASSET_ROOT}/latest/download")

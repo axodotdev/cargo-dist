@@ -72,7 +72,11 @@ if ($env:INSTALLER_DOWNLOAD_URL) {
 $receipt = @"
 {{ receipt | tojson }}
 "@
-$receipt_home = "${env:LOCALAPPDATA}\{{ app_name }}"
+if ($env:XDG_CONFIG_HOME) {
+  $receipt_home = "${env:XDG_CONFIG_HOME}\{{ app_name }}"
+} else {
+  $receipt_home = "${env:LOCALAPPDATA}\{{ app_name }}"
+}
 
 if ($env:{{ env_vars.disable_update_env_var }}) {
   $install_updater = $false
