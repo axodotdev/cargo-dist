@@ -265,7 +265,8 @@ identifier = "dev.axo.axolotsay"
 }
 
 #[test]
-fn axolotlsay_abyss_only() -> Result<(), miette::Report> {
+#[should_panic(expected = r#"No GitHub hosting is defined!"#)]
+fn axolotlsay_abyss_only() {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
@@ -289,7 +290,7 @@ identifier = "dev.axo.axolotsay"
 install-location = "/opt/axolotlsay"
 
 "#
-        ))?;
+        )).unwrap();
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
@@ -301,7 +302,7 @@ install-location = "/opt/axolotlsay"
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())
-    })
+    }).unwrap()
 }
 
 #[test]

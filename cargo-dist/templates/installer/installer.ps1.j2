@@ -49,12 +49,6 @@ param (
 
 $app_name = '{{ app_name }}'
 $app_version = '{{ app_version }}'
-
-{%- if hosting.axodotdev is defined %}
-if ($env:INSTALLER_DOWNLOAD_URL) {
-  $ArtifactDownloadUrl = $env:INSTALLER_DOWNLOAD_URL
-}
-{% else %}
 if ($env:{{ env_vars.ghe_base_url_env_var }}) {
   $installer_base_url = $env:{{ env_vars.ghe_base_url_env_var }}
 } elseif ($env:{{ env_vars.github_base_url_env_var }}) {
@@ -67,7 +61,6 @@ if ($env:INSTALLER_DOWNLOAD_URL) {
 } else {
   $ArtifactDownloadUrl = "$installer_base_url{{ hosting.github.artifact_download_path }}"
 }
-{%- endif %}
 
 $receipt = @"
 {{ receipt | tojson }}
