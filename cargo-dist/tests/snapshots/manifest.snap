@@ -1,7 +1,6 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
-snapshot_kind: text
 ---
 stdout:
 {
@@ -206,7 +205,7 @@ stdout:
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -ExecutionPolicy ByPass -c \"irm https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.ps1 | iex\"",
+      "install_hint": "powershell -ExecutionPolicy Bypass -c \"irm https://fake.axo.dev/faker/cargo-dist/fake-id-do-not-upload/cargo-dist-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "cargo-dist-installer.sh": {
