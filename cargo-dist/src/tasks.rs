@@ -2032,7 +2032,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 artifacts,
                 hint,
                 desc,
-                receipt: InstallReceipt::from_metadata(&self.inner, release),
+                receipt: InstallReceipt::from_metadata(&self.inner, release)?,
                 bin_aliases,
                 install_libraries: config.install_libraries.clone(),
                 runtime_conditions,
@@ -2275,7 +2275,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 artifacts,
                 hint,
                 desc,
-                receipt: InstallReceipt::from_metadata(&self.inner, release),
+                receipt: InstallReceipt::from_metadata(&self.inner, release)?,
                 bin_aliases,
                 install_libraries: config.install_libraries.clone(),
                 runtime_conditions: RuntimeConditions::default(),
@@ -3345,19 +3345,22 @@ pub struct InstallReceipt {
 
 impl InstallReceipt {
     /// Produces an install receipt for the given DistGraph.
-    pub fn from_metadata(manifest: &DistGraph, release: &Release) -> Option<InstallReceipt> {
+    pub fn from_metadata(
+        manifest: &DistGraph,
+        release: &Release,
+    ) -> DistResult<Option<InstallReceipt>> {
         let hosting = if let Some(hosting) = &manifest.hosting {
             hosting
         } else {
-            return None;
+            return Ok(None);
         };
-        let source_type = if hosting.hosts.contains(&HostingStyle::Axodotdev) {
-            ReleaseSourceType::Axo
-        } else {
+        let source_type = if hosting.hosts.contains(&HostingStyle::Github) {
             ReleaseSourceType::GitHub
+        } else {
+            return Err(DistError::NoGitHubHosting {});
         };
 
-        Some(InstallReceipt {
+        Ok(Some(InstallReceipt {
             // These first five are placeholder values which the installer will update
             install_prefix: "AXO_INSTALL_PREFIX".to_owned(),
             install_layout: InstallLayout::Unspecified,
@@ -3377,7 +3380,7 @@ impl InstallReceipt {
             },
             binary_aliases: BTreeMap::default(),
             modify_path: true,
-        })
+        }))
     }
 }
 

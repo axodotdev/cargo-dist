@@ -304,6 +304,11 @@ pub enum DistError {
         style: String,
     },
 
+    /// unrecognized hosting style
+    #[error("No GitHub hosting is defined!")]
+    #[diagnostic(help("Releases must have at least GitHub hosting for updates to be supported."))]
+    NoGitHubHosting {},
+
     /// unrecognized ci style
     #[error("{style} is not a recognized ci provider")]
     UnrecognizedCiStyle {
