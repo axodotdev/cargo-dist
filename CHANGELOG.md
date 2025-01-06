@@ -2,6 +2,20 @@
 
 Nothing Yet!
 
+# Version 0.27.1 (2024-12-20)
+
+## Fixed a bug where `dist migrate` would delete `dist-workspace.toml`
+
+A bug was introduced in 0.27.0 where, instead of `dist migrate` _never_ deleting `dist-workspace.toml`, it would _always_ delete it. This has been fixed.
+
+- impl @duckinator [fix: avoid 'dist migrate' deleting dist-workspace.toml](https://github.com/axodotdev/cargo-dist/pull/1661)
+
+## Warn if a tool is "shadowed" on your PATH
+
+Shell installers now check if the tool it installed is shadowed by another tool on your path.
+
+- impl @mistydemeo [feat: check for shadowed binaries in shell installer](https://github.com/axodotdev/cargo-dist/pull/1659)
+
 # Version 0.27.0 (2024-12-19)
 
 We're back once more with a little holiday gift for you. This release contains a few new features and fixes.
