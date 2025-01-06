@@ -2233,7 +2233,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact_name = ArtifactId::new(format!("{release_id}-installer.ps1"));
         let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
         let installer_url = format!("{download_url}/{artifact_name}");
-        let hint = format!(r#"powershell -ExecutionPolicy ByPass -c "irm {installer_url} | iex""#);
+        let hint = format!(r#"powershell -ExecutionPolicy Bypass -c "irm {installer_url} | iex""#);
         let desc = "Install prebuilt binaries via powershell script".to_owned();
 
         // Gather up the bundles the installer supports

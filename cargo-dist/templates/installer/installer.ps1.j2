@@ -550,7 +550,7 @@ Upgrade PowerShell:
   }
 
   # show notification to change execution policy:
-  $allowedExecutionPolicy = @('Unrestricted', 'RemoteSigned', 'ByPass')
+  $allowedExecutionPolicy = @('Unrestricted', 'RemoteSigned', 'Bypass')
   If ((Get-ExecutionPolicy).ToString() -notin $allowedExecutionPolicy) {
     throw @"
 Error: PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ", ")] to run $app_name. For example, to set the execution policy to 'RemoteSigned' please run:
