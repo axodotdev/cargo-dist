@@ -1,7 +1,6 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
-snapshot_kind: text
 ---
 stdout:
 Professional packaging and distribution for ambitious developers
