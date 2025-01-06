@@ -155,7 +155,7 @@ fn do_migrate_from_dist_toml() -> DistResult<()> {
     }
 
     if root_workspace.kind != WorkspaceKind::Generic
-        && root_workspace.manifest_path.file_name() != Some("dist.toml")
+        || root_workspace.manifest_path.file_name() != Some("dist.toml")
     {
         return Ok(());
     }
