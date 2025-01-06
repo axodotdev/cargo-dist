@@ -16,6 +16,12 @@ Shell installers now check if the tool it installed is shadowed by another tool 
 
 - impl @mistydemeo [feat: check for shadowed binaries in shell installer](https://github.com/axodotdev/cargo-dist/pull/1659)
 
+## Prefer GitHub over Axo Releases
+
+This release switches the preferred installation location to GitHub. In prior releases, if the user had both GitHub Releases and Axo Releases selected, generated installation scripts and receipts would prefer to fetch from GitHub.
+
+- impl @mistydemeo [feat: prioritize github over axo](https://github.com/axodotdev/cargo-dist/pull/1673)
+
 # Version 0.27.0 (2024-12-19)
 
 We're back once more with a little holiday gift for you. This release contains a few new features and fixes.
