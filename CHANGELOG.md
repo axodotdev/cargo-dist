@@ -2,7 +2,7 @@
 
 Nothing Yet!
 
-# Version 0.27.1 (2024-12-20)
+# Version 0.27.1 (2025-01-06)
 
 ## Fixed a bug where `dist migrate` would delete `dist-workspace.toml`
 
