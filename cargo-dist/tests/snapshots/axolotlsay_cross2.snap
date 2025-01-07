@@ -2001,7 +2001,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "container": {
               "image": "messense/cargo-xwin",
               "host": "x86_64-unknown-linux-musl",
-              "package_manager": null
+              "package_manager": "apt"
             },
             "install_dist": {
               "shell": "sh",

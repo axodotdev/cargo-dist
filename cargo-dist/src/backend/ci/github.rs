@@ -682,7 +682,7 @@ fn cargo_xwin() -> GithubRunnerConfig {
         container: Some(cargo_dist_schema::ContainerConfig {
             image: ContainerImageRef::from_str("messense/cargo-xwin").to_owned(),
             host: targets::TARGET_X64_LINUX_MUSL.to_owned(),
-            package_manager: None,
+            package_manager: Some(cargo_dist_schema::PackageManager::Apt),
         }),
     }
 }
