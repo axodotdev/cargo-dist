@@ -1,7 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
-snapshot_kind: text
 ---
 ================ axolotl-brew.rb ================
 class AxolotlBrew < Formula
