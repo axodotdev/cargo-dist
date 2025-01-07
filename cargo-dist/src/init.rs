@@ -9,7 +9,11 @@ use crate::{
     config::{
         self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
         MacPkgConfig, PublishStyle,
-        v1::TomlLayer,
+        v1::{
+            builds::BuildLayer,
+            layer::BoolOr,
+            TomlLayer,
+        },
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -38,10 +42,10 @@ pub struct InitArgs {
 #[serde(deny_unknown_fields)]
 struct MultiDistMetadata {
     /// `[workspace.metadata.dist]`
-    workspace: Option<DistMetadata>,
+    workspace: Option<TomlLayer>,
     /// package_name => `[package.metadata.dist]`
     #[serde(default)]
-    packages: SortedMap<String, DistMetadata>,
+    packages: SortedMap<String, TomlLayer>,
 }
 
 fn theme() -> dialoguer::theme::ColorfulTheme {
@@ -321,7 +325,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
             return do_init(cfg, args);
         }
     }
-
+//=====================
     // If this is a Cargo.toml, offer to either write their config to
     // a dist-workspace.toml, or migrate existing config there
     let mut newly_initted_generic = false;
@@ -937,21 +941,15 @@ fn get_new_dist_metadata(
 /// Update a workspace toml-edit document with the current DistMetadata value
 pub(crate) fn apply_dist_to_workspace_toml(
     workspace_toml: &mut toml_edit::DocumentMut,
-    workspace_kind: WorkspaceKind,
-    meta: &DistMetadata,
+    _workspace_kind: WorkspaceKind,
+    meta: &TomlLayer,
 ) {
-    let metadata = if workspace_kind == WorkspaceKind::Rust {
-        // Write to metadata table
-        config::get_toml_metadata(workspace_toml, true)
-    } else {
-        // Write to document root
-        workspace_toml.as_item_mut()
-    };
+    let metadata = workspace_toml.as_item_mut();
     apply_dist_to_metadata(metadata, meta);
 }
 
-/// Ensure [*.metadata.dist] has the given values
-fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
+/// Ensure [dist] has the given values
+fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
     let dist_metadata = &mut metadata[METADATA_DIST];
 
     // If there's no table, make one
@@ -963,76 +961,21 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     let table = dist_metadata.as_table_mut().unwrap();
 
     // This is intentionally written awkwardly to make you update this
-    let DistMetadata {
-        cargo_dist_version,
-        cargo_dist_url_override,
-        rust_toolchain_version,
+    let TomlLayer {
+        dist_version,
+        dist_url_override,
         dist,
-        ci,
-        installers,
-        install_success_msg,
-        tap,
-        formula,
-        targets,
-        include,
-        auto_includes,
-        windows_archive,
-        unix_archive,
-        npm_scope,
-        npm_package,
-        checksum,
-        precise_builds,
-        merge_tasks,
-        fail_fast,
-        cache_builds,
-        build_local_artifacts,
-        dispatch_releases,
-        release_branch,
-        install_path,
-        features,
-        all_features,
-        default_features,
-        plan_jobs,
-        local_artifacts_jobs,
-        global_artifacts_jobs,
-        source_tarball,
-        host_jobs,
-        publish_jobs,
-        post_announce_jobs,
-        publish_prereleases,
-        force_latest,
-        create_release,
-        github_releases_repo,
-        github_releases_submodule_path,
-        pr_run_mode,
         allow_dirty,
-        ssldotcom_windows_sign,
-        macos_sign,
-        github_attestations,
-        msvc_crt_static,
-        hosting,
-        tag_namespace,
-        install_updater,
-        always_use_latest_updater,
-        display,
-        display_name,
-        github_release,
-        package_libraries,
-        install_libraries,
-        mac_pkg_config,
-        min_glibc_version,
-        cargo_auditable,
-        cargo_cyclonedx,
-        omnibor,
-        // These settings are complex enough that we don't support editing them in init
-        extra_artifacts: _,
-        github_custom_runners: _,
-        github_custom_job_permissions: _,
-        bin_aliases: _,
-        system_dependencies: _,
-        github_build_setup: _,
+        targets,
+        artifacts,
+        builds,
+        ci,
+        hosts,
+        installers,
+        publishers,
     } = &meta;
 
+/*
     // Forcibly inline the default install_path if not specified,
     // and if we've specified a shell or powershell installer
     let install_path = if install_path.is_none()
@@ -1048,28 +991,150 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     } else {
         install_path.clone()
     };
+*/
 
     apply_optional_value(
         table,
-        "cargo-dist-version",
+        "dist-version",
         "# The preferred dist version to use in CI (Cargo.toml SemVer syntax)\n",
-        cargo_dist_version.as_ref().map(|v| v.to_string()),
+        dist_version.as_ref().map(|v| v.to_string()),
     );
 
     apply_optional_value(
         table,
-        "cargo-dist-url-override",
+        "dist-url-override",
         "# A URL to use to install `cargo-dist` (with the installer script)\n",
-        cargo_dist_url_override.as_ref().map(|v| v.to_string()),
+        dist_url_override.as_ref().map(|v| v.to_string()),
     );
 
     apply_optional_value(
         table,
-        "rust-toolchain-version",
-        "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n",
-        rust_toolchain_version.as_deref(),
+        "dist",
+        "# Whether the package should be distributed/built by dist (defaults to true)\n",
+        dist.clone(),
     );
 
+    apply_string_list(
+        table,
+        "allow-dirty",
+        "# Skip checking whether the specified configuration files are up to date\n",
+        allow_dirty.as_ref(),
+    );
+
+    //apply_targets(table, targets);
+    //apply_artifacts(table, artifacts);
+    apply_builds(table, builds);
+    //apply_ci(table, ci);
+    //apply_hosts(table, hosts);
+    //apply_installers(table, installers);
+    //apply_publishers(table, publishers);
+
+    if let Some(installers) = installers {
+        // InstallerLayer
+/*
+        if let Some(homebrew) = &installers.homebrew {
+            match homebrew {
+                BoolOr::Bool(b) => {
+                    apply_optional_value(
+                        installers_table,
+                        "homebrew",
+                        "# Whether to build a Homebrew installer",
+                        installers.updater.clone(),
+                    );
+                }
+                BoolOr::Val(v) => {
+                    // HomebrewInstallerLayer
+
+                }
+            }
+        }
+
+        if let Some(msi) = &installers.msi {
+            match msi {
+                BoolOr::Bool(b) => {
+                    /* handle bool */
+                }
+                BoolOr::Val(v) => {
+                    /* handle MsiInstallerLayer */
+                }
+            }
+        }
+
+        if let Some(npm) = &installers.npm {
+            match npm {
+                BoolOr::Bool(b) => {
+                    /* handle bool */
+                }
+                BoolOr::Val(v) => {
+                    /* handle NpmInstallerLayer */
+                }
+            }
+        }
+
+        if let Some(powershell) = &installers.powershell {
+            match powershell {
+                BoolOr::Bool(b) => {
+                    // handle bool
+                }
+                BoolOr::Val(v) => {
+                    // PowershellInstallerLayer
+                }
+            }
+        }
+
+        if let Some(shell) = &installers.shell {
+            match shell {
+                BoolOr::Bool(b) => {
+                    // handle bool
+                }
+                BoolOr::Val(v) => {
+                    // ShellInstallerLayer
+                }
+            }
+        }
+
+        if let Some(pkg) = &installers.pkg {
+            match pkg {
+                BoolOr::Bool(b) => {
+                    apply_optional_value(
+                        installers_table,
+                        "pkg",
+                        "\n# Configuration for the Mac .pkg installer\n",
+                        Some(b),
+                    );
+                }
+                BoolOr::Val(v) => {
+                    // PkgInstallerLayer
+                    apply_optional_mac_pkg(
+                        installers_table,
+                        "pkg",
+                        "\n# Configuration for the Mac .pkg installer\n",
+                        Some(v).as_ref(),
+                    );
+                }
+            }
+        }
+
+        // installer.updater: Option<Bool>
+        // installer.always_use_latest_updater: Option<bool>
+        apply_optional_value(
+            installers_table,
+            "updater",
+            "# Whether to install an updater program alongside the software",
+            installers.updater.clone(),
+        );
+
+        apply_optional_value(
+            installers_table,
+            "always-use-latest-updater",
+            "# Whether to always use the latest updater version instead of a fixed version",
+            installers.always_use_latest_updater.clone(),
+        );
+*/
+    }
+
+
+/*
     apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
 
     apply_string_list(
@@ -1077,13 +1142,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "installers",
         "# The installers to generate for each app\n",
         installers.as_ref(),
-    );
-
-    apply_optional_mac_pkg(
-        table,
-        "mac-pkg-config",
-        "\n# Configuration for the Mac .pkg installer\n",
-        mac_pkg_config.as_ref(),
     );
 
     apply_optional_value(
@@ -1172,13 +1230,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_optional_value(
         table,
-        "precise-builds",
-        "# Build only the required packages, and individually\n",
-        *precise_builds,
-    );
-
-    apply_optional_value(
-        table,
         "merge-tasks",
         "# Whether to run otherwise-parallelizable tasks on the same machine\n",
         *merge_tasks,
@@ -1258,27 +1309,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_string_list(
         table,
-        "features",
-        "# Features to pass to cargo build\n",
-        features.as_ref(),
-    );
-
-    apply_optional_value(
-        table,
-        "default-features",
-        "# Whether default-features should be enabled with cargo build\n",
-        *default_features,
-    );
-
-    apply_optional_value(
-        table,
-        "all-features",
-        "# Whether to pass --all-features to cargo build\n",
-        *all_features,
-    );
-
-    apply_string_list(
-        table,
         "plan-jobs",
         "# Plan jobs to run in CI\n",
         plan_jobs.as_ref(),
@@ -1345,20 +1375,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "pr-run-mode",
         "# Which actions to run on pull requests\n",
         pr_run_mode.as_ref().map(|m| m.to_string()),
-    );
-
-    apply_string_list(
-        table,
-        "allow-dirty",
-        "# Skip checking whether the specified configuration files are up to date\n",
-        allow_dirty.as_ref(),
-    );
-
-    apply_optional_value(
-        table,
-        "msvc-crt-static",
-        "# Whether +crt-static should be used on msvc\n",
-        *msvc_crt_static,
     );
 
     apply_optional_value(
@@ -1437,7 +1453,45 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "# Which kinds of packaged libraries to install\n",
         install_libraries.as_ref(),
     );
+*/
 
+    // Finalize the table
+    table.decor_mut().set_prefix("\n# Config for 'dist'\n");
+}
+
+fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
+    let Some(builds) = builds
+        else {
+            return
+        };
+
+    let mut possible_table = toml_edit::table();
+    let table = toplevel_table
+        .get_mut("builds")
+        .unwrap_or_else(|| &mut possible_table);
+
+    let toml_edit::Item::Table(table) = table
+        else { panic!("Expected [dist.builds] to be a table") };
+
+    // / inheritable fields
+    //common: CommonBuildLayer,
+
+    // / Whether we should sign windows binaries with ssl.com
+    //ssldotcom_windows_sign: Option<ProductionMode>,
+
+    // / whether to sign macos binaries with apple
+    //macos_sign: Option<bool>,
+
+    apply_cargo_builds(table, builds);
+    // / cargo builds
+    //cargo: Option<BoolOr<CargoBuildLayer>>,
+    // / generic builds
+    //generic: Option<BoolOr<GenericBuildLayer>>,
+    // / A set of packages to install before building
+    //#[serde(rename = "dependencies")]
+    //system_dependencies: Option<SystemDependencies>,
+
+        /*
     apply_optional_min_glibc_version(
         table,
         "min-glibc-version",
@@ -1447,27 +1501,82 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_optional_value(
         table,
+        "omnibor",
+        "# Whether to use omnibor-cli to generate OmniBOR Artifact IDs\n",
+        *omnibor,
+    );
+        */
+}
+
+fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) {
+    let Some(BoolOr::Val(ref cargo_builds)) = builds.cargo
+        else {
+            return;
+        };
+
+    let mut possible_table = toml_edit::table();
+    let table = builds_table
+        .get_mut("cargo")
+        .unwrap_or_else(|| &mut possible_table);
+
+    let toml_edit::Item::Table(table) = table
+        else { panic!("Expected [dist.builds] to be a table") };
+
+    apply_optional_value(
+        table,
+        "rust-toolchain-version",
+        "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n",
+        cargo_builds.rust_toolchain_version.as_deref(),
+    );
+
+    apply_optional_value(
+        table,
+        "msvc-crt-static",
+        "# Whether +crt-static should be used on msvc\n",
+        cargo_builds.msvc_crt_static.clone(),
+    );
+
+    apply_optional_value(
+        table,
+        "precise-builds",
+        "# Build only the required packages, and individually\n",
+        cargo_builds.precise_builds.clone(),
+    );
+
+    apply_string_list(
+        table,
+        "features",
+        "# Features to pass to cargo build\n",
+        cargo_builds.features.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "default-features",
+        "# Whether default-features should be enabled with cargo build\n",
+        cargo_builds.default_features.clone(),
+    );
+
+    apply_optional_value(
+        table,
+        "all-features",
+        "# Whether to pass --all-features to cargo build\n",
+        cargo_builds.all_features.clone(),
+    );
+
+    apply_optional_value(
+        table,
         "cargo-auditable",
         "# Whether to embed dependency information using cargo-auditable\n",
-        *cargo_auditable,
+        cargo_builds.cargo_auditable.clone(),
     );
 
     apply_optional_value(
         table,
         "cargo-cyclonedx",
         "# Whether to use cargo-cyclonedx to generate an SBOM\n",
-        *cargo_cyclonedx,
+        cargo_builds.cargo_cyclonedx.clone(),
     );
-
-    apply_optional_value(
-        table,
-        "omnibor",
-        "# Whether to use omnibor-cli to generate OmniBOR Artifact IDs\n",
-        *omnibor,
-    );
-
-    // Finalize the table
-    table.decor_mut().set_prefix("\n# Config for 'dist'\n");
 }
 
 /// Update the toml table to add/remove this value
