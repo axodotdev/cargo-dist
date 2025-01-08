@@ -65,7 +65,7 @@ pub struct InstallerConfigInheritable {
 }
 
 /// installer config (raw from file)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct InstallerLayer {
     /// inheritable fields

@@ -171,3 +171,12 @@ pub enum BoolOr<T> {
     /// They gave a more interesting value
     Val(T),
 }
+
+impl<T> BoolOr<T> {
+    pub fn truthy(&self) -> bool {
+        match self {
+            BoolOr::Bool(b) => *b,
+            BoolOr::Val(_v) => true,
+        }
+    }
+}

@@ -1,4 +1,4 @@
-use axoasset::{toml_edit, LocalAsset};
+use axoasset::{toml, toml_edit, LocalAsset};
 use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
 use dist_schema::TripleNameRef;
@@ -9,6 +9,11 @@ use crate::{
     config::{
         self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
         MacPkgConfig, PublishStyle,
+        v1::{
+            builds::BuildLayer,
+            layer::BoolOr,
+            TomlLayer,
+        },
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -37,10 +42,10 @@ pub struct InitArgs {
 #[serde(deny_unknown_fields)]
 struct MultiDistMetadata {
     /// `[workspace.metadata.dist]`
-    workspace: Option<DistMetadata>,
+    workspace: Option<TomlLayer>,
     /// package_name => `[package.metadata.dist]`
     #[serde(default)]
-    packages: SortedMap<String, DistMetadata>,
+    packages: SortedMap<String, TomlLayer>,
 }
 
 fn theme() -> dialoguer::theme::ColorfulTheme {
@@ -199,11 +204,52 @@ fn do_migrate_from_dist_toml() -> DistResult<()> {
     Ok(())
 }
 
+fn do_migrate_from_v0() -> DistResult<()> {
+    let workspaces = config::get_project()?;
+    let root_workspace = workspaces.root_workspace();
+    let manifest_path = &root_workspace.manifest_path;
+
+    if config::load_config(manifest_path).is_ok() {
+        // We're already on a V1 config, no need to migrate!
+        return Ok(());
+    }
+
+    // Load in the root workspace toml to edit and write back
+    let Ok(old_config) = config::load_v0_config(manifest_path) else {
+        // We don't have a valid v0 _or_ v1 config. No migration can be done.
+        // It feels weird to return Ok(()) here, but I think it's right?
+        return Ok(());
+    };
+
+    let Some(dist_metadata) = &old_config.dist else {
+        // We don't have a valid v0 config. No migration can be done.
+        return Ok(());
+    };
+
+    let dist = dist_metadata.to_toml_layer(true);
+
+    let workspace = old_config.workspace;
+    let package = None;
+
+    let config = config::v1::DistWorkspaceConfig {
+        dist,
+        workspace,
+        package,
+    };
+
+    let workspace_toml_text = toml::to_string(&config)?;
+
+    // Write new config file.
+    axoasset::LocalAsset::write_new(&workspace_toml_text, manifest_path)?;
+
+    Ok(())
+}
+
 /// Run `dist migrate`
 pub fn do_migrate() -> DistResult<()> {
     do_migrate_from_rust_workspace()?;
     do_migrate_from_dist_toml()?;
-    //do_migrate_from_v0()?;
+    do_migrate_from_v0()?;
     Ok(())
 }
 
@@ -279,7 +325,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
             return do_init(cfg, args);
         }
     }
-
+//=====================
     // If this is a Cargo.toml, offer to either write their config to
     // a dist-workspace.toml, or migrate existing config there
     let mut newly_initted_generic = false;
@@ -465,87 +511,27 @@ fn get_new_dist_metadata(
     cfg: &Config,
     args: &InitArgs,
     workspaces: &WorkspaceGraph,
-) -> DistResult<DistMetadata> {
+) -> DistResult<TomlLayer> {
     use dialoguer::{Confirm, Input, MultiSelect};
     let root_workspace = workspaces.root_workspace();
     let has_config = has_metadata_table(root_workspace);
 
     let mut meta = if has_config {
-        config::parse_metadata_table_or_manifest(
-            &root_workspace.manifest_path,
-            root_workspace.dist_manifest_path.as_deref(),
-            root_workspace.cargo_metadata_table.as_ref(),
-        )?
+        config::load_config(&root_workspace.manifest_path)?.dist
     } else {
-        DistMetadata {
+        TomlLayer {
             // If they init with this version we're gonna try to stick to it!
-            cargo_dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
-            cargo_dist_url_override: None,
-            // deprecated, default to not emitting it
-            rust_toolchain_version: None,
-            ci: None,
-            installers: None,
-            install_success_msg: None,
-            tap: None,
-            formula: None,
-            system_dependencies: None,
-            targets: None,
+            dist_version: Some(std::env!("CARGO_PKG_VERSION").parse().unwrap()),
+            dist_url_override: None,
             dist: None,
-            include: None,
-            auto_includes: None,
-            windows_archive: None,
-            unix_archive: None,
-            npm_scope: None,
-            npm_package: None,
-            checksum: None,
-            precise_builds: None,
-            merge_tasks: None,
-            fail_fast: None,
-            cache_builds: None,
-            build_local_artifacts: None,
-            dispatch_releases: None,
-            release_branch: None,
-            install_path: None,
-            features: None,
-            default_features: None,
-            all_features: None,
-            plan_jobs: None,
-            local_artifacts_jobs: None,
-            global_artifacts_jobs: None,
-            source_tarball: None,
-            host_jobs: None,
-            publish_jobs: None,
-            post_announce_jobs: None,
-            publish_prereleases: None,
-            force_latest: None,
-            create_release: None,
-            github_releases_repo: None,
-            github_releases_submodule_path: None,
-            github_release: None,
-            pr_run_mode: None,
             allow_dirty: None,
-            ssldotcom_windows_sign: None,
-            macos_sign: None,
-            github_attestations: None,
-            msvc_crt_static: None,
-            hosting: None,
-            extra_artifacts: None,
-            github_custom_runners: None,
-            github_custom_job_permissions: None,
-            bin_aliases: None,
-            tag_namespace: None,
-            install_updater: None,
-            always_use_latest_updater: None,
-            display: None,
-            display_name: None,
-            package_libraries: None,
-            install_libraries: None,
-            github_build_setup: None,
-            mac_pkg_config: None,
-            min_glibc_version: None,
-            cargo_auditable: None,
-            cargo_cyclonedx: None,
-            omnibor: None,
+            targets: None,
+            artifacts: None,
+            builds: None,
+            ci: None,
+            hosts: None,
+            installers: None,
+            publishers: None,
         }
     };
 
@@ -560,13 +546,12 @@ fn get_new_dist_metadata(
     let check = console::style("✔".to_string()).for_stderr().green();
     let notice = console::style("⚠️".to_string()).for_stderr().yellow();
 
-    if !args.host.is_empty() {
-        meta.hosting = Some(args.host.clone());
-    }
+    let github_hosting = !args.host.is_empty() && args.host.contains(&HostingStyle::Github);
+    let axo_hosting = !args.host.is_empty() && args.host.contains(&HostingStyle::Axodotdev);
 
     // Set cargo-dist-version
     let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
-    if let Some(desired_version) = &meta.cargo_dist_version {
+    if let Some(desired_version) = &meta.dist_version {
         if desired_version != &current_version && !desired_version.pre.starts_with("github-") {
             let default = true;
             let prompt = format!(
@@ -586,7 +571,7 @@ fn get_new_dist_metadata(
             };
 
             if response {
-                meta.cargo_dist_version = Some(current_version);
+                meta.dist_version = Some(current_version);
             } else {
                 Err(DistError::NoUpdateVersion {
                     project_version: desired_version.clone(),
@@ -596,7 +581,7 @@ fn get_new_dist_metadata(
         }
     } else {
         // Really not allowed, so just force them onto the current version
-        meta.cargo_dist_version = Some(current_version);
+        meta.dist_version = Some(current_version);
     }
 
     {
@@ -661,11 +646,13 @@ fn get_new_dist_metadata(
     // FIXME: when there is more than one option we maybe shouldn't hide this
     // once the user has any one enabled, right now it's just annoying to always
     // prompt for Github CI support.
-    if meta.ci.as_deref().unwrap_or_default().is_empty() {
+    if meta.ci.is_none() {
+
+
         // FIXME: when there is more than one option this should be a proper
         // multiselect like the installer selector is! For now we do
         // most of the multi-select logic and then just give a prompt.
-        let known = &[CiStyle::Github];
+        /*let known = &[CiStyle::Github];
         let mut defaults = vec![];
         let mut keys = vec![];
         let mut github_key = 0;
@@ -692,38 +679,44 @@ fn get_new_dist_metadata(
             keys.push(match item {
                 CiStyle::Github => "github",
             });
-        }
+        }*/
 
         // Prompt the user
         let prompt = r#"enable Github CI and Releases?"#;
-        let default = defaults[github_key];
+        let default_value = true;
 
         let github_selected = if args.yes {
-            default
+            default_value
         } else {
             let res = Confirm::with_theme(&theme)
                 .with_prompt(prompt)
-                .default(default)
+                .default(default_value)
                 .interact()?;
             eprintln!();
             res
         };
 
-        let selected = if github_selected {
-            vec![github_key]
-        } else {
-            vec![]
-        };
-
-        // Apply the results
-        let ci: Vec<_> = selected.into_iter().map(|i| known[i]).collect();
-        meta.ci = if ci.is_empty() { None } else { Some(ci) };
+        if github_selected {
+            meta.ci.as_ref().map(|ci| ci.github = Some(BoolOr::Bool(true)));
+        }
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // FIXME: "vendored" installers like msi could be enabled without any CI...
-    let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
+    //let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
+    let has_ci = meta.ci.is_some_and(|ci|
+        ci.github.is_some_and(|gh| gh.truthy())
+    );
+
+    let existing_shell_config = meta.installers.is_some_and(|ins| ins.shell.is_some_and(|sh| sh.truthy()));
+    let existing_powershell_config = meta.installers.is_some_and(|ins| ins.powershell.is_some_and(|ps| ps.truthy()));
+    let existing_npm_config = meta.installers.is_some_and(|ins| ins.npm.is_some_and(|npm| npm.truthy()));
+    let existing_homebrew_config = meta.installers.is_some_and(|ins| ins.homebrew.is_some_and(|hb| hb.truthy()));
+    let existing_msi_config = meta.installers.is_some_and(|ins| ins.msi.is_some_and(|msi| msi.truthy()));
+    let existing_pkg_config = meta.installers.is_some_and(|ins| ins.pkg.is_some_and(|pkg| pkg.truthy()));
+
     {
+
         // If they have CI, then they can use fetching installers,
         // otherwise they can only do vendored installers.
         let known: &[InstallerStyle] = if has_ci {
@@ -733,37 +726,34 @@ fn get_new_dist_metadata(
                 InstallerStyle::Npm,
                 InstallerStyle::Homebrew,
                 InstallerStyle::Msi,
+                // Pkg intentionally left out because it's currently opt-in only.
             ]
         } else {
             eprintln!("{notice} no CI backends enabled, most installers have been hidden");
             &[InstallerStyle::Msi]
         };
-        let mut defaults = vec![];
-        let mut keys = vec![];
-        for item in known {
-            // If this CI style is in their config, keep it
-            // If they passed it on the CLI, flip it on
-            let config_had_it = meta
-                .installers
-                .as_deref()
-                .unwrap_or_default()
-                .contains(item);
-            let cli_had_it = cfg.installers.contains(item);
 
-            let default = config_had_it || cli_had_it;
-            defaults.push(default);
+        let mut defaults: SortedMap<&str, bool> = SortedMap::new();
+        defaults.insert("shell",
+            existing_shell_config || cfg.installers.contains(&InstallerStyle::Shell)
+        );
+        defaults.insert("powershell",
+            existing_powershell_config || cfg.installers.contains(&InstallerStyle::Powershell)
+        );
+        defaults.insert("npm",
+            existing_npm_config || cfg.installers.contains(&InstallerStyle::Npm)
+        );
+        defaults.insert("homebrew",
+            existing_homebrew_config || cfg.installers.contains(&InstallerStyle::Homebrew)
+        );
+        defaults.insert("msi",
+            existing_msi_config || cfg.installers.contains(&InstallerStyle::Msi)
+        );
+        defaults.insert("pkg",
+            existing_pkg_config || cfg.installers.contains(&InstallerStyle::Pkg)
+        );
 
-            // This match is here to remind you to add new InstallerStyles
-            // to `known` above!
-            keys.push(match item {
-                InstallerStyle::Shell => "shell",
-                InstallerStyle::Powershell => "powershell",
-                InstallerStyle::Npm => "npm",
-                InstallerStyle::Homebrew => "homebrew",
-                InstallerStyle::Msi => "msi",
-                InstallerStyle::Pkg => "pkg",
-            });
-        }
+        let keys: Vec<&str> = defaults.keys().cloned().collect();
 
         // Prompt the user
         let prompt = r#"what installers do you want to build?
@@ -772,12 +762,14 @@ fn get_new_dist_metadata(
             defaults
                 .iter()
                 .enumerate()
-                .filter_map(|(idx, enabled)| enabled.then_some(idx))
+                .filter_map(|(idx, (_, enabled))| enabled.then_some(idx))
                 .collect()
         } else {
+            let default_values: Vec<bool> = defaults.values().cloned().collect();
+
             let res = MultiSelect::with_theme(&theme)
                 .items(&keys)
-                .defaults(&defaults)
+                .defaults(&default_values)
                 .with_prompt(prompt)
                 .interact()?;
             eprintln!();
@@ -785,23 +777,41 @@ fn get_new_dist_metadata(
         };
 
         // Apply the results
-        meta.installers = Some(selected.into_iter().map(|i| known[i]).collect());
+        meta.installers = Some(meta.installers.unwrap_or_default());
+
+        meta.installers.map(|mut installers| {
+            for item in selected {
+                match keys[item] {
+                    "shell" => {
+                        installers.shell = installers.shell.or(Some(BoolOr::Bool(true)));
+                    }
+                    "powershell" => {
+                        installers.powershell = installers.powershell.or(Some(BoolOr::Bool(true)));
+                    }
+                    "npm" => {
+                        installers.npm = installers.npm.or(Some(BoolOr::Bool(true)));
+                    }
+                    "homebrew" => {
+                        installers.homebrew = installers.homebrew.or(Some(BoolOr::Bool(true)));
+                    }
+                    "msi" => {
+                        installers.msi = installers.msi.or(Some(BoolOr::Bool(true)));
+                    }
+                    "pkg" => {
+                        installers.pkg = installers.pkg.or(Some(BoolOr::Bool(true)));
+                    }
+                    _ => {
+                        // This should be enforced at the type level, ideally.
+                        unreachable!("got an unknown installer type -- this is a dist bug, please report it");
+                    }
+                }
+            }
+        });
     }
 
-    let mut publish_jobs = orig_meta.publish_jobs.clone().unwrap_or(vec![]);
-
     // Special handling of the Homebrew installer
-    if meta
-        .installers
-        .as_deref()
-        .unwrap_or_default()
-        .contains(&InstallerStyle::Homebrew)
-    {
-        let homebrew_is_new = !orig_meta
-            .installers
-            .as_deref()
-            .unwrap_or_default()
-            .contains(&InstallerStyle::Homebrew);
+    if meta.installers.is_some_and(|ins| ins.homebrew.is_some_and(|hb| hb.truthy())) {
+        let homebrew_is_new = !existing_homebrew_config;
 
         if homebrew_is_new {
             let prompt = r#"you've enabled Homebrew support; if you want dist
@@ -822,10 +832,19 @@ fn get_new_dist_metadata(
             let tap = tap.trim();
             if tap.is_empty() {
                 eprintln!("Homebrew packages will not be automatically published");
-                meta.tap = None;
+                meta.installers.map(|mut ins| ins.homebrew = None);
             } else {
-                meta.tap = Some(tap.to_owned());
-                publish_jobs.push(PublishStyle::Homebrew);
+                let installers = meta.installers.unwrap_or_default();
+                let homebrew = match installers.homebrew.unwrap_or(BoolOr::Bool(true)) {
+                    BoolOr::Val(v) => v,
+                    // The hb.truthy() condition above means this should never be false.
+                    BoolOr::Bool(_b) => Default::default(),
+                };
+
+                homebrew.tap = Some(tap.to_owned());
+
+                installers.homebrew = Some(BoolOr::Val(homebrew));
+                meta.installers = Some(installers);
 
                 eprintln!("{check} Homebrew package will be published to {tap}");
 
@@ -838,30 +857,17 @@ fn get_new_dist_metadata(
             }
         }
     } else {
-        let homebrew_toggled_off = orig_meta
-            .installers
-            .as_deref()
-            .unwrap_or_default()
-            .contains(&InstallerStyle::Homebrew);
+        let homebrew_toggled_off = existing_homebrew_config;
+
         if homebrew_toggled_off {
-            meta.tap = None;
-            publish_jobs.retain(|job| job != &PublishStyle::Homebrew);
+            meta.installers.map(|mut ins| ins.homebrew = None);
         }
     }
 
     // Special handling of the npm installer
-    if meta
-        .installers
-        .as_deref()
-        .unwrap_or_default()
-        .contains(&InstallerStyle::Npm)
-    {
+    if meta.installers.is_some_and(|ins| ins.npm.is_some_and(|npm| npm.truthy())) {
         // If npm is being newly enabled here, prompt for a @scope
-        let npm_is_new = !orig_meta
-            .installers
-            .as_deref()
-            .unwrap_or_default()
-            .contains(&InstallerStyle::Npm);
+        let npm_is_new = !existing_npm_config;
         if npm_is_new {
             let prompt = r#"you've enabled npm support, please enter the @scope you want to use
     this is the "namespace" the package will be published under
@@ -895,58 +901,64 @@ fn get_new_dist_metadata(
                 res
             };
             let scope = scope.trim();
-            if scope.is_empty() {
-                eprintln!("{check} npm packages will be published globally");
-                meta.npm_scope = None;
-            } else {
-                meta.npm_scope = Some(scope.to_owned());
-                eprintln!("{check} npm packages will be published under {scope}");
-            }
+
+            meta.installers = Some(meta.installers.unwrap_or_default());
+
+            meta.installers.map(|mut installers| {
+                // unwrap() is okay because we use .unwrap_or_default() immediately above.
+                let mut npm = match installers.npm.unwrap_or(BoolOr::Bool(true)) {
+                    BoolOr::Val(v) => v,
+                    // The npm.truthy() condition above means this should never be false.
+                    BoolOr::Bool(_b) => Default::default(),
+                };
+
+                if scope.is_empty() {
+                    eprintln!("{check} npm packages will be published globally");
+                    npm.scope = None;
+                } else {
+                    npm.scope = Some(scope.to_owned());
+                    eprintln!("{check} npm packages will be published under {scope}");
+                }
+
+                installers.npm = Some(BoolOr::Val(npm));
+            });
+
             eprintln!();
         }
     } else {
-        let npm_toggled_off = orig_meta
-            .installers
-            .as_deref()
-            .unwrap_or_default()
-            .contains(&InstallerStyle::Npm);
-        if npm_toggled_off {
-            meta.npm_scope = None;
-            publish_jobs.retain(|job| job != &PublishStyle::Npm);
-        }
+        // Remove the npm installer configuration.
+        meta.installers.map(|mut ins| ins.npm = None);
+
+        // Remove the npm publisher configuration.
+        meta.publishers.map(|mut pubs| pubs.npm = None);
     }
 
-    meta.publish_jobs = if publish_jobs.is_empty() {
-        None
-    } else {
-        Some(publish_jobs)
-    };
-
-    if orig_meta.install_updater.is_none()
-        && meta
-            .installers
-            .as_deref()
-            .unwrap_or_default()
-            .iter()
-            .any(|installer| {
-                installer == &InstallerStyle::Shell || installer == &InstallerStyle::Powershell
-            })
-    {
-        let default = false;
-        let install_updater = if args.yes {
-            default
+    meta.publishers =
+        if meta.publishers.is_some_and(|p| p.homebrew.is_some() || p.npm.is_some()) {
+            meta.publishers
         } else {
-            let prompt = r#"Would you like to include an updater program with your binaries?"#;
-            let res = Confirm::with_theme(&theme)
-                .with_prompt(prompt)
-                .default(default)
-                .interact()?;
-            eprintln!();
-
-            res
+            None
         };
 
-        meta.install_updater = Some(install_updater);
+    if let Some(installers) = &meta.installers {
+        if installers.shell.is_some() || installers.powershell.is_some() {
+            // default to the current value if there is one, or false otherwise.
+            let default = installers.updater.unwrap_or(false);
+            let install_updater = if args.yes {
+                default
+            } else {
+                let prompt = r#"Would you like to include an updater program with your binaries?"#;
+                let res = Confirm::with_theme(&theme)
+                    .with_prompt(prompt)
+                    .default(default)
+                    .interact()?;
+                eprintln!();
+
+                res
+            };
+
+            installers.updater = Some(install_updater);
+        }
     }
 
     Ok(meta)
@@ -955,21 +967,15 @@ fn get_new_dist_metadata(
 /// Update a workspace toml-edit document with the current DistMetadata value
 pub(crate) fn apply_dist_to_workspace_toml(
     workspace_toml: &mut toml_edit::DocumentMut,
-    workspace_kind: WorkspaceKind,
-    meta: &DistMetadata,
+    _workspace_kind: WorkspaceKind,
+    meta: &TomlLayer,
 ) {
-    let metadata = if workspace_kind == WorkspaceKind::Rust {
-        // Write to metadata table
-        config::get_toml_metadata(workspace_toml, true)
-    } else {
-        // Write to document root
-        workspace_toml.as_item_mut()
-    };
+    let metadata = workspace_toml.as_item_mut();
     apply_dist_to_metadata(metadata, meta);
 }
 
-/// Ensure [*.metadata.dist] has the given values
-fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
+/// Ensure [dist] has the given values
+fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
     let dist_metadata = &mut metadata[METADATA_DIST];
 
     // If there's no table, make one
@@ -981,76 +987,21 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     let table = dist_metadata.as_table_mut().unwrap();
 
     // This is intentionally written awkwardly to make you update this
-    let DistMetadata {
-        cargo_dist_version,
-        cargo_dist_url_override,
-        rust_toolchain_version,
+    let TomlLayer {
+        dist_version,
+        dist_url_override,
         dist,
-        ci,
-        installers,
-        install_success_msg,
-        tap,
-        formula,
-        targets,
-        include,
-        auto_includes,
-        windows_archive,
-        unix_archive,
-        npm_scope,
-        npm_package,
-        checksum,
-        precise_builds,
-        merge_tasks,
-        fail_fast,
-        cache_builds,
-        build_local_artifacts,
-        dispatch_releases,
-        release_branch,
-        install_path,
-        features,
-        all_features,
-        default_features,
-        plan_jobs,
-        local_artifacts_jobs,
-        global_artifacts_jobs,
-        source_tarball,
-        host_jobs,
-        publish_jobs,
-        post_announce_jobs,
-        publish_prereleases,
-        force_latest,
-        create_release,
-        github_releases_repo,
-        github_releases_submodule_path,
-        pr_run_mode,
         allow_dirty,
-        ssldotcom_windows_sign,
-        macos_sign,
-        github_attestations,
-        msvc_crt_static,
-        hosting,
-        tag_namespace,
-        install_updater,
-        always_use_latest_updater,
-        display,
-        display_name,
-        github_release,
-        package_libraries,
-        install_libraries,
-        mac_pkg_config,
-        min_glibc_version,
-        cargo_auditable,
-        cargo_cyclonedx,
-        omnibor,
-        // These settings are complex enough that we don't support editing them in init
-        extra_artifacts: _,
-        github_custom_runners: _,
-        github_custom_job_permissions: _,
-        bin_aliases: _,
-        system_dependencies: _,
-        github_build_setup: _,
+        targets,
+        artifacts,
+        builds,
+        ci,
+        hosts,
+        installers,
+        publishers,
     } = &meta;
 
+/*
     // Forcibly inline the default install_path if not specified,
     // and if we've specified a shell or powershell installer
     let install_path = if install_path.is_none()
@@ -1066,28 +1017,150 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     } else {
         install_path.clone()
     };
+*/
 
     apply_optional_value(
         table,
-        "cargo-dist-version",
+        "dist-version",
         "# The preferred dist version to use in CI (Cargo.toml SemVer syntax)\n",
-        cargo_dist_version.as_ref().map(|v| v.to_string()),
+        dist_version.as_ref().map(|v| v.to_string()),
     );
 
     apply_optional_value(
         table,
-        "cargo-dist-url-override",
+        "dist-url-override",
         "# A URL to use to install `cargo-dist` (with the installer script)\n",
-        cargo_dist_url_override.as_ref().map(|v| v.to_string()),
+        dist_url_override.as_ref().map(|v| v.to_string()),
     );
 
     apply_optional_value(
         table,
-        "rust-toolchain-version",
-        "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n",
-        rust_toolchain_version.as_deref(),
+        "dist",
+        "# Whether the package should be distributed/built by dist (defaults to true)\n",
+        dist.clone(),
     );
 
+    apply_string_list(
+        table,
+        "allow-dirty",
+        "# Skip checking whether the specified configuration files are up to date\n",
+        allow_dirty.as_ref(),
+    );
+
+    //apply_targets(table, targets);
+    //apply_artifacts(table, artifacts);
+    apply_builds(table, builds);
+    //apply_ci(table, ci);
+    //apply_hosts(table, hosts);
+    //apply_installers(table, installers);
+    //apply_publishers(table, publishers);
+
+    if let Some(installers) = installers {
+        // InstallerLayer
+/*
+        if let Some(homebrew) = &installers.homebrew {
+            match homebrew {
+                BoolOr::Bool(b) => {
+                    apply_optional_value(
+                        installers_table,
+                        "homebrew",
+                        "# Whether to build a Homebrew installer",
+                        installers.updater.clone(),
+                    );
+                }
+                BoolOr::Val(v) => {
+                    // HomebrewInstallerLayer
+
+                }
+            }
+        }
+
+        if let Some(msi) = &installers.msi {
+            match msi {
+                BoolOr::Bool(b) => {
+                    /* handle bool */
+                }
+                BoolOr::Val(v) => {
+                    /* handle MsiInstallerLayer */
+                }
+            }
+        }
+
+        if let Some(npm) = &installers.npm {
+            match npm {
+                BoolOr::Bool(b) => {
+                    /* handle bool */
+                }
+                BoolOr::Val(v) => {
+                    /* handle NpmInstallerLayer */
+                }
+            }
+        }
+
+        if let Some(powershell) = &installers.powershell {
+            match powershell {
+                BoolOr::Bool(b) => {
+                    // handle bool
+                }
+                BoolOr::Val(v) => {
+                    // PowershellInstallerLayer
+                }
+            }
+        }
+
+        if let Some(shell) = &installers.shell {
+            match shell {
+                BoolOr::Bool(b) => {
+                    // handle bool
+                }
+                BoolOr::Val(v) => {
+                    // ShellInstallerLayer
+                }
+            }
+        }
+
+        if let Some(pkg) = &installers.pkg {
+            match pkg {
+                BoolOr::Bool(b) => {
+                    apply_optional_value(
+                        installers_table,
+                        "pkg",
+                        "\n# Configuration for the Mac .pkg installer\n",
+                        Some(b),
+                    );
+                }
+                BoolOr::Val(v) => {
+                    // PkgInstallerLayer
+                    apply_optional_mac_pkg(
+                        installers_table,
+                        "pkg",
+                        "\n# Configuration for the Mac .pkg installer\n",
+                        Some(v).as_ref(),
+                    );
+                }
+            }
+        }
+
+        // installer.updater: Option<Bool>
+        // installer.always_use_latest_updater: Option<bool>
+        apply_optional_value(
+            installers_table,
+            "updater",
+            "# Whether to install an updater program alongside the software",
+            installers.updater.clone(),
+        );
+
+        apply_optional_value(
+            installers_table,
+            "always-use-latest-updater",
+            "# Whether to always use the latest updater version instead of a fixed version",
+            installers.always_use_latest_updater.clone(),
+        );
+*/
+    }
+
+
+/*
     apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
 
     apply_string_list(
@@ -1095,13 +1168,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "installers",
         "# The installers to generate for each app\n",
         installers.as_ref(),
-    );
-
-    apply_optional_mac_pkg(
-        table,
-        "mac-pkg-config",
-        "\n# Configuration for the Mac .pkg installer\n",
-        mac_pkg_config.as_ref(),
     );
 
     apply_optional_value(
@@ -1190,13 +1256,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_optional_value(
         table,
-        "precise-builds",
-        "# Build only the required packages, and individually\n",
-        *precise_builds,
-    );
-
-    apply_optional_value(
-        table,
         "merge-tasks",
         "# Whether to run otherwise-parallelizable tasks on the same machine\n",
         *merge_tasks,
@@ -1276,27 +1335,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_string_list(
         table,
-        "features",
-        "# Features to pass to cargo build\n",
-        features.as_ref(),
-    );
-
-    apply_optional_value(
-        table,
-        "default-features",
-        "# Whether default-features should be enabled with cargo build\n",
-        *default_features,
-    );
-
-    apply_optional_value(
-        table,
-        "all-features",
-        "# Whether to pass --all-features to cargo build\n",
-        *all_features,
-    );
-
-    apply_string_list(
-        table,
         "plan-jobs",
         "# Plan jobs to run in CI\n",
         plan_jobs.as_ref(),
@@ -1363,20 +1401,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "pr-run-mode",
         "# Which actions to run on pull requests\n",
         pr_run_mode.as_ref().map(|m| m.to_string()),
-    );
-
-    apply_string_list(
-        table,
-        "allow-dirty",
-        "# Skip checking whether the specified configuration files are up to date\n",
-        allow_dirty.as_ref(),
-    );
-
-    apply_optional_value(
-        table,
-        "msvc-crt-static",
-        "# Whether +crt-static should be used on msvc\n",
-        *msvc_crt_static,
     );
 
     apply_optional_value(
@@ -1455,7 +1479,45 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "# Which kinds of packaged libraries to install\n",
         install_libraries.as_ref(),
     );
+*/
 
+    // Finalize the table
+    table.decor_mut().set_prefix("\n# Config for 'dist'\n");
+}
+
+fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
+    let Some(builds) = builds
+        else {
+            return
+        };
+
+    let mut possible_table = toml_edit::table();
+    let table = toplevel_table
+        .get_mut("builds")
+        .unwrap_or_else(|| &mut possible_table);
+
+    let toml_edit::Item::Table(table) = table
+        else { panic!("Expected [dist.builds] to be a table") };
+
+    // / inheritable fields
+    //common: CommonBuildLayer,
+
+    // / Whether we should sign windows binaries with ssl.com
+    //ssldotcom_windows_sign: Option<ProductionMode>,
+
+    // / whether to sign macos binaries with apple
+    //macos_sign: Option<bool>,
+
+    apply_cargo_builds(table, builds);
+    // / cargo builds
+    //cargo: Option<BoolOr<CargoBuildLayer>>,
+    // / generic builds
+    //generic: Option<BoolOr<GenericBuildLayer>>,
+    // / A set of packages to install before building
+    //#[serde(rename = "dependencies")]
+    //system_dependencies: Option<SystemDependencies>,
+
+        /*
     apply_optional_min_glibc_version(
         table,
         "min-glibc-version",
@@ -1465,27 +1527,82 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
 
     apply_optional_value(
         table,
+        "omnibor",
+        "# Whether to use omnibor-cli to generate OmniBOR Artifact IDs\n",
+        *omnibor,
+    );
+        */
+}
+
+fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) {
+    let Some(BoolOr::Val(ref cargo_builds)) = builds.cargo
+        else {
+            return;
+        };
+
+    let mut possible_table = toml_edit::table();
+    let table = builds_table
+        .get_mut("cargo")
+        .unwrap_or_else(|| &mut possible_table);
+
+    let toml_edit::Item::Table(table) = table
+        else { panic!("Expected [dist.builds] to be a table") };
+
+    apply_optional_value(
+        table,
+        "rust-toolchain-version",
+        "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n",
+        cargo_builds.rust_toolchain_version.as_deref(),
+    );
+
+    apply_optional_value(
+        table,
+        "msvc-crt-static",
+        "# Whether +crt-static should be used on msvc\n",
+        cargo_builds.msvc_crt_static.clone(),
+    );
+
+    apply_optional_value(
+        table,
+        "precise-builds",
+        "# Build only the required packages, and individually\n",
+        cargo_builds.precise_builds.clone(),
+    );
+
+    apply_string_list(
+        table,
+        "features",
+        "# Features to pass to cargo build\n",
+        cargo_builds.features.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "default-features",
+        "# Whether default-features should be enabled with cargo build\n",
+        cargo_builds.default_features.clone(),
+    );
+
+    apply_optional_value(
+        table,
+        "all-features",
+        "# Whether to pass --all-features to cargo build\n",
+        cargo_builds.all_features.clone(),
+    );
+
+    apply_optional_value(
+        table,
         "cargo-auditable",
         "# Whether to embed dependency information using cargo-auditable\n",
-        *cargo_auditable,
+        cargo_builds.cargo_auditable.clone(),
     );
 
     apply_optional_value(
         table,
         "cargo-cyclonedx",
         "# Whether to use cargo-cyclonedx to generate an SBOM\n",
-        *cargo_cyclonedx,
+        cargo_builds.cargo_cyclonedx.clone(),
     );
-
-    apply_optional_value(
-        table,
-        "omnibor",
-        "# Whether to use omnibor-cli to generate OmniBOR Artifact IDs\n",
-        *omnibor,
-    );
-
-    // Finalize the table
-    table.decor_mut().set_prefix("\n# Config for 'dist'\n");
 }
 
 /// Update the toml table to add/remove this value
