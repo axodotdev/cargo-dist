@@ -2,6 +2,22 @@
 
 Nothing Yet!
 
+# Version 0.28.0 (2025-01-08)
+
+This release contains a new feature that improves the Windows PowerShell installer. We've also made some behind-the-scenes changes which most users won't notice yet - keep an eye out for our next major release!
+
+## PowerShell improvements
+
+While we've always updated the user's `Path` variable for them, in the past the user had to reboot their system for the change to be reflected or temporarily add the installation directory to the `Path` themselves. Starting in 0.28.0, we now only require you to restart your shell for the change to take effect, not the entire system. We've also made improvements to our handling of this variable to better support users whose `Path` contained variable expansions.
+
+Thanks to open source contributor @DavisVaughan, who did extensive research as well as writing the feature!
+
+- impl @DavisVaughan [Rework Add-Path to avoid expanding and request an environment refresh](https://github.com/axodotdev/cargo-dist/pull/1658)
+
+## Fixes
+
+- @mistydemeo [Properly support installing apt packages from the default cargo-xwin builder](https://github.com/axodotdev/cargo-dist/pull/1681)
+
 # Version 0.27.1 (2025-01-06)
 
 ## Fixed a bug where `dist migrate` would delete `dist-workspace.toml`
