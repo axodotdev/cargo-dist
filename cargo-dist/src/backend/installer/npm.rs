@@ -2,7 +2,7 @@
 
 use axoasset::{LocalAsset, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{ArtifactId, GlibcVersion, TripleName};
+use dist_schema::{ArtifactId, GlibcVersion, TripleName};
 use serde::Serialize;
 
 use super::InstallerInfo;

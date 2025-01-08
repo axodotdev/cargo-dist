@@ -22,7 +22,7 @@ use axoasset::LocalAsset;
 use axoprocess::Cmd;
 use base64::Engine;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::TripleNameRef;
+use dist_schema::TripleNameRef;
 use temp_dir::TempDir;
 use tracing::warn;
 

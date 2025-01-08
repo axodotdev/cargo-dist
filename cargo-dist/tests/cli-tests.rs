@@ -40,7 +40,7 @@ fn test_version() {
     assert_eq!(stderr, "");
 
     let (name, ver) = stdout.split_once(' ').unwrap();
-    assert_eq!(name, "cargo-dist");
+    assert_eq!(name, "dist");
     let mut ver_parts = ver.trim().split('.');
     ver_parts.next().unwrap().parse::<u8>().unwrap();
     ver_parts.next().unwrap().parse::<u8>().unwrap();
@@ -123,7 +123,7 @@ fn test_lib_manifest() {
         .arg("--output-format=json")
         .arg("--verbose=error")
         .arg("--tag")
-        .arg(&format!("cargo-dist-schema-v{}", version))
+        .arg(&format!("dist-schema-v{}", version))
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
@@ -149,7 +149,7 @@ fn test_lib_manifest_slash() {
         .arg("--output-format=json")
         .arg("--verbose=error")
         .arg("--tag")
-        .arg(&format!("cargo-dist-schema/v{}", version))
+        .arg(&format!("dist-schema/v{}", version))
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()

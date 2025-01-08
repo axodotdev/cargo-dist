@@ -90,7 +90,7 @@ use std::fmt::Display;
 
 use axoproject::PackageIdx;
 use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
-use cargo_dist_schema::{DistManifest, GithubHosting, TripleName, TripleNameRef};
+use dist_schema::{DistManifest, GithubHosting, TripleName, TripleNameRef};
 use itertools::Itertools;
 use semver::Version;
 use tracing::info;
@@ -884,9 +884,9 @@ pub fn announcement_github(manifest: &mut DistManifest) {
 
         for (_name, artifact) in manifest.artifacts_for_release(release) {
             match artifact.kind {
-                cargo_dist_schema::ArtifactKind::ExecutableZip => bundles.push(artifact),
-                cargo_dist_schema::ArtifactKind::Symbols => symbols.push(artifact),
-                cargo_dist_schema::ArtifactKind::Installer => {
+                dist_schema::ArtifactKind::ExecutableZip => bundles.push(artifact),
+                dist_schema::ArtifactKind::Symbols => symbols.push(artifact),
+                dist_schema::ArtifactKind::Installer => {
                     if let (Some(desc), Some(hint)) =
                         (&artifact.description, &artifact.install_hint)
                     {
@@ -895,10 +895,10 @@ pub fn announcement_github(manifest: &mut DistManifest) {
                         local_installers.push(artifact);
                     }
                 }
-                cargo_dist_schema::ArtifactKind::Checksum => {
+                dist_schema::ArtifactKind::Checksum => {
                     // Do Nothing (will be included with the artifact it checksums)
                 }
-                cargo_dist_schema::ArtifactKind::Unknown => {
+                dist_schema::ArtifactKind::Unknown => {
                     // Do nothing
                 }
                 _ => {
@@ -1022,7 +1022,7 @@ fn sortable_triple(triple: &TripleNameRef) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use cargo_dist_schema::TripleNameRef;
+    use dist_schema::TripleNameRef;
 
     use super::sortable_triple;
     #[test]

@@ -379,71 +379,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-dist"
-version = "0.28.0"
-dependencies = [
- "axoasset",
- "axocli",
- "axoprocess",
- "axoproject",
- "axotag",
- "axoupdater",
- "backtrace",
- "base64",
- "blake2",
- "camino",
- "cargo-dist-schema",
- "cargo-wix",
- "cargo_metadata",
- "clap",
- "clap-cargo",
- "color-backtrace",
- "comfy-table",
- "console",
- "current_platform",
- "dialoguer",
- "flate2",
- "gazenot",
- "goblin",
- "include_dir",
- "insta",
- "itertools 0.13.0",
- "lazy_static",
- "mach_object",
- "miette 7.4.0",
- "minijinja",
- "newline-converter",
- "schemars",
- "semver",
- "serde",
- "serde_json",
- "sha2",
- "sha3",
- "similar",
- "spdx",
- "tar",
- "temp-dir",
- "thiserror 2.0.9",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "cargo-dist-schema"
-version = "0.28.0"
-dependencies = [
- "camino",
- "gazenot",
- "insta",
- "schemars",
- "semver",
- "serde",
- "serde_json",
- "target-lexicon",
-]
-
-[[package]]
 name = "cargo-platform"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -838,6 +773,71 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.87",
+]
+
+[[package]]
+name = "dist"
+version = "0.28.0"
+dependencies = [
+ "axoasset",
+ "axocli",
+ "axoprocess",
+ "axoproject",
+ "axotag",
+ "axoupdater",
+ "backtrace",
+ "base64",
+ "blake2",
+ "camino",
+ "cargo-wix",
+ "cargo_metadata",
+ "clap",
+ "clap-cargo",
+ "color-backtrace",
+ "comfy-table",
+ "console",
+ "current_platform",
+ "dialoguer",
+ "dist-schema",
+ "flate2",
+ "gazenot",
+ "goblin",
+ "include_dir",
+ "insta",
+ "itertools 0.13.0",
+ "lazy_static",
+ "mach_object",
+ "miette 7.4.0",
+ "minijinja",
+ "newline-converter",
+ "schemars",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sha3",
+ "similar",
+ "spdx",
+ "tar",
+ "temp-dir",
+ "thiserror 2.0.9",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "dist-schema"
+version = "0.28.0"
+dependencies = [
+ "camino",
+ "gazenot",
+ "insta",
+ "schemars",
+ "semver",
+ "serde",
+ "serde_json",
+ "target-lexicon",
 ]
 
 [[package]]

@@ -9,14 +9,14 @@ use axoprocess::Cmd;
 use axoupdater::AxoUpdater;
 use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
-use cargo_dist::{linkage::LinkageDisplay, *};
-use cargo_dist_schema::{AssetKind, DistManifest};
 use clap::Parser;
 use cli::{
     Cli, Commands, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat, PlanArgs,
     PrintUploadFilesFromManifestArgs,
 };
 use console::Term;
+use dist::{linkage::LinkageDisplay, *};
+use dist_schema::{AssetKind, DistManifest};
 use miette::{miette, IntoDiagnostic};
 use net::ClientSettings;
 
@@ -116,7 +116,7 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
         )?;
         for artifact_id in &release.artifacts {
             let artifact = &manifest.artifacts[artifact_id];
-            if let cargo_dist_schema::ArtifactKind::Checksum = &artifact.kind {
+            if let dist_schema::ArtifactKind::Checksum = &artifact.kind {
                 // Don't print shasums at top-level
                 continue;
             }
@@ -186,7 +186,7 @@ fn print_human(out: &mut Term, manifest: &DistManifest) -> Result<(), std::io::E
 
 fn print_human_artifact_path(
     out: &mut Term,
-    artifact: &cargo_dist_schema::Artifact,
+    artifact: &dist_schema::Artifact,
 ) -> Result<(), std::io::Error> {
     // Print out the name or path of the artifact (path is more useful by noisier)
     if let Some(path) = &artifact.path {
@@ -217,7 +217,7 @@ fn print_human_linkage(out: &mut Term, report: &DistManifest) -> Result<(), std:
 }
 
 fn cmd_build(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::config::Config {
+    let config = dist::config::Config {
         tag_settings: cli.tag_settings(true),
         create_hosting: false,
         artifact_mode: args.artifacts.to_lib(),
@@ -242,7 +242,7 @@ fn cmd_print_upload_files_from_manifest(
     args: &PrintUploadFilesFromManifestArgs,
 ) -> Result<(), miette::Report> {
     let manifest_str = axoasset::LocalAsset::load_string(&args.manifest)?;
-    let manifest = serde_json::from_str::<cargo_dist_schema::DistManifest>(&manifest_str)
+    let manifest = serde_json::from_str::<dist_schema::DistManifest>(&manifest_str)
         .into_diagnostic()
         .map_err(|err| miette!("Failed to parse manifest as JSON: {}", err))?;
 
@@ -254,7 +254,7 @@ fn cmd_print_upload_files_from_manifest(
 }
 
 fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
-    let args = cargo_dist::config::HostArgs {
+    let args = dist::config::HostArgs {
         steps: args.steps.iter().map(|m| m.to_lib()).collect(),
     };
     // host can be invoked on multiple machines, so use arg keys to disambiguate
@@ -264,7 +264,7 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
         .map(|s| s.to_string())
         .collect::<Vec<_>>()
         .join(",");
-    let config = cargo_dist::config::Config {
+    let config = dist::config::Config {
         tag_settings: cli.tag_settings(true),
         create_hosting: false,
         artifact_mode: config::ArtifactMode::All,
@@ -276,7 +276,7 @@ fn cmd_host(cli: &Cli, args: &HostArgs) -> Result<(), miette::Report> {
         root_cmd: format!("host:{arg_key}"),
     };
 
-    let report = cargo_dist::host::do_host(&config, args)?;
+    let report = dist::host::do_host(&config, args)?;
     print(cli, &report, false, Some("host"))
 }
 
@@ -382,7 +382,7 @@ fn generate_manifest(
     args: &ManifestArgs,
     needs_coherence: bool,
 ) -> Result<DistManifest, miette::Report> {
-    let config = cargo_dist::config::Config {
+    let config = dist::config::Config {
         tag_settings: cli.tag_settings(needs_coherence),
         create_hosting: false,
         artifact_mode: args.build_args.artifacts.to_lib(),
@@ -404,7 +404,7 @@ fn generate_manifest(
             .as_ref()
             .and_then(|ci| ci.github.as_ref())
             .and_then(|gh| gh.pr_run_mode)
-            == Some(cargo_dist_schema::PrRunMode::Upload))
+            == Some(dist_schema::PrRunMode::Upload))
     {
         let message = concat!(
             "  note: Forcing needs_coherence=true, because pr-run-mode=\"upload\" is set.\n",
@@ -425,10 +425,10 @@ fn cmd_migrate(_cli: &Cli, _args: &MigrateArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::config::Config {
+    let config = dist::config::Config {
         tag_settings: cli.tag_settings(false),
         create_hosting: false,
-        artifact_mode: cargo_dist::config::ArtifactMode::All,
+        artifact_mode: dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,
         targets: cli.target.clone(),
@@ -436,7 +436,7 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         root_cmd: "init".to_owned(),
     };
-    let args = cargo_dist::InitArgs {
+    let args = dist::InitArgs {
         yes: args.yes,
         no_generate: args.skip_generate,
         with_json_config: args.with_json_config.clone(),
@@ -447,10 +447,10 @@ fn cmd_init(cli: &Cli, args: &InitArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::config::Config {
+    let config = dist::config::Config {
         tag_settings: cli.tag_settings(false),
         create_hosting: false,
-        artifact_mode: cargo_dist::config::ArtifactMode::All,
+        artifact_mode: dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,
         targets: cli.target.clone(),
@@ -458,7 +458,7 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         root_cmd: "generate".to_owned(),
     };
-    let args = cargo_dist::GenerateArgs {
+    let args = dist::GenerateArgs {
         check: args.check,
         modes: args.mode.iter().map(|m| m.to_lib()).collect(),
     };
@@ -467,10 +467,10 @@ fn cmd_generate(cli: &Cli, args: &GenerateArgs) -> Result<(), miette::Report> {
 }
 
 fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
-    let config = cargo_dist::config::Config {
+    let config = dist::config::Config {
         tag_settings: cli.tag_settings(false),
         create_hosting: false,
-        artifact_mode: cargo_dist::config::ArtifactMode::All,
+        artifact_mode: dist::config::ArtifactMode::All,
         no_local_paths: cli.no_local_paths,
         allow_all_dirty: cli.allow_dirty,
         targets: cli.target.clone(),
@@ -478,7 +478,7 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
         installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
         root_cmd: "linkage".to_owned(),
     };
-    let mut options = cargo_dist::linkage::LinkageArgs {
+    let mut options = dist::linkage::LinkageArgs {
         print_output: args.print_output,
         print_json: args.print_json,
         from_json: args.from_json.clone(),
@@ -486,7 +486,7 @@ fn cmd_linkage(cli: &Cli, args: &LinkageArgs) -> Result<(), miette::Report> {
     if !args.print_output && !args.print_json {
         options.print_output = true;
     }
-    cargo_dist::linkage::do_linkage(&config, &options)?;
+    dist::linkage::do_linkage(&config, &options)?;
     Ok(())
 }
 
@@ -661,7 +661,7 @@ fn cmd_manifest_schema(
     _config: &Cli,
     args: &cli::ManifestSchemaArgs,
 ) -> Result<(), miette::ErrReport> {
-    let schema = cargo_dist_schema::DistManifest::json_schema();
+    let schema = dist_schema::DistManifest::json_schema();
     let json_schema = serde_json::to_string_pretty(&schema).expect("failed to stringify schema!?");
 
     if let Some(destination) = args.output.to_owned() {
@@ -720,7 +720,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     // out immediately to avoid the user getting confused and thinking the update didn't work!
     if !args.skip_init {
         config::get_project()
-            .map_err(|cause| cargo_dist::errors::DistError::UpdateNotInWorkspace { cause })?;
+            .map_err(|cause| dist::errors::DistError::UpdateNotInWorkspace { cause })?;
     }
 
     if this_cargo_dist_provided_by_brew() {

@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use axoasset::{LocalAsset, SourceFile};
 use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{
+use dist_schema::{
     target_lexicon::{self, Architecture, OperatingSystem, Triple},
     AptPackageName, ChocolateyPackageName, ContainerImageRef, GhaRunStep, GithubGlobalJobConfig,
     GithubLocalJobConfig, GithubMatrix, GithubRunnerConfig, GithubRunnerRef, GithubRunners,
@@ -66,9 +66,9 @@ pub struct GithubCiInfo {
     /// Trigger releases on pushes to this branch instead of ci
     pub release_branch: Option<String>,
     /// Matrix for upload-local-artifacts
-    pub artifacts_matrix: cargo_dist_schema::GithubMatrix,
+    pub artifacts_matrix: dist_schema::GithubMatrix,
     /// What kind of job to run on pull request
-    pub pr_run_mode: cargo_dist_schema::PrRunMode,
+    pub pr_run_mode: dist_schema::PrRunMode,
     /// global task
     pub global_task: GithubGlobalJobConfig,
     /// homebrew tap
@@ -222,7 +222,7 @@ impl GithubCiInfo {
         let mut dependencies = SystemDependencies::default();
 
         let caching_could_be_profitable =
-            release_branch.is_some() || pr_run_mode == cargo_dist_schema::PrRunMode::Upload;
+            release_branch.is_some() || pr_run_mode == dist_schema::PrRunMode::Upload;
         let cache_builds = cache_builds.unwrap_or(caching_could_be_profitable);
 
         let need_cargo_auditable = dist.config.builds.cargo.cargo_auditable;
@@ -679,10 +679,10 @@ fn cargo_xwin() -> GithubRunnerConfig {
     GithubRunnerConfig {
         runner: GithubRunnerRef::from_str("ubuntu-20.04").to_owned(),
         host: targets::TARGET_X64_LINUX_GNU.to_owned(),
-        container: Some(cargo_dist_schema::ContainerConfig {
+        container: Some(dist_schema::ContainerConfig {
             image: ContainerImageRef::from_str("messense/cargo-xwin").to_owned(),
             host: targets::TARGET_X64_LINUX_MUSL.to_owned(),
-            package_manager: Some(cargo_dist_schema::PackageManager::Apt),
+            package_manager: Some(dist_schema::PackageManager::Apt),
         }),
     }
 }
@@ -743,7 +743,7 @@ fn system_deps_install_script(
             // apt-using runners.
             if rc.container.is_none()
                 || rc.container.as_ref().and_then(|c| c.package_manager)
-                    == Some(cargo_dist_schema::PackageManager::Apt)
+                    == Some(dist_schema::PackageManager::Apt)
             {
                 for (name, pkg) in &packages.apt {
                     if !pkg.0.stage_wanted(&DependencyKind::Build) {

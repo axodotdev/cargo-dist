@@ -37,7 +37,7 @@
 use std::collections::btree_map::Entry;
 
 use camino::{Utf8Path, Utf8PathBuf};
-use cargo_dist_schema::{
+use dist_schema::{
     Artifact, ArtifactId, Asset, AssetKind, DistManifest, DynamicLibraryAsset, ExecutableAsset,
     Hosting, StaticLibraryAsset,
 };
@@ -336,12 +336,12 @@ fn add_manifest_artifact(
         ArtifactKind::ExecutableZip(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::ExecutableZip;
+            kind = dist_schema::ArtifactKind::ExecutableZip;
         }
         ArtifactKind::Symbols(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::Symbols;
+            kind = dist_schema::ArtifactKind::Symbols;
         }
         ArtifactKind::Installer(
             InstallerImpl::Powershell(info)
@@ -354,58 +354,58 @@ fn add_manifest_artifact(
         ) => {
             install_hint = Some(info.hint.clone());
             description = Some(info.desc.clone());
-            kind = cargo_dist_schema::ArtifactKind::Installer;
+            kind = dist_schema::ArtifactKind::Installer;
         }
         ArtifactKind::Installer(InstallerImpl::Msi(..)) => {
             install_hint = None;
             description = Some("install via msi".to_owned());
-            kind = cargo_dist_schema::ArtifactKind::Installer;
+            kind = dist_schema::ArtifactKind::Installer;
         }
         ArtifactKind::Installer(InstallerImpl::Pkg(..)) => {
             install_hint = None;
             description = Some("install via pkg".to_owned());
-            kind = cargo_dist_schema::ArtifactKind::Installer;
+            kind = dist_schema::ArtifactKind::Installer;
         }
         ArtifactKind::Checksum(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::Checksum;
+            kind = dist_schema::ArtifactKind::Checksum;
         }
         ArtifactKind::UnifiedChecksum(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::UnifiedChecksum;
+            kind = dist_schema::ArtifactKind::UnifiedChecksum;
         }
         ArtifactKind::SourceTarball(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::SourceTarball;
+            kind = dist_schema::ArtifactKind::SourceTarball;
         }
         ArtifactKind::ExtraArtifact(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::ExtraArtifact;
+            kind = dist_schema::ArtifactKind::ExtraArtifact;
         }
         ArtifactKind::Updater(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::Updater;
+            kind = dist_schema::ArtifactKind::Updater;
         }
         ArtifactKind::SBOM(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::SBOM;
+            kind = dist_schema::ArtifactKind::SBOM;
         }
         ArtifactKind::OmniborArtifactId(_) => {
             install_hint = None;
             description = None;
-            kind = cargo_dist_schema::ArtifactKind::OmniborArtifactId;
+            kind = dist_schema::ArtifactKind::OmniborArtifactId;
         }
     };
 
     let checksum = artifact.checksum.map(|idx| dist.artifact(idx).id.clone());
 
-    let out_artifact = cargo_dist_schema::Artifact {
+    let out_artifact = dist_schema::Artifact {
         name: Some(artifact.id.clone()),
         path: if cfg.no_local_paths {
             None
