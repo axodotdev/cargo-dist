@@ -29,7 +29,7 @@ axoprocess = { version = "0.2.0" }
 gazenot = { version = "0.3.3" }
 
 # third-party deps
-clap = { version = "4.5.23", features = ["derive"] }
+clap = { version = "4.5.24", features = ["derive"] }
 console = { version = "0.15.10" }
 clap-cargo = { version = "0.14.0" }
 comfy-table = "7.1.3"
