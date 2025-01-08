@@ -132,7 +132,7 @@ pub fn snapshot_settings() -> insta::Settings {
 pub fn snapshot_settings_with_version_filter() -> insta::Settings {
     let mut settings = snapshot_settings();
     settings.add_filter(
-        r"\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?",
+        r"\d+\.\d+\.\d+(\-prerelease\d*|\-rc\d*)?(\.\d+)?",
         "1.0.0-FAKEVERSION",
     );
     settings
@@ -149,7 +149,7 @@ pub fn snapshot_settings_with_gallery_filter() -> insta::Settings {
         r#""cargo_version_line": "CENSORED""#,
     );
     settings.add_filter(
-        r"cargo-dist/releases/download/v\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?/",
+        r"cargo-dist/releases/download/v\d+\.\d+\.\d+(\-prerelease\d*|\-rc\d*)?(\.\d+)?/",
         "cargo-dist/releases/download/vSOME_VERSION/",
     );
     settings.add_filter(r#"sha256 ".*""#, r#"sha256 "CENSORED""#);
