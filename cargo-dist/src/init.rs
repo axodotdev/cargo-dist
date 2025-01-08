@@ -546,9 +546,8 @@ fn get_new_dist_metadata(
     let check = console::style("✔".to_string()).for_stderr().green();
     let notice = console::style("⚠️".to_string()).for_stderr().yellow();
 
-    if !args.host.is_empty() {
-        meta.hosting = Some(args.host.clone());
-    }
+    let github_hosting = !args.host.is_empty() && args.host.contains(&HostingStyle::Github);
+    let axo_hosting = !args.host.is_empty() && args.host.contains(&HostingStyle::Axodotdev);
 
     // Set cargo-dist-version
     let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
@@ -647,11 +646,13 @@ fn get_new_dist_metadata(
     // FIXME: when there is more than one option we maybe shouldn't hide this
     // once the user has any one enabled, right now it's just annoying to always
     // prompt for Github CI support.
-    if meta.ci.as_deref().unwrap_or_default().is_empty() {
+    if meta.ci.is_none() {
+
+
         // FIXME: when there is more than one option this should be a proper
         // multiselect like the installer selector is! For now we do
         // most of the multi-select logic and then just give a prompt.
-        let known = &[CiStyle::Github];
+        /*let known = &[CiStyle::Github];
         let mut defaults = vec![];
         let mut keys = vec![];
         let mut github_key = 0;
@@ -678,38 +679,37 @@ fn get_new_dist_metadata(
             keys.push(match item {
                 CiStyle::Github => "github",
             });
-        }
+        }*/
 
         // Prompt the user
         let prompt = r#"enable Github CI and Releases?"#;
-        let default = defaults[github_key];
+        let default_value = true;
 
         let github_selected = if args.yes {
-            default
+            default_value
         } else {
             let res = Confirm::with_theme(&theme)
                 .with_prompt(prompt)
-                .default(default)
+                .default(default_value)
                 .interact()?;
             eprintln!();
             res
         };
 
-        let selected = if github_selected {
-            vec![github_key]
-        } else {
-            vec![]
-        };
-
-        // Apply the results
-        let ci: Vec<_> = selected.into_iter().map(|i| known[i]).collect();
-        meta.ci = if ci.is_empty() { None } else { Some(ci) };
+        if github_selected {
+            meta.ci.map(|ci| ci.github = Some(BoolOr::Bool(true)));
+        }
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // FIXME: "vendored" installers like msi could be enabled without any CI...
-    let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
+    //let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
+    let has_ci = meta.ci.is_some_and(|ci|
+        ci.github.is_some_and(|gh| gh.truthy())
+    );
+
     {
+
         // If they have CI, then they can use fetching installers,
         // otherwise they can only do vendored installers.
         let known: &[InstallerStyle] = if has_ci {
@@ -719,37 +719,42 @@ fn get_new_dist_metadata(
                 InstallerStyle::Npm,
                 InstallerStyle::Homebrew,
                 InstallerStyle::Msi,
+                // Pkg intentionally left out because it's currently opt-in only.
             ]
         } else {
             eprintln!("{notice} no CI backends enabled, most installers have been hidden");
             &[InstallerStyle::Msi]
         };
-        let mut defaults = vec![];
-        let mut keys = vec![];
-        for item in known {
-            // If this CI style is in their config, keep it
-            // If they passed it on the CLI, flip it on
-            let config_had_it = meta
-                .installers
-                .as_deref()
-                .unwrap_or_default()
-                .contains(item);
-            let cli_had_it = cfg.installers.contains(item);
 
-            let default = config_had_it || cli_had_it;
-            defaults.push(default);
+        let installers = meta.installers;
 
-            // This match is here to remind you to add new InstallerStyles
-            // to `known` above!
-            keys.push(match item {
-                InstallerStyle::Shell => "shell",
-                InstallerStyle::Powershell => "powershell",
-                InstallerStyle::Npm => "npm",
-                InstallerStyle::Homebrew => "homebrew",
-                InstallerStyle::Msi => "msi",
-                InstallerStyle::Pkg => "pkg",
-            });
-        }
+        let mut defaults: SortedMap<&str, bool> = SortedMap::new();
+        defaults.insert("shell",
+            installers.is_some_and(|ins| ins.shell.is_some_and(|sh| sh.truthy())) ||
+            cfg.installers.contains(&InstallerStyle::Shell)
+        );
+        defaults.insert("powershell",
+            installers.is_some_and(|ins| ins.powershell.is_some_and(|ps| ps.truthy())) ||
+            cfg.installers.contains(&InstallerStyle::Powershell)
+        );
+        defaults.insert("npm",
+            installers.is_some_and(|ins| ins.npm.is_some_and(|npm| npm.truthy())) ||
+            cfg.installers.contains(&InstallerStyle::Npm)
+        );
+        defaults.insert("homebrew",
+            installers.is_some_and(|ins| ins.homebrew.is_some_and(|hb| hb.truthy())) ||
+            cfg.installers.contains(&InstallerStyle::Homebrew)
+        );
+        defaults.insert("msi",
+            installers.is_some_and(|ins| ins.msi.is_some_and(|msi| msi.truthy())) ||
+            cfg.installers.contains(&InstallerStyle::Msi)
+        );
+        defaults.insert("pkg",
+            installers.is_some_and(|ins| ins.pkg.is_some_and(|pkg| pkg.truthy())) ||
+            cfg.installers.contains(&InstallerStyle::Pkg)
+        );
+
+        let keys: Vec<&str> = defaults.keys().cloned().collect();
 
         // Prompt the user
         let prompt = r#"what installers do you want to build?
@@ -758,12 +763,14 @@ fn get_new_dist_metadata(
             defaults
                 .iter()
                 .enumerate()
-                .filter_map(|(idx, enabled)| enabled.then_some(idx))
+                .filter_map(|(idx, (_, enabled))| enabled.then_some(idx))
                 .collect()
         } else {
+            let default_values: Vec<bool> = defaults.values().cloned().collect();
+
             let res = MultiSelect::with_theme(&theme)
                 .items(&keys)
-                .defaults(&defaults)
+                .defaults(&default_values)
                 .with_prompt(prompt)
                 .interact()?;
             eprintln!();
@@ -771,7 +778,32 @@ fn get_new_dist_metadata(
         };
 
         // Apply the results
-        meta.installers = Some(selected.into_iter().map(|i| known[i]).collect());
+        let mut installers = meta.installers.unwrap_or_default();
+
+        for item in selected {
+            match keys[item] {
+                "shell" => {
+                    installers.shell = installers.shell.or(Some(BoolOr::Bool(true)));
+                }
+                "powershell" => {
+                    installers.powershell = installers.powershell.or(Some(BoolOr::Bool(true)));
+                }
+                "npm" => {
+                    installers.npm = installers.npm.or(Some(BoolOr::Bool(true)));
+                }
+                "homebrew" => {
+                    installers.homebrew = installers.homebrew.or(Some(BoolOr::Bool(true)));
+                }
+                "msi" => {
+                    installers.msi = installers.msi.or(Some(BoolOr::Bool(true)));
+                }
+                "pkg" => {
+                    installers.pkg = installers.pkg.or(Some(BoolOr::Bool(true)));
+                }
+            }
+        }
+
+        meta.installers = Some(installers);
     }
 
     let mut publish_jobs = orig_meta.publish_jobs.clone().unwrap_or(vec![]);
