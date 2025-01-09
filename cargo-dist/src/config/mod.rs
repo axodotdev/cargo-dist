@@ -956,6 +956,14 @@ pub(crate) fn parse_metadata_table_or_manifest(
     }
 }
 
+pub(crate) fn has_v0_config(root_workspace: &axoproject::WorkspaceInfo) -> bool {
+    if let Some(dist_manifest_path) = root_workspace.dist_manifest_path.as_deref() {
+        crate::config::load_v0_config(dist_manifest_path).is_ok()
+    } else {
+        false
+    }
+}
+
 pub(crate) fn load_v0_config(dist_manifest_path: &Utf8Path) -> DistResult<V0WorkspaceConfig> {
     let src = SourceFile::load_local(dist_manifest_path)?;
     parse_v0_config(src)

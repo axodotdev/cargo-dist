@@ -324,6 +324,13 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         }
     }
 
+    if root_workspace.kind == WorkspaceKind::Generic
+        && initted
+        && crate::config::has_v0_config(root_workspace) {
+        do_migrate()?;
+        return do_init(cfg, args);
+    }
+
     // If this is a Cargo.toml, offer to either write their config to
     // a dist-workspace.toml, or migrate existing config there
     let mut newly_initted_generic = false;
