@@ -12,7 +12,7 @@ use super::*;
 use crate::platform::MinGlibcVersion;
 use crate::SortedMap;
 
-use crate::config::v1::{WorkspaceTable, PackageTable};
+use crate::config::v1::{PackageTable, WorkspaceTable};
 
 /// A container to assist deserializing the entirety of `dist-workspace.toml`.
 #[derive(Debug, Deserialize)]

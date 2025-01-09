@@ -7,13 +7,10 @@ use serde::Deserialize;
 
 use crate::{
     config::{
-        self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
+        self,
+        v1::{builds::BuildLayer, layer::BoolOr, TomlLayer},
+        CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
         MacPkgConfig, PublishStyle,
-        v1::{
-            builds::BuildLayer,
-            layer::BoolOr,
-            TomlLayer,
-        },
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -695,16 +692,18 @@ fn get_new_dist_metadata(
         };
 
         if github_selected {
-            meta.ci.as_ref().map(|ci| ci.github = Some(BoolOr::Bool(true)));
+            meta.ci
+                .as_ref()
+                .map(|ci| ci.github = Some(BoolOr::Bool(true)));
         }
     }
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // FIXME: "vendored" installers like msi could be enabled without any CI...
     //let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
-    let has_ci = meta.ci.is_some_and(|ci|
-        ci.github.is_some_and(|gh| gh.truthy())
-    );
+    let has_ci = meta
+        .ci
+        .is_some_and(|ci| ci.github.is_some_and(|gh| gh.truthy()));
 
     let existing_shell_config = meta.installers.is_some_and(|ins| ins.shell.is_some_and(|sh| sh.truthy()));
     let existing_powershell_config = meta.installers.is_some_and(|ins| ins.powershell.is_some_and(|ps| ps.truthy()));
@@ -731,23 +730,29 @@ fn get_new_dist_metadata(
         };
 
         let mut defaults: SortedMap<&str, bool> = SortedMap::new();
-        defaults.insert("shell",
-            existing_shell_config || cfg.installers.contains(&InstallerStyle::Shell)
+        defaults.insert(
+            "shell",
+            existing_shell_config || cfg.installers.contains(&InstallerStyle::Shell),
         );
-        defaults.insert("powershell",
-            existing_powershell_config || cfg.installers.contains(&InstallerStyle::Powershell)
+        defaults.insert(
+            "powershell",
+            existing_powershell_config || cfg.installers.contains(&InstallerStyle::Powershell),
         );
-        defaults.insert("npm",
-            existing_npm_config || cfg.installers.contains(&InstallerStyle::Npm)
+        defaults.insert(
+            "npm",
+            existing_npm_config || cfg.installers.contains(&InstallerStyle::Npm),
         );
-        defaults.insert("homebrew",
-            existing_homebrew_config || cfg.installers.contains(&InstallerStyle::Homebrew)
+        defaults.insert(
+            "homebrew",
+            existing_homebrew_config || cfg.installers.contains(&InstallerStyle::Homebrew),
         );
-        defaults.insert("msi",
-            existing_msi_config || cfg.installers.contains(&InstallerStyle::Msi)
+        defaults.insert(
+            "msi",
+            existing_msi_config || cfg.installers.contains(&InstallerStyle::Msi),
         );
-        defaults.insert("pkg",
-            existing_pkg_config || cfg.installers.contains(&InstallerStyle::Pkg)
+        defaults.insert(
+            "pkg",
+            existing_pkg_config || cfg.installers.contains(&InstallerStyle::Pkg),
         );
 
         let keys: Vec<&str> = defaults.keys().cloned().collect();
@@ -799,7 +804,9 @@ fn get_new_dist_metadata(
                     }
                     _ => {
                         // This should be enforced at the type level, ideally.
-                        unreachable!("got an unknown installer type -- this is a dist bug, please report it");
+                        unreachable!(
+                            "got an unknown installer type -- this is a dist bug, please report it"
+                        );
                     }
                 }
             }
@@ -1156,7 +1163,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         */
     }
 
-
     /*
     apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
 
@@ -1483,18 +1489,16 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
 }
 
 fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
-    let Some(builds) = builds
-        else {
-            return
-        };
+    let Some(builds) = builds else { return };
 
     let mut possible_table = toml_edit::table();
     let table = toplevel_table
         .get_mut("builds")
         .unwrap_or_else(|| &mut possible_table);
 
-    let toml_edit::Item::Table(table) = table
-        else { panic!("Expected [dist.builds] to be a table") };
+    let toml_edit::Item::Table(table) = table else {
+        panic!("Expected [dist.builds] to be a table")
+    };
 
     // / inheritable fields
     //common: CommonBuildLayer,
@@ -1532,18 +1536,18 @@ fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLaye
 }
 
 fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) {
-    let Some(BoolOr::Val(ref cargo_builds)) = builds.cargo
-        else {
-            return;
-        };
+    let Some(BoolOr::Val(ref cargo_builds)) = builds.cargo else {
+        return;
+    };
 
     let mut possible_table = toml_edit::table();
     let table = builds_table
         .get_mut("cargo")
         .unwrap_or_else(|| &mut possible_table);
 
-    let toml_edit::Item::Table(table) = table
-        else { panic!("Expected [dist.builds] to be a table") };
+    let toml_edit::Item::Table(table) = table else {
+        panic!("Expected [dist.builds] to be a table")
+    };
 
     apply_optional_value(
         table,
