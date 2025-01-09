@@ -12,7 +12,7 @@ use cargo_dist_schema::{
 use serde::{Deserialize, Serialize};
 
 use crate::announce::TagSettings;
-use crate::config::v1::DistWorkspaceConfig;
+use crate::config::v1::{DistWorkspaceConfig, TomlLayer};
 use crate::SortedMap;
 use crate::{
     errors::{DistError, DistResult},
@@ -944,12 +944,12 @@ pub(crate) fn parse_metadata_table_or_manifest(
     manifest_path: &Utf8Path,
     dist_manifest_path: Option<&Utf8Path>,
     metadata_table: Option<&serde_json::Value>,
-) -> DistResult<DistMetadata> {
+) -> DistResult<TomlLayer> {
     if let Some(dist_manifest_path) = dist_manifest_path {
         reject_metadata_table(manifest_path, dist_manifest_path, metadata_table)?;
         // Generic dist.toml
         let src = SourceFile::load_local(dist_manifest_path)?;
-        parse_generic_config(src)
+        Ok(parse_config(src)?.dist)
     } else {
         // Pre-parsed Rust metadata table
         parse_metadata_table(manifest_path, metadata_table)
@@ -993,14 +993,14 @@ pub(crate) fn reject_metadata_table(
 pub(crate) fn parse_metadata_table(
     manifest_path: &Utf8Path,
     metadata_table: Option<&serde_json::Value>,
-) -> DistResult<DistMetadata> {
+) -> DistResult<TomlLayer> {
     if crate::config::is_v0_config(manifest_path) {
         return Err(DistError::OldConfigFormat {});
     }
 
     Ok(metadata_table
         .and_then(|t| t.get(METADATA_DIST))
-        .map(DistMetadata::deserialize)
+        .map(TomlLayer::deserialize)
         .transpose()
         .map_err(|cause| DistError::CargoTomlParse {
             manifest_path: manifest_path.to_owned(),

@@ -986,7 +986,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 root_workspace.cargo_metadata_table.as_ref(),
             )?;
 
-        let workspace_layer = workspace_metadata.to_toml_layer(true);
+        let workspace_layer = workspace_metadata.clone();
         workspace_metadata.make_relative_to(&root_workspace.workspace_dir);
 
         let config = workspace_config(workspaces, workspace_layer.clone());
@@ -1011,7 +1011,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 workspaces,
                 pkg_idx,
                 workspace_layer.clone(),
-                package_metadata.to_toml_layer(false),
+                package_metadata.clone(), // fixme: this seems suspect since we call seemingly-mutating functions on it later
             ));
 
             package_metadata.make_relative_to(&package.package_root);
