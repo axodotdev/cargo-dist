@@ -2,13 +2,14 @@ use axoasset::{toml, toml_edit, LocalAsset};
 use axoproject::{WorkspaceGraph, WorkspaceInfo, WorkspaceKind};
 use camino::Utf8PathBuf;
 use cargo_dist_schema::TripleNameRef;
+use dialoguer::{Confirm, Input, MultiSelect};
 use semver::Version;
 use serde::Deserialize;
 
 use crate::{
     config::{
         self,
-        v1::{builds::BuildLayer, layer::BoolOr, TomlLayer},
+        v1::{builds::BuildLayer, installers::InstallerLayer, layer::BoolOr, TomlLayer},
         CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
         MacPkgConfig, PublishStyle,
     },
@@ -509,7 +510,6 @@ fn get_new_dist_metadata(
     args: &InitArgs,
     workspaces: &WorkspaceGraph,
 ) -> DistResult<TomlLayer> {
-    use dialoguer::{Confirm, Input, MultiSelect};
     let root_workspace = workspaces.root_workspace();
     let has_config = has_metadata_table(root_workspace);
 
@@ -693,24 +693,33 @@ fn get_new_dist_metadata(
 
         if github_selected {
             meta.ci
-                .as_ref()
+                .as_mut()
                 .map(|ci| ci.github = Some(BoolOr::Bool(true)));
         }
     }
+
+    let old_installers = if let Some(installers) = &meta.installers {
+        installers.to_owned()
+    } else {
+        Default::default()
+    };
+
+    let mut installers = old_installers.clone();
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // FIXME: "vendored" installers like msi could be enabled without any CI...
     //let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
     let has_ci = meta
         .ci
-        .is_some_and(|ci| ci.github.is_some_and(|gh| gh.truthy()));
+        .as_ref()
+        .is_some_and(|ci| ci.github.as_ref().is_some_and(|gh| gh.truthy()));
 
-    let existing_shell_config = meta.installers.is_some_and(|ins| ins.shell.is_some_and(|sh| sh.truthy()));
-    let existing_powershell_config = meta.installers.is_some_and(|ins| ins.powershell.is_some_and(|ps| ps.truthy()));
-    let existing_npm_config = meta.installers.is_some_and(|ins| ins.npm.is_some_and(|npm| npm.truthy()));
-    let existing_homebrew_config = meta.installers.is_some_and(|ins| ins.homebrew.is_some_and(|hb| hb.truthy()));
-    let existing_msi_config = meta.installers.is_some_and(|ins| ins.msi.is_some_and(|msi| msi.truthy()));
-    let existing_pkg_config = meta.installers.is_some_and(|ins| ins.pkg.is_some_and(|pkg| pkg.truthy()));
+    let existing_shell_config = installers.shell.as_ref().is_some_and(|sh| sh.truthy());
+    let existing_powershell_config = installers.powershell.as_ref().is_some_and(|ps| ps.truthy());
+    let existing_npm_config = installers.npm.as_ref().is_some_and(|npm| npm.truthy());
+    let existing_homebrew_config = installers.homebrew.as_ref().is_some_and(|hb| hb.truthy());
+    let existing_msi_config = installers.msi.as_ref().is_some_and(|msi| msi.truthy());
+    let existing_pkg_config = installers.pkg.as_ref().is_some_and(|pkg| pkg.truthy());
 
     {
         // If they have CI, then they can use fetching installers,
@@ -779,42 +788,38 @@ fn get_new_dist_metadata(
         };
 
         // Apply the results
-        meta.installers = Some(meta.installers.unwrap_or_default());
-
-        meta.installers.map(|mut installers| {
-            for item in selected {
-                match keys[item] {
-                    "shell" => {
-                        installers.shell = installers.shell.or(Some(BoolOr::Bool(true)));
-                    }
-                    "powershell" => {
-                        installers.powershell = installers.powershell.or(Some(BoolOr::Bool(true)));
-                    }
-                    "npm" => {
-                        installers.npm = installers.npm.or(Some(BoolOr::Bool(true)));
-                    }
-                    "homebrew" => {
-                        installers.homebrew = installers.homebrew.or(Some(BoolOr::Bool(true)));
-                    }
-                    "msi" => {
-                        installers.msi = installers.msi.or(Some(BoolOr::Bool(true)));
-                    }
-                    "pkg" => {
-                        installers.pkg = installers.pkg.or(Some(BoolOr::Bool(true)));
-                    }
-                    _ => {
-                        // This should be enforced at the type level, ideally.
-                        unreachable!(
-                            "got an unknown installer type -- this is a dist bug, please report it"
-                        );
-                    }
+        for item in selected {
+            match keys[item] {
+                "shell" => {
+                    installers.shell = installers.shell.or(Some(BoolOr::Bool(true)));
+                }
+                "powershell" => {
+                    installers.powershell = installers.powershell.or(Some(BoolOr::Bool(true)));
+                }
+                "npm" => {
+                    installers.npm = installers.npm.or(Some(BoolOr::Bool(true)));
+                }
+                "homebrew" => {
+                    installers.homebrew = installers.homebrew.or(Some(BoolOr::Bool(true)));
+                }
+                "msi" => {
+                    installers.msi = installers.msi.or(Some(BoolOr::Bool(true)));
+                }
+                "pkg" => {
+                    installers.pkg = installers.pkg.or(Some(BoolOr::Bool(true)));
+                }
+                _ => {
+                    // This should be enforced at the type level, ideally.
+                    unreachable!(
+                        "got an unknown installer type -- this is a dist bug, please report it"
+                    );
                 }
             }
-        });
+        }
     }
 
     // Special handling of the Homebrew installer
-    if meta.installers.is_some_and(|ins| ins.homebrew.is_some_and(|hb| hb.truthy())) {
+    if installers.homebrew.as_ref().is_some_and(|hb| hb.truthy()) {
         let homebrew_is_new = !existing_homebrew_config;
 
         if homebrew_is_new {
@@ -836,10 +841,9 @@ fn get_new_dist_metadata(
             let tap = tap.trim();
             if tap.is_empty() {
                 eprintln!("Homebrew packages will not be automatically published");
-                meta.installers.map(|mut ins| ins.homebrew = None);
+                installers.homebrew = None;
             } else {
-                let installers = meta.installers.unwrap_or_default();
-                let homebrew = match installers.homebrew.unwrap_or(BoolOr::Bool(true)) {
+                let mut homebrew = match installers.homebrew.clone().unwrap_or(BoolOr::Bool(true)) {
                     BoolOr::Val(v) => v,
                     // The hb.truthy() condition above means this should never be false.
                     BoolOr::Bool(_b) => Default::default(),
@@ -847,8 +851,7 @@ fn get_new_dist_metadata(
 
                 homebrew.tap = Some(tap.to_owned());
 
-                installers.homebrew = Some(BoolOr::Val(homebrew));
-                meta.installers = Some(installers);
+                installers.homebrew = Some(BoolOr::Val(homebrew.to_owned()));
 
                 eprintln!("{check} Homebrew package will be published to {tap}");
 
@@ -864,12 +867,12 @@ fn get_new_dist_metadata(
         let homebrew_toggled_off = existing_homebrew_config;
 
         if homebrew_toggled_off {
-            meta.installers.map(|mut ins| ins.homebrew = None);
+            installers.homebrew = None;
         }
     }
 
     // Special handling of the npm installer
-    if meta.installers.is_some_and(|ins| ins.npm.is_some_and(|npm| npm.truthy())) {
+    if installers.npm.as_ref().is_some_and(|npm| npm.truthy()) {
         // If npm is being newly enabled here, prompt for a @scope
         let npm_is_new = !existing_npm_config;
         if npm_is_new {
@@ -906,64 +909,62 @@ fn get_new_dist_metadata(
             };
             let scope = scope.trim();
 
-            meta.installers = Some(meta.installers.unwrap_or_default());
+            let mut npm = match installers.npm.unwrap_or(BoolOr::Bool(true)) {
+                BoolOr::Val(v) => v,
+                // The npm.truthy() condition above means this should never be false.
+                BoolOr::Bool(_b) => Default::default(),
+            };
 
-            meta.installers.map(|mut installers| {
-                // unwrap() is okay because we use .unwrap_or_default() immediately above.
-                let mut npm = match installers.npm.unwrap_or(BoolOr::Bool(true)) {
-                    BoolOr::Val(v) => v,
-                    // The npm.truthy() condition above means this should never be false.
-                    BoolOr::Bool(_b) => Default::default(),
-                };
+            if scope.is_empty() {
+                eprintln!("{check} npm packages will be published globally");
+                npm.scope = None;
+            } else {
+                npm.scope = Some(scope.to_owned());
+                eprintln!("{check} npm packages will be published under {scope}");
+            }
 
-                if scope.is_empty() {
-                    eprintln!("{check} npm packages will be published globally");
-                    npm.scope = None;
-                } else {
-                    npm.scope = Some(scope.to_owned());
-                    eprintln!("{check} npm packages will be published under {scope}");
-                }
-
-                installers.npm = Some(BoolOr::Val(npm));
-            });
+            installers.npm = Some(BoolOr::Val(npm));
 
             eprintln!();
         }
     } else {
         // Remove the npm installer configuration.
-        meta.installers.map(|mut ins| ins.npm = None);
+        installers.npm = None;
 
         // Remove the npm publisher configuration.
-        meta.publishers.map(|mut pubs| pubs.npm = None);
-    }
-
-    meta.publishers =
-        if meta.publishers.is_some_and(|p| p.homebrew.is_some() || p.npm.is_some()) {
-            meta.publishers
-        } else {
-            None
-        };
-
-    if let Some(installers) = &meta.installers {
-        if installers.shell.is_some() || installers.powershell.is_some() {
-            // default to the current value if there is one, or false otherwise.
-            let default = installers.updater.unwrap_or(false);
-            let install_updater = if args.yes {
-                default
-            } else {
-                let prompt = r#"Would you like to include an updater program with your binaries?"#;
-                let res = Confirm::with_theme(&theme)
-                    .with_prompt(prompt)
-                    .default(default)
-                    .interact()?;
-                eprintln!();
-
-                res
-            };
-
-            installers.updater = Some(install_updater);
+        if let Some(publishers) = meta.publishers.as_mut() {
+            publishers.npm = None;
         }
     }
+
+    if meta
+        .publishers
+        .as_ref()
+        .is_some_and(|p| p.homebrew.as_ref().is_none() || p.npm.as_ref().is_none())
+    {
+        meta.publishers = None
+    };
+
+    if installers.shell.is_some() || installers.powershell.is_some() {
+        // default to the current value if there is one, or false otherwise.
+        let default = installers.updater.unwrap_or(false);
+        let install_updater = if args.yes {
+            default
+        } else {
+            let prompt = r#"Would you like to include an updater program with your binaries?"#;
+            let res = Confirm::with_theme(&theme)
+                .with_prompt(prompt)
+                .default(default)
+                .interact()?;
+            eprintln!();
+
+            res
+        };
+
+        installers.updater = Some(install_updater);
+    }
+
+    meta.installers = Some(installers);
 
     Ok(meta)
 }

@@ -173,6 +173,7 @@ pub enum BoolOr<T> {
 }
 
 impl<T> BoolOr<T> {
+    /// Returns true if if the Bool portion is truthy, or if this contains a value.
     pub fn truthy(&self) -> bool {
         match self {
             BoolOr::Bool(b) => *b,
