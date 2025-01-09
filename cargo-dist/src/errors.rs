@@ -637,7 +637,7 @@ pub enum DistError {
     OldConfigFormat {},
 
     /// No dist manifest
-    #[error("Could not find a dist-workspace.toml")]
+    #[error("No manifest path specified")]
     NoDistManifest {},
 }
 
