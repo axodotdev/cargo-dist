@@ -635,6 +635,10 @@ pub enum DistError {
     #[error("Your project is using an old configuration format. Please run `dist init` to migrate to the new format.")]
     //#[diagnostic(help("???? probably provide a link ???")]
     OldConfigFormat {},
+
+    /// No dist manifest
+    #[error("Could not find a dist-workspace.toml")]
+    NoDistManifest {},
 }
 
 impl From<minijinja::Error> for DistError {

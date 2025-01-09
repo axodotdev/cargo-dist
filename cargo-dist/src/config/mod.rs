@@ -930,8 +930,13 @@ impl std::fmt::Display for ProductionMode {
     }
 }
 
-pub(crate) fn load_config(dist_manifest_path: &Utf8Path) -> DistResult<DistWorkspaceConfig> {
-    let src = SourceFile::load_local(dist_manifest_path)?;
+pub(crate) fn try_load_config(dist_manifest_path: Option<&Utf8PathBuf>) -> DistResult<DistWorkspaceConfig> {
+    let path = dist_manifest_path.ok_or(DistError::NoDistManifest {})?;
+    load_config(path)
+}
+
+pub(crate) fn load_config(dist_manifest_path: &Utf8PathBuf) -> DistResult<DistWorkspaceConfig> {
+    let src = SourceFile::load_local(dist_manifest_path.as_path())?;
     parse_config(src)
 }
 

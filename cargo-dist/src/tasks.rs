@@ -978,13 +978,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let dist_dir = target_dir.join(TARGET_DIST);
 
+        // Read the global config
         let mut workspace_metadata =
-            // Read the global config
-            config::parse_metadata_table_or_manifest(
-                &root_workspace.manifest_path,
-                root_workspace.dist_manifest_path.as_deref(),
-                root_workspace.cargo_metadata_table.as_ref(),
-            )?;
+            config::try_load_config(root_workspace.dist_manifest_path.as_ref())?.dist;
 
         let workspace_layer = workspace_metadata.clone();
         workspace_metadata.make_relative_to(&root_workspace.workspace_dir);
@@ -1002,11 +998,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut package_configs = vec![];
 
         for (pkg_idx, package) in workspaces.all_packages() {
-            let mut package_metadata = config::parse_metadata_table_or_manifest(
-                &package.manifest_path,
-                package.dist_manifest_path.as_deref(),
-                package.cargo_metadata_table.as_ref(),
-            )?;
+            let mut package_metadata = config::try_load_config(package.dist_manifest_path.as_ref())?.dist;
             package_configs.push(app_config(
                 workspaces,
                 pkg_idx,
