@@ -325,7 +325,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
             return do_init(cfg, args);
         }
     }
-//=====================
+
     // If this is a Cargo.toml, offer to either write their config to
     // a dist-workspace.toml, or migrate existing config there
     let mut newly_initted_generic = false;
@@ -647,8 +647,6 @@ fn get_new_dist_metadata(
     // once the user has any one enabled, right now it's just annoying to always
     // prompt for Github CI support.
     if meta.ci.is_none() {
-
-
         // FIXME: when there is more than one option this should be a proper
         // multiselect like the installer selector is! For now we do
         // most of the multi-select logic and then just give a prompt.
@@ -716,7 +714,6 @@ fn get_new_dist_metadata(
     let existing_pkg_config = meta.installers.is_some_and(|ins| ins.pkg.is_some_and(|pkg| pkg.truthy()));
 
     {
-
         // If they have CI, then they can use fetching installers,
         // otherwise they can only do vendored installers.
         let known: &[InstallerStyle] = if has_ci {
@@ -1001,7 +998,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         publishers,
     } = &meta;
 
-/*
+    /*
     // Forcibly inline the default install_path if not specified,
     // and if we've specified a shell or powershell installer
     let install_path = if install_path.is_none()
@@ -1017,7 +1014,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
     } else {
         install_path.clone()
     };
-*/
+    */
 
     apply_optional_value(
         table,
@@ -1057,7 +1054,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
 
     if let Some(installers) = installers {
         // InstallerLayer
-/*
+        /*
         if let Some(homebrew) = &installers.homebrew {
             match homebrew {
                 BoolOr::Bool(b) => {
@@ -1156,11 +1153,11 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
             "# Whether to always use the latest updater version instead of a fixed version",
             installers.always_use_latest_updater.clone(),
         );
-*/
+        */
     }
 
 
-/*
+    /*
     apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
 
     apply_string_list(
@@ -1479,7 +1476,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         "# Which kinds of packaged libraries to install\n",
         install_libraries.as_ref(),
     );
-*/
+    */
 
     // Finalize the table
     table.decor_mut().set_prefix("\n# Config for 'dist'\n");
@@ -1517,7 +1514,7 @@ fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLaye
     //#[serde(rename = "dependencies")]
     //system_dependencies: Option<SystemDependencies>,
 
-        /*
+    /*
     apply_optional_min_glibc_version(
         table,
         "min-glibc-version",
@@ -1531,7 +1528,7 @@ fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLaye
         "# Whether to use omnibor-cli to generate OmniBOR Artifact IDs\n",
         *omnibor,
     );
-        */
+    */
 }
 
 fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) {
