@@ -930,6 +930,10 @@ impl std::fmt::Display for ProductionMode {
     }
 }
 
+pub(crate) fn is_v1_config(dist_manifest_path: &Utf8Path) -> bool {
+    crate::config::load_config(dist_manifest_path).is_ok()
+}
+
 pub(crate) fn load_config(dist_manifest_path: &Utf8Path) -> DistResult<DistWorkspaceConfig> {
     let src = SourceFile::load_local(dist_manifest_path)?;
     parse_config(src)
@@ -957,7 +961,8 @@ pub(crate) fn parse_metadata_table_or_manifest(
 }
 
 pub(crate) fn is_v0_config(dist_manifest_path: &Utf8Path) -> bool {
-    crate::config::load_v0_config(dist_manifest_path).is_ok()
+    !is_v1_config(dist_manifest_path) &&
+        crate::config::load_v0_config(dist_manifest_path).is_ok()
 }
 
 pub(crate) fn load_v0_config(dist_manifest_path: &Utf8Path) -> DistResult<V0WorkspaceConfig> {
