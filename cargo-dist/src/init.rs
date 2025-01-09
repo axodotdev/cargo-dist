@@ -324,11 +324,13 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         }
     }
 
-    if root_workspace.kind == WorkspaceKind::Generic
-        && initted
-        && crate::config::has_v0_config(root_workspace) {
-        do_migrate()?;
-        return do_init(cfg, args);
+    if let Some(dist_manifest_path) = root_workspace.dist_manifest_path.as_deref() {
+        if root_workspace.kind == WorkspaceKind::Generic
+            && initted
+            && crate::config::is_v0_config(dist_manifest_path) {
+            do_migrate()?;
+            return do_init(cfg, args);
+        }
     }
 
     // If this is a Cargo.toml, offer to either write their config to

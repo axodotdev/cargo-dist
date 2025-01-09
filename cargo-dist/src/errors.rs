@@ -630,6 +630,11 @@ pub enum DistError {
         /// Version the project uses
         your_version: semver::Version,
     },
+
+    /// Project is using a v0 config
+    #[error("Your project is using an old configuration format. Please run `dist init` to migrate to the new format.")]
+    //#[diagnostic(help("???? probably provide a link ???")]
+    OldConfigFormat {},
 }
 
 impl From<minijinja::Error> for DistError {

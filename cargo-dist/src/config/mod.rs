@@ -956,12 +956,8 @@ pub(crate) fn parse_metadata_table_or_manifest(
     }
 }
 
-pub(crate) fn has_v0_config(root_workspace: &axoproject::WorkspaceInfo) -> bool {
-    if let Some(dist_manifest_path) = root_workspace.dist_manifest_path.as_deref() {
-        crate::config::load_v0_config(dist_manifest_path).is_ok()
-    } else {
-        false
-    }
+pub(crate) fn is_v0_config(dist_manifest_path: &Utf8Path) -> bool {
+    crate::config::load_v0_config(dist_manifest_path).is_ok()
 }
 
 pub(crate) fn load_v0_config(dist_manifest_path: &Utf8Path) -> DistResult<V0WorkspaceConfig> {
@@ -998,6 +994,10 @@ pub(crate) fn parse_metadata_table(
     manifest_path: &Utf8Path,
     metadata_table: Option<&serde_json::Value>,
 ) -> DistResult<DistMetadata> {
+    if crate::config::is_v0_config(manifest_path) {
+        return Err(DistError::OldConfigFormat {});
+    }
+
     Ok(metadata_table
         .and_then(|t| t.get(METADATA_DIST))
         .map(DistMetadata::deserialize)
