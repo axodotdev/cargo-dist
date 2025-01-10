@@ -731,7 +731,7 @@ fn get_new_dist_metadata(
         }
     }
 
-    let old_installers = if let Some(installers) = &meta.installers {
+    let old_installers = if let Some(installers) = &orig_meta.installers {
         installers.to_owned()
     } else {
         Default::default()
