@@ -1589,6 +1589,8 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
         panic!("Expected [dist.installers] to be a table");
     };
 
+    apply_installers_common(installers_table, &installers.common);
+
     if let Some(homebrew) = &installers.homebrew {
         match homebrew {
             BoolOr::Bool(b) => {
