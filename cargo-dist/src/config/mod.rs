@@ -930,8 +930,23 @@ impl std::fmt::Display for ProductionMode {
     }
 }
 
+#[derive(Deserialize)]
+struct FauxV1 {
+    #[allow(dead_code)]
+    dist_version: String,
+}
+
+#[derive(Deserialize)]
+struct FauxConfigV1 {
+    #[allow(dead_code)]
+    dist: FauxV1,
+}
+
 pub(crate) fn is_v1_config(dist_manifest_path: &Utf8Path) -> bool {
-    load_config(&dist_manifest_path.to_owned()).is_ok()
+    let Ok(src) = SourceFile::load_local(dist_manifest_path) else {
+        return false;
+    };
+    src.deserialize_toml::<FauxConfigV1>().is_ok()
 }
 
 pub(crate) fn try_load_config(dist_manifest_path: Option<&Utf8PathBuf>) -> DistResult<DistWorkspaceConfig> {
@@ -965,9 +980,30 @@ pub(crate) fn parse_metadata_table_or_manifest(
     }
 }
 
+// Extremely minimal struct designed to catch the most visible difference
+// between V0 and V1 config.
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct FauxV0 {
+    #[allow(dead_code)]
+    cargo_dist_version: String,
+}
+
+#[derive(Deserialize)]
+struct FauxConfigV0 {
+    #[allow(dead_code)]
+    dist: FauxV0,
+}
+
+pub(crate) fn looks_like_v0_config(dist_manifest_path: &Utf8Path) -> bool {
+    let Ok(src) = SourceFile::load_local(dist_manifest_path) else {
+        return false;
+    };
+    src.deserialize_toml::<FauxConfigV0>().is_ok()
+}
+
 pub(crate) fn is_v0_config(dist_manifest_path: &Utf8Path) -> bool {
-    !is_v1_config(dist_manifest_path)
-        && load_v0_config(dist_manifest_path).is_ok()
+    !is_v1_config(dist_manifest_path) && load_v0_config(dist_manifest_path).is_ok()
 }
 
 pub(crate) fn load_v0_config(dist_manifest_path: &Utf8Path) -> DistResult<V0WorkspaceConfig> {
@@ -1004,7 +1040,7 @@ pub(crate) fn parse_metadata_table(
     manifest_path: &Utf8Path,
     metadata_table: Option<&serde_json::Value>,
 ) -> DistResult<TomlLayer> {
-    if crate::config::is_v0_config(manifest_path) {
+    if looks_like_v0_config(manifest_path) {
         return Err(DistError::OldConfigFormat {});
     }
 

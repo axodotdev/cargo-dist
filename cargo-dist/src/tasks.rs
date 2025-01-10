@@ -978,6 +978,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         };
         let dist_dir = target_dir.join(TARGET_DIST);
 
+        if let Some(metadata_path) = &root_workspace.dist_manifest_path {
+            if metadata_path.exists() && config::looks_like_v0_config(metadata_path) {
+                return Err(DistError::OldConfigFormat {});
+            }
+        }
+
         // Read the global config
         let mut workspace_metadata =
             config::try_load_config(root_workspace.dist_manifest_path.as_ref())?.dist;
