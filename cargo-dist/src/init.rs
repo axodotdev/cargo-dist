@@ -10,8 +10,9 @@ use crate::{
     config::{
         self,
         v1::{
-            builds::BuildLayer, hosts::HostLayer, installers::InstallerLayer, layer::BoolOr,
-            TomlLayer,
+            artifacts::ArtifactLayer, builds::BuildLayer, ci::CiLayer,
+            hosts::HostLayer, installers::InstallerLayer, publishers::PublisherLayer,
+            layer::BoolOr, TomlLayer,
         },
         CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
         MacPkgConfig, PublishStyle,
@@ -1093,12 +1094,12 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         targets.as_ref(),
     );
 
-    //apply_artifacts(table, artifacts);
+    apply_artifacts(table, artifacts);
     apply_builds(table, builds);
-    //apply_ci(table, ci);
-    //apply_hosts(table, hosts);
-    //apply_installers(table, installers);
-    //apply_publishers(table, publishers);
+    apply_ci(table, ci);
+    apply_hosts(table, hosts);
+    apply_installers(table, installers);
+    apply_publishers(table, publishers);
 
     if let Some(installers) = installers {
         // InstallerLayer
@@ -1522,15 +1523,28 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
     table.decor_mut().set_prefix("\n# Config for 'dist'\n");
 }
 
-fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
-    let Some(builds) = builds else { return };
+fn apply_artifacts(table: &mut toml_edit::Table, artifacts: &Option<ArtifactLayer>) {
+    let Some(artifacts_table) = table.get_mut("artifacts") else {
+        // Nothing to do.
+        return;
+    };
+    let toml_edit::Item::Table(artifacts_table) = artifacts_table else {
+        panic!("Expected [dist.artifacts] to be a table");
+    };
 
-    let mut possible_table = toml_edit::table();
-    let table = toplevel_table
-        .get_mut("builds")
-        .unwrap_or_else(|| &mut possible_table);
+    // ...
+}
 
-    let toml_edit::Item::Table(table) = table else {
+fn apply_builds(table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
+    let Some(builds) = builds else {
+        // Nothing to do.
+        return;
+    };
+    let Some(builds_table) = table.get_mut("builds") else {
+        // Nothing to do.
+        return;
+    };
+    let toml_edit::Item::Table(builds_table) = builds_table else {
         panic!("Expected [dist.builds] to be a table");
     };
 
@@ -1543,7 +1557,7 @@ fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLaye
     // / whether to sign macos binaries with apple
     //macos_sign: Option<bool>,
 
-    apply_cargo_builds(table, builds);
+    apply_cargo_builds(builds_table, builds);
     // / cargo builds
     //cargo: Option<BoolOr<CargoBuildLayer>>,
     // / generic builds
@@ -1638,6 +1652,54 @@ fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) 
         "# Whether to use cargo-cyclonedx to generate an SBOM\n",
         cargo_builds.cargo_cyclonedx.clone(),
     );
+}
+
+fn apply_ci(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
+    let Some(ci_table) = table.get_mut("ci") else {
+        // Nothing to do.
+        return;
+    };
+    let toml_edit::Item::Table(ci_table) = ci_table else {
+        panic!("Expected [dist.ci] to be a table");
+    };
+
+    // ...
+}
+
+fn apply_hosts(table: &mut toml_edit::Table, hosts: &Option<HostLayer>) {
+    let Some(hosts_table) = table.get_mut("hosts") else {
+        // Nothing to do.
+        return;
+    };
+    let toml_edit::Item::Table(hosts_table) = hosts_table else {
+        panic!("Expected [dist.hosts] to be a table");
+    };
+
+    // ...
+}
+
+fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerLayer>) {
+    let Some(installers_table) = table.get_mut("installers") else {
+        // Nothing to do.
+        return;
+    };
+    let toml_edit::Item::Table(installers_table) = installers_table else {
+        panic!("Expected [dist.installers] to be a table");
+    };
+
+    // ...
+}
+
+fn apply_publishers(table: &mut toml_edit::Table, publishers: &Option<PublisherLayer>) {
+    let Some(publishers_table) = table.get_mut("publishers") else {
+        // Nothing to do.
+        return;
+    };
+    let toml_edit::Item::Table(publishers_table) = publishers_table else {
+        panic!("Expected [dist.publishers] to be a table");
+    };
+
+    // ...
 }
 
 /// Update the toml table to add/remove this value
