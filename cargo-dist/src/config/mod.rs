@@ -930,25 +930,6 @@ impl std::fmt::Display for ProductionMode {
     }
 }
 
-#[derive(Deserialize)]
-struct FauxV1 {
-    #[allow(dead_code)]
-    dist_version: String,
-}
-
-#[derive(Deserialize)]
-struct FauxConfigV1 {
-    #[allow(dead_code)]
-    dist: FauxV1,
-}
-
-pub(crate) fn is_v1_config(dist_manifest_path: &Utf8Path) -> bool {
-    let Ok(src) = SourceFile::load_local(dist_manifest_path) else {
-        return false;
-    };
-    src.deserialize_toml::<FauxConfigV1>().is_ok()
-}
-
 pub(crate) fn try_load_config(
     dist_manifest_path: Option<&Utf8PathBuf>,
 ) -> DistResult<DistWorkspaceConfig> {
@@ -1015,10 +996,6 @@ pub(crate) fn looks_like_v0_config(dist_manifest_path: &Utf8Path) -> bool {
     src.deserialize_toml::<FauxConfigV0>().is_ok()
 }
 
-pub(crate) fn is_v0_config(dist_manifest_path: &Utf8Path) -> bool {
-    !is_v1_config(dist_manifest_path) && load_v0_config(dist_manifest_path).is_ok()
-}
-
 pub(crate) fn load_v0_config(dist_manifest_path: &Utf8Path) -> DistResult<V0WorkspaceConfig> {
     let src = SourceFile::load_local(dist_manifest_path)?;
     parse_v0_config(src)
@@ -1026,11 +1003,6 @@ pub(crate) fn load_v0_config(dist_manifest_path: &Utf8Path) -> DistResult<V0Work
 
 pub(crate) fn parse_v0_config(src: SourceFile) -> DistResult<V0WorkspaceConfig> {
     Ok(src.deserialize_toml()?)
-}
-
-pub(crate) fn parse_generic_config(src: SourceFile) -> DistResult<DistMetadata> {
-    let config: GenericConfig = src.deserialize_toml()?;
-    Ok(config.dist.unwrap_or_default())
 }
 
 pub(crate) fn reject_metadata_table(
