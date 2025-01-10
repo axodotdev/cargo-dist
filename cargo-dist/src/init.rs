@@ -329,9 +329,10 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     if let Some(dist_manifest_path) = root_workspace.dist_manifest_path.as_deref() {
         if root_workspace.kind == WorkspaceKind::Generic
-            && initted
-            && crate::config::is_v0_config(dist_manifest_path)
+            && crate::config::looks_like_v0_config(dist_manifest_path)
         {
+            eprintln!("Found outdated configuration -- performing an automatic migration.");
+            eprintln!();
             do_migrate()?;
             return do_init(cfg, args);
         }
