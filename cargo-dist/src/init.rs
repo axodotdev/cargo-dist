@@ -9,7 +9,10 @@ use serde::Deserialize;
 use crate::{
     config::{
         self,
-        v1::{builds::BuildLayer, installers::InstallerLayer, layer::BoolOr, TomlLayer},
+        v1::{
+            builds::BuildLayer, hosts::HostLayer, installers::InstallerLayer, layer::BoolOr,
+            TomlLayer,
+        },
         CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
         MacPkgConfig, PublishStyle,
     },
@@ -327,7 +330,8 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     if let Some(dist_manifest_path) = root_workspace.dist_manifest_path.as_deref() {
         if root_workspace.kind == WorkspaceKind::Generic
             && initted
-            && crate::config::is_v0_config(dist_manifest_path) {
+            && crate::config::is_v0_config(dist_manifest_path)
+        {
             do_migrate()?;
             return do_init(cfg, args);
         }
@@ -554,6 +558,26 @@ fn get_new_dist_metadata(
 
     let github_hosting = !args.host.is_empty() && args.host.contains(&HostingStyle::Github);
     let axo_hosting = !args.host.is_empty() && args.host.contains(&HostingStyle::Axodotdev);
+    if github_hosting || axo_hosting {
+        let mut hosting = match meta.hosts.clone() {
+            Some(hosting) => hosting,
+            None => HostLayer {
+                common: config::v1::hosts::CommonHostLayer {},
+                github: None,
+                axodotdev: None,
+                force_latest: None,
+                display: None,
+                display_name: None,
+            },
+        };
+        if github_hosting {
+            hosting.github = Some(BoolOr::Bool(github_hosting))
+        }
+        if axo_hosting {
+            hosting.axodotdev = Some(BoolOr::Bool(axo_hosting))
+        }
+        meta.hosts = Some(hosting);
+    }
 
     // Set cargo-dist-version
     let current_version: Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
