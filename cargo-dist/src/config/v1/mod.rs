@@ -685,13 +685,6 @@ impl TomlLayer {
             ci.clone_from(&workspace_config.ci);
         }
 
-        // TODO: Copy hosts.github if needed
-        if let Some(hosts) = hosts.as_ref() {
-            //if hosts.github.is_none() {
-            //    hosts.github.clone_from(
-            //}
-        }
-
         if publishers.is_none() {
             publishers.clone_from(&workspace_config.publishers);
         }
