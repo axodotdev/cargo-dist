@@ -1086,7 +1086,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         allow_dirty.as_ref(),
     );
 
-    //apply_targets(table, targets);
+    apply_string_list(
+        table,
+        "targets",
+        "# Target platforms to build apps for (Rust target-triple syntax)\n",
+        targets.as_ref(),
+    );
+
     //apply_artifacts(table, artifacts);
     apply_builds(table, builds);
     //apply_ci(table, ci);
@@ -1220,13 +1226,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         "formula",
         "# Customize the Homebrew formula name\n",
         formula.clone(),
-    );
-
-    apply_string_list(
-        table,
-        "targets",
-        "# Target platforms to build apps for (Rust target-triple syntax)\n",
-        targets.as_ref(),
     );
 
     apply_optional_value(
@@ -1532,7 +1531,7 @@ fn apply_builds(toplevel_table: &mut toml_edit::Table, builds: &Option<BuildLaye
         .unwrap_or_else(|| &mut possible_table);
 
     let toml_edit::Item::Table(table) = table else {
-        panic!("Expected [dist.builds] to be a table")
+        panic!("Expected [dist.builds] to be a table");
     };
 
     // / inheritable fields
