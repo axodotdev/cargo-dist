@@ -1004,7 +1004,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let mut package_configs = vec![];
 
         for (pkg_idx, package) in workspaces.all_packages() {
-            let mut package_metadata = config::try_load_config(package.dist_manifest_path.as_ref())?.dist;
+            let mut package_metadata =
+                config::try_load_package_config(package.dist_manifest_path.as_ref())?;
             package_configs.push(app_config(
                 workspaces,
                 pkg_idx,

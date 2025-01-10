@@ -949,9 +949,22 @@ pub(crate) fn is_v1_config(dist_manifest_path: &Utf8Path) -> bool {
     src.deserialize_toml::<FauxConfigV1>().is_ok()
 }
 
-pub(crate) fn try_load_config(dist_manifest_path: Option<&Utf8PathBuf>) -> DistResult<DistWorkspaceConfig> {
+pub(crate) fn try_load_config(
+    dist_manifest_path: Option<&Utf8PathBuf>,
+) -> DistResult<DistWorkspaceConfig> {
     let path = dist_manifest_path.ok_or(DistError::NoDistManifest {})?;
     load_config(path)
+}
+
+pub(crate) fn try_load_package_config(
+    dist_manifest_path: Option<&Utf8PathBuf>,
+) -> DistResult<TomlLayer> {
+    if let Some(dist_manifest_path) = dist_manifest_path {
+        let src = SourceFile::load_local(dist_manifest_path)?;
+        Ok(parse_config(src)?.dist)
+    } else {
+        Ok(Default::default())
+    }
 }
 
 pub(crate) fn load_config(dist_manifest_path: &Utf8PathBuf) -> DistResult<DistWorkspaceConfig> {
