@@ -15,7 +15,7 @@ use crate::{
             layer::BoolOr, TomlLayer,
         },
         CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
-        MacPkgConfig, PublishStyle,
+        MacPkgConfig, PublishStyle, SystemDependencies,
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -1443,20 +1443,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
 
     apply_optional_value(
         table,
-        "ssldotcom-windows-sign",
-        "",
-        ssldotcom_windows_sign.as_ref().map(|p| p.to_string()),
-    );
-
-    apply_optional_value(
-        table,
-        "macos-sign",
-        "# Whether to sign macOS executables\n",
-        *macos_sign,
-    );
-
-    apply_optional_value(
-        table,
         "github-attestations",
         "# Whether to enable GitHub Attestations\n",
         *github_attestations,
@@ -1533,6 +1519,9 @@ fn apply_artifacts(table: &mut toml_edit::Table, artifacts: &Option<ArtifactLaye
     };
 
     // ...
+
+    // Finalize the table
+    artifacts_table.decor_mut().set_prefix("\n# Artifact configuration for dist\n");
 }
 
 fn apply_builds(table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
@@ -1548,110 +1537,132 @@ fn apply_builds(table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
         panic!("Expected [dist.builds] to be a table");
     };
 
-    // / inheritable fields
-    //common: CommonBuildLayer,
-
-    // / Whether we should sign windows binaries with ssl.com
-    //ssldotcom_windows_sign: Option<ProductionMode>,
-
-    // / whether to sign macos binaries with apple
-    //macos_sign: Option<bool>,
-
-    apply_cargo_builds(builds_table, builds);
-    // / cargo builds
-    //cargo: Option<BoolOr<CargoBuildLayer>>,
-    // / generic builds
-    //generic: Option<BoolOr<GenericBuildLayer>>,
-    // / A set of packages to install before building
-    //#[serde(rename = "dependencies")]
-    //system_dependencies: Option<SystemDependencies>,
-
-    /*
-    apply_optional_min_glibc_version(
-        table,
-        "min-glibc-version",
-        "# The minimum glibc version supported by the package (overrides auto-detection)\n",
-        min_glibc_version.as_ref(),
+    apply_optional_value(
+        builds_table,
+        "ssldotcom-windows-sign",
+        "# Whether we should sign Windows binaries using ssl.com",
+        builds.ssldotcom_windows_sign.as_ref().map(|p| p.to_string()),
     );
 
     apply_optional_value(
-        table,
+        builds_table,
+        "macos-sign",
+        "# Whether to sign macOS executables\n",
+        builds.macos_sign,
+    );
+
+    apply_cargo_builds(builds_table, builds);
+    apply_system_dependencies(builds_table, builds.system_dependencies.as_ref());
+
+    apply_optional_min_glibc_version(
+        builds_table,
+        "min-glibc-version",
+        "# The minimum glibc version supported by the package (overrides auto-detection)\n",
+        builds.min_glibc_version.as_ref(),
+    );
+
+    apply_optional_value(
+        builds_table,
         "omnibor",
         "# Whether to use omnibor-cli to generate OmniBOR Artifact IDs\n",
-        *omnibor,
+        builds.omnibor,
     );
-    */
+
+    // Finalize the table
+    builds_table.decor_mut().set_prefix("\n# Build configuration for dist\n");
 }
 
 fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) {
+    if let Some(BoolOr::Bool(b)) = builds.cargo {
+        // If it was set as a boolean, simply set it as a boolean and return.
+        apply_optional_value(builds_table,
+            "cargo",
+            "# Whether dist should build cargo projects\n# (Use the table format of [dist.builds.cargo] for more nuanced config!)\n",
+            Some(b),
+        );
+        return;
+    }
+
     let Some(BoolOr::Val(ref cargo_builds)) = builds.cargo else {
         return;
     };
 
     let mut possible_table = toml_edit::table();
-    let table = builds_table
+    let cargo_builds_table = builds_table
         .get_mut("cargo")
         .unwrap_or_else(|| &mut possible_table);
 
-    let toml_edit::Item::Table(table) = table else {
-        panic!("Expected [dist.builds] to be a table")
+    let toml_edit::Item::Table(cargo_builds_table) = cargo_builds_table else {
+        panic!("Expected [dist.builds.cargo] to be a table")
     };
 
     apply_optional_value(
-        table,
+        cargo_builds_table,
         "rust-toolchain-version",
         "# The preferred Rust toolchain to use in CI (rustup toolchain syntax)\n",
         cargo_builds.rust_toolchain_version.as_deref(),
     );
 
     apply_optional_value(
-        table,
+        cargo_builds_table,
         "msvc-crt-static",
         "# Whether +crt-static should be used on msvc\n",
         cargo_builds.msvc_crt_static.clone(),
     );
 
     apply_optional_value(
-        table,
+        cargo_builds_table,
         "precise-builds",
         "# Build only the required packages, and individually\n",
         cargo_builds.precise_builds.clone(),
     );
 
     apply_string_list(
-        table,
+        cargo_builds_table,
         "features",
         "# Features to pass to cargo build\n",
         cargo_builds.features.as_ref(),
     );
 
     apply_optional_value(
-        table,
+        cargo_builds_table,
         "default-features",
         "# Whether default-features should be enabled with cargo build\n",
         cargo_builds.default_features.clone(),
     );
 
     apply_optional_value(
-        table,
+        cargo_builds_table,
         "all-features",
         "# Whether to pass --all-features to cargo build\n",
         cargo_builds.all_features.clone(),
     );
 
     apply_optional_value(
-        table,
+        cargo_builds_table,
         "cargo-auditable",
         "# Whether to embed dependency information using cargo-auditable\n",
         cargo_builds.cargo_auditable.clone(),
     );
 
     apply_optional_value(
-        table,
+        cargo_builds_table,
         "cargo-cyclonedx",
         "# Whether to use cargo-cyclonedx to generate an SBOM\n",
         cargo_builds.cargo_cyclonedx.clone(),
     );
+
+    // Finalize the table
+    cargo_builds_table.decor_mut().set_prefix("\n# How dist should build Cargo projects\n");
+}
+
+fn apply_system_dependencies(builds_table: &mut toml_edit::Table, system_dependencies: Option<&SystemDependencies>) {
+    let Some(system_dependencies) = system_dependencies else {
+        // Nothing to do.
+        return;
+    };
+
+
 }
 
 fn apply_ci(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
@@ -1664,6 +1675,9 @@ fn apply_ci(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
     };
 
     // ...
+
+    // Finalize the table
+    ci_table.decor_mut().set_prefix("\n# CI configuration for dist\n");
 }
 
 fn apply_hosts(table: &mut toml_edit::Table, hosts: &Option<HostLayer>) {
@@ -1676,6 +1690,9 @@ fn apply_hosts(table: &mut toml_edit::Table, hosts: &Option<HostLayer>) {
     };
 
     // ...
+
+    // Finalize the table
+    hosts_table.decor_mut().set_prefix("\n# Hosting configuration for dist\n");
 }
 
 fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerLayer>) {
@@ -1688,6 +1705,9 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
     };
 
     // ...
+
+    // Finalize the table
+    installers_table.decor_mut().set_prefix("\n# Installer configuration for dist\n");
 }
 
 fn apply_publishers(table: &mut toml_edit::Table, publishers: &Option<PublisherLayer>) {
@@ -1700,6 +1720,9 @@ fn apply_publishers(table: &mut toml_edit::Table, publishers: &Option<PublisherL
     };
 
     // ...
+
+    // Finalize the table
+    publishers_table.decor_mut().set_prefix("\n# Publisher configuration for dist\n");
 }
 
 /// Update the toml table to add/remove this value
