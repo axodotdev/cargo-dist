@@ -1048,6 +1048,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         publishers,
     } = &meta;
 
+    // TODO(migration): figure out what we need to do with this
     /*
     // Forcibly inline the default install_path if not specified,
     // and if we've specified a shell or powershell installer
@@ -1108,6 +1109,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
     apply_installers(table, installers);
     apply_publishers(table, publishers);
 
+    // TODO(migration): make sure all of these are handled
     /*
     apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
 
@@ -1401,7 +1403,7 @@ fn apply_artifacts(table: &mut toml_edit::Table, artifacts: &Option<ArtifactLaye
         panic!("Expected [dist.artifacts] to be a table");
     };
 
-    // ...
+    // TODO(migration): implement this
 
     // Finalize the table
     artifacts_table.decor_mut().set_prefix("\n# Artifact configuration for dist\n");
@@ -1545,7 +1547,7 @@ fn apply_system_dependencies(builds_table: &mut toml_edit::Table, system_depende
         return;
     };
 
-
+    // TODO(migration): implement this
 }
 
 fn apply_ci(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
@@ -1557,7 +1559,7 @@ fn apply_ci(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
         panic!("Expected [dist.ci] to be a table");
     };
 
-    // ...
+    // TODO(migration): implement this
 
     // Finalize the table
     ci_table.decor_mut().set_prefix("\n# CI configuration for dist\n");
@@ -1572,7 +1574,7 @@ fn apply_hosts(table: &mut toml_edit::Table, hosts: &Option<HostLayer>) {
         panic!("Expected [dist.hosts] to be a table");
     };
 
-    // ...
+    // TODO(migration): implement this
 
     // Finalize the table
     hosts_table.decor_mut().set_prefix("\n# Hosting configuration for dist\n");
@@ -1731,7 +1733,7 @@ fn apply_installers_common(table: &mut toml_edit::Table, common: &CommonInstalle
     );
 
     // / Aliases to install binaries as
-    // FIXME/TODO: pub bin_aliases: Option<SortedMap<String, Vec<String>>>,
+    // TODO(migration): handle `pub bin_aliases: Option<SortedMap<String, Vec<String>>>`
 }
 
 fn apply_installers_homebrew(installers_table: &mut toml_edit::Table, homebrew: &HomebrewInstallerLayer) {
@@ -1744,7 +1746,7 @@ fn apply_installers_homebrew(installers_table: &mut toml_edit::Table, homebrew: 
 
     apply_installers_common(homebrew_table, &homebrew.common);
 
-    // TODO: similar to shell
+    // TODO(migration): implement this (similar to shell)
 }
 
 fn apply_installers_msi(installers_table: &mut toml_edit::Table, msi: &MsiInstallerLayer) {
@@ -1757,7 +1759,7 @@ fn apply_installers_msi(installers_table: &mut toml_edit::Table, msi: &MsiInstal
 
     apply_installers_common(msi_table, &msi.common);
 
-    // TODO: similar to shell
+    // TODO(migration): implement this (similar to shell)
 }
 
 fn apply_installers_npm(installers_table: &mut toml_edit::Table, npm: &NpmInstallerLayer) {
@@ -1770,7 +1772,7 @@ fn apply_installers_npm(installers_table: &mut toml_edit::Table, npm: &NpmInstal
 
     apply_installers_common(npm_table, &npm.common);
 
-    // TODO: similar to shell
+    // TODO(migration): implement this (similar to shell)
 }
 
 fn apply_installers_powershell(installers_table: &mut toml_edit::Table, powershell: &PowershellInstallerLayer) {
@@ -1783,7 +1785,7 @@ fn apply_installers_powershell(installers_table: &mut toml_edit::Table, powershe
 
     apply_installers_common(powershell_table, &powershell.common);
 
-    // TODO: similar to shell
+    // TODO(migration): implement this (similar to shell)
 }
 
 fn apply_installers_shell(installers_table: &mut toml_edit::Table, shell: &ShellInstallerLayer) {
@@ -1796,7 +1798,7 @@ fn apply_installers_shell(installers_table: &mut toml_edit::Table, shell: &Shell
 
     apply_installers_common(shell_table, &shell.common);
 
-    // TODO
+    // TODO(migration): implement this
 }
 
 fn apply_installers_pkg(installers_table: &mut toml_edit::Table, pkg: &PkgInstallerLayer) {
@@ -1818,22 +1820,23 @@ fn apply_installers_pkg(installers_table: &mut toml_edit::Table, pkg: &PkgInstal
 
     apply_optional_value(
         pkg_table,
-        "install_location",
+        "install-location",
         "# The location to which software should be installed (defaults to /usr/local)\n",
         pkg.install_location.clone(),
     );
+
+    // TODO(migration): verify there's no other macOS/pkg stuff to add here
 }
 
 fn apply_publishers(table: &mut toml_edit::Table, publishers: &Option<PublisherLayer>) {
     let Some(publishers_table) = table.get_mut("publishers") else {
-        // Nothing to do.
         return;
     };
     let toml_edit::Item::Table(publishers_table) = publishers_table else {
         panic!("Expected [dist.publishers] to be a table");
     };
 
-    // ...
+    // TODO(migration): implement this
 
     // Finalize the table
     publishers_table.decor_mut().set_prefix("\n# Publisher configuration for dist\n");
@@ -1901,6 +1904,7 @@ where
 }
 
 /// Similar to [`apply_optional_value`][] but specialized to `MacPkgConfig`, since we're not able to work with structs dynamically
+// TODO(migration): This should be replaced by `apply_installers_pkg() -- once that's done, remove this.
 fn apply_optional_mac_pkg(
     table: &mut toml_edit::Table,
     key: &str,
