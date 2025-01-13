@@ -386,7 +386,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     };
 
     if let Some(meta) = &multi_meta.workspace {
-        apply_dist_to_workspace_toml(&mut workspace_toml, desired_workspace_kind, meta);
+        apply_dist_to_workspace_toml(&mut workspace_toml, meta);
     }
 
     eprintln!();
@@ -979,7 +979,6 @@ fn get_new_dist_metadata(
 /// Update a workspace toml-edit document with the current DistMetadata value
 pub(crate) fn apply_dist_to_workspace_toml(
     workspace_toml: &mut toml_edit::DocumentMut,
-    _workspace_kind: WorkspaceKind,
     meta: &TomlLayer,
 ) {
     let metadata = workspace_toml.as_item_mut();
