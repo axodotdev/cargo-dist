@@ -755,10 +755,6 @@ fn get_new_dist_metadata(
                 "homebrew",
                 existing_homebrew_config || cfg.installers.contains(&InstallerStyle::Homebrew),
             );
-            defaults.insert(
-                "pkg",
-                existing_pkg_config || cfg.installers.contains(&InstallerStyle::Pkg),
-            );
         } else {
             eprintln!("{notice} no CI backends enabled, so only installers that work offline are available");
         }
@@ -769,6 +765,11 @@ fn get_new_dist_metadata(
         defaults.insert(
             "msi",
             existing_msi_config || cfg.installers.contains(&InstallerStyle::Msi),
+        );
+
+        defaults.insert(
+            "pkg",
+            existing_pkg_config || cfg.installers.contains(&InstallerStyle::Pkg),
         );
 
         let keys: Vec<&str> = defaults.keys().cloned().collect();
@@ -1789,7 +1790,8 @@ fn apply_installers_pkg(installers_table: &mut toml_edit::Table, pkg: &PkgInstal
         pkg.install_location.clone(),
     );
 
-    // TODO(migration): verify there's no other macOS/pkg stuff to add here
+    // Finalize the table
+    pkg_table.decor_mut().set_prefix("\n# Configuration for the Mac .pkg installer\n");
 }
 
 fn apply_publishers(table: &mut toml_edit::Table, publishers: &Option<PublisherLayer>) {
@@ -1862,43 +1864,6 @@ where
         } else {
             apply_string_list(table, key, desc, Some(items))
         }
-    } else {
-        table.remove(key);
-    }
-}
-
-/// Similar to [`apply_optional_value`][] but specialized to `MacPkgConfig`, since we're not able to work with structs dynamically
-// TODO(migration): This should be replaced by `apply_installers_pkg() -- once that's done, remove this.
-fn apply_optional_mac_pkg(
-    table: &mut toml_edit::Table,
-    key: &str,
-    desc: &str,
-    val: Option<&MacPkgConfig>,
-) {
-    if let Some(mac_pkg_config) = val {
-        let MacPkgConfig {
-            identifier,
-            install_location,
-        } = mac_pkg_config;
-
-        let new_item = &mut table[key];
-        let mut new_table = toml_edit::table();
-        if let Some(new_table) = new_table.as_table_mut() {
-            apply_optional_value(
-                new_table,
-                "identifier",
-                "# A unique identifier, in tld.domain.package format\n",
-                identifier.as_ref(),
-            );
-            apply_optional_value(
-                new_table,
-                "install-location",
-                "# The location to which the software should be installed\n",
-                install_location.as_ref(),
-            );
-            new_table.decor_mut().set_prefix(desc);
-        }
-        new_item.or_insert(new_table);
     } else {
         table.remove(key);
     }
