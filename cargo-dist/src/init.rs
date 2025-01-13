@@ -1076,13 +1076,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
 
     // TODO(migration): make sure all of these are handled
     /*
-    apply_optional_value(
-        table,
-        "dist",
-        "# Whether to consider the binaries in a package for distribution (defaults true)\n",
-        *dist,
-    );
-
     apply_string_list(
         table,
         "include",
