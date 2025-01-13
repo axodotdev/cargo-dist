@@ -1050,7 +1050,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         table,
         "dist",
         "# Whether the package should be distributed/built by dist (defaults to true)\n",
-        dist.clone(),
+        *dist,
     );
 
     apply_string_list(
@@ -1293,7 +1293,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
 fn apply_artifacts(table: &mut toml_edit::Table, artifacts: &Option<ArtifactLayer>) {
     let Some(artifacts) = artifacts else {
         return;
-    }
+    };
     let Some(artifacts_table) = table.get_mut("artifacts") else {
         return;
     };
@@ -1463,14 +1463,14 @@ fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) 
         cargo_builds_table,
         "msvc-crt-static",
         "# Whether +crt-static should be used on msvc\n",
-        cargo_builds.msvc_crt_static.clone(),
+        cargo_builds.msvc_crt_static,
     );
 
     apply_optional_value(
         cargo_builds_table,
         "precise-builds",
         "# Build only the required packages, and individually\n",
-        cargo_builds.precise_builds.clone(),
+        cargo_builds.precise_builds,
     );
 
     apply_string_list(
@@ -1484,28 +1484,28 @@ fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) 
         cargo_builds_table,
         "default-features",
         "# Whether default-features should be enabled with cargo build\n",
-        cargo_builds.default_features.clone(),
+        cargo_builds.default_features,
     );
 
     apply_optional_value(
         cargo_builds_table,
         "all-features",
         "# Whether to pass --all-features to cargo build\n",
-        cargo_builds.all_features.clone(),
+        cargo_builds.all_features,
     );
 
     apply_optional_value(
         cargo_builds_table,
         "cargo-auditable",
         "# Whether to embed dependency information using cargo-auditable\n",
-        cargo_builds.cargo_auditable.clone(),
+        cargo_builds.cargo_auditable,
     );
 
     apply_optional_value(
         cargo_builds_table,
         "cargo-cyclonedx",
         "# Whether to use cargo-cyclonedx to generate an SBOM\n",
-        cargo_builds.cargo_cyclonedx.clone(),
+        cargo_builds.cargo_cyclonedx,
     );
 
     // Finalize the table
@@ -1575,7 +1575,7 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
                 );
             }
             BoolOr::Val(v) => {
-                apply_installers_homebrew(installers_table, &v);
+                apply_installers_homebrew(installers_table, v);
             }
         }
     }
@@ -1591,7 +1591,7 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
                 );
             }
             BoolOr::Val(v) => {
-                apply_installers_msi(installers_table, &v);
+                apply_installers_msi(installers_table, v);
             }
         }
     }
@@ -1607,7 +1607,7 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
                 );
             }
             BoolOr::Val(v) => {
-                apply_installers_npm(installers_table, &v);
+                apply_installers_npm(installers_table, v);
             }
         }
     }
@@ -1623,7 +1623,7 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
                 );
             }
             BoolOr::Val(v) => {
-                apply_installers_powershell(installers_table, &v);
+                apply_installers_powershell(installers_table, v);
             }
         }
     }
@@ -1639,7 +1639,7 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
                 );
             }
             BoolOr::Val(v) => {
-                apply_installers_shell(installers_table, &v);
+                apply_installers_shell(installers_table, v);
             }
         }
     }
@@ -1655,7 +1655,7 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
                 );
             }
             BoolOr::Val(v) => {
-                apply_installers_pkg(installers_table, &v);
+                apply_installers_pkg(installers_table, v);
             }
         }
     }
@@ -1666,14 +1666,14 @@ fn apply_installers(table: &mut toml_edit::Table, installers: &Option<InstallerL
         installers_table,
         "updater",
         "# Whether to install an updater program alongside the software\n",
-        installers.updater.clone(),
+        installers.updater,
     );
 
     apply_optional_value(
         installers_table,
         "always-use-latest-updater",
         "# Whether to always use the latest updater version instead of a fixed version\n",
-        installers.always_use_latest_updater.clone(),
+        installers.always_use_latest_updater,
     );
 
 
