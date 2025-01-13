@@ -51,7 +51,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`install-libraries`](#install-libraries)
 * [`bin-aliases`](#bin-aliases)
 * [shell and powershell installer settings](#shell-and-powershell-installer-settings)
-    * [`custom-success-msg`](#custom-success-msg)
+    * [`install-success-msg`](#install-success-msg)
     * [`install-path`](#install-path)
     * [`install-updater`](#install-updater)
 * [npm installer settings](#npm-installer-settings)
@@ -738,7 +738,7 @@ When using [shell][shell-installer] and [powershell][powershell-installer] insta
 
 These settings are specific to the [shell][shell-installer] and [powershell][powershell-installer] installers, which provide a `curl | sh` installer for unix, and the equivalent `irm | iex` for windows. The two largely support the same things and behave the same, and typically want to be configured and enabled together.
 
-#### `custom-success-msg`
+#### `install-success-msg`
 
 > <span style="float:right">since 0.15.0<br>[package-local][]</span>
 > 📖 read the [shell][shell-installer] and [powershell][powershell-installer] installer guides!\
@@ -747,7 +747,7 @@ These settings are specific to the [shell][shell-installer] and [powershell][pow
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
 > [dist]
-> custom-success-msg = "axolotlsay is ready to rumble! >o_o<"
+> install-success-msg = "axolotlsay is ready to rumble! >o_o<"
 > ```
 
 The message to display on success in the [shell][shell-installer] and [powershell][powershell-installer] installers.
