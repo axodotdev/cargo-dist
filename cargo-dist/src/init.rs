@@ -682,42 +682,7 @@ fn get_new_dist_metadata(
     }
 
     // Enable CI backends
-    // FIXME: when there is more than one option we maybe shouldn't hide this
-    // once the user has any one enabled, right now it's just annoying to always
-    // prompt for Github CI support.
     if meta.ci.is_none() {
-        // FIXME: when there is more than one option this should be a proper
-        // multiselect like the installer selector is! For now we do
-        // most of the multi-select logic and then just give a prompt.
-        /*let known = &[CiStyle::Github];
-        let mut defaults = vec![];
-        let mut keys = vec![];
-        let mut github_key = 0;
-        for item in known {
-            // If this CI style is in their config, keep it
-            // If they passed it on the CLI, flip it on
-            let mut default = meta
-                .ci
-                .as_ref()
-                .map(|ci| ci.contains(item))
-                .unwrap_or(false)
-                || cfg.ci.contains(item);
-
-            // Currently default to enabling github CI because we don't
-            // support anything else and we can give a good error later
-            #[allow(irrefutable_let_patterns)]
-            if let CiStyle::Github = item {
-                github_key = 0;
-                default = true;
-            }
-            defaults.push(default);
-            // This match is here to remind you to add new CiStyles
-            // to `known` above!
-            keys.push(match item {
-                CiStyle::Github => "github",
-            });
-        }*/
-
         // Prompt the user
         let prompt = r#"enable Github CI and Releases?"#;
         let default_value = true;
@@ -750,7 +715,6 @@ fn get_new_dist_metadata(
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // FIXME: "vendored" installers like msi could be enabled without any CI...
-    //let has_ci = meta.ci.as_ref().map(|ci| !ci.is_empty()).unwrap_or(false);
     let has_ci = meta
         .ci
         .as_ref()
