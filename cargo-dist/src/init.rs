@@ -1721,18 +1721,18 @@ fn apply_installers_homebrew(installers_table: &mut toml_edit::Table, homebrew: 
         homebrew_table,
         "tap",
         "# A GitHub repo to push Homebrew formulas to\n",
-        tap.clone(),
+        homebrew.tap.clone(),
     );
 
     apply_optional_value(
         homebrew_table,
         "formula",
         "# Customize the Homebrew formula name\n",
-        formula.clone(),
+        homebrew.formula.clone(),
     );
 
     // Finalize the table
-    pkg_table.decor_mut().set_prefix("\n# Configure the built Homebrew installer\n");
+    homebrew_table.decor_mut().set_prefix("\n# Configure the built Homebrew installer\n");
 }
 
 fn apply_installers_msi(installers_table: &mut toml_edit::Table, msi: &MsiInstallerLayer) {
