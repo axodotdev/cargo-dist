@@ -1076,15 +1076,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
 
     // TODO(migration): make sure all of these are handled
     /*
-    apply_string_or_list(table, "ci", "# CI backends to support\n", ci.as_ref());
-
-    apply_string_list(
-        table,
-        "installers",
-        "# The installers to generate for each app\n",
-        installers.as_ref(),
-    );
-
     apply_optional_value(
         table,
         "tap",
