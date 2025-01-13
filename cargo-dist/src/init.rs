@@ -1078,20 +1078,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
     /*
     apply_optional_value(
         table,
-        "tap",
-        "# A GitHub repo to push Homebrew formulas to\n",
-        tap.clone(),
-    );
-
-    apply_optional_value(
-        table,
-        "formula",
-        "# Customize the Homebrew formula name\n",
-        formula.clone(),
-    );
-
-    apply_optional_value(
-        table,
         "dist",
         "# Whether to consider the binaries in a package for distribution (defaults true)\n",
         *dist,
@@ -1702,7 +1688,22 @@ fn apply_installers_homebrew(installers_table: &mut toml_edit::Table, homebrew: 
 
     apply_installers_common(homebrew_table, &homebrew.common);
 
-    // TODO(migration): implement this (similar to shell)
+    apply_optional_value(
+        homebrew_table,
+        "tap",
+        "# A GitHub repo to push Homebrew formulas to\n",
+        tap.clone(),
+    );
+
+    apply_optional_value(
+        homebrew_table,
+        "formula",
+        "# Customize the Homebrew formula name\n",
+        formula.clone(),
+    );
+
+    // Finalize the table
+    pkg_table.decor_mut().set_prefix("\n# Configure the built Homebrew installer\n");
 }
 
 fn apply_installers_msi(installers_table: &mut toml_edit::Table, msi: &MsiInstallerLayer) {
