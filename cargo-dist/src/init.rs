@@ -728,46 +728,47 @@ fn get_new_dist_metadata(
     let existing_pkg_config = installers.pkg.as_ref().is_some_and(|pkg| pkg.truthy());
 
     {
-        // If they have CI, then they can use fetching installers,
-        // otherwise they can only do vendored installers.
-        let known: &[InstallerStyle] = if has_ci {
-            &[
-                InstallerStyle::Shell,
-                InstallerStyle::Powershell,
-                InstallerStyle::Npm,
-                InstallerStyle::Homebrew,
-                InstallerStyle::Msi,
-                // Pkg intentionally left out because it's currently opt-in only.
-            ]
-        } else {
-            eprintln!("{notice} no CI backends enabled, most installers have been hidden");
-            &[InstallerStyle::Msi]
-        };
-
         let mut defaults: SortedMap<&str, bool> = SortedMap::new();
-        defaults.insert(
-            "shell",
-            existing_shell_config || cfg.installers.contains(&InstallerStyle::Shell),
-        );
-        defaults.insert(
-            "powershell",
-            existing_powershell_config || cfg.installers.contains(&InstallerStyle::Powershell),
-        );
-        defaults.insert(
-            "npm",
-            existing_npm_config || cfg.installers.contains(&InstallerStyle::Npm),
-        );
-        defaults.insert(
-            "homebrew",
-            existing_homebrew_config || cfg.installers.contains(&InstallerStyle::Homebrew),
-        );
+
+        if has_ci {
+            // If CI is configured, we have a place to host assets.
+            //
+            // This means we can use installers that fetch the actual
+            // program via the network.
+            //
+            // If any of these online installers updated to work offline,
+            // make sure to move them outside of this if/else block!
+
+            defaults.insert(
+                "shell",
+                existing_shell_config || cfg.installers.contains(&InstallerStyle::Shell),
+            );
+            defaults.insert(
+                "powershell",
+                existing_powershell_config || cfg.installers.contains(&InstallerStyle::Powershell),
+            );
+            defaults.insert(
+                "npm",
+                existing_npm_config || cfg.installers.contains(&InstallerStyle::Npm),
+            );
+            defaults.insert(
+                "homebrew",
+                existing_homebrew_config || cfg.installers.contains(&InstallerStyle::Homebrew),
+            );
+            defaults.insert(
+                "pkg",
+                existing_pkg_config || cfg.installers.contains(&InstallerStyle::Pkg),
+            );
+        } else {
+            eprintln!("{notice} no CI backends enabled, so only installers that work offline are available");
+        }
+
+        // All installers after this point should work offline, because
+        // they bundle the program with the installer.
+
         defaults.insert(
             "msi",
             existing_msi_config || cfg.installers.contains(&InstallerStyle::Msi),
-        );
-        defaults.insert(
-            "pkg",
-            existing_pkg_config || cfg.installers.contains(&InstallerStyle::Pkg),
         );
 
         let keys: Vec<&str> = defaults.keys().cloned().collect();
