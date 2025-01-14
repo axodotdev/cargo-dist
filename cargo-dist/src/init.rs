@@ -556,9 +556,6 @@ fn get_new_dist_metadata(
         }
     };
 
-    // Clone this to simplify checking for settings changes
-    let orig_meta = meta.clone();
-
     // Now prompt the user interactively to initialize these...
 
     // Tune the theming a bit
@@ -707,9 +704,7 @@ fn get_new_dist_metadata(
         }
     }
 
-    let old_installers = orig_meta.installers.map(|i| i.to_owned()).unwrap_or_default();
-
-    let mut installers = old_installers.clone();
+    let installers = meta.installers.get_or_insert_with(Default::default);
 
     // Enable installer backends (if they have a CI backend that can provide URLs)
     // FIXME: "vendored" installers like msi could be enabled without any CI...
@@ -718,12 +713,12 @@ fn get_new_dist_metadata(
         .as_ref()
         .is_some_and(|ci| ci.github.as_ref().is_some_and(|gh| gh.not_false()));
 
-    let existing_shell_config = installers.shell.as_ref().is_some_and(|sh| sh.not_false());
-    let existing_powershell_config = installers.powershell.as_ref().is_some_and(|ps| ps.not_false());
-    let existing_npm_config = installers.npm.as_ref().is_some_and(|npm| npm.not_false());
-    let existing_homebrew_config = installers.homebrew.as_ref().is_some_and(|hb| hb.not_false());
-    let existing_msi_config = installers.msi.as_ref().is_some_and(|msi| msi.not_false());
-    let existing_pkg_config = installers.pkg.as_ref().is_some_and(|pkg| pkg.not_false());
+    let existing_shell_config = installers.shell.is_some_and_not_false();
+    let existing_powershell_config = installers.powershell.is_some_and_not_false();
+    let existing_npm_config = installers.npm.is_some_and_not_false();
+    let existing_homebrew_config = installers.homebrew.is_some_and_not_false();
+    let existing_msi_config = installers.msi.is_some_and_not_false();
+    let existing_pkg_config = installers.pkg.is_some_and_not_false();
 
     {
         let mut defaults: SortedMap<&str, bool> = SortedMap::new();
@@ -797,22 +792,22 @@ fn get_new_dist_metadata(
         for item in selected {
             match keys[item] {
                 "shell" => {
-                    installers.shell = installers.shell.or(Some(BoolOr::Bool(true)));
+                    installers.shell.get_or_insert(BoolOr::Bool(true));
                 }
                 "powershell" => {
-                    installers.powershell = installers.powershell.or(Some(BoolOr::Bool(true)));
+                    installers.powershell.get_or_insert(BoolOr::Bool(true));
                 }
                 "npm" => {
-                    installers.npm = installers.npm.or(Some(BoolOr::Bool(true)));
+                    installers.npm.get_or_insert(BoolOr::Bool(true));
                 }
                 "homebrew" => {
-                    installers.homebrew = installers.homebrew.or(Some(BoolOr::Bool(true)));
+                    installers.homebrew.get_or_insert(BoolOr::Bool(true));
                 }
                 "msi" => {
-                    installers.msi = installers.msi.or(Some(BoolOr::Bool(true)));
+                    installers.msi.get_or_insert(BoolOr::Bool(true));
                 }
                 "pkg" => {
-                    installers.pkg = installers.pkg.or(Some(BoolOr::Bool(true)));
+                    installers.pkg.get_or_insert(BoolOr::Bool(true));
                 }
                 _ => {
                     // This should be enforced at the type level, ideally.
@@ -915,7 +910,7 @@ fn get_new_dist_metadata(
             };
             let scope = scope.trim();
 
-            let mut npm = match installers.npm.unwrap_or(BoolOr::Bool(true)) {
+            let mut npm = match installers.npm.clone().unwrap_or(BoolOr::Bool(true)) {
                 BoolOr::Val(v) => v,
                 // The npm.not_false() condition above means this should never be false.
                 BoolOr::Bool(_b) => Default::default(),
@@ -969,8 +964,6 @@ fn get_new_dist_metadata(
 
         installers.updater = Some(install_updater);
     }
-
-    meta.installers = Some(installers);
 
     Ok(meta)
 }

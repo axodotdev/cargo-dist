@@ -190,6 +190,10 @@ where
     /// Given an Option<BoolOr<T>>, returns `true` if the value is
     /// `None` or `Some(BoolOr::Bool(false))`.
     fn none_or_false(&self) -> bool;
+
+    /// Given an Option<BoolOr<T>>, returns `true` if the value is
+    /// a `Some(BoolOr::Val(...))` or `Some(BoolOr::Bool(true))`.
+    fn is_some_and_not_false(&self) -> bool;
 }
 impl<T> BoolOrOptExt for Option<BoolOr<T>> {
     fn none_or_false(&self) -> bool {
@@ -197,6 +201,14 @@ impl<T> BoolOrOptExt for Option<BoolOr<T>> {
             !item.not_false()
         } else {
             true
+        }
+    }
+
+    fn is_some_and_not_false(&self) -> bool {
+        if let Some(item) = self {
+            item.not_false()
+        } else {
+            false
         }
     }
 }
