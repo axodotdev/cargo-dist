@@ -651,7 +651,7 @@ impl TomlLayer {
         // All of `hosts.github` is global-only.
         if let Some(hosts) = &hosts {
             if let Some(github) = &hosts.github {
-                if github.truthy() {
+                if github.not_false() {
                     Self::merge_warn("hosts.github", package_manifest_path);
                 }
             }

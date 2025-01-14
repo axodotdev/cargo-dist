@@ -718,14 +718,14 @@ fn get_new_dist_metadata(
     let has_ci = meta
         .ci
         .as_ref()
-        .is_some_and(|ci| ci.github.as_ref().is_some_and(|gh| gh.truthy()));
+        .is_some_and(|ci| ci.github.as_ref().is_some_and(|gh| gh.not_false()));
 
-    let existing_shell_config = installers.shell.as_ref().is_some_and(|sh| sh.truthy());
-    let existing_powershell_config = installers.powershell.as_ref().is_some_and(|ps| ps.truthy());
-    let existing_npm_config = installers.npm.as_ref().is_some_and(|npm| npm.truthy());
-    let existing_homebrew_config = installers.homebrew.as_ref().is_some_and(|hb| hb.truthy());
-    let existing_msi_config = installers.msi.as_ref().is_some_and(|msi| msi.truthy());
-    let existing_pkg_config = installers.pkg.as_ref().is_some_and(|pkg| pkg.truthy());
+    let existing_shell_config = installers.shell.as_ref().is_some_and(|sh| sh.not_false());
+    let existing_powershell_config = installers.powershell.as_ref().is_some_and(|ps| ps.not_false());
+    let existing_npm_config = installers.npm.as_ref().is_some_and(|npm| npm.not_false());
+    let existing_homebrew_config = installers.homebrew.as_ref().is_some_and(|hb| hb.not_false());
+    let existing_msi_config = installers.msi.as_ref().is_some_and(|msi| msi.not_false());
+    let existing_pkg_config = installers.pkg.as_ref().is_some_and(|pkg| pkg.not_false());
 
     {
         let mut defaults: SortedMap<&str, bool> = SortedMap::new();
@@ -827,7 +827,7 @@ fn get_new_dist_metadata(
     }
 
     // Special handling of the Homebrew installer
-    if installers.homebrew.as_ref().is_some_and(|hb| hb.truthy()) {
+    if installers.homebrew.as_ref().is_some_and(|hb| hb.not_false()) {
         let homebrew_is_new = !existing_homebrew_config;
 
         if homebrew_is_new {
@@ -853,7 +853,7 @@ fn get_new_dist_metadata(
             } else {
                 let mut homebrew = match installers.homebrew.clone().unwrap_or(BoolOr::Bool(true)) {
                     BoolOr::Val(v) => v,
-                    // The hb.truthy() condition above means this should never be false.
+                    // The hb.not_false() condition above means this should never be false.
                     BoolOr::Bool(_b) => Default::default(),
                 };
 
@@ -880,7 +880,7 @@ fn get_new_dist_metadata(
     }
 
     // Special handling of the npm installer
-    if installers.npm.as_ref().is_some_and(|npm| npm.truthy()) {
+    if installers.npm.as_ref().is_some_and(|npm| npm.not_false()) {
         // If npm is being newly enabled here, prompt for a @scope
         let npm_is_new = !existing_npm_config;
         if npm_is_new {
@@ -919,7 +919,7 @@ fn get_new_dist_metadata(
 
             let mut npm = match installers.npm.unwrap_or(BoolOr::Bool(true)) {
                 BoolOr::Val(v) => v,
-                // The npm.truthy() condition above means this should never be false.
+                // The npm.not_false() condition above means this should never be false.
                 BoolOr::Bool(_b) => Default::default(),
             };
 
