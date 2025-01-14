@@ -711,7 +711,7 @@ fn get_new_dist_metadata(
     let has_ci = meta
         .ci
         .as_ref()
-        .is_some_and(|ci| ci.github.as_ref().is_some_and(|gh| gh.not_false()));
+        .is_some_and(|ci| ci.github.is_some_and_not_false());
 
     let existing_shell_config = installers.shell.is_some_and_not_false();
     let existing_powershell_config = installers.powershell.is_some_and_not_false();
@@ -820,7 +820,7 @@ fn get_new_dist_metadata(
     }
 
     // Special handling of the Homebrew installer
-    if installers.homebrew.as_ref().is_some_and(|hb| hb.not_false()) {
+    if installers.homebrew.is_some_and_not_false() {
         let homebrew_is_new = !existing_homebrew_config;
 
         if homebrew_is_new {
@@ -873,7 +873,7 @@ fn get_new_dist_metadata(
     }
 
     // Special handling of the npm installer
-    if installers.npm.as_ref().is_some_and(|npm| npm.not_false()) {
+    if installers.npm.is_some_and_not_false() {
         // If npm is being newly enabled here, prompt for a @scope
         let npm_is_new = !existing_npm_config;
         if npm_is_new {
