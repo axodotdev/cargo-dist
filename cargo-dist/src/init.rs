@@ -1075,19 +1075,6 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
     // TODO(migration): make sure all of these are handled
     /*
 
-    apply_optional_value(
-        table,
-        "npm-package",
-        "# The npm package should have this name\n",
-        npm_package.as_deref(),
-    );
-
-    apply_optional_value(
-        table,
-        "npm-scope",
-        "# A namespace to use when publishing this package to the npm registry\n",
-        npm_scope.as_deref(),
-    );
 
     apply_optional_value(
         table,
@@ -1756,7 +1743,19 @@ fn apply_installers_npm(installers_table: &mut toml_edit::Table, npm: &NpmInstal
 
     apply_installers_common(npm_table, &npm.common);
 
-    // TODO(migration): implement this (similar to shell)
+    apply_optional_value(
+        npm_table,
+        "package",
+        "# The npm package should have this name\n",
+        npm.package.as_deref(),
+    );
+
+    apply_optional_value(
+        npm_table,
+        "scope",
+        "# A namespace to use when publishing this package to the npm registry\n",
+        npm.scope.as_deref(),
+    );
 }
 
 fn apply_installers_powershell(installers_table: &mut toml_edit::Table, powershell: &PowershellInstallerLayer) {
