@@ -678,6 +678,12 @@ impl ChecksumStyle {
     }
 }
 
+impl std::fmt::Display for ChecksumStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.ext())
+    }
+}
+
 /// Which style(s) of configuration to generate
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum GenerateMode {
