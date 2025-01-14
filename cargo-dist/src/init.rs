@@ -6,6 +6,8 @@ use dialoguer::{Confirm, Input, MultiSelect};
 use semver::Version;
 use serde::Deserialize;
 
+use crate::config::v1::layer::BoolOrOptExt;
+
 use crate::{
     config::{
         self,
@@ -986,6 +988,23 @@ pub(crate) fn apply_dist_to_workspace_toml(
     apply_dist_to_metadata(metadata, meta);
 }
 
+fn apply_default_install_path(installers: &Option<InstallerLayer>) -> InstallerLayer {
+    let mut installers = installers.clone().unwrap_or_default();
+
+    // Forcibly inline the default install_path if not specified,
+    // and if we've specified a shell or powershell installer
+    let install_path = if installers.common.install_path.is_none()
+        && !(installers.shell.none_or_false() || installers.powershell.none_or_false())
+    {
+        Some(InstallPathStrategy::default_list())
+    } else {
+        installers.common.install_path.clone()
+    };
+
+    installers.common.install_path = install_path;
+    installers
+}
+
 /// Ensure [dist] has the given values
 fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
     let dist_metadata = &mut metadata[METADATA_DIST];
@@ -1013,24 +1032,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) {
         publishers,
     } = &meta;
 
-    // TODO(migration): figure out what we need to do with this
-    /*
-    // Forcibly inline the default install_path if not specified,
-    // and if we've specified a shell or powershell installer
-    let install_path = if install_path.is_none()
-        && installers
-            .as_ref()
-            .map(|i| {
-                i.iter()
-                    .any(|el| matches!(el, InstallerStyle::Shell | InstallerStyle::Powershell))
-            })
-            .unwrap_or(false)
-    {
-        Some(InstallPathStrategy::default_list())
-    } else {
-        install_path.clone()
-    };
-    */
+    let installers = &Some(apply_default_install_path(installers));
 
     apply_optional_value(
         table,
