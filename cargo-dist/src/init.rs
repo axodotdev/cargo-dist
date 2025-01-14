@@ -701,17 +701,13 @@ fn get_new_dist_metadata(
         };
 
         if github_selected {
-            meta.ci
-                .as_mut()
-                .map(|ci| ci.github = Some(BoolOr::Bool(true)));
+            if let Some(ci) = meta.ci.as_mut() {
+                ci.github = Some(BoolOr::Bool(true));
+            }
         }
     }
 
-    let old_installers = if let Some(installers) = &orig_meta.installers {
-        installers.to_owned()
-    } else {
-        Default::default()
-    };
+    let old_installers = orig_meta.installers.map(|i| i.to_owned()).unwrap_or_default();
 
     let mut installers = old_installers.clone();
 
@@ -1448,7 +1444,7 @@ fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) 
     let mut possible_table = toml_edit::table();
     let cargo_builds_table = builds_table
         .get_mut("cargo")
-        .unwrap_or_else(|| &mut possible_table);
+        .unwrap_or(&mut possible_table);
 
     let toml_edit::Item::Table(cargo_builds_table) = cargo_builds_table else {
         panic!("Expected [dist.builds.cargo] to be a table")
