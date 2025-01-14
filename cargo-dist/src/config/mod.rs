@@ -18,6 +18,10 @@ use crate::{
     METADATA_DIST,
 };
 
+mod version;
+pub use version::ConfigVersion;
+pub use version::get_version;
+
 pub mod v0;
 pub mod v0_to_v1;
 pub mod v1;
