@@ -1730,7 +1730,9 @@ fn apply_installers_msi(installers_table: &mut toml_edit::Table, msi: &MsiInstal
 
     apply_installers_common(msi_table, &msi.common);
 
-    // TODO(migration): implement this (similar to shell)
+    // There are no items under MsiInstallerConfig aside from `msi.common`.
+
+    msi_table.decor_mut().set_prefix("\n# Configure the built MSI installer\n");
 }
 
 fn apply_installers_npm(installers_table: &mut toml_edit::Table, npm: &NpmInstallerLayer) {
