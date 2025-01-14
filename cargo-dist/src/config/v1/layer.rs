@@ -181,3 +181,22 @@ impl<T> BoolOr<T> {
         }
     }
 }
+
+/// Extension trait to provide Option<BoolOr<T>>::none_or_false()
+pub trait BoolOrOptExt
+where
+    Self: Sized,
+{
+    /// Given an Option<BoolOr<T>>, returns `true` if the value is
+    /// `None` or `Some(BoolOr::Bool(false))`.
+    fn none_or_false(&self) -> bool;
+}
+impl<T> BoolOrOptExt for Option<BoolOr<T>> {
+    fn none_or_false(&self) -> bool {
+        if let Some(item) = self {
+            !item.not_false()
+        } else {
+            true
+        }
+    }
+}
