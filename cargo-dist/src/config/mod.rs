@@ -22,7 +22,7 @@ pub mod v0;
 pub mod v0_to_v1;
 pub mod v1;
 
-pub use v0::{DistMetadata, GenericConfig};
+pub use v0::{DistMetadata, V0DistConfig};
 
 /// values of the form `permission-name: read`
 pub type GithubPermissionMap = SortedMap<String, GithubPermission>;
@@ -943,17 +943,11 @@ pub(crate) fn parse_metadata_table_or_manifest(
     if let Some(dist_manifest_path) = dist_manifest_path {
         reject_metadata_table(manifest_path, dist_manifest_path, metadata_table)?;
         // Generic dist.toml
-        let src = SourceFile::load_local(dist_manifest_path)?;
-        parse_generic_config(src)
+        v0::load_dist(dist_manifest_path)
     } else {
         // Pre-parsed Rust metadata table
         parse_metadata_table(manifest_path, metadata_table)
     }
-}
-
-pub(crate) fn parse_generic_config(src: SourceFile) -> DistResult<DistMetadata> {
-    let config: GenericConfig = src.deserialize_toml()?;
-    Ok(config.dist.unwrap_or_default())
 }
 
 pub(crate) fn reject_metadata_table(
