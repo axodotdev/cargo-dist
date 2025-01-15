@@ -250,6 +250,7 @@ impl ApplyLayer for WorkspaceConfigInheritable {
             allow_dirty,
             dist_version,
             dist_url_override,
+            config_version: _,
             // app-scope only
             dist: _,
             targets: _,
@@ -361,6 +362,7 @@ impl ApplyLayer for AppConfigInheritable {
             allow_dirty: _,
             dist_version: _,
             dist_url_override: _,
+            config_version: _,
         }: Self::Layer,
     ) {
         self.artifacts.apply_val_layer(artifacts);
@@ -387,6 +389,10 @@ pub struct TomlLayer {
     /// things other dist versions can't handle!
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_version: Option<Version>,
+
+    /// The configuration file version.
+    #[serde(default)]
+    pub config_version: crate::config::version::ConfigVersion,
 
     /// see [`CargoDistUrlOverride`]
     #[serde(skip_serializing_if = "Option::is_none")]

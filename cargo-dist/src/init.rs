@@ -4,6 +4,7 @@ use camino::Utf8PathBuf;
 use dist_schema::TripleNameRef;
 use semver::Version;
 use serde::Deserialize;
+use tracing::debug;
 
 use crate::{
     config::{
@@ -203,6 +204,7 @@ fn do_migrate_from_dist_toml() -> DistResult<()> {
 pub fn do_migrate() -> DistResult<()> {
     do_migrate_from_rust_workspace()?;
     do_migrate_from_dist_toml()?;
+    debug!("dist.config-version = {}", config::get_version()?);
     //do_migrate_from_v0()?;
     Ok(())
 }
