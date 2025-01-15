@@ -19,8 +19,7 @@ use crate::{
 };
 
 mod version;
-pub use version::ConfigVersion;
-pub use version::get_version;
+pub use version::{get_version, ConfigVersion};
 
 pub mod v0;
 pub mod v0_to_v1;
