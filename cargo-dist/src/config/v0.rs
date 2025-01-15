@@ -1,5 +1,6 @@
 //! v0 config
 
+use axoproject::generic::{Package, Workspace};
 use camino::{Utf8Path, Utf8PathBuf};
 use dist_schema::{
     declare_strongly_typed_string, GithubRunner, GithubRunnerConfigInput, StringLikeOr,
@@ -12,10 +13,36 @@ use super::*;
 use crate::platform::MinGlibcVersion;
 use crate::SortedMap;
 
+/// Loads a dist(-workspace).toml from disk.
+pub fn load(dist_manifest_path: &Utf8Path) -> DistResult<V0DistConfig> {
+    let src = SourceFile::load_local(dist_manifest_path)?;
+    parse(src)
+}
+
+/// Load a dist(-workspace).toml from disk and return its `[dist]` table.
+pub fn load_dist(dist_manifest_path: &Utf8Path) -> DistResult<DistMetadata> {
+    Ok(load(dist_manifest_path)?.dist.unwrap_or_default())
+}
+
+/// Given a SourceFile of a dist(-workspace).toml, deserializes it.
+pub fn parse(src: SourceFile) -> DistResult<V0DistConfig> {
+    // parse() can probably be consolidated into load() eventually.
+    Ok(src.deserialize_toml()?)
+}
+
+/// Given a SourceFile of a dist(-workspace).toml, deserialize its `[dist]` table.
+pub fn parse_dist(src: SourceFile) -> DistResult<DistMetadata> {
+    Ok(parse(src)?.dist.unwrap_or_default())
+}
+
 /// A container to assist deserializing metadata from dist(-workspace).tomls
 #[derive(Debug, Deserialize)]
-pub struct GenericConfig {
-    /// The dist field within dist.toml
+pub struct V0DistConfig {
+    /// the `[workspace]` table.
+    pub workspace: Option<Workspace>,
+    /// the `[package]` table.
+    pub package: Option<Package>,
+    /// the `[dist]` table.
     pub dist: Option<DistMetadata>,
 }
 

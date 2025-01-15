@@ -1,6 +1,6 @@
 use crate::{
     backend::diff_source,
-    config::{parse_generic_config, parse_metadata_table, DistMetadata},
+    config::{self, parse_metadata_table, DistMetadata},
     init::apply_dist_to_workspace_toml,
     DistResult,
 };
@@ -23,7 +23,7 @@ fn parse_config(src: &SourceFile, input_kind: WorkspaceKind) -> DistResult<DistM
             unimplemented!("npm packages don't have [package.metadata.dist]")
         }
         WorkspaceKind::Rust => parse_rust_config(src.clone()),
-        WorkspaceKind::Generic => parse_generic_config(src.clone()),
+        WorkspaceKind::Generic => config::v0::parse_dist(src.clone()),
     }
 }
 
