@@ -236,24 +236,6 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let root_workspace = workspaces.root_workspace();
     let check = console::style("✔".to_string()).for_stderr().green();
 
-    eprintln!("let's setup your dist config...");
-    eprintln!();
-
-    // For each [workspace] Cargo.toml in the workspaces, initialize [profile]
-    let mut did_add_profile = false;
-    for workspace_idx in workspaces.all_workspace_indices() {
-        let workspace = workspaces.workspace(workspace_idx);
-        if workspace.kind == WorkspaceKind::Rust {
-            let mut workspace_toml = config::load_toml(&workspace.manifest_path)?;
-            did_add_profile |= init_dist_profile(cfg, &mut workspace_toml)?;
-            config::write_toml(&workspace.manifest_path, workspace_toml)?;
-        }
-    }
-
-    if did_add_profile {
-        eprintln!("{check} added [profile.dist] to your workspace Cargo.toml");
-    }
-
     // Load in the root workspace toml to edit and write back
     let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
     let initted = has_metadata_table(root_workspace);
@@ -280,6 +262,24 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
             do_migrate()?;
             return do_init(cfg, args);
         }
+    }
+
+    eprintln!("let's setup your dist config...");
+    eprintln!();
+
+    // For each [workspace] Cargo.toml in the workspaces, initialize [profile]
+    let mut did_add_profile = false;
+    for workspace_idx in workspaces.all_workspace_indices() {
+        let workspace = workspaces.workspace(workspace_idx);
+        if workspace.kind == WorkspaceKind::Rust {
+            let mut workspace_toml = config::load_toml(&workspace.manifest_path)?;
+            did_add_profile |= init_dist_profile(cfg, &mut workspace_toml)?;
+            config::write_toml(&workspace.manifest_path, workspace_toml)?;
+        }
+    }
+
+    if did_add_profile {
+        eprintln!("{check} added [profile.dist] to your workspace Cargo.toml");
     }
 
     // If this is a Cargo.toml, offer to either write their config to
