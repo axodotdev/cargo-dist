@@ -126,6 +126,8 @@ use hosts::*;
 use installers::*;
 use publishers::*;
 
+use tracing::log::warn;
+
 /// Compute the workspace-level config
 pub fn workspace_config(
     workspaces: &WorkspaceGraph,
@@ -493,6 +495,160 @@ impl TomlLayer {
         }
 
         Ok(())
+    }
+
+    // We say "value is being ignored", but it seems like we use the "ignored" values anyway?
+    // However, for the v0->v1 migration, I'm going for reproducing behavior
+    // over fixing bugs, so I'm keeping it this way for now. -@duckinator
+    fn merge_warn(name: &str, package_manifest_path: &Utf8Path) {
+        warn!("dist.{} is set, but this is only accepted in workspace.metadata (value is being ignored): {}", name, package_manifest_path);
+    }
+
+    /// Merge a workspace config into a package config (self)
+    pub fn merge_workspace_config(
+        &mut self,
+        workspace_config: &Self,
+        package_manifest_path: &Utf8Path,
+    ) {
+        // This is intentionally written awkwardly to make you update it
+        let Self {
+            config_version: _,
+            dist_version,
+            dist_url_override,
+            dist,
+            allow_dirty,
+            targets,
+            artifacts,
+            builds,
+            ci,
+            hosts,
+            installers,
+            publishers,
+        } = self;
+
+        // Check for global settings on local packages
+        if dist_version.is_some() {
+            Self::merge_warn("dist-version", package_manifest_path);
+        }
+        if dist_url_override.is_some() {
+            Self::merge_warn("dist-url-override", package_manifest_path);
+        }
+
+        // Arguably should be package-local for things like msi installers, but doesn't make sense for CI,
+        // so let's not support that yet for its complexity!
+        if allow_dirty.is_some() {
+            Self::merge_warn("allow-dirty", package_manifest_path);
+        }
+
+        // artifacts
+        if let Some(artifacts) = artifacts {
+            if artifacts.source_tarball.is_some() {
+                Self::merge_warn("artifacts.source-tarball", package_manifest_path);
+            }
+        }
+
+        if let Some(builds) = builds {
+            if builds.ssldotcom_windows_sign.is_some() {
+                Self::merge_warn("builds.ssldotcom-windows-sign", package_manifest_path);
+            }
+
+            if let Some(macos_sign) = builds.macos_sign {
+                if macos_sign {
+                    Self::merge_warn("builds.macos-sign", package_manifest_path);
+                }
+            }
+
+            if let Some(BoolOr::Val(cargo)) = &builds.cargo {
+                if cargo.features.is_some() {
+                    Self::merge_warn("cargo.features", package_manifest_path);
+                }
+                if cargo.default_features.unwrap_or(false) {
+                    Self::merge_warn("cargo.default-features", package_manifest_path);
+                }
+                if cargo.all_features.unwrap_or(false) {
+                    Self::merge_warn("cargo.all-features", package_manifest_path);
+                }
+                if cargo.cargo_auditable.unwrap_or(false) {
+                    Self::merge_warn("cargo.cargo-auditable", package_manifest_path);
+                }
+                if cargo.cargo_cyclonedx.unwrap_or(false) {
+                    Self::merge_warn("cargo.cargo-cyclonedx", package_manifest_path);
+                }
+            }
+        }
+
+        // The entire CiLayer is global-only.
+        if ci.is_some() {
+            Self::merge_warn("ci", package_manifest_path);
+        }
+
+        // All of `hosts.github` is global-only.
+        if let Some(hosts) = &hosts {
+            if let Some(github) = &hosts.github {
+                if github.is_not_false() {
+                    Self::merge_warn("hosts.github", package_manifest_path);
+                }
+            }
+        }
+
+        // All of `installers` (InstallerLayer) is package-only, so no need to check it.
+
+        // All of PublisherLayer is global-only.
+        if publishers.is_some() {
+            Self::merge_warn("dist.publishers", package_manifest_path);
+        }
+
+        // Merge non-global settings
+        if installers.is_none() {
+            installers.clone_from(&workspace_config.installers);
+        }
+        if targets.is_none() {
+            targets.clone_from(&workspace_config.targets);
+        }
+        if dist.is_none() {
+            *dist = workspace_config.dist;
+        }
+
+        if artifacts.is_none() {
+            artifacts.clone_from(&workspace_config.artifacts);
+        }
+        if builds.is_none() {
+            builds.clone_from(&workspace_config.builds);
+        }
+        if ci.is_none() {
+            ci.clone_from(&workspace_config.ci);
+        }
+
+        if publishers.is_none() {
+            publishers.clone_from(&workspace_config.publishers);
+        }
+
+        // it'd be nice to make this less... cthulu-esque... -@duckinator
+        if let Some(ws_artifacts) = &workspace_config.artifacts {
+            if let Some(ws_archives) = &ws_artifacts.archives {
+                if let Some(ws_include) = &ws_archives.include {
+                    // If we get here, we have something to bother copying.
+
+                    if artifacts.is_none() {
+                        artifacts.clone_from(&Some(Default::default()));
+                    }
+
+                    if let Some(artifacts) = artifacts {
+                        if artifacts.archives.is_none() {
+                            artifacts.archives.clone_from(&Some(Default::default()));
+                        }
+
+                        if let Some(archives) = &mut artifacts.archives {
+                            if let Some(include) = &mut archives.include {
+                                include.extend(ws_include.iter().cloned());
+                            } else {
+                                archives.include.clone_from(&ws_archives.include);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
