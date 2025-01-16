@@ -321,7 +321,7 @@ jobs:
           echo "dist ran successfully"
       {{%- if github_attestations is defined and github_attestations %}}
       - name: Attest
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
           subject-path: "target/distrib/*${{ join(matrix.targets, ', ') }}*"
       {{%- endif %}}
