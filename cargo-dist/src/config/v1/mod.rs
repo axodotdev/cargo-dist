@@ -453,7 +453,7 @@ impl TomlLayer {
     ///
     /// This is important to do eagerly, because once we start merging configs
     /// we'll forget what file they came from!
-    fn make_relative_to(&mut self, base_path: &Utf8Path) {
+    pub fn make_relative_to(&mut self, base_path: &Utf8Path) {
         // It's kind of unfortunate that we don't exhaustively match this to
         // force you to update it BUT almost no config is ever applicable for
         // this so even when we used to, everyone just skimmed over this so
