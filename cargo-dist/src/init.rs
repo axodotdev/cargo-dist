@@ -243,19 +243,15 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
     let initted = has_metadata_table(root_workspace);
 
-    if root_workspace.kind == WorkspaceKind::Generic
+    let using_dist_toml = root_workspace.kind == WorkspaceKind::Generic
         && initted
-        && root_workspace.manifest_path.file_name() == Some("dist.toml")
-    {
-        do_migrate()?;
-        return do_init(cfg, args);
-    }
+        && root_workspace.manifest_path.file_name() == Some("dist.toml");
 
-    // Already-initted users should be asked whether to migrate.
-    if root_workspace.kind == WorkspaceKind::Rust && initted && !args.yes {
+    let using_cargo_toml = root_workspace.kind == WorkspaceKind::Rust && initted;
+
+    if (using_dist_toml || using_cargo_toml) && !args.yes {
         let prompt = r#"Would you like to opt in to the new configuration format?
-    Future versions of dist will feature major changes to the
-    configuration format, including a new dist-specific configuration file."#;
+    Future versions of dist will feature major changes to the configuration format."#;
         let is_migrating = dialoguer::Confirm::with_theme(&theme())
             .with_prompt(prompt)
             .default(false)
