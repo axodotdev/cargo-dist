@@ -123,6 +123,8 @@ fn do_migrate_from_rust_workspace() -> DistResult<()> {
         return Ok(());
     }
 
+    eprintln!("migrating dist config from Cargo.toml to dist-workspace.toml...");
+
     // Load in the root workspace toml to edit and write back
     let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
     let mut original_workspace_toml = workspace_toml.clone();
@@ -161,10 +163,11 @@ fn do_migrate_from_dist_toml() -> DistResult<()> {
         return Ok(());
     }
 
+    eprintln!("migrating dist config from dist.toml to dist-workspace.toml...");
+
     // OK, now we know we have a root-level dist.toml. Time to fix that.
     let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
 
-    eprintln!("Migrating tables");
     // Init a generic workspace with the appropriate members
     let mut new_workspace_toml = new_generic_workspace();
     // First copy the [package] section
