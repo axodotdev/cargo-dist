@@ -481,6 +481,19 @@ impl TomlLayer {
             }
         }
     }
+
+    /// Determines whether the configured install paths are compatible with each other
+    pub fn validate_install_paths(&self) -> DistResult<()> {
+        if let Some(installers) = &self.installers {
+            if let Some(paths) = &installers.common.install_path {
+                if paths.len() > 1 && paths.contains(&InstallPathStrategy::CargoHome) {
+                    return Err(DistError::IncompatibleInstallPathConfiguration {});
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 fn make_path_relative_to(path: &mut Utf8PathBuf, base_path: &Utf8Path) {
