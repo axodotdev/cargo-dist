@@ -1,6 +1,6 @@
 use crate::{
     backend::diff_source,
-    config::{self, parse_metadata_table, DistMetadata},
+    config::{self, v0::parse_metadata_table, DistMetadata},
     init::apply_dist_to_workspace_toml,
     DistResult,
 };

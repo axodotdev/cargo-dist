@@ -13,6 +13,52 @@ use super::*;
 use crate::platform::MinGlibcVersion;
 use crate::SortedMap;
 
+pub(crate) fn parse_metadata_table_or_manifest(
+    manifest_path: &Utf8Path,
+    dist_manifest_path: Option<&Utf8Path>,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<DistMetadata> {
+    if let Some(dist_manifest_path) = dist_manifest_path {
+        reject_metadata_table(manifest_path, dist_manifest_path, metadata_table)?;
+        // Generic dist.toml
+        v0::load_dist(dist_manifest_path)
+    } else {
+        // Pre-parsed Rust metadata table
+        parse_metadata_table(manifest_path, metadata_table)
+    }
+}
+
+pub(crate) fn reject_metadata_table(
+    manifest_path: &Utf8Path,
+    dist_manifest_path: &Utf8Path,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<()> {
+    let has_dist_metadata = metadata_table.and_then(|t| t.get(METADATA_DIST)).is_some();
+    if has_dist_metadata {
+        Err(DistError::UnusedMetadata {
+            manifest_path: manifest_path.to_owned(),
+            dist_manifest_path: dist_manifest_path.to_owned(),
+        })
+    } else {
+        Ok(())
+    }
+}
+
+pub(crate) fn parse_metadata_table(
+    manifest_path: &Utf8Path,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<DistMetadata> {
+    Ok(metadata_table
+        .and_then(|t| t.get(METADATA_DIST))
+        .map(DistMetadata::deserialize)
+        .transpose()
+        .map_err(|cause| DistError::CargoTomlParse {
+            manifest_path: manifest_path.to_owned(),
+            cause,
+        })?
+        .unwrap_or_default())
+}
+
 /// Loads a dist(-workspace).toml from disk.
 pub fn load(dist_manifest_path: &Utf8Path) -> DistResult<V0DistConfig> {
     let src = SourceFile::load_local(dist_manifest_path)?;
