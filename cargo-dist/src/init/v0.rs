@@ -112,14 +112,6 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         eprintln!("{check} added [profile.dist] to your workspace Cargo.toml");
     }
 
-    let root_workspace = workspaces.root_workspace();
-
-    // Load in the root workspace toml to edit and write back
-    let mut workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
-
-    // We used to migrate from Cargo.toml here, now it's part of do_migrate().
-    let desired_workspace_kind = root_workspace.kind;
-
     let multi_meta = if let Some(json_path) = &args.with_json_config {
         // json update path, read from a file and apply all requested updates verbatim
         let src = axoasset::SourceFile::load_local(json_path)?;
@@ -138,8 +130,13 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // ctrl-c handler.
     ctrlc_handler.abort();
 
+    let root_workspace = workspaces.root_workspace();
+
+    // Load in the root workspace toml to edit and write back
+    let mut workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
+
     if let Some(meta) = &multi_meta.workspace {
-        apply_dist_to_workspace_toml(&mut workspace_toml, desired_workspace_kind, meta);
+        apply_dist_to_workspace_toml(&mut workspace_toml, root_workspace.kind, meta);
     }
 
     eprintln!();
@@ -152,7 +149,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     // Save the workspace toml (potentially an effective no-op if we made no edits)
     config::write_toml(&destination, workspace_toml)?;
-    let key = if desired_workspace_kind == WorkspaceKind::Rust {
+    let key = if root_workspace.kind == WorkspaceKind::Rust {
         "[workspace.metadata.dist]"
     } else {
         "[dist]"
