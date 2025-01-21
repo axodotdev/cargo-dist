@@ -25,7 +25,7 @@ pub mod v0;
 pub mod v0_to_v1;
 pub mod v1;
 
-pub use v0::{DistMetadata, V0DistConfig};
+pub(crate) use v0::{parse_metadata_table_or_manifest, reject_metadata_table, DistMetadata};
 
 /// values of the form `permission-name: read`
 pub type GithubPermissionMap = SortedMap<String, GithubPermission>;
@@ -936,52 +936,6 @@ impl std::fmt::Display for ProductionMode {
             ProductionMode::Prod => "prod".fmt(f),
         }
     }
-}
-
-pub(crate) fn parse_metadata_table_or_manifest(
-    manifest_path: &Utf8Path,
-    dist_manifest_path: Option<&Utf8Path>,
-    metadata_table: Option<&serde_json::Value>,
-) -> DistResult<DistMetadata> {
-    if let Some(dist_manifest_path) = dist_manifest_path {
-        reject_metadata_table(manifest_path, dist_manifest_path, metadata_table)?;
-        // Generic dist.toml
-        v0::load_dist(dist_manifest_path)
-    } else {
-        // Pre-parsed Rust metadata table
-        parse_metadata_table(manifest_path, metadata_table)
-    }
-}
-
-pub(crate) fn reject_metadata_table(
-    manifest_path: &Utf8Path,
-    dist_manifest_path: &Utf8Path,
-    metadata_table: Option<&serde_json::Value>,
-) -> DistResult<()> {
-    let has_dist_metadata = metadata_table.and_then(|t| t.get(METADATA_DIST)).is_some();
-    if has_dist_metadata {
-        Err(DistError::UnusedMetadata {
-            manifest_path: manifest_path.to_owned(),
-            dist_manifest_path: dist_manifest_path.to_owned(),
-        })
-    } else {
-        Ok(())
-    }
-}
-
-pub(crate) fn parse_metadata_table(
-    manifest_path: &Utf8Path,
-    metadata_table: Option<&serde_json::Value>,
-) -> DistResult<DistMetadata> {
-    Ok(metadata_table
-        .and_then(|t| t.get(METADATA_DIST))
-        .map(DistMetadata::deserialize)
-        .transpose()
-        .map_err(|cause| DistError::CargoTomlParse {
-            manifest_path: manifest_path.to_owned(),
-            cause,
-        })?
-        .unwrap_or_default())
 }
 
 /// Find the dist workspaces relative to the current directory
