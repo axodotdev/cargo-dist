@@ -61,7 +61,7 @@ tar = "0.4.43"
 flate2 = "1.0.35"
 pathdiff = { version = "0.2.3", features = ["camino"] }
 url = "2.5.4"
-parse-changelog = "0.6.10"
+parse-changelog = "0.6.11"
 schemars = "0.8.21"
 spdx = "0.10.8"
 base64 = "0.22.1"
