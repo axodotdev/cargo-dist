@@ -123,6 +123,8 @@ fn do_migrate_from_rust_workspace() -> DistResult<()> {
         return Ok(());
     }
 
+    eprintln!("migrating dist config from Cargo.toml to dist-workspace.toml...");
+
     // Load in the root workspace toml to edit and write back
     let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
     let mut original_workspace_toml = workspace_toml.clone();
@@ -161,10 +163,11 @@ fn do_migrate_from_dist_toml() -> DistResult<()> {
         return Ok(());
     }
 
+    eprintln!("migrating dist config from dist.toml to dist-workspace.toml...");
+
     // OK, now we know we have a root-level dist.toml. Time to fix that.
     let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
 
-    eprintln!("Migrating tables");
     // Init a generic workspace with the appropriate members
     let mut new_workspace_toml = new_generic_workspace();
     // First copy the [package] section
@@ -236,6 +239,30 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let root_workspace = workspaces.root_workspace();
     let check = console::style("✔".to_string()).for_stderr().green();
 
+    // Load in the root workspace toml to edit and write back
+    let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
+    let initted = has_metadata_table(root_workspace);
+
+    let using_dist_toml = root_workspace.kind == WorkspaceKind::Generic
+        && initted
+        && root_workspace.manifest_path.file_name() == Some("dist.toml");
+
+    let using_cargo_toml = root_workspace.kind == WorkspaceKind::Rust && initted;
+
+    if (using_dist_toml || using_cargo_toml) && !args.yes {
+        let prompt = r#"Would you like to opt in to the new configuration format?
+    Future versions of dist will feature major changes to the configuration format."#;
+        let is_migrating = dialoguer::Confirm::with_theme(&theme())
+            .with_prompt(prompt)
+            .default(false)
+            .interact()?;
+
+        if is_migrating {
+            do_migrate()?;
+            return do_init(cfg, args);
+        }
+    }
+
     eprintln!("let's setup your dist config...");
     eprintln!();
 
@@ -252,34 +279,6 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
 
     if did_add_profile {
         eprintln!("{check} added [profile.dist] to your workspace Cargo.toml");
-    }
-
-    // Load in the root workspace toml to edit and write back
-    let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
-    let initted = has_metadata_table(root_workspace);
-
-    if root_workspace.kind == WorkspaceKind::Generic
-        && initted
-        && root_workspace.manifest_path.file_name() == Some("dist.toml")
-    {
-        do_migrate()?;
-        return do_init(cfg, args);
-    }
-
-    // Already-initted users should be asked whether to migrate.
-    if root_workspace.kind == WorkspaceKind::Rust && initted && !args.yes {
-        let prompt = r#"Would you like to opt in to the new configuration format?
-    Future versions of dist will feature major changes to the
-    configuration format, including a new dist-specific configuration file."#;
-        let is_migrating = dialoguer::Confirm::with_theme(&theme())
-            .with_prompt(prompt)
-            .default(false)
-            .interact()?;
-
-        if is_migrating {
-            do_migrate()?;
-            return do_init(cfg, args);
-        }
     }
 
     // If this is a Cargo.toml, offer to either write their config to
