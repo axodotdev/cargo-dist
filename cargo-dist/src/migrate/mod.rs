@@ -4,6 +4,20 @@ use tracing::debug;
 
 use crate::{config, errors::DistResult, METADATA_DIST};
 
+pub fn needs_migration() -> DistResult<bool> {
+    let workspaces = config::get_project()?;
+    let root_workspace = workspaces.root_workspace();
+    let initted = has_metadata_table(root_workspace);
+
+    let using_dist_toml = root_workspace.kind == WorkspaceKind::Generic
+        && initted
+        && root_workspace.manifest_path.file_name() == Some("dist.toml");
+
+    let using_cargo_toml = root_workspace.kind == WorkspaceKind::Rust && initted;
+
+    Ok(using_dist_toml || using_cargo_toml)
+}
+
 /// Copy [workspace.metadata.dist] from one workspace to [dist] in another.
 fn copy_cargo_workspace_metadata_dist(
     new_workspace: &mut toml_edit::DocumentMut,

@@ -84,13 +84,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
     let initted = migrate::has_metadata_table(root_workspace);
 
-    let using_dist_toml = root_workspace.kind == WorkspaceKind::Generic
-        && initted
-        && root_workspace.manifest_path.file_name() == Some("dist.toml");
-
-    let using_cargo_toml = root_workspace.kind == WorkspaceKind::Rust && initted;
-
-    if (using_dist_toml || using_cargo_toml) && !args.yes {
+    if migrate::needs_migration()? && !args.yes {
         let prompt = r#"Would you like to opt in to the new configuration format?
     Future versions of dist will feature major changes to the configuration format."#;
         let is_migrating = dialoguer::Confirm::with_theme(&theme())
@@ -122,6 +116,8 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         eprintln!("{check} added [profile.dist] to your workspace Cargo.toml");
     }
 
+    // FIXME(duckinator): This Cargo.toml stuff is probably redundant with do_migrate_from_rust_workspace().
+    //
     // If this is a Cargo.toml, offer to either write their config to
     // a dist-workspace.toml, or migrate existing config there
     let mut newly_initted_generic = false;
