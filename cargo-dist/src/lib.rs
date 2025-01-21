@@ -37,7 +37,8 @@ use temp_dir::TempDir;
 use tracing::info;
 
 use errors::*;
-pub use init::{do_init, do_migrate, InitArgs};
+pub use init::{do_init, InitArgs};
+pub use migrate::do_migrate;
 pub use tasks::*;
 
 pub mod announce;
@@ -50,6 +51,7 @@ pub mod host;
 mod init;
 pub mod linkage;
 pub mod manifest;
+mod migrate;
 pub mod net;
 pub mod platform;
 pub mod sign;
