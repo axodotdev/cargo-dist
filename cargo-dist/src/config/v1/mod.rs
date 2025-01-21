@@ -497,7 +497,7 @@ impl TomlLayer {
         Ok(())
     }
 
-    // We say "value is being ignored", but it seems like we use the "ignored" values anyway?
+    // FIXME(duckinator): We say "value is being ignored", but it seems like we use the "ignored" values anyway?
     // However, for the v0->v1 migration, I'm going for reproducing behavior
     // over fixing bugs, so I'm keeping it this way for now. -@duckinator
     fn merge_warn(name: &str, package_manifest_path: &Utf8Path) {
@@ -534,13 +534,10 @@ impl TomlLayer {
             Self::merge_warn("dist-url-override", package_manifest_path);
         }
 
-        // Arguably should be package-local for things like msi installers, but doesn't make sense for CI,
-        // so let's not support that yet for its complexity!
         if allow_dirty.is_some() {
             Self::merge_warn("allow-dirty", package_manifest_path);
         }
 
-        // artifacts
         if let Some(artifacts) = artifacts {
             if artifacts.source_tarball.is_some() {
                 Self::merge_warn("artifacts.source-tarball", package_manifest_path);
