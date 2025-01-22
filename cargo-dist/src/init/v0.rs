@@ -1,3 +1,4 @@
+use super::{theme, InitArgs};
 use axoasset::toml_edit;
 use axoproject::{WorkspaceGraph, WorkspaceKind};
 use camino::Utf8PathBuf;
@@ -17,19 +18,6 @@ use crate::{
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
 
-/// Arguments for `dist init` ([`do_init`][])
-#[derive(Debug)]
-pub struct InitArgs {
-    /// Whether to auto-accept the default values for interactive prompts
-    pub yes: bool,
-    /// Don't automatically generate ci
-    pub no_generate: bool,
-    /// A path to a json file containing values to set in workspace.metadata.dist
-    pub with_json_config: Option<Utf8PathBuf>,
-    /// Hosts to enable
-    pub host: Vec<HostingStyle>,
-}
-
 /// Input for --with-json-config
 ///
 /// Contains a DistMetadata for the workspace.metadata.dist and
@@ -42,15 +30,6 @@ struct MultiDistMetadata {
     /// package_name => `[package.metadata.dist]`
     #[serde(default)]
     packages: SortedMap<String, DistMetadata>,
-}
-
-fn theme() -> dialoguer::theme::ColorfulTheme {
-    dialoguer::theme::ColorfulTheme {
-        checked_item_prefix: console::style("  [x]".to_string()).for_stderr().green(),
-        unchecked_item_prefix: console::style("  [ ]".to_string()).for_stderr().dim(),
-        active_item_style: console::Style::new().for_stderr().cyan().bold(),
-        ..dialoguer::theme::ColorfulTheme::default()
-    }
 }
 
 /// Run 'dist init'
