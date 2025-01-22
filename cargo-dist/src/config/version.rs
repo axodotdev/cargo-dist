@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::DistResult;
 
 /// Represents all known configuration versions.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum ConfigVersion {
     /// The original legacy configuration formats are all lumped in as V0.
@@ -68,4 +68,14 @@ pub fn get_version_for_manifest(dist_manifest_path: Utf8PathBuf) -> DistResult<C
     let version = config.dist.config_version;
 
     Ok(version)
+}
+
+/// Returns true if the project is using a v1 config _or_ if the `DIST_V1`
+/// environment variable is set to any value except `false`.
+pub fn want_v1() -> DistResult<bool> {
+    let want_v1 = std::env::var("DIST_V1")
+        .map(|s| s != "false")
+        .unwrap_or(false);
+
+    Ok(want_v1 || (get_version()? == ConfigVersion::V1))
 }
