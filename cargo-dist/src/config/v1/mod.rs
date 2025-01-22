@@ -112,6 +112,7 @@ pub mod hosts;
 pub mod installers;
 pub mod publishers;
 
+use axoproject::generic::{Package, Workspace};
 use axoproject::{PackageIdx, WorkspaceGraph};
 use semver::Version;
 use v0::CargoDistUrlOverride;
@@ -127,6 +128,17 @@ use installers::*;
 use publishers::*;
 
 use tracing::log::warn;
+
+/// A representation of an entire dist(-workspace).toml.
+#[derive(Default, Deserialize, Serialize)]
+pub struct DistConfig {
+    /// the `[workspace]` table.
+    pub workspace: Option<Workspace>,
+    /// the `[package]` table.
+    pub package: Option<Package>,
+    /// the `[dist]` table.
+    pub dist: Option<TomlLayer>,
+}
 
 /// Compute the workspace-level config
 pub fn workspace_config(
@@ -378,7 +390,7 @@ impl ApplyLayer for AppConfigInheritable {
 }
 
 /// The "raw" input from a toml file containing config
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct TomlLayer {
     /// The intended version of dist to build with. (normal Cargo SemVer syntax)
