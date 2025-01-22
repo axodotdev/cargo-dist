@@ -74,6 +74,10 @@ pub enum DistError {
     #[error(transparent)]
     TripleError(#[from] dist_schema::target_lexicon::ParseError),
 
+    /// error when using axoasset::toml::to_string() or similar
+    #[error(transparent)]
+    AxoassetTomlSerErr(#[from] axoasset::toml::ser::Error),
+
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
     #[diagnostic(
@@ -626,6 +630,15 @@ pub enum DistError {
         /// Version the project uses
         your_version: semver::Version,
     },
+
+    /// Project is using a v0 config
+    #[error("Your project is using an old configuration format. Please run `dist init` to migrate to the new format.")]
+    //#[diagnostic(help("???? probably provide a link ???")]
+    OldConfigFormat {},
+
+    /// No dist manifest
+    #[error("No configuration file (e.g. dist-workspace.toml) was found")]
+    NoConfigFile {},
 }
 
 impl From<minijinja::Error> for DistError {
