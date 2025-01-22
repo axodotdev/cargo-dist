@@ -76,14 +76,6 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         std::process::exit(exitstatus);
     });
 
-    let workspaces = config::get_project()?;
-    let root_workspace = workspaces.root_workspace();
-    let check = console::style("✔".to_string()).for_stderr().green();
-
-    // Load in the root workspace toml to edit and write back
-    let workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
-    let initted = migrate::has_metadata_table(root_workspace);
-
     if migrate::needs_migration()? && !args.yes {
         let prompt = r#"Would you like to opt in to the new configuration format?
     Future versions of dist will feature major changes to the configuration format."#;
@@ -101,6 +93,10 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     eprintln!("let's setup your dist config...");
     eprintln!();
 
+    let check = console::style("✔".to_string()).for_stderr().green();
+
+    let workspaces = config::get_project()?;
+
     // For each [workspace] Cargo.toml in the workspaces, initialize [profile]
     let mut did_add_profile = false;
     for workspace_idx in workspaces.all_workspace_indices() {
@@ -115,20 +111,6 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     if did_add_profile {
         eprintln!("{check} added [profile.dist] to your workspace Cargo.toml");
     }
-
-    // FIXME(duckinator): This Cargo.toml stuff is probably redundant with do_migrate_from_rust_workspace().
-    //
-    // If this is a Cargo.toml, offer to either write their config to
-    // a dist-workspace.toml, or migrate existing config there
-    let mut newly_initted_generic = false;
-    // Users who haven't initted yet should be opted into the
-    // new config format by default.
-    let desired_workspace_kind = if root_workspace.kind == WorkspaceKind::Rust && !initted {
-        newly_initted_generic = true;
-        WorkspaceKind::Generic
-    } else {
-        root_workspace.kind
-    };
 
     let multi_meta = if let Some(json_path) = &args.with_json_config {
         // json update path, read from a file and apply all requested updates verbatim
@@ -148,38 +130,26 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     // ctrl-c handler.
     ctrlc_handler.abort();
 
-    // If we're migrating, the configuration will be missing the
-    // generic workspace specification, and will have some
-    // extraneous cargo-specific stuff that we don't want.
-    let mut workspace_toml = if newly_initted_generic {
-        migrate::new_cargo_workspace()
-    } else {
-        workspace_toml
-    };
+    let root_workspace = workspaces.root_workspace();
+
+    // Load in the root workspace toml to edit and write back
+    let mut workspace_toml = config::load_toml(&root_workspace.manifest_path)?;
 
     if let Some(meta) = &multi_meta.workspace {
-        apply_dist_to_workspace_toml(&mut workspace_toml, desired_workspace_kind, meta);
+        apply_dist_to_workspace_toml(&mut workspace_toml, root_workspace.kind, meta);
     }
 
     eprintln!();
 
-    let filename;
-    let destination;
-    if newly_initted_generic {
-        // Migrations and newly-initted setups always use dist-workspace.toml.
-        filename = "dist-workspace.toml";
-        destination = root_workspace.workspace_dir.join(filename);
-    } else {
-        filename = root_workspace
-            .manifest_path
-            .file_name()
-            .expect("no filename!?");
-        destination = root_workspace.manifest_path.to_owned();
-    };
+    let filename = root_workspace
+        .manifest_path
+        .file_name()
+        .unwrap_or("dist-workspace.toml");
+    let destination = root_workspace.manifest_path.to_owned();
 
     // Save the workspace toml (potentially an effective no-op if we made no edits)
     config::write_toml(&destination, workspace_toml)?;
-    let key = if desired_workspace_kind == WorkspaceKind::Rust {
+    let key = if root_workspace.kind == WorkspaceKind::Rust {
         "[workspace.metadata.dist]"
     } else {
         "[dist]"
