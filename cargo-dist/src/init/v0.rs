@@ -1,4 +1,5 @@
-use super::{theme, InitArgs};
+use super::console_helpers::theme;
+use super::{console_helpers, InitArgs};
 use axoasset::toml_edit;
 use axoproject::{WorkspaceGraph, WorkspaceKind};
 use camino::Utf8PathBuf;
@@ -53,7 +54,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     eprintln!("let's setup your dist config...");
     eprintln!();
 
-    let check = console::style("✔".to_string()).for_stderr().green();
+    let check = console_helpers::checkmark();
 
     let workspaces = config::get_project()?;
 
@@ -305,8 +306,8 @@ fn get_new_dist_metadata(
     // Tune the theming a bit
     let theme = theme();
     // Some indicators we'll use in a few places
-    let check = console::style("✔".to_string()).for_stderr().green();
-    let notice = console::style("⚠️".to_string()).for_stderr().yellow();
+    let check = console_helpers::checkmark();
+    let notice = console_helpers::notice();
 
     if !args.host.is_empty() {
         meta.hosting = Some(args.host.clone());

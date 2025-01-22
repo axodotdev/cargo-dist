@@ -1,3 +1,11 @@
+pub(crate) fn checkmark() -> console::StyledObject<String> {
+    console::style("✔".to_string()).for_stderr().green()
+}
+
+pub(crate) fn notice() -> console::StyledObject<String> {
+    console::style("⚠️".to_string()).for_stderr().yellow()
+}
+
 pub(crate) fn ctrlc_handler() -> tokio::task::JoinHandle<()> {
     // on ctrl-c,  dialoguer/console will clean up the rest of its
     // formatting, but the cursor will remain hidden unless we
