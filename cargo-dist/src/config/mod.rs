@@ -18,7 +18,7 @@ use crate::{
     METADATA_DIST,
 };
 
-mod version;
+pub mod version;
 pub use version::{get_version, ConfigVersion};
 
 pub mod v0;
@@ -26,6 +26,9 @@ pub mod v0_to_v1;
 pub mod v1;
 
 pub(crate) use v0::{parse_metadata_table_or_manifest, reject_metadata_table, DistMetadata};
+
+mod loader;
+pub use loader::*;
 
 /// values of the form `permission-name: read`
 pub type GithubPermissionMap = SortedMap<String, GithubPermission>;
