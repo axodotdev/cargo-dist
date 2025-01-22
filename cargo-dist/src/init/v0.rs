@@ -2,15 +2,14 @@ use super::console_helpers::theme;
 use super::{console_helpers, InitArgs};
 use axoasset::toml_edit;
 use axoproject::{WorkspaceGraph, WorkspaceKind};
-use camino::Utf8PathBuf;
 use dist_schema::TripleNameRef;
 use semver::Version;
 use serde::Deserialize;
 
 use crate::{
     config::{
-        self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
-        MacPkgConfig, PublishStyle,
+        self, CiStyle, Config, DistMetadata, InstallPathStrategy, InstallerStyle, MacPkgConfig,
+        PublishStyle,
     },
     do_generate,
     errors::{DistError, DistResult},

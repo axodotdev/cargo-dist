@@ -1,7 +1,7 @@
 use crate::config::HostingStyle;
 use camino::Utf8PathBuf;
 
-/// Arguments for `dist init` ([`do_init`][])
+/// Arguments for `dist init` ([`do_init`][crate::init::do_init])
 #[derive(Debug)]
 pub struct InitArgs {
     /// Whether to auto-accept the default values for interactive prompts
