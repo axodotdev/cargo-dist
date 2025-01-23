@@ -1,14 +1,15 @@
+use super::console_helpers::theme;
+use super::{console_helpers, InitArgs};
 use axoasset::toml_edit;
 use axoproject::{WorkspaceGraph, WorkspaceKind};
-use camino::Utf8PathBuf;
 use dist_schema::TripleNameRef;
 use semver::Version;
 use serde::Deserialize;
 
 use crate::{
     config::{
-        self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
-        MacPkgConfig, PublishStyle,
+        self, CiStyle, Config, DistMetadata, InstallPathStrategy, InstallerStyle, MacPkgConfig,
+        PublishStyle,
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -16,19 +17,6 @@ use crate::{
     platform::{triple_to_display_name, MinGlibcVersion},
     GenerateArgs, SortedMap, METADATA_DIST, PROFILE_DIST,
 };
-
-/// Arguments for `dist init` ([`do_init`][])
-#[derive(Debug)]
-pub struct InitArgs {
-    /// Whether to auto-accept the default values for interactive prompts
-    pub yes: bool,
-    /// Don't automatically generate ci
-    pub no_generate: bool,
-    /// A path to a json file containing values to set in workspace.metadata.dist
-    pub with_json_config: Option<Utf8PathBuf>,
-    /// Hosts to enable
-    pub host: Vec<HostingStyle>,
-}
 
 /// Input for --with-json-config
 ///
@@ -44,37 +32,9 @@ struct MultiDistMetadata {
     packages: SortedMap<String, DistMetadata>,
 }
 
-fn theme() -> dialoguer::theme::ColorfulTheme {
-    dialoguer::theme::ColorfulTheme {
-        checked_item_prefix: console::style("  [x]".to_string()).for_stderr().green(),
-        unchecked_item_prefix: console::style("  [ ]".to_string()).for_stderr().dim(),
-        active_item_style: console::Style::new().for_stderr().cyan().bold(),
-        ..dialoguer::theme::ColorfulTheme::default()
-    }
-}
-
 /// Run 'dist init'
 pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
-    // on ctrl-c,  dialoguer/console will clean up the rest of its
-    // formatting, but the cursor will remain hidden unless we
-    // explicitly go in and show it again
-    // See: https://github.com/console-rs/dialoguer/issues/294
-    let ctrlc_handler = tokio::spawn(async move {
-        tokio::signal::ctrl_c().await.unwrap();
-
-        let term = console::Term::stdout();
-        // Ignore the error here if there is any, this is best effort
-        let _ = term.show_cursor();
-
-        // Immediately re-exit the process with the same
-        // exit code the unhandled ctrl-c would have used
-        let exitstatus = if cfg!(windows) {
-            0xc000013a_u32 as i32
-        } else {
-            130
-        };
-        std::process::exit(exitstatus);
-    });
+    let ctrlc_handler = console_helpers::ctrlc_handler();
 
     if migrate::needs_migration()? && !args.yes {
         let prompt = r#"Would you like to opt in to the new configuration format?
@@ -93,7 +53,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
     eprintln!("let's setup your dist config...");
     eprintln!();
 
-    let check = console::style("✔".to_string()).for_stderr().green();
+    let check = console_helpers::checkmark();
 
     let workspaces = config::get_project()?;
 
@@ -126,8 +86,7 @@ pub fn do_init(cfg: &Config, args: &InitArgs) -> DistResult<()> {
         }
     };
 
-    // We're past the final dialoguer call; we can remove the
-    // ctrl-c handler.
+    // We're past the final dialoguer call; we can remove the ctrl-c handler.
     ctrlc_handler.abort();
 
     let root_workspace = workspaces.root_workspace();
@@ -346,8 +305,8 @@ fn get_new_dist_metadata(
     // Tune the theming a bit
     let theme = theme();
     // Some indicators we'll use in a few places
-    let check = console::style("✔".to_string()).for_stderr().green();
-    let notice = console::style("⚠️".to_string()).for_stderr().yellow();
+    let check = console_helpers::checkmark();
+    let notice = console_helpers::notice();
 
     if !args.host.is_empty() {
         meta.hosting = Some(args.host.clone());
