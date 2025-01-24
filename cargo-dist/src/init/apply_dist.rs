@@ -1,24 +1,19 @@
-use crate::{
-    config::{
-        v1::{
-            artifacts::archives::ArchiveLayer,
-            artifacts::ArtifactLayer,
-            builds::BuildLayer,
-            ci::CiLayer,
-            hosts::HostLayer,
-            installers::{
-                homebrew::HomebrewInstallerLayer, msi::MsiInstallerLayer, npm::NpmInstallerLayer,
-                pkg::PkgInstallerLayer, powershell::PowershellInstallerLayer,
-                shell::ShellInstallerLayer, CommonInstallerLayer, InstallerLayer,
-            },
-            layer::BoolOr,
-            publishers::PublisherLayer,
-            TomlLayer,
-        },
-        InstallPathStrategy, SystemDependencies,
-    },
-    platform::MinGlibcVersion,
-    METADATA_DIST,
+use crate::{platform::MinGlibcVersion, METADATA_DIST};
+use crate::config::{InstallPathStrategy, SystemDependencies};
+use crate::config::v1::{
+    artifacts::archives::ArchiveLayer,
+    artifacts::ArtifactLayer,
+    builds::BuildLayer,
+    ci::CiLayer,
+    hosts::HostLayer,
+    layer::BoolOr,
+    publishers::PublisherLayer,
+    TomlLayer,
+};
+use crate::config::v1::installers::{
+    homebrew::HomebrewInstallerLayer, msi::MsiInstallerLayer, npm::NpmInstallerLayer,
+    pkg::PkgInstallerLayer, powershell::PowershellInstallerLayer,
+    shell::ShellInstallerLayer, CommonInstallerLayer, InstallerLayer,
 };
 use axoasset::toml_edit;
 
