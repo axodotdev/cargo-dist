@@ -4,6 +4,9 @@ use tracing::debug;
 
 use crate::{config, errors::DistResult, METADATA_DIST};
 
+mod from_v0;
+use from_v0::do_migrate_from_v0;
+
 pub fn needs_migration() -> DistResult<bool> {
     let workspaces = config::get_project()?;
     let root_workspace = workspaces.root_workspace();
@@ -173,7 +176,9 @@ pub fn do_migrate() -> DistResult<()> {
     do_migrate_from_rust_workspace()?;
     do_migrate_from_dist_toml()?;
     debug!("dist.config-version = {}", config::get_version()?);
-    //do_migrate_from_v0()?;
+    if config::want_v1()? {
+        do_migrate_from_v0()?;
+    }
     Ok(())
 }
 
