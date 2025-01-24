@@ -394,7 +394,7 @@ pub struct TomlLayer {
 
     /// The configuration file version.
     #[serde(default)]
-    pub config_version: crate::config::version::ConfigVersion,
+    pub config_version: crate::config::ConfigVersion,
 
     /// see [`CargoDistUrlOverride`]
     #[serde(skip_serializing_if = "Option::is_none")]

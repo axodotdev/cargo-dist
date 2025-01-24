@@ -176,7 +176,7 @@ pub fn do_migrate() -> DistResult<()> {
     do_migrate_from_rust_workspace()?;
     do_migrate_from_dist_toml()?;
     debug!("dist.config-version = {}", config::get_version()?);
-    if config::version::want_v1()? {
+    if config::want_v1()? {
         do_migrate_from_v0()?;
     }
     Ok(())
