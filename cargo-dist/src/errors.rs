@@ -629,6 +629,9 @@ pub enum DistError {
 
     /// No dist manifest
     #[error("No configuration file (e.g. dist-workspace.toml) was found")]
+    #[diagnostic(help(
+        "Did you run 'dist init'? If you did, this is probably a bug; please file an issue!"
+    ))]
     NoConfigFile {},
 }
 
