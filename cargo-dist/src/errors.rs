@@ -626,6 +626,13 @@ pub enum DistError {
         /// Version the project uses
         your_version: semver::Version,
     },
+
+    /// No dist manifest
+    #[error("No configuration file (e.g. dist-workspace.toml) was found")]
+    #[diagnostic(help(
+        "Did you run 'dist init'? If you did, this is probably a bug; please file an issue!"
+    ))]
+    NoConfigFile {},
 }
 
 impl From<minijinja::Error> for DistError {
