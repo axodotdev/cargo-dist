@@ -8,7 +8,6 @@ use crate::DistResult;
 
 /// Represents all known configuration versions.
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(untagged)]
 pub enum ConfigVersion {
     /// The original legacy configuration formats are all lumped in as V0.
     #[serde(rename = "0")]
