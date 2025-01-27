@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.26.0-prerelease.1</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release pre-release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.26.0-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Nov 15 2024 at 00:25 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.</p>
+<h2>Builtin Rust cross-compilation support</h2>
+<p>You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using <a href="https://github.com/rust-cross/cargo-zigbuild" rel="noopener noreferrer">cargo-zigbuild</a> and Windows (using <a href="https://github.com/rust-cross/cargo-xwin" rel="noopener noreferrer">cargo-xwin</a>. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#cross-compilation" rel="noopener noreferrer">the docs</a>.</p>
+<p>We're also making use of this feature ourselves: we now build our aarch64 Linux binaries using this new tooling.</p>
+<p>(Note: for technical reasons, cargo-zigbuild cross-compiles and cargo-auditable are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @fasterthanlime, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1529" rel="noopener noreferrer">Add cross-compilation support via cargo-zigbuild and cargo-xwin</a></li>
+</ul>
+<h2>Checksum verifications in shell installers</h2>
+<p>While we've always generated checksum information for binary tarballs/ZIPs, we only actually validated those checksums in the Homebrew installer. That changes with this release: we now embed checksum information into the shell installer and validate the tarball before unpacking it.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1497" rel="noopener noreferrer">Verify checksums in install.sh</a></li>
+</ul>
+<h2>cargo-auditable support</h2>
+<p>We've added integrated support for the Rust Secure Code Working Group's <a href="https://github.com/rust-secure-code/cargo-auditable" rel="noopener noreferrer">cargo-auditable</a>, which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#cargo-auditable" rel="noopener noreferrer">our docs</a> and the <a href="https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md" rel="noopener noreferrer">docs for the cargo-audit tool</a>.</p>
+<p>(Note: for technical reasons, this feature and cargo-zigbuild cross-compiles are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1528" rel="noopener noreferrer">Add cargo-auditable config option</a></li>
+</ul>
+<h2>cargo-cyclonedx support</h2>
+<p>We've also added support for generating <a href="https://cyclonedx.org" rel="noopener noreferrer">CyloneDX Software Bill of Materials (SBOM)</a> files for Rust projects. We've implemented this using the <a href="https://github.com/CycloneDX/cyclonedx-rust-cargo/blob/main/cargo-cyclonedx/README.md" rel="noopener noreferrer">cargo-cyclonedx</a> tool. Unlike the cargo-auditable support above, which embeds dependency information directly into your binaries, this data is stored as a standalone <code>bom.xml</code> file which is distributed with your software. Users can then validate that SBOM file using <a href="https://cyclonedx.org/tool-center/" rel="noopener noreferrer">any compatible CycloneDX tool</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1531" rel="noopener noreferrer">Add cargo-cyclonedx config option.</a></li>
+</ul>
+<h2>OmniBOR support</h2>
+<p>Rounding out this release's new security features, we've added support for <a href="https://omnibor.io" rel="noopener noreferrer">generating OmniBOR artifact IDs</a>. We implement this using the <a href="https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli" rel="noopener noreferrer">omnibor-cli</a> tool. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#omnibor" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1568" rel="noopener noreferrer">Add option to generate omnibor artifact IDs.</a></li>
+</ul>
+<h2>Strict error catching in template rendering</h2>
+<p>We've tightened up error handling for undefined values in templates when we create things such as installer scripts and the GitHub Actions YAML config. Any errors that occur here are dist's fault, not users' fault, and stricter error handling ensures we get the information we need to fix dist bugs and make this code more reliable. This was made possible thanks to a contribution by @fasterthanlime to the minijinja project, ensuring that we get actionable messages for these kinds of errors.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1499" rel="noopener noreferrer">Enable jinja "strict undefined behavior", fix templates, improve reporting</a></li>
+</ul>
+<h2>Per-target glibc version overrides</h2>
+<p>Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#min-glibc-version" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1537" rel="noopener noreferrer">Allow per-target glibc version overrides.</a></li>
+</ul>
+<h2>Tag-parsing and library-only mode improvements</h2>
+<p>We've tightened up the tag parsing code, ensuring that a few edge cases are handled more predictably. The <code>dist plan</code> output is now clearer in workspaces with multiple versions, with better instruction text on how to resolve unclear situations. We've also made a small change to <code>dist = false</code> handling, which means that we now refuse to run if a release tag only matches a crate with <code>dist = false</code> instead of going ahead with single library mode.</p>
+<ul>
+<li>impl
+<ul>
+<li>@duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1551" rel="noopener noreferrer">Avoid discarding tag information, so "dist plan --tag={name}-{version}" works.</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1441" rel="noopener noreferrer">Disable single-library mode for dist=false</a></li>
+<li>@alilleybrinker <a href="https://github.com/axodotdev/cargo-dist/pull/1579" rel="noopener noreferrer">Permit tag incoherence for dist plan</a></li>
+</ul>
+</li>
+</ul>
+<h2>Improved pc-windows-gnu support</h2>
+<p>Although we've previously supported <code>pc-windows-gnu</code> builds for Rust software, we had a few notable gotchas: we wouldn't install <code>choco</code> dependencies, and PowerShell installers couldn't install them. We've fixed both of these issues this release, ensuring these targets are a bit closer to <code>pc-windows-msvc</code> in support.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1586" rel="noopener noreferrer">feat: add pc-windows-gnu to powershell installers</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1566" rel="noopener noreferrer">Explicitly set manifest path when building MSI with WiX</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>
