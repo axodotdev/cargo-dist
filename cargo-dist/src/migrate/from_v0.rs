@@ -40,6 +40,8 @@ pub fn do_migrate_from_v0() -> DistResult<()> {
         return Ok(());
     }
 
+    eprintln!("migrating dist config from V0 to V1 format...");
+
     // Load in the root workspace toml to edit and write back
     let Ok(old_config) = config::v0::load(manifest_path) else {
         // We don't have a valid v0 _or_ v1 config. No migration can be done.
