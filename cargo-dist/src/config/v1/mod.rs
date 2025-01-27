@@ -464,6 +464,22 @@ pub struct TomlLayer {
 }
 
 impl TomlLayer {
+    /// Update `config_version` to the current default.
+    pub fn with_current_config_version(&self) -> Self {
+        let mut new = self.clone();
+        new.config_version = crate::config::ConfigVersion::default();
+        new
+    }
+
+    /// Update `dist_version` to the current dist version.
+    pub fn with_current_dist_version(&self) -> Self {
+        let current_version: semver::Version = std::env!("CARGO_PKG_VERSION").parse()
+            .expect("CARGO_PKG_VERSION was not set -- this is probably a bug in dist; please file an issue!");
+        let mut new = self.clone();
+        new.dist_version = Some(current_version);
+        new
+    }
+
     /// Take any configs that contain paths that are *relative to the file they came from*
     /// and make them relative to the given basepath.
     ///
