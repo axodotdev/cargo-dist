@@ -17,23 +17,11 @@ fn migrate_from_v0_dist_config(old_config: V0DistConfig) -> DistConfig {
         package,
     } = old_config;
 
-
-    let current_dist_version: semver::Version = std::env!("CARGO_PKG_VERSION").parse().unwrap();
-    let version_one = semver::Version::new(1, 0, 0);
-
-    let dist = dist
-        // Take Some(v0::DistMetadata) and turn it into Some(v1::TomlLayer).
-        .map(|dist| dist.to_toml_layer(true))
-        .map(|mut dist| {
-            // If dist_version is pinned to <1.0.0, set it to the current version
-            if dist.dist_version < Some(version_one) {
-                dist.dist_version = Some(current_dist_version);
-            }
-
-            // Change config_version from V0 to V1, since we're migrating to it.
-            dist.config_version = config::ConfigVersion::V1;
-            dist
-        });
+    let dist = dist.map(|dist| {
+        dist.to_toml_layer(true)
+            .with_current_config_version()
+            .with_current_dist_version()
+    });
 
     config::v1::DistConfig {
         dist,
