@@ -361,7 +361,7 @@ fn apply_artifacts(table: &mut toml_edit::Table, artifacts: &Option<ArtifactLaye
 
     apply_optional_value(
         artifacts_table,
-        "checksum-style",
+        "checksum",
         "# The checksum format to generate\n",
         artifacts.checksum.map(|cs| cs.to_string()),
     );
