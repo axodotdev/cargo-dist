@@ -509,13 +509,65 @@ fn apply_ci(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
         panic!("Expected [dist.ci] to be a table");
     };
 
-
     apply_ci_common(ci_table, &ci.common);
+
+    if let Some(github) = &ci.github {
+        match github {
+            BoolOr::Bool(b) => {
+                apply_optional_value(
+                    installers_table,
+                    "github",
+                    "# Whether to use GitHub CI\n",
+                    Some(*b),
+                );
+            }
+            BoolOr::Val(v) => {
+                apply_ci_github(installers_table, v);
+            }
+        }
+    }
 
     // Finalize the table
     ci_table
         .decor_mut()
         .set_prefix("\n# CI configuration for dist\n");
+}
+
+fn apply_ci_github(ci_table: &mut toml_edit::Table, github: &GithubCiLayer) {
+    let Some(gh_table) = ci_table.get_mut("github") else {
+        return;
+    };
+    let toml_edit::Item::Table(gh_table) = gh_table else {
+        panic!("Expected [dist.ci.github] to be a table");
+    };
+
+    apply_installers_common(gh_table, &github.common);
+
+    apply_optional_value(
+        gh_table,
+        "runners",
+        "# Custom GitHub runners, specified as target triples\n",
+        github.runners,
+    );
+
+    apply_optional_value(
+        gh_table,
+        "permissions",
+        "# Custom permissions for jobs\n",
+        github.permissions,
+    );
+
+    apply_optional_value(
+        gh_table,
+        "build-setup",
+        "# Custom permissions for jobs\n",
+        github.build_setup,
+    );
+
+    // Finalize the table
+    gh_table
+        .decor_mut()
+        .set_prefix("\n# Configure GitHub CI\n");
 }
 
 
