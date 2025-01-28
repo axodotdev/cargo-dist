@@ -110,56 +110,6 @@ pub fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) 
     // TODO(migration): make sure all of these are handled
     /*
 
-
-    apply_optional_value(
-        table,
-        "checksum",
-        "# Checksums to generate for each App\n",
-        checksum.map(|c| c.ext().as_str()),
-    );
-
-    apply_optional_value(
-        table,
-        "merge-tasks",
-        "# Whether to run otherwise-parallelizable tasks on the same machine\n",
-        *merge_tasks,
-    );
-
-    apply_optional_value(
-        table,
-        "fail-fast",
-        "# Whether failing tasks should make us give up on all other tasks\n",
-        *fail_fast,
-    );
-
-    apply_optional_value(
-        table,
-        "cache-builds",
-        "# Whether builds should try to be cached in CI\n",
-        *cache_builds,
-    );
-
-    apply_optional_value(
-        table,
-        "build-local-artifacts",
-        "# Whether CI should include auto-generated code to build local artifacts\n",
-        *build_local_artifacts,
-    );
-
-    apply_optional_value(
-        table,
-        "dispatch-releases",
-        "# Whether CI should trigger releases with dispatches instead of tag pushes\n",
-        *dispatch_releases,
-    );
-
-    apply_optional_value(
-        table,
-        "release-branch",
-        "# Trigger releases on pushes to this branch instead of tag pushes\n",
-        release_branch.as_ref(),
-    );
-
     apply_optional_value(
         table,
         "create-release",
@@ -188,13 +138,6 @@ pub fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) 
         github_releases_submodule_path
             .as_ref()
             .map(|a| a.to_string()),
-    );
-
-    apply_string_list(
-        table,
-        "plan-jobs",
-        "# Plan jobs to run in CI\n",
-        plan_jobs.as_ref(),
     );
 
     apply_string_list(
@@ -248,13 +191,6 @@ pub fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) 
 
     apply_optional_value(
         table,
-        "pr-run-mode",
-        "# Which actions to run on pull requests\n",
-        pr_run_mode.as_ref().map(|m| m.to_string()),
-    );
-
-    apply_optional_value(
-        table,
         "github-attestations",
         "# Whether to enable GitHub Attestations\n",
         *github_attestations,
@@ -265,13 +201,6 @@ pub fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &TomlLayer) 
         "hosting",
         "# Where to host releases\n",
         hosting.as_ref(),
-    );
-
-    apply_optional_value(
-        table,
-        "tag-namespace",
-        "# A prefix git tags must include for dist to care about them\n",
-        tag_namespace.as_ref(),
     );
 
     apply_optional_value(
@@ -580,12 +509,114 @@ fn apply_ci(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
         panic!("Expected [dist.ci] to be a table");
     };
 
-    // TODO(migration): implement this
+
+    apply_ci_common(ci_table, &ci.common);
 
     // Finalize the table
     ci_table
         .decor_mut()
         .set_prefix("\n# CI configuration for dist\n");
+}
+
+
+fn apply_ci_common(table: &mut toml_edit::Table, common: &CommonCiLayer) {
+    apply_optional_value(
+        table,
+        "merge-tasks",
+        "# Whether to run otherwise-parallelizable tasks on the same machine\n",
+        common.merge_tasks,
+    );
+
+    apply_optional_value(
+        table,
+        "fail-fast",
+        "# Whether failing tasks should make us give up on all other tasks\n",
+        common.fail_fast,
+    );
+
+    apply_optional_value(
+        table,
+        "cache-builds",
+        "# Whether builds should try to be cached in CI\n",
+        common.cache_builds,
+    );
+
+    apply_optional_value(
+        table,
+        "build-local-artifacts",
+        "# Whether CI should include auto-generated code to build local artifacts\n",
+        common.build_local_artifacts,
+    );
+
+    apply_optional_value(
+        table,
+        "dispatch-releases",
+        "# Whether CI should trigger releases with dispatches instead of tag pushes\n",
+        common.dispatch_releases,
+    );
+
+    apply_optional_value(
+        table,
+        "release-branch",
+        "# Trigger releases on pushes to this branch instead of tag pushes\n",
+        common.release_branch.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "pr-run-mode",
+        "# Which actions to run on pull requests\n",
+        common.pr_run_mode.as_ref().map(|m| m.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "tag-namespace",
+        "# A prefix git tags must include for dist to care about them\n",
+        common.tag_namespace.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "plan-jobs",
+        "# Additional plan jobs to run in CI\n",
+        common.plan_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "build-local-jobs",
+        "# Additional local artifacts jobs to run in CI\n",
+        common.build_local_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "build-global-jobs",
+        "# Additional global artifacts jobs to run in CI\n",
+        common.build_global_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "host-jobs",
+        "# Additional hosts jobs to run in CI\n",
+        common.host_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "publish-jobs",
+        "# Additional publish jobs to run in CI\n",
+        common.publish_jobs.as_ref(),
+    );
+
+    apply_string_list(
+        table,
+        "post-announce-jobs",
+        "# Additional jobs to run in CI, after the announce job finishes\n",
+        common.post_announce_jobs.as_ref(),
+    );
 }
 
 fn apply_hosts(table: &mut toml_edit::Table, hosts: &Option<HostLayer>) {
