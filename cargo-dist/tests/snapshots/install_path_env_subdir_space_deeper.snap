@@ -688,9 +688,11 @@ install() {
 check_for_shadowed_bins() {
     local _install_dir="$1"
     local _bins="$2"
+    local _shadow
 
     for _bin_name in $_bins; do
-        if [ "$(command -v "$_bin_name")" != "$_install_dir/$_bin_name" ]; then
+        _shadow="$(command -v "$_bin_name")"
+        if [ -n "$_shadow" ] && [ "$_shadow" != "$_install_dir/$_bin_name" ]; then
             _shadowed_bins="$_shadowed_bins $_bin_name"
         fi
     done
