@@ -253,7 +253,10 @@ fn apply_installers_powershell(
 
     apply_installers_common(powershell_table, &powershell.common);
 
-    // TODO(migration): implement this (similar to shell)
+    // Finalize the table
+    installers_table
+        .decor_mut()
+        .set_prefix("\n# Configuration for the Windows PowerShell installer\n");
 }
 
 fn apply_installers_shell(installers_table: &mut toml_edit::Table, shell: &ShellInstallerLayer) {
@@ -266,7 +269,10 @@ fn apply_installers_shell(installers_table: &mut toml_edit::Table, shell: &Shell
 
     apply_installers_common(shell_table, &shell.common);
 
-    // TODO(migration): implement this
+    // Finalize the table
+    installers_table
+        .decor_mut()
+        .set_prefix("\n# Configuration for the *nix shell installer\n");
 }
 
 fn apply_installers_pkg(installers_table: &mut toml_edit::Table, pkg: &PkgInstallerLayer) {
