@@ -31,7 +31,7 @@ In an ideal world most of these caveats improve (except for maybe the requiremen
 
 Here is a more fleshed out description of how the powershell installer attempts to add the [install-path][config-install-path] to the user's PATH, and the limitations of that process.
 
-The most fundamental limitation is that installers fundamentally cannot edit the PATH of the currently running shell (it's a parent process). Powershell does not have an equivalent of `source`, so to the best of our knowledge restarting the shell is the only option (which if using Windows Terminal seems to mean opening a whole new window, tabs aren't good enough). As such, it benefits an installer to try to install to a directory that will already be on PATH (such as [CARGO_HOME][cargo home]). ([rustup also sends a broadcast WM_SETTINGCHANGE message](https://github.com/rust-lang/rustup/blob/bcfac6278c7c2f16a41294f7533aeee2f7f88d07/src/cli/self_update/windows.rs#L397-L409), but we couldn't find any evidence that this does anything useful.)
+The most fundamental limitation is that installers fundamentally cannot edit the PATH of the currently running shell (it's a parent process). Powershell does not have an equivalent of `source`, so to the best of our knowledge restarting the shell is the only option (which if using Windows Terminal seems to mean opening a whole new window, tabs aren't good enough). As such, it benefits an installer to try to install to a directory that will already be on PATH (such as [CARGO_HOME][cargo home]).
 
 The process we use to add [install-path][config-install-path] to the user's PATH is roughly the same process that rustup uses (hopefully making us harmonious with running rustup before/after one of our installer scripts). In the following description we will use `$install-path` as a placeholder for the path computed at install-time where the binaries get installed. Its actual value will likely look something like `C:\Users\axo\.myapp` or `C:\Users\.cargo\bin`.
 
@@ -39,7 +39,9 @@ The process we use to add [install-path][config-install-path] to the user's PATH
 * we check if `$install-path` is contained within it already
 * if not, we prepend it and write the value back
     * prepending is used to ideally override system-installed binaries, as that is assumed to be desired when explicitly installing with not-your-system-package-manager
+    * the value is written back with a `REG_EXPAND_SZ` data type, which enables PATH expansion
 * if we edited the registry, we prompt the user to restart their shell
+    * we additionally broadcast `WM_SETTINGCHANGE` to running programs to ensure that environment updates are propagated. This ensures you only need to restart your shell, rather than your entire machine, for the "Path" update to be recognized.
 
 
 
