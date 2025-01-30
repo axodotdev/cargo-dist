@@ -25,7 +25,7 @@ pub fn apply(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
                 apply_optional_value(
                     ci_table,
                     "github",
-                    "# Whether to use GitHub CI\n",
+                    "# Whether dist should generate workflows for GitHub CI\n",
                     Some(*b),
                 );
             }
@@ -78,7 +78,7 @@ fn apply_ci_github(ci_table: &mut toml_edit::Table, github: &GithubCiLayer) {
     // Finalize the table
     gh_table
         .decor_mut()
-        .set_prefix("\n# Configure GitHub CI\n");
+        .set_prefix("\n# Configure generated workflows for GitHub CI\n");
 }
 
 fn apply_ci_common(table: &mut toml_edit::Table, common: &CommonCiLayer) {
