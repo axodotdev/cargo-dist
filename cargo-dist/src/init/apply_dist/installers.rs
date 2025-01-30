@@ -1,11 +1,11 @@
-use axoasset::toml_edit;
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
 use super::helpers::*;
+use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
+use axoasset::toml_edit;
 
 use crate::config::v1::installers::{
     homebrew::HomebrewInstallerLayer, msi::MsiInstallerLayer, npm::NpmInstallerLayer,
-    pkg::PkgInstallerLayer, powershell::PowershellInstallerLayer,
-    shell::ShellInstallerLayer, CommonInstallerLayer, InstallerLayer,
+    pkg::PkgInstallerLayer, powershell::PowershellInstallerLayer, shell::ShellInstallerLayer,
+    CommonInstallerLayer, InstallerLayer,
 };
 
 pub fn apply(table: &mut toml_edit::Table, installers: &Option<InstallerLayer>) {

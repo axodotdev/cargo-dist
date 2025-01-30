@@ -1,5 +1,5 @@
-use axoasset::toml_edit;
 use crate::platform::MinGlibcVersion;
+use axoasset::toml_edit;
 
 /// Update the toml table to add/remove this value
 ///

@@ -1,9 +1,8 @@
-use axoasset::toml_edit;
-use crate::config::v1::ci::{CiLayer, CommonCiLayer};
-use crate::config::v1::ci::github::GithubCiLayer;
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
 use super::helpers::*;
-
+use crate::config::v1::ci::github::GithubCiLayer;
+use crate::config::v1::ci::{CiLayer, CommonCiLayer};
+use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
+use axoasset::toml_edit;
 
 pub fn apply(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
     let Some(ci) = ci else {
@@ -81,7 +80,6 @@ fn apply_ci_github(ci_table: &mut toml_edit::Table, github: &GithubCiLayer) {
         .decor_mut()
         .set_prefix("\n# Configure GitHub CI\n");
 }
-
 
 fn apply_ci_common(table: &mut toml_edit::Table, common: &CommonCiLayer) {
     apply_optional_value(

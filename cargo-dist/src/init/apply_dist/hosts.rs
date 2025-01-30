@@ -1,8 +1,7 @@
-use axoasset::toml_edit;
+use super::helpers::*;
 use crate::config::v1::hosts::HostLayer;
 use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
-use super::helpers::*;
-
+use axoasset::toml_edit;
 
 pub fn apply(table: &mut toml_edit::Table, hosts: &Option<HostLayer>) {
     let Some(hosts_table) = table.get_mut("hosts") else {

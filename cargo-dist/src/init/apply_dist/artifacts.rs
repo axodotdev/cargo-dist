@@ -1,8 +1,8 @@
-use axoasset::toml_edit;
-use crate::config::v1::artifacts::ArtifactLayer;
-use crate::config::v1::artifacts::archives::ArchiveLayer;
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
 use super::helpers::*;
+use crate::config::v1::artifacts::archives::ArchiveLayer;
+use crate::config::v1::artifacts::ArtifactLayer;
+use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
+use axoasset::toml_edit;
 
 pub fn apply(table: &mut toml_edit::Table, artifacts: &Option<ArtifactLayer>) {
     let Some(artifacts) = artifacts else {

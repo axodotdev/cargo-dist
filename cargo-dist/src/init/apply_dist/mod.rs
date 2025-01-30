@@ -1,9 +1,9 @@
-use axoasset::toml_edit;
-use crate::METADATA_DIST;
-use crate::config::InstallPathStrategy;
-use crate::config::v1::TomlLayer;
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
 use crate::config::v1::installers::InstallerLayer;
+use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
+use crate::config::v1::TomlLayer;
+use crate::config::InstallPathStrategy;
+use crate::METADATA_DIST;
+use axoasset::toml_edit;
 
 mod artifacts;
 mod builds;
@@ -17,10 +17,7 @@ mod system_dependencies;
 use helpers::*;
 
 /// Update a workspace toml-edit document with the current DistMetadata value
-pub fn apply_dist_to_workspace_toml(
-    workspace_toml: &mut toml_edit::DocumentMut,
-    meta: &TomlLayer,
-) {
+pub fn apply_dist_to_workspace_toml(workspace_toml: &mut toml_edit::DocumentMut, meta: &TomlLayer) {
     let metadata = workspace_toml.as_item_mut();
     apply_dist_to_metadata(metadata, meta);
 }

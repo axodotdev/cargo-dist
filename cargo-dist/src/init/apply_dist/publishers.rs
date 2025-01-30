@@ -1,7 +1,7 @@
-use axoasset::toml_edit;
+use super::helpers::*;
 use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
 use crate::config::v1::publishers::PublisherLayer;
-use super::helpers::*;
+use axoasset::toml_edit;
 
 pub fn apply(table: &mut toml_edit::Table, publishers: &Option<PublisherLayer>) {
     let Some(publishers_table) = table.get_mut("publishers") else {
