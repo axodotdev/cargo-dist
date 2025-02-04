@@ -339,8 +339,12 @@ impl DistMetadata {
             list_to_bool_layer(is_global, &publish_jobs, PublishStyle::Homebrew, || None);
         let npm_publisher_layer =
             list_to_bool_layer(is_global, &publish_jobs, PublishStyle::Npm, || None);
+        let user_layer = list_to_bool_layer_predicate(is_global, &publish_jobs, |job| {
+            matches!(job, PublishStyle::User(_))
+        });
         let needs_publisher_layer = homebrew_publisher_layer.is_some()
             || npm_publisher_layer.is_some()
+            || user_layer.is_some()
             || publish_prereleases.is_some();
         let publisher_layer = needs_publisher_layer.then_some(PublisherLayer {
             common: CommonPublisherLayer {
@@ -348,6 +352,7 @@ impl DistMetadata {
             },
             homebrew: homebrew_publisher_layer,
             npm: npm_publisher_layer,
+            user: user_layer,
         });
 
         // done!
@@ -385,6 +390,28 @@ where
     let list = list.as_ref()?;
     // Otherwise treat "is in the list" as a simple boolean
     let is_in_list = list.contains(&item);
+    if is_global && !is_in_list {
+        // ... with the exception of an omitted value in the global list.
+        // here None and Some(false) are the same, so Some(false) is Noise
+        // we want to hide.
+        None
+    } else {
+        Some(BoolOr::Bool(is_in_list))
+    }
+}
+
+fn list_to_bool_layer_predicate<I, T>(
+    is_global: bool,
+    list: &Option<Vec<I>>,
+    predicate: impl FnMut(&I) -> bool,
+) -> Option<BoolOr<T>>
+where
+    I: Eq,
+{
+    // If the list doesn't exist, don't mention it
+    let list = list.as_ref()?;
+    // Otherwise treat "is in the list" as a simple boolean
+    let is_in_list = list.iter().any(predicate);
     if is_global && !is_in_list {
         // ... with the exception of an omitted value in the global list.
         // here None and Some(false) are the same, so Some(false) is Noise
