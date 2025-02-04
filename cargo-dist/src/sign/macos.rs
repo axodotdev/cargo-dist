@@ -131,10 +131,16 @@ struct CodesignEnv {
     pub identity: String,
     pub password: String,
     pub certificate: Vec<u8>,
+    pub options: Option<String>,
 }
 
 impl CodesignEnv {
-    pub fn from(identity: &str, password: &str, raw_certificate: &str) -> DistResult<Self> {
+    pub fn from(
+        identity: &str,
+        password: &str,
+        raw_certificate: &str,
+        options: Option<&str>,
+    ) -> DistResult<Self> {
         let certificate = base64::prelude::BASE64_STANDARD
             .decode(raw_certificate)
             .map_err(|_| DistError::CertificateDecodeError {})?;
@@ -143,6 +149,7 @@ impl CodesignEnv {
             identity: identity.to_owned(),
             password: password.to_owned(),
             certificate,
+            options: options.map(ToOwned::to_owned),
         })
     }
 }
@@ -163,12 +170,13 @@ impl Codesign {
             return Ok(None);
         }
 
-        if let (Some(identity), Some(password), Some(certificate)) = (
-            Self::var("CODESIGN_IDENTITY"),
-            Self::var("CODESIGN_CERTIFICATE_PASSWORD"),
-            Self::var("CODESIGN_CERTIFICATE"),
+        if let (Some(identity), Some(password), Some(certificate), options) = (
+            Self::var("CODESIGN_IDENTITY", true),
+            Self::var("CODESIGN_CERTIFICATE_PASSWORD", true),
+            Self::var("CODESIGN_CERTIFICATE", true),
+            Self::var("CODESIGN_OPTIONS", false),
         ) {
-            let env = CodesignEnv::from(&identity, &password, &certificate)?;
+            let env = CodesignEnv::from(&identity, &password, &certificate, options.as_deref())?;
 
             Ok(Some(Self { env }))
         } else {
@@ -176,9 +184,9 @@ impl Codesign {
         }
     }
 
-    fn var(var: &str) -> Option<String> {
+    fn var(var: &str, warn: bool) -> Option<String> {
         let val = std::env::var(var).ok();
-        if val.is_none() {
+        if warn && val.is_none() {
             warn!("{var} is missing");
         }
         val
@@ -191,6 +199,9 @@ impl Codesign {
 
         let mut cmd = Cmd::new("/usr/bin/codesign", "sign macOS artifacts");
         cmd.arg("--sign").arg(&self.env.identity);
+        if let Some(options) = &self.env.options {
+            cmd.arg("--options").arg(options);
+        }
         cmd.arg("--keychain").arg(&keychain.path);
         cmd.arg(file);
         cmd.stdout_to_stderr();
