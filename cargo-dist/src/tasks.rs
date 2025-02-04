@@ -1142,10 +1142,15 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .as_ref()
             .map(|p| {
                 // until we have `dist publish` we need to enforce everyone agreeing on `prereleases`
-                let PublisherConfig { homebrew, npm } = p;
+                let PublisherConfig {
+                    homebrew,
+                    npm,
+                    user,
+                } = p;
                 let h_pre = homebrew.as_ref().map(|p| p.prereleases);
                 let npm_pre = npm.as_ref().map(|p| p.prereleases);
-                let choices = [h_pre, npm_pre];
+                let user_pre = user.as_ref().map(|p| p.prereleases);
+                let choices = [h_pre, npm_pre, user_pre];
                 let mut global_choice = None;
                 #[allow(clippy::manual_flatten)]
                 for choice in choices {
