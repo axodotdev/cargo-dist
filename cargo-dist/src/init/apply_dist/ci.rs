@@ -284,25 +284,15 @@ github = true
                 release_branch: Some("main".to_string()),
                 pr_run_mode: Some(dist_schema::PrRunMode::Skip),
                 tag_namespace: Some("some-namespace".to_string()),
-                plan_jobs: Some(vec![
-                    "./plan-job".parse().unwrap(),
-                ]),
+                plan_jobs: Some(vec!["./plan-job".parse().unwrap()]),
                 build_local_jobs: Some(vec![
                     "./build-local-job-1".parse().unwrap(),
                     "./build-local-job-2".parse().unwrap(),
                 ]),
-                build_global_jobs: Some(vec![
-                    "./build-global-job".parse().unwrap(),
-                ]),
-                host_jobs: Some(vec![
-                    "./host-job".parse().unwrap(),
-                ]),
-                publish_jobs: Some(vec![
-                    "./publish-job".parse().unwrap(),
-                ]),
-                post_announce_jobs: Some(vec![
-                    "./post-announce-job".parse().unwrap(),
-                ]),
+                build_global_jobs: Some(vec!["./build-global-job".parse().unwrap()]),
+                host_jobs: Some(vec!["./host-job".parse().unwrap()]),
+                publish_jobs: Some(vec!["./publish-job".parse().unwrap()]),
+                post_announce_jobs: Some(vec!["./post-announce-job".parse().unwrap()]),
             },
             github: Some(BoolOr::Bool(true)),
         });
@@ -344,6 +334,5 @@ build-setup = "build-setup"
 
         let toml_text = doc.to_string();
         assert_eq!(expected, toml_text);
-
     }
 }
