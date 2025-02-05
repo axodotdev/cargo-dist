@@ -1,12 +1,12 @@
 ---
 source: cargo-dist/tests/cli-tests.rs
 expression: format_outputs(&output)
+snapshot_kind: text
 ---
 stdout:
 {"diagnostic": {"message": "This workspace doesn't have anything for dist to Release!","severity": "error","causes": [],"help": "You may need to pass the current version as --tag, or need to give all your packages the same version\n\nHere are some options:\n\n--tag=v1.0.0-FAKEVERSION will Announce: dist\n\nyou can also request any single package with --tag=dist-v1.0.0-FAKEVERSION\n","labels": [],"related": []}}
 
 stderr:
-
   × This workspace doesn't have anything for dist to Release!
   help: You may need to pass the current version as --tag, or need to give all your packages the same version
         
