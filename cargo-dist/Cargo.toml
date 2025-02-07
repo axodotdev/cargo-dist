@@ -78,6 +78,7 @@ schemars.workspace = true
 insta.workspace = true
 tar.workspace = true
 flate2.workspace = true
+pretty_assertions.workspace = true
 
 [package.metadata.dist]
 features = ["fear_no_msrv", "tls_native_roots"]
