@@ -48,7 +48,8 @@ fn apply_ci_github(ci_table: &mut toml_edit::Table, github: &GithubCiLayer) {
 
     apply_ci_common(gh_table, &github.common);
 
-    // FIXME(migration): make these actually compile.
+    // FIXME(migration): Like with the v0 config, [dist.github.runners] and
+    // [dist.github.permissions] are not currently reformatted due to complexity.
     /*
     apply_optional_value(
         gh_table,
@@ -63,14 +64,15 @@ fn apply_ci_github(ci_table: &mut toml_edit::Table, github: &GithubCiLayer) {
         "# Custom permissions for jobs\n",
         github.permissions,
     );
+    */
 
     apply_optional_value(
         gh_table,
         "build-setup",
-        "# Custom permissions for jobs\n",
-        github.build_setup,
+        "# Path to a file containing a YAML array of steps, to be performed before 'dist build'\n\
+        # KNOWN BUG: https://github.com/axodotdev/cargo-dist/issues/1750\n",
+        github.build_setup.clone(),
     );
-    */
 
     // Finalize the table
     gh_table
@@ -314,14 +316,16 @@ github = true
 
 # Configure generated workflows for GitHub CI
 [dist.ci.github]
-build-setup = "build-setup"
+# Path to a file containing a YAML array of steps, to be performed before 'dist build'
+# KNOWN BUG: https://github.com/axodotdev/cargo-dist/issues/1750
+build-setup = "some-build-setup"
 "#;
 
         let ci = Some(CiLayer {
             common: CommonCiLayer::default(),
             github: Some(BoolOr::Val(GithubCiLayer {
                 common: CommonCiLayer::default(),
-                build_setup: Some("build-setup".to_string()),
+                build_setup: Some("some-build-setup".to_string()),
                 permissions: None,
                 runners: None,
             })),
