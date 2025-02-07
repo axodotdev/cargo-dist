@@ -1,6 +1,6 @@
 use super::helpers::*;
 use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
-use axoasset::toml_edit;
+use axoasset::toml_edit::{self, DocumentMut, Item, Table};
 
 use crate::config::v1::installers::{
     homebrew::HomebrewInstallerLayer, msi::MsiInstallerLayer, npm::NpmInstallerLayer,
@@ -12,12 +12,11 @@ pub fn apply(table: &mut toml_edit::Table, installers: &Option<InstallerLayer>) 
     let Some(installers) = installers else {
         return;
     };
-    let Some(installers_table) = table.get_mut("installers") else {
-        return;
-    };
-    let toml_edit::Item::Table(installers_table) = installers_table else {
-        panic!("Expected [dist.installers] to be a table");
-    };
+    let installers_table = table
+        .entry("installers")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
+        .expect("[dist.installers] should be a table");
 
     apply_installers_common(installers_table, &installers.common);
 
@@ -107,7 +106,7 @@ pub fn apply(table: &mut toml_edit::Table, installers: &Option<InstallerLayer>) 
                 apply_optional_value(
                     installers_table,
                     "pkg",
-                    "\n# Configuration for the Mac .pkg installer\n",
+                    "# Whether to build a Mac .pkg installer\n",
                     Some(*b),
                 );
             }
@@ -169,12 +168,11 @@ fn apply_installers_homebrew(
     installers_table: &mut toml_edit::Table,
     homebrew: &HomebrewInstallerLayer,
 ) {
-    let Some(homebrew_table) = installers_table.get_mut("homebrew") else {
-        return;
-    };
-    let toml_edit::Item::Table(homebrew_table) = homebrew_table else {
-        panic!("Expected [dist.installers.homebrew] to be a table");
-    };
+    let homebrew_table = installers_table
+        .entry("homebrew")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
+        .expect("[dist.installers.homebrew] should be a table");
 
     apply_installers_common(homebrew_table, &homebrew.common);
 
@@ -195,16 +193,15 @@ fn apply_installers_homebrew(
     // Finalize the table
     homebrew_table
         .decor_mut()
-        .set_prefix("\n# Configure the built Homebrew installer\n");
+        .set_prefix("\n# Configuration for the Homebrew installer\n");
 }
 
 fn apply_installers_msi(installers_table: &mut toml_edit::Table, msi: &MsiInstallerLayer) {
-    let Some(msi_table) = installers_table.get_mut("msi") else {
-        return;
-    };
-    let toml_edit::Item::Table(msi_table) = msi_table else {
-        panic!("Expected [dist.installers.msi] to be a table");
-    };
+    let msi_table = installers_table
+        .entry("msi")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
+        .expect("[dist.installers.msi] should be a table");
 
     apply_installers_common(msi_table, &msi.common);
 
@@ -212,44 +209,46 @@ fn apply_installers_msi(installers_table: &mut toml_edit::Table, msi: &MsiInstal
 
     msi_table
         .decor_mut()
-        .set_prefix("\n# Configure the built MSI installer\n");
+        .set_prefix("\n# Configuration for the MSI installer\n");
 }
 
 fn apply_installers_npm(installers_table: &mut toml_edit::Table, npm: &NpmInstallerLayer) {
-    let Some(npm_table) = installers_table.get_mut("npm") else {
-        return;
-    };
-    let toml_edit::Item::Table(npm_table) = npm_table else {
-        panic!("Expected [dist.installers.npm] to be a table");
-    };
+    let npm_table = installers_table
+        .entry("npm")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
+        .expect("[dist.installers.npm] should be a table");
 
     apply_installers_common(npm_table, &npm.common);
 
     apply_optional_value(
         npm_table,
         "package",
-        "# The npm package should have this name\n",
+        "# The name of the npm package\n",
         npm.package.as_deref(),
     );
 
     apply_optional_value(
         npm_table,
         "scope",
-        "# A namespace to use when publishing this package to the npm registry\n",
+        "# The namespace to use when publishing this package to the npm registry\n",
         npm.scope.as_deref(),
     );
+
+    npm_table
+        .decor_mut()
+        .set_prefix("\n# Configuration for the NPM installer\n");
 }
 
 fn apply_installers_powershell(
     installers_table: &mut toml_edit::Table,
     powershell: &PowershellInstallerLayer,
 ) {
-    let Some(powershell_table) = installers_table.get_mut("powershell") else {
-        return;
-    };
-    let toml_edit::Item::Table(powershell_table) = powershell_table else {
-        panic!("Expected [dist.installers.powershell] to be a table");
-    };
+    let powershell_table = installers_table
+        .entry("powershell")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
+        .expect("[dist.installers.powershell] should be a table");
 
     apply_installers_common(powershell_table, &powershell.common);
 
@@ -260,12 +259,11 @@ fn apply_installers_powershell(
 }
 
 fn apply_installers_shell(installers_table: &mut toml_edit::Table, shell: &ShellInstallerLayer) {
-    let Some(shell_table) = installers_table.get_mut("shell") else {
-        return;
-    };
-    let toml_edit::Item::Table(shell_table) = shell_table else {
-        panic!("Expected [dist.installers.shell] to be a table");
-    };
+    let shell_table = installers_table
+        .entry("shell")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
+        .expect("[dist.installers.shell] should be a table");
 
     apply_installers_common(shell_table, &shell.common);
 
@@ -276,12 +274,11 @@ fn apply_installers_shell(installers_table: &mut toml_edit::Table, shell: &Shell
 }
 
 fn apply_installers_pkg(installers_table: &mut toml_edit::Table, pkg: &PkgInstallerLayer) {
-    let Some(pkg_table) = installers_table.get_mut("pkg") else {
-        return;
-    };
-    let toml_edit::Item::Table(pkg_table) = pkg_table else {
-        panic!("Expected [dist.installers.pkg] to be a table");
-    };
+    let pkg_table = installers_table
+        .entry("pkg")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
+        .expect("[dist.installers.pkg] should be a table");
 
     apply_installers_common(pkg_table, &pkg.common);
 
@@ -303,4 +300,213 @@ fn apply_installers_pkg(installers_table: &mut toml_edit::Table, pkg: &PkgInstal
     pkg_table
         .decor_mut()
         .set_prefix("\n# Configuration for the Mac .pkg installer\n");
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{CompressionImpl, ChecksumStyle, ZipStyle};
+    use crate::config::LibraryStyle;
+    use crate::init::apply_dist::InstallPathStrategy;
+    use miette::IntoDiagnostic;
+    use pretty_assertions::{assert_eq, assert_ne};
+
+    fn source() -> toml_edit::DocumentMut {
+        let src = axoasset::SourceFile::new("fake-dist-workspace.toml", String::new());
+        let doc = src.deserialize_toml_edit().into_diagnostic().unwrap();
+        doc
+    }
+
+    // Given a DocumentMut, make sure it has a [dist] table, and return
+    // a reference to that dist table.
+    fn dist_table(doc: &mut toml_edit::DocumentMut) -> &mut toml_edit::Table {
+        let dist = doc
+            .entry("dist")
+            .or_insert(Item::Table(Table::new()))
+            .as_table_mut()
+            .unwrap();
+        // Don't show the empty top-level [dist].
+        dist.set_implicit(true);
+        // Return the table we just created.
+        dist
+    }
+
+    #[test]
+    fn apply_installers_empty() {
+        let expected = "";
+
+        let installers = Some(InstallerLayer {
+            common: CommonInstallerLayer {
+                install_path: None,
+                install_success_msg: None,
+                install_libraries: None,
+                bin_aliases: None,
+            },
+            homebrew: None,
+            msi: None,
+            npm: None,
+            powershell: None,
+            shell: None,
+            pkg: None,
+            updater: None,
+            always_use_latest_updater: None,
+        });
+
+        let mut doc = source();
+        let table = dist_table(&mut doc);
+
+        apply(table, &installers);
+
+        let toml_text = table.to_string();
+        assert_eq!(toml_text, expected);
+    }
+
+    #[test]
+    fn apply_installers_everything_bools() {
+        let expected = r#"
+# Installer configuration for dist
+[dist.installers]
+# Path that installers should place binaries in
+install-path = ["~/some-install-path/", "CARGO_HOME"]
+# Custom message to display on successful install
+install-success-msg = "default success message"
+# Which kinds of packaged libraries to install
+install-libraries = ["cdylib", "cstaticlib"]
+# Whether to build a Homebrew installer
+homebrew = true
+# Whether to build an MSI installer
+msi = true
+# Whether to build an NPM installer
+npm = true
+# Whether to build a PowerShell installer
+powershell = true
+# Whether to build a Shell installer
+shell = true
+# Whether to build a Mac .pkg installer
+pkg = true
+# Whether to install an updater program alongside the software
+updater = true
+# Whether to always use the latest updater version instead of a fixed version
+always-use-latest-updater = true
+"#;
+
+        let installers = Some(InstallerLayer {
+            common: CommonInstallerLayer {
+                install_path: Some(vec![
+                    InstallPathStrategy::HomeSubdir {
+                        subdir: "some-install-path/".to_string(),
+                    },
+                    InstallPathStrategy::CargoHome,
+                ]),
+                install_success_msg: Some("default success message".to_string()),
+                install_libraries: Some(vec![LibraryStyle::CDynamic, LibraryStyle::CStatic]),
+                bin_aliases: None,
+            },
+            homebrew: Some(BoolOr::Bool(true)),
+            msi: Some(BoolOr::Bool(true)),
+            npm: Some(BoolOr::Bool(true)),
+            powershell: Some(BoolOr::Bool(true)),
+            shell: Some(BoolOr::Bool(true)),
+            pkg: Some(BoolOr::Bool(true)),
+            updater: Some(true),
+            always_use_latest_updater: Some(true),
+        });
+
+        let mut doc = source();
+        let table = dist_table(&mut doc);
+
+        apply(table, &installers);
+
+        let toml_text = doc.to_string();
+        assert_eq!(expected, toml_text);
+    }
+
+
+    #[test]
+    fn apply_installers_complex() {
+        let expected = r#"
+# Installer configuration for dist
+[dist.installers]
+# Path that installers should place binaries in
+install-path = ["~/some-install-path/", "CARGO_HOME"]
+# Custom message to display on successful install
+install-success-msg = "default success message"
+# Which kinds of packaged libraries to install
+install-libraries = ["cdylib", "cstaticlib"]
+# Whether to build an MSI installer
+msi = true
+# Whether to build a PowerShell installer
+powershell = true
+# Whether to build a Shell installer
+shell = true
+# Whether to install an updater program alongside the software
+updater = true
+# Whether to always use the latest updater version instead of a fixed version
+always-use-latest-updater = true
+
+# Configuration for the Homebrew installer
+[dist.installers.homebrew]
+# A GitHub repo to push Homebrew formulas to
+tap = "homebrew-tap"
+# Customize the Homebrew formula name
+formula = "homebrew-formula"
+
+# Configuration for the NPM installer
+[dist.installers.npm]
+# The name of the npm package
+package = "npm-package"
+# The namespace to use when publishing this package to the npm registry
+scope = "npm-scope"
+
+# Configuration for the Mac .pkg installer
+[dist.installers.pkg]
+# A unique identifier, in tld.domain.package format
+identifier = "pkg-identifier"
+# The location to which software should be installed (defaults to /usr/local)
+install-location = "pkg-install-location"
+"#;
+
+
+        let installers = Some(InstallerLayer {
+            common: CommonInstallerLayer {
+                install_path: Some(vec![
+                    InstallPathStrategy::HomeSubdir {
+                        subdir: "some-install-path/".to_string(),
+                    },
+                    InstallPathStrategy::CargoHome,
+                ]),
+                install_success_msg: Some("default success message".to_string()),
+                install_libraries: Some(vec![LibraryStyle::CDynamic, LibraryStyle::CStatic]),
+                bin_aliases: None,
+            },
+            homebrew: Some(BoolOr::Val(HomebrewInstallerLayer {
+                common: CommonInstallerLayer::default(),
+                tap: Some("homebrew-tap".to_string()),
+                formula: Some("homebrew-formula".to_string()),
+            })),
+            msi: Some(BoolOr::Bool(true)),
+            npm: Some(BoolOr::Val(NpmInstallerLayer {
+                common: CommonInstallerLayer::default(),
+                package: Some("npm-package".to_string()),
+                scope: Some("npm-scope".to_string()),
+            })),
+            powershell: Some(BoolOr::Bool(true)),
+            shell: Some(BoolOr::Bool(true)),
+            pkg: Some(BoolOr::Val(PkgInstallerLayer {
+                common: CommonInstallerLayer::default(),
+                identifier: Some("pkg-identifier".to_string()),
+                install_location: Some("pkg-install-location".to_string()),
+            })),
+            updater: Some(true),
+            always_use_latest_updater: Some(true),
+        });
+
+        let mut doc = source();
+        let table = dist_table(&mut doc);
+
+        apply(table, &installers);
+
+        let toml_text = doc.to_string();
+        assert_eq!(expected, toml_text);
+    }
 }
