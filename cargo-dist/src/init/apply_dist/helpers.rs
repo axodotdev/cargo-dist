@@ -1,5 +1,19 @@
 use crate::platform::MinGlibcVersion;
 use axoasset::toml_edit;
+use tracing::trace;
+
+pub fn skip_optional_value<I>(
+    _table: &mut toml_edit::Table,
+    key: &str,
+    _desc: &str,
+    _val: Option<I>,
+) {
+    trace!("apply_dist/skipping: {}", key);
+}
+
+pub fn skip_string_list<I>(_table: &mut toml_edit::Table, key: &str, desc: &str, _list: Option<I>) {
+    trace!("apply_dist/skipping: {}", key);
+}
 
 /// Update the toml table to add/remove this value
 ///
