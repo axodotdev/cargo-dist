@@ -160,8 +160,13 @@ fn apply_installers_common(table: &mut toml_edit::Table, common: &CommonInstalle
         common.install_libraries.as_ref(),
     );
 
-    // / Aliases to install binaries as
-    // TODO(migration): handle `pub bin_aliases: Option<SortedMap<String, Vec<String>>>`
+    // [dist.ci.installers.bin-aliases] is not reformatted due to complexity.
+    skip_string_list(
+        table,
+        "bin-aliases",
+        "# Aliases to install for generated binaries\n",
+        common.bin_aliases.as_ref(),
+    );
 }
 
 fn apply_installers_homebrew(

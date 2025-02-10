@@ -48,23 +48,21 @@ fn apply_ci_github(ci_table: &mut toml_edit::Table, github: &GithubCiLayer) {
 
     apply_ci_common(gh_table, &github.common);
 
-    // FIXME(migration): Like with the v0 config, [dist.github.runners] and
-    // [dist.github.permissions] are not currently reformatted due to complexity.
-    /*
-    apply_optional_value(
+    // [dist.ci.github.runners] is not reformatted due to complexity.
+    skip_optional_value(
         gh_table,
         "runners",
         "# Custom GitHub runners, specified as target triples\n",
-        github.runners,
+        github.runners.as_ref(),
     );
 
-    apply_optional_value(
+    // [dist.ci.github.permissions] is not reformatted due to complexity.
+    skip_optional_value(
         gh_table,
         "permissions",
         "# Custom permissions for jobs\n",
-        github.permissions,
+        github.permissions.as_ref(),
     );
-    */
 
     apply_optional_value(
         gh_table,

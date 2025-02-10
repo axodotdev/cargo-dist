@@ -23,16 +23,13 @@ pub fn apply(table: &mut toml_edit::Table, artifacts: &Option<ArtifactLayer>) {
         artifacts.source_tarball,
     );
 
-    // FIXME(migration): Like with the v0 config, [dist.artifacts.extra] is
-    // not currently reformatted due to compelxity.
-    /*
-    apply_optional_value(
+    // [dist.artifacts.extra] is not reformatted due to complexity.
+    skip_optional_value(
         artifacts_table,
         "extra",
         "# Any extra artifacts, and their build scripts\n",
-        artifacts.extra,
+        artifacts.extra.as_ref(),
     );
-    */
 
     apply_optional_value(
         artifacts_table,
