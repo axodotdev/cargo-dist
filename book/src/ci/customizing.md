@@ -277,7 +277,7 @@ For example, if you needed the Lua programming language installed you could upda
 github-build-setup = "../build-setup.yml"
 ```
 
-An then include in the root of your repository a file named `.github/build-setup.yml` containing the
+And then include in the root of your repository a file named `.github/build-setup.yml` containing the
 following.
 
 ```yml
