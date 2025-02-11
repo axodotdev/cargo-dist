@@ -34,6 +34,8 @@ const BASE_OMNIBOR_FETCH_URL: &str = "https://github.com/omnibor/omnibor-rs/rele
 // NOTE: This is hard-coded to a specific version because omnibor-cli,
 //       omnibor-rs, and gitoid are released on the same repo.
 //       This means the "latest" release is sometimes NOT actually omnibor-cli!
+//
+// SEE ALSO: .github/workflows/ci.yml
 const OMNIBOR_VERSION: &str = "0.7.0";
 
 /// Info about all the enabled CI backends
