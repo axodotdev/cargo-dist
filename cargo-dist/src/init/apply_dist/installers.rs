@@ -310,9 +310,9 @@ fn apply_installers_pkg(installers_table: &mut toml_edit::Table, pkg: &PkgInstal
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{CompressionImpl, ChecksumStyle, ZipStyle};
     use crate::config::LibraryStyle;
     use crate::init::apply_dist::InstallPathStrategy;
+    use crate::{ChecksumStyle, CompressionImpl, ZipStyle};
     use miette::IntoDiagnostic;
     use pretty_assertions::{assert_eq, assert_ne};
 
@@ -426,7 +426,6 @@ always-use-latest-updater = true
         assert_eq!(expected, toml_text);
     }
 
-
     #[test]
     fn apply_installers_complex() {
         let expected = r#"
@@ -470,7 +469,6 @@ identifier = "pkg-identifier"
 # The location to which software should be installed (defaults to /usr/local)
 install-location = "pkg-install-location"
 "#;
-
 
         let installers = Some(InstallerLayer {
             common: CommonInstallerLayer {

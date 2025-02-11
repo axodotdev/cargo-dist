@@ -96,8 +96,8 @@ fn apply_artifacts_archives(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{CompressionImpl, ChecksumStyle, ZipStyle};
     use crate::config::LibraryStyle;
+    use crate::{ChecksumStyle, CompressionImpl, ZipStyle};
     use axoasset::toml_edit::{self, DocumentMut, Item, Table};
     use miette::IntoDiagnostic;
     use pretty_assertions::{assert_eq, assert_ne};
