@@ -71,9 +71,9 @@ impl std::fmt::Display for WorkspaceMember {
         match self {
             WorkspaceMember::Generic(path) => write!(f, "{MEMBER_GENERIC}:{path}"),
             #[cfg(feature = "cargo-projects")]
-            WorkspaceMember::Cargo(path) => write!(f, "{MEMBER_CARGO}/{path}"),
+            WorkspaceMember::Cargo(path) => write!(f, "{MEMBER_CARGO}:{path}"),
             #[cfg(feature = "npm-projects")]
-            WorkspaceMember::Npm(path) => write!(f, "${MEMBER_NPM}/{path}"),
+            WorkspaceMember::Npm(path) => write!(f, "${MEMBER_NPM}:{path}"),
         }
     }
 }
