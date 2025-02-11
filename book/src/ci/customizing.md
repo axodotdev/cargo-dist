@@ -267,16 +267,17 @@ To do this, use the [github-build-setup setting](../reference/config.md#github-b
 should be a path relative to your `.github/workflows/` directory, and which should point to a
 `.yml` file containing the github workflow steps just as you would normally write them in a workflow.
 (don't forget that leading `-`!)
+We recommend storing this file one directory below or above `.github/workflows` so that GitHub doesn't mistake it for a standalone workflow.
 
 For example, if you needed the Lua programming language installed you could update your `Cargo.toml` with the following:
 
 ```toml
-[workspace.metadata.dist]
+[dist]
 # ...
-github-build-setup = "build-setup.yml"
+github-build-setup = "../build-setup.yml"
 ```
 
-An then include in the root of your repository a file named `.github/workflows/build-setup.yml` containing the
+An then include in the root of your repository a file named `.github/build-setup.yml` containing the
 following.
 
 ```yml
