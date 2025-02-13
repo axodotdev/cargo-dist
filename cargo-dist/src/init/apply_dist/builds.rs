@@ -152,7 +152,7 @@ mod test {
     use crate::config::v1::builds::cargo::CargoBuildLayer;
     use crate::config::v1::builds::generic::GenericBuildLayer;
     use crate::config::v1::builds::CommonBuildLayer;
-    use crate::config::{ProductionMode, SystemDependencies};
+    use crate::config::ProductionMode;
     use miette::IntoDiagnostic;
     use pretty_assertions::assert_eq;
 

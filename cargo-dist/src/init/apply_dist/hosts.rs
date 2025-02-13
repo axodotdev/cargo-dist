@@ -93,9 +93,7 @@ fn apply_github(hosts_table: &mut toml_edit::Table, hosts: &HostLayer) {
         gh_table,
         "submodule-path",
         "# Read the commit to be tagged from the submodule at this path\n",
-        github.submodule_path
-            .as_ref()
-            .map(|a| a.to_string()),
+        github.submodule_path.as_ref().map(|a| a.to_string()),
     );
 
     apply_optional_value(
@@ -114,7 +112,8 @@ fn apply_github(hosts_table: &mut toml_edit::Table, hosts: &HostLayer) {
 fn apply_axodotdev(hosts_table: &mut toml_edit::Table, hosts: &HostLayer) {
     if let Some(BoolOr::Bool(b)) = hosts.axodotdev {
         // If it was set as a boolean, simply set it as a boolean and return.
-        apply_optional_value(hosts_table,
+        apply_optional_value(
+            hosts_table,
             "axodotdev",
             "# Whether to use axo.dev hosting\n",
             Some(b),
@@ -134,7 +133,8 @@ fn apply_axodotdev(hosts_table: &mut toml_edit::Table, hosts: &HostLayer) {
     // Theoretically, there's no valid representation of AxodotdevHostLayer
     // which isn't empty, so this should never run.
     // -@duckinator
-    apply_optional_value(hosts_table,
+    apply_optional_value(
+        hosts_table,
         "axodotdev",
         "# Whether to use axo.dev hosting\n",
         Some(true),
@@ -144,8 +144,8 @@ fn apply_axodotdev(hosts_table: &mut toml_edit::Table, hosts: &HostLayer) {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::config::v1::hosts::CommonHostLayer;
     use crate::config::v1::hosts::github::GithubHostLayer;
+    use crate::config::v1::hosts::CommonHostLayer;
     use crate::config::{GithubReleasePhase, GithubRepoPair};
     use miette::IntoDiagnostic;
     use pretty_assertions::assert_eq;
