@@ -1,7 +1,7 @@
 use super::helpers::*;
-use super::system_dependencies;
 use crate::config::v1::builds::BuildLayer;
 use crate::config::v1::layer::BoolOr;
+use crate::config::SystemDependencies;
 use axoasset::toml_edit::{self, Item, Table};
 
 pub fn apply(table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
@@ -34,7 +34,7 @@ pub fn apply(table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
     );
 
     apply_cargo_builds(builds_table, builds);
-    system_dependencies::apply(builds_table, builds.system_dependencies.as_ref());
+    apply_system_dependencies(builds_table, builds.system_dependencies.as_ref());
 
     apply_optional_value(
         builds_table,
@@ -54,6 +54,13 @@ pub fn apply(table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
     builds_table
         .decor_mut()
         .set_prefix("\n# Build configuration for dist\n");
+}
+
+pub fn apply_system_dependencies(
+    _builds_table: &mut toml_edit::Table,
+    _system_dependencies: Option<&SystemDependencies>,
+) {
+    // This is complex enough we don't support editing it in init, so this does nothing.
 }
 
 fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) {
