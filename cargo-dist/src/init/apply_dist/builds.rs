@@ -142,11 +142,11 @@ fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) 
 #[cfg(test)]
 mod test {
     use super::*;
-    use miette::IntoDiagnostic;
     use crate::config::v1::builds::cargo::CargoBuildLayer;
     use crate::config::v1::builds::generic::GenericBuildLayer;
     use crate::config::v1::builds::CommonBuildLayer;
     use crate::config::{ProductionMode, SystemDependencies};
+    use miette::IntoDiagnostic;
     use pretty_assertions::assert_eq;
 
     fn source() -> toml_edit::DocumentMut {
@@ -213,12 +213,15 @@ some-target = "1.2"
 "#;
 
         let mut min_glibc = crate::platform::MinGlibcVersion::new();
-        min_glibc.insert("some-target".to_string(), crate::platform::LibcVersion {
-            major: 1,
-            series: 2,
-        });
+        min_glibc.insert(
+            "some-target".to_string(),
+            crate::platform::LibcVersion {
+                major: 1,
+                series: 2,
+            },
+        );
 
-       let layer = Some(BuildLayer {
+        let layer = Some(BuildLayer {
             common: CommonBuildLayer {},
             ssldotcom_windows_sign: Some(ProductionMode::Test),
             macos_sign: Some(true),
@@ -273,10 +276,13 @@ some-target = "1.2"
 "#;
 
         let mut min_glibc = crate::platform::MinGlibcVersion::new();
-        min_glibc.insert("some-target".to_string(), crate::platform::LibcVersion {
-            major: 1,
-            series: 2,
-        });
+        min_glibc.insert(
+            "some-target".to_string(),
+            crate::platform::LibcVersion {
+                major: 1,
+                series: 2,
+            },
+        );
 
         let cargo_bl = CargoBuildLayer {
             common: CommonBuildLayer {},
@@ -295,7 +301,7 @@ some-target = "1.2"
             common: CommonBuildLayer {},
         };
 
-       let layer = Some(BuildLayer {
+        let layer = Some(BuildLayer {
             common: CommonBuildLayer {},
             ssldotcom_windows_sign: Some(ProductionMode::Test),
             macos_sign: Some(true),

@@ -15,7 +15,6 @@ pub fn apply(table: &mut toml_edit::Table, publishers: &Option<PublisherLayer>) 
         .as_table_mut()
         .expect("[dist.publishers] should be a table");
 
-
     apply_common(publishers_table, &publishers.common);
     apply_homebrew(publishers_table, publishers);
     apply_npm(publishers_table, publishers);
@@ -38,7 +37,8 @@ fn apply_common(table: &mut toml_edit::Table, common: &CommonPublisherLayer) {
 fn apply_homebrew(publishers_table: &mut toml_edit::Table, publishers: &PublisherLayer) {
     if let Some(BoolOr::Bool(b)) = publishers.homebrew {
         // If it was set as a boolean, simply set it as a boolean and return.
-        apply_optional_value(publishers_table,
+        apply_optional_value(
+            publishers_table,
             "homebrew",
             "# Whether to publish to Homebrew\n",
             Some(b),
@@ -68,7 +68,8 @@ fn apply_homebrew(publishers_table: &mut toml_edit::Table, publishers: &Publishe
 fn apply_npm(publishers_table: &mut toml_edit::Table, publishers: &PublisherLayer) {
     if let Some(BoolOr::Bool(b)) = publishers.npm {
         // If it was set as a boolean, simply set it as a boolean and return.
-        apply_optional_value(publishers_table,
+        apply_optional_value(
+            publishers_table,
             "npm",
             "# Whether to publish to NPM\n",
             Some(b),
@@ -94,8 +95,6 @@ fn apply_npm(publishers_table: &mut toml_edit::Table, publishers: &PublisherLaye
         .decor_mut()
         .set_prefix("\n# Configuration for publishing to NPM\n");
 }
-
-
 
 #[cfg(test)]
 mod test {
@@ -129,9 +128,7 @@ mod test {
         let expected = "";
 
         let layer = Some(PublisherLayer {
-            common: CommonPublisherLayer {
-                prereleases: None,
-            },
+            common: CommonPublisherLayer { prereleases: None },
             homebrew: None,
             npm: None,
         });

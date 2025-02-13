@@ -11,7 +11,12 @@ pub fn skip_optional_value<I>(
     trace!("apply_dist/skipping: {}", key);
 }
 
-pub fn skip_string_list<I>(_table: &mut toml_edit::Table, key: &str, _desc: &str, _list: Option<I>) {
+pub fn skip_string_list<I>(
+    _table: &mut toml_edit::Table,
+    key: &str,
+    _desc: &str,
+    _list: Option<I>,
+) {
     trace!("apply_dist/skipping: {}", key);
 }
 
