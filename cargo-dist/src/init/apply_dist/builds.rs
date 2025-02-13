@@ -1,7 +1,7 @@
 use super::helpers::*;
 use super::system_dependencies;
 use crate::config::v1::builds::BuildLayer;
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
+use crate::config::v1::layer::BoolOr;
 use axoasset::toml_edit::{self, Item, Table};
 
 pub fn apply(table: &mut toml_edit::Table, builds: &Option<BuildLayer>) {
@@ -143,17 +143,15 @@ fn apply_cargo_builds(builds_table: &mut toml_edit::Table, builds: &BuildLayer) 
 mod test {
     use super::*;
     use miette::IntoDiagnostic;
-    use axoasset::toml_edit::DocumentMut;
     use crate::config::v1::builds::cargo::CargoBuildLayer;
     use crate::config::v1::builds::generic::GenericBuildLayer;
     use crate::config::v1::builds::CommonBuildLayer;
     use crate::config::{ProductionMode, SystemDependencies};
-    use pretty_assertions::{assert_eq, assert_ne};
+    use pretty_assertions::assert_eq;
 
     fn source() -> toml_edit::DocumentMut {
         let src = axoasset::SourceFile::new("fake-dist-workspace.toml", String::new());
-        let doc = src.deserialize_toml_edit().into_diagnostic().unwrap();
-        doc
+        src.deserialize_toml_edit().into_diagnostic().unwrap()
     }
 
     // Given a DocumentMut, make sure it has a [dist] table, and return

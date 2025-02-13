@@ -1,7 +1,7 @@
 use super::helpers::*;
 use crate::config::v1::ci::github::GithubCiLayer;
 use crate::config::v1::ci::{CiLayer, CommonCiLayer};
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
+use crate::config::v1::layer::BoolOr;
 use axoasset::toml_edit::{self, Item, Table};
 
 pub fn apply(table: &mut toml_edit::Table, ci: &Option<CiLayer>) {
@@ -181,14 +181,11 @@ fn apply_ci_common(table: &mut toml_edit::Table, common: &CommonCiLayer) {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::config::JobStyle;
-    use axoasset::toml_edit::DocumentMut;
     use miette::IntoDiagnostic;
 
     fn source() -> toml_edit::DocumentMut {
         let src = axoasset::SourceFile::new("fake-dist-workspace.toml", String::new());
-        let doc = src.deserialize_toml_edit().into_diagnostic().unwrap();
-        doc
+        src.deserialize_toml_edit().into_diagnostic().unwrap()
     }
 
     // Given a DocumentMut, make sure it has a [dist] table, and return

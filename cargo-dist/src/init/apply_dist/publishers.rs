@@ -17,8 +17,8 @@ pub fn apply(table: &mut toml_edit::Table, publishers: &Option<PublisherLayer>) 
 
 
     apply_common(publishers_table, &publishers.common);
-    apply_homebrew(publishers_table, &publishers);
-    apply_npm(publishers_table, &publishers);
+    apply_homebrew(publishers_table, publishers);
+    apply_npm(publishers_table, publishers);
 
     // Finalize the table
     publishers_table
@@ -103,13 +103,11 @@ mod test {
     use crate::config::v1::publishers::homebrew::HomebrewPublisherLayer;
     use crate::config::v1::publishers::npm::NpmPublisherLayer;
     use miette::IntoDiagnostic;
-    use axoasset::toml_edit::DocumentMut;
-    use pretty_assertions::{assert_eq, assert_ne};
+    use pretty_assertions::assert_eq;
 
     fn source() -> toml_edit::DocumentMut {
         let src = axoasset::SourceFile::new("fake-dist-workspace.toml", String::new());
-        let doc = src.deserialize_toml_edit().into_diagnostic().unwrap();
-        doc
+        src.deserialize_toml_edit().into_diagnostic().unwrap()
     }
 
     // Given a DocumentMut, make sure it has a [dist] table, and return

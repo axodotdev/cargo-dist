@@ -1,6 +1,6 @@
 use super::helpers::*;
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
-use axoasset::toml_edit::{self, DocumentMut, Item, Table};
+use crate::config::v1::layer::BoolOr;
+use axoasset::toml_edit::{self, Item, Table};
 
 use crate::config::v1::installers::{
     homebrew::HomebrewInstallerLayer, msi::MsiInstallerLayer, npm::NpmInstallerLayer,
@@ -312,14 +312,12 @@ mod test {
     use super::*;
     use crate::config::LibraryStyle;
     use crate::init::apply_dist::InstallPathStrategy;
-    use crate::{ChecksumStyle, CompressionImpl, ZipStyle};
     use miette::IntoDiagnostic;
-    use pretty_assertions::{assert_eq, assert_ne};
+    use pretty_assertions::assert_eq;
 
     fn source() -> toml_edit::DocumentMut {
         let src = axoasset::SourceFile::new("fake-dist-workspace.toml", String::new());
-        let doc = src.deserialize_toml_edit().into_diagnostic().unwrap();
-        doc
+        src.deserialize_toml_edit().into_diagnostic().unwrap()
     }
 
     // Given a DocumentMut, make sure it has a [dist] table, and return

@@ -1,8 +1,7 @@
 use super::helpers::*;
 use crate::config::v1::artifacts::archives::ArchiveLayer;
 use crate::config::v1::artifacts::ArtifactLayer;
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
-use axoasset::toml_edit::{self, DocumentMut, Item, Table};
+use axoasset::toml_edit::{self, Item, Table};
 
 pub fn apply(table: &mut toml_edit::Table, artifacts: &Option<ArtifactLayer>) {
     let Some(artifacts) = artifacts else {
@@ -98,14 +97,12 @@ mod test {
     use super::*;
     use crate::config::LibraryStyle;
     use crate::{ChecksumStyle, CompressionImpl, ZipStyle};
-    use axoasset::toml_edit::{self, DocumentMut, Item, Table};
     use miette::IntoDiagnostic;
-    use pretty_assertions::{assert_eq, assert_ne};
+    use pretty_assertions::assert_eq;
 
     fn source() -> toml_edit::DocumentMut {
         let src = axoasset::SourceFile::new("fake-dist-workspace.toml", String::new());
-        let doc = src.deserialize_toml_edit().into_diagnostic().unwrap();
-        doc
+        src.deserialize_toml_edit().into_diagnostic().unwrap()
     }
 
     // Given a DocumentMut, make sure it has a [dist] table, and return

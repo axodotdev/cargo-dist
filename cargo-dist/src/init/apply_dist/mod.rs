@@ -1,5 +1,5 @@
 use crate::config::v1::installers::InstallerLayer;
-use crate::config::v1::layer::{BoolOr, BoolOrOptExt};
+use crate::config::v1::layer::BoolOrOptExt;
 use crate::config::v1::TomlLayer;
 use crate::config::InstallPathStrategy;
 use crate::METADATA_DIST;
