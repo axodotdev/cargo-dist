@@ -31,7 +31,7 @@ pub struct PublisherConfigInheritable {
 }
 
 /// "raw" publisher config from presum
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct PublisherLayer {
     /// common fields that each publisher inherits
     #[serde(flatten)]
