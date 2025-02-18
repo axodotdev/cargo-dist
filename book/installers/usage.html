@@ -1,0 +1,374 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Usage - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html" class="active"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/installers/usage.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="usage"><a class="header" href="#usage">Usage</a></h1>
+<p>axo's installers are designed to require no end user input - however, in many
+cases, end users like the ability to tailor their installation experience. For
+these users, our installers allow several inputs which give the user more
+control over their installation experience via configuration. Most of these are
+implemented using environment variables, however several are also available as
+arguments to the installer scripts themselves.</p>
+<p>This documentation is targeted at developers using <code>dist</code> to distribute their apps. If you expect your users to be interested in any of these features, we recommend incorporating the relevant information into your own installation documentation. If there's any additional documentation you'd find helpful here, please feel free to <a href="https://github.com/axodotdev/cargo-dist/issues/new">open an issue</a>!</p>
+<p>Several of these options were available in earlier releases of <code>dist</code>, but they
+are formally stabilized as of <code>0.23.0</code>.</p>
+<h2 id="install-location"><a class="header" href="#install-location">Install location</a></h2>
+<blockquote>
+<p>since 0.1.0</p>
+</blockquote>
+<p>One of the most important jobs of an installer is to place the necessary
+artifacts in the correct location on the target machine. <code>dist</code> allows you to
+configure this for your particular needs. Depending on your setup, the following
+options are available for end users to further configure this location:</p>
+<ul>
+<li>
+<p><code>${app name}_INSTALL_DIR</code></p>
+<blockquote>
+<p>Replace <code>{app name}</code> with the name of the application. To transform the
+app name to the env var, replace any spaces or hyphens with an underscore
+and then put it in all caps. You can double check this transform by
+comparing the <code>install_dir_env_var</code> value in your <code>dist-manifest.json</code>.</p>
+</blockquote>
+<p>This environment variable tells the installer what to use as the "base"
+directory for the installation task. This may not necessarily be the exact
+directory your binaries are installed to based on your install layout. For
+example, this directory may have <code>./bin</code> appended to it.</p>
+<p>This environment variable is also known as <code>CARGO_DIST_FORCE_INSTALL_DIR</code>.</p>
+</li>
+<li>
+<p><code>$HOME</code></p>
+<p>This environment variable is sourced if you use the <code>CARGO_HOME</code> or
+<code>~/sub/dir</code> install location options. For more information, see the <a href="../reference/config.html#install-path">documentation for this feature</a>.</p>
+</li>
+<li>
+<p><code>${custom env var}</code></p>
+<p>You can use a custom environment variable to specify your install
+location. If you do, that variable will be sourced during the install task. For more information, see the <a href="../reference/config.html#install-path">documentation for this feature</a>.</p>
+</li>
+<li>
+<p><code>$CARGO_HOME</code></p>
+<p>This environment variable is sourced if you use the <code>CARGO_HOME</code> install
+location. For more information, see the <a href="../reference/config.html#install-path">documentation for this feature</a>.</p>
+</li>
+</ul>
+<h2 id="path"><a class="header" href="#path"><code>$PATH</code></a></h2>
+<blockquote>
+<p>since 0.1.0, path modification options updated in 0.23.0</p>
+</blockquote>
+<p><code>$PATH</code> is an environment variable that pre-exists on nearly all systems and
+lists locations to look for executables in. This is what allows you to call a
+program by its name instead of needing to call it by it's specific location on
+the file system.</p>
+<p>When you use axo installers, we do the heavy lifting of ensuring that your
+application is available "on PATH" to your end users. On Linux and macOS, we do this by editing shell dotfiles; on Windows, we do this by editing the <code>Environment.Path</code> registry key. However, there are
+circumstances where this is not desirable, and so we provide the ability to
+skip this setup step.</p>
+<ul>
+<li>
+<h3 id="path-1"><a class="header" href="#path-1"><code>$PATH</code></a></h3>
+<p>This environment variable is both sourced and modified in the standard mode
+of an installation. We source this variable to see if the installation
+location is already on PATH and we will modify it if it is not.</p>
+</li>
+<li>
+<h3 id="path-modification"><a class="header" href="#path-modification"><code>$PATH</code> modification</a></h3>
+<p>If you do not want your PATH to be modified you can use the <code>INSTALLER_NO_MODIFY_PATH</code> environment variable to configure your installation experience.</p>
+</li>
+<li>
+<h3 id="github_path"><a class="header" href="#github_path"><code>$GITHUB_PATH</code></a></h3>
+<p>If an installer detects the presence of this environment variable
+(signalling that it is running in a GitHub Actions context) our installers
+will modify this environment variable to ensure that all installed
+applications are immediately available on PATH.</p>
+</li>
+</ul>
+<h2 id="artifact-location"><a class="header" href="#artifact-location">Artifact location</a></h2>
+<blockquote>
+<p>since 0.25.0</p>
+</blockquote>
+<p>Some folks, particularly those working in security-sensitive business environments,
+may need to mirror artifacts within a private network. <code>dist</code> enables this usecase
+by allowing end users to customize the URL that artifacts are fetched from:</p>
+<ul>
+<li><code>${app name}_GITHUB_INSTALLER_BASE_URL</code></li>
+<li><code>${app name}_GHE_INSTALLER_BASE_URL</code></li>
+</ul>
+<blockquote>
+<p>Replace <code>{app name}</code> with the name of the application. To transform the
+app name to the env var, replace any spaces or hyphens with an underscore
+and then put it in all caps. You can double check this transform by
+comparing the <code>install_dir_env_var</code> value in your <code>dist-manifest.json</code>.</p>
+</blockquote>
+<p>These environment variables enable you to specify both a base URL and a URL
+structure to the installer and updater of a project that distributes with <code>dist</code>.
+When set, installers will fetch from URL constructed based on the value you set
+here.</p>
+<p>When setting up your mirror you'll need to both mirror the artifacts <em>and</em> provide
+an endpoint that indexes the available releases (so that the updater can work).</p>
+<p>To minimize complexity for both us and our end users, we have standardized our
+requested API structure expectations to match either:</p>
+<ul>
+<li>Github.com, or
+<ul>
+<li>Public artifact URLs: https://{CUSTOM}/owner/repo/releases/download/version/artifact-name</li>
+<li>Releases API: https://api.{CUSTOM}/repos/owner/repo/releases/latest (<a href="https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28">docs</a>)</li>
+</ul>
+</li>
+<li>Github Enterprise
+<ul>
+<li>Public artifact URLs: https://{CUSTOM}/owner/repo/releases/download/version/artifact-name</li>
+<li>Releases API: https://{CUSTOM}/api/v3/repos/owner/repo/releases/latest (<a href="https://docs.github.com/en/enterprise-server@3.14/rest/releases/releases?apiVersion=2022-11-28">docs</a>)</li>
+</ul>
+</li>
+</ul>
+<p><code>dist</code> is eager to support enterprise level features like this- so if you have questions
+or related feature requests, please join our <a href="https://discord.gg/XAFG6xSZ">Discord</a> or send
+us an email at hello@axo.dev.</p>
+<h2 id="receipt"><a class="header" href="#receipt">Receipt</a></h2>
+<blockquote>
+<p>since 0.9.0</p>
+</blockquote>
+<p>When you use axo to distribute your application, in addition to installers, you
+may also enable an updater - either integrated into your application using a
+library or as a standalone binary shipped alongside your application.</p>
+<p>The updater functionality relies on knowing how your application was originally
+installed and where. To keep track of this information, the installer writes a
+receipt that is read by the the updater.</p>
+<p>You can configure this receipt writing using the following options:</p>
+<ul>
+<li>Shell: The <code>$HOME</code> environment variable is sourced to write the receipt to
+<code>$HOME/.config/{app name}</code>.</li>
+<li>PowerShell: The <code>$LOCALAPPDATA</code> environment variable is sourced to write the
+receipt to <code>$LOCALAPPDATA/{app name}</code>.</li>
+</ul>
+<h2 id="unmanaged-mode"><a class="header" href="#unmanaged-mode">Unmanaged mode</a></h2>
+<blockquote>
+<p>since 0.23.0</p>
+</blockquote>
+<p>This is intended for users installing in ephemeral environments such as CI and disables several features that are unneeded in those environments. To use it, set the <code>${app name}_UNMANAGED_INSTALL</code> environment variable to the desired installation path.</p>
+<blockquote>
+<p>Replace <code>{app name}</code> with the name of the application. To transform the
+app name to the env var, replace any spaces or hyphens with an underscore
+and then put it in all caps. You can double check this transform by
+comparing the <code>install_dir_env_var</code> value in your <code>dist-manifest.json</code>.</p>
+</blockquote>
+<p>Enabling this mode does the following things:</p>
+<ul>
+<li>Disables updater-related tooling, including install receipt creation</li>
+<li>Disables modification of the user's <code>PATH</code>, including modification of dotfiles</li>
+<li>Forces a flat installation layout, installing all files into a single directory</li>
+</ul>
+<h2 id="debug"><a class="header" href="#debug">Debug</a></h2>
+<p>As you work with axo's installers, you will, despite everyone's best efforts,
+find yourself debugging an issue. You can use the following options:</p>
+<ul>
+<li>
+<h3 id="message-level"><a class="header" href="#message-level">Message level</a></h3>
+<ul>
+<li>Shell: <code>$INSTALLER_PRINT_VERBOSE</code>, <code>-v, --verbose</code> and <code>$INSTALLER_PRINT_QUIET</code>, `-q, --quiet``</li>
+<li>PowerShell: <code>-Verbose</code></li>
+</ul>
+</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../installers/updater.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../artifacts/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../installers/updater.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../artifacts/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
