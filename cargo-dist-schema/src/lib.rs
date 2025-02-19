@@ -78,7 +78,7 @@ impl TripleNameRef {
     }
 }
 declare_strongly_typed_string! {
-    /// The name of a Github Actions Runner, like `ubuntu-20.04` or `macos-13`
+    /// The name of a Github Actions Runner, like `ubuntu-22.04` or `macos-13`
     pub struct GithubRunner => &GithubRunnerRef;
 
     /// A container image, like `quay.io/pypa/manylinux_2_28_x86_64`
@@ -412,7 +412,7 @@ impl GithubRunnerConfig {
 /// GitHub config that's common between different kinds of jobs (global, local)
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ContainerConfigInput {
-    /// The container image to run, something like `ubuntu:20.04` or
+    /// The container image to run, something like `ubuntu:22.04` or
     /// `quay.io/pypa/manylinux_2_28_x86_64`
     pub image: ContainerImage,
 
@@ -428,7 +428,7 @@ pub struct ContainerConfigInput {
 /// GitHub config that's common between different kinds of jobs (global, local)
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ContainerConfig {
-    /// The container image to run, something like `ubuntu:20.04` or
+    /// The container image to run, something like `ubuntu:22.04` or
     /// `quay.io/pypa/manylinux_2_28_x86_64`
     pub image: ContainerImage,
 

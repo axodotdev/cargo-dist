@@ -314,7 +314,7 @@ impl LibcVersion {
     /// Get the default glibc version for cases where we just need to guess
     /// and make one up.
     ///
-    /// This is the glibc of Ubuntu 20.04, which is the oldest supported
+    /// This is the glibc of Ubuntu 22.04, which is the oldest supported
     /// github linux runner, as of this writing.
     pub fn default_glibc() -> Self {
         Self {
@@ -940,7 +940,7 @@ fn native_glibc_version(system: &SystemInfo, linkage: &Linkage) -> Option<LibcVe
                 // If there's a system libc, assume that's what it was built against
                 return Some(LibcVersion::glibc_from_schema(system_glibc));
             } else {
-                // If the system has no known libc version use Ubuntu 20.04's glibc as a guess
+                // If the system has no known libc version use Ubuntu 22.04's glibc as a guess
                 return Some(LibcVersion::default_glibc());
             }
         }
