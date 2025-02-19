@@ -87,7 +87,7 @@ Running `dist init` for your tool will update your GitHub Actions configuration 
 
 By default, dist uses the following runners:
 
-* Linux (x86_64): `ubuntu-20.04`
+* Linux (x86_64): `ubuntu-22.04`
 * macOS (x86_64): `macos-13`
 * macOS (Apple Silicon): `macos-13`
 * Windows (x86_64): `windows-2019`
@@ -130,14 +130,14 @@ there are no free `aarch64` GitHub runners, dist will assume you meant this:
 
 ```toml
 [dist.github-custom-runners]
-aarch64-unknown-linux-gnu = "ubuntu-20.04"
+aarch64-unknown-linux-gnu = "ubuntu-22.04"
 ```
 
 Which really means this:
 
 ```toml
 [dist.github-custom-runners.aarch64-unknown-linux-gnu]
-runner = "ubuntu-20.04"
+runner = "ubuntu-22.04"
 host = "x86_64-unknown-linux-gnu"
 ```
 
@@ -168,10 +168,10 @@ This will work, eventually:
 targets = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
 
 [dist.github-custom-runners.x86_64-pc-windows-msvc]
-runner = "ubuntu-20.04"
+runner = "ubuntu-22.04"
 
 [dist.github-custom-runners.aarch64-pc-windows-msvc]
-runner = "ubuntu-20.04"
+runner = "ubuntu-22.04"
 ```
 
 ...because dist can install `cargo-xwin` via `pip`. However, it will take
@@ -221,7 +221,7 @@ aarch64-pc-windows-msvc.container = "messense/cargo-xwin"
 ```
 
 Note that you can use containers for non-cross reasons: maybe you want your binaries to be
-compatible with really old versions of glibc, older than Ubuntu 20.04: in this case, you
+compatible with really old versions of glibc, older than Ubuntu 22.04: in this case, you
 can do something like:
 
 ```toml

@@ -698,7 +698,7 @@ expression: json_schema
           "type": "string"
         },
         "image": {
-          "description": "The container image to run, something like `ubuntu:20.04` or `quay.io/pypa/manylinux_2_28_x86_64`",
+          "description": "The container image to run, something like `ubuntu:22.04` or `quay.io/pypa/manylinux_2_28_x86_64`",
           "type": "string"
         },
         "package_manager": {
