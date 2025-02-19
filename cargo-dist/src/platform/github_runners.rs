@@ -13,7 +13,7 @@ lazy_static::lazy_static! {
         // last updated 2024-10-25
 
         //-------- linux
-        m.insert(GithubRunnerRef::from_str("ubuntu-20.04"), t::TARGET_X64_LINUX_GNU);
+        m.insert(GithubRunnerRef::from_str("ubuntu-22.04"), t::TARGET_X64_LINUX_GNU);
         m.insert(GithubRunnerRef::from_str("ubuntu-22.04"), t::TARGET_X64_LINUX_GNU);
         m.insert(GithubRunnerRef::from_str("ubuntu-24.04"), t::TARGET_X64_LINUX_GNU);
         m.insert(GithubRunnerRef::from_str("ubuntu-latest"), t::TARGET_X64_LINUX_GNU);
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn test_target_for_github_runner() {
         assert_eq!(
-            target_for_github_runner(GithubRunnerRef::from_str("ubuntu-20.04")),
+            target_for_github_runner(GithubRunnerRef::from_str("ubuntu-22.04")),
             Some(t::TARGET_X64_LINUX_GNU)
         );
         assert_eq!(
