@@ -79,6 +79,17 @@ impl MsiInstallerInfo {
             .join("wix")
             .join("main.wxs");
         b.output(Some(output.as_str()));
+
+        // populate defaulted fields from Cargo.toml's [package.metadata.wix]
+        let mut package_toml = config::load_toml(&self.manifest_path)?;
+        let metadata = config::get_toml_metadata(&mut package_toml, false);
+        let wix_metadata = &mut metadata[METADATA_WIX];
+        if let Some(table) = wix_metadata.as_table_mut() {
+            b.description(table.get("description").and_then(|v| v.as_str()));
+            b.manufacturer(table.get("manufacturer").and_then(|v| v.as_str()));
+            b.product_name(table.get("product-name").and_then(|v| v.as_str()));
+        }
+
         let exec = b.build();
         let renders = exec.render().map_err(|e| DistError::WixInit {
             package: self.pkg_spec.clone(),
