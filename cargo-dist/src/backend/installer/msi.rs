@@ -86,6 +86,7 @@ impl MsiInstallerInfo {
         let wix_metadata = &mut metadata[METADATA_WIX];
         if let Some(table) = wix_metadata.as_table_mut() {
             b.description(table.get("description").and_then(|v| v.as_str()));
+            b.help_url(table.get("url").and_then(|v| v.as_str()));
             b.manufacturer(table.get("manufacturer").and_then(|v| v.as_str()));
             b.product_name(table.get("product-name").and_then(|v| v.as_str()));
         }
