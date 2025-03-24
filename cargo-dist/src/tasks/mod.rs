@@ -51,6 +51,7 @@
 use std::collections::BTreeMap;
 
 use crate::backend::installer::{ExecutableZipFragment, HomebrewImpl};
+use crate::build::cargo::target_gcc_linker;
 use crate::platform::targets::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
 };
@@ -58,7 +59,7 @@ use axoasset::AxoClient;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::{Utf8Path, Utf8PathBuf};
-use dist_schema::target_lexicon::{OperatingSystem, Triple};
+use dist_schema::target_lexicon::{Architecture, OperatingSystem, Triple};
 use dist_schema::{
     ArtifactId, BuildEnvironment, DistManifest, HomebrewPackageName, SystemId, SystemInfo,
     TripleName, TripleNameRef,
@@ -333,6 +334,16 @@ impl Tools {
             tool: "cargo-zigbuild".to_owned(),
         })
     }
+
+    /// Returns gcc cross toolchain or an error
+    pub fn gcc_cross_toolchain(host: &Triple, target: &Triple) -> DistResult<Tool> {
+        let linker = target_gcc_linker(host, target)?;
+        if let Some(tool) = find_tool(&linker, "--version") {
+            Ok(tool)
+        } else {
+            Err(DistError::ToolMissing { tool: linker })
+        }
+    }
 }
 
 /// Info about the cargo toolchain we're using
@@ -461,6 +472,10 @@ pub struct CargoBuildStep {
 /// A wrapper to use instead of `cargo build`, generally used for cross-compilation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CargoBuildWrapper {
+    /// Run 'cargo build' to cross-compile, e.g. from `x86_64-unknown-linux-gnu` to `aarch64-unknown-linux-gnu`
+    /// This wrapper sets the target linker for `cargo build`. e.g. `aarch64-linux-gnu-gcc`
+    Plain,
+
     /// Run 'cargo zigbuild' to cross-compile, e.g. from `x86_64-unknown-linux-gnu` to `aarch64-unknown-linux-gnu`
     /// cf. <https://github.com/rust-cross/cargo-zigbuild>
     ZigBuild,
@@ -473,6 +488,7 @@ pub enum CargoBuildWrapper {
 impl std::fmt::Display for CargoBuildWrapper {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.pad(match self {
+            CargoBuildWrapper::Plain => "cargo-build",
             CargoBuildWrapper::ZigBuild => "cargo-zigbuild",
             CargoBuildWrapper::Xwin => "cargo-xwin",
         })
@@ -510,7 +526,12 @@ pub fn build_wrapper_for_cross(
         OperatingSystem::Linux => match host.operating_system {
             OperatingSystem::Linux | OperatingSystem::Darwin | OperatingSystem::Windows => {
                 // zigbuild works for e.g. x86_64-unknown-linux-gnu => aarch64-unknown-linux-gnu
-                Ok(Some(CargoBuildWrapper::ZigBuild))
+                match target.architecture {
+                    Architecture::Riscv64(_) | Architecture::LoongArch64 => {
+                        Ok(Some(CargoBuildWrapper::Plain))
+                    },
+                    _ => Ok(Some(CargoBuildWrapper::ZigBuild))
+                }
             }
             _ => {
                 Err(DistError::UnsupportedCrossCompile {

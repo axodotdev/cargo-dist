@@ -10,7 +10,7 @@
 //! It's currently not terribly well-suited to being used as a pure library because it happily
 //! writes to stderr/stdout whenever it pleases. Suboptimal for a library.
 
-use std::io::Write;
+use std::{borrow::Cow, io::Write};
 
 use announce::TagSettings;
 use axoasset::LocalAsset;
@@ -79,6 +79,7 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
 
     let tools = dist.tools;
     let host = tools.host_target.parse()?;
+    let mut plain_cross_targets = Vec::new();
 
     for step in dist.local_build_steps.iter() {
         // Can't require cross-compilation tools if we aren't compiling.
@@ -92,6 +93,9 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
                 let wrapper = tasks::build_wrapper_for_cross(&host, &target)?;
 
                 match wrapper {
+                    Some(CargoBuildWrapper::Plain) => {
+                        plain_cross_targets.push(target);
+                    }
                     Some(CargoBuildWrapper::Xwin) => {
                         need_xwin = true;
                     }
@@ -109,12 +113,18 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
     //
     // bool::then(f) returns an Option, so we start with a
     // Vec<Option<Result<&Tool, DistResult>>>.
-    let all_tools: Vec<Option<DistResult<&Tool>>> = vec![
-        need_cargo_auditable.then(|| tools.cargo_auditable()),
-        need_omnibor.then(|| tools.omnibor()),
-        need_xwin.then(|| tools.cargo_xwin()),
-        need_zigbuild.then(|| tools.cargo_zigbuild()),
+    let mut all_tools: Vec<Option<DistResult<Cow<Tool>>>> = vec![
+        need_cargo_auditable.then(|| tools.cargo_auditable().map(Cow::Borrowed)),
+        need_omnibor.then(|| tools.omnibor().map(Cow::Borrowed)),
+        need_xwin.then(|| tools.cargo_xwin().map(Cow::Borrowed)),
+        need_zigbuild.then(|| tools.cargo_zigbuild().map(Cow::Borrowed)),
     ];
+    all_tools.extend(
+        plain_cross_targets
+            .iter()
+            .map(|t| Tools::gcc_cross_toolchain(&host, t).map(Cow::Owned))
+            .map(Some),
+    );
 
     // Drop `None`s, then extract the values from the remaining `Option`s.
     let needed_tools = all_tools.into_iter().flatten();

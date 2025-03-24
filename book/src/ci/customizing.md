@@ -119,6 +119,7 @@ dist will transparently use either of:
 
   * [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild)
   * [cargo-xwin](https://github.com/rust-cross/cargo-xwin)
+  * plain `cargo build` with target-specific linkers
 
 To try and build for the target you specified, from the host you specified.
 
