@@ -1,12 +1,14 @@
 <div class="oranda-hide">
 
-# `dist` (formerly known as `cargo-dist`)
+# `cargo-dist`
 
 </div>
 
 [![crates.io](https://img.shields.io/crates/v/cargo-dist.svg)](https://crates.io/crates/cargo-dist)
 [![docs](https://docs.rs/cargo-dist/badge.svg)](https://docs.rs/cargo-dist)
 [![Rust CI](https://github.com/astral-sh/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)](https://github.com/astral-sh/cargo-dist/actions/workflows/ci.yml)
+
+**This is an unofficial fork of [axodotdev/cargo-dist](https://github.com/axodotdev/cargo-dist/) 0.28.0 to apply minor updates and fixes for astral's projects.**
 
 *dist distributes your binaries*
 
