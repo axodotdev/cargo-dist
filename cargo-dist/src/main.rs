@@ -759,11 +759,7 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
         updater.set_github_token(&token);
     }
 
-
-    if updater
-        .load_receipt_as("cargo-dist")
-        .is_err()
-    {
+    if updater.load_receipt_as("cargo-dist").is_err() {
         eprintln!("Unable to load install receipt to check for updates.");
         eprintln!("If you installed this via `brew`, please `brew upgrade cargo-dist`!");
         return Ok(());
