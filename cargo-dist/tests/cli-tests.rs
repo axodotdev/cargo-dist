@@ -123,7 +123,7 @@ fn test_lib_manifest() {
         .arg("--output-format=json")
         .arg("--verbose=error")
         .arg("--tag")
-        .arg(&format!("cargo-dist-schema-v{}", version))
+        .arg(format!("cargo-dist-schema-v{}", version))
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
@@ -149,7 +149,7 @@ fn test_lib_manifest_slash() {
         .arg("--output-format=json")
         .arg("--verbose=error")
         .arg("--tag")
-        .arg(&format!("cargo-dist-schema/v{}", version))
+        .arg(format!("cargo-dist-schema/v{}", version))
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
@@ -267,7 +267,7 @@ fn generate_installer(version: &axotag::Version, release_type: ReleaseSourceType
 }
 
 #[test]
-#[ignore = "can't be reenabled until after the rename"]
+#[ignore = "mysterious GITHUB_TOKEN permission issues abound"]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
     if std::env::var(ENV_RUIN_ME)
@@ -304,18 +304,6 @@ fn test_self_update() {
         // Remove the installed binary before running the next test
         std::fs::remove_file(installed_bin).unwrap();
 
-        // Then rerun with Axo; this is in one function because
-        // they touch the same global files and can't happen
-        // in parallel.
-        args.release_type = ReleaseSourceType::Axo;
-        let installed_bin = axoupdater::test::helpers::perform_runtest(&args);
-        assert!(installed_bin.exists());
-        let status = Command::new(&installed_bin)
-            .arg("--version")
-            .status()
-            .expect("binary didn't exist or --version returned nonzero");
-        assert!(status.success());
-
         // Next two runtests: like the above, but we produce
         // new installers so that we test against the latest installer
         // code in this PR instead of the installers that were generated
@@ -329,7 +317,7 @@ fn test_self_update() {
 
         let mut updater = AxoUpdater::new_for("cargo-dist");
         updater.set_release_source(axoupdater::ReleaseSource {
-            release_type: ReleaseSourceType::Axo,
+            release_type: ReleaseSourceType::GitHub,
             owner: "astral-sh".to_owned(),
             name: "cargo-dist".to_owned(),
             app_name: "cargo-dist".to_owned(),
@@ -348,18 +336,6 @@ fn test_self_update() {
         std::env::set_var("CARGO_DIST_USE_INSTALLER_AT_PATH", installer_path);
 
         args.release_type = ReleaseSourceType::GitHub;
-        let installed_bin = axoupdater::test::helpers::perform_runtest(&args);
-        assert!(installed_bin.exists());
-        let status = Command::new(&installed_bin)
-            .arg("--version")
-            .status()
-            .expect("binary didn't exist or --version returned nonzero");
-        assert!(status.success());
-
-        // And once more, with Axo
-        generate_installer(new_version, ReleaseSourceType::Axo);
-
-        args.release_type = ReleaseSourceType::Axo;
         let installed_bin = axoupdater::test::helpers::perform_runtest(&args);
         assert!(installed_bin.exists());
         let status = Command::new(&installed_bin)

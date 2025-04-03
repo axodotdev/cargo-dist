@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn test_target_for_github_runner() {
         assert_eq!(
-            target_for_github_runner(GithubRunnerRef::from_str("ubuntu-20.04")),
+            target_for_github_runner(GithubRunnerRef::from_str("ubuntu-22.04")),
             Some(t::TARGET_X64_LINUX_GNU)
         );
         assert_eq!(

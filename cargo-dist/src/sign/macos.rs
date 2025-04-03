@@ -5,6 +5,7 @@
 //! 2) Apple expects certificates to be located in the Keychain,
 //!    a Mac-specific certificate store, which interacts a bit
 //!    weirdly with our ephemeral runner setup in CI.
+//!
 //! Most of this module is actually concerned with ephemeral
 //! keychain setup, with the signing section of the code relatively
 //! short in comparison. The keychain code will be reused elsewhere

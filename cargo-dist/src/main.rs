@@ -724,12 +724,12 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     }
 
     if this_cargo_dist_provided_by_brew() {
-        eprintln!("Your copy of `dist` seems to have been installed via Homebrew.");
+        eprintln!("Your copy of `cargo-dist` seems to have been installed via Homebrew.");
         eprintln!("Please run `brew upgrade cargo-dist` to update this copy.");
         return Ok(());
     }
 
-    let mut updater = AxoUpdater::new_for("dist");
+    let mut updater = AxoUpdater::new_for("cargo-dist");
 
     // If there's a specific version needed, random-access query it by tag,
     // because we always use the same tag format and this is fastest while
@@ -759,19 +759,10 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
         updater.set_github_token(&token);
     }
 
-    // First, try to check for a "dist" receipt
-    // (this might be a post-rename release)
-    if updater.load_receipt_as("dist").is_err() {
-        // If that didn't work, try again as "cargo-dist"
-        if updater
-            .load_receipt_as("cargo-dist")
-            .map(|updater| updater.set_name("dist"))
-            .is_err()
-        {
-            eprintln!("Unable to load install receipt to check for updates.");
-            eprintln!("If you installed this via `brew`, please `brew upgrade cargo-dist`!");
-            return Ok(());
-        }
+    if updater.load_receipt_as("cargo-dist").is_err() {
+        eprintln!("Unable to load install receipt to check for updates.");
+        eprintln!("If you installed this via `brew`, please `brew upgrade cargo-dist`!");
+        return Ok(());
     }
 
     if !updater.check_receipt_is_for_this_executable()? {

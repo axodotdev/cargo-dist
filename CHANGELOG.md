@@ -3,9 +3,22 @@
 Nothing Yet!
 
 
-# Version 0.28.1 (2025-04-03)
+# Version 0.28.3 (2025-04-03)
 
 Nothing Yet!
+
+
+# Version 0.28.2 (2025-04-03)
+
+* fixed warning about shadowed binaries
+* updated old dependencies
+* updated the default github runners and glibc version
+* potentially fixed self updater
+
+
+# Version 0.28.1 (2025-04-03)
+
+Forked project.
 
 # Version 0.28.0 (2025-01-08)
 
