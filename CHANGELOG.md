@@ -2,6 +2,11 @@
 
 Nothing Yet!
 
+
+# Version 0.28.1 (2025-04-03)
+
+Nothing Yet!
+
 # Version 0.28.0 (2025-01-08)
 
 This release contains a new feature that improves the Windows PowerShell installer. We've also made some behind-the-scenes changes which most users won't notice yet - keep an eye out for our next major release!

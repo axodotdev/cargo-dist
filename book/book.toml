@@ -6,8 +6,8 @@ src = "src"
 title = "dist"
 
 [output.html]
-git-repository-url = "https://github.com/axodotdev/cargo-dist"
-edit-url-template = "https://github.com/axodotdev/cargo-dist/edit/main/book/{path}"
+git-repository-url = "https://github.com/astral-sh/cargo-dist"
+edit-url-template = "https://github.com/astral-sh/cargo-dist/edit/main/book/{path}"
 search.use-boolean-and = true
 
 [output.linkcheck]
