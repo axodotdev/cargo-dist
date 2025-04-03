@@ -267,6 +267,7 @@ fn generate_installer(version: &axotag::Version, release_type: ReleaseSourceType
 }
 
 #[test]
+#[ignore = "mysterious GITHUB_TOKEN permission issues abound"]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
     if std::env::var(ENV_RUIN_ME)
