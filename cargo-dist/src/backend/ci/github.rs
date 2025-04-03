@@ -638,7 +638,7 @@ pub fn runner_to_config(runner: &GithubRunnerRef) -> GithubRunnerConfig {
     }
 }
 
-const DEFAULT_LINUX_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("ubuntu-20.04");
+const DEFAULT_LINUX_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("ubuntu-22.04");
 
 fn default_global_runner_config() -> GithubRunnerConfig {
     runner_to_config(DEFAULT_LINUX_RUNNER)
@@ -659,14 +659,14 @@ fn github_runner_for_target(
     // where random system dependencies can creep in and be very
     // recent. This helps with portability!
     let result = Some(match target_triple.operating_system {
-        OperatingSystem::Linux => runner_to_config(GithubRunnerRef::from_str("ubuntu-20.04")),
+        OperatingSystem::Linux => runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04")),
         OperatingSystem::Darwin => runner_to_config(GithubRunnerRef::from_str("macos-13")),
         OperatingSystem::Windows => {
             // Default to cargo-xwin for Windows cross-compiles
             if target_triple.architecture != Architecture::X86_64 {
                 cargo_xwin()
             } else {
-                runner_to_config(GithubRunnerRef::from_str("windows-2019"))
+                runner_to_config(GithubRunnerRef::from_str("windows-2022"))
             }
         }
         _ => return Ok(None),
@@ -677,7 +677,7 @@ fn github_runner_for_target(
 
 fn cargo_xwin() -> GithubRunnerConfig {
     GithubRunnerConfig {
-        runner: GithubRunnerRef::from_str("ubuntu-20.04").to_owned(),
+        runner: GithubRunnerRef::from_str("ubuntu-22.04").to_owned(),
         host: targets::TARGET_X64_LINUX_GNU.to_owned(),
         container: Some(cargo_dist_schema::ContainerConfig {
             image: ContainerImageRef::from_str("messense/cargo-xwin").to_owned(),

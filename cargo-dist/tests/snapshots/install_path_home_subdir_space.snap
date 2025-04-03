@@ -428,7 +428,7 @@ select_archive_for_arch() {
             ;;
         "x86_64-unknown-linux-gnu")
             _archive="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
-            if ! check_glibc "2" "31"; then
+            if ! check_glibc "2" "35"; then
                 _archive=""
             fi
             if [ -n "$_archive" ]; then
@@ -2242,7 +2242,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "cache_provider": "github"
           },
           {
-            "runner": "windows-2019",
+            "runner": "windows-2022",
             "host": "x86_64-pc-windows-msvc",
             "install_dist": {
               "shell": "pwsh",
@@ -2255,7 +2255,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "cache_provider": "github"
           },
           {
-            "runner": "ubuntu-20.04",
+            "runner": "ubuntu-22.04",
             "host": "x86_64-unknown-linux-gnu",
             "install_dist": {
               "shell": "sh",
