@@ -1,7 +1,7 @@
 # cargo-dist-schema
 
 [![crates.io](https://img.shields.io/crates/v/cargo-dist-schema.svg)](https://crates.io/crates/cargo-dist) [![docs](https://docs.rs/cargo-dist-schema/badge.svg)](https://docs.rs/cargo-dist-schema)
-![Rust CI](https://github.com/axodotdev/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)
+![Rust CI](https://github.com/astral-sh/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)
 
 Schema reporting/parsing for dist's `dist-manifest.json`, which is the result you get from `--output-format=json` when running `cargo dist build` or `cargo dist plan`.
 
