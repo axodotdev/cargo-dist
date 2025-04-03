@@ -71,7 +71,7 @@ impl ApplyLayer for GithubCiConfig {
     ) {
         self.common.apply_layer(common);
 
-        let mk_default_github_runner = || GithubRunner::new("ubuntu-20.04".to_owned());
+        let mk_default_github_runner = || GithubRunner::new("ubuntu-22.04".to_owned());
         self.runners.apply_val(runners.map(|runners| {
             runners
                 .into_iter()
