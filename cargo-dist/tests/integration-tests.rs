@@ -45,7 +45,6 @@ windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
 cargo-auditable = true
 cargo-cyclonedx = true
-omnibor = true
 
 [workspace.metadata.dist.min-glibc-version]
 "*" = "2.17"

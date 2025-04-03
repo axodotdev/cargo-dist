@@ -10,8 +10,8 @@ exclude = ["axoproject/tests/projects/"]
 [workspace.package]
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/axodotdev/cargo-dist"
-homepage = "https://opensource.axo.dev/cargo-dist/"
+repository = "https://github.com/astral-sh/cargo-dist"
+homepage = "https://github.com/astral-sh/cargo-dist"
 version = "0.28.0"
 rust-version = "1.74"
 

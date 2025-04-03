@@ -77,7 +77,7 @@ pub enum DistError {
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
     #[diagnostic(
-        help("this is a bug in dist, let us know and we'll fix it: https://github.com/axodotdev/cargo-dist/issues/new")
+        help("this is a bug in dist, let us know and we'll fix it: https://github.com/astral-sh/cargo-dist/issues/new")
     )]
     Jinja {
         /// The SourceFile we were try to parse

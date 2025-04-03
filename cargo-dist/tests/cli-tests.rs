@@ -242,7 +242,7 @@ fn generate_installer(version: &axotag::Version, release_type: ReleaseSourceType
             format!("https://axodotdev.artifacts.axodotdev.host/cargo-dist/v{version}",)
         }
         ReleaseSourceType::GitHub => {
-            format!("https://github.com/axodotdev/cargo-dist/releases/download/v{version}",)
+            format!("https://github.com/astral-sh/cargo-dist/releases/download/v{version}",)
         }
     };
 
@@ -279,7 +279,7 @@ fn test_self_update() {
         let mut args = RuntestArgs {
             app_name: "cargo-dist".to_owned(),
             package: "cargo-dist".to_owned(),
-            owner: "axodotdev".to_owned(),
+            owner: "astral-sh".to_owned(),
             bin: PathBuf::from(BIN),
             binaries: vec!["dist".to_owned()],
             args: vec![
@@ -330,7 +330,7 @@ fn test_self_update() {
         let mut updater = AxoUpdater::new_for("cargo-dist");
         updater.set_release_source(axoupdater::ReleaseSource {
             release_type: ReleaseSourceType::Axo,
-            owner: "axodotdev".to_owned(),
+            owner: "astral-sh".to_owned(),
             name: "cargo-dist".to_owned(),
             app_name: "cargo-dist".to_owned(),
         });

@@ -1,7 +1,7 @@
 {
   "name": "axonpminstaller",
   "version": "0.0.0",
-  "repository": "https://github.com/axodotdev/cargo-dist/",
+  "repository": "https://github.com/astral-sh/cargo-dist/",
   "preferUnplugged": true,
   "artifactDownloadUrl": "",
   "glibcMinimum": {

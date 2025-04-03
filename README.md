@@ -6,7 +6,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/cargo-dist.svg)](https://crates.io/crates/cargo-dist)
 [![docs](https://docs.rs/cargo-dist/badge.svg)](https://docs.rs/cargo-dist)
-[![Rust CI](https://github.com/axodotdev/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)](https://github.com/axodotdev/cargo-dist/actions/workflows/ci.yml)
+[![Rust CI](https://github.com/astral-sh/cargo-dist/workflows/Rust%20CI/badge.svg?branch=main)](https://github.com/astral-sh/cargo-dist/actions/workflows/ci.yml)
 
 *dist distributes your binaries*
 
@@ -19,7 +19,7 @@ git push
 git push --tags
 ```
 
-Will make [this Github Release](https://github.com/axodotdev/axolotlsay/releases/tag/v0.2.0):
+Will make [this Github Release](https://github.com/astral-sh/axolotlsay/releases/tag/v0.2.0):
 
 Or if you're using [oranda](https://opensource.axo.dev/oranda/), you'll get [this website](https://opensource.axo.dev/axolotlsay/).
 
