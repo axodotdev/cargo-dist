@@ -724,12 +724,12 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
     }
 
     if this_cargo_dist_provided_by_brew() {
-        eprintln!("Your copy of `dist` seems to have been installed via Homebrew.");
+        eprintln!("Your copy of `cargo-dist` seems to have been installed via Homebrew.");
         eprintln!("Please run `brew upgrade cargo-dist` to update this copy.");
         return Ok(());
     }
 
-    let mut updater = AxoUpdater::new_for("dist");
+    let mut updater = AxoUpdater::new_for("cargo-dist");
 
     // If there's a specific version needed, random-access query it by tag,
     // because we always use the same tag format and this is fastest while
