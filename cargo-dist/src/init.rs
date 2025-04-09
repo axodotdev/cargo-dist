@@ -521,6 +521,7 @@ fn get_new_dist_metadata(
             create_release: None,
             github_releases_repo: None,
             github_releases_submodule_path: None,
+            github_action_commits: None,
             github_release: None,
             pr_run_mode: None,
             allow_dirty: None,
@@ -1043,6 +1044,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         cargo_cyclonedx,
         omnibor,
         // These settings are complex enough that we don't support editing them in init
+        github_action_commits: _,
         extra_artifacts: _,
         github_custom_runners: _,
         github_custom_job_permissions: _,

@@ -67,6 +67,7 @@ impl DistMetadata {
             github_releases_repo,
             github_releases_submodule_path,
             github_release,
+            github_action_commits,
             ssldotcom_windows_sign,
             macos_sign,
             mac_pkg_config,
@@ -155,12 +156,14 @@ impl DistMetadata {
             if github_custom_runners.is_some()
                 || github_custom_job_permissions.is_some()
                 || github_build_setup.is_some()
+                || github_action_commits.is_some()
             {
                 Some(GithubCiLayer {
                     common: CommonCiLayer::default(),
                     runners: github_custom_runners,
                     permissions: github_custom_job_permissions,
                     build_setup: github_build_setup,
+                    action_commits: github_action_commits,
                 })
             } else {
                 None

@@ -73,6 +73,47 @@ identifier = "dev.axo.axolotsay"
 }
 
 #[test]
+fn axolotlsay_action_commit() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell"]
+tap = "axodotdev/homebrew-packages"
+publish-jobs = ["homebrew", "npm"]
+targets = ["x86_64-unknown-linux-gnu", "i686-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "x86_64-pc-windows-gnu", "aarch64-apple-darwin"]
+install-success-msg = ">o_o< everything's installed!"
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+npm-scope ="@axodotdev"
+github-attestations = true
+cache-builds = true
+
+[workspace.metadata.dist.github-action-commits]
+"actions/checkout" = "abcd1234"
+"actions/upload-artifact" = "ababcdcd"
+"actions/download-artifact" = "efef1212"
+"actions/attest-build-provenance" = "34253426"
+"swatinem/rust-cache" = "1ab23467"
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
 fn axolotlsay_homebrew_linux_only() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|mut ctx| {

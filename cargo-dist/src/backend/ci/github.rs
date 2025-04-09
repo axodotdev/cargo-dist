@@ -102,6 +102,8 @@ pub struct GithubCiInfo {
     /// Info about making a GitHub Release (if we're making one)
     #[serde(flatten)]
     pub github_release: Option<GithubReleaseInfo>,
+    /// Action versions to use
+    pub actions: SortedMap<String, String>,
     /// Whether to install cargo-auditable
     pub need_cargo_auditable: bool,
     /// Whether to run cargo-cyclonedx
@@ -366,6 +368,25 @@ impl GithubCiInfo {
             .transpose()?
             .unwrap_or_default();
 
+        let default_action_versions = [
+            ("actions/checkout", "v4"),
+            ("actions/upload-artifact", "v4"),
+            ("actions/download-artifact", "v4"),
+            ("actions/attest-build-provenance", "v2"),
+            ("swatinem/rust-cache", "v2"),
+        ];
+        let actions = default_action_versions
+            .iter()
+            .map(|(name, version)| {
+                let version = ci_config
+                    .action_commits
+                    .get(*name)
+                    .map(|c| &**c)
+                    .unwrap_or(*version);
+                (name.to_string(), format!("{name}@{version}"))
+            })
+            .collect::<SortedMap<_, _>>();
+
         Ok(GithubCiInfo {
             github_ci_workflow_dir,
             tag_namespace,
@@ -394,6 +415,7 @@ impl GithubCiInfo {
             root_permissions,
             github_build_setup,
             github_release,
+            actions,
             need_cargo_auditable,
             need_cargo_cyclonedx,
             need_omnibor,

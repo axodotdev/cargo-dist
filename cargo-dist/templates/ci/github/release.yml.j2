@@ -117,7 +117,7 @@ jobs:
       AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     {{%- endif %}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: {{{actions["actions/checkout"] | safe }}}
         with:
           submodules: recursive
       {{%- if rust_version %}}
@@ -130,7 +130,7 @@ jobs:
         shell: bash
         run: {{{ dist_install_for_coordinator.run }}}
       - name: Cache dist
-        uses: actions/upload-artifact@v4
+        uses: {{{actions["actions/upload-artifact"] | safe }}}
         with:
           name: cargo-dist-cache
           path: ~/.cargo/bin/dist
@@ -156,7 +156,7 @@ jobs:
           echo "tag-flag=--tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json) --force-tag" >> "$GITHUB_OUTPUT"
           {{%- endif %}}
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v4
+        uses: {{{actions["actions/upload-artifact"] | safe }}}
         with:
           name: artifacts-plan-dist-manifest
           path: plan-dist-manifest.json
@@ -221,7 +221,7 @@ jobs:
       - name: enable windows longpaths
         run: |
           git config --global core.longpaths true
-      - uses: actions/checkout@v4
+      - uses: {{{actions["actions/checkout"] | safe }}}
         with:
           submodules: recursive
       - name: Install Rust non-interactively if not already installed
@@ -287,7 +287,7 @@ jobs:
         {{%- endif %}}
       {{%- endfor %}}
       {{%- if cache_builds %}}
-      - uses: swatinem/rust-cache@v2
+      - uses: {{{actions["swatinem/rust-cache"] | safe }}}
         with:
           key: ${{ join(matrix.targets, '-') }}
           cache-provider: ${{ matrix.cache_provider }}
@@ -296,7 +296,7 @@ jobs:
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v4
+        uses: {{{actions["actions/download-artifact"] | safe }}}
         with:
           pattern: artifacts-*
           path: target/distrib/
@@ -322,7 +322,7 @@ jobs:
           echo "dist ran successfully"
       {{%- if github_attestations is defined and github_attestations %}}
       - name: Attest
-        uses: actions/attest-build-provenance@v2
+        uses: {{{actions["actions/attest-build-provenance"] | safe }}}
         with:
           subject-path: "target/distrib/*${{ join(matrix.targets, ', ') }}*"
       {{%- endif %}}
@@ -340,7 +340,7 @@ jobs:
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v4
+        uses: {{{actions["actions/upload-artifact"] | safe }}}
         with:
           name: artifacts-build-local-${{ join(matrix.targets, '_') }}
           path: |
@@ -386,7 +386,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
     steps:
-      - uses: actions/checkout@v4
+      - uses: {{{actions["actions/checkout"] | safe }}}
         with:
           submodules: recursive
       {{%- if rust_version %}}
@@ -394,7 +394,7 @@ jobs:
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - name: Install cached dist
-        uses: actions/download-artifact@v4
+        uses: {{{actions["actions/download-artifact"] | safe }}}
         with:
           name: cargo-dist-cache
           path: ~/.cargo/bin/
@@ -415,7 +415,7 @@ jobs:
       {{%- endif %}}
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
-        uses: actions/download-artifact@v4
+        uses: {{{actions["actions/download-artifact"] | safe }}}
         with:
           pattern: artifacts-*
           path: target/distrib/
@@ -448,7 +448,7 @@ jobs:
             echo "EOF" >> "$GITHUB_OUTPUT"
       {{%- endif %}}
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v4
+        uses: {{{actions["actions/upload-artifact"] | safe }}}
         with:
           name: artifacts-build-global
           path: |
@@ -523,7 +523,7 @@ jobs:
     outputs:
       val: ${{ steps.host.outputs.manifest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: {{{actions["actions/checkout"] | safe }}}
         with:
           submodules: recursive
       {{%- if rust_version %}}
@@ -531,14 +531,14 @@ jobs:
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - name: Install cached dist
-        uses: actions/download-artifact@v4
+        uses: {{{actions["actions/download-artifact"] | safe }}}
         with:
           name: cargo-dist-cache
           path: ~/.cargo/bin/
       - run: chmod +x ~/.cargo/bin/dist
       # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
-        uses: actions/download-artifact@v4
+        uses: {{{actions["actions/download-artifact"] | safe }}}
         with:
           pattern: artifacts-*
           path: target/distrib/
@@ -557,7 +557,7 @@ jobs:
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v4
+        uses: {{{actions["actions/upload-artifact"] | safe }}}
         with:
           # Overwrite the previous copy
           name: artifacts-dist-manifest
@@ -664,7 +664,7 @@ jobs:
       AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
     {{%- endif %}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: {{{actions["actions/checkout"] | safe }}}
         with:
           submodules: recursive
     {{%- if "axodotdev" in hosting_providers %}}
@@ -673,13 +673,13 @@ jobs:
         run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
       {{%- endif %}}
       - name: Install cached dist
-        uses: actions/download-artifact@v4
+        uses: {{{actions["actions/download-artifact"] | safe }}}
         with:
           name: cargo-dist-cache
           path: ~/.cargo/bin/
       - run: chmod +x ~/.cargo/bin/dist
       - name: Fetch Axo Artifacts
-        uses: actions/download-artifact@v4
+        uses: {{{actions["actions/download-artifact"] | safe }}}
         with:
           pattern: artifacts-*
           path: target/distrib/
