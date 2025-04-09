@@ -486,6 +486,10 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_custom_job_permissions: Option<SortedMap<String, GithubPermissionMap>>,
 
+    /// Use these specific commits of these specific actions
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_action_commits: Option<SortedMap<String, String>>,
+
     /// Aliases to install binaries as
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bin_aliases: Option<SortedMap<String, Vec<String>>>,
@@ -607,6 +611,7 @@ impl DistMetadata {
             hosting: _,
             github_custom_runners: _,
             github_custom_job_permissions: _,
+            github_action_commits: _,
             bin_aliases: _,
             tag_namespace: _,
             install_updater: _,
@@ -709,6 +714,7 @@ impl DistMetadata {
             extra_artifacts,
             github_custom_runners,
             github_custom_job_permissions,
+            github_action_commits,
             bin_aliases,
             tag_namespace,
             install_updater,
@@ -828,6 +834,9 @@ impl DistMetadata {
         }
         if github_custom_job_permissions.is_some() {
             warn!("package.metadata.dist.github-custom-job-permissions is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_action_commits.is_some() {
+            warn!("package.metadata.dist.github-action-commits is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if github_custom_runners.is_some() {
             warn!("package.metadata.dist.github-custom-runners is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
