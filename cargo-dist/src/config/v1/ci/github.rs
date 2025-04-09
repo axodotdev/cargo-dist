@@ -28,6 +28,10 @@ pub struct GithubCiLayer {
     /// Custom permissions for jobs
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build_setup: Option<String>,
+
+    /// Use these commits for actions
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action_commits: Option<SortedMap<String, String>>,
 }
 
 /// github ci config (final)
@@ -44,6 +48,9 @@ pub struct GithubCiConfig {
 
     /// Custom permissions for jobs
     pub build_setup: Option<String>,
+
+    /// Use these commits for github actions
+    pub action_commits: SortedMap<String, String>,
 }
 
 impl GithubCiConfig {
@@ -53,6 +60,7 @@ impl GithubCiConfig {
             common: common.clone(),
             runners: Default::default(),
             permissions: Default::default(),
+            action_commits: Default::default(),
             build_setup: None,
         }
     }
@@ -67,6 +75,7 @@ impl ApplyLayer for GithubCiConfig {
             runners,
             permissions,
             build_setup,
+            action_commits,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -134,6 +143,7 @@ impl ApplyLayer for GithubCiConfig {
         }));
         self.permissions.apply_val(permissions);
         self.build_setup.apply_opt(build_setup);
+        self.action_commits.apply_val(action_commits);
     }
 }
 impl ApplyLayer for GithubCiLayer {
@@ -145,12 +155,14 @@ impl ApplyLayer for GithubCiLayer {
             runners,
             permissions,
             build_setup,
+            action_commits,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
         self.runners.apply_opt(runners);
         self.permissions.apply_opt(permissions);
         self.build_setup.apply_opt(build_setup);
+        self.action_commits.apply_opt(action_commits);
     }
 }
 
