@@ -1739,6 +1739,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install Rust
         run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
@@ -1800,6 +1801,7 @@ jobs:
           git config --global core.longpaths true
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
@@ -1860,6 +1862,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install Rust
         run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
@@ -1911,6 +1914,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install Rust
         run: rustup update "1.67.1" --no-self-update && rustup default "1.67.1"
@@ -1977,4 +1981,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
