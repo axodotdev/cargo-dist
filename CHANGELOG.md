@@ -1,7 +1,9 @@
 # Unreleased
 
-Nothing Yet!
-
+* set `persist-credentials = false` for `actions/checkout` uses to harden release.yml
+* added `[dist.binaries]` to override what binaries are expected to be available for a platform('s archives)
+* added `[dist.github-action-commits]` to specify what commit of an action to use in release.yml
+* fixed copyright header
 
 # Version 0.28.3 (2025-04-03)
 
