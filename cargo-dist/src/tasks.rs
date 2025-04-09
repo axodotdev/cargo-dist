@@ -830,6 +830,8 @@ pub struct Release {
     pub app_homepage_url: Option<String>,
     /// A list of the app's keywords
     pub app_keywords: Option<Vec<String>>,
+    /// The package this release is based on
+    pub pkg_idx: PackageIdx,
     /// The version of the app
     pub version: Version,
     /// The unique id of the release (e.g. "my-app-v1.0.0")
@@ -1298,6 +1300,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             app_keywords,
             version,
             id,
+            pkg_idx,
             global_artifacts: vec![],
             bins: vec![],
             cdylibs: vec![],
@@ -1328,20 +1331,33 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             cdylibs,
             cstaticlibs,
             config,
+            pkg_idx,
             ..
         } = self.release_mut(to_release);
         let static_assets = static_assets.clone();
         let variant_id = format!("{release_id}-{target}");
         info!("added variant {variant_id}");
+        let binaries_map = &config.artifacts.archives.binaries;
 
         variants.push(idx);
         targets.push(target.clone());
 
-        let mut packageables: Vec<(PackageIdx, String, BinaryKind)> = bins
-            .clone()
-            .into_iter()
-            .map(|(idx, b)| (idx, b, BinaryKind::Executable))
-            .collect();
+        // Apply binary list overrides
+        let mapped_bins = binaries_map
+            .get(target.as_str())
+            .or_else(|| binaries_map.get("*"));
+        let mut packageables: Vec<(PackageIdx, String, BinaryKind)> =
+            if let Some(mapped_bins) = mapped_bins {
+                mapped_bins
+                    .iter()
+                    .map(|b| (*pkg_idx, b.to_string(), BinaryKind::Executable))
+                    .collect()
+            } else {
+                bins.clone()
+                    .into_iter()
+                    .map(|(idx, b)| (idx, b, BinaryKind::Executable))
+                    .collect()
+            };
 
         // If we're not packaging libraries here, avoid chaining them
         // into the list we're iterating over

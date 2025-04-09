@@ -2644,6 +2644,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: "mistydemeo/homebrew-formulae"
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula

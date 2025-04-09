@@ -13,13 +13,14 @@
       GITHUB_EMAIL: "admin+bot@axo.dev"
     if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: {{{ actions["actions/checkout"] | safe }}}
         with:
+          persist-credentials: false
           repository: {{{ tap }}}
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
       - name: Fetch homebrew formulae
-        uses: actions/download-artifact@v4
+        uses: {{{ actions["actions/download-artifact"] | safe }}}
         with:
           pattern: artifacts-*
           path: Formula/

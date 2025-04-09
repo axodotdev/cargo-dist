@@ -176,6 +176,18 @@ download_binary_and_run_installer() {
             _updater_name=""
             _updater_bin=""
             ;;
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz")
+            _arch="i686-unknown-linux-gnu"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
+            _libs=""
+            _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
+            _updater_name=""
+            _updater_bin=""
+            ;;
         "axolotlsay-x86_64-apple-darwin.tar.gz")
             _arch="x86_64-apple-darwin"
             _zip_ext=".tar.gz"
@@ -188,11 +200,23 @@ download_binary_and_run_installer() {
             _updater_name=""
             _updater_bin=""
             ;;
-        "axolotlsay-x86_64-pc-windows-msvc.tar.gz")
-            _arch="x86_64-pc-windows-msvc"
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz")
+            _arch="x86_64-pc-windows-gnu"
             _zip_ext=".tar.gz"
             _bins="axolotlsay.exe"
             _bins_js_array='"axolotlsay.exe"'
+            _libs=""
+            _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
+            _updater_name=""
+            _updater_bin=""
+            ;;
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz")
+            _arch="x86_64-pc-windows-msvc"
+            _zip_ext=".tar.gz"
+            _bins="axlotolsay.exe axolotlsayw.exe"
+            _bins_js_array='"axlotolsay.exe","axolotlsayw.exe"'
             _libs=""
             _libs_js_array=""
             _staticlibs=""
@@ -323,16 +347,22 @@ json_binary_aliases() {
 
     case "$_arch" in 
     "aarch64-apple-darwin")
-        echo '{"nosuchbin":["axolotlsay-link1","axolotlsay-link2"]}'
+        echo '{}'
+        ;;
+    "aarch64-pc-windows-gnu")
+        echo '{}'
+        ;;
+    "i686-unknown-linux-gnu")
+        echo '{}'
         ;;
     "x86_64-apple-darwin")
-        echo '{"nosuchbin":["axolotlsay-link1","axolotlsay-link2"]}'
+        echo '{}'
         ;;
     "x86_64-pc-windows-gnu")
-        echo '{"nosuchbin.exe":["axolotlsay-link1.exe","axolotlsay-link2.exe"]}'
+        echo '{}'
         ;;
     "x86_64-unknown-linux-gnu")
-        echo '{"nosuchbin":["axolotlsay-link1","axolotlsay-link2"]}'
+        echo '{}'
         ;;
     *)
         echo '{}'
@@ -347,9 +377,20 @@ aliases_for_binary() {
     case "$_arch" in 
     "aarch64-apple-darwin")
         case "$_bin" in
-        "nosuchbin")
-            echo "axolotlsay-link1 axolotlsay-link2"
+        *)
+            echo ""
             ;;
+        esac
+        ;;
+    "aarch64-pc-windows-gnu")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "i686-unknown-linux-gnu")
+        case "$_bin" in
         *)
             echo ""
             ;;
@@ -357,9 +398,6 @@ aliases_for_binary() {
         ;;
     "x86_64-apple-darwin")
         case "$_bin" in
-        "nosuchbin")
-            echo "axolotlsay-link1 axolotlsay-link2"
-            ;;
         *)
             echo ""
             ;;
@@ -367,9 +405,6 @@ aliases_for_binary() {
         ;;
     "x86_64-pc-windows-gnu")
         case "$_bin" in
-        "nosuchbin.exe")
-            echo "axolotlsay-link1.exe axolotlsay-link2.exe"
-            ;;
         *)
             echo ""
             ;;
@@ -377,9 +412,6 @@ aliases_for_binary() {
         ;;
     "x86_64-unknown-linux-gnu")
         case "$_bin" in
-        "nosuchbin")
-            echo "axolotlsay-link1 axolotlsay-link2"
-            ;;
         *)
             echo ""
             ;;
@@ -410,8 +442,25 @@ select_archive_for_arch() {
                 return 0
             fi
             ;;
+        "aarch64-pc-windows-gnu")
+            _archive="axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
         "aarch64-pc-windows-msvc")
             _archive="axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "i686-unknown-linux-gnu")
+            _archive="axolotlsay-i686-unknown-linux-gnu.tar.gz"
+            if ! check_glibc "2" "35"; then
+                _archive=""
+            fi
             if [ -n "$_archive" ]; then
                 echo "$_archive"
                 return 0
@@ -425,6 +474,11 @@ select_archive_for_arch() {
             fi
             ;;
         "x86_64-pc-windows-gnu")
+            _archive="axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
             _archive="axolotlsay-x86_64-pc-windows-msvc.tar.gz"
             if [ -n "$_archive" ]; then
                 echo "$_archive"
@@ -677,7 +731,7 @@ install() {
         say "  $_lib_name"
     done
 
-    say "everything's installed!"
+    say ">o_o< everything's installed!"
 
     # Avoid modifying the users PATH if they are managing their PATH manually
     case :$PATH:
@@ -1370,30 +1424,12 @@ class Axolotlsay < Formula
   license any_of: ["MIT", "Apache-2.0"]
 
   BINARY_ALIASES = {
-    "aarch64-apple-darwin": {
-      "nosuchbin": [
-        "axolotlsay-link1",
-        "axolotlsay-link2"
-      ]
-    },
-    "x86_64-apple-darwin": {
-      "nosuchbin": [
-        "axolotlsay-link1",
-        "axolotlsay-link2"
-      ]
-    },
-    "x86_64-pc-windows-gnu": {
-      "nosuchbin.exe": [
-        "axolotlsay-link1.exe",
-        "axolotlsay-link2.exe"
-      ]
-    },
-    "x86_64-unknown-linux-gnu": {
-      "nosuchbin": [
-        "axolotlsay-link1",
-        "axolotlsay-link2"
-      ]
-    }
+    "aarch64-apple-darwin": {},
+    "aarch64-pc-windows-gnu": {},
+    "i686-unknown-linux-gnu": {},
+    "x86_64-apple-darwin": {},
+    "x86_64-pc-windows-gnu": {},
+    "x86_64-unknown-linux-gnu": {}
   }
 
   def target_triple
@@ -1530,38 +1566,45 @@ function Install-Binary($install_args) {
 
   # Platform info injected by dist
   $platforms = @{
+    "aarch64-pc-windows-gnu" = @{
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+      "bins" = @("axolotlsay.exe")
+      "libs" = @()
+      "staticlibs" = @()
+      "zip_ext" = ".tar.gz"
+      "aliases" = @{
+      }
+      "aliases_json" = '{}'
+    }
     "aarch64-pc-windows-msvc" = @{
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
-      "bins" = @("axolotlsay.exe")
+      "bins" = @("axlotolsay.exe", "axolotlsayw.exe")
       "libs" = @()
       "staticlibs" = @()
       "zip_ext" = ".tar.gz"
       "aliases" = @{
-        "nosuchbin.exe" = "axolotlsay-link1.exe", "axolotlsay-link2.exe"
       }
-      "aliases_json" = '{"nosuchbin.exe":["axolotlsay-link1.exe","axolotlsay-link2.exe"]}'
+      "aliases_json" = '{}'
     }
     "x86_64-pc-windows-gnu" = @{
-      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-gnu.tar.gz"
       "bins" = @("axolotlsay.exe")
       "libs" = @()
       "staticlibs" = @()
       "zip_ext" = ".tar.gz"
       "aliases" = @{
-        "nosuchbin.exe" = "axolotlsay-link1.exe", "axolotlsay-link2.exe"
       }
-      "aliases_json" = '{"nosuchbin.exe":["axolotlsay-link1.exe","axolotlsay-link2.exe"]}'
+      "aliases_json" = '{}'
     }
     "x86_64-pc-windows-msvc" = @{
       "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
-      "bins" = @("axolotlsay.exe")
+      "bins" = @("axlotolsay.exe", "axolotlsayw.exe")
       "libs" = @()
       "staticlibs" = @()
       "zip_ext" = ".tar.gz"
       "aliases" = @{
-        "nosuchbin.exe" = "axolotlsay-link1.exe", "axolotlsay-link2.exe"
       }
-      "aliases_json" = '{"nosuchbin.exe":["axolotlsay-link1.exe","axolotlsay-link2.exe"]}'
+      "aliases_json" = '{}'
     }
   }
 
@@ -1863,7 +1906,7 @@ function Invoke-Installer($artifacts, $platforms) {
     $NoModifyPath = $env:INSTALLER_NO_MODIFY_PATH
   }
 
-  Write-Information "everything's installed!"
+  Write-Information ">o_o< everything's installed!"
   if (-not $NoModifyPath) {
     Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {
@@ -2624,7 +2667,9 @@ install(false);
   "packages": {
     "": {
       "bin": {
-        "axolotlsay": "run-axolotlsay.js"
+        "axlotolsay": "run-axlotolsay.js",
+        "axolotlsay": "run-axolotlsay.js",
+        "axolotlsayw": "run-axolotlsayw.js"
       },
       "dependencies": {
         "axios": "^1.7.9",
@@ -3340,7 +3385,9 @@ install(false);
   "artifactDownloadUrl": "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2",
   "author": "axodotdev <hello@axo.dev>",
   "bin": {
-    "axolotlsay": "run-axolotlsay.js"
+    "axlotolsay": "run-axlotolsay.js",
+    "axolotlsay": "run-axolotlsay.js",
+    "axolotlsayw": "run-axolotlsayw.js"
   },
   "dependencies": {
     "axios": "^1.7.9",
@@ -3379,10 +3426,25 @@ install(false);
       },
       "zipExt": ".tar.gz"
     },
+    "aarch64-pc-windows-gnu": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
     "aarch64-pc-windows-msvc": {
       "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
       "bins": {
-        "axolotlsay": "axolotlsay.exe"
+        "axlotolsay": "axlotolsay.exe",
+        "axolotlsayw": "axolotlsayw.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "i686-unknown-linux-gnu": {
+      "artifactName": "axolotlsay-i686-unknown-linux-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay"
       },
       "zipExt": ".tar.gz"
     },
@@ -3394,7 +3456,7 @@ install(false);
       "zipExt": ".tar.gz"
     },
     "x86_64-pc-windows-gnu": {
-      "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "artifactName": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
       "bins": {
         "axolotlsay": "axolotlsay.exe"
       },
@@ -3403,7 +3465,8 @@ install(false);
     "x86_64-pc-windows-msvc": {
       "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
       "bins": {
-        "axolotlsay": "axolotlsay.exe"
+        "axlotolsay": "axlotolsay.exe",
+        "axolotlsayw": "axolotlsayw.exe"
       },
       "zipExt": ".tar.gz"
     },
@@ -3421,11 +3484,23 @@ install(false);
     "npm": "9.5.0"
   }
 }
+================ axolotlsay-npm-package.tar.gz/package/run-axlotolsay.js ================
+#!/usr/bin/env node
+
+const { run } = require("./binary");
+run("axlotolsay");
+
 ================ axolotlsay-npm-package.tar.gz/package/run-axolotlsay.js ================
 #!/usr/bin/env node
 
 const { run } = require("./binary");
 run("axolotlsay");
+
+================ axolotlsay-npm-package.tar.gz/package/run-axolotlsayw.js ================
+#!/usr/bin/env node
+
+const { run } = require("./binary");
+run("axolotlsayw");
 
 ================ sha256.sum ================
 CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  axolotlsay-npm-package.tar.gz
@@ -3440,7 +3515,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.2",
   "announcement_changelog": "```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy Bypass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-aarch64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy Bypass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-aarch64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.pkg](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.pkg.sha256) |\n| [axolotlsay-x86_64-pc-windows-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.tar.gz) | x64 MinGW | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-gnu.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.msi) | x64 MinGW | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.msi.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.msi](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.msi.sha256) |\n| [axolotlsay-i686-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz) | x86 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "axolotlsay",
@@ -3467,10 +3542,16 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-aarch64-apple-darwin.pkg",
         "axolotlsay-aarch64-apple-darwin.pkg.sha256",
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz",
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.tar.gz",
         "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
         "axolotlsay-x86_64-apple-darwin.pkg",
         "axolotlsay-x86_64-apple-darwin.pkg.sha256",
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256",
+        "axolotlsay-x86_64-pc-windows-gnu.msi",
+        "axolotlsay-x86_64-pc-windows-gnu.msi.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
         "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
         "axolotlsay-x86_64-pc-windows-msvc.msi",
@@ -3556,10 +3637,54 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "aarch64-apple-darwin"
       ]
     },
+    "axolotlsay-i686-unknown-linux-gnu.tar.gz": {
+      "name": "axolotlsay-i686-unknown-linux-gnu.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "i686-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "axolotlsay-i686-unknown-linux-gnu-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256"
+    },
+    "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "i686-unknown-linux-gnu"
+      ]
+    },
     "axolotlsay-installer.ps1": {
       "name": "axolotlsay-installer.ps1",
       "kind": "installer",
       "target_triples": [
+        "aarch64-pc-windows-gnu",
         "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
@@ -3572,6 +3697,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
+        "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
@@ -3584,7 +3711,9 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
         "aarch64-pc-windows-msvc",
+        "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc",
@@ -3717,6 +3846,73 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "x86_64-apple-darwin"
       ]
     },
+    "axolotlsay-x86_64-pc-windows-gnu.msi": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.msi",
+      "kind": "installer",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ],
+      "assets": [
+        {
+          "id": "axolotlsay-x86_64-pc-windows-gnu-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "description": "install via msi",
+      "checksum": "axolotlsay-x86_64-pc-windows-gnu.msi.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.msi.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.msi.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ]
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.tar.gz": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "axolotlsay-x86_64-pc-windows-gnu-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ]
+    },
     "axolotlsay-x86_64-pc-windows-msvc.msi": {
       "name": "axolotlsay-x86_64-pc-windows-msvc.msi",
       "kind": "installer",
@@ -3725,9 +3921,15 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       ],
       "assets": [
         {
-          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay.exe",
+          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axlotolsay",
+          "name": "axlotolsay",
+          "path": "axlotolsay.exe",
+          "kind": "executable"
+        },
+        {
+          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsayw",
+          "name": "axolotlsayw",
+          "path": "axolotlsayw.exe",
           "kind": "executable"
         }
       ],
@@ -3769,9 +3971,15 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsay",
-          "name": "axolotlsay",
-          "path": "axolotlsay.exe",
+          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axlotolsay",
+          "name": "axlotolsay",
+          "path": "axlotolsay.exe",
+          "kind": "executable"
+        },
+        {
+          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsayw",
+          "name": "axolotlsayw",
+          "path": "axolotlsayw.exe",
           "kind": "executable"
         }
       ],
@@ -3832,6 +4040,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
+        "i686-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
@@ -3880,6 +4090,20 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "cache_provider": "github"
           },
           {
+            "runner": "ubuntu-22.04",
+            "host": "x86_64-unknown-linux-gnu",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=i686-unknown-linux-gnu",
+            "targets": [
+              "i686-unknown-linux-gnu"
+            ],
+            "packages_install": "if ! command -v cargo-zigbuild > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-zigbuild\nfi",
+            "cache_provider": "github"
+          },
+          {
             "runner": "macos-13",
             "host": "x86_64-apple-darwin",
             "install_dist": {
@@ -3889,6 +4113,19 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "targets": [
               "x86_64-apple-darwin"
+            ],
+            "cache_provider": "github"
+          },
+          {
+            "runner": "windows-2022",
+            "host": "x86_64-pc-windows-msvc",
+            "install_dist": {
+              "shell": "pwsh",
+              "run": "irm https://github.com/astral-sh/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
+            },
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-gnu",
+            "targets": [
+              "x86_64-pc-windows-gnu"
             ],
             "cache_provider": "github"
           },
@@ -4255,15 +4492,44 @@ jobs:
           done
           git push
 
+  publish-npm:
+    needs:
+      - plan
+      - host
+    runs-on: "ubuntu-22.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PLAN: ${{ needs.plan.outputs.val }}
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    steps:
+      - name: Fetch npm packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: npm/
+          merge-multiple: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: |
+          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith("-npm-package.tar.gz")] | any)'); do
+            pkg=$(echo "$release" | jq '.artifacts[] | select(endswith("-npm-package.tar.gz"))' --raw-output)
+            npm publish --access public "./npm/${pkg}"
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   announce:
     needs:
       - plan
       - host
       - publish-homebrew-formula
+      - publish-npm
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
-    if: ${{ always() && needs.host.result == 'success' && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') }}
+    if: ${{ always() && needs.host.result == 'success' && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') && (needs.publish-npm.result == 'skipped' || needs.publish-npm.result == 'success') }}
     runs-on: "ubuntu-22.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

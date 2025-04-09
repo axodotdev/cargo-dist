@@ -86,6 +86,7 @@ impl DistMetadata {
             install_libraries,
             github_build_setup,
             min_glibc_version,
+            binaries,
             cargo_auditable,
             cargo_cyclonedx,
             omnibor,
@@ -96,13 +97,15 @@ impl DistMetadata {
             || auto_includes.is_some()
             || windows_archive.is_some()
             || unix_archive.is_some()
-            || package_libraries.is_some();
+            || package_libraries.is_some()
+            || binaries.is_some();
         let archive_layer = needs_archive_layer.then_some(ArchiveLayer {
             include,
             auto_includes,
             windows_archive,
             unix_archive,
             package_libraries,
+            binaries,
         });
         let needs_artifacts = archive_layer.is_some()
             || source_tarball.is_some()

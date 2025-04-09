@@ -466,6 +466,11 @@ pub struct DistMetadata {
     #[serde(default)]
     pub min_glibc_version: Option<MinGlibcVersion>,
 
+    /// Overrides for platform binaries, same syntax as min_glibc_version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub binaries: Option<SortedMap<String, Vec<String>>>,
+
     /// Whether to embed dependency information in the executable.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
@@ -552,6 +557,7 @@ impl DistMetadata {
             github_build_setup: _,
             mac_pkg_config: _,
             min_glibc_version: _,
+            binaries: _,
             cargo_auditable: _,
             cargo_cyclonedx: _,
             omnibor: _,
@@ -655,6 +661,7 @@ impl DistMetadata {
             github_build_setup,
             mac_pkg_config,
             min_glibc_version,
+            binaries,
             cargo_auditable,
             cargo_cyclonedx,
             omnibor,
@@ -853,6 +860,9 @@ impl DistMetadata {
         }
         if min_glibc_version.is_none() {
             min_glibc_version.clone_from(&workspace_config.min_glibc_version);
+        }
+        if binaries.is_none() {
+            binaries.clone_from(&workspace_config.binaries);
         }
         if cargo_auditable.is_none() {
             cargo_auditable.clone_from(&workspace_config.cargo_auditable);
