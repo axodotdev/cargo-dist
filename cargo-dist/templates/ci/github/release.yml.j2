@@ -119,6 +119,7 @@ jobs:
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
+          persist-credentials: false
           submodules: recursive
       {{%- if rust_version %}}
       - name: Install Rust
@@ -223,6 +224,7 @@ jobs:
           git config --global core.longpaths true
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
@@ -388,6 +390,7 @@ jobs:
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
+          persist-credentials: false
           submodules: recursive
       {{%- if rust_version %}}
       - name: Install Rust
@@ -525,6 +528,7 @@ jobs:
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
+          persist-credentials: false
           submodules: recursive
       {{%- if rust_version %}}
       - name: Install Rust
@@ -666,6 +670,7 @@ jobs:
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
+          persist-credentials: false
           submodules: recursive
     {{%- if "axodotdev" in hosting_providers %}}
       {{%- if rust_version %}}

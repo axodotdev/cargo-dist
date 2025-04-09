@@ -3954,6 +3954,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
@@ -4013,6 +4014,7 @@ jobs:
           git config --global core.longpaths true
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
@@ -4088,6 +4090,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install cached dist
         uses: actions/download-artifact@v4
@@ -4137,6 +4140,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install cached dist
         uses: actions/download-artifact@v4
@@ -4276,6 +4280,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
 
 ================ main.wxs ================
