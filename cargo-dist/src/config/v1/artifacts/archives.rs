@@ -15,6 +15,8 @@ pub struct ArchiveConfig {
     pub unix_archive: ZipStyle,
     /// Whether to include built libraries in the release archive
     pub package_libraries: Vec<LibraryStyle>,
+    /// Binaries for a given platform
+    pub binaries: SortedMap<String, Vec<String>>,
 }
 
 /// archive config (raw from config file)
@@ -48,6 +50,10 @@ pub struct ArchiveLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default, with = "opt_string_or_vec")]
     pub package_libraries: Option<Vec<LibraryStyle>>,
+
+    /// Binaries for a given platform
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub binaries: Option<SortedMap<String, Vec<String>>>,
 }
 
 impl ArchiveConfig {
@@ -59,6 +65,7 @@ impl ArchiveConfig {
             windows_archive: ZipStyle::Zip,
             unix_archive: ZipStyle::Tar(CompressionImpl::Xzip),
             package_libraries: vec![],
+            binaries: SortedMap::default(),
         }
     }
 }
@@ -73,6 +80,7 @@ impl ApplyLayer for ArchiveConfig {
             windows_archive,
             unix_archive,
             package_libraries,
+            binaries,
         }: Self::Layer,
     ) {
         self.include.apply_val(include);
@@ -80,6 +88,7 @@ impl ApplyLayer for ArchiveConfig {
         self.windows_archive.apply_val(windows_archive);
         self.unix_archive.apply_val(unix_archive);
         self.package_libraries.apply_val(package_libraries);
+        self.binaries.apply_val(binaries);
     }
 }
 impl ApplyLayer for ArchiveLayer {
@@ -92,6 +101,7 @@ impl ApplyLayer for ArchiveLayer {
             windows_archive,
             unix_archive,
             package_libraries,
+            binaries,
         }: Self::Layer,
     ) {
         self.include.apply_opt(include);
@@ -99,5 +109,6 @@ impl ApplyLayer for ArchiveLayer {
         self.windows_archive.apply_opt(windows_archive);
         self.unix_archive.apply_opt(unix_archive);
         self.package_libraries.apply_opt(package_libraries);
+        self.binaries.apply_opt(binaries);
     }
 }
