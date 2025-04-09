@@ -544,6 +544,7 @@ fn get_new_dist_metadata(
             github_build_setup: None,
             mac_pkg_config: None,
             min_glibc_version: None,
+            binaries: None,
             cargo_auditable: None,
             cargo_cyclonedx: None,
             omnibor: None,
@@ -1051,6 +1052,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         bin_aliases: _,
         system_dependencies: _,
         github_build_setup: _,
+        binaries: _,
     } = &meta;
 
     // Forcibly inline the default install_path if not specified,
