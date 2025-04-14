@@ -46,6 +46,7 @@ if [ -n "${UNMANAGED_INSTALL}" ]; then
     NO_MODIFY_PATH=1
     INSTALL_UPDATER=0
 fi
+AUTH_TOKEN="{{ '${' }}{{ env_vars.github_token_env_var }}:-}"
 
 read -r RECEIPT <<EORECEIPT
 {{ receipt | tojson }}
@@ -1200,6 +1201,10 @@ downloader() {
     elif check_cmd wget
     then _dld=wget
     else _dld='curl or wget' # to be used in error message of need_cmd
+    fi
+
+    if [ -n "${AUTH_TOKEN:-}" ]; then
+        echo "TODO"
     fi
 
     if [ "$1" = --check ]

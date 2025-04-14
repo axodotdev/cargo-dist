@@ -61,6 +61,7 @@ if ($env:INSTALLER_DOWNLOAD_URL) {
 } else {
   $ArtifactDownloadUrl = "$installer_base_url{{ hosting.github.artifact_download_path }}"
 }
+$auth_token = $env:{{ env_vars.github_token_env_var }}
 
 $receipt = @"
 {{ receipt | tojson }}
@@ -218,6 +219,10 @@ function Download($download_url, $platforms) {
   # Make a new temp dir to unpack things to
   $tmp = New-Temp-Dir
   $dir_path = "$tmp\$app_name$zip_ext"
+
+  if ($auth_token) {
+    Write-Verbose "TODO"
+  }
 
   # Download and unpack!
   $url = "$download_url/$artifact_name"
