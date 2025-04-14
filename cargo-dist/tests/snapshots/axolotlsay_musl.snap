@@ -1257,18 +1257,20 @@ downloader() {
     else _dld='curl or wget' # to be used in error message of need_cmd
     fi
 
-    if [ -n "${AUTH_TOKEN:-}" ]; then
-        _extra_args="--header 'Authorization: Bearer ${AUTH_TOKEN}'"
-    else
-        _extra_args=''
-    fi
-
     if [ "$1" = --check ]
     then need_cmd "$_dld"
-    elif [ "$_dld" = curl ]
-    then curl -sSfL "$_extra_args" "$1" -o "$2"
-    elif [ "$_dld" = wget ]
-    then wget "$_extra_args" "$1" -O "$2"
+    elif [ "$_dld" = curl ]; then
+        if [ -n "${AUTH_TOKEN:-}" ]; then
+            curl -sSfL --header "Authorization: Bearer ${AUTH_TOKEN}" "$1" -o "$2"
+        else
+            curl -sSfL "$1" -o "$2"
+        fi
+    elif [ "$_dld" = wget ]; then
+        if [ -n "${AUTH_TOKEN:-}" ]; then
+            wget --header "Authorization: Bearer ${AUTH_TOKEN}" "$1" -O "$2"
+        else
+            wget "$1" -O "$2"
+        fi
     else err "Unknown downloader"   # should not reach here
     fi
 }
