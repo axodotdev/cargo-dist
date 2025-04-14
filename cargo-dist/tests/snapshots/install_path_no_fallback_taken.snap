@@ -1254,9 +1254,9 @@ downloader() {
     if [ "$1" = --check ]
     then need_cmd "$_dld"
     elif [ "$_dld" = curl ]
-    then curl -sSfL $_extra_args "$1" -o "$2"
+    then curl -sSfL "$_extra_args" "$1" -o "$2"
     elif [ "$_dld" = wget ]
-    then wget $_extra_args "$1" -O "$2"
+    then wget "$_extra_args" "$1" -O "$2"
     else err "Unknown downloader"   # should not reach here
     fi
 }
