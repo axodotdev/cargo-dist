@@ -1246,15 +1246,17 @@ downloader() {
     fi
 
     if [ -n "${AUTH_TOKEN:-}" ]; then
-        echo "TODO"
+        _extra_args="--header 'Authorization: Bearer ${AUTH_TOKEN}'"
+    else
+        _extra_args=''
     fi
 
     if [ "$1" = --check ]
     then need_cmd "$_dld"
     elif [ "$_dld" = curl ]
-    then curl -sSfL "$1" -o "$2"
+    then curl -sSfL $_extra_args "$1" -o "$2"
     elif [ "$_dld" = wget ]
-    then wget "$1" -O "$2"
+    then wget $_extra_args "$1" -O "$2"
     else err "Unknown downloader"   # should not reach here
     fi
 }
@@ -1611,16 +1613,15 @@ function Download($download_url, $platforms) {
   $tmp = New-Temp-Dir
   $dir_path = "$tmp\$app_name$zip_ext"
 
-  if ($auth_token) {
-    Write-Verbose "TODO"
-  }
-
   # Download and unpack!
   $url = "$download_url/$artifact_name"
   Write-Information "Downloading $app_name $app_version ($arch)"
   Write-Verbose "  from $url"
   Write-Verbose "  to $dir_path"
   $wc = New-Object Net.Webclient
+  if ($auth_token) {
+    $wc.Headers["Authorization"] = "Bearer $auth_token"
+  }
   $wc.downloadFile($url, $dir_path)
 
   Write-Verbose "Unpacking to $tmp"

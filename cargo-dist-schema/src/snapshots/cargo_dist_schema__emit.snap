@@ -721,6 +721,7 @@ expression: json_schema
         "disable_update_env_var",
         "ghe_base_url_env_var",
         "github_base_url_env_var",
+        "github_token_env_var",
         "install_dir_env_var",
         "no_modify_path_env_var",
         "unmanaged_dir_env_var"
@@ -736,6 +737,10 @@ expression: json_schema
         },
         "github_base_url_env_var": {
           "description": "Environment variable to set the GitHub base URL",
+          "type": "string"
+        },
+        "github_token_env_var": {
+          "description": "Environment variable to set the GitHub BEARER token when fetching archives",
           "type": "string"
         },
         "install_dir_env_var": {
