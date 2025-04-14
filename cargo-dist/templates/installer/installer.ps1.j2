@@ -61,6 +61,7 @@ if ($env:INSTALLER_DOWNLOAD_URL) {
 } else {
   $ArtifactDownloadUrl = "$installer_base_url{{ hosting.github.artifact_download_path }}"
 }
+$auth_token = $env:{{ env_vars.github_token_env_var }}
 
 $receipt = @"
 {{ receipt | tojson }}
@@ -225,6 +226,9 @@ function Download($download_url, $platforms) {
   Write-Verbose "  from $url"
   Write-Verbose "  to $dir_path"
   $wc = New-Object Net.Webclient
+  if ($auth_token) {
+    $wc.Headers["Authorization"] = "Bearer $auth_token"
+  }
   $wc.downloadFile($url, $dir_path)
 
   Write-Verbose "Unpacking to $tmp"

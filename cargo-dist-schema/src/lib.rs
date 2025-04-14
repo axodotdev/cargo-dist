@@ -585,6 +585,8 @@ pub struct EnvironmentVariables {
     pub github_base_url_env_var: String,
     /// Environment variable to set the GitHub Enterprise base URL
     pub ghe_base_url_env_var: String,
+    /// Environment variable to set the GitHub BEARER token when fetching archives
+    pub github_token_env_var: String,
 }
 
 /// A Release of an Application
@@ -914,6 +916,7 @@ impl DistManifest {
             let no_modify_path_env_var = format!("{env_app_name}_NO_MODIFY_PATH");
             let github_base_url_env_var = format!("{env_app_name}_INSTALLER_GITHUB_BASE_URL");
             let ghe_base_url_env_var = format!("{env_app_name}_INSTALLER_GHE_BASE_URL");
+            let github_token_env_var = format!("{env_app_name}_GITHUB_TOKEN");
 
             let environment_variables = EnvironmentVariables {
                 install_dir_env_var,
@@ -922,6 +925,7 @@ impl DistManifest {
                 no_modify_path_env_var,
                 github_base_url_env_var,
                 ghe_base_url_env_var,
+                github_token_env_var,
             };
 
             self.releases.push(Release {
