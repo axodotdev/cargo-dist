@@ -51,6 +51,7 @@ if [ -n "${UNMANAGED_INSTALL}" ]; then
     NO_MODIFY_PATH=1
     INSTALL_UPDATER=0
 fi
+AUTH_TOKEN="${AXOLOTLSAY_GITHUB_TOKEN:-}"
 
 read -r RECEIPT <<EORECEIPT
 {"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_layout":"unspecified","install_prefix":"AXO_INSTALL_PREFIX","modify_path":true,"provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
@@ -1250,10 +1251,18 @@ downloader() {
 
     if [ "$1" = --check ]
     then need_cmd "$_dld"
-    elif [ "$_dld" = curl ]
-    then curl -sSfL "$1" -o "$2"
-    elif [ "$_dld" = wget ]
-    then wget "$1" -O "$2"
+    elif [ "$_dld" = curl ]; then
+        if [ -n "${AUTH_TOKEN:-}" ]; then
+            curl -sSfL --header "Authorization: Bearer ${AUTH_TOKEN}" "$1" -o "$2"
+        else
+            curl -sSfL "$1" -o "$2"
+        fi
+    elif [ "$_dld" = wget ]; then
+        if [ -n "${AUTH_TOKEN:-}" ]; then
+            wget --header "Authorization: Bearer ${AUTH_TOKEN}" "$1" -O "$2"
+        else
+            wget "$1" -O "$2"
+        fi
     else err "Unknown downloader"   # should not reach here
     fi
 }
@@ -1457,6 +1466,7 @@ if ($env:INSTALLER_DOWNLOAD_URL) {
 } else {
   $ArtifactDownloadUrl = "$installer_base_url/axodotdev/axolotlsay/releases/download/v0.2.2"
 }
+$auth_token = $env:AXOLOTLSAY_GITHUB_TOKEN
 
 $receipt = @"
 {"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_layout":"unspecified","install_prefix":"AXO_INSTALL_PREFIX","modify_path":true,"provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
@@ -1626,6 +1636,9 @@ function Download($download_url, $platforms) {
   Write-Verbose "  from $url"
   Write-Verbose "  to $dir_path"
   $wc = New-Object Net.Webclient
+  if ($auth_token) {
+    $wc.Headers["Authorization"] = "Bearer $auth_token"
+  }
   $wc.downloadFile($url, $dir_path)
 
   Write-Verbose "Unpacking to $tmp"
@@ -3428,7 +3441,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "disable_update_env_var": "AXOLOTLSAY_DISABLE_UPDATE",
         "no_modify_path_env_var": "AXOLOTLSAY_NO_MODIFY_PATH",
         "github_base_url_env_var": "AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL",
-        "ghe_base_url_env_var": "AXOLOTLSAY_INSTALLER_GHE_BASE_URL"
+        "ghe_base_url_env_var": "AXOLOTLSAY_INSTALLER_GHE_BASE_URL",
+        "github_token_env_var": "AXOLOTLSAY_GITHUB_TOKEN"
       },
       "display_name": "axolotlsay",
       "display": true,
