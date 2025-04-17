@@ -1,9 +1,16 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.28.4 (2025-04-17)
+
 * set `persist-credentials = false` for `actions/checkout` uses to harden release.yml
 * added `[dist.binaries]` to override what binaries are expected to be available for a platform('s archives)
 * added `[dist.github-action-commits]` to specify what commit of an action to use in release.yml
 * fixed copyright header
+* added support for `{APP_NAME}_GITHUB_TOKEN` to installer.sh and installer.ps1
+* merged new fixes from rustup-installer.sh 
 
 # Version 0.28.3 (2025-04-03)
 
