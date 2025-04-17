@@ -5,19 +5,25 @@ expression: self.payload
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
 # shellcheck shell=dash
+# shellcheck disable=SC2039  # local is non-POSIX
 #
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
-if [ "$KSH_VERSION" = 'Version JM 93t+ 2010-03-05' ]; then
-    # The version of ksh93 that ships with many illumos systems does not
-    # support the "local" extension.  Print a message rather than fail in
-    # subtle ways later on:
-    echo 'this installer does not work with this ksh93 version; please try bash!' >&2
-    exit 1
-fi
+# This runs on Unix shells like bash/dash/ksh/zsh. It uses the common `local`
+# extension. Note: Most shells limit `local` to 1 var per line, contra bash.
+
+# Some versions of ksh have no `local` keyword. Alias it to `typeset`, but
+# beware this makes variables global with f()-style function syntax in ksh93.
+# mksh has this alias by default.
+has_local() {
+    # shellcheck disable=SC2034  # deliberately unused
+    local _has_local
+}
+
+has_local 2>/dev/null || alias local=typeset
 
 set -u
 
@@ -706,7 +712,7 @@ install() {
 
     _shadowed_bins="$(check_for_shadowed_bins "$_install_dir" "$_bins")"
     if [ -n "$_shadowed_bins" ]; then
-        say "WARNING: The following commands are shadowed by other commands in your PATH:$_shadowed_bins"
+        warn "The following commands are shadowed by other commands in your PATH:$_shadowed_bins"
     fi
 }
 
@@ -921,12 +927,23 @@ end
 EOF
 }
 
-check_proc() {
-    # Check for /proc by looking for the /proc/self/exe link
+get_current_exe() {
+    # Returns the executable used for system architecture detection
     # This is only run on Linux
-    if ! test -L /proc/self/exe ; then
-        err "fatal: Unable to find /proc/self/exe.  Is /proc mounted?  Installation cannot proceed without /proc."
+    local _current_exe
+    if test -L /proc/self/exe ; then
+        _current_exe=/proc/self/exe
+    else
+        warn "Unable to find /proc/self/exe. System architecture detection might be inaccurate."
+        if test -n "$SHELL" ; then
+            _current_exe=$SHELL
+        else
+            need_cmd /bin/sh
+            _current_exe=/bin/sh
+        fi
+        warn "Falling back to $_current_exe."
     fi
+    echo "$_current_exe"
 }
 
 get_bitness() {
@@ -937,8 +954,9 @@ get_bitness() {
     #   0x02 for 64-bit.
     # The printf builtin on some shells like dash only supports octal
     # escape sequences, so we use those.
+    local _current_exe=$1
     local _current_exe_head
-    _current_exe_head=$(head -c 5 /proc/self/exe )
+    _current_exe_head=$(head -c 5 "$_current_exe")
     if [ "$_current_exe_head" = "$(printf '\177ELF\001')" ]; then
         echo 32
     elif [ "$_current_exe_head" = "$(printf '\177ELF\002')" ]; then
@@ -949,27 +967,30 @@ get_bitness() {
 }
 
 is_host_amd64_elf() {
+    local _current_exe=$1
+
     need_cmd head
     need_cmd tail
     # ELF e_machine detection without dependencies beyond coreutils.
     # Two-byte field at offset 0x12 indicates the CPU,
     # but we're interested in it being 0x3E to indicate amd64, or not that.
     local _current_exe_machine
-    _current_exe_machine=$(head -c 19 /proc/self/exe | tail -c 1)
+    _current_exe_machine=$(head -c 19 "$_current_exe" | tail -c 1)
     [ "$_current_exe_machine" = "$(printf '\076')" ]
 }
 
 get_endianness() {
-    local cputype=$1
-    local suffix_eb=$2
-    local suffix_el=$3
+    local _current_exe=$1
+    local cputype=$2
+    local suffix_eb=$3
+    local suffix_el=$4
 
     # detect endianness without od/hexdump, like get_bitness() does.
     need_cmd head
     need_cmd tail
 
     local _current_exe_endianness
-    _current_exe_endianness="$(head -c 6 /proc/self/exe | tail -c 1)"
+    _current_exe_endianness="$(head -c 6 "$_current_exe" | tail -c 1)"
     if [ "$_current_exe_endianness" = "$(printf '\001')" ]; then
         echo "${cputype}${suffix_el}"
     elif [ "$_current_exe_endianness" = "$(printf '\002')" ]; then
@@ -977,6 +998,60 @@ get_endianness() {
     else
         err "unknown platform endianness"
     fi
+}
+
+# Detect the Linux/LoongArch UAPI flavor, with all errors being non-fatal.
+# Returns 0 or 234 in case of successful detection, 1 otherwise (/tmp being
+# noexec, or other causes).
+check_loongarch_uapi() {
+    need_cmd base64
+
+    local _tmp
+    if ! _tmp="$(ensure mktemp)"; then
+        return 1
+    fi
+
+    # Minimal Linux/LoongArch UAPI detection, exiting with 0 in case of
+    # upstream ("new world") UAPI, and 234 (-EINVAL truncated) in case of
+    # old-world (as deployed on several early commercial Linux distributions
+    # for LoongArch).
+    #
+    # See https://gist.github.com/xen0n/5ee04aaa6cecc5c7794b9a0c3b65fc7f for
+    # source to this helper binary.
+    ignore base64 -d > "$_tmp" <<EOF
+f0VMRgIBAQAAAAAAAAAAAAIAAgEBAAAAeAAgAAAAAABAAAAAAAAAAAAAAAAAAAAAQQAAAEAAOAAB
+AAAAAAAAAAEAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAJAAAAAAAAAAkAAAAAAAAAAAA
+AQAAAAAABCiAAwUAFQAGABUAByCAAwsYggMAACsAC3iBAwAAKwAxen0n
+EOF
+
+    ignore chmod u+x "$_tmp"
+    if [ ! -x "$_tmp" ]; then
+        ignore rm "$_tmp"
+        return 1
+    fi
+
+    "$_tmp"
+    local _retval=$?
+
+    ignore rm "$_tmp"
+    return "$_retval"
+}
+
+ensure_loongarch_uapi() {
+    check_loongarch_uapi
+    case $? in
+        0)
+            return 0
+            ;;
+        234)
+            err 'Your Linux kernel does not provide the ABI required by this distribution.'
+            ;;
+        *)
+            warn "Cannot determine current system's ABI flavor, continuing anyway."
+            warn 'Note that the official distribution only works with the upstream kernel ABI.'
+            warn 'Installation will fail if your running kernel happens to be incompatible.'
+            ;;
+    esac
 }
 
 get_architecture() {
@@ -999,17 +1074,30 @@ get_architecture() {
         fi
     fi
 
-    if [ "$_ostype" = Darwin ] && [ "$_cputype" = i386 ]; then
-        # Darwin `uname -m` lies
-        if sysctl hw.optional.x86_64 | grep -q ': 1'; then
-            _cputype=x86_64
-        fi
-    fi
+    if [ "$_ostype" = Darwin ]; then
+        # Darwin `uname -m` can lie due to Rosetta shenanigans. If you manage to
+        # invoke a native shell binary and then a native uname binary, you can
+        # get the real answer, but that's hard to ensure, so instead we use
+        # `sysctl` (which doesn't lie) to check for the actual architecture.
+        if [ "$_cputype" = i386 ]; then
+            # Handling i386 compatibility mode in older macOS versions (<10.15)
+            # running on x86_64-based Macs.
+            # Starting from 10.15, macOS explicitly bans all i386 binaries from running.
+            # See: <https://support.apple.com/en-us/HT208436>
 
-    if [ "$_ostype" = Darwin ] && [ "$_cputype" = x86_64 ]; then
-        # Rosetta on aarch64
-        if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" = "1" ]; then
-            _cputype=aarch64
+            # Avoid `sysctl: unknown oid` stderr output and/or non-zero exit code.
+            if sysctl hw.optional.x86_64 2> /dev/null || true | grep -q ': 1'; then
+                _cputype=x86_64
+            fi
+        elif [ "$_cputype" = x86_64 ]; then
+            # Handling x86-64 compatibility mode (a.k.a. Rosetta 2)
+            # in newer macOS versions (>=11) running on arm64-based Macs.
+            # Rosetta 2 is built exclusively for x86-64 and cannot run i386 binaries.
+
+            # Avoid `sysctl: unknown oid` stderr output and/or non-zero exit code.
+            if sysctl hw.optional.arm64 2> /dev/null || true | grep -q ': 1'; then
+                _cputype=arm64
+            fi
         fi
     fi
 
@@ -1031,6 +1119,7 @@ get_architecture() {
         fi
     fi
 
+    local _current_exe
     case "$_ostype" in
 
         Android)
@@ -1038,9 +1127,9 @@ get_architecture() {
             ;;
 
         Linux)
-            check_proc
+            _current_exe=$(get_current_exe)
             _ostype=unknown-linux-$_clibtype
-            _bitness=$(get_bitness)
+            _bitness=$(get_bitness "$_current_exe")
             ;;
 
         FreeBSD)
@@ -1113,14 +1202,14 @@ get_architecture() {
             ;;
 
         mips)
-            _cputype=$(get_endianness mips '' el)
+            _cputype=$(get_endianness "$_current_exe" mips '' el)
             ;;
 
         mips64)
             if [ "$_bitness" -eq 64 ]; then
                 # only n64 ABI is supported for now
                 _ostype="${_ostype}abi64"
-                _cputype=$(get_endianness mips64 '' el)
+                _cputype=$(get_endianness "$_current_exe" mips64 '' el)
             fi
             ;;
 
@@ -1144,6 +1233,7 @@ get_architecture() {
             ;;
         loongarch64)
             _cputype=loongarch64
+            ensure_loongarch_uapi
             ;;
         *)
             err "unknown CPU type: $_cputype"
@@ -1155,14 +1245,14 @@ get_architecture() {
         case $_cputype in
             x86_64)
                 # 32-bit executable for amd64 = x32
-                if is_host_amd64_elf; then {
+                if is_host_amd64_elf "$_current_exe"; then {
                     err "x32 linux unsupported"
                 }; else
                     _cputype=i686
                 fi
                 ;;
             mips64)
-                _cputype=$(get_endianness mips '' el)
+                _cputype=$(get_endianness "$_current_exe" mips '' el)
                 ;;
             powerpc64)
                 _cputype=powerpc
@@ -1181,10 +1271,12 @@ get_architecture() {
         esac
     fi
 
-    # treat armv7 systems without neon as plain arm
+    # Detect armv7 but without the CPU features Rust needs in that build,
+    # and fall back to arm.
     if [ "$_ostype" = "unknown-linux-gnueabihf" ] && [ "$_cputype" = armv7 ]; then
-        if ensure grep '^Features' /proc/cpuinfo | grep -q -v neon; then
-            # At least one processor does not have NEON.
+        if ! (ensure grep '^Features' /proc/cpuinfo | grep -E -q 'neon|simd') ; then
+            # Either `/proc/cpuinfo` is malformed or unavailable, or
+            # at least one processor does not have NEON (which is asimd on armv8+).
             _cputype=arm
         fi
     fi
@@ -1203,6 +1295,16 @@ say() {
 say_verbose() {
     if [ "1" = "$PRINT_VERBOSE" ]; then
         echo "$1"
+    fi
+}
+
+warn() {
+    if [ "0" = "$PRINT_QUIET" ]; then
+        local red
+        local reset
+        red=$(tput setaf 1 2>/dev/null || echo '')
+        reset=$(tput sgr0 2>/dev/null || echo '')
+        say "${red}WARN${reset}: $1" >&2
     fi
 }
 
