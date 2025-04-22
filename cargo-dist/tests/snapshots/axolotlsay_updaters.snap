@@ -1,7 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
-snapshot_kind: text
 ---
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -2608,7 +2607,7 @@ install(false);
         "axios": "^1.7.9",
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
-        "detect-libc": "^2.0.3",
+        "detect-libc": "^2.0.4",
         "rimraf": "^5.0.8"
       },
       "devDependencies": {
@@ -2807,10 +2806,10 @@ install(false);
       "engines": {
         "node": ">=8"
       },
-      "integrity": "sha512-bwy0MGW55bG41VqxxypOsdSdGqLwXPI/focwgTYCFMbdUiBAxLg9CFzG08sz2aqzknwiX7Hkl0bQENjg8iLByw==",
+      "integrity": "sha512-3UDv+G9CsCKO1WKMGw9fwq/SWJYbI0c5Y7LU1AXYoDdbhE2AHQ6N6Nb34sG8Fj7T5APy8qXDCKuuIHd1BR0tVA==",
       "license": "Apache-2.0",
-      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.0.3.tgz",
-      "version": "2.0.3"
+      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.0.4.tgz",
+      "version": "2.0.4"
     },
     "node_modules/eastasianwidth": {
       "integrity": "sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==",
@@ -3324,7 +3323,7 @@ install(false);
     "axios": "^1.7.9",
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
-    "detect-libc": "^2.0.3",
+    "detect-libc": "^2.0.4",
     "rimraf": "^5.0.8"
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
