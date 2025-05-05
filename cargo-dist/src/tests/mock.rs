@@ -122,6 +122,7 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
         npm_scope: None,
         build_command: None,
         axoupdater_versions: Default::default(),
+        dist: None,
     }
 }
 

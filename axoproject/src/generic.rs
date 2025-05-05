@@ -29,6 +29,8 @@ struct WorkspaceManifest {
 #[serde(rename_all = "kebab-case")]
 struct Workspace {
     members: Vec<WorkspaceMember>,
+    #[serde(default)]
+    packages: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -204,6 +206,12 @@ fn process_virtual_workspace(
                 let member_manifest_path = member_dir.join(DIST_PACKAGE_TOML);
                 let mut package = package_from(&member_manifest_path)?;
                 crate::merge_auto_includes(&mut package, &root_auto_includes);
+
+                // If `workspace.packages` is set, set distability overrides
+                if !workspace.packages.is_empty() {
+                    package.dist = Some(workspace.packages.contains(&package.name));
+                }
+
                 package_info.push(package);
             }
             #[cfg(feature = "cargo-projects")]
@@ -236,6 +244,11 @@ fn process_virtual_workspace(
                 merge_package_with_raw_generic(package, generic, paired_manifest);
             }
             crate::merge_auto_includes(package, &root_auto_includes);
+
+            // If `workspace.packages` is set, set distability overrides
+            if !workspace.packages.is_empty() {
+                package.dist = Some(workspace.packages.contains(&package.name));
+            }
         }
     }
 
@@ -384,6 +397,7 @@ fn process_package(
         cargo_package_id: None,
         npm_scope: None,
         axoupdater_versions: Default::default(),
+        dist: None,
     };
 
     // Load and apply auto-includes
