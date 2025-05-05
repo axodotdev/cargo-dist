@@ -283,6 +283,7 @@ fn package_info(
         npm_scope: None,
         build_command: None,
         axoupdater_versions,
+        dist: None,
     };
 
     // Find files we might want to auto-include
