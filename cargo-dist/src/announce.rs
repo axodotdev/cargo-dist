@@ -309,8 +309,10 @@ fn check_dist_package(
         });
     }
 
-    // If [metadata.dist].dist is explicitly set, respect it!
-    let override_publish = if let Some(do_dist) = config.dist {
+    // If [workspace].packages was set, respect it!
+    // Otherwise if [metadata.dist].dist is explicitly set, respect it!
+    let do_dist = pkg.dist.or(config.dist);
+    let override_publish = if let Some(do_dist) = do_dist {
         if !do_dist {
             return Some(DisabledReason::DistFalse);
         } else {
@@ -545,9 +547,11 @@ fn select_packages(
     // add that package as a release still, on the assumption it's a Library
     if releases.is_empty() {
         if let ReleaseType::Package { idx, version: _ } = announcing.release {
-            let config = graph.package_config(PackageIdx(idx));
-
-            if config.dist != Some(false) {
+            let pkg_idx = PackageIdx(idx);
+            let pkg = graph.workspaces.package(pkg_idx);
+            let config = graph.package_config(pkg_idx);
+            let do_dist = pkg.dist.or(config.dist);
+            if do_dist != Some(false) {
                 releases.push(ReleaseArtifacts {
                     package_idx: PackageIdx(idx),
                     executables: vec![],
