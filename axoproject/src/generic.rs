@@ -30,8 +30,13 @@ struct WorkspaceManifest {
 #[serde(rename_all = "kebab-case")]
 pub struct Workspace {
     members: Vec<WorkspaceMember>,
+    /// If non-empty, reject the false gods of `dist = true/false`
+    /// and force distability of packages based on name-matching this list.
     #[serde(default)]
     packages: Vec<String>,
+    /// If set, force every package to have this version
+    /// (note that the true_version still exists to remember the truth).
+    version: Option<semver::Version>,
 }
 
 #[derive(Debug)]
@@ -232,6 +237,10 @@ fn process_virtual_workspace(
                 if !workspace.packages.is_empty() {
                     package.dist = Some(workspace.packages.contains(&package.name));
                 }
+                // If `workspace.version` is set, force every package to have this version
+                if let Some(version_override) = &workspace.version {
+                    package.version = Some(Version::Cargo(version_override.clone()));
+                }
 
                 package_info.push(package);
             }
@@ -269,6 +278,10 @@ fn process_virtual_workspace(
             // If `workspace.packages` is set, set distability overrides
             if !workspace.packages.is_empty() {
                 package.dist = Some(workspace.packages.contains(&package.name));
+            }
+            // If `workspace.version` is set, force every package to have this version
+            if let Some(version_override) = &workspace.version {
+                package.version = Some(Version::Cargo(version_override.clone()));
             }
         }
     }
