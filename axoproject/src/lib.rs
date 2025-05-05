@@ -526,6 +526,8 @@ pub struct PackageInfo {
     pub npm_scope: Option<String>,
     /// Command to run to build this package
     pub build_command: Option<Vec<String>>,
+    /// Whether the workspace wants to force this package's distability
+    pub dist: Option<bool>,
 }
 
 impl PackageInfo {
