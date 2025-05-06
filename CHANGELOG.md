@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.28.5 (2025-05-06)
+
 * Ban snap-installed curl (https://github.com/boukendesho/curl-snap/issues/1)
 * Add `packages` field to the `dist-workspace.toml`'s `[workspace]`
 * Add `version` field to the `dist-workspace.toml`'s `[workspace]`
