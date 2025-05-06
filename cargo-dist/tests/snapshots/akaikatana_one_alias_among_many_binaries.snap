@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
+snapshot_kind: text
 ---
 ================ akaikatana-repack-installer.sh ================
 #!/bin/sh
@@ -1356,10 +1357,30 @@ ignore() {
 # This wraps curl or wget. Try curl first, if not installed,
 # use wget instead.
 downloader() {
-    if check_cmd curl
+    # Check if we have a broken snap curl
+    # https://github.com/boukendesho/curl-snap/issues/1
+    _snap_curl=0
+    if command -v curl > /dev/null 2>&1; then
+      _curl_path=$(command -v curl)
+      if echo "$_curl_path" | grep "/snap/" > /dev/null 2>&1; then
+        _snap_curl=1
+      fi
+    fi
+
+    # Check if we have a working (non-snap) curl
+    if check_cmd curl && [ "$_snap_curl" = "0" ]
     then _dld=curl
+    # Try wget for both no curl and the broken snap curl
     elif check_cmd wget
     then _dld=wget
+    # If we can't fall back from broken snap curl to wget, report the broken snap curl
+    elif [ "$_snap_curl" = "1" ]
+    then
+      say "curl installed with snap cannot be used to install $APP_NAME"
+      say "due to missing permissions. Please uninstall it and"
+      say "reinstall curl with a different package manager (e.g., apt)."
+      say "See https://github.com/boukendesho/curl-snap/issues/1"
+      exit 1
     else _dld='curl or wget' # to be used in error message of need_cmd
     fi
 

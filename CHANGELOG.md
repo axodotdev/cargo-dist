@@ -1,7 +1,6 @@
 # Unreleased
 
-Nothing Yet!
-
+* Ban snap-installed curl (https://github.com/boukendesho/curl-snap/issues/1)
 
 # Version 0.28.4 (2025-04-17)
 
