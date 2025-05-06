@@ -89,8 +89,8 @@ Some folks, particularly those working in security-sensitive business environmen
 may need to mirror artifacts within a private network. `dist` enables this usecase
 by allowing end users to customize the URL that artifacts are fetched from:
 
-- `${app name}_GITHUB_INSTALLER_BASE_URL`
-- `${app name}_GHE_INSTALLER_BASE_URL`
+- `${app name}_INSTALLER_GITHUB_BASE_URL`
+- `${app name}_INSTALLER_GHE_BASE_URL`
 
 > Replace `{app name}` with the name of the application. To transform the
 > app name to the env var, replace any spaces or hyphens with an underscore
