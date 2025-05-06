@@ -304,7 +304,7 @@ impl GithubCiInfo {
         }
 
         let mut publish_jobs = vec![];
-        if let Some(PublisherConfig { homebrew, npm }) = &dist.global_publishers {
+        if let Some(PublisherConfig { homebrew, npm, .. }) = &dist.global_publishers {
             if homebrew.is_some() {
                 publish_jobs.push(PublishStyle::Homebrew.to_string());
             }
