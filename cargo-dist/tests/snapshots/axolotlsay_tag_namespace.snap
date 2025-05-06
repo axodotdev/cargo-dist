@@ -1,6 +1,7 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
+snapshot_kind: text
 ---
 ================ sha256.sum ================
 CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.gz
