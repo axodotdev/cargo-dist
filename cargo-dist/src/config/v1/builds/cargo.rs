@@ -164,9 +164,9 @@ impl ApplyLayer for WorkspaceCargoBuildConfig {
             precise_builds,
             cargo_auditable,
             cargo_cyclonedx,
+            msvc_crt_static,
             // local-only
             common: _,
-            msvc_crt_static: _,
             features: _,
             default_features: _,
             all_features: _,
@@ -177,6 +177,7 @@ impl ApplyLayer for WorkspaceCargoBuildConfig {
         self.precise_builds.apply_opt(precise_builds);
         self.cargo_auditable.apply_val(cargo_auditable);
         self.cargo_cyclonedx.apply_val(cargo_cyclonedx);
+        self.msvc_crt_static.apply_val(msvc_crt_static);
     }
 }
 impl ApplyLayer for AppCargoBuildConfig {
