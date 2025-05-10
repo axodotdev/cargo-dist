@@ -125,7 +125,8 @@ impl DistMetadata {
             || default_features.is_some()
             || all_features.is_some()
             || cargo_auditable.is_some()
-            || cargo_cyclonedx.is_some();
+            || cargo_cyclonedx.is_some()
+            || msvc_crt_static.is_some();
         let cargo_layer = needs_cargo_build_layer.then_some(BoolOr::Val(CargoBuildLayer {
             common: CommonBuildLayer::default(),
             rust_toolchain_version,
