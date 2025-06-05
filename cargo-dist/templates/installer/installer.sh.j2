@@ -62,7 +62,7 @@ EORECEIPT
 # https://github.com/astral-sh/uv/issues/6965#issuecomment-2915796022
 get_home() {
     if [ -n "${HOME:-}" ]; then
-        echo "HOME"
+        echo "$HOME"
     elif [ -n "${USER:-}" ]; then
         getent passwd "$USER" | cut -d: -f6
     else
