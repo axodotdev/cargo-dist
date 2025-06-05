@@ -75,7 +75,19 @@ get_home() {
         getent passwd "$(id -un)" | cut -d: -f6
     fi
 }
+# The HOME reference to show in user output. If `$HOME` isn't set, we show the absolute path instead.
+get_home_expression() {
+    if [ -n "${HOME:-}" ]; then
+        # shellcheck disable=SC2016
+        echo '$HOME'
+    elif [ -n "${USER:-}" ]; then
+        getent passwd "$USER" | cut -d: -f6
+    else
+        getent passwd "$(id -un)" | cut -d: -f6
+    fi
+}
 INFERRED_HOME=$(get_home)
+INFERRED_HOME_EXPRESSION=$(get_home_expression)
 RECEIPT_HOME="${XDG_CONFIG_HOME:-$INFERRED_HOME/.config}/akaikatana-repack"
 
 usage() {
@@ -89,7 +101,7 @@ This script detects what platform you're on and fetches an appropriate archive f
 https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0
 then unpacks the binaries and installs them to
 
-    \$CARGO_HOME/bin (or \$INFERRED_HOME/.cargo/bin)
+    \$CARGO_HOME/bin (or \$HOME/.cargo/bin)
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -624,8 +636,8 @@ install() {
             # This is what rustup does, and accurately reproducing it is useful.
             if [ -n "${INFERRED_HOME:-}" ]; then
                 if [ "$INFERRED_HOME/.cargo/bin" = "$_install_dir" ]; then
-                    _install_dir_expr='$INFERRED_HOME/.cargo/bin'
-                    _env_script_path_expr='$INFERRED_HOME/.cargo/env'
+                    _install_dir_expr="$INFERRED_HOME_EXPRESSION/.cargo/bin"
+                    _env_script_path_expr="$INFERRED_HOME_EXPRESSION/.cargo/env"
                 fi
             fi
         elif [ -n "${INFERRED_HOME:-}" ]; then
@@ -633,8 +645,8 @@ install() {
             _install_dir="$INFERRED_HOME/.cargo/bin"
             _lib_install_dir="$INFERRED_HOME/.cargo/bin"
             _env_script_path="$INFERRED_HOME/.cargo/env"
-            _install_dir_expr='$INFERRED_HOME/.cargo/bin'
-            _env_script_path_expr='$INFERRED_HOME/.cargo/env'
+            _install_dir_expr="$INFERRED_HOME_EXPRESSION/.cargo/bin"
+            _env_script_path_expr="$INFERRED_HOME_EXPRESSION/.cargo/env"
         fi
     fi
 

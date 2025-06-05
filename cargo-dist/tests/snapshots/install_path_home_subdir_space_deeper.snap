@@ -75,7 +75,19 @@ get_home() {
         getent passwd "$(id -un)" | cut -d: -f6
     fi
 }
+# The HOME reference to show in user output. If `$HOME` isn't set, we show the absolute path instead.
+get_home_expression() {
+    if [ -n "${HOME:-}" ]; then
+        # shellcheck disable=SC2016
+        echo '$HOME'
+    elif [ -n "${USER:-}" ]; then
+        getent passwd "$USER" | cut -d: -f6
+    else
+        getent passwd "$(id -un)" | cut -d: -f6
+    fi
+}
 INFERRED_HOME=$(get_home)
+INFERRED_HOME_EXPRESSION=$(get_home_expression)
 RECEIPT_HOME="${XDG_CONFIG_HOME:-$INFERRED_HOME/.config}/axolotlsay"
 
 usage() {
@@ -89,7 +101,7 @@ This script detects what platform you're on and fetches an appropriate archive f
 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2
 then unpacks the binaries and installs them to
 
-    \$INFERRED_HOME/My Axolotlsay Documents/bin
+    \$HOME/My Axolotlsay Documents/bin
 
 It will then add that dir to PATH by adding the appropriate line to your shell profiles.
 
@@ -608,8 +620,8 @@ install() {
             _lib_install_dir="$INFERRED_HOME/My Axolotlsay Documents/bin"
             _receipt_install_dir="$_install_dir"
             _env_script_path="$INFERRED_HOME/My Axolotlsay Documents/bin/env"
-            _install_dir_expr='$INFERRED_HOME/My Axolotlsay Documents/bin'
-            _env_script_path_expr='$INFERRED_HOME/My Axolotlsay Documents/bin/env'
+            _install_dir_expr="$INFERRED_HOME_EXPRESSION/My Axolotlsay Documents/bin"
+            _env_script_path_expr="$INFERRED_HOME_EXPRESSION/My Axolotlsay Documents/bin/env"
         fi
     fi
 
