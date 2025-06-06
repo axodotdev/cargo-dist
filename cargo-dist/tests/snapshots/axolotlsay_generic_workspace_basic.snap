@@ -345,8 +345,8 @@ download_binary_and_run_installer() {
 replace_home() {
     local _str="$1"
 
-    if [ -n "${INFERRED_HOME:-}" ]; then
-        echo "$_str" | sed "s,$INFERRED_HOME,\$INFERRED_HOME,"
+    if [ -n "${HOME:-}" ]; then
+        echo "$_str" | sed "s,$HOME,\$HOME,"
     else
         echo "$_str"
     fi
@@ -2460,8 +2460,8 @@ download_binary_and_run_installer() {
 replace_home() {
     local _str="$1"
 
-    if [ -n "${INFERRED_HOME:-}" ]; then
-        echo "$_str" | sed "s,$INFERRED_HOME,\$INFERRED_HOME,"
+    if [ -n "${HOME:-}" ]; then
+        echo "$_str" | sed "s,$HOME,\$HOME,"
     else
         echo "$_str"
     fi
