@@ -87,6 +87,7 @@ get_home_expression() {
     fi
 }
 INFERRED_HOME=$(get_home)
+# shellcheck disable=SC2034
 INFERRED_HOME_EXPRESSION=$(get_home_expression)
 RECEIPT_HOME="${XDG_CONFIG_HOME:-$INFERRED_HOME/.config}/axolotlsay"
 
