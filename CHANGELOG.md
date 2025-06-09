@@ -3,6 +3,13 @@
 Nothing Yet!
 
 
+# Version 0.28.6 (2025-06-09)
+
+* Fixed msvc-crt-static setting
+* Added recursive-tarball setting for including submodules
+* Made installers more robust to $HOME not being defined
+
+
 # Version 0.28.5 (2025-05-06)
 
 * Ban snap-installed curl (https://github.com/boukendesho/curl-snap/issues/1)
