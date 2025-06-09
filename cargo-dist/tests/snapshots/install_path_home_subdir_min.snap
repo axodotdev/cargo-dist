@@ -63,7 +63,33 @@ AUTH_TOKEN="${AXOLOTLSAY_GITHUB_TOKEN:-}"
 read -r RECEIPT <<EORECEIPT
 {"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_layout":"unspecified","install_prefix":"AXO_INSTALL_PREFIX","modify_path":true,"provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
 EORECEIPT
-RECEIPT_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/axolotlsay"
+
+# Some Linux distributions don't set HOME
+# https://github.com/astral-sh/uv/issues/6965#issuecomment-2915796022
+get_home() {
+    if [ -n "${HOME:-}" ]; then
+        echo "$HOME"
+    elif [ -n "${USER:-}" ]; then
+        getent passwd "$USER" | cut -d: -f6
+    else
+        getent passwd "$(id -un)" | cut -d: -f6
+    fi
+}
+# The HOME reference to show in user output. If `$HOME` isn't set, we show the absolute path instead.
+get_home_expression() {
+    if [ -n "${HOME:-}" ]; then
+        # shellcheck disable=SC2016
+        echo '$HOME'
+    elif [ -n "${USER:-}" ]; then
+        getent passwd "$USER" | cut -d: -f6
+    else
+        getent passwd "$(id -un)" | cut -d: -f6
+    fi
+}
+INFERRED_HOME=$(get_home)
+# shellcheck disable=SC2034
+INFERRED_HOME_EXPRESSION=$(get_home_expression)
+RECEIPT_HOME="${XDG_CONFIG_HOME:-$INFERRED_HOME/.config}/axolotlsay"
 
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
@@ -503,7 +529,7 @@ install() {
     # * Create a shell script at $HOME/.cargo/env that:
     #   * Checks if $HOME/.cargo/bin/ is on PATH
     #   * and if not prepends it to PATH
-    # * Edits $HOME/.profile to run $HOME/.cargo/env (if the line doesn't exist)
+    # * Edits $INFERRED_HOME/.profile to run $HOME/.cargo/env (if the line doesn't exist)
     #
     # To do this we need these 4 values:
 
@@ -548,7 +574,7 @@ install() {
         if [ "$_install_layout" = "flat" ]; then
             # If the install directory is targeting the Cargo home directory, then
             # we assume this application was previously installed that layout
-            if [ "$_force_install_dir" = "${CARGO_HOME:-${HOME:-}/.cargo}" ]; then
+            if [ "$_force_install_dir" = "${CARGO_HOME:-${INFERRED_HOME:-}/.cargo}" ]; then
                 _install_layout="cargo-home"
             fi
         fi
@@ -590,13 +616,13 @@ install() {
     if [ -z "${_install_dir:-}" ]; then
         _install_layout="flat"
         # Install to $HOME/.axolotlsay
-        if [ -n "${HOME:-}" ]; then
-            _install_dir="$HOME/.axolotlsay"
-            _lib_install_dir="$HOME/.axolotlsay"
+        if [ -n "${INFERRED_HOME:-}" ]; then
+            _install_dir="$INFERRED_HOME/.axolotlsay"
+            _lib_install_dir="$INFERRED_HOME/.axolotlsay"
             _receipt_install_dir="$_install_dir"
-            _env_script_path="$HOME/.axolotlsay/env"
-            _install_dir_expr='$HOME/.axolotlsay'
-            _env_script_path_expr='$HOME/.axolotlsay/env'
+            _env_script_path="$INFERRED_HOME/.axolotlsay/env"
+            _install_dir_expr="$INFERRED_HOME_EXPRESSION/.axolotlsay"
+            _env_script_path_expr="$INFERRED_HOME_EXPRESSION/.axolotlsay/env"
         fi
     fi
 
@@ -673,7 +699,7 @@ install() {
         add_install_dir_to_path "$_install_dir_expr" "$_env_script_path" "$_env_script_path_expr" ".zshrc .zshenv" "sh"
         exit3=$?
         # This path may not exist by default
-        ensure mkdir -p "$HOME/.config/fish/conf.d"
+        ensure mkdir -p "$INFERRED_HOME/.config/fish/conf.d"
         exit4=$?
         add_install_dir_to_path "$_install_dir_expr" "$_fish_env_script_path" "$_fish_env_script_path_expr" ".config/fish/conf.d/$APP_NAME.env.fish" "fish"
         exit5=$?
@@ -719,11 +745,11 @@ print_home_for_script() {
             if [ -n "${ZDOTDIR:-}" ]; then
                 _home="$ZDOTDIR"
             else
-                _home="$HOME"
+                _home="$INFERRED_HOME"
             fi
             ;;
         *)
-            _home="$HOME"
+            _home="$INFERRED_HOME"
             ;;
     esac
 
@@ -760,7 +786,7 @@ add_install_dir_to_path() {
     local _rcfiles="$4"
     local _shell="$5"
 
-    if [ -n "${HOME:-}" ]; then
+    if [ -n "${INFERRED_HOME:-}" ]; then
         local _target
         local _home
 
@@ -852,7 +878,7 @@ shotgun_install_dir_to_path() {
     local _rcfiles="$4"
     local _shell="$5"
 
-    if [ -n "${HOME:-}" ]; then
+    if [ -n "${INFERRED_HOME:-}" ]; then
         local _found=false
         local _home
 
