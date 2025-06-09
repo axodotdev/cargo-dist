@@ -58,6 +58,7 @@ impl DistMetadata {
             local_artifacts_jobs,
             global_artifacts_jobs,
             source_tarball,
+            recursive_tarball,
             host_jobs,
             publish_jobs,
             post_announce_jobs,
@@ -109,11 +110,13 @@ impl DistMetadata {
         });
         let needs_artifacts = archive_layer.is_some()
             || source_tarball.is_some()
+            || recursive_tarball.is_some()
             || extra_artifacts.is_some()
             || checksum.is_some();
         let artifacts_layer = needs_artifacts.then_some(ArtifactLayer {
             archives: archive_layer,
             source_tarball,
+            recursive_tarball,
             extra: extra_artifacts,
             checksum,
         });

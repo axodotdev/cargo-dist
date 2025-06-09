@@ -513,6 +513,7 @@ fn get_new_dist_metadata(
             local_artifacts_jobs: None,
             global_artifacts_jobs: None,
             source_tarball: None,
+            recursive_tarball: None,
             host_jobs: None,
             publish_jobs: None,
             post_announce_jobs: None,
@@ -1016,6 +1017,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         local_artifacts_jobs,
         global_artifacts_jobs,
         source_tarball,
+        recursive_tarball,
         host_jobs,
         publish_jobs,
         post_announce_jobs,
@@ -1325,6 +1327,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "source-tarball",
         "# Generate and dist a source tarball\n",
         *source_tarball,
+    );
+
+    apply_optional_value(
+        table,
+        "recursive-tarball",
+        "# Whether source tarballs should include submodules\n",
+        *recursive_tarball,
     );
 
     apply_string_list(
