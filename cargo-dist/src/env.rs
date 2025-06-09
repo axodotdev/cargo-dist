@@ -86,7 +86,7 @@ fn formulas_from_env(environment: &SortedMap<&str, &str>) -> Vec<(String, String
             for dep in formulastring.split(',') {
                 // Unwrap here is safe because `split` will always return
                 // a collection of at least one item.
-                let short_name = dep.split('/').last().unwrap();
+                let short_name = dep.split('/').next_back().unwrap();
                 let pkg_opt = format!("{opt_prefix}/{short_name}");
                 packages.push((dep.to_owned(), pkg_opt));
             }

@@ -482,7 +482,7 @@ fn determine_linux_build_environment() -> DistResult<BuildEnvironment> {
         // ldd (GNU libc) 2.39 (Fedora)
         first_line
             .split(' ')
-            .last()
+            .next_back()
             .and_then(|s| s.split_once('.').map(glibc_from_tuple))
             .transpose()?
     };
