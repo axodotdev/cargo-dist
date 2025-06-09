@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.28.6 (2025-06-09)
+
 * Fixed msvc-crt-static setting
 * Added recursive-tarball setting for including submodules
 * Made installers more robust to $HOME not being defined
