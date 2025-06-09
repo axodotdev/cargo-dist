@@ -19,6 +19,8 @@ pub struct AppArtifactConfig {
 pub struct WorkspaceArtifactConfig {
     /// Whether to generate and dist a tarball containing your app's source code
     pub source_tarball: bool,
+    /// Whether tarballs should include submodules
+    pub recursive_tarball: bool,
     /// How to checksum
     pub checksum: ChecksumStyle,
 }
@@ -35,6 +37,12 @@ pub struct ArtifactLayer {
     /// (defaults to true)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_tarball: Option<bool>,
+
+    /// Whether source tarballs should include submodules
+    ///
+    /// (defaults to false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recursive_tarball: Option<bool>,
 
     /// Any extra artifacts and their buildscripts
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -59,6 +67,7 @@ impl WorkspaceArtifactConfig {
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
         Self {
             source_tarball: true,
+            recursive_tarball: false,
             checksum: ChecksumStyle::Sha256,
         }
     }
@@ -73,6 +82,7 @@ impl ApplyLayer for AppArtifactConfig {
             extra,
             // these are all workspace-only
             source_tarball: _,
+            recursive_tarball: _,
             checksum: _,
         }: Self::Layer,
     ) {
@@ -87,6 +97,7 @@ impl ApplyLayer for WorkspaceArtifactConfig {
         &mut self,
         Self::Layer {
             source_tarball,
+            recursive_tarball,
             checksum,
             // these are all app-only
             archives: _,
@@ -94,6 +105,7 @@ impl ApplyLayer for WorkspaceArtifactConfig {
         }: Self::Layer,
     ) {
         self.source_tarball.apply_val(source_tarball);
+        self.recursive_tarball.apply_val(recursive_tarball);
         self.checksum.apply_val(checksum);
     }
 }

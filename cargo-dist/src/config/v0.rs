@@ -392,6 +392,12 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_tarball: Option<bool>,
 
+    /// Whether source tarballs should include submodules
+    ///
+    /// (defaults to false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recursive_tarball: Option<bool>,
+
     /// Host jobs to run in CI
     ///
     /// The core build job is always run, but this allows additional hooks
@@ -600,6 +606,7 @@ impl DistMetadata {
             local_artifacts_jobs: _,
             global_artifacts_jobs: _,
             source_tarball: _,
+            recursive_tarball: _,
             host_jobs: _,
             publish_jobs: _,
             post_announce_jobs: _,
@@ -703,6 +710,7 @@ impl DistMetadata {
             local_artifacts_jobs,
             global_artifacts_jobs,
             source_tarball,
+            recursive_tarball,
             host_jobs,
             publish_jobs,
             post_announce_jobs,
@@ -823,6 +831,9 @@ impl DistMetadata {
         }
         if source_tarball.is_some() {
             warn!("package.metadata.dist.source-tarball is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if recursive_tarball.is_some() {
+            warn!("package.metadata.dist.recursive-tarball is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if host_jobs.is_some() {
             warn!("package.metadata.dist.host-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
