@@ -653,6 +653,8 @@ pub struct SourceTarballStep {
     pub target: Utf8PathBuf,
     /// The dir to run the git command in
     pub working_dir: Utf8PathBuf,
+    /// Use an implementation that bundles submodules
+    pub recursive: bool,
 }
 
 /// Fetch or build an updater
@@ -789,6 +791,8 @@ pub struct SourceTarball {
     pub target: Utf8PathBuf,
     /// path to the git checkout
     pub working_dir: Utf8PathBuf,
+    /// Whether submodules should be included
+    pub recursive: bool,
 }
 
 /// An extra artifact of some kind
@@ -1722,6 +1726,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let artifact_name = ArtifactId::new("source.tar.gz".to_owned());
         let target_path = dist_dir.join(artifact_name.as_str());
         let prefix = format!("{}-{}/", release.app_name, release.version);
+        let recursive = self.inner.config.artifacts.recursive_tarball;
 
         let artifact = Artifact {
             id: artifact_name.to_owned(),
@@ -1738,6 +1743,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 prefix,
                 target: target_path.to_owned(),
                 working_dir,
+                recursive,
             }),
             checksum: None,
             is_global: true,
@@ -2762,6 +2768,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         prefix: tarball.prefix.to_owned(),
                         target: tarball.target.to_owned(),
                         working_dir: tarball.working_dir.to_owned(),
+                        recursive: tarball.recursive,
                     }));
                 }
                 ArtifactKind::ExtraArtifact(_) => {
