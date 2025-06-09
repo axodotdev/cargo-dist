@@ -244,7 +244,20 @@ fn run_build_step(
             prefix,
             target,
             working_dir,
-        }) => generate_source_tarball(dist_graph, committish, prefix, target, working_dir)?,
+            recursive,
+        }) => {
+            if *recursive {
+                generate_recursive_source_tarball(
+                    dist_graph,
+                    committish,
+                    prefix,
+                    target,
+                    working_dir,
+                )?
+            } else {
+                generate_source_tarball(dist_graph, committish, prefix, target, working_dir)?
+            }
+        }
         BuildStep::Extra(target) => run_extra_artifacts_build(dist_graph, target)?,
         BuildStep::Updater(updater) => fetch_updater(dist_graph, updater)?,
     };
@@ -421,6 +434,7 @@ fn build_fake(
             prefix,
             target,
             working_dir,
+            recursive: _,
         }) => generate_fake_source_tarball(dist_graph, committish, prefix, target, working_dir)?,
         // Or extra artifacts, which may involve real builds
         BuildStep::Extra(target) => run_fake_extra_artifacts_build(dist_graph, target)?,
@@ -606,6 +620,69 @@ fn generate_source_tarball(
         .arg(target)
         .current_dir(working_dir)
         .run()?;
+
+    Ok(())
+}
+
+fn generate_recursive_source_tarball(
+    graph: &DistGraph,
+    _committish: &str,
+    prefix: &str,
+    target: &Utf8Path,
+    working_dir: &Utf8Path,
+) -> DistResult<()> {
+    let git = if let Some(tool) = &graph.tools.git {
+        tool.cmd.to_owned()
+    } else {
+        return Err(DistError::ToolMissing {
+            tool: "git".to_owned(),
+        });
+    };
+
+    let output = Cmd::new(git, "generate a source tarball for your project")
+        .arg("ls-files")
+        .arg("--recurse-submodules")
+        .current_dir(working_dir)
+        .output()?;
+
+    let file_paths = String::from_utf8(output.stdout)?;
+    let (_temp_dir, temp_path) = create_tmp()?;
+
+    for relpath in file_paths.lines() {
+        let src_path = working_dir.join(relpath);
+        let dest_path = temp_path.join(prefix).join(relpath);
+
+        // git ls-files prints deleted tracked files, do not try to copy those
+        if !src_path.exists() {
+            continue;
+        }
+
+        if src_path.is_dir() {
+            axoasset::LocalAsset::create_dir_all(dest_path)?;
+        } else {
+            // Ensure the parent dir exists in the target
+            if let Some(dest_parent) = dest_path.parent() {
+                axoasset::LocalAsset::create_dir_all(dest_parent)?;
+            }
+            if src_path.is_symlink() {
+                if cfg!(unix) {
+                    #[cfg(unix)]
+                    {
+                        let link_name = std::fs::read_link(&src_path)?;
+                        std::os::unix::fs::symlink(link_name, dest_path).unwrap();
+                    }
+                } else {
+                    // If we're not on unix we can't work with symlinks well so don't try
+                    // (This doesn't really matter, tarballs are always made on linux)
+                    axoasset::LocalAsset::create_dir_all(dest_path)?;
+                }
+            } else {
+                axoasset::LocalAsset::copy_file_to_file(src_path, dest_path)?;
+            }
+        }
+    }
+
+    axoasset::LocalAsset::tar_gz_dir(temp_path.join(prefix), target, None::<&Utf8Path>)?;
 
     Ok(())
 }
