@@ -1,7 +1,6 @@
 # Unreleased
 
-Nothing Yet!
-
+* Fixed bug in recursive-tarball setting (now handles non-ascii paths correctly)
 
 # Version 0.28.6 (2025-06-09)
 
