@@ -642,20 +642,26 @@ fn generate_recursive_source_tarball(
         });
     };
 
+    // Get git to print out all the files that are checked in
     let output = Cmd::new(git, "generate a source tarball for your project")
         .arg("ls-files")
+        // We want to include submodule contents
         .arg("--recurse-submodules")
+        // We don't want path escaping, make the output \0 delimited
+        .arg("-z")
         .current_dir(working_dir)
         .output()?;
 
-    let file_paths = String::from_utf8(output.stdout)?;
+    let file_paths = output.stdout.split(|byte| *byte == 0);
     let (_temp_dir, temp_path) = create_tmp()?;
 
-    for relpath in file_paths.lines() {
-        let src_path = working_dir.join(relpath);
-        let dest_path = temp_path.join(prefix).join(relpath);
+    for raw_relpath in file_paths {
+        let relpath = String::from_utf8(raw_relpath.to_owned()).expect("non-utf8 path");
+        let src_path = working_dir.join(&relpath);
+        let dest_path = temp_path.join(prefix).join(&relpath);
 
-        // git ls-files prints deleted tracked files, do not try to copy those
+        // git ls-files prints deleted tracked files, do not try to copy those.
+        // This also throws out broken symlinks.
         if !src_path.exists() {
             continue;
         }
