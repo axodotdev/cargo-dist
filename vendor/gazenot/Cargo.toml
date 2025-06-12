@@ -1,0 +1,34 @@
+[package]
+name = "gazenot"
+description = "Gaze Not Into The Abyss, Lest You Become A Release Engineer"
+version = "0.3.3"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["client_lib"]
+client_lib = ["axoasset", "url", "tracing", "tokio", "camino", "axoasset", "backon"]
+tls-native-roots = ["axoasset/tls-native-roots"]
+
+[dependencies]
+
+# things needed for even the faux-schema mode (--no-default-features)
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+miette = { workspace = true }
+schemars = { workspace = true }
+
+# things needed for the full client
+axoasset = { workspace = true, features = ["json-serde", "remote"], optional = true }
+url = { workspace = true, features = ["serde"], optional = true }
+tracing = { workspace = true, features = ["log"], optional = true }
+tokio = { workspace = true, features = ["full"], optional = true }
+camino = { workspace = true, optional = true }
+backon = { version = "0.4.1", optional = true }
+
+[lints.clippy]
+result_large_err = "allow"

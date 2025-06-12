@@ -22,7 +22,7 @@ fn test_self_detect() {
     let packages = workspaces.all_packages().collect::<Vec<_>>();
 
     assert_eq!(project.kind, WorkspaceKind::Rust);
-    assert_eq!(packages.len(), 3);
+    assert_eq!(packages.len(), 9);
 
     let package = get_package(&packages, "axoproject");
     assert_eq!(package.name, "axoproject");

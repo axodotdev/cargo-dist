@@ -1,0 +1,28 @@
+[package]
+name = "axocli"
+version = "0.2.0"
+edition = "2021"
+description = "common code for setting up a CLI App and handling errors/printing."
+license = "MIT OR Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+backtrace = { workspace = true }
+backtrace-ext = { workspace = true }
+console = { workspace = true }
+miette = { workspace = true, features = ["fancy"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# dev-deps are use by the example
+# for sake of clarity duplicate deps are repeated here!
+[dev-dependencies]
+clap = { workspace = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+miette = { workspace = true }

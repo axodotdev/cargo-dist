@@ -1,0 +1,56 @@
+[package]
+name = "axoasset"
+description = ">o_o<"
+version = "1.2.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[features]
+# Default enable remote support
+default = ["remote"]
+# Enable SourceFile support for deserializing using the "toml" crate
+toml-serde = ["toml", "serde"]
+# Enable SourceFile support for deserializing using the "serde_json" crate
+json-serde = ["serde_json", "serde"]
+# Enable SourceFile support for deserializing using the "toml_edit" crate
+toml-edit = ["toml_edit"]
+# Enable SourceFile support for deserializing using the "serde_yml" crate
+yaml-serde = ["serde_yml", "serde"]
+# Enable reqwest-based http file fetching
+remote = ["reqwest", "image"]
+# On the off-chance native tls roots cause a problem, they can be opted out of
+# by only using remote-min
+tls-native-roots = ["reqwest/rustls-tls-native-roots"]
+# Enable support for reading and writing zips and tarballs
+compression = ["compression-tar", "compression-zip"]
+# Enable support for reading and writing tarballs
+compression-tar = ["flate2", "tar", "xz2", "zstd"]
+# Enable support for reading and writing zips
+compression-zip = ["zip"]
+
+[dependencies]
+image = { workspace = true, default-features = false, optional = true }
+mime = { workspace = true }
+reqwest = { workspace = true, optional = true, default-features = false, features = ["json", "rustls-tls-webpki-roots"] }
+thiserror = { workspace = true }
+url = { workspace = true }
+miette = { workspace = true }
+camino = { workspace = true }
+toml = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+serde_yml = { workspace = true, optional = true }
+serde = { workspace = true, optional = true, features = ["derive"] }
+tar = { workspace = true, optional = true }
+zip = { workspace = true, optional = true }
+flate2 = { workspace = true, optional = true }
+xz2 = { workspace = true, optional = true, features = ["static"] }
+zstd = { workspace = true, optional = true }
+toml_edit = { workspace = true, optional = true }
+walkdir = { workspace = true }
+lazy_static = { workspace = true }
+
+[dev-dependencies]
+assert_fs = { workspace = true }
+tokio = { workspace = true, features = ["macros"]}
+wiremock = { workspace = true }
+clap = { workspace = true, features = ["derive"] }

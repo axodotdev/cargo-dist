@@ -18,9 +18,7 @@ exclude = [
 doctest = false
 
 [dependencies]
-# would be nice to inherit this from workspace but we don't want to pull in
-# a full http client for the schema crate!
-gazenot = { version = "0.3.0", default-features = false }
+gazenot = { workspace = true }
 
 camino.workspace = true
 schemars.workspace = true

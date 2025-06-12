@@ -3,6 +3,12 @@ members = [
     "axoproject",
     "cargo-dist",
     "cargo-dist-schema",
+    "vendor/axoasset",
+    "vendor/axocli",
+    "vendor/axoprocess",
+    "vendor/axotag",
+    "vendor/axoupdater",
+    "vendor/gazenot",
 ]
 resolver = "2"
 exclude = ["axoproject/tests/projects/"]
@@ -10,7 +16,7 @@ exclude = ["axoproject/tests/projects/"]
 [workspace.package]
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/axodotdev/cargo-dist"
+repository = "https://github.com/oxidecomputer/cargo-dist"
 homepage = "https://opensource.axo.dev/cargo-dist/"
 version = "1.0.0-rc.1"
 rust-version = "1.74"
@@ -20,13 +26,13 @@ rust-version = "1.74"
 dist-schema = { version = "=1.0.0-rc.1", path = "cargo-dist-schema" }
 axoproject = { version = "=1.0.0-rc.1", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
 
-# first-party deps
-axocli = { version = "0.2.0" }
-axoupdater = { version = "0.9.0" }
-axotag = "0.2.0"
-axoasset = { version = "1.2.0", features = ["json-serde", "toml-serde", "toml-edit", "yaml-serde", "compression", "remote"] }
-axoprocess = { version = "0.2.0" }
-gazenot = { version = "0.3.3" }
+# vendored first-party deps
+axocli = { version = "0.2.0", path = "vendor/axocli" }
+axoupdater = { version = "0.9.0", path = "vendor/axoupdater" }
+axotag = { version = "0.2.0", path = "vendor/axotag" }
+axoasset = { version = "1.2.0", path = "vendor/axoasset", features = ["json-serde", "toml-serde", "toml-edit", "yaml-serde", "compression", "remote"] }
+axoprocess = { version = "0.2.0", path = "vendor/axoprocess" }
+gazenot = { version = "0.3.3", path = "vendor/gazenot" }
 
 # third-party deps
 clap = { version = "4.5.28", features = ["derive"] }
@@ -36,8 +42,10 @@ comfy-table = "7.1.4"
 miette = { version = "7.5.0" }
 thiserror = "2.0.11"
 tracing = { version = "0.1.41", features = ["log"] }
+tracing-subscriber = "0.3.18"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = { version = "1.0.138" }
+serde_yml = { version = "0.0.11" }
 cargo_metadata = "0.18.1"
 camino = { version = "1.1.9", features = ["serde1"] }
 semver = "1.0.25"
@@ -54,11 +62,15 @@ goblin = "0.8.2"
 similar = "2.7.0"
 tokio = { version = "1.43.0", features = ["full"] }
 temp-dir = "0.1.14"
+tempfile = "3.10.1"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
 insta = { version = "1.42.1", features = ["filters"] }
 tar = "0.4.43"
 flate2 = "1.0.35"
+zip = { version = "0.6.4" }
+xz2 = { version = "0.1.7" }
+zstd = { version = "0.13.0" }
 pathdiff = { version = "0.2.3", features = ["camino"] }
 url = "2.5.4"
 parse-changelog = "0.6.12"
@@ -69,7 +81,21 @@ lazy_static = "1.5.0"
 current_platform = "0.2.0"
 color-backtrace = "0.6.1"
 backtrace = "0.3.74"
+backtrace-ext = "0.2.1"
 target-lexicon = "0.12.16"
+homedir = "0.3.3"
+self-replace = "1.5.0"
+httpmock = "0.7.0"
+serial_test = "3.2.0"
+backon = "0.4.1"
+image = { version = "0.25.4", default-features = false }
+mime = "0.3.16"
+reqwest = { version = ">=0.11.0", default-features = false }
+toml = "0.8.12"
+toml_edit = { version = "0.22.22" }
+walkdir = "2.5.0"
+assert_fs = "1"
+wiremock = "0.6"
 
 [workspace.metadata.release]
 shared-version = true

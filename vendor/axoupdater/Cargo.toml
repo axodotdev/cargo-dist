@@ -1,0 +1,45 @@
+[package]
+name = "axoupdater"
+description = "Self-updater library for use with cargo-dist"
+version = "0.9.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/axodotdev/axoupdater"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["axo_releases", "github_releases"]
+axo_releases = ["gazenot"]
+blocking = ["tokio"]
+github_releases = ["axoasset/remote"]
+tls_native_roots = ["axoasset/tls-native-roots"]
+
+[dependencies]
+axoasset = { workspace = true, features = ["json-serde"] }
+axoprocess = { workspace = true }
+axotag = { workspace = true }
+camino = { workspace = true }
+homedir = { workspace = true }
+serde = { workspace = true }
+tempfile = { workspace = true }
+url = { workspace = true }
+
+# axo releases
+gazenot = { workspace = true, features = ["client_lib"], optional = true }
+
+# blocking API
+tokio = { workspace = true, optional = true }
+
+# errors
+miette = { workspace = true }
+thiserror = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+self-replace = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+httpmock = { workspace = true }
+serial_test = { workspace = true }
