@@ -15,7 +15,7 @@ pub mod github;
 
 /// The current version of dist
 const SELF_DIST_VERSION: &str = env!("CARGO_PKG_VERSION");
-const BASE_DIST_FETCH_URL: &str = "https://github.com/axodotdev/cargo-dist/releases/download";
+const BASE_DIST_FETCH_URL: &str = "https://github.com/oxidecomputer/cargo-dist/releases/download";
 
 // NOTE: This is hard-coded to download latest.
 const BASE_CARGO_AUDITABLE_FETCH_LATEST_URL: &str =
@@ -130,7 +130,7 @@ impl InstallStrategy for DistInstallStrategy {
                 "curl --proto '=https' --tlsv1.2 -LsSf {installer_url}/{installer_name}.sh | sh"
             ),
             DistInstallStrategy::GitBranch { branch } => format!(
-                "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} cargo-dist"
+                "cargo install --git https://github.com/oxidecomputer/cargo-dist/ --branch={branch} cargo-dist"
             ),
         }).into()
     }
@@ -142,7 +142,7 @@ impl InstallStrategy for DistInstallStrategy {
                 "irm {installer_url}/{installer_name}.ps1 | iex"
             ),
             DistInstallStrategy::GitBranch { branch } => format!(
-                "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} cargo-dist"
+                "cargo install --git https://github.com/oxidecomputer/cargo-dist/ --branch={branch} cargo-dist"
             ),
         }).into()
     }
