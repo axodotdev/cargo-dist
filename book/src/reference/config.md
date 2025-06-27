@@ -908,7 +908,7 @@ These settings are specific to how we publish your packages to package managers 
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
 > [dist]
-> publish-preleases = true
+> publish-prereleases = true
 > ```
 
 If you set `publish-prereleases = true`, dist will [publish](#publish-jobs) prerelease versions to package managers such as [homebrew][homebrew-installer] and [npm][npm-installer]. By default, dist will only publish stable versions to avoid polluting your releases. This is especially important for things like Homebrew which don't really have a proper notion of "prereleases" or "literally having more than one published version of a package".
