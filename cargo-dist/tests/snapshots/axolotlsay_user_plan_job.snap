@@ -1,7 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
-snapshot_kind: text
 ---
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -3781,7 +3780,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "cache_provider": "github"
           },
           {
-            "runner": "windows-2019",
+            "runner": "windows-2022",
             "host": "x86_64-pc-windows-msvc",
             "install_dist": {
               "shell": "pwsh",

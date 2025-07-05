@@ -1623,7 +1623,7 @@ download_binary_and_run_installer "$@" || exit 1
             "cache_provider": "github"
           },
           {
-            "runner": "windows-2019",
+            "runner": "windows-2022",
             "host": "x86_64-pc-windows-msvc",
             "install_dist": {
               "shell": "pwsh",

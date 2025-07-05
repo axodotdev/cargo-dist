@@ -666,7 +666,7 @@ fn github_runner_for_target(
             if target_triple.architecture != Architecture::X86_64 {
                 cargo_xwin()
             } else {
-                runner_to_config(GithubRunnerRef::from_str("windows-2019"))
+                runner_to_config(GithubRunnerRef::from_str("windows-2022"))
             }
         }
         _ => return Ok(None),
