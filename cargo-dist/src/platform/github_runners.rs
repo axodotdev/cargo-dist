@@ -14,18 +14,15 @@ lazy_static::lazy_static! {
 
         //-------- linux
         m.insert(GithubRunnerRef::from_str("ubuntu-22.04"), t::TARGET_X64_LINUX_GNU);
-        m.insert(GithubRunnerRef::from_str("ubuntu-22.04"), t::TARGET_X64_LINUX_GNU);
         m.insert(GithubRunnerRef::from_str("ubuntu-24.04"), t::TARGET_X64_LINUX_GNU);
         m.insert(GithubRunnerRef::from_str("ubuntu-latest"), t::TARGET_X64_LINUX_GNU);
 
         //-------- windows
-        m.insert(GithubRunnerRef::from_str("windows-2019"), t::TARGET_X64_WINDOWS);
         m.insert(GithubRunnerRef::from_str("windows-2022"), t::TARGET_X64_WINDOWS);
+        m.insert(GithubRunnerRef::from_str("windows-2025"), t::TARGET_X64_WINDOWS);
         m.insert(GithubRunnerRef::from_str("windows-latest"), t::TARGET_X64_WINDOWS);
 
         //-------- macos x64
-        m.insert(GithubRunnerRef::from_str("macos-12"), t::TARGET_X64_MAC); // deprecated
-        m.insert(GithubRunnerRef::from_str("macos-12-large"), t::TARGET_X64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-13"), t::TARGET_X64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-13-large"), t::TARGET_X64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-14-large"), t::TARGET_X64_MAC);

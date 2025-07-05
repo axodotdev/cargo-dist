@@ -4169,7 +4169,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "cache_provider": "github"
           },
           {
-            "runner": "windows-2019",
+            "runner": "windows-2022",
             "host": "x86_64-pc-windows-msvc",
             "install_dist": {
               "shell": "pwsh",
@@ -4190,7 +4190,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "cache_provider": "github"
           },
           {
-            "runner": "windows-2019",
+            "runner": "windows-2022",
             "host": "x86_64-pc-windows-msvc",
             "install_dist": {
               "shell": "pwsh",

@@ -89,8 +89,8 @@ By default, dist uses the following runners:
 
 * Linux (x86_64): `ubuntu-22.04`
 * macOS (x86_64): `macos-13`
-* macOS (Apple Silicon): `macos-13`
-* Windows (x86_64): `windows-2019`
+* macOS (Apple Silicon): `macos-14`
+* Windows (x86_64): `windows-2022`
 
 It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the [`github-custom-runners`][config-github-custom-runners] configuration setting in your dist config. Here's an example which adds support for Linux (aarch64) using runners from [Buildjet](https://buildjet.com/for-github-actions):
 
@@ -156,7 +156,7 @@ aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
 ```
 
 Building `aarch64-pc-windows-msvc` binaries from a `x86_64-pc-windows-msvc` runner (like
-`windows-2019`) is surprisingly hard. But building both binaries from an `x86_64-unknown-linux-gnu`
+`windows-2022`) is surprisingly hard. But building both binaries from an `x86_64-unknown-linux-gnu`
 runner is surprisingly easy via `cargo-xwin`
 
 This will work, eventually:
