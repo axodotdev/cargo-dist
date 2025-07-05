@@ -42,3 +42,7 @@ host = "x86_64-unknown-linux-musl"
 [dist.github-custom-runners.aarch64-unknown-linux-musl.container]
 image = "quay.io/pypa/manylinux_2_28_x86_64"
 host = "x86_64-unknown-linux-musl"
+
+[dist.github-custom-runners]
+global = "ubuntu-22.04"
+x86_64-unknown-linux-gnu = "ubuntu-22.04"
