@@ -599,7 +599,7 @@ stdout:
             "cache_provider": "github"
           },
           {
-            "runner": "ubuntu-20.04",
+            "runner": "ubuntu-22.04",
             "host": "x86_64-unknown-linux-gnu",
             "install_dist": {
               "shell": "sh",
