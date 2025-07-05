@@ -52,12 +52,12 @@ impl PkgInstallerInfo {
         info!("Copying executables");
         for exe in &self.artifact.executables {
             info!("{} => {:?}", &self.package_dir.join(exe), bindir.join(exe));
-            LocalAsset::copy_file_to_file(&self.package_dir.join(exe), bindir.join(exe))?;
+            LocalAsset::copy_file_to_file(self.package_dir.join(exe), bindir.join(exe))?;
         }
         #[cfg(unix)]
         for (bin, targets) in &self.bin_aliases {
             for target in targets {
-                std::os::unix::fs::symlink(&bindir.join(bin), &bindir.join(target))?;
+                std::os::unix::fs::symlink(bindir.join(bin), bindir.join(target))?;
             }
         }
         for lib in self
@@ -66,7 +66,7 @@ impl PkgInstallerInfo {
             .iter()
             .chain(self.artifact.cstaticlibs.iter())
         {
-            LocalAsset::copy_file_to_file(&self.package_dir.join(lib), libdir.join(lib))?;
+            LocalAsset::copy_file_to_file(self.package_dir.join(lib), libdir.join(lib))?;
         }
 
         // The path the two pkg files get placed in while building
