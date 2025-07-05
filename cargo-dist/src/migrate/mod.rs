@@ -148,7 +148,7 @@ fn do_migrate_from_dist_toml() -> DistResult<()> {
             // Try to keep existing comments if we can
             if let Some(desc) = decor.prefix().and_then(|p| p.as_str()) {
                 if !desc.starts_with('\n') {
-                    decor.set_prefix(&format!("\n{desc}"));
+                    decor.set_prefix(format!("\n{desc}"));
                 }
             } else {
                 decor.set_prefix("\n");
