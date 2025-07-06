@@ -128,7 +128,7 @@ impl InstallStrategy for DistInstallStrategy {
                 "curl --proto '=https' --tlsv1.2 -LsSf {installer_url}/{installer_name}.sh | sh"
             ),
             DistInstallStrategy::GitBranch { branch } => format!(
-                "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} cargo-dist"
+                "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} --locked cargo-dist"
             ),
         }).into()
     }
