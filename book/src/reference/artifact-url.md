@@ -44,43 +44,6 @@ https://github.com/axodotdev/cargo-dist/releases/latest/download/dist-manifest-s
 ```
 
 
-## axodotdev
-
-It host uploads your artifacts to an axo Release. This functionality can be used with any CI backend. A [source host](#source-hosts) must be defined that matches your axo Releases account. Because axo Releases and dist were built to work together and enable More Advanced Features, the process of getting an Artifact URL out of this hosting provider is more complex.
-
-[Most of the details are handled by gazenot, the axo Releases client. See its docs for way too many details.](https://github.com/axodotdev/gazenot#gazenot)
-
-The TL;DR is that axo Releases wants to randomly generate an Artifact URL for us, and since we need to bake those URLs into the artifacts we build (installers that fetch binaries), we need to get that URL as soon as possible (in the "plan" step).
-
-Getting this URL is a networked side-effect that requires an authentication token, so when you locally run `dist build` or `dist plan` we will just use a mock URL.
-
-The command that gets A Real Artifact URL from axo Releases is `dist host --steps=create`. This is conceptually identical to `dist plan`, but indicates "yes I am ok with doing side-effectful networking to get an Artifact URL to upload things to". This command will write a `dist-manifest.json` to your output directory that subsequent commands like `dist build --artifacts=global` will read back in to get the currently active artifact url. If you do this locally, you will need to use `cargo clean` to make dist forget the URL.
-
-This random URL ("Set URL") will work forever and will get baked into various outputs. However, it's not the URL you want to show end-users when telling them to install your software. Once released, you will also have access to the more end-user-friendly "Release URL" and "Latest URL":
-
-* A **Set URL** (`https://myuser.artifacts.axodotdev.host/myapp/ax_UJl_tKCujZwxKL1n_K7TM`) is the permanent randomly
-  generated URL for downloading files. It will be embedded in things like the bodies of things like `my-app-installer.sh`,
-  but ideally it **should never** be presented to end-users in things like `curl | sh https://...` expressions.
-* A **Release URL** (`https://myuser.artifacts.axodotdev.host/myapp/v1.0.0/`) is a permanent stable-format URL for
-  downloading files from a Release('s ArtifactSet). This is typically what should be presented in curl-sh expressions.
-  This URL may go dead if a Release is never Announced.
-* A **Latest (Release) URL** (`https://myuser.artifacts.axodotdev.host/myapp/latest/`) is a mutable-destination
-  stable-format URL for downloading "whatever the latest Release('s ArtifactSet) is". This URL is appropriate for
-  linking in random docs which you don't want to update every time there's a release.
-
-The default schemas for these URLs are:
-
-```
-* set: https://{owner}.artifacts.axodotdev.host/{project}/{RANDOM_ID}/
-* release: https://{owner}.artifacts.axodotdev.host/{project}/{tag}/
-* latest: https://{owner}.artifacts.axodotdev.host/{project}/latest/
-```
-
-Where `owner` and `project` are [your source host](#source-hosts), and `tag` is the git tag of the release.
-
-[See gazenot's docs for what this extra complexity potentially enables](https://github.com/axodotdev/gazenot#gazenot).
-
-
 ## Other
 
 Future releases [will expose a more general mechanism for specifying artifact download URLs](https://github.com/axodotdev/cargo-dist/issues/236).

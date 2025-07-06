@@ -38,11 +38,6 @@ pub enum DistError {
     /// random gazenot error
     #[error(transparent)]
     #[diagnostic(transparent)]
-    Gazenot(#[from] gazenot::error::GazenotError),
-
-    /// random gazenot error
-    #[error(transparent)]
-    #[diagnostic(transparent)]
     Project(#[from] axoproject::errors::ProjectError),
 
     /// random string error

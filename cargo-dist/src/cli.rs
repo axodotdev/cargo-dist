@@ -496,7 +496,6 @@ impl HostingStyle {
     pub fn to_lib(self) -> cargo_dist::config::HostingStyle {
         match self {
             HostingStyle::Github => cargo_dist::config::HostingStyle::Github,
-            HostingStyle::Axodotdev => cargo_dist::config::HostingStyle::Axodotdev,
         }
     }
 }
@@ -506,15 +505,12 @@ impl HostingStyle {
 pub enum HostingStyle {
     /// Host on Github Releases
     Github,
-    /// Host on Axo Releases ("Abyss")
-    Axodotdev,
 }
 
 impl std::fmt::Display for HostingStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let string = match self {
             HostingStyle::Github => "github",
-            HostingStyle::Axodotdev => "axodotdev",
         };
         string.fmt(f)
     }
