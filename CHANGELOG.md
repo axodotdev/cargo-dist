@@ -2,6 +2,24 @@
 
 Nothing Yet!
 
+# Version 0.28.1 (2025-07-06)
+
+This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues.
+
+## Fixes
+
+- impl @mistydemeo
+  - [Bump Rust version to 1.87.0](https://github.com/axodotdev/cargo-dist/pull/1832)
+  - [feat: synchronize runners with github](https://github.com/axodotdev/cargo-dist/pull/1834)
+  - [fix: use --locked for from-git installs](https://github.com/axodotdev/cargo-dist/pull/1836)
+- impl @Lee-W [feat: update ubuntu version from 20.04 to 22.04](https://github.com/axodotdev/cargo-dist/pull/1766)
+- impl @jackkleeman [Support publishing prereleases even if there are only custom publish jobs](https://github.com/axodotdev/cargo-dist/pull/1838)
+- impl @geofft [fix: Do not report shadowed binaries when no binary exists](https://github.com/axodotdev/cargo-dist/pull/1735)
+- impl @rdbisme [Fix typo for installer base url override](https://github.com/axodotdev/cargo-dist/pull/1841)
+- impl @CramBL [fix ignored configuration key 'msvc-crt-static'](https://github.com/axodotdev/cargo-dist/pull/1842)
+- impl @gtema [update version of github provenance action](https://github.com/axodotdev/cargo-dist/pull/1702)
+
+
 # Version 0.28.0 (2025-01-08)
 
 This release contains a new feature that improves the Windows PowerShell installer. We've also made some behind-the-scenes changes which most users won't notice yet - keep an eye out for our next major release!
