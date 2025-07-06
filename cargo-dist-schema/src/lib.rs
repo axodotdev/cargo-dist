@@ -900,35 +900,6 @@ impl DistManifest {
         self.releases.iter().find(|r| r.app_name == name)
     }
 
-    /// Update the download url for an Axo Release (to a prettier one)
-    pub fn update_release_axodotdev_artifact_download_url(&mut self, name: &str, new_url: String) {
-        // Find the release
-        let release = self.releases.iter_mut().find(|r| r.app_name == name);
-        let Some(release) = release else {
-            return;
-        };
-
-        // Swap the new URL in
-        let mut old_url = None;
-        if let Some(host) = &mut release.hosting.axodotdev {
-            old_url = host.set_download_url.take();
-            host.set_download_url = Some(new_url.clone());
-        }
-
-        // If the url changed, update install_hints
-        if let Some(old_url) = old_url {
-            for artifact_name in &release.artifacts {
-                let artifact = self
-                    .artifacts
-                    .get_mut(artifact_name)
-                    .expect("release referenced non-existent artifacts");
-                if let Some(hint) = &mut artifact.install_hint {
-                    *hint = hint.replace(&old_url, &new_url);
-                }
-            }
-        }
-    }
-
     /// Either get the release with the given name, or make a minimal one
     /// with no hosting/artifacts (to be populated)
     pub fn ensure_release(&mut self, name: String, version: String) -> &mut Release {
@@ -1007,10 +978,6 @@ pub struct Hosting {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github: Option<GithubHosting>,
-    /// Hosted on Axo Releases
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub axodotdev: Option<gazenot::ArtifactSet>,
 }
 
 /// Github Hosting
@@ -1032,11 +999,7 @@ pub struct GithubHosting {
 impl Hosting {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
     pub fn artifact_download_url(&self) -> Option<String> {
-        let Hosting { axodotdev, github } = &self;
-        // Prefer axodotdev is present, otherwise github
-        if let Some(host) = &axodotdev {
-            return host.set_download_url.clone();
-        }
+        let Hosting { github } = &self;
         if let Some(host) = &github {
             return Some(format!(
                 "{}{}",
@@ -1047,8 +1010,8 @@ impl Hosting {
     }
     /// Gets whether there's no hosting
     pub fn is_empty(&self) -> bool {
-        let Hosting { axodotdev, github } = &self;
-        axodotdev.is_none() && github.is_none()
+        let Hosting { github } = &self;
+        github.is_none()
     }
 }
 

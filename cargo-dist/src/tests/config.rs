@@ -75,7 +75,7 @@ targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "aarch64-unknown
 # Which actions to run on pull requests
 pr-run-mode = "plan"
 # Where to host releases
-hosting = ["axodotdev", "github"]
+hosting = "github"
 # Whether to install an updater program
 install-updater = false
 # Path that installers should place binaries in
@@ -123,7 +123,7 @@ cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github"]
 # Where to host releases
-hosting = ["axodotdev"]
+hosting = ["github"]
 # Path that installers should place binaries in
 install-path = ["$MY_COMPANY/bin"]
 # Target platforms to build apps for (Rust target-triple syntax)
@@ -142,7 +142,7 @@ cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = "github"
 # Where to host releases
-hosting = "axodotdev"
+hosting = "github"
 # Path that installers should place binaries in
 install-path = "$MY_COMPANY/bin"
 # Target platforms to build apps for (Rust target-triple syntax)
@@ -175,7 +175,7 @@ cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github", "github"]
 # Where to host releases
-hosting = ["axodotdev", "github"]
+hosting = ["github"]
 # Path that installers should place binaries in
 install-path = ["$MY_COMPANY/bin", "~/.mycompany/bin"]
 # Target platforms to build apps for (Rust target-triple syntax)
@@ -194,7 +194,7 @@ cargo-dist-version = "0.13.1-prerelease.1"
 # CI backends to support
 ci = ["github", "github"]
 # Where to host releases
-hosting = ["axodotdev", "github"]
+hosting = "github"
 # Path that installers should place binaries in
 install-path = ["$MY_COMPANY/bin", "~/.mycompany/bin"]
 # Target platforms to build apps for (Rust target-triple syntax)

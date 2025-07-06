@@ -37,18 +37,3 @@ pub fn create_axoasset_client(settings: &ClientSettings) -> DistResult<axoasset:
     let client = create_reqwest_client(settings)?;
     Ok(axoasset::AxoClient::with_reqwest(client))
 }
-
-/// Create a Gazenot client
-///
-/// Gazenot clients are configured to particular sourcehosts, and creating
-/// one will error out if certain environment variables aren't set. As such,
-/// this should be called in a fairly lazy/latebound way -- only when we know
-/// for sure we HAVE to do gazenot http requests.
-pub fn create_gazenot_client(
-    ClientSettings {}: &ClientSettings,
-    source_host: &str,
-    owner: &str,
-) -> DistResult<gazenot::Gazenot> {
-    let client = gazenot::Gazenot::into_the_abyss(source_host, owner)?;
-    Ok(client)
-}

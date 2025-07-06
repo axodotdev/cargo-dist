@@ -8,9 +8,6 @@
 # * checks for a Git Tag that looks like a release
 # * builds artifacts with dist (archives, installers, hashes)
 # * uploads those artifacts to temporary workflow zip
-{{%- if "axodotdev" in hosting_providers %}}
-# * on success, uploads the artifacts to Axo Releases and makes an Announcement
-{{%- endif %}}
 {{%- if "github" in hosting_providers %}}
 # * on success, uploads the artifacts to a GitHub Release
   {{%- if create_release %}}
@@ -112,9 +109,6 @@ jobs:
       {{%- endif %}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    {{%- if "axodotdev" in hosting_providers %}}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
-    {{%- endif %}}
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
@@ -146,7 +140,6 @@ jobs:
           {{%- elif release_branch %}} ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp --force-tag')
           {{%- else %}} ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name))
           {{%- endif %}}
-          {{%- if "axodotdev" in hosting_providers %}} || (env.AXO_RELEASES_TOKEN && 'host --steps=check') {{%- endif %}}
           {{{- " || 'plan' }} --output-format=json > plan-dist-manifest.json" | safe }}}
           echo "dist ran successfully"
           cat plan-dist-manifest.json
@@ -482,21 +475,7 @@ jobs:
       {{%- endfor %}}
     {{%- endif %}}
 {{%- endfor %}}
-
-{{%- if "axodotdev" in hosting_providers %}}
-  # Uploads the artifacts to Axo Releases and tentatively creates Releases for them.
-  # This makes perma URLs like /v1.0.0/ live for subsequent publish steps to use, but
-  # leaves them "disconnected" from the release history (for the purposes of
-  # "list the releases" or "give me the latest releases").
-  #
-  # If all the subsequent "publish" steps succeed, the "announce" job will "connect"
-  # the releases and concepts like "latest" will be updated. Otherwise you're hopefully
-  # in a decent position to roll back the release without anyone noticing it!
-  # This is imperfect with things like "publish to crates.io" being irreversible, but
-  # at worst you're in a better position to yank the version with minimum disruption.
-{{%- else %}}
   # Determines if we should publish/announce
-{{%- endif %}}
   host:
     needs:
       - plan
@@ -518,9 +497,6 @@ jobs:
     {{{- " }}" | safe }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    {{%- if "axodotdev" in hosting_providers %}}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
-    {{%- endif %}}
     runs-on: {{{ global_task.runner }}}
     outputs:
       val: ${{ steps.host.outputs.manifest }}
@@ -546,9 +522,6 @@ jobs:
           pattern: artifacts-*
           path: target/distrib/
           merge-multiple: true
-    {{%- if "axodotdev" in hosting_providers %}}
-      # Upload files to Axo Releases and create the Releases
-    {{%- endif %}}
     {{%- if "github" in hosting_providers and release_phase == "announce" %}}
       # This is a harmless no-op for GitHub Releases, hosting for that happens in "announce"
     {{%- endif %}}
@@ -630,9 +603,6 @@ jobs:
 {{#- being extremely Normal about whitespace/newlines -#}}
 {{{- "
 " | safe }}}
-{{%- if "axodotdev" in hosting_providers %}}
-  # Create an Announcement for all the Axo Releases, updating the "latest" release
-{{%- endif %}}
 {{%- if "github" in hosting_providers and release_phase == "announce" %}}
   # Create a GitHub Release while uploading all files to it
 {{%- endif %}}
@@ -663,35 +633,11 @@ jobs:
     runs-on: {{{ global_task.runner }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    {{%- if "axodotdev" in hosting_providers %}}
-      AXO_RELEASES_TOKEN: ${{ secrets.AXO_RELEASES_TOKEN }}
-    {{%- endif %}}
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
           persist-credentials: false
           submodules: recursive
-    {{%- if "axodotdev" in hosting_providers %}}
-      {{%- if rust_version %}}
-      - name: Install Rust
-        run: rustup update {{{ rust_version }}} --no-self-update && rustup default {{{ rust_version }}}
-      {{%- endif %}}
-      - name: Install cached dist
-        uses: {{{actions["actions/download-artifact"] | safe }}}
-        with:
-          name: cargo-dist-cache
-          path: ~/.cargo/bin/
-      - run: chmod +x ~/.cargo/bin/dist
-      - name: Fetch Axo Artifacts
-        uses: {{{actions["actions/download-artifact"] | safe }}}
-        with:
-          pattern: artifacts-*
-          path: target/distrib/
-          merge-multiple: true
-      - name: Announce Axo Releases
-        run: |
-          dist host --steps=announce ${{ needs.plan.outputs.tag-flag }}
-    {{%- endif %}}
     {{%- if "github" in hosting_providers and release_phase == "announce" %}}
 {{% include 'ci/github/partials/publish_github.yml' %}}
     {{%- endif %}}

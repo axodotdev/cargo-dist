@@ -249,21 +249,17 @@ impl DistMetadata {
                     None
                 }
             });
-        let axodotdev_host_layer =
-            list_to_bool_layer(is_global, &hosting, HostingStyle::Axodotdev, || None);
-        if github_host_layer.is_none() && axodotdev_host_layer.is_none() && has_github_ci {
+        if github_host_layer.is_none() && has_github_ci {
             github_host_layer = Some(BoolOr::Bool(true));
         }
 
         let needs_host_layer = github_host_layer.is_some()
-            || axodotdev_host_layer.is_some()
             || force_latest.is_some()
             || display.is_some()
             || display_name.is_some();
         let host_layer = needs_host_layer.then_some(HostLayer {
             common: CommonHostLayer {},
             github: github_host_layer,
-            axodotdev: axodotdev_host_layer,
             force_latest,
             display,
             display_name,

@@ -48,26 +48,6 @@ fn github_simple() {
 }
 
 #[test]
-fn github_and_axo_simple() {
-    // ci = "github" and hosting = ["github", "axodotdev"]
-    let mut workspaces = workspace_unified();
-    let hosting = Some(vec![HostingStyle::Github, HostingStyle::Axodotdev]);
-    let ci = Some(vec![CiStyle::Github]);
-
-    let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
-
-    let hosting = hosting.unwrap().unwrap();
-    assert_eq!(
-        hosting.hosts,
-        &[HostingStyle::Github, HostingStyle::Axodotdev]
-    );
-    assert_eq!(hosting.owner, REPO_OWNER);
-    assert_eq!(hosting.project, REPO_PROJECT);
-    assert_eq!(hosting.source_host, "github");
-}
-
-#[test]
 fn github_implicit() {
     // ci = "github" and hosting = None
     let mut workspaces = workspace_unified();
