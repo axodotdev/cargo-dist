@@ -916,7 +916,7 @@ If you set `publish-prereleases = true`, dist will [publish](#publish-jobs) prer
 
 ## hosting settings
 
-These settings govern how we host your files with platforms like [GitHub Releases][github-releases-guide] and axo Releases, and the text we tell them to display about your releases.
+These settings govern how we host your files with platforms like [GitHub Releases][github-releases-guide], and the text we tell them to display about your releases.
 
 ### `hosting`
 
@@ -932,17 +932,11 @@ These settings govern how we host your files with platforms like [GitHub Release
 
 Possible values:
 
-* `axodotdev`: Use axo Releases (currently in closed beta)
 * `github`: Use GitHub Releases (default if ci = "github")
 
 Specifies what hosting provider to use when hosting/announcing new releases.
 
 By default we will automatically use the native hosting of your CI provider, so when running on GitHub CI, we'll default to using GitHub Releases for hosting/announcing.
-
-If axo Releases and GitHub Releases are both enabled, we will host/announce on both platforms, but the GitHub Release's contents will regard the axo Release as the canonical source for the files. Specifically if you have a [shell installer][shell-installer], the GitHub Release will contain a shell installer that fetches from axo Releases and it will tell you to `curl | sh` with a URL to axo Releases.
-
-(Ideally files uploaded to both hosts should be bitwise identical, which means we have to "pick"
-a host to win for fetching installers, and if you're using axo Releases at all you *probably* want that one to win.)
 
 
 ### `display`
@@ -1037,9 +1031,7 @@ Possible values:
 
 Controls which stage of the release process the GitHub Release will be created in.
 
-By default, the GitHub Release is created during the "host" phase, as it hosts the files some installers will try to download. If axo Releases is also enabled, it will be moved back to the "announce" phase, as the files will be primarily hosted on axo Releases, and GitHub Releases will be treated like a backup and announcement of the release.
-
-**Most users should be well-served by the default setting, and changing it is likely to introduce undesirable publishing race conditions.** The only reason you might want to override this setting is if you're using [`dispatch-releases = true`](#dispatch-releases) and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist). In this case setting github-release = "announce" will accomplish that, but see below for what race conditions this might introduce.
+By default, the GitHub Release is created during the "host" phase, as it hosts the files some installers will try to download. **Most users should be well-served by the default setting, and changing it is likely to introduce undesirable publishing race conditions.** The only reason you might want to override this setting is if you're using [`dispatch-releases = true`](#dispatch-releases) and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist). In this case setting github-release = "announce" will accomplish that, but see below for what race conditions this might introduce.
 
 If using only GitHub Releases, and you force it to run during "announce", there will be a very brief window (~30 seconds) during which generated [Homebrew][homebrew-installer] and [npm][npm-installer] installers are live and referencing URLs that will only exist when the GitHub Release is created, causing the packages to error out when installed.
 

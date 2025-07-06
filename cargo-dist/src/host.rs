@@ -1,7 +1,7 @@
 //! Details for hosting artifacts
 
 use crate::{
-    announce::{announcement_axodotdev, announcement_github, AnnouncementTag},
+    announce::AnnouncementTag,
     check_integrity,
     config::{
         v1::{ci::CiConfig, hosts::WorkspaceHostConfig},
@@ -10,12 +10,10 @@ use crate::{
     errors::DistResult,
     gather_work,
     manifest::save_manifest,
-    net::create_gazenot_client,
-    DistError, DistGraph, DistGraphBuilder, HostingInfo,
+    DistError, DistGraphBuilder, HostingInfo,
 };
 use axoproject::WorkspaceGraph;
-use dist_schema::{ArtifactIdRef, DistManifest, Hosting};
-use gazenot::{AnnouncementKey, Gazenot};
+use dist_schema::DistManifest;
 
 /// Do hosting
 pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
@@ -27,39 +25,13 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
         create_hosting: host_args.steps.contains(&HostStyle::Create),
         ..cfg.clone()
     };
-    let (dist, mut manifest) = gather_work(&cfg)?;
+    let (dist, manifest) = gather_work(&cfg)?;
 
     // The rest of the steps are more self-contained
 
     if let Some(hosting) = &dist.hosting {
         for host in &hosting.hosts {
             match host {
-                HostingStyle::Axodotdev => {
-                    let abyss = create_gazenot_client(
-                        &dist.client_settings,
-                        &hosting.source_host,
-                        &hosting.owner,
-                    )?;
-                    if host_args.steps.contains(&HostStyle::Check) {
-                        check_hosting(&dist, &manifest, &abyss)?;
-                    }
-                    if host_args.steps.contains(&HostStyle::Upload) {
-                        // pre-save the hosting info so that it will be found on the FS to upload.
-                        // The currently in-memory manifest has more information about stuff that
-                        // the original 'plan' couldn't: system info, linkage, hashes, symbols, ...
-                        save_manifest(&dist.dist_dir.join("dist-manifest.json"), &manifest)?;
-                        upload_to_hosting(&dist, &manifest, &abyss)?;
-                    }
-                    if host_args.steps.contains(&HostStyle::Release) {
-                        // note that this mutates the manifest with new Release URLs, to be written back!
-                        // this makes Axo Releases and Github Releases diverge on the dist-manifest.json
-                        // uploaded to them, differing specifically in the URLs in install-hints. This is OK.
-                        release_hosting(&dist, &mut manifest, &abyss)?;
-                    }
-                    if host_args.steps.contains(&HostStyle::Announce) {
-                        announce_hosting(&dist, &manifest, &abyss)?;
-                    }
-                }
                 HostingStyle::Github => {
                     // implemented in CI backend
                 }
@@ -91,14 +63,10 @@ impl<'a> DistGraphBuilder<'a> {
         {
             let WorkspaceHostConfig {
                 github,
-                axodotdev,
                 force_latest: _,
             } = &self.inner.config.hosts;
             if github.is_some() {
                 hosting.push(HostingStyle::Github);
-            }
-            if axodotdev.is_some() {
-                hosting.push(HostingStyle::Axodotdev);
             }
         }
         let hosting = if hosting.is_empty() {
@@ -151,37 +119,6 @@ impl<'a> DistGraphBuilder<'a> {
 
         for host in &hosting.hosts {
             match host {
-                HostingStyle::Axodotdev => {
-                    // Ask The Abyss For Hosting, or mock the result
-                    let packages = releases_without_hosting
-                        .iter()
-                        .map(|(name, _version)| name.clone());
-
-                    let artifact_sets = if create_hosting {
-                        let abyss = create_gazenot_client(
-                            &self.inner.client_settings,
-                            &hosting.source_host,
-                            &hosting.owner,
-                        )?;
-                        tokio::runtime::Handle::current()
-                            .block_on(abyss.create_artifact_sets(packages))?
-                    } else {
-                        packages.map(gazenot::ArtifactSet::mock).collect()
-                    };
-
-                    // Store the results so other machines can use it
-                    for ((name, version), set) in releases_without_hosting.iter().zip(artifact_sets)
-                    {
-                        assert_eq!(
-                            *name, set.package,
-                            "gazenot got confused about package names..."
-                        );
-                        self.manifest
-                            .ensure_release(name.clone(), version.clone())
-                            .hosting
-                            .axodotdev = Some(set);
-                    }
-                }
                 HostingStyle::Github => {
                     // CI currently impls this for us, all we need to know is the URL to download from
                     let repo_path = &hosting.repo_path;
@@ -203,109 +140,6 @@ impl<'a> DistGraphBuilder<'a> {
 
         Ok(())
     }
-}
-
-fn check_hosting(_dist: &DistGraph, _manifest: &DistManifest, _abyss: &Gazenot) -> DistResult<()> {
-    // FIXME: implement a ping/whoami API to check the Abyss client is working
-
-    Ok(())
-}
-
-fn upload_to_hosting(dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot) -> DistResult<()> {
-    const DIST_MANIFEST_ARTIFACT_ID: &ArtifactIdRef = ArtifactIdRef::from_str("dist-manifest.json");
-
-    // Gather up the files to upload for each release
-    let files = manifest.releases.iter().filter_map(|release| {
-        // Github Releases only has semantics on Announce
-        let Hosting {
-            axodotdev,
-            github: _,
-        } = &release.hosting;
-        if let Some(set) = axodotdev {
-            // Upload all files associated with this Release, plus the dist-manifest.json
-            let files = manifest
-                .artifacts_for_release(release)
-                .filter_map(|(_id, artifact)| artifact.name.as_deref())
-                .chain(Some(DIST_MANIFEST_ARTIFACT_ID))
-                .map(|name| dist.dist_dir.join(name.as_str()))
-                .collect::<Vec<_>>();
-            Some((set, files))
-        } else {
-            None
-        }
-    });
-
-    tokio::runtime::Handle::current().block_on(abyss.upload_files(files))?;
-    eprintln!("all artifacts hosted!");
-    Ok(())
-}
-
-fn release_hosting(
-    _dist: &DistGraph,
-    manifest: &mut DistManifest,
-    abyss: &Gazenot,
-) -> DistResult<()> {
-    // Gather up the releases
-    let releases = manifest.releases.iter().filter_map(|release| {
-        // Github Releases only has semantics on Announce
-        let Hosting {
-            axodotdev,
-            github: _,
-        } = &release.hosting;
-        if let Some(set) = axodotdev {
-            let release = gazenot::ReleaseKey {
-                version: release.app_version.clone(),
-                tag: manifest.announcement_tag.clone().unwrap(),
-                is_prerelease: manifest.announcement_is_prerelease,
-            };
-            Some((set, release))
-        } else {
-            None
-        }
-    });
-
-    // Tell The Abyss To Release
-    let new_releases =
-        tokio::runtime::Handle::current().block_on(abyss.create_releases(releases))?;
-
-    // Update artifact download URLs with release results
-    for new_release in new_releases {
-        if let Some(new_url) = new_release.release_download_url {
-            manifest.update_release_axodotdev_artifact_download_url(&new_release.package, new_url);
-        }
-    }
-
-    // Update Github Announcement body with new URLs
-    announcement_github(manifest);
-
-    eprintln!("release published!");
-    Ok(())
-}
-
-fn announce_hosting(_dist: &DistGraph, manifest: &DistManifest, abyss: &Gazenot) -> DistResult<()> {
-    // Perform the announcement
-    let releases = manifest
-        .releases
-        .iter()
-        .filter_map(|release| {
-            // FIXME: implement native github releases support? (currently exists in github ci logic)
-            let Hosting {
-                axodotdev,
-                github: _,
-            } = &release.hosting;
-            axodotdev
-                .as_ref()
-                .map(|set| set.to_release(manifest.announcement_tag.clone().unwrap()))
-        })
-        .collect::<Vec<_>>();
-
-    let announcement = AnnouncementKey {
-        body: announcement_axodotdev(manifest),
-    };
-    tokio::runtime::Handle::current()
-        .block_on(abyss.create_announcements(&releases, announcement))?;
-    eprintln!("release announced!");
-    Ok(())
 }
 
 pub(crate) fn select_hosting(

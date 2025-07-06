@@ -483,18 +483,7 @@ impl GithubReleaseInfo {
             .flatten();
 
         let release_phase = if host_config.during == GithubReleasePhase::Auto {
-            // We typically prefer to release in announce.
-            // If Axo is in use, we also want the release to come late
-            // because the release body will contain links to Axo URLs
-            // that won't become live until the announce phase.
-            if dist.config.hosts.axodotdev.is_some() {
-                GithubReleasePhase::Announce
-            // Otherwise, if Axo isn't present, we lean on host for
-            // safety reasons - because npm/Homebrew contain links to
-            // URLs that won't exist until the GitHub release happens.
-            } else {
-                GithubReleasePhase::Host
-            }
+            GithubReleasePhase::Host
         // If the user chose a non-auto option, respect that.
         } else {
             host_config.during

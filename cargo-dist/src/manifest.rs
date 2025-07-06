@@ -104,10 +104,7 @@ pub(crate) fn load_and_merge_manifests(
             let out_release =
                 output.ensure_release(release.app_name.clone(), release.app_version.clone());
             // If the input has hosting info, apply it
-            let Hosting { axodotdev, github } = release.hosting;
-            if let Some(hosting) = axodotdev {
-                out_release.hosting.axodotdev = Some(hosting);
-            }
+            let Hosting { github } = release.hosting;
             if let Some(hosting) = github {
                 out_release.hosting.github = Some(hosting);
             }
