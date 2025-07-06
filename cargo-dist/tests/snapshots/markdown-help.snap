@@ -173,8 +173,7 @@ releases hosting backends we want to support
 If left unspecified we will use the value in [workspace.metadata.dist]. (If no such value exists we will use the one "native" to your CI provider) `dist init` will persist the values you pass to that location.
 
 Possible values:
-- github:    Host on Github Releases
-- axodotdev: Host on Axo Releases ("Abyss")
+- github: Host on Github Releases
 
 #### `-h, --help`
 Print help (see a summary with '-h')
@@ -389,8 +388,7 @@ releases hosting backends we want to support
 If left unspecified we will use the value in [workspace.metadata.dist]. (If no such value exists we will use the one "native" to your CI provider) `dist init` will persist the values you pass to that location.
 
 Possible values:
-- github:    Host on Github Releases
-- axodotdev: Host on Axo Releases ("Abyss")
+- github: Host on Github Releases
 
 #### `-h, --help`
 Print help (see a summary with '-h')

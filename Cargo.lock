@@ -218,7 +218,6 @@ dependencies = [
  "axoprocess",
  "axotag",
  "camino",
- "gazenot",
  "homedir",
  "miette 7.6.0",
  "self-replace",
@@ -226,18 +225,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.12",
  "url",
-]
-
-[[package]]
-name = "backon"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d67782c3f868daa71d3533538e98a8e13713231969def7536e8039606fc46bf0"
-dependencies = [
- "fastrand",
- "futures-core",
- "pin-project",
- "tokio",
 ]
 
 [[package]]
@@ -397,7 +384,6 @@ dependencies = [
  "current_platform",
  "dialoguer",
  "flate2",
- "gazenot",
  "goblin",
  "include_dir",
  "insta",
@@ -428,7 +414,6 @@ name = "cargo-dist-schema"
 version = "0.28.2"
 dependencies = [
  "camino",
- "gazenot",
  "insta",
  "schemars",
  "semver",
@@ -1005,25 +990,6 @@ dependencies = [
  "futures-task",
  "pin-project-lite",
  "pin-utils",
-]
-
-[[package]]
-name = "gazenot"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7628c2e8e192258187c04c7632aa417b17d4b290b2c233c5f423c51119018db8"
-dependencies = [
- "axoasset",
- "backon",
- "camino",
- "miette 7.6.0",
- "schemars",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "url",
 ]
 
 [[package]]

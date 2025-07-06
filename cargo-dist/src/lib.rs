@@ -10,8 +10,6 @@
 //! It's currently not terribly well-suited to being used as a pure library because it happily
 //! writes to stderr/stdout whenever it pleases. Suboptimal for a library.
 
-use std::io::Write;
-
 use announce::TagSettings;
 use axoasset::LocalAsset;
 use axoprocess::Cmd;
@@ -31,7 +29,6 @@ use cargo_dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifes
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
-use console::Term;
 use semver::Version;
 use temp_dir::TempDir;
 use tracing::info;
@@ -846,19 +843,6 @@ pub fn check_integrity(cfg: &Config) -> DistResult<()> {
         root_cmd: "check".to_owned(),
     };
     let (dist, _manifest) = tasks::gather_work(&check_config)?;
-
-    if let Some(hosting) = &dist.hosting {
-        if hosting.hosts.contains(&config::HostingStyle::Axodotdev) {
-            let mut out = Term::stderr();
-            let info = "INFO:";
-            let message = r"You've enabled Axo Releases, which is currently in Closed Beta.
-If you haven't yet signed up, please join our discord
-(https://discord.gg/ECnWuUUXQk) or message hello@axo.dev to get started!
-";
-
-            writeln!(out, "{} {}", out.style().yellow().apply_to(info), message).unwrap();
-        }
-    }
 
     run_generate(
         &dist,

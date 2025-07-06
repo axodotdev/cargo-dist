@@ -364,46 +364,6 @@ expression: json_schema
         }
       }
     },
-    "ArtifactSet": {
-      "description": "A handle for talking about ArtifactSets",
-      "type": "object",
-      "required": [
-        "package",
-        "public_id"
-      ],
-      "properties": {
-        "announce_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "package": {
-          "type": "string"
-        },
-        "public_id": {
-          "type": "string"
-        },
-        "release_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "set_download_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "upload_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
     "Asset": {
       "description": "An asset contained in an artifact (executable, license, etc.)",
       "type": "object",
@@ -986,17 +946,6 @@ expression: json_schema
       "description": "Possible hosting providers",
       "type": "object",
       "properties": {
-        "axodotdev": {
-          "description": "Hosted on Axo Releases",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/ArtifactSet"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "github": {
           "description": "Hosted on Github Releases",
           "anyOf": [

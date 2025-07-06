@@ -233,15 +233,12 @@ impl std::fmt::Display for GithubReleasePhase {
 pub enum HostingStyle {
     /// Host on Github Releases
     Github,
-    /// Host on Axo Releases ("Abyss")
-    Axodotdev,
 }
 
 impl std::fmt::Display for HostingStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let string = match self {
             HostingStyle::Github => "github",
-            HostingStyle::Axodotdev => "axodotdev",
         };
         string.fmt(f)
     }
@@ -252,7 +249,6 @@ impl std::str::FromStr for HostingStyle {
     fn from_str(val: &str) -> DistResult<Self> {
         let res = match val {
             "github" => HostingStyle::Github,
-            "axodotdev" => HostingStyle::Axodotdev,
             s => {
                 return Err(DistError::UnrecognizedHostingStyle {
                     style: s.to_string(),
