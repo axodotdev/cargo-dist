@@ -142,7 +142,7 @@ impl InstallStrategy for DistInstallStrategy {
                 "irm {installer_url}/{installer_name}.ps1 | iex"
             ),
             DistInstallStrategy::GitBranch { branch } => format!(
-                "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} cargo-dist"
+                "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} --locked cargo-dist"
             ),
         }).into()
     }
