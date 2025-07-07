@@ -26,7 +26,7 @@
     "axios": "^1.7.9",
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
-    "detect-libc": "^2.0.3",
+    "detect-libc": "^2.0.4",
     "rimraf": "^5.0.8"
   },
   "devDependencies": {
