@@ -4,12 +4,15 @@ use std::env;
 
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
-use dist_schema::target_lexicon::{Architecture, Environment, Triple};
-use dist_schema::{DistManifest, TripleName};
+use dist_schema::target_lexicon::{Architecture, Environment, OperatingSystem, Triple};
+use dist_schema::{AptPackageName, DistManifest, TripleName};
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
 
 use crate::build::BuildExpectations;
+use crate::config::{
+    DependencyKind, SystemDependencies, SystemDependency, SystemDependencyComplex,
+};
 use crate::env::{calculate_ldflags, fetch_brew_env, parse_env, select_brew_env};
 use crate::{
     build_wrapper_for_cross, errors::*, BinaryIdx, BuildStep, CargoBuildWrapper, DistGraphBuilder,
@@ -162,6 +165,95 @@ impl<'a> DistGraphBuilder<'a> {
     }
 }
 
+/// Get the apt packages for target apt linker from `host` platform.
+pub fn target_gcc_packages(host: &Triple, target: &Triple) -> DistResult<SystemDependencies> {
+    if target.operating_system != OperatingSystem::Linux {
+        return Err(DistError::UnsupportedCrossCompile {
+            host: host.clone(),
+            target: target.clone(),
+            details: "cargo-build is not a supported cross-compilation method for this combination"
+                .to_string(),
+        });
+    }
+    let mut deps = SystemDependencies::default();
+    let _env = match target.environment {
+        Environment::Gnu => "gnu",
+        Environment::Musl => {
+            // TODO: Currently we do not install musl cross toolchain
+            //       because of missing apt packages. The user is up to
+            //       install musl cross toolchain themselves.
+            return Ok(deps);
+        }
+        _ => {
+            return Err(DistError::UnsupportedCrossCompile {
+                host: host.clone(),
+                target: target.clone(),
+                details: format!(
+                    "cargo-build is not a supported cross-compilation method for {}",
+                    target.environment
+                ),
+            });
+        }
+    };
+    let linux_arch = match target.architecture {
+        // Strip ISA exts part from riscv triple. e.g. riscv64gc -> riscv64
+        Architecture::Riscv64(_) => "riscv64".into(),
+        Architecture::Riscv32(_) => "riscv32".into(),
+        arch => arch.into_str(),
+    };
+    deps.apt.insert(
+        AptPackageName::new(format!("binutils-{linux_arch}-linux-gnu")),
+        SystemDependency(SystemDependencyComplex {
+            version: None,
+            stage: vec![DependencyKind::Build],
+            targets: vec![TripleName::new(target.to_string())],
+        }),
+    );
+    deps.apt.insert(
+        AptPackageName::new(format!("gcc-{linux_arch}-linux-gnu")),
+        SystemDependency(SystemDependencyComplex {
+            version: None,
+            stage: vec![DependencyKind::Build],
+            targets: vec![TripleName::new(target.to_string())],
+        }),
+    );
+    // TODO: support homebrew
+    Ok(deps)
+}
+
+/// Get the `target` specific gcc compiler to use as linker from `host` platform.
+pub fn target_gcc_linker(host: &Triple, target: &Triple) -> DistResult<String> {
+    if target.operating_system != OperatingSystem::Linux {
+        return Err(DistError::UnsupportedCrossCompile {
+            host: host.clone(),
+            target: target.clone(),
+            details: "cargo-build is not a supported cross-compilation method for this combination"
+                .to_string(),
+        });
+    }
+    let env = match target.environment {
+        Environment::Gnu => "gnu",
+        Environment::Musl => "musl",
+        _ => {
+            return Err(DistError::UnsupportedCrossCompile {
+                host: host.clone(),
+                target: target.clone(),
+                details: format!(
+                    "cargo-build is not a supported cross-compilation method for {}",
+                    target.environment
+                ),
+            });
+        }
+    };
+    let linux_arch = match target.architecture {
+        // Strip ISA exts part from riscv triple. e.g. riscv64gc -> riscv64
+        Architecture::Riscv64(_) => "riscv64".into(),
+        Architecture::Riscv32(_) => "riscv32".into(),
+        arch => arch.into_str(),
+    };
+    Ok(format!("{linux_arch}-linux-{env}-gcc"))
+}
+
 /// Generate a `cargo build` command
 pub fn make_build_cargo_target_command(
     host: &Triple,
@@ -188,6 +280,16 @@ pub fn make_build_cargo_target_command(
     }
     match wrapper {
         None => {
+            command.arg("build");
+        }
+        Some(CargoBuildWrapper::Plain) => {
+            command.env(
+                format!(
+                    "CARGO_TARGET_{}_LINKER",
+                    target.to_string().to_uppercase().replace('-', "_")
+                ),
+                target_gcc_linker(host, &target)?,
+            );
             command.arg("build");
         }
         Some(CargoBuildWrapper::ZigBuild) => {
