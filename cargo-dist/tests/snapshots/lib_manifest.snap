@@ -51,7 +51,8 @@ stdout:
     }
   },
   "linkage": [],
-  "upload_files": []
+  "upload_files": [],
+  "github_attestations": true
 }
 
 stderr:
