@@ -36,6 +36,10 @@ stdout:
         "sha256.sum",
         "cargo-dist-aarch64-apple-darwin.tar.xz",
         "cargo-dist-aarch64-apple-darwin.tar.xz.sha256",
+        "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
+        "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256",
+        "cargo-dist-aarch64-unknown-linux-musl.tar.xz",
+        "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256",
         "cargo-dist-x86_64-apple-darwin.tar.xz",
         "cargo-dist-x86_64-apple-darwin.tar.xz.sha256",
         "cargo-dist-x86_64-pc-windows-msvc.zip",
@@ -99,6 +103,92 @@ stdout:
         "aarch64-apple-darwin"
       ]
     },
+    "cargo-dist-aarch64-unknown-linux-gnu.tar.xz": {
+      "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "cargo-dist-aarch64-unknown-linux-gnu-exe-dist",
+          "name": "dist",
+          "path": "dist",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256"
+    },
+    "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "cargo-dist-aarch64-unknown-linux-gnu.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-unknown-linux-gnu"
+      ]
+    },
+    "cargo-dist-aarch64-unknown-linux-musl.tar.xz": {
+      "name": "cargo-dist-aarch64-unknown-linux-musl.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-unknown-linux-musl"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "cargo-dist-aarch64-unknown-linux-musl-exe-dist",
+          "name": "dist",
+          "path": "dist",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256"
+    },
+    "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256": {
+      "name": "cargo-dist-aarch64-unknown-linux-musl.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-unknown-linux-musl"
+      ]
+    },
     "cargo-dist-installer.ps1": {
       "name": "cargo-dist-installer.ps1",
       "kind": "installer",
@@ -115,6 +205,9 @@ stdout:
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl-dynamic",
+        "aarch64-unknown-linux-musl-static",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu",
@@ -130,6 +223,9 @@ stdout:
       "target_triples": [
         "aarch64-apple-darwin",
         "aarch64-pc-windows-msvc",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl-dynamic",
+        "aarch64-unknown-linux-musl-static",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc",
@@ -374,6 +470,9 @@ stdout:
       "kind": "installer",
       "target_triples": [
         "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl-dynamic",
+        "aarch64-unknown-linux-musl-static",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu",
@@ -425,6 +524,44 @@ stdout:
             "targets": [
               "aarch64-apple-darwin"
             ],
+            "cache_provider": "github"
+          },
+          {
+            "runner": "ubuntu-22.04",
+            "host": "x86_64-unknown-linux-gnu",
+            "container": {
+              "image": "quay.io/pypa/manylinux_2_28_x86_64",
+              "host": "x86_64-unknown-linux-musl",
+              "package_manager": null
+            },
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu",
+            "targets": [
+              "aarch64-unknown-linux-gnu"
+            ],
+            "packages_install": "if ! command -v cargo-zigbuild > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-zigbuild\nfi",
+            "cache_provider": "github"
+          },
+          {
+            "runner": "ubuntu-22.04",
+            "host": "x86_64-unknown-linux-gnu",
+            "container": {
+              "image": "quay.io/pypa/manylinux_2_28_x86_64",
+              "host": "x86_64-unknown-linux-musl",
+              "package_manager": null
+            },
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=aarch64-unknown-linux-musl",
+            "targets": [
+              "aarch64-unknown-linux-musl"
+            ],
+            "packages_install": "if ! command -v cargo-zigbuild > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-zigbuild\nfi",
             "cache_provider": "github"
           },
           {
@@ -486,7 +623,8 @@ stdout:
     }
   },
   "linkage": [],
-  "upload_files": []
+  "upload_files": [],
+  "github_attestations": true
 }
 
 stderr:
