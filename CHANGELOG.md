@@ -1,6 +1,6 @@
 # Unreleased
 
-Nothing Yet!
+* Add support for GitHub Attestations in the host phase.
 
 # Version 0.29.0 (2025-07-31)
 

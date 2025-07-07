@@ -87,6 +87,22 @@ expression: json_schema
       "description": "Whether Artifact Attestations should be found in the GitHub Release\n\n<https://github.blog/2024-05-02-introducing-artifact-attestations-now-in-public-beta/>",
       "type": "boolean"
     },
+    "github_attestations_filters": {
+      "description": "Patterns to attest when creating Artifact Attestations",
+      "allOf": [
+        {
+          "$ref": "#/definitions/GithubAttestationsFilters"
+        }
+      ]
+    },
+    "github_attestations_phase": {
+      "description": "When to generate Artifact Attestations\n\nDefaults to \"build-local-artifacts\" for backwards compatibility",
+      "allOf": [
+        {
+          "$ref": "#/definitions/GithubAttestationsPhase"
+        }
+      ]
+    },
     "linkage": {
       "description": "Data about dynamic linkage in the built libraries",
       "default": [],
@@ -772,6 +788,32 @@ expression: json_schema
               ]
             }
           }
+        }
+      ]
+    },
+    "GithubAttestationsFilters": {
+      "description": "Used to capture GitHub Attestations filters",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "GithubAttestationsPhase": {
+      "description": "Phase in which to generate GitHub attestations",
+      "oneOf": [
+        {
+          "description": "Generate attestations during the `host` phase",
+          "type": "string",
+          "enum": [
+            "host"
+          ]
+        },
+        {
+          "description": "Generate attestations during `build-local-artifacts` (default for backwards compatibility)",
+          "type": "string",
+          "enum": [
+            "build-local-artifacts"
+          ]
         }
       ]
     },

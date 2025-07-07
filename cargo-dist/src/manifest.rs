@@ -88,6 +88,8 @@ pub(crate) fn load_and_merge_manifests(
             ci,
             linkage,
             github_attestations: _,
+            github_attestations_filters: _,
+            github_attestations_phase: _,
         } = manifest;
 
         // Discard clearly unrelated manifests

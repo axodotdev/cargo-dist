@@ -73,6 +73,8 @@ impl DistMetadata {
             macos_sign,
             mac_pkg_config,
             github_attestations,
+            github_attestations_filters,
+            github_attestations_phase,
             hosting,
             extra_artifacts,
             github_custom_runners,
@@ -247,6 +249,8 @@ impl DistMetadata {
                         submodule_path: github_releases_submodule_path.map(|p| p.into()),
                         during: github_release,
                         attestations: github_attestations,
+                        attestations_filters: github_attestations_filters,
+                        attestations_phase: github_attestations_phase,
                     })
                 } else {
                     None
