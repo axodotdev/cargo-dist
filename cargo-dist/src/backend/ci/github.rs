@@ -9,7 +9,8 @@ use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
 use dist_schema::{
     target_lexicon::{self, Architecture, OperatingSystem, Triple},
-    AptPackageName, ChocolateyPackageName, ContainerImageRef, GhaRunStep, GithubGlobalJobConfig,
+    AptPackageName, ChocolateyPackageName, ContainerImageRef, GhaRunStep,
+    GithubAttestationsFilters, GithubAttestationsPhase, GithubGlobalJobConfig,
     GithubLocalJobConfig, GithubMatrix, GithubRunnerConfig, GithubRunnerRef, GithubRunners,
     HomebrewPackageName, PackageInstallScript, PackageVersion, PipPackageName, TripleNameRef,
 };
@@ -123,6 +124,10 @@ pub struct GithubReleaseInfo {
     pub external_repo_commit: Option<String>,
     /// Whether to enable GitHub Attestations
     pub github_attestations: bool,
+    /// Patterns to attest when creating attestations for release artifacts
+    pub github_attestations_filters: GithubAttestationsFilters,
+    /// When to generate GitHub Attestations
+    pub github_attestations_phase: GithubAttestationsPhase,
     /// `gh` command to run to create the release
     pub release_command: String,
     /// Which phase to create the release at
@@ -474,6 +479,8 @@ impl GithubReleaseInfo {
         let create_release = host_config.create;
         let github_releases_repo = host_config.repo.clone().map(|r| r.into_jinja());
         let github_attestations = host_config.attestations;
+        let github_attestations_filters = host_config.attestations_filters.clone();
+        let github_attestations_phase = host_config.attestations_phase;
 
         let github_releases_submodule_path = host_config.submodule_path.clone();
         let external_repo_commit = github_releases_submodule_path
@@ -521,6 +528,8 @@ impl GithubReleaseInfo {
             github_releases_repo,
             external_repo_commit,
             github_attestations,
+            github_attestations_filters,
+            github_attestations_phase,
             release_command,
             release_phase,
         }))

@@ -1213,6 +1213,18 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .as_ref()
             .map(|g| g.attestations)
             .unwrap_or(false);
+        let github_attestations_filters = config
+            .hosts
+            .github
+            .as_ref()
+            .map(|g| g.attestations_filters.clone())
+            .unwrap_or_default();
+        let github_attestations_phase = config
+            .hosts
+            .github
+            .as_ref()
+            .map(|g| g.attestations_phase)
+            .unwrap_or_default();
         let force_latest = config.hosts.force_latest;
         Ok(Self {
             inner: DistGraph {
@@ -1261,6 +1273,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 linkage: vec![],
                 upload_files: vec![],
                 github_attestations,
+                github_attestations_filters,
+                github_attestations_phase,
             },
             package_configs,
             workspaces,

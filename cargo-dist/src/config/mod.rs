@@ -6,8 +6,8 @@ use axoasset::{toml_edit, SourceFile};
 use axoproject::local_repo::LocalRepo;
 use camino::{Utf8Path, Utf8PathBuf};
 use dist_schema::{
-    AptPackageName, ChecksumExtensionRef, ChocolateyPackageName, HomebrewPackageName,
-    PackageVersion, TripleName, TripleNameRef,
+    AptPackageName, ChecksumExtensionRef, ChocolateyPackageName, GithubAttestationsFilters,
+    GithubAttestationsPhase, HomebrewPackageName, PackageVersion, TripleName, TripleNameRef,
 };
 use serde::{Deserialize, Serialize};
 
