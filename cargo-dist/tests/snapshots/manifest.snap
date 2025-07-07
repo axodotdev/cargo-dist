@@ -619,7 +619,7 @@ stdout:
           }
         ]
       },
-      "pr_run_mode": "plan"
+      "pr_run_mode": "upload"
     }
   },
   "linkage": [],
