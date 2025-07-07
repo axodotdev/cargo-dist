@@ -401,6 +401,14 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github_attestations: Option<bool>,
 
+    /// GitHub Attestation filters (default *)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_attestations_filters: Option<GithubAttestationsFilters>,
+
+    /// When to generate GitHub Attestations (default build-local-artifacts)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub github_attestations_phase: Option<GithubAttestationsPhase>,
+
     /// Hosting provider
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default, with = "opt_string_or_vec")]
@@ -546,6 +554,8 @@ impl DistMetadata {
             ssldotcom_windows_sign: _,
             macos_sign: _,
             github_attestations: _,
+            github_attestations_filters: _,
+            github_attestations_phase: _,
             msvc_crt_static: _,
             hosting: _,
             github_custom_runners: _,
@@ -650,6 +660,8 @@ impl DistMetadata {
             ssldotcom_windows_sign,
             macos_sign,
             github_attestations,
+            github_attestations_filters,
+            github_attestations_phase,
             msvc_crt_static,
             hosting,
             extra_artifacts,
@@ -740,6 +752,12 @@ impl DistMetadata {
         }
         if github_attestations.is_some() {
             warn!("package.metadata.dist.github-attestations is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_attestations_filters.is_some() {
+            warn!("package.metadata.dist.github-attestations-filters is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_attestations_phase.is_some() {
+            warn!("package.metadata.dist.github-attestations-phase is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if msvc_crt_static.is_some() {
             warn!("package.metadata.dist.msvc-crt-static is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

@@ -9,6 +9,15 @@
         run: |
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
+        {{%- if github_attestations is defined and github_attestations and github_attestations_phase == "host" %}}
+      - name: Attest
+        uses: {{{actions["actions/attest-build-provenance"] | safe }}}
+        with:
+          subject-path: |
+          {{%- for filter in github_attestations_filters %}}
+            artifacts/{{{ filter | safe }}}
+          {{%- endfor %}}
+        {{%- endif %}}
       - name: Create GitHub Release
         env: {{%- set manifest = "needs.host.outputs.val" if release_phase == "announce" else "steps.host.outputs.manifest" %}}
           PRERELEASE_FLAG: "${{ fromJson({{{ manifest | safe }}}).announcement_is_prerelease && '--prerelease' || '' }}"
