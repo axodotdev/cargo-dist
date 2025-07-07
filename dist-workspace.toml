@@ -24,7 +24,7 @@ hosting = ["github"]
 # Whether to install an updater program
 install-updater = false
 # Whether to enable GitHub Attestations
-github-attestations = true
+github-attestations = false
 # Path that installers should place binaries in
 install-path = "CARGO_HOME"
 
