@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.27.0 (2024-12-19)</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.27.0
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Dec 20 2024 at 01:37 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>We're back once more with a little holiday gift for you. This release contains a few new features and fixes.</p>
+<h2>Support for XDG_CONFIG_HOME</h2>
+<p>We've always supported standard OS configuration paths. This release adds support for <code>XDG_CONFIG_HOME</code>, an <a href="https://specifications.freedesktop.org/basedir-spec/latest/#variables" rel="noopener noreferrer">environment variable defined in the XDG Base Directory Specification</a>, in order to allow users to override that default. We support this on all platforms, even Windows. Installers created with dist 0.27.0 or later will respect this environment variable and place install receipts in that path; updaters using axoupdater 0.9.0 or later will respect that variable when searching for the receipt.</p>
+<ul>
+<li>impl @brennanfee, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1655" rel="noopener noreferrer">feat: support XDG_CONFIG_HOME</a></li>
+</ul>
+<h2>Improved handling of missing build dependencies</h2>
+<p>While we've always reported if mandatory tools are missing, we previously would only check for their existence right before we'd use them. This made it hard to judge exactly when required tools might be absent, and meant we'd only report about a single tool at a time. With this release, we now check for these tools up front and we check for every tool your build will need simultaneously. This allows us to tell you about <em>every</em> missing tool in one message, and before the builds themselves begin.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1640" rel="noopener noreferrer">Fail early if required tools can't be found.</a></li>
+</ul>
+<h2>Improved generic config handling</h2>
+<p>Since we shipped the new config format, <code>dist-workspace.toml</code>, we've been providing some spurious messages for non-Rust builds using just a <code>dist.toml</code> file. In this release, we now migrate users with <code>dist.toml</code>-alone apps to <code>dist-workspace.toml</code>. This conversion is automatic and requires no user input; it will happen when using <code>dist init</code> to upgrade to a new release.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1656" rel="noopener noreferrer">feat: migrate dist.toml to dist-workspace.toml</a></li>
+</ul>
+<h2>Stabilizing the standalone updater we ship</h2>
+<p>In the past, we always shipped the latest version of the standalone updater provided via <a href="https://github.com/axodotdev/axoupdater" rel="noopener noreferrer">axoupdater</a>. This meant that, if a new version of axoupdater was released after a given version of dist, your app would receive that latest version. As we've stabilized the updater's feature set, we feel that end users are deriving less benefit from this rolling release schedule and it would be more helpful to provide a fixed, known-good stable release instead.</p>
+<p>Beginning with this release, dist will always package the same version of axoupdater when building and shipping your app. If you prefer the old behaviour, and would like to receive whatever's the latest, you can set <code>always-use-latest-updater = true</code> in your configuration.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1598" rel="noopener noreferrer">feat: update axoupdater, fetch known-good version</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>
