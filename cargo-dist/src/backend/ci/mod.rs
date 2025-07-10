@@ -63,7 +63,7 @@ pub trait InstallStrategy {
     /// Return the right install method for a given set of targets
     fn for_triple(&self, triple: &Triple) -> GhaRunStep {
         match triple.operating_system {
-            OperatingSystem::Linux | OperatingSystem::Darwin => self.dash(),
+            OperatingSystem::Linux | OperatingSystem::Darwin(_) => self.dash(),
             OperatingSystem::Windows => self.powershell(),
             _ => panic!("unsupported host triple {triple}"),
         }
