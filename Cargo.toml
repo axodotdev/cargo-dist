@@ -57,7 +57,7 @@ temp-dir = "0.1.14"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
 insta = { version = "1.43.1", features = ["filters"] }
-tar = "0.4.43"
+tar = "0.4.44"
 flate2 = "1.1.2"
 pathdiff = { version = "0.2.3", features = ["camino"] }
 url = "2.5.4"
