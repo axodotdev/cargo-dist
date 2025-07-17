@@ -492,8 +492,8 @@ pub fn build_wrapper_for_cross(
 
     match target.operating_system {
         // compiling for macOS (making Mach-O binaries, .dylib files, etc.)
-        OperatingSystem::Darwin => match host.operating_system {
-            OperatingSystem::Darwin => {
+        OperatingSystem::Darwin(_) => match host.operating_system {
+            OperatingSystem::Darwin(_) => {
                 // from mac to mac, even if we do aarch64 => x86_64, or the other way
                 // around, _all we need_ is to add the target to rustup
                 Ok(None)
@@ -508,7 +508,7 @@ pub fn build_wrapper_for_cross(
         },
         // compiling for Linux (making ELF binaries, .so files, etc.)
         OperatingSystem::Linux => match host.operating_system {
-            OperatingSystem::Linux | OperatingSystem::Darwin | OperatingSystem::Windows => {
+            OperatingSystem::Linux | OperatingSystem::Darwin(_) | OperatingSystem::Windows => {
                 // zigbuild works for e.g. x86_64-unknown-linux-gnu => aarch64-unknown-linux-gnu
                 Ok(Some(CargoBuildWrapper::ZigBuild))
             }
@@ -522,7 +522,7 @@ pub fn build_wrapper_for_cross(
         },
         // compiling for Windows (making PE binaries, .dll files, etc.)
         OperatingSystem::Windows => match host.operating_system {
-            OperatingSystem::Linux | OperatingSystem::Darwin => {
+            OperatingSystem::Linux | OperatingSystem::Darwin(_) => {
                 // cargo-xwin is made for that
                 Ok(Some(CargoBuildWrapper::Xwin))
             }

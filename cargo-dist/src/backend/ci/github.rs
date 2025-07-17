@@ -660,7 +660,7 @@ fn github_runner_for_target(
     // recent. This helps with portability!
     let result = Some(match target_triple.operating_system {
         OperatingSystem::Linux => runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04")),
-        OperatingSystem::Darwin => runner_to_config(GithubRunnerRef::from_str("macos-13")),
+        OperatingSystem::Darwin(_) => runner_to_config(GithubRunnerRef::from_str("macos-13")),
         OperatingSystem::Windows => {
             // Default to cargo-xwin for Windows cross-compiles
             if target_triple.architecture != Architecture::X86_64 {
@@ -726,7 +726,7 @@ fn system_deps_install_script(
 
     let host = rc.real_triple();
     match host.operating_system {
-        OperatingSystem::Darwin => {
+        OperatingSystem::Darwin(_) => {
             for (name, pkg) in &packages.homebrew {
                 if !pkg.0.stage_wanted(&DependencyKind::Build) {
                     continue;
