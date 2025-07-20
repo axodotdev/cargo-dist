@@ -113,7 +113,7 @@ pub enum DistError {
 
     /// Error parsing metadata in Cargo.toml (json because it's from cargo-metadata)
     #[error("Malformed metadata.dist in\n{manifest_path}")]
-    #[diagnostic(help("you can find a reference for the configuration schema at https://opensource.axo.dev/cargo-dist/book/reference/config.html"))]
+    #[diagnostic(help("you can find a reference for the configuration schema at https://axodotdev.github.io/cargo-dist/book/reference/config.html"))]
     CargoTomlParse {
         /// path to file
         manifest_path: Utf8PathBuf,
@@ -472,7 +472,7 @@ pub enum DistError {
 
     /// An unknown target was found
     #[error("Unrecognized target: {target}")]
-    #[diagnostic(help("The full list of supported targets can be found here: https://opensource.axo.dev/cargo-dist/book/reference/config.html#targets"))]
+    #[diagnostic(help("The full list of supported targets can be found here: https://axodotdev.github.io/cargo-dist/book/reference/config.html#targets"))]
     UnrecognizedTarget {
         /// The target in question
         target: TripleName,
@@ -538,7 +538,7 @@ pub enum DistError {
     /// missing "dist" script in a package.json
     #[error("package.json was missing a \"dist\" script\n{manifest}")]
     #[diagnostic(help(
-        "https://opensource.axo.dev/cargo-dist/book/quickstart/javascript.html#adding-a-dist-script"
+        "https://axodotdev.github.io/cargo-dist/book/quickstart/javascript.html#adding-a-dist-script"
     ))]
     NoDistScript {
         /// path to package.json
@@ -580,7 +580,7 @@ pub enum DistError {
     /// missing "build-command" for a package that needs one
     #[error("dist package was missing a build-command\n{manifest}")]
     #[diagnostic(help(
-        "https://opensource.axo.dev/cargo-dist/book/quickstart/everyone-else.html#setup"
+        "https://axodotdev.github.io/cargo-dist/book/quickstart/everyone-else.html#setup"
     ))]
     NoBuildCommand {
         /// path to manifest
@@ -614,7 +614,7 @@ pub enum DistError {
     /// Project depends on a too-old axoupdater
     #[error("Your project ({package_name}) uses axoupdater as a library, but the version specified ({your_version}) is older than the minimum supported version ({minimum}). (The dependency comes via {source_name} in the dependency tree.)")]
     #[diagnostic(help(
-        "https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-version-checking"
+        "https://axodotdev.github.io/cargo-dist/book/installers/updater.html#minimum-supported-version-checking"
     ))]
     AxoupdaterTooOld {
         /// Name of the package

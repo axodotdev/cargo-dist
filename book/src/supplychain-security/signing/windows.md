@@ -74,7 +74,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
 3. **You're done!**
 
-    The simplest way to test your signing out is to cut a (pre)release, but [you can also build the artifacts in a pull request](https://opensource.axo.dev/cargo-dist/book/ci/github.html#build-and-upload-artifacts-on-every-pull-request).
+    The simplest way to test your signing out is to cut a (pre)release, but [you can also build the artifacts in a pull request](https://axodotdev.github.io/cargo-dist/book/ci/github.html#build-and-upload-artifacts-on-every-pull-request).
 
     If everything worked, all windows binaries and MSIs should now be signed with your certificate. If you used real certificates, you can test this by downloading the windows .zip for your app with your browser and double-clicking it in your file explorer. If you get no message that "Windows protected your PC", it worked!
 
