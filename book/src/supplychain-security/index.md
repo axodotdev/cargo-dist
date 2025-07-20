@@ -4,7 +4,7 @@ As software supplychain security concerns and requirements grow, `dist` is
 committed to making compliance with policies and regulations as turnkey as possible.
 
 If you have an integration you are looking for [file an issue](https://github.com/axodotdev/cargo-dist/issues/new) or
-[join our Discord](https://discord.gg/rW4JJ3Wa).
+[join our Discord](https://discord.gg/MnyjrpTceV).
 
 ## Signing
 
