@@ -43,7 +43,7 @@ camino = { version = "1.1.9", features = ["serde1"] }
 semver = "1.0.24"
 newline-converter = "0.3.0"
 dialoguer = "0.11.0"
-sha2 = "0.10.6"
+sha2 = "0.10.9"
 minijinja = { version = "2.5.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.4"
 itertools = "0.13.0"
