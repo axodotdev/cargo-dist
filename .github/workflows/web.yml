@@ -30,7 +30,7 @@ on:
   # If you only want docs to update with releases, disable this one.
   push:
     branches:
-      - main
+      - stable
 
   # Whenever a workflow called "Release" completes, update the docs!
   #
