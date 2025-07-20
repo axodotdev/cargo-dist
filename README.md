@@ -21,7 +21,7 @@ git push --tags
 
 Will make [this Github Release](https://github.com/axodotdev/axolotlsay/releases/tag/v0.2.0):
 
-Or if you're using [oranda](https://opensource.axo.dev/oranda/), you'll get [this website](https://opensource.axo.dev/axolotlsay/).
+Or if you're using [oranda](https://axodotdev.github.io/oranda/), you'll get [this website](https://axodotdev.github.io/axolotlsay/).
 
 
 ## Plan, Build, Host, Publish, Announce
@@ -66,20 +66,20 @@ As a distribution tool, dist gets to flex its biggest superpower: **it generates
     * Uploads build artifacts to the Release
     * Adds relevant release notes from your RELEASES/CHANGELOG
 
-[tarballs]: https://opensource.axo.dev/cargo-dist/book/artifacts/archives.html
-[installers]: https://opensource.axo.dev/cargo-dist/book/installers/index.html
-[manifest]: https://opensource.axo.dev/cargo-dist/book/reference/schema.html
-[ci-providers]: https://opensource.axo.dev/cargo-dist/book/ci/index.html
+[tarballs]: https://axodotdev.github.io/cargo-dist/book/artifacts/archives.html
+[installers]: https://axodotdev.github.io/cargo-dist/book/installers/index.html
+[manifest]: https://axodotdev.github.io/cargo-dist/book/reference/schema.html
+[ci-providers]: https://axodotdev.github.io/cargo-dist/book/ci/index.html
 
 # Read The Book!
 
 We've got all the docs you need over at the [dist book](https://axodotdev.github.io/cargo-dist/book/)!
 
-* [Introduction](https://opensource.axo.dev/cargo-dist/book/introduction.html)
-* [Install](https://opensource.axo.dev/cargo-dist/book/install.html)
-* [Way-Too-Quickstart](https://opensource.axo.dev/cargo-dist/book/quickstart/index.html)
-* [Workspaces Guide](https://opensource.axo.dev/cargo-dist/book/workspaces/index.html)
-* [Reference](https://opensource.axo.dev/cargo-dist/book/reference/index.html)
+* [Introduction](https://axodotdev.github.io/cargo-dist/book/introduction.html)
+* [Install](https://axodotdev.github.io/cargo-dist/book/install.html)
+* [Way-Too-Quickstart](https://axodotdev.github.io/cargo-dist/book/quickstart/index.html)
+* [Workspaces Guide](https://axodotdev.github.io/cargo-dist/book/workspaces/index.html)
+* [Reference](https://axodotdev.github.io/cargo-dist/book/reference/index.html)
 
 <div class="oranda-hide">
 
@@ -109,7 +109,7 @@ If you know you like the changes, just use `cargo insta accept` to auto-apply al
 
 ## Cutting Releases
 
-dist is self-hosting, so you just need to push a git-tag with the right format to "do" a release. Of course there's lots of other tedious tasks that come with updating a release, and we use cargo-release to handle all those mechanical details of updating versions/headings/tags. See [these sections of the docs for the release workflow we use](https://opensource.axo.dev/cargo-dist/book/workspaces/cargo-release-guide.html#using-cargo-release-with-pull-requests).
+dist is self-hosting, so you just need to push a git-tag with the right format to "do" a release. Of course there's lots of other tedious tasks that come with updating a release, and we use cargo-release to handle all those mechanical details of updating versions/headings/tags. See [these sections of the docs for the release workflow we use](https://axodotdev.github.io/cargo-dist/book/workspaces/cargo-release-guide.html#using-cargo-release-with-pull-requests).
 
 TL;DR:
 

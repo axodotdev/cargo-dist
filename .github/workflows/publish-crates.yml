@@ -1,7 +1,7 @@
 # Publishes our workspace's crates to crates.io
 #
 # This is triggered automatically by dist during the publish step
-# (this is a custom publish job: https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-jobs)
+# (this is a custom publish job: https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-jobs)
 #
 # It is assumed that all crates are versioned and released in lockstep,
 # and that the current commit we're working on already has them at the right version

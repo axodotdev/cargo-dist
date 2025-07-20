@@ -1582,7 +1582,7 @@ This is *essentially* required as almost all dist features are blocked behind kn
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
 > [package]
-> homepage = "https://opensource.axo.dev/axolotlsay"
+> homepage = "https://axodotdev.github.io/axolotlsay"
 > ```
 
 A URL to the homepage of the package.

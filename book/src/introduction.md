@@ -15,7 +15,7 @@ Will make [this Github Release](https://github.com/axodotdev/axolotlsay/releases
 
 ![A Github Release for "axolotlsay 0.2.0" with several installers and prebuilt binaries][simple-release]
 
-Or if you're using [oranda](https://opensource.axo.dev/oranda/), you'll get [this website](https://opensource.axo.dev/axolotlsay/):
+Or if you're using [oranda](https://axodotdev.github.io/oranda/), you'll get [this website](https://axodotdev.github.io/axolotlsay/):
 
 ![A website for "axolotlsay" that has a widget that detects the user's platform and suggests installation methods][simple-oranda]
 
