@@ -21,7 +21,7 @@ cargo-dist-schema = { version = "=0.28.1", path = "cargo-dist-schema" }
 axoproject = { version = "=0.28.1", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
 
 # first-party deps
-axocli = { version = "0.2.0" }
+axocli = { version = "0.3.0" }
 axoupdater = { version = "0.9.0" }
 axotag = "0.2.0"
 axoasset = { version = "1.2.0", features = ["json-serde", "toml-serde", "toml-edit", "yaml-serde", "compression", "remote"] }
