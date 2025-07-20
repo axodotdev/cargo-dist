@@ -98,7 +98,7 @@ It's been slightly longer than usual since our last release, and now we're back 
 
 ## Builtin Rust cross-compilation support
 
-You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild) and Windows (using [cargo-xwin](https://github.com/rust-cross/cargo-xwin). For more information, see [the docs](https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#cross-compilation).
+You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild) and Windows (using [cargo-xwin](https://github.com/rust-cross/cargo-xwin). For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#cross-compilation).
 
 We're also making use of this feature ourselves: we now build our aarch64 Linux binaries using this new tooling.
 
@@ -114,7 +114,7 @@ While we've always generated checksum information for binary tarballs/ZIPs, we o
 
 ## cargo-auditable support
 
-We've added integrated support for the Rust Secure Code Working Group's [cargo-auditable](https://github.com/rust-secure-code/cargo-auditable), which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see [our docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#cargo-auditable) and the [docs for the cargo-audit tool](https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md).
+We've added integrated support for the Rust Secure Code Working Group's [cargo-auditable](https://github.com/rust-secure-code/cargo-auditable), which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see [our docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#cargo-auditable) and the [docs for the cargo-audit tool](https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md).
 
 (Note: for technical reasons, this feature and cargo-zigbuild cross-compiles are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)
 
@@ -128,7 +128,7 @@ We've also added support for generating [CyloneDX Software Bill of Materials (SB
 
 ## OmniBOR support
 
-Rounding out this release's new security features, we've added support for [generating OmniBOR artifact IDs](https://omnibor.io). We implement this using the [omnibor-cli](https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli) tool. For more information, see [the docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#omnibor).
+Rounding out this release's new security features, we've added support for [generating OmniBOR artifact IDs](https://omnibor.io). We implement this using the [omnibor-cli](https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli) tool. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#omnibor).
 
 - impl @duckinator [Add option to generate omnibor artifact IDs.](https://github.com/axodotdev/cargo-dist/pull/1568)
 
@@ -140,7 +140,7 @@ We've tightened up error handling for undefined values in templates when we crea
 
 ## Per-target glibc version overrides
 
-Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see [the docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#min-glibc-version).
+Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#min-glibc-version).
 
 - impl @duckinator [Allow per-target glibc version overrides.](https://github.com/axodotdev/cargo-dist/pull/1537)
 
@@ -178,7 +178,7 @@ These two variables will also be supported by a new version of axoupdater in ord
 
 - impl @mistydemeo [feat: allow installer domain to be overridden](feat: allow installer domain to be overridden)
 
-You can learn more about this feature in the [artifact location installer usage documentation](https://opensource.axo.dev/cargo-dist/book/installers/usage.html#artifact-location).
+You can learn more about this feature in the [artifact location installer usage documentation](https://axodotdev.github.io/cargo-dist/book/installers/usage.html#artifact-location).
 
 ## Default glibc version override
 
@@ -273,20 +273,20 @@ In previous versions, enabling the npm installer would require your package to b
 
 ## Axoupdater version checking
 
-Users who implement an updater by using axoupdater as a library always need to make sure that library is up to date so that they're able to make use of the latest features. This release contains a version checker which detects if your software is using an out-of-date version of axoupdater which may cause problems, and will alert you that an update is needed during builds. For more information, see [the documentation](https://opensource.axo.dev/cargo-dist/book/installers/updater.html#minimum-supported-version-checking).
+Users who implement an updater by using axoupdater as a library always need to make sure that library is up to date so that they're able to make use of the latest features. This release contains a version checker which detects if your software is using an out-of-date version of axoupdater which may cause problems, and will alert you that an update is needed during builds. For more information, see [the documentation](https://axodotdev.github.io/cargo-dist/book/installers/updater.html#minimum-supported-version-checking).
 
 - impl @mistydemeo [feat: add minimum supported axoupdater check (library)](https://github.com/axodotdev/cargo-dist/pull/1432)
 
 ## Standalone axoupdater installation fix
 
-cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which caused the standalone installer to fail to install when using the shell installer. End users who installed your software via installers generated with these versions will not have received a standalone installer along with your software. This bug is fixed beginning with this release. For more information, see [the documentation](https://opensource.axo.dev/cargo-dist/book/installers/updater.html#releases-with-issues-surrounding-the-standalone-updater).
+cargo-dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which caused the standalone installer to fail to install when using the shell installer. End users who installed your software via installers generated with these versions will not have received a standalone installer along with your software. This bug is fixed beginning with this release. For more information, see [the documentation](https://axodotdev.github.io/cargo-dist/book/installers/updater.html#releases-with-issues-surrounding-the-standalone-updater).
 
 - impl @mistydemeo
   - [fix: standalone updater installation](https://github.com/axodotdev/cargo-dist/pull/1444)
   - [fix: invalid updater for first in array](https://github.com/axodotdev/cargo-dist/pull/1451)
 
-[workspace-docs]: https://opensource.axo.dev/cargo-dist/book/workspaces/structure.html
-[installer-usage]: https://opensource.axo.dev/cargo-dist/book/installers/usage.html
+[workspace-docs]: https://axodotdev.github.io/cargo-dist/book/workspaces/structure.html
+[installer-usage]: https://axodotdev.github.io/cargo-dist/book/installers/usage.html
 
 # Version 0.22.1 (2024-09-04)
 
@@ -381,7 +381,7 @@ This release contains several new features and bugfixes.
 
 Historically, cargo-dist has been focused on building and distributing binaries. There's so many more kinds of software out there, however, and we've had requests to package more kinds of artifacts. This release introduces support for two new kinds of build artifacts: C dynamic libraries, and C static libraries. While these would always be built in the past, we wouldn't package or install them for you. Starting with this release, we've now added the option to include these in your release tarballs/ZIPs and to install them in your installers.
 
-We recognize that it may cause issues if existing binary-plus-library crates began unexpectedly installing libraries with this release, so we've introduced this feature as opt-in for the time being. It may be turned on by default in a future release. To enable packaging libraries in your tarballs/ZIPs, use the [package-libraries](https://opensource.axo.dev/cargo-dist/book/reference/config.html#package-libraries) configuration option. To enable installing libraries, use the [install-libraries](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-libraries) configuration option.
+We recognize that it may cause issues if existing binary-plus-library crates began unexpectedly installing libraries with this release, so we've introduced this feature as opt-in for the time being. It may be turned on by default in a future release. To enable packaging libraries in your tarballs/ZIPs, use the [package-libraries](https://axodotdev.github.io/cargo-dist/book/reference/config.html#package-libraries) configuration option. To enable installing libraries, use the [install-libraries](https://axodotdev.github.io/cargo-dist/book/reference/config.html#install-libraries) configuration option.
 
 In the current release, libraries will be installed to the same locations as binaries in the shell and PowerShell installers, while the Homebrew installer will install them to the Homebrew-standard library paths. In the future, as we introduce new forms of installation layouts, we'll provide ways for the shell and PowerShell installers to install libraries to separate locations.
 
@@ -404,7 +404,7 @@ This release introduces an experimental feature which makes it possible to run a
   run: lua -e "print('hello world!')"
 ```
 
-For more information, [consult the documentation](https://opensource.axo.dev/cargo-dist/book/ci/github.html#customizing-build-setup).
+For more information, [consult the documentation](https://axodotdev.github.io/cargo-dist/book/ci/github.html#customizing-build-setup).
 
 * impl @FreeMasen [ci: add github build setup configuration](https://github.com/axodotdev/cargo-dist/pull/1217)
 
@@ -412,7 +412,7 @@ For more information, [consult the documentation](https://opensource.axo.dev/car
 
 This release introduces the first steps in a major overhaul of cargo-dist that makes it more suitable for building and distributing apps that aren't written in Rust. This is something we've supported for a long time, but now we're making a big push to make it first-class and stabilizing all the parts.
 
-There is also now experimental support for natively understanding JS projects, to make it easier to use dist for standalone JS executables. [Read the new JS quickstart for details!](https://opensource.axo.dev/cargo-dist/book/quickstart/javascript.html)
+There is also now experimental support for natively understanding JS projects, to make it easier to use dist for standalone JS executables. [Read the new JS quickstart for details!](https://axodotdev.github.io/cargo-dist/book/quickstart/javascript.html)
 
 Several other pages of the docs have seen overhauls, and many more are to come.
 
@@ -467,9 +467,9 @@ With all the improvements applied, we've actually discovered that the cache larg
 
 Worse yet, the cache can hang each build machine for over 2 minutes to determine this fact, meaning it often *slows down* releases!
 
-So we've introduced the [cache-builds setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#cache-builds) and defaulted it to off for most users. Users that might benefit from it still will have it defaulted on. See the docs for details!
+So we've introduced the [cache-builds setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#cache-builds) and defaulted it to off for most users. Users that might benefit from it still will have it defaulted on. See the docs for details!
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#cache-builds)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#cache-builds)
 * @gankra [feat: add cache-builds setting, and disable by default](https://github.com/axodotdev/cargo-dist/pull/1178)
 
 
@@ -479,9 +479,9 @@ So we've introduced the [cache-builds setting](https://opensource.axo.dev/cargo-
 
 When using custom CI jobs, cargo-dist's CI needs to pass down permissions to each one. For a long time now we've passed special permissions to custom publish jobs to let them publish to [GitHub packages](https://github.com/features/packages), but they've been hardcoded, and all other jobs have had no special permissions.
 
-Now using the [github-custom-job-permissions setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-job-permissions) you can give any of your custom jobs whatever permissions they need.
+Now using the [github-custom-job-permissions setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-custom-job-permissions) you can give any of your custom jobs whatever permissions they need.
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-job-permissions)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-custom-job-permissions)
 * @gankra [feat: add github-custom-job-permissions setting](https://github.com/axodotdev/cargo-dist/pull/1179)
 
 
@@ -499,7 +499,7 @@ This release is mostly several fixes to how we create GitHub Releases, as well a
 
 ## GitHub Release Ordering
 
-We now prefer creating your [GitHub Release in the host step](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release), ensuring published npm and Homebrew packages never refer to URLs that don't yet exist.
+We now prefer creating your [GitHub Release in the host step](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-release), ensuring published npm and Homebrew packages never refer to URLs that don't yet exist.
 
 Conceptually the cargo-dist pipeline is as follow:
 
@@ -521,11 +521,11 @@ But pure GitHub users aren't going away, and this conflict still exists for them
 
 When using axo Releases together with GitHub Releases, GitHub remains in the announce step where it belongs, because it's more of a mirror/announcement, and not the canonical file host.
 
-If for whatever reason you need to get the old behaviour back, you can use the new [`github-release = "announce"` config](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release).
+If for whatever reason you need to get the old behaviour back, you can use the new [`github-release = "announce"` config](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-release).
 
-The only reason you might want to override this setting is if you're using [`dispatch-releases = true`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases) and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist, and many organizations really don't like when you delete/change git tags). In this case setting `github-release = "announce"` will accomplish that, but the above race conditions would then apply.
+The only reason you might want to override this setting is if you're using [`dispatch-releases = true`](https://axodotdev.github.io/cargo-dist/book/reference/config.html#dispatch-releases) and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist, and many organizations really don't like when you delete/change git tags). In this case setting `github-release = "announce"` will accomplish that, but the above race conditions would then apply.
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-release)
 * @mistydemeo [fix: prefer creating github releases in host step](https://github.com/axodotdev/cargo-dist/pull/1171)
 
 
@@ -552,11 +552,11 @@ When using the `dispatch-releases = true` setting, we now more strictly specify 
 
 # Version 0.16.0 (2024-06-14)
 
-This release introduces some new [supplychain security features](https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html), and fixes some bugs.
+This release introduces some new [supplychain security features](https://axodotdev.github.io/cargo-dist/book/supplychain-security/index.html), and fixes some bugs.
 
 ## GitHub Artifact Attestations
 
-With the new [`github-attestations = true` setting](https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html) you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.
+With the new [`github-attestations = true` setting](https://axodotdev.github.io/cargo-dist/book/supplychain-security/attestations/github.html) you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.
 
 * @dunxen [feat: add support for github artifact attestations](https://github.com/axodotdev/cargo-dist/pull/1012)
 
@@ -570,14 +570,14 @@ We're working towards replacing some third-party GitHub actions used by cargo-di
 
 ## Autodetect Buildjet Runners For Rust Cache
 
-We use [swatinem/rust-cache](https://github.com/Swatinem/rust-cache) to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often [enable buildjet for arm linux builds](https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners), so hopefully those should be faster now!
+We use [swatinem/rust-cache](https://github.com/Swatinem/rust-cache) to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often [enable buildjet for arm linux builds](https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners), so hopefully those should be faster now!
 
 @gankra + @arlyon [feat: autodetect buildjet runners to use their backend for rust cache](https://github.com/axodotdev/cargo-dist/pull/1129)
 
 
 ## Path Flexibility For Extra Artifacts
 
-Previously [the extra-artifacts setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts) didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.
+Previously [the extra-artifacts setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#extra-artifacts) didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.
 
 @gankra [fix: rework extra_artifacts to properly use paths](https://github.com/axodotdev/cargo-dist/pull/1128)
 
@@ -606,7 +606,7 @@ cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSig
 
 Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates)
+* [docs](https://axodotdev.github.io/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates)
 * impl @Gankra [feat: reimplement ssldotcom-windows-sign](https://github.com/axodotdev/cargo-dist/pull/1036)
 
 
@@ -616,7 +616,7 @@ The SHA-3 and BLAKE2 hash algorithms are now supported.
 
 Thanks to @sorairolake for contributing this!
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#checksum)
 * impl @sorairolake [feat: support SHA-3 and BLAKE2](https://github.com/axodotdev/cargo-dist/pull/1067)
 
 
@@ -629,33 +629,33 @@ Previously, our installers would update the user's `PATH` for local commandline 
 
 ## Custom installer output
 
-When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with [the `install-success-msg` setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg).
+When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with [the `install-success-msg` setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#install-success-msg).
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#install-success-msg)
 * impl @ashleygwilliams [feat: custom success msg](https://github.com/axodotdev/cargo-dist/pull/1102)
 
 
 ## Forcing prereleases to be the latest
 
-cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new [`force-latest`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest) configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.
+cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new [`force-latest`](https://axodotdev.github.io/cargo-dist/book/reference/config.html#force-latest) configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.
 
 This mostly exists to support projects who only plan to produce prereleases for the foreseeable future, so that GitHub properly shows them in its UI.
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#force-latest)
 * impl @mistydemeo [feat: allow always marking releases as stable](https://github.com/axodotdev/cargo-dist/pull/1054)
 
 ## Configuring the global runner
 
-In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using [the "global" key](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners).
+In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using [the "global" key](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-custom-runners).
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-custom-runners)
 * impl @mistydemeo [feat: allow configuring global runner](https://github.com/axodotdev/cargo-dist/pull/1055)
 
 ## Specify commit to publish to in external repo
 
-In 0.14.0, we added the new [`github-releases-repo`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo) configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new [`github-releases-submodule-path`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path) configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.
+In 0.14.0, we added the new [`github-releases-repo`](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-releases-repo) configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new [`github-releases-submodule-path`](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-releases-submodule-path) configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-releases-submodule-path)
 * impl @mistydemeo [feat: allow specifying external commit from submodule](https://github.com/axodotdev/cargo-dist/pull/1026)
 
 
@@ -692,11 +692,11 @@ This is a BIG release for installers, with every installer getting big bugfixes 
     * can install aliases for your binaries (additional bin commands on the package)
     * can have a different name from their parent cargo package
     * have more robust platform-support fallbacks
-    * [have all new docs](https://opensource.axo.dev/cargo-dist/book/installers/npm.html)
+    * [have all new docs](https://axodotdev.github.io/cargo-dist/book/installers/npm.html)
 * homebrew installers
     * can install aliases for your binaries (builtin homebrew aliases)
     * have more idiomatic install-hints
-    * [have all new docs](https://opensource.axo.dev/cargo-dist/book/installers/homebrew.html)
+    * [have all new docs](https://axodotdev.github.io/cargo-dist/book/installers/homebrew.html)
 
 
 ## Features
@@ -706,13 +706,13 @@ This is a BIG release for installers, with every installer getting big bugfixes 
 
 The npm installer has been rewritten to remove almost every limitation it has.
 
-Notably, you can now have multiple binaries in an npm package without any issue. You can even make aliases for commands with the new [bin-aliases setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#bin-aliases).
+Notably, you can now have multiple binaries in an npm package without any issue. You can even make aliases for commands with the new [bin-aliases setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#bin-aliases).
 
-Although for the best user experience, ensuring your package [unambiguously has one true command](https://docs.npmjs.com/cli/v7/commands/npx#description) is ideal. To help with this, the [npm-package setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#npm-package) was added, allowing you to rename your npm package (which is one of the disambiguators for the primary command of an npm package).
+Although for the best user experience, ensuring your package [unambiguously has one true command](https://docs.npmjs.com/cli/v7/commands/npx#description) is ideal. To help with this, the [npm-package setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#npm-package) was added, allowing you to rename your npm package (which is one of the disambiguators for the primary command of an npm package).
 
-You can also now automatically [publish your npm packages](https://opensource.axo.dev/cargo-dist/book/installers/npm.html#quickstart) by [setting `publish-jobs = ["npm"]`](https://opensource.axo.dev/cargo-dist/book/reference/config.html#publish-jobs)!
+You can also now automatically [publish your npm packages](https://axodotdev.github.io/cargo-dist/book/installers/npm.html#quickstart) by [setting `publish-jobs = ["npm"]`](https://axodotdev.github.io/cargo-dist/book/reference/config.html#publish-jobs)!
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/installers/npm.html)
+* [docs](https://axodotdev.github.io/cargo-dist/book/installers/npm.html)
 * impl
     * @gankra [rewrite npm installer](https://github.com/axodotdev/cargo-dist/pull/974)
     * @gankra [add npm-package config](https://github.com/axodotdev/cargo-dist/pull/988)
@@ -722,7 +722,7 @@ You can also now automatically [publish your npm packages](https://opensource.ax
 
 ### install-path cascades
 
-The [install-path setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-paths) that's used by the shell and powershell installers can now be an array of options to try in sequence. This is mostly useful for checking if special environment variables are set before falling back to some hardcoded subdir of $HOME.
+The [install-path setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#install-paths) that's used by the shell and powershell installers can now be an array of options to try in sequence. This is mostly useful for checking if special environment variables are set before falling back to some hardcoded subdir of $HOME.
 
 For instance, if you set:
 
@@ -732,20 +732,20 @@ install-dir = ["$MY_APP_HOME/bin", "~/.my-app/bin"]
 
 Then your shell and powershell installers will first check if `$MY_APP_HOME` is defined and install to `$MY_APP_HOME/bin` if it is. If it's not defined then it will use the more hardcoded `$HOME/.my-app/bin`.
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-paths)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#install-paths)
 * @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/947)
 
 
 ### binary aliases
 
-The shell, powershell, npm, and homebrew installers all now support aliases for binaries with the new [bin-aliases setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#bin-aliases). These are not included in your downloadable archives, and are setup in an installer-specific way:
+The shell, powershell, npm, and homebrew installers all now support aliases for binaries with the new [bin-aliases setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#bin-aliases). These are not included in your downloadable archives, and are setup in an installer-specific way:
 
 * shell: symlinks
 * powershell: hardlinks
 * npm: extra "bin" entries pointing at the same command
 * homebrew: bin.install_symlink
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#bin-aliases)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#bin-aliases)
 * impl
     * @mistydemeo [add binary aliases](https://github.com/axodotdev/cargo-dist/pull/964)
     * @mistydemeo [adjust feature name](https://github.com/axodotdev/cargo-dist/pull/986)
@@ -756,15 +756,15 @@ The shell, powershell, npm, and homebrew installers all now support aliases for 
 
 If you need to publish your GitHub Releases to a different repo than the one you run your release workflow on, you can use the new [github-releases-repo setting](github-releases-repo) to specify this.
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#github-releases-repo)
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/967)
 
 
 ### disable alternative source tarballs
 
-You can now disable the backup source tarballs uploaded by cargo-dist with the new [source-tarball setting](https://opensource.axo.dev/cargo-dist/book/reference/config.html#source-tarball).
+You can now disable the backup source tarballs uploaded by cargo-dist with the new [source-tarball setting](https://axodotdev.github.io/cargo-dist/book/reference/config.html#source-tarball).
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#source-tarball)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#source-tarball)
 * @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/959)
 
 
@@ -906,7 +906,7 @@ This release introduces an experimental new feature: an updater which allows you
 
 The new cargo-dist updater, [axoupdater](https://github.com/axodotdev/axoupdater), provides a way for your users to easily upgrade your software without needing to check your website for new versions. If you enable the new `install-updater = true` option in cargo-dist, users who install your software via the shell or PowerShell installers will receive a standalone updater program alongside your program itself. Running this program will check for updates and, if necessary, install the new version for them. In addition, axoupdater provides a Rust library with all of its functionality exposed so that you can choose to integrate the updater functionality into your own program directly.
 
-For more information, see the [cargo-dist documentation](https://opensource.axo.dev/cargo-dist/book/installers/updater.html) or consult the axoupdater repository and [documentation](http://docs.rs/axoupdater/latest/axoupdater/).
+For more information, see the [cargo-dist documentation](https://axodotdev.github.io/cargo-dist/book/installers/updater.html) or consult the axoupdater repository and [documentation](http://docs.rs/axoupdater/latest/axoupdater/).
 
 ### Homebrew cask dependencies
 
@@ -948,7 +948,7 @@ This release is a few minor improvements, and a new config for homebrew installe
 
 The name of your homebrew formula can now be overridden with `formula = "my-cool-formula"`.
 
-* [docs](opensource.axo.dev/cargo-dist/book/reference/config.html#formula)
+* [docs](axodotdev.github.io/cargo-dist/book/reference/config.html#formula)
 * impl
     * @ashleygwilliams [initial impl](https://github.com/axodotdev/cargo-dist/pull/791)
     * @gankra [add support to brew publish job](https://github.com/axodotdev/cargo-dist/pull/816)
@@ -973,7 +973,7 @@ This release is a few minor improvements, and a new config for homebrew installe
 
 The name of your homebrew formula can now be overridden with `formula = "my-cool-formula"`.
 
-* [docs](opensource.axo.dev/cargo-dist/book/reference/config.html#formula)
+* [docs](axodotdev.github.io/cargo-dist/book/reference/config.html#formula)
 * @ashleygwilliams [impl](https://github.com/axodotdev/cargo-dist/pull/791)
 
 ## Fixes
@@ -997,7 +997,7 @@ This release fixes an issue with shell installers and adds an experimental featu
 
 A new experimental config, `tag-namespace = "some-prefix"` has been added. Setting `tag-name = "owo"` will change the tag matching expression we put in your github ci, to require the tag to start with "owo" for cargo-dist to care about it. This can be useful for situations where you have several things with different tag/release workflows in the same workspace. It also renames `release.yaml` to `owo-release.yml` to make it clear it's just one of many release workflows.
 
-* [docs](opensource.axo.dev/cargo-dist/book/reference/config.html#tag-namespace)
+* [docs](axodotdev.github.io/cargo-dist/book/reference/config.html#tag-namespace)
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/779)
 
 
@@ -1083,7 +1083,7 @@ Enabling this disables tag-push releases, but keeps pr checks enabled.
 By default the workflow dispatch form will have "dry-run" populated as the tag, which is taken to have the same meaning as `pr-run-mode = upload`: run the plan and build steps, but not the publish or announce ones. Currently hosting is also disabled, but future versions may add some forms of hosting in this mode.
 
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/717)
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#dispatch-releases)
 
 
 
@@ -1107,7 +1107,7 @@ cargo dist manifest --artifacts=local --no-local-paths
 Also note that for legacy reasons a tarball is expected to have all the contents nested under a root dir with the same name as the tarball (sans extension), while zips are expected to have all the files directly in the root (installers pass `--strip-components=1` to tar when extracting).
 
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/717)
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#build-local-artifacts)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#build-local-artifacts)
 
 
 
@@ -1337,7 +1337,7 @@ at once and having to frantically hack things back to normal when something weir
 It should also make it possible for us to provide features like Release/PR Previews.
 
 * docs
-    * [hosting config](https://opensource.axo.dev/cargo-dist/book/reference/config.html#hosting)
+    * [hosting config](https://axodotdev.github.io/cargo-dist/book/reference/config.html#hosting)
 * impl
     * @gankra [preparatory refactor](https://github.com/axodotdev/cargo-dist/pull/546)
     * @gankra [create gazenot client library](https://github.com/axodotdev/gazenot)
@@ -1352,7 +1352,7 @@ It should also make it possible for us to provide features like Release/PR Previ
 0.5.0 contains experimental support for building non-cargo-based projects. These can be in any language, and follow any repository layout, so long as they're accompanied by a cargo-dist manifest file that provides information on how to build and install it. For more information, consult the documentation.
 
 * docs
-    * [guide](https://opensource.axo.dev/cargo-dist/book/generic-builds.html)
+    * [guide](https://axodotdev.github.io/cargo-dist/book/generic-builds.html)
     * [example npm project](https://github.com/axodotdev/axolotlsay-js)
     * [example C project](https://github.com/axodotdev/cargo-dist-c-example)
 * impl
@@ -1384,7 +1384,7 @@ would just produce broken templates, because cargo-dist wouldn't know about them
 
 * docs
     * [cargo-wix docs](https://volks73.github.io/cargo-wix/cargo_wix/#configuration)
-    * [cargo-dist msi docs](https://opensource.axo.dev/cargo-dist/book/installers/msi.html)
+    * [cargo-dist msi docs](https://axodotdev.github.io/cargo-dist/book/installers/msi.html)
 * impl
     * @gankra [refactor eulas and add new config](https://github.com/volks73/cargo-wix/pull/247)
     * @gankra [add config for setting installer images](https://github.com/volks73/cargo-wix/pull/250)
@@ -1449,7 +1449,7 @@ cmake = '*'
 libcue-dev = { version = "2.2.1-2" }
 ```
 
-For more information, see the [documentation](https://opensource.axo.dev/cargo-dist/book/reference/config.html#dependencies).
+For more information, see the [documentation](https://axodotdev.github.io/cargo-dist/book/reference/config.html#dependencies).
 
 * impl
     * @mistydemeo [initial impl](https://github.com/axodotdev/cargo-dist/pull/428)
@@ -1488,7 +1488,7 @@ cargo-dist has [always forced +crt-static on, as it is considered more correct f
 Although we [would like to teach cargo-dist to handle redistributables for you](https://github.com/axodotdev/cargo-dist/issues/496), we're starting with a simple escape hatch: if you set `msvc-crt-static = false` in `[workspace.metadata.dist]`, we'll revert to the typical Rust behaviour of dynamically linking the CRT.
 
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/507)
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#msvc-crt-static)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#msvc-crt-static)
 
 
 # Version 0.3.1 (2023-09-28)
@@ -1508,11 +1508,11 @@ The majority of users will not be affected by this and will not need to upgrade;
 
 # Version 0.3.0 (2023-09-27)
 
-This release is a big overhaul of cargo-dist's UX! [Our CI scripts have been completely redesigned](https://opensource.axo.dev/cargo-dist/book/introduction.html#distributing) to allow your release process to be tested in pull-requests, so you don't have to worry as much about your release process breaking!
+This release is a big overhaul of cargo-dist's UX! [Our CI scripts have been completely redesigned](https://axodotdev.github.io/cargo-dist/book/introduction.html#distributing) to allow your release process to be tested in pull-requests, so you don't have to worry as much about your release process breaking!
 
 Since we can now test your release process frequently, we've also made most cargo-dist commands default to erroring out if anything is out of sync and needs to be regenerated.
 
-To make this easier, we've also introduced an experimental new system for [user-defined hooks](https://opensource.axo.dev/cargo-dist/book/ci/github.html#custom-jobs), allowing you to write custom publish jobs without having to actually edit release.yml.
+To make this easier, we've also introduced an experimental new system for [user-defined hooks](https://axodotdev.github.io/cargo-dist/book/ci/github.html#custom-jobs), allowing you to write custom publish jobs without having to actually edit release.yml.
 
 This release also introduces initial support for msi installers with the wonderful help of [cargo-wix](https://github.com/volks73/cargo-wix)!
 
@@ -1539,22 +1539,22 @@ This is the big ticket item of the release, the CI has been completely redesigne
     * @mistydemeo [add docs](https://github.com/axodotdev/cargo-dist/pull/443)
 
 * docs
-    * [high-level summary](https://opensource.axo.dev/cargo-dist/book/introduction.html#distributing)
-    * [detailed docs](https://opensource.axo.dev/cargo-dist/book/ci/github.html)
+    * [high-level summary](https://axodotdev.github.io/cargo-dist/book/introduction.html#distributing)
+    * [detailed docs](https://axodotdev.github.io/cargo-dist/book/ci/github.html)
 
 ### user-defined publish jobs
 
 You can now define custom hand-written publish jobs that cargo-dist's CI will know how to invoke, without actually having to hand-edit release.yml!
 
 * @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/417)
-* [docs](https://opensource.axo.dev/cargo-dist/book/ci/github.html#custom-jobs)
+* [docs](https://axodotdev.github.io/cargo-dist/book/ci/github.html#custom-jobs)
 
 ### default to not publishing prereleases to homebrew
 
 Homebrew doesn't have a notion of package "versions", there is Only The Latest Version, so we changed the default to only publishing to your homebrew tap if you're cutting a stable release. You can opt back in to the old behaviour with `publish-prereleases = true`.
 
 * @mistydemeo [impl](https://github.com/axodotdev/cargo-dist/pull/401)
-* [docs](https://opensource.axo.dev/cargo-dist/book/reference/config.html#publish-prereleases)
+* [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#publish-prereleases)
 
 ### generate command
 
@@ -1575,8 +1575,8 @@ The `allow-dirty = ["ci"]` config was introduced to disable these `generate` mod
     * @mistydemeo [hide generate-ci alias command](https://github.com/axodotdev/cargo-dist/pull/434)
     * @gankra [cleanup more references to generate-ci](https://github.com/axodotdev/cargo-dist/pull/444)
 * docs
-    * [generate cli command](https://opensource.axo.dev/cargo-dist/book/reference/cli.html#cargo-dist-generate)
-    * [allow-dirty config](https://opensource.axo.dev/cargo-dist/book/reference/config.html#allow-dirty)
+    * [generate cli command](https://axodotdev.github.io/cargo-dist/book/reference/cli.html#cargo-dist-generate)
+    * [allow-dirty config](https://axodotdev.github.io/cargo-dist/book/reference/config.html#allow-dirty)
 
 ### msi installer
 
@@ -1586,7 +1586,7 @@ Initial msi installer support is here, based on the wonderful [cargo-wix](https:
     * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/370)
     * @gankra [properly handle multiple subscribers to a binary](https://github.com/axodotdev/cargo-dist/pull/421)
     * @gankra [don't forward WiX output to stdout](https://github.com/axodotdev/cargo-dist/pull/418)
-* [docs](https://opensource.axo.dev/cargo-dist/book/installers/msi.html)
+* [docs](https://axodotdev.github.io/cargo-dist/book/installers/msi.html)
 
 ## Fixes
 
@@ -1650,7 +1650,7 @@ grow support for automatically publishing to crates.io, npm, and more!
     * @mistydemeo [Add explicit version tag](https://github.com/axodotdev/cargo-dist/pull/348)
     * @mistydemeo [Fix Homebrew messages in init](https://github.com/axodotdev/cargo-dist/pull/353)
     * @mistydemeo [Add Homebrew docs](https://github.com/axodotdev/cargo-dist/pull/341)
-* [docs](https://opensource.axo.dev/cargo-dist/book/installers.html#homebrew)
+* [docs](https://axodotdev.github.io/cargo-dist/book/installers.html#homebrew)
 
 ### Feature Flags
 
@@ -1664,10 +1664,10 @@ See the docs for all the details.
 
 * @gankra + @Yatekii [impl](https://github.com/axodotdev/cargo-dist/pull/321)
 * docs
-    * [features](https://opensource.axo.dev/cargo-dist/book/config.html#features)
-    * [all-features](https://opensource.axo.dev/cargo-dist/book/config.html#all-features)
-    * [default-features](https://opensource.axo.dev/cargo-dist/book/config.html#default-features)
-    * [precise-builds](https://opensource.axo.dev/cargo-dist/book/config.html#precise-builds)
+    * [features](https://axodotdev.github.io/cargo-dist/book/config.html#features)
+    * [all-features](https://axodotdev.github.io/cargo-dist/book/config.html#all-features)
+    * [default-features](https://axodotdev.github.io/cargo-dist/book/config.html#default-features)
+    * [precise-builds](https://axodotdev.github.io/cargo-dist/book/config.html#precise-builds)
 
 ### Tag Formats
 
@@ -1699,7 +1699,7 @@ And of course `-prerelease.1`-style suffixes can be added to any of those.
 Thanks to @Sharparam for all the great work on the implementation and docs for this!
 
 * @Sharparam + @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/346)
-* [docs](https://opensource.axo.dev/cargo-dist/book/workspace-guide.html#announcement-tags)
+* [docs](https://axodotdev.github.io/cargo-dist/book/workspace-guide.html#announcement-tags)
 
 ### Bring Your Own Github Release
 
@@ -1710,7 +1710,7 @@ for your Github Release.
 When you set `create-release = false` cargo-dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the Github Release.
 
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/367)
-* [docs](https://opensource.axo.dev/cargo-dist/book/config.html#create-release)
+* [docs](https://axodotdev.github.io/cargo-dist/book/config.html#create-release)
 
 
 ### Enhanced Release Description
@@ -1740,7 +1740,7 @@ Thanks to everyone who contributed docs and cleanups, the real MVPs!!!
 
 The standout features of this release are custom install paths ("install my app to `~/.my-app` and add that to PATH"), archive checksums (releases should now include `my-app.tar.xz.sha256`), and refined builds (builds are more fault-tolerant, lower latency, and you can opt out of building `--workspace`).
 
-To update your cargo-dist config and release.yml [install cargo dist 0.1.0](https://opensource.axo.dev/cargo-dist/) and run `cargo dist init` (you should also remove rust-toolchain-version from your config, it's deprecated).
+To update your cargo-dist config and release.yml [install cargo dist 0.1.0](https://axodotdev.github.io/cargo-dist/) and run `cargo dist init` (you should also remove rust-toolchain-version from your config, it's deprecated).
 
 The codebase also got some major cleanups to make it easier to contribute and iterate on installers. All templates are now migrated to jinja2 (as opposed to adhoc string replace), and we have integration tests that can validate that installers work as intended.
 
@@ -1767,9 +1767,9 @@ The new install-path config currently takes 3 possible formats (that we will sur
 See the docs for finer details, caveats, and future plans.
 
 * docs
-    * [install-path](https://opensource.axo.dev/cargo-dist/book/config.html#install-path)
-    * [shell installer](https://opensource.axo.dev/cargo-dist/book/installers.html#shell)
-    * [powershell installer](https://opensource.axo.dev/cargo-dist/book/installers.html#powershell)
+    * [install-path](https://axodotdev.github.io/cargo-dist/book/config.html#install-path)
+    * [shell installer](https://axodotdev.github.io/cargo-dist/book/installers.html#shell)
+    * [powershell installer](https://axodotdev.github.io/cargo-dist/book/installers.html#powershell)
 * impl
     * @gankra [add install-path](https://github.com/axodotdev/cargo-dist/pull/284)
     * @gankra [teach scripts to edit PATH](https://github.com/axodotdev/cargo-dist/pull/293)
@@ -1779,7 +1779,7 @@ See the docs for finer details, caveats, and future plans.
 
 By default all archives will get a paired checksum file generated and uploaded to the release (default sha256). So for instance if you produce `my-app-x86_64-unknown-linux-gnu.tar.gz` then there will also be `my-app-x86_64-unknown-linux-gnu.tar.gz.sha256`. This can be configured with the new `checksum` config.
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/config.html#checksum)
+* [docs](https://axodotdev.github.io/cargo-dist/book/config.html#checksum)
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/243)
 
 
@@ -1801,10 +1801,10 @@ By default we now:
 In addition, you can now set `precise-builds = true` if you don't want us to build your apps with `--workspace`. There's a lot of complicated factors involved here but basically the difference is in how feature selection works in Cargo when you have multiple packages sharing a workspace. `--workspace` gets you a maximal default, precise-builds gets you a minimal default. For most projects there won't be a difference.
 
 * docs
-    * [precise-builds](https://opensource.axo.dev/cargo-dist/book/config.html#precise-builds)
-    * [merge-tasks](https://opensource.axo.dev/cargo-dist/book/config.html#merge-tasks)
-    * [fail-fast](https://opensource.axo.dev/cargo-dist/book/config.html#fail-fast)
-    * [rust-toolchain-version](https://opensource.axo.dev/cargo-dist/book/config.html#rust-toolchain-version)
+    * [precise-builds](https://axodotdev.github.io/cargo-dist/book/config.html#precise-builds)
+    * [merge-tasks](https://axodotdev.github.io/cargo-dist/book/config.html#merge-tasks)
+    * [fail-fast](https://axodotdev.github.io/cargo-dist/book/config.html#fail-fast)
+    * [rust-toolchain-version](https://axodotdev.github.io/cargo-dist/book/config.html#rust-toolchain-version)
 * impl
     * @gankra [precise-builds + merge-tasks](https://github.com/axodotdev/cargo-dist/pull/277)
     * @gankra [fail-fast](https://github.com/axodotdev/cargo-dist/pull/276)
@@ -1818,10 +1818,10 @@ In addition, you can now set `precise-builds = true` if you don't want us to bui
 A few new CLI features were added to cargo-dist to enable more programmatic manipulation of it. These are mostly uninteresting to normal users, and exist to enable future axo.dev tools that build on top of cargo-dist.
 
 * `cargo dist init --with-json-config=path/to/config.json`
-    * [docs](https://opensource.axo.dev/cargo-dist/book/cli.html#--with-json-config-with_json_config)
+    * [docs](https://axodotdev.github.io/cargo-dist/book/cli.html#--with-json-config-with_json_config)
     * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/279)
 * The dist-manifest-schema.json is now properly hosted in releases
-    * [docs](https://opensource.axo.dev/cargo-dist/book/schema.html)
+    * [docs](https://axodotdev.github.io/cargo-dist/book/schema.html)
     * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/280)
 
 
@@ -1830,7 +1830,7 @@ A few new CLI features were added to cargo-dist to enable more programmatic mani
 When parsing your changelog, prereleases can now also match the special "Unreleased" heading,
 making it easier to keep a changelog for the upcoming release without committing to its version.
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/simple-guide.html#release-notes)
+* [docs](https://axodotdev.github.io/cargo-dist/book/simple-guide.html#release-notes)
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/250)
 
 
@@ -1842,7 +1842,7 @@ making it easier to keep a changelog for the upcoming release without committing
 The `include` config will now work properly if you provide it a path to a directory
 (the functionality was stubbed out but never implemented).
 
-* [docs](https://opensource.axo.dev/cargo-dist/book/config.html#include)
+* [docs](https://axodotdev.github.io/cargo-dist/book/config.html#include)
 * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/295)
 
 
@@ -1893,13 +1893,13 @@ This allows you to `npm publish URL_TO_TARBALL` directly without any issues.
 This release is a pretty big improvement to cargo-dist's UX!
 
 * `cargo dist init` is now interactive and useful for updating your config/install. This is especially useful for updating your project to a new version of cargo-dist, or enabling new installers, as the interactive UI will automatically prompt you to do so and help you keep your config coherent. It also reduces the chances of your CI script getting out of sync, as it runs generate-ci at the end for you. If you want the old non-interactive behaviour, just pass `--yes` which auto-accepts all recommendations.
-    * [docs](https://opensource.axo.dev/cargo-dist/book/way-too-quickstart.html#setup)
+    * [docs](https://axodotdev.github.io/cargo-dist/book/way-too-quickstart.html#setup)
     * impl
         * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/227)
         * @gankra [fixups](https://github.com/axodotdev/cargo-dist/pull/230)
 
 * Support for generating an npm project that installs your app into node_modules! Just add "npm" to your installers (using `cargo dist init` for this is recommended, as it will prompt you to make any other necessary changes to your config).
-    * [docs](https://opensource.axo.dev/cargo-dist/book/installers.html#npm)
+    * [docs](https://axodotdev.github.io/cargo-dist/book/installers.html#npm)
     * impl:
         * @gankra [initial impl](https://github.com/axodotdev/cargo-dist/pull/210)
         * @gankra [fixups](https://github.com/axodotdev/cargo-dist/pull/219)
@@ -1908,7 +1908,7 @@ This release is a pretty big improvement to cargo-dist's UX!
 
 
 * `cargo dist plan` is a new command for getting a local preview of what your release CI will build. (This is just a synonym for `cargo dist manifest` but with nicer defaults for what you *usually* want.)
-    * [docs](https://opensource.axo.dev/cargo-dist/book/way-too-quickstart.html#check-what-ci-will-build)
+    * [docs](https://axodotdev.github.io/cargo-dist/book/way-too-quickstart.html#check-what-ci-will-build)
     * impl
         * @gankra [initial impl as "status"](https://github.com/axodotdev/cargo-dist/pull/230)
         * @gankra [rename "status" to "plan"](https://github.com/axodotdev/cargo-dist/pull/232)
@@ -1920,7 +1920,7 @@ This release is a pretty big improvement to cargo-dist's UX!
     * @gankra [impl](https://github.com/axodotdev/cargo-dist/commit/8a417f239ef8f8e3ab66c46cf7c3d26afaba1c87)
 
 * The compression format used for executable-zips can now be set with `windows-archive` and `unix-archive` configs. Supported values include ".tar.gz", ".tar.xz", ".tar.zstd", and ".zip". The defaults (.zip on windows, .tar.xz elsewhere) are unchanged, as we believe those have the best balance of UX and compatibility.
-    * [docs](https://opensource.axo.dev/cargo-dist/book/config.html#windows-archive)
+    * [docs](https://axodotdev.github.io/cargo-dist/book/config.html#windows-archive)
     * @gankra [impl](https://github.com/axodotdev/cargo-dist/pull/211)
 
 * other great cleanups/fixes
