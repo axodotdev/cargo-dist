@@ -116,7 +116,7 @@ requested API structure expectations to match either:
     - Releases API: https://{CUSTOM}/api/v3/repos/owner/repo/releases/latest ([docs](https://docs.github.com/en/enterprise-server@3.14/rest/releases/releases?apiVersion=2022-11-28))
 
 `dist` is eager to support enterprise level features like this- so if you have questions
-or related feature requests, please join our [Discord](https://discord.gg/XAFG6xSZ) or send
+or related feature requests, please join our [Discord](https://discord.gg/MnyjrpTceV) or send
 us an email at hello@axo.dev.
 
 ## Receipt
