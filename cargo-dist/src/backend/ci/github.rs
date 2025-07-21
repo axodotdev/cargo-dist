@@ -19,6 +19,7 @@ use tracing::warn;
 
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
+    build::cargo::target_gcc_packages,
     build_wrapper_for_cross,
     config::{
         v1::{ci::github::GithubCiConfig, publishers::PublisherConfig},
@@ -336,6 +337,12 @@ impl GithubCiInfo {
 
             let mut dist_args = String::from("--artifacts=local");
             for target in &targets {
+                let target_triple = target.parse()?;
+                if let Some(CargoBuildWrapper::Plain) =
+                    build_wrapper_for_cross(&real_triple, &target_triple)?
+                {
+                    dependencies.append(&mut target_gcc_packages(&real_triple, &target_triple)?);
+                }
                 write!(dist_args, " --target={target}").unwrap();
             }
             let packages_install = system_deps_install_script(&runner, &targets, &dependencies)?;
