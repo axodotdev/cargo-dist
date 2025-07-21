@@ -172,12 +172,12 @@ dependencies = [
 
 [[package]]
 name = "axoprocess"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4de46920588aef95658797996130bacd542436aee090084646521260a74bda7d"
+checksum = "8a4b4798a6c02e91378537c63cd6e91726900b595450daa5d487bc3c11e95e1b"
 dependencies = [
  "miette 7.6.0",
- "thiserror 1.0.69",
+ "thiserror 2.0.9",
  "tracing",
 ]
 
