@@ -2,6 +2,11 @@
 
 Nothing Yet!
 
+# Version 0.28.2 (2025-07-20)
+
+This release updates dependencies and contains no substantive code changes.
+
+
 # Version 0.28.1 (2025-07-20)
 
 This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.
