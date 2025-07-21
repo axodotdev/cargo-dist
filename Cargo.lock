@@ -810,7 +810,7 @@ dependencies = [
  "blake2",
  "camino",
  "cargo-wix",
- "cargo_metadata 0.18.1",
+ "cargo_metadata 0.19.2",
  "clap",
  "clap-cargo",
  "color-backtrace",
