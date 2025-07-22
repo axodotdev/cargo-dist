@@ -47,7 +47,7 @@ sha2 = "0.10.9"
 minijinja = { version = "2.11.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.4"
 itertools = "0.13.0"
-cargo-wix = "0.3.8"
+cargo-wix = "0.3.9"
 uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
 goblin = "0.8.2"
