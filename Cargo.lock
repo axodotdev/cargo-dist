@@ -1828,12 +1828,12 @@ dependencies = [
 
 [[package]]
 name = "node-semver"
-version = "2.1.0"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84f390c1756333538f2aed01cf280a56bc683e199b9804a504df6e7320d40116"
+checksum = "3b1a233ea5dc37d2cfba31cfc87a5a56cc2a9c04e3672c15d179ca118dae40a7"
 dependencies = [
  "bytecount",
- "miette 5.10.0",
+ "miette 7.6.0",
  "nom",
  "serde",
  "thiserror 1.0.69",
