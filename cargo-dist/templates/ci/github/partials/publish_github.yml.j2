@@ -1,6 +1,6 @@
       # Create a GitHub Release while uploading all files to it
       - name: "Download GitHub Artifacts"
-        uses: actions/download-artifact@v4
+        uses: {{{ actions["actions/download-artifact"] | safe }}}
         with:
           pattern: artifacts-*
           path: artifacts
