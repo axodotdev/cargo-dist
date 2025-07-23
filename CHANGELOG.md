@@ -2,7 +2,7 @@
 
 Nothing Yet!
 
-# Version 0.28.2 (2025-07-20)
+# Version 0.28.2 (2025-07-22)
 
 This release updates dependencies and contains no substantive code changes.
 
