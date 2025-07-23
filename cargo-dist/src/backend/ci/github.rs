@@ -374,6 +374,7 @@ impl GithubCiInfo {
             ("actions/download-artifact", "v4"),
             ("actions/attest-build-provenance", "v2"),
             ("swatinem/rust-cache", "v2"),
+            ("actions/setup-node", "v4"),
         ];
         let actions = default_action_versions
             .iter()
