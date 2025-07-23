@@ -15,6 +15,7 @@
     steps:
       - uses: {{{ actions["actions/checkout"] | safe }}}
         with:
+          persist-credentials: true
           repository: {{{ tap }}}
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
