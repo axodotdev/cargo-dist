@@ -2982,7 +2982,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             self.add_cyclonedx_sbom_file(info.package_idx, release);
 
             // Add the unified checksum file
-            self.add_unified_checksum_file(release);
+            if self.inner.config.artifacts.checksum != ChecksumStyle::False {
+                self.add_unified_checksum_file(release);
+            }
         }
 
         // Translate the result to DistManifest
