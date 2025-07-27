@@ -86,7 +86,12 @@ impl WorkspaceGraph {
 
         // Prefer generic workspace, then use rust workspace.
         // JS is currently not allowed to be a root workspace, only a child
-        for ws in [generic::get_workspace, rust::get_workspace] {
+        for ws in [
+            #[cfg(feature = "generic-projects")]
+            generic::get_workspace,
+            #[cfg(feature = "cargo-projects")]
+            rust::get_workspace,
+        ] {
             match ws(start_dir, clamp_to_dir) {
                 // Accept the first one we find
                 WorkspaceSearch::Found(ws) => {
