@@ -296,6 +296,21 @@ dist uses this feature to distribute its [`dist-manifest-schema.json`](./schema.
 By default, dist creates and uploads source tarballs from your repository. This setting disables that behaviour. This is especially useful for users who distribute closed-source software to hosts outside their git repos and who would prefer not to distribute source code to their users.
 
 
+### `recursive-tarball`
+
+> <span style="float:right">since 0.29.0<br>[global-only][]</span>
+> [📖 read the artifacts guide!][artifacts] \
+> default = `true`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> recursive-tarball = true
+> ```
+
+By default, dist's source tarballs only includes the contents of your repository. Setting `recursive-tarball = true` switches to an alternate tarball generation method which includes the content of submodules.
+
+
 ### `ssldotcom-windows-sign`
 
 > <span style="float:right">since 0.14.0<br>[global-only][]</span>
