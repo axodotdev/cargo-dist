@@ -249,7 +249,7 @@ Dist uses a number of first-party and third-party actions. Typically, it uses ta
 "actions/checkout" = "11bd71901bbe5b1630ceea73d27597364c9af683"
 ```
 
-### Build and upload artifacts on every pull request
+## Build and upload artifacts on every pull request
 
 > since 0.3.0
 
