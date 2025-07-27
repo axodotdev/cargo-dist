@@ -119,6 +119,14 @@ requested API structure expectations to match either:
 or related feature requests, please join our [Discord](https://discord.gg/MnyjrpTceV) or send
 us an email at hello@axo.dev.
 
+## GitHub bearer token
+
+> since 0.29.0
+
+By default, the installer fetches archives without using any form of authentication. This is fine for public repos, but users with private projects (or who run into GitHub rate limits) may wish to provide their own tokens when downloading. If set, this will be used when fetching GitHub artifacts.
+
+- `${app name}_GITHUB_TOKEN`
+
 ## Receipt
 
 > since 0.9.0
