@@ -238,6 +238,17 @@ Because of dist's cross-compilation support, if you have both `cargo-zigbuild` a
 installed on a macOS machine, you can build pretty much every target dist supports, by running
 `dist build --artifacts all` — in fact, this is used to develop dist itself!
 
+## Pinned actions commits
+
+> since 0.29.0
+
+Dist uses a number of first-party and third-party actions. Typically, it uses tagged versions; for example, dist 0.29.0 uses `actions/checkout@v4`. Some users with special security requirements may wish to pin these to specific commits rather than floating tags; this can be done using the `github-action-commits` setting. For example:
+
+```toml
+[dist.github-action-commits]
+"actions/checkout" = "11bd71901bbe5b1630ceea73d27597364c9af683"
+```
+
 ### Build and upload artifacts on every pull request
 
 > since 0.3.0

@@ -91,6 +91,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`github-custom-job-permissions`](#github-custom-job-permissions)
     * [`github-custom-runners`](#github-custom-runners)
     * [`github-build-setup`](#github-build-setup)
+    * [`github-action-commits`](#github-action-commits)
 * [custom ci jobs](#custom-ci-jobs)
     * [`plan-jobs`](#plan-jobs)
     * [`local-artifacts-jobs`](#local-artifacts-jobs)
@@ -1337,6 +1338,21 @@ All other custom jobs default to no special permissions.
 Allows specifying which runner to use for a target. The keys within this table are target triples in the same format as the ["targets"](#targets) setting. Any targets not specified in this table will use the defaults.
 
 In addition to defining runners for a target, it's also possible to specify a runner for the global, non-target-specific tasks using the `global` key. This runner will be used for tasks like `plan`, `host`, generating installers, and so on.
+
+
+### `github-action-commits`
+
+> <span style="float:right">since 0.29.0<br>[global-only][]</span>
+> [📖 read the ci customization guide!][github-ci] \
+> default = `<none>`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist.github-action-commits]
+> "actions/checkout" = "11bd71901bbe5b1630ceea73d27597364c9af683"
+> ```
+
+Allows overriding which version of a GitHub Action to use. This can be useful to replace the default set of tags used by dist with a specific pinned set of commits.
 
 
 ### custom ci jobs
