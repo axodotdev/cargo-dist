@@ -20,6 +20,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`dist`](#dist)
 * [`packages`](#packages)
 * [`targets`](#targets)
+* [`version`](#version)
 
 [artifact settings](#artifact-settings)
 * [`checksum`](#checksum)
@@ -236,6 +237,19 @@ The supported choices are:
 * arm64 Linux (static musl): "aarch64-unknown-linux-musl"
 
 By default all runs of `dist` will be trying to handle all platforms specified here at once. If you specify `--target=...` on the CLI this will focus the run to only those platforms. As discussed in [concepts][], this cannot be used to specify platforms that are not listed in `metadata.dist`, to ensure different runs agree on the maximum set of platforms.
+
+
+## `version`
+> <span style="float:right">since 0.29.0<br>[global-only][]</span>
+> default = `<none>` (infer it)
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> version = "0.0.1"
+> ```
+
+If set, this value will override the actual version configured for each package. For example, if the workspace contains packages versioned "0.2" and "0.3", and this value is set to "0.1", then dist will consider every package in the workspace to have the version "0.1".
 
 
 ## artifact settings
