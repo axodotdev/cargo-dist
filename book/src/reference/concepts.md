@@ -36,6 +36,8 @@ To match cargo-install's behaviour, if a package defines multiple binaries then 
 
 If you don't want a package-with-binaries to be considered an App that dist should care about, you can use Cargo's own builtin [publish = false][publish-false]. You can also use `dist = false` or `dist = true` in [dist's own config][config-dist], which when defined will take priority over `publish`.
 
+Distability can also be configured on the workspace level by using the `packages` setting in the workspace configuration. If set, this defines a specific list of packages which will be distributed, overriding any `dist = true` or `dist = false` configuration.
+
 
 
 # Defining Your Artifacts
