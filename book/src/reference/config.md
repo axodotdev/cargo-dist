@@ -18,6 +18,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`allow-dirty`](#allow-dirty)
 * [`cargo-dist-version`](#cargo-dist-version)
 * [`dist`](#dist)
+* [`packages`](#packages)
 * [`targets`](#targets)
 
 [artifact settings](#artifact-settings)
@@ -188,6 +189,21 @@ There are 3 major cases where you might use this:
 * `dist = false` on a package can be used to force dist to ignore it
 * `dist = true` on a package can be used to force dist to distribute it in spite of signals like Cargo's `publish = false` that would suggest otherwise.
 * `dist = false` on a whole workspace defaults all packages to do-not-distribute, forcing you to manually allow-list packages with `dist = true` (large monorepos often find this to be a better way of managing project distribution when most developers aren't release engineers).
+
+
+## `packages`
+
+> <span style="float:right">since 0.29.0<br>[global-only][]</span>
+> [📖 read the guide for this feature!][distribute] \
+> default = `<none>` (infer it)
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> packages = ["a", "b"]
+> ```
+
+`packages` provides a more explicit way of specifying which packages to dist (or not). If `packages` is set, it provides a list of exactly which packages should be distributed within the workspace. It overrides individual package-level `dist = true` or `dist = false` configuration.
 
 
 ## `targets`
