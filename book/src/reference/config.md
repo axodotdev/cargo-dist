@@ -50,6 +50,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`installers`](#installers)
 * [`install-libraries`](#install-libraries)
 * [`bin-aliases`](#bin-aliases)
+* [`binaries`](#binaries)
 * [shell and powershell installer settings](#shell-and-powershell-installer-settings)
     * [`install-success-msg`](#install-success-msg)
     * [`install-path`](#install-path)
@@ -712,6 +713,20 @@ This is a map of binary names to aliases that your [installers][] should create 
 * [npm][npm-installer]: extra "bins" pointing at the same command
 * [homebrew][homebrew-installer]: bin.install_symlink
 * [msi][msi-installer]: **not currently supported**
+
+
+### `binaries`
+
+> <span style="float:right">since 0.29.0<br>[package-local][]</span>
+> default = `<none>`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist.binaries]
+> x86_64-pc-windows-msvc = ["a", "b"]
+> ```
+
+This setting allows overriding the list of binaries to install on a per-platform basis.
 
 
 ### `install-libraries`
