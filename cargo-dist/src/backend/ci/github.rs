@@ -671,7 +671,14 @@ fn github_runner_for_target(
     // where random system dependencies can creep in and be very
     // recent. This helps with portability!
     let result = Some(match target_triple.operating_system {
-        OperatingSystem::Linux => runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04")),
+        OperatingSystem::Linux => {
+            // Use ARM-specific runner for aarch64 Linux targets
+            if matches!(target_triple.architecture, Architecture::Aarch64(_)) {
+                runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04-arm"))
+            } else {
+                runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04"))
+            }
+        }
         OperatingSystem::Darwin(_) => runner_to_config(GithubRunnerRef::from_str("macos-13")),
         OperatingSystem::Windows => {
             // Default to cargo-xwin for Windows cross-compiles
