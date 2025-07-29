@@ -581,9 +581,23 @@ pub struct EnvironmentVariables {
     pub disable_update_env_var: String,
     /// Environment variable to disable modifying the path
     pub no_modify_path_env_var: String,
+    /// Environment variable to make the installer more quiet
+    pub print_quiet_env_var: String,
+    /// Environment variable to make teh installer more verbose
+    pub print_verbose_env_var: String,
+    /// Environment variable to override the URL to download from
+    ///
+    /// This trumps the base_url env vars below.
+    pub download_url_env_var: String,
     /// Environment variable to set the GitHub base URL
+    ///
+    /// `{owner}/{repo}` will be added to the end of this value to
+    /// construct the installer_download_url.
     pub github_base_url_env_var: String,
     /// Environment variable to set the GitHub Enterprise base URL
+    ///
+    /// `{owner}/{repo}` will be added to the end of this value to
+    /// construct the installer_download_url.
     pub ghe_base_url_env_var: String,
     /// Environment variable to set the GitHub BEARER token when fetching archives
     pub github_token_env_var: String,
@@ -940,8 +954,11 @@ impl DistManifest {
         } else {
             let env_app_name = name.to_ascii_uppercase().replace('-', "_");
             let install_dir_env_var = format!("{env_app_name}_INSTALL_DIR");
+            let download_url_env_var = format!("{env_app_name}_DOWNLOAD_URL");
             let unmanaged_dir_env_var = format!("{env_app_name}_UNMANAGED_INSTALL");
             let disable_update_env_var = format!("{env_app_name}_DISABLE_UPDATE");
+            let print_quiet_env_var = format!("{env_app_name}_PRINT_QUIET");
+            let print_verbose_env_var = format!("{env_app_name}_PRINT_VERBOSE");
             let no_modify_path_env_var = format!("{env_app_name}_NO_MODIFY_PATH");
             let github_base_url_env_var = format!("{env_app_name}_INSTALLER_GITHUB_BASE_URL");
             let ghe_base_url_env_var = format!("{env_app_name}_INSTALLER_GHE_BASE_URL");
@@ -949,8 +966,11 @@ impl DistManifest {
 
             let environment_variables = EnvironmentVariables {
                 install_dir_env_var,
+                download_url_env_var,
                 unmanaged_dir_env_var,
                 disable_update_env_var,
+                print_quiet_env_var,
+                print_verbose_env_var,
                 no_modify_path_env_var,
                 github_base_url_env_var,
                 ghe_base_url_env_var,
