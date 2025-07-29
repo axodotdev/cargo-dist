@@ -583,7 +583,7 @@ pub struct EnvironmentVariables {
     pub no_modify_path_env_var: String,
     /// Environment variable to make the installer more quiet
     pub print_quiet_env_var: String,
-    /// Environment variable to make teh installer more verbose
+    /// Environment variable to make the installer more verbose
     pub print_verbose_env_var: String,
     /// Environment variable to override the URL to download from
     ///

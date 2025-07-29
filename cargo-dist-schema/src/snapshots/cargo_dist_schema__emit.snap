@@ -763,7 +763,7 @@ expression: json_schema
           "type": "string"
         },
         "print_verbose_env_var": {
-          "description": "Environment variable to make teh installer more verbose",
+          "description": "Environment variable to make the installer more verbose",
           "type": "string"
         },
         "unmanaged_dir_env_var": {
