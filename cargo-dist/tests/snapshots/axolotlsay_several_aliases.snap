@@ -1,7 +1,6 @@
 ---
 source: cargo-dist/tests/gallery/dist/snapshot.rs
 expression: self.payload
-snapshot_kind: text
 ---
 ================ axolotlsay-installer.sh ================
 #!/bin/sh
@@ -36,13 +35,23 @@ if [ -n "${AXOLOTLSAY_INSTALLER_GHE_BASE_URL:-}" ]; then
 else
     INSTALLER_BASE_URL="${AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL:-https://github.com}"
 fi
-if [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
+if [ -n "${AXOLOTLSAY_DOWNLOAD_URL:-}" ]; then
+    ARTIFACT_DOWNLOAD_URL="$AXOLOTLSAY_DOWNLOAD_URL"
+elif [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
     ARTIFACT_DOWNLOAD_URL="$INSTALLER_DOWNLOAD_URL"
 else
     ARTIFACT_DOWNLOAD_URL="${INSTALLER_BASE_URL}/axodotdev/axolotlsay/releases/download/v0.2.2"
 fi
-PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
-PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
+if [ -n "${AXOLOTLSAY_PRINT_VERBOSE:-}" ]; then
+    PRINT_VERBOSE="$AXOLOTLSAY_PRINT_VERBOSE"
+else
+    PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
+fi
+if [ -n "${AXOLOTLSAY_PRINT_QUIET:-}" ]; then
+    PRINT_QUIET="$AXOLOTLSAY_PRINT_QUIET"
+else
+    PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
+fi
 if [ -n "${AXOLOTLSAY_NO_MODIFY_PATH:-}" ]; then
     NO_MODIFY_PATH="$AXOLOTLSAY_NO_MODIFY_PATH"
 else
@@ -3799,6 +3808,9 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "unmanaged_dir_env_var": "AXOLOTLSAY_UNMANAGED_INSTALL",
         "disable_update_env_var": "AXOLOTLSAY_DISABLE_UPDATE",
         "no_modify_path_env_var": "AXOLOTLSAY_NO_MODIFY_PATH",
+        "print_quiet_env_var": "AXOLOTLSAY_PRINT_QUIET",
+        "print_verbose_env_var": "AXOLOTLSAY_PRINT_VERBOSE",
+        "download_url_env_var": "AXOLOTLSAY_DOWNLOAD_URL",
         "github_base_url_env_var": "AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL",
         "ghe_base_url_env_var": "AXOLOTLSAY_INSTALLER_GHE_BASE_URL",
         "github_token_env_var": "AXOLOTLSAY_GITHUB_TOKEN"
