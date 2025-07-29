@@ -679,11 +679,14 @@ expression: json_schema
       "type": "object",
       "required": [
         "disable_update_env_var",
+        "download_url_env_var",
         "ghe_base_url_env_var",
         "github_base_url_env_var",
         "github_token_env_var",
         "install_dir_env_var",
         "no_modify_path_env_var",
+        "print_quiet_env_var",
+        "print_verbose_env_var",
         "unmanaged_dir_env_var"
       ],
       "properties": {
@@ -691,12 +694,16 @@ expression: json_schema
           "description": "Environment variable to disable updater features",
           "type": "string"
         },
+        "download_url_env_var": {
+          "description": "Environment variable to override the URL to download from\n\nThis trumps the base_url env vars below.",
+          "type": "string"
+        },
         "ghe_base_url_env_var": {
-          "description": "Environment variable to set the GitHub Enterprise base URL",
+          "description": "Environment variable to set the GitHub Enterprise base URL\n\n`{owner}/{repo}` will be added to the end of this value to construct the installer_download_url.",
           "type": "string"
         },
         "github_base_url_env_var": {
-          "description": "Environment variable to set the GitHub base URL",
+          "description": "Environment variable to set the GitHub base URL\n\n`{owner}/{repo}` will be added to the end of this value to construct the installer_download_url.",
           "type": "string"
         },
         "github_token_env_var": {
@@ -709,6 +716,14 @@ expression: json_schema
         },
         "no_modify_path_env_var": {
           "description": "Environment variable to disable modifying the path",
+          "type": "string"
+        },
+        "print_quiet_env_var": {
+          "description": "Environment variable to make the installer more quiet",
+          "type": "string"
+        },
+        "print_verbose_env_var": {
+          "description": "Environment variable to make the installer more verbose",
           "type": "string"
         },
         "unmanaged_dir_env_var": {

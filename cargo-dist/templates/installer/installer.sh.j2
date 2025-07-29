@@ -30,13 +30,23 @@ if [ -n "{{ '${' }}{{ env_vars.ghe_base_url_env_var }}:-}" ]; then
 else
     INSTALLER_BASE_URL="{{ '${' }}{{ env_vars.github_base_url_env_var }}:-{{ hosting.github.artifact_base_url }}}"
 fi
-if [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
+if [ -n "{{ '${' }}{{ env_vars.download_url_env_var }}:-}" ]; then
+    ARTIFACT_DOWNLOAD_URL="${{ env_vars.download_url_env_var }}"
+elif [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
     ARTIFACT_DOWNLOAD_URL="$INSTALLER_DOWNLOAD_URL"
 else
     ARTIFACT_DOWNLOAD_URL="${INSTALLER_BASE_URL}{{ hosting.github.artifact_download_path }}"
 fi
-PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
-PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
+if [ -n "{{ '${' }}{{ env_vars.print_verbose_env_var }}:-}" ]; then
+    PRINT_VERBOSE="${{ env_vars.print_verbose_env_var }}"
+else
+    PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
+fi
+if [ -n "{{ '${' }}{{ env_vars.print_quiet_env_var }}:-}" ]; then
+    PRINT_QUIET="${{ env_vars.print_quiet_env_var }}"
+else
+    PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
+fi
 if [ -n "{{ '${' }}{{ env_vars.no_modify_path_env_var }}:-}" ]; then
     NO_MODIFY_PATH="${{ env_vars.no_modify_path_env_var }}"
 else

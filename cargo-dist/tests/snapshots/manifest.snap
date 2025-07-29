@@ -20,6 +20,9 @@ stdout:
         "unmanaged_dir_env_var": "DIST_UNMANAGED_INSTALL",
         "disable_update_env_var": "DIST_DISABLE_UPDATE",
         "no_modify_path_env_var": "DIST_NO_MODIFY_PATH",
+        "print_quiet_env_var": "DIST_PRINT_QUIET",
+        "print_verbose_env_var": "DIST_PRINT_VERBOSE",
+        "download_url_env_var": "DIST_DOWNLOAD_URL",
         "github_base_url_env_var": "DIST_INSTALLER_GITHUB_BASE_URL",
         "ghe_base_url_env_var": "DIST_INSTALLER_GHE_BASE_URL",
         "github_token_env_var": "DIST_GITHUB_TOKEN"
