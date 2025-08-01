@@ -1,6 +1,7 @@
 # Unreleased
 
 * Fixed bug in recursive-tarball setting (now handles non-ascii paths correctly)
+* All supported `INSTALLER_*` env vars now have a preferred equivalent `{APP_NAME}_*` env var for shell and powershell installers.
 
 # Version 0.28.6 (2025-06-09)
 
