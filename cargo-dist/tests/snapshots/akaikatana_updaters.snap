@@ -1619,7 +1619,9 @@ if ($env:AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL) {
 } else {
   $installer_base_url = "https://github.com"
 }
-if ($env:INSTALLER_DOWNLOAD_URL) {
+if ($env:AKAIKATANA_REPACK_DOWNLOAD_URL) {
+  $ArtifactDownloadUrl = $env:AKAIKATANA_REPACK_DOWNLOAD_URL
+} elseif ($env:INSTALLER_DOWNLOAD_URL) {
   $ArtifactDownloadUrl = $env:INSTALLER_DOWNLOAD_URL
 } else {
   $ArtifactDownloadUrl = "$installer_base_url/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
