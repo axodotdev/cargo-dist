@@ -2,6 +2,78 @@
 
 Nothing Yet!
 
+# Version 0.29.0 (2025-07-31)
+
+This is a big release! 0.29.0 includes all of the new features from Astral's fork of dist along with some new bugfixes. It also removes support for Axo Releases.
+
+## Pinning GitHub Actions to commits
+
+By default, dist uses "floating" Actions using versioned tags such as `actions/checkout@v4`. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits).
+
+- impl @Gankra [feat: add github-action-commits config](https://github.com/axodotdev/cargo-dist/pull/1944)
+
+## Recursive source tarballs, including the contents of submodules
+
+While we've had support for source tarballs since [0.5.0](https://github.com/axodotdev/cargo-dist/releases/tag/v0.5.0), those tarballs have been limited to the contents of the base repository and didn't contain the contents of submodules. (This is a limitation of the `git archive` tool that we use to generate them.) This release adds support for recursive tarballs that include the contents of submodules as well. This feature is opt-in and can be enabled with the `recursive-tarballs = true` setting. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#recursive-tarball).
+
+- impl @Gankra [feat: add recursive-tarballs](https://github.com/axodotdev/cargo-dist/pull/1966)
+
+## Support cross-compiling from Windows to Windows
+
+In previous versions, dist would refuse to cross-compile from one Windows architecture to another. This release fixes that and allows the build to be attempted. We still default to cross-compiling via `cargo-xwin`; users who would like to try this will need to configure their builds to use a Windows runner. For example:
+
+```toml
+[dist.github-custom-runners.aarch64-pc-windows-msvc]
+runner = "windows-2025"
+```
+
+- impl @baszalmstra [fix: allow cross compiling from windows to windows](https://github.com/axodotdev/cargo-dist/pull/1962)
+
+## Installer improvements
+
+We've improved compatibility for the shell installer by bringing in newer changes from the Rustup installer it was originally based on. We've also improved compatibility with Linux distributions that don't use the `$HOME` environment variable.
+
+- impl @Gankra [feat: improve installer.sh with changes from rustup](https://github.com/axodotdev/cargo-dist/pull/1958)
+- impl @konstin [feat: support Linux distros that don't set HOME](https://github.com/axodotdev/cargo-dist/pull/1968)
+
+## BYO GitHub bearer token for installers
+
+In addition to the above, we now allow users to bring their own GitHub token to be used when fetching tarballs from GitHub. This is useful for users who are often rate-limited when downloading artifacts or who need to fetch artifacts from private repositories. Like our other environment variables, this is branded with your application's name in the format `{APP_NAME}_GITHUB_TOKEN`. This environment variable is supported in both the shell and PowerShell installers. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/installers/usage.html?highlight=bearer#github-bearer-token).
+
+- impl @Gankra [feat: add `{APP_NAME}_GITHUB_TOKEN` install env-var](https://github.com/axodotdev/cargo-dist/pull/1956)
+
+## Reduce unnecessary credentials persistence in Actions config
+
+This release includes some tweaks to generated Actions config in order to reduce the risk of accidentally persisting credentials longer in the run than necessary. This is always enabled and doesn't require configuration to opt into.
+
+- impl @Gankra [feat: add persist-credentials: false to checkouts](https://github.com/axodotdev/cargo-dist/pull/1948)
+
+## Allow overriding binaries per-platform
+
+It's now possible to override the set of binaries to install on a per-platform basis. For example, a project with three binaries may choose to only install two of them on Windows, or may choose to provide an extra binary on other platforms. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#binaries).
+
+- impl @Gankra [feat: allow overriding per-platform binaries](https://github.com/axodotdev/cargo-dist/pull/1946)
+
+## New setting for overriding packages to dist
+
+A new top-level option, `packages`, allows specifying a list of exactly which packages should be disted. This overrides any individual `dist = true` or `dist = false` set in individual packages, and can be easier to reason about. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html?highlight=packages#packages).
+
+- impl @Gankra [feat: add packages override for externally setting dist=true/false](https://github.com/axodotdev/cargo-dist/pull/1960)
+
+## Overriding package versions
+
+The new top-level `version` option overrides the individually-configuredversions for every package and instead causes dist to assume every package has the specified version. For more information, see [the docs]().
+
+- impl @Gankra [feat: add workspace.version override](https://github.com/axodotdev/cargo-dist/pull/1964)
+
+## Fixes
+
+- impl @mistydemeo
+  - [fix: mark homebrew with persist-credentials](https://github.com/axodotdev/cargo-dist/pull/1949)
+  - [fix: don't write unified checksum with no checksums](https://github.com/axodotdev/cargo-dist/pull/1971)
+- impl @cibyr [fix(axoproject): allow building without generic-projects](https://github.com/axodotdev/cargo-dist/pull/1978)
+
+
 # Version 0.28.2 (2025-07-22)
 
 This release updates dependencies and contains no substantive code changes.
