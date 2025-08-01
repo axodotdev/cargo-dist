@@ -8,7 +8,7 @@ This is a big release! 0.29.0 includes all of the new features from Astral's for
 
 ## Pinning GitHub Actions to commits
 
-By default, dist uses "floating" Actions using versioned tags such as `actions/checkout@v4`. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits).
+By default, dist uses Actions via floating versioned tags such as `actions/checkout@v4`. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits).
 
 - impl @Gankra [feat: add github-action-commits config](https://github.com/axodotdev/cargo-dist/pull/1944)
 
