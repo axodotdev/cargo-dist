@@ -5,21 +5,8 @@
   "build": {
     "path_prefix": "cargo-dist"
   },
-  "marketing": {
-    "social": {
-      "image": "https://www.axo.dev/meta_small.jpeg",
-      "image_alt": "axo",
-      "twitter_account": "@axodotdev"
-    },
-    "analytics": {
-      "plausible": {
-        "domain": "opensource.axo.dev"
-      }
-    }
-  },
   "styles": {
-    "theme": "axo_dark",
-    "favicon": "https://www.axo.dev/favicon.ico"
+    "theme": "axo_dark"
   },
   "components": {
     "changelog": true,
