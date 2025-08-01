@@ -1602,7 +1602,9 @@ if ($env:AXOLOTLSAY_INSTALLER_GHE_BASE_URL) {
 } else {
   $installer_base_url = "https://github.com"
 }
-if ($env:INSTALLER_DOWNLOAD_URL) {
+if ($env:AXOLOTLSAY_DOWNLOAD_URL) {
+  $ArtifactDownloadUrl = $env:AXOLOTLSAY_DOWNLOAD_URL
+} elseif ($env:INSTALLER_DOWNLOAD_URL) {
   $ArtifactDownloadUrl = $env:INSTALLER_DOWNLOAD_URL
 } else {
   $ArtifactDownloadUrl = "$installer_base_url/axodotdev/axolotlsay/releases/download/v0.2.2"
