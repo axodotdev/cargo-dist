@@ -14,7 +14,9 @@ lazy_static::lazy_static! {
 
         //-------- linux
         m.insert(GithubRunnerRef::from_str("ubuntu-22.04"), t::TARGET_X64_LINUX_GNU);
+        m.insert(GithubRunnerRef::from_str("ubuntu-22.04-arm"), t::TARGET_ARM64_LINUX_GNU);
         m.insert(GithubRunnerRef::from_str("ubuntu-24.04"), t::TARGET_X64_LINUX_GNU);
+        m.insert(GithubRunnerRef::from_str("ubuntu-24.04-arm"), t::TARGET_ARM64_LINUX_GNU);
         m.insert(GithubRunnerRef::from_str("ubuntu-latest"), t::TARGET_X64_LINUX_GNU);
 
         //-------- windows
