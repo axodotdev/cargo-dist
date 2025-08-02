@@ -37,7 +37,7 @@ miette = { version = "7.6.0" }
 thiserror = "2.0.12"
 tracing = { version = "0.1.41", features = ["log"] }
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = { version = "1.0.141" }
+serde_json = { version = "1.0.142" }
 cargo_metadata = "0.19.2"
 camino = { version = "1.1.10", features = ["serde1"] }
 semver = "1.0.26"
