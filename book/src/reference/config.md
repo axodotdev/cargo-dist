@@ -76,6 +76,8 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [github hosting settings](#github-hosting-settings)
     * [`create-release`](#create-release)
     * [`github-attestations`](#github-attestations)
+    * [`github-attestations-phase`](#github-attestations-phase)
+    * [`github-attestations-filters`](#github-attestations-filters)
     * [`github-release`](#github-release)
     * [`github-releases-repo`](#github-releases-repo)
     * [`github-releases-submodule-path`](#github-releases-submodule-path)
@@ -1071,6 +1073,39 @@ These settings govern how we host your files on [GitHub Releases][github-release
 
 If you're using GitHub Releases, this will enable GitHub's experimental artifact attestation feature.
 
+#### `github-attestations-phase`
+
+> <span style="float:right">since 0.30.0<br>[global-only][]</span>
+> 🔧 this is an experimental feature! \
+> [📖 read the guide for this feature!](../supplychain-security/attestations/github.md) \
+> default = `"build-local-artifacts"`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> github-attestations-phase = "host"
+> ```
+
+Possible values:
+
+* `host`: Create the GitHub Attestations during the `host` phase.
+* `build-local-artifacts`: Create the GitHub Attestations during the `build-local-artifacts` phase (default).
+
+
+#### `github-attestations-filters`
+
+> <span style="float:right">since 0.30.0<br>[global-only][]</span>
+> 🔧 this is an experimental feature! \
+> [📖 read the guide for this feature!](../supplychain-security/attestations/github.md) \
+> default = `["*"]`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> github-attestations-filters = ["*.json", "*.sh", "*.ps1", "*.zip", "*.tar.gz"]
+> ```
+
+Allows filtering GitHub Attestations in the `host` phase. All patterns are globed against the pattern `artifacts/{filter}`.
 
 #### `github-release`
 
