@@ -1954,7 +1954,7 @@ windows-archive = ".tar.gz"
 [workspace.metadata.dist.github-custom-runners]
 x86_64-pc-windows-msvc.container = "messense/cargo-xwin"
 aarch64-pc-windows-msvc.container = "messense/cargo-xwin"
-# aarch64-unknown-linux-gnu should work out of the box
+aarch64-unknown-linux-gnu = "ubuntu-22.04"
 "#
         ))?;
 

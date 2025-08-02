@@ -2542,7 +2542,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "cache_provider": "github"
           },
           {
-            "runner": "ubuntu-22.04-arm",
+            "runner": "ubuntu-22.04",
             "host": "x86_64-unknown-linux-gnu",
             "install_dist": {
               "shell": "sh",
