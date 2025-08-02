@@ -1,0 +1,8 @@
+{
+  "$id": "https://axodotdev.github.io/cargo-dist/schemas/dist-manifest/v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cargo-dist DistManifest (v1)",
+  "type": "object",
+  "additionalProperties": true,
+  "description": "Loose schema placeholder for DistManifest v1; concrete fields are validated by cargo-dist-schema."
+}

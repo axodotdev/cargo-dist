@@ -108,6 +108,9 @@ pub struct Cli {
 
 #[derive(Subcommand, Clone, Debug)]
 pub enum Commands {
+    /// Generate a release preview report (JSON and optional HTML)
+    #[clap(disable_version_flag = true)]
+    Report(ReportArgs),
     /// Build artifacts
     #[clap(disable_version_flag = true)]
     Build(BuildArgs),

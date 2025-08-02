@@ -1,0 +1,27 @@
+name: Quality
+on:
+  pull_request:
+  push:
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v1
+      - name: llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: llvm-tools-preview,cargo-llvm-cov
+      - name: test with coverage
+        run: cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
+      - name: upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: lcov.info

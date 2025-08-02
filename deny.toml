@@ -1,0 +1,14 @@
+# cargo-deny configuration (minimal hardening)
+[advisories]
+vulnerability = "deny"
+unmaintained = "warn"
+yanked = "warn"
+unsound = "deny"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

@@ -11,6 +11,7 @@ use camino::Utf8PathBuf;
 // Import everything from the lib version of ourselves
 use cargo_dist::{linkage::LinkageDisplay, *};
 use cargo_dist_schema::{AssetKind, DistManifest};
+const SCHEMA_URL: &str = "https://axodotdev.github.io/cargo-dist/schemas/dist-manifest/v1.json";
 use clap::Parser;
 use cli::{
     Cli, Commands, GenerateMode, HelpMarkdownArgs, HostArgs, ManifestArgs, OutputFormat, PlanArgs,
@@ -55,6 +56,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::Linkage(args) => cmd_linkage(config, args),
         Commands::Manifest(args) => cmd_manifest(config, args),
         Commands::Plan(args) => cmd_plan(config, args),
+        Commands::Report(args) => cmd_report(config, args),
         Commands::HelpMarkdown(args) => cmd_help_md(config, args),
         Commands::ManifestSchema(args) => cmd_manifest_schema(config, args),
         Commands::Build(args) => cmd_build(config, args),
@@ -207,10 +209,15 @@ fn print_human_artifact_path(
 }
 
 fn print_json(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Error> {
-    let string = serde_json::to_string_pretty(report).unwrap();
+    let mut value = serde_json::to_value(report).unwrap();
+    if let serde_json::Value::Object(ref mut map) = value {
+        map.insert("$schema".to_string(), serde_json::Value::String(SCHEMA_URL.to_string()));
+    }
+    let string = serde_json::to_string_pretty(&value).unwrap();
     writeln!(out, "{string}")?;
     Ok(())
 }
+
 
 fn print_human_linkage(out: &mut Term, report: &DistManifest) -> Result<(), std::io::Error> {
     writeln!(out, "{}", LinkageDisplay(report))
@@ -820,5 +827,77 @@ async fn cmd_update(_config: &Cli, args: &cli::UpdateArgs) -> Result<(), miette:
         return Ok(());
     }
 
+    Ok(())
+}
+
+#[derive(clap::Args, Clone, Debug)]
+pub struct ReportArgs {
+    /// Output directory for the report files
+    #[clap(long)]
+    pub output_dir: Option<Utf8PathBuf>,
+    /// Also render HTML report (in addition to JSON)
+    #[clap(long)]
+    pub html: bool,
+}
+
+fn cmd_report(cli: &Cli, args: &ReportArgs) -> Result<(), miette::Report> {
+    let cfg = &cli.config;
+    let manifest = cargo_dist::do_manifest(cfg)?;
+    // Build a simplified JSON report
+    #[derive(serde::Serialize)]
+    struct ArtifactRow<'a> {
+        package: &'a str,
+        version: &'a str,
+        target: String,
+        kind: String,
+        filename: String,
+        checksum: Option<String>,
+    }
+    let mut targets = std::collections::BTreeSet::new();
+    let mut rows = Vec::new();
+    for art in &manifest.artifacts {
+        targets.insert(art.target.to_string());
+        rows.push(ArtifactRow {
+            package: art.package.as_str(),
+            version: art.version.as_str(),
+            target: art.target.to_string(),
+            kind: format!("{:?}", art.kind),
+            filename: art.file_name.as_str().to_string(),
+            checksum: art.checksum.as_ref().map(|c| c.to_string()),
+        });
+    }
+    #[derive(serde::Serialize)]
+    struct Summary {
+        apps: usize,
+        artifacts: usize,
+        targets: Vec<String>,
+    }
+    let summary = Summary {
+        apps: manifest.releases.len(),
+        artifacts: manifest.artifacts.len(),
+        targets: targets.into_iter().collect(),
+    };
+    let report_json = serde_json::json!({
+        "$schema": SCHEMA_URL,
+        "summary": summary,
+        "artifacts": rows,
+    });
+    let out_dir = args.output_dir.clone().unwrap_or_else(|| Utf8PathBuf::from("target/dist"));
+    std::fs::create_dir_all(&out_dir).ok();
+    let json_path = out_dir.join("release_report.json");
+    std::fs::write(&json_path, serde_json::to_string_pretty(&report_json).unwrap())?;
+
+    if args.html {
+        let templates = cargo_dist::backend::templates::Templates::new()?;
+        #[derive(serde::Serialize)]
+        struct HtmlCtx<'a> {
+            summary: &'a Summary,
+            artifacts: &'a [ArtifactRow<'a>],
+        }
+        let html_ctx = HtmlCtx { summary: &summary, artifacts: &rows };
+        let html = templates.render_file_to_clean_string("report/report.html", &html_ctx)?;
+        let html_path = out_dir.join("release_report.html");
+        std::fs::write(&html_path, html)?;
+    }
     Ok(())
 }
