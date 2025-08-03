@@ -13,7 +13,7 @@ const error = (msg) => {
 };
 
 class Package {
-  constructor(name, url, filename, zipExt, binaries) {
+  constructor(platform, name, url, filename, zipExt, binaries) {
     let errors = [];
     if (typeof url !== "string") {
       errors.push("url must be a string");
@@ -47,6 +47,8 @@ class Package {
         '\n\nCorrect usage: new Package("my-binary", "https://example.com/binary/download.tar.gz", {"my-binary": "my-binary"})';
       error(errorMsg);
     }
+
+    this.platform = platform;
     this.url = url;
     this.name = name;
     this.filename = filename;
@@ -122,12 +124,29 @@ class Package {
                   );
                 }
               } else if (this.zipExt == ".zip") {
-                const result = spawnSync("unzip", [
-                  "-q",
-                  tempFile,
-                  "-d",
-                  this.installDirectory,
-                ]);
+                let result;
+                if (this.platform.includes('windows')) {
+                  // Windows does not have "unzip" by default on many installations, instead
+                  // we use Expand-Archive from powershell
+                  result = spawnSync(
+                    "powershell.exe",
+                    [
+                      "-NoProfile",
+                      "-NonInteractive",
+                      "-Command",
+                      `Expand-Archive -LiteralPath '${tempFile}' -DestinationPath '${this.installDirectory}' -Force`,
+                    ]
+                  );
+                } else {
+                  result = spawnSync("unzip", [
+                    "-q",
+                    tempFile,
+                    "-d",
+                    this.installDirectory,
+                  ]);
+                }
+
+
                 if (result.status == 0) {
                   resolve();
                 } else if (result.error) {
