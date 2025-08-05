@@ -125,18 +125,15 @@ class Package {
                 }
               } else if (this.zipExt == ".zip") {
                 let result;
-                if (this.platform.includes('windows')) {
+                if (this.platform.includes("windows")) {
                   // Windows does not have "unzip" by default on many installations, instead
                   // we use Expand-Archive from powershell
-                  result = spawnSync(
-                    "powershell.exe",
-                    [
-                      "-NoProfile",
-                      "-NonInteractive",
-                      "-Command",
-                      `Expand-Archive -LiteralPath '${tempFile}' -DestinationPath '${this.installDirectory}' -Force`,
-                    ]
-                  );
+                  result = spawnSync("powershell.exe", [
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    `Expand-Archive -LiteralPath '${tempFile}' -DestinationPath '${this.installDirectory}' -Force`,
+                  ]);
                 } else {
                   result = spawnSync("unzip", [
                     "-q",
@@ -145,7 +142,6 @@ class Package {
                     this.installDirectory,
                   ]);
                 }
-
 
                 if (result.status == 0) {
                   resolve();
