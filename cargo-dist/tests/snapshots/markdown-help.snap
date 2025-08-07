@@ -121,14 +121,14 @@ If let unspecified, we will pick a fuzzier "host" mode that builds "as much as p
 
 The specifics of "host" mode are intentionally unspecified to enable us to provider better out-of-the-box UX for local usage. In CI environments you should always specify "global" or "local" to get consistent behaviour!
 
-\[default: host]  
-
 Possible values:
 - local:  Build target-specific artifacts like archives and msi installers
 - global: Build unique artifacts like curl-sh installers and npm packages
 - host:   Fuzzily build "as much as possible" for the host system
 - all:    Build all the artifacts; useful for `dist manifest`
 - lies:   Fake all the artifacts; useful for testing/mocking/staging
+
+\[default: host]  
 
 #### `-p, --print <PRINT>`
 What extra information to print, if anything. Currently supported:
@@ -279,14 +279,14 @@ If let unspecified, we will pick a fuzzier "host" mode that builds "as much as p
 
 The specifics of "host" mode are intentionally unspecified to enable us to provider better out-of-the-box UX for local usage. In CI environments you should always specify "global" or "local" to get consistent behaviour!
 
-\[default: host]  
-
 Possible values:
 - local:  Build target-specific artifacts like archives and msi installers
 - global: Build unique artifacts like curl-sh installers and npm packages
 - host:   Fuzzily build "as much as possible" for the host system
 - all:    Build all the artifacts; useful for `dist manifest`
 - lies:   Fake all the artifacts; useful for testing/mocking/staging
+
+\[default: host]  
 
 #### `-p, --print <PRINT>`
 What extra information to print, if anything. Currently supported:
