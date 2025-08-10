@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>updater - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html" class="active"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/installers/updater.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="self-updater"><a class="header" href="#self-updater">Self-updater</a></h1>
+<blockquote>
+<p>since 0.12.0</p>
+</blockquote>
+<p>NOTE: This feature is currently experimental.</p>
+<p>Ordinarily, your users will need to visit your website and download an installer for the latest release in order to upgrade. Users who installed your software via a package manager, like Homebrew and npm, can use that package manager to upgrade to the latest release. For users of the <a href="./shell.html">shell</a> and <a href="./powershell.html">PowerShell</a> installers, you can provide your users with a standalone installation program to upgrade more conveniently.</p>
+<p>If you add <code>install-updater = true</code> to your <code>Cargo.toml</code>, dist's shell and PowerShell installers will include an updater program alongside your program itself. This standalone program will be installed as the name <code>yourpackage-update</code>, and users can simply run it to poll for new releases and have them installed. The source code for this program is open source in the <a href="https://github.com/axodotdev/axoupdater">axoupdater</a> repository.</p>
+<p>Users will interact with this updater by running the <code>yourpackage-update</code> command. It takes no options or arguments, and will automatically perform an upgrade without further input from the user. If your program supports custom external subcommands via the executable naming structure, like <code>git</code> and <code>cargo</code> do, then your user can also run <code>yourpackage update</code>. Here's a sample <code>axolotlsay-update</code> session as a demonstration of what your users will experience:</p>
+<pre><code>$ axolotlsay-update
+Checking for updates...
+downloading axolotlsay 0.2.114 aarch64-apple-darwin
+installing to /Users/mistydemeo/.cargo/bin
+  axolotlsay
+  axolotlsay-update
+everything's installed!
+New release installed!
+</code></pre>
+<p>If you would prefer to handle polling for updates yourself, for example in order to incorporate it as an internal subcommand of your own software, axoupdater is available as a <a href="https://crates.io/crates/axoupdater">crate</a> which can be used as a library within your program. More information about how to use axoupdater as a library in your own program can be found in its README and in its <a href="https://docs.rs/axoupdater/">API documentation</a>.</p>
+<h2 id="minimum-supported-version-checking"><a class="header" href="#minimum-supported-version-checking">Minimum supported version checking</a></h2>
+<p>While dist will always fetch up to date versions of the updater when building your software, if you use axoupdater as a library then it's important to make sure that it's kept up to date to ensure compatibility. To help you test this, dist will attempt to check if the packages it's disting use axoupdater as a dependency; if it detects an unsupported, too-old version of axoupdater is in use, it will then refuse to continue to build in order to avoid distributing a package that's unsafe to update.</p>
+<h2 id="github-actions-and-rate-limits-in-ci"><a class="header" href="#github-actions-and-rate-limits-in-ci">GitHub Actions and Rate Limits in CI</a></h2>
+<p>By default, axoupdater uses unauthenticated GitHub API calls when fetching release information. This is reliable in normal use, but it's much more likely to run into rate limits in the highly artificial environment of a CI test. If you're testing the standalone updater in your CI configuration, we recommend setting the <code>AXOUPDATER_GITHUB_TOKEN</code> environment variable to the value of the <code>GITHUB_TOKEN</code> secret that GitHub Action defines automatically.</p>
+<pre><code class="language-yaml">env:
+  AXOUPDATER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+</code></pre>
+<p>A sample in dist's CI configuration can be found <a href="https://github.com/axodotdev/cargo-dist/blob/80f2e19e5aa79b7b1f64beb62ceb07aa71566707/.github/workflows/ci.yml#L82-L85">here</a>.</p>
+<p>If you use the axoupdater crate to implement the updater yourself, instructions for opting into a token in CI can be found <a href="https://github.com/axodotdev/axoupdater?tab=readme-ov-file#github-actions-and-rate-limits-in-ci">here</a>.</p>
+<h2 id="releases-with-issues-surrounding-the-standalone-updater"><a class="header" href="#releases-with-issues-surrounding-the-standalone-updater">Releases with issues surrounding the standalone updater</a></h2>
+<p>dist versions 0.21.1, 0.22.0 and 0.22.1 contain a bug which prevents the shell installer from installing the standalone updater alongside your binaries. This bug doesn't affect the PowerShell installer. Users of installers created with these releases will have had your software installed as normal, but won't have received an updater. Users whose first installation came via one of these installers will need to upgrade manually using a new shell installer.</p>
+<p>Users who first installed with an installer created with an older dist will still have their updater from their original installation, and so they will be able to update as normal.</p>
+<p>This issue was resolved in dist 0.23.0.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../installers/msi.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../installers/usage.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../installers/msi.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../installers/usage.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
