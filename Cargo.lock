@@ -137,7 +137,7 @@ dependencies = [
  "serde_json",
  "serde_yml",
  "tar",
- "thiserror 2.0.14",
+ "thiserror 2.0.15",
  "toml",
  "toml_edit",
  "url",
@@ -159,7 +159,7 @@ dependencies = [
  "miette 7.6.0",
  "serde",
  "serde_json",
- "thiserror 2.0.14",
+ "thiserror 2.0.15",
  "tracing",
  "tracing-subscriber",
 ]
@@ -171,7 +171,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a4b4798a6c02e91378537c63cd6e91726900b595450daa5d487bc3c11e95e1b"
 dependencies = [
  "miette 7.6.0",
- "thiserror 2.0.14",
+ "thiserror 2.0.15",
  "tracing",
 ]
 
@@ -192,7 +192,7 @@ dependencies = [
  "pathdiff",
  "semver",
  "serde",
- "thiserror 2.0.14",
+ "thiserror 2.0.15",
  "tracing",
  "url",
 ]
@@ -205,7 +205,7 @@ checksum = "dc923121fbc4cc72e9008436b5650b98e56f94b5799df59a1b4f572b5c6a7e6b"
 dependencies = [
  "miette 7.6.0",
  "semver",
- "thiserror 2.0.14",
+ "thiserror 2.0.15",
 ]
 
 [[package]]
@@ -223,7 +223,7 @@ dependencies = [
  "self-replace",
  "serde",
  "tempfile",
- "thiserror 2.0.14",
+ "thiserror 2.0.15",
  "url",
 ]
 
@@ -419,7 +419,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "thiserror 2.0.14",
+ "thiserror 2.0.15",
 ]
 
 [[package]]
@@ -826,7 +826,7 @@ dependencies = [
  "spdx",
  "tar",
  "temp-dir",
- "thiserror 2.0.14",
+ "thiserror 2.0.15",
  "tokio",
  "tracing",
  "uuid",
@@ -2866,11 +2866,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.14"
+version = "2.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b0949c3a6c842cbde3f1686d6eea5a010516deb7085f79db747562d4102f41e"
+checksum = "80d76d3f064b981389ecb4b6b7f45a0bf9fdac1d5b9204c7bd6714fecc302850"
 dependencies = [
- "thiserror-impl 2.0.14",
+ "thiserror-impl 2.0.15",
 ]
 
 [[package]]
@@ -2886,9 +2886,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.14"
+version = "2.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc5b44b4ab9c2fdd0e0512e6bece8388e214c0749f5862b114cc5b7a25daf227"
+checksum = "44d29feb33e986b6ea906bd9c3559a856983f92371b3eaa5e83782a351623de0"
 dependencies = [
  "proc-macro2",
  "quote",
