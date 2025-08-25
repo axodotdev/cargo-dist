@@ -25,7 +25,7 @@ npm-projects = ["oro-common", "oro-package-spec", "node-semver"]
 [dependencies]
 # it would be nice to inherit these features from workspace
 # but you can't optional inherit workspace deps..?
-guppy = { version = "0.17.10", optional = true }
+guppy = { version = "0.17.13", optional = true }
 oro-common = { version = "0.3.34", optional = true }
 oro-package-spec = { version = "0.3.34", optional = true }
 node-semver = { version = "2.2.0", optional = true }
