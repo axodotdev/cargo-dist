@@ -52,17 +52,17 @@ nix-env -i cargo-dist
 
 ### Other Options
 
-#### cargo-install
-
-```sh
-cargo install cargo-dist
-```
-
 #### cargo-binstall
 
 ```sh
 cargo install cargo-binstall # if you don't have binstall available already
 cargo binstall cargo-dist
+```
+
+#### cargo-install
+
+```sh
+cargo install cargo-dist
 ```
 
 ## Build From Source
