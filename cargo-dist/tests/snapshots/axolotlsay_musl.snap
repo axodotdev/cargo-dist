@@ -1948,7 +1948,10 @@ class Package {
                     "-NoProfile",
                     "-NonInteractive",
                     "-Command",
-                    "& { Expand-Archive -LiteralPath $args[0] -DestinationPath $args[1] -Force }",
+                    `& {
+                        param([string]$LiteralPath, [string]$DestinationPath)
+                        Expand-Archive -LiteralPath $LiteralPath -DestinationPath $DestinationPath -Force
+                    }`,
                     tempFile,
                     this.installDirectory
                   ]);
