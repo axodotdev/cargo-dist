@@ -2679,7 +2679,12 @@ class Package {
                     "-NoProfile",
                     "-NonInteractive",
                     "-Command",
-                    `Expand-Archive -LiteralPath '${tempFile}' -DestinationPath '${this.installDirectory}' -Force`,
+                    `& {
+                        param([string]$LiteralPath, [string]$DestinationPath)
+                        Expand-Archive -LiteralPath $LiteralPath -DestinationPath $DestinationPath -Force
+                    }`,
+                    tempFile,
+                    this.installDirectory,
                   ]);
                 } else {
                   result = spawnSync("unzip", [

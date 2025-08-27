@@ -2598,7 +2598,7 @@ class Package {
                         Expand-Archive -LiteralPath $LiteralPath -DestinationPath $DestinationPath -Force
                     }`,
                     tempFile,
-                    this.installDirectory
+                    this.installDirectory,
                   ]);
                 } else {
                   result = spawnSync("unzip", [
