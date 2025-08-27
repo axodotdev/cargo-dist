@@ -236,6 +236,8 @@ fn get_new_dist_metadata(
             ssldotcom_windows_sign: None,
             macos_sign: None,
             github_attestations: None,
+            github_attestations_filters: None,
+            github_attestations_phase: None,
             msvc_crt_static: None,
             hosting: None,
             extra_artifacts: None,
@@ -738,6 +740,8 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         ssldotcom_windows_sign,
         macos_sign,
         github_attestations,
+        github_attestations_filters,
+        github_attestations_phase,
         msvc_crt_static,
         hosting,
         tag_namespace,
@@ -1118,6 +1122,20 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "github-attestations",
         "# Whether to enable GitHub Attestations\n",
         *github_attestations,
+    );
+
+    apply_string_or_list(
+        table,
+        "github-attestations-filters",
+        "# Patterns to attest when creating attestations for release artifacts\n",
+        github_attestations_filters.as_ref(),
+    );
+
+    apply_optional_value(
+        table,
+        "github-attestations-phase",
+        "# When to generate GitHub Attestations\n",
+        github_attestations_phase.as_ref().map(|p| p.to_string()),
     );
 
     apply_string_or_list(

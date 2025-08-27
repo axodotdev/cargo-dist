@@ -39,6 +39,14 @@ pub struct GithubHostLayer {
     /// Whether GitHub Attestations is enabled (default false)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attestations: Option<bool>,
+
+    /// GitHub Attestation filters (default *)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attestations_filters: Option<GithubAttestationsFilters>,
+
+    /// When to generate GitHub Attestations (default build-local-artifacts)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attestations_phase: Option<GithubAttestationsPhase>,
 }
 /// github host config (final)
 #[derive(Debug, Default, Clone)]
@@ -56,6 +64,10 @@ pub struct GithubHostConfig {
     pub during: GithubReleasePhase,
     /// Whether GitHub Attestations is enabled (default false)
     pub attestations: bool,
+    /// GitHub Attestation filters (default *)
+    pub attestations_filters: GithubAttestationsFilters,
+    /// When to generate GitHub Attestations (default build-local-artifacts)
+    pub attestations_phase: GithubAttestationsPhase,
 }
 
 impl GithubHostConfig {
@@ -68,6 +80,8 @@ impl GithubHostConfig {
             submodule_path: None,
             during: GithubReleasePhase::default(),
             attestations: false,
+            attestations_filters: GithubAttestationsFilters::default(),
+            attestations_phase: GithubAttestationsPhase::default(),
         }
     }
 }
@@ -83,6 +97,8 @@ impl ApplyLayer for GithubHostConfig {
             submodule_path,
             during,
             attestations,
+            attestations_filters,
+            attestations_phase,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -91,6 +107,8 @@ impl ApplyLayer for GithubHostConfig {
         self.submodule_path.apply_opt(submodule_path);
         self.during.apply_val(during);
         self.attestations.apply_val(attestations);
+        self.attestations_filters.apply_val(attestations_filters);
+        self.attestations_phase.apply_val(attestations_phase);
     }
 }
 impl ApplyLayer for GithubHostLayer {
@@ -104,6 +122,8 @@ impl ApplyLayer for GithubHostLayer {
             submodule_path,
             during,
             attestations,
+            attestations_filters,
+            attestations_phase,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
@@ -112,6 +132,8 @@ impl ApplyLayer for GithubHostLayer {
         self.submodule_path.apply_opt(submodule_path);
         self.during.apply_opt(during);
         self.attestations.apply_opt(attestations);
+        self.attestations_filters.apply_opt(attestations_filters);
+        self.attestations_phase.apply_opt(attestations_phase);
     }
 }
 

@@ -8,6 +8,37 @@ Note that GitHub's Artifact Attestations only supports public repositories and p
 
 Currently, verification of GitHub Artifact Attestations is only supported via GitHub CLI with [`gh attestation verify`].
 
+Additionally, you can control which phase attestations occur using the [`github-attestations-phase` setting](../../reference/config.md#github-attestations-phase).
+
+By default, attestations occur during the `build-local-artifacts` phase. This can be alternatively be changed to the `host` phase, which is particularly
+useful when `build-local-artifacts` is set to `false`.
+
+When performing attestations in the `host` phase, you can control what gets attested by using the [`github-attestations-filters` setting](../../reference/config.md#github-attestations-filters).
+
+This setting yields the following attestation step by default:
+
+```yaml
+- name: Attest
+  uses: actions/attest-build-provenance@v2
+  with:
+    subject-path: |
+      artifacts/*
+```
+
+When set to a different set of values such as `github-attestations-filters = ["*.json", "*.sh", "*.ps1", "*.zip", "*.tar.gz"]` it yields:
+
+```yaml
+- name: Attest
+  uses: actions/attest-build-provenance@v2
+  with:
+    subject-path: |
+      artifacts/*.json
+      artifacts/*.sh
+      artifacts/*.ps1
+      artifacts/*.zip
+      artifacts/*.tar.gz
+```
+
 [Artifact Attestations]: https://github.blog/2024-05-02-introducing-artifact-attestations-now-in-public-beta/
 [Sigstore]: https://www.sigstore.dev/
 [Rekor]: https://docs.sigstore.dev/logging/overview/

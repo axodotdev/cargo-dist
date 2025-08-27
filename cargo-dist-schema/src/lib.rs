@@ -226,6 +226,16 @@ pub struct DistManifest {
     #[serde(default)]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub github_attestations: bool,
+    /// Patterns to attest when creating Artifact Attestations
+    #[serde(default)]
+    #[serde(skip_serializing_if = "GithubAttestationsFilters::is_default")]
+    pub github_attestations_filters: GithubAttestationsFilters,
+    /// When to generate Artifact Attestations
+    ///
+    /// Defaults to "build-local-artifacts" for backwards compatibility
+    #[serde(default)]
+    #[serde(skip_serializing_if = "GithubAttestationsPhase::is_default")]
+    pub github_attestations_phase: GithubAttestationsPhase,
 }
 
 /// Information about the build environment on this system
@@ -495,6 +505,58 @@ pub struct GithubLocalJobConfig {
     /// What cache provider to use
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_provider: Option<String>,
+}
+
+/// Used to capture GitHub Attestations filters
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+pub struct GithubAttestationsFilters(Vec<String>);
+
+impl Default for GithubAttestationsFilters {
+    fn default() -> Self {
+        Self(vec!["*".to_string()])
+    }
+}
+
+impl<'a> IntoIterator for &'a GithubAttestationsFilters {
+    type Item = &'a String;
+    type IntoIter = std::slice::Iter<'a, String>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
+
+impl GithubAttestationsFilters {
+    fn is_default(&self) -> bool {
+        *self == Default::default()
+    }
+}
+
+/// Phase in which to generate GitHub attestations
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub enum GithubAttestationsPhase {
+    /// Generate attestations during the `host` phase
+    #[serde(rename = "host")]
+    Host,
+    /// Generate attestations during `build-local-artifacts` (default for backwards compatibility)
+    #[default]
+    #[serde(rename = "build-local-artifacts")]
+    BuildLocalArtifacts,
+}
+
+impl GithubAttestationsPhase {
+    fn is_default(&self) -> bool {
+        matches!(self, GithubAttestationsPhase::BuildLocalArtifacts)
+    }
+}
+
+impl std::fmt::Display for GithubAttestationsPhase {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GithubAttestationsPhase::Host => write!(f, "host"),
+            GithubAttestationsPhase::BuildLocalArtifacts => write!(f, "build-local-artifacts"),
+        }
+    }
 }
 
 /// A GitHub Actions "run" step, either bash or powershell
@@ -871,6 +933,8 @@ impl DistManifest {
             announcement_changelog: None,
             announcement_github_body: None,
             github_attestations: false,
+            github_attestations_filters: Default::default(),
+            github_attestations_phase: Default::default(),
             system_info: None,
             releases,
             artifacts,
