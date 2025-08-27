@@ -125,7 +125,7 @@ class Package {
                 }
               } else if (this.zipExt == ".zip") {
                 let result;
-                if (this.platform.includes("windows")) {
+                if (this.platform.artifactName.includes("windows")) {
                   // Windows does not have "unzip" by default on many installations, instead
                   // we use Expand-Archive from powershell
                   result = spawnSync("powershell.exe", [
