@@ -1,0 +1,692 @@
+<?xml version="1.0" encoding="utf-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>cargo-dist Changelog</title><link>http://127.0.0.1:7979/cargo-dist/changelog</link><description>Changelog information for cargo-dist</description><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><atom:link href="http://127.0.0.1:7979/cargo-dist/changelog.rss" rel="self"/><item><title>Version 0.30.0-prerelease.5</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.5</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.5</guid><content:encoded><![CDATA[<ul>
+<li>Add support for GitHub Attestations in the host phase.</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.30.0-prerelease.4</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.4</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.4</guid><content:encoded><![CDATA[<ul>
+<li>Add support for GitHub Attestations in the host phase.</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.30.0-prerelease.3</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.3</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.3</guid><content:encoded><![CDATA[<ul>
+<li>Add support for GitHub Attestations in the host phase.</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.30.0-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.2</guid><content:encoded><![CDATA[<ul>
+<li>Add support for GitHub Attestations in the host phase.</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.30.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.30.0-prerelease.1</guid><content:encoded><![CDATA[<ul>
+<li>Add support for GitHub Attestations in the host phase.</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.29.0 (2025-07-31)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.29.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.29.0</guid><content:encoded><![CDATA[<p>This is a big release! 0.29.0 includes all of the new features from Astral's fork of dist along with some new bugfixes. It also removes support for Axo Releases.</p>
+<h2>Pinning GitHub Actions to commits</h2>
+<p>By default, dist uses Actions via floating versioned tags such as <code>actions/checkout@v4</code>. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1944" rel="noopener noreferrer">feat: add github-action-commits config</a></li>
+</ul>
+<h2>Recursive source tarballs, including the contents of submodules</h2>
+<p>While we've had support for source tarballs since <a href="https://github.com/axodotdev/cargo-dist/releases/tag/v0.5.0" rel="noopener noreferrer">0.5.0</a>, those tarballs have been limited to the contents of the base repository and didn't contain the contents of submodules. (This is a limitation of the <code>git archive</code> tool that we use to generate them.) This release adds support for recursive tarballs that include the contents of submodules as well. This feature is opt-in and can be enabled with the <code>recursive-tarballs = true</code> setting. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#recursive-tarball" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1966" rel="noopener noreferrer">feat: add recursive-tarballs</a></li>
+</ul>
+<h2>Support cross-compiling from Windows to Windows</h2>
+<p>In previous versions, dist would refuse to cross-compile from one Windows architecture to another. This release fixes that and allows the build to be attempted. We still default to cross-compiling via <code>cargo-xwin</code>; users who would like to try this will need to configure their builds to use a Windows runner. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#89ddff;">[dist.github-custom-runners.aarch64-pc-windows-msvc]
+</span><span style="color:#f07178;">runner </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">windows-2025</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>impl @baszalmstra <a href="https://github.com/axodotdev/cargo-dist/pull/1962" rel="noopener noreferrer">fix: allow cross compiling from windows to windows</a></li>
+</ul>
+<h2>Installer improvements</h2>
+<p>We've improved compatibility for the shell installer by bringing in newer changes from the Rustup installer it was originally based on. We've also improved compatibility with Linux distributions that don't use the <code>$HOME</code> environment variable.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1958" rel="noopener noreferrer">feat: improve installer.sh with changes from rustup</a></li>
+<li>impl @konstin <a href="https://github.com/axodotdev/cargo-dist/pull/1968" rel="noopener noreferrer">feat: support Linux distros that don't set HOME</a></li>
+</ul>
+<h2>BYO GitHub bearer token for installers</h2>
+<p>In addition to the above, we now allow users to bring their own GitHub token to be used when fetching tarballs from GitHub. This is useful for users who are often rate-limited when downloading artifacts or who need to fetch artifacts from private repositories. Like our other environment variables, this is branded with your application's name in the format <code>{APP_NAME}_GITHUB_TOKEN</code>. This environment variable is supported in both the shell and PowerShell installers. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/installers/usage.html?highlight=bearer#github-bearer-token" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1956" rel="noopener noreferrer">feat: add <code>{APP_NAME}_GITHUB_TOKEN</code> install env-var</a></li>
+</ul>
+<h2>Reduce unnecessary credentials persistence in Actions config</h2>
+<p>This release includes some tweaks to generated Actions config in order to reduce the risk of accidentally persisting credentials longer in the run than necessary. This is always enabled and doesn't require configuration to opt into.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1948" rel="noopener noreferrer">feat: add persist-credentials: false to checkouts</a></li>
+</ul>
+<h2>Allow overriding binaries per-platform</h2>
+<p>It's now possible to override the set of binaries to install on a per-platform basis. For example, a project with three binaries may choose to only install two of them on Windows, or may choose to provide an extra binary on other platforms. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#binaries" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1946" rel="noopener noreferrer">feat: allow overriding per-platform binaries</a></li>
+</ul>
+<h2>New setting for overriding packages to dist</h2>
+<p>A new top-level option, <code>packages</code>, allows specifying a list of exactly which packages should be disted. This overrides any individual <code>dist = true</code> or <code>dist = false</code> set in individual packages, and can be easier to reason about. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html?highlight=packages#packages" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1960" rel="noopener noreferrer">feat: add packages override for externally setting dist=true/false</a></li>
+</ul>
+<h2>Overriding package versions</h2>
+<p>The new top-level <code>version</code> option overrides the individually-configuredversions for every package and instead causes dist to assume every package has the specified version. For more information, see <a href="" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1964" rel="noopener noreferrer">feat: add workspace.version override</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1949" rel="noopener noreferrer">fix: mark homebrew with persist-credentials</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1971" rel="noopener noreferrer">fix: don't write unified checksum with no checksums</a></li>
+</ul>
+</li>
+<li>impl @cibyr <a href="https://github.com/axodotdev/cargo-dist/pull/1978" rel="noopener noreferrer">fix(axoproject): allow building without generic-projects</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.29.0-prerelease.2 (2025-07-31)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.29.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.29.0-prerelease.2</guid><content:encoded><![CDATA[<p>This is a big release! 0.29.0 includes all of the new features from Astral's fork of dist along with some new bugfixes. It also removes support for Axo Releases.</p>
+<h2>Pinning GitHub Actions to commits</h2>
+<p>By default, dist uses Actions via floating versioned tags such as <code>actions/checkout@v4</code>. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1944" rel="noopener noreferrer">feat: add github-action-commits config</a></li>
+</ul>
+<h2>Recursive source tarballs, including the contents of submodules</h2>
+<p>While we've had support for source tarballs since <a href="https://github.com/axodotdev/cargo-dist/releases/tag/v0.5.0" rel="noopener noreferrer">0.5.0</a>, those tarballs have been limited to the contents of the base repository and didn't contain the contents of submodules. (This is a limitation of the <code>git archive</code> tool that we use to generate them.) This release adds support for recursive tarballs that include the contents of submodules as well. This feature is opt-in and can be enabled with the <code>recursive-tarballs = true</code> setting. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#recursive-tarball" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1966" rel="noopener noreferrer">feat: add recursive-tarballs</a></li>
+</ul>
+<h2>Support cross-compiling from Windows to Windows</h2>
+<p>In previous versions, dist would refuse to cross-compile from one Windows architecture to another. This release fixes that and allows the build to be attempted. We still default to cross-compiling via <code>cargo-xwin</code>; users who would like to try this will need to configure their builds to use a Windows runner. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#89ddff;">[dist.github-custom-runners.aarch64-pc-windows-msvc]
+</span><span style="color:#f07178;">runner </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">windows-2025</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>impl @baszalmstra <a href="https://github.com/axodotdev/cargo-dist/pull/1962" rel="noopener noreferrer">fix: allow cross compiling from windows to windows</a></li>
+</ul>
+<h2>Installer improvements</h2>
+<p>We've improved compatibility for the shell installer by bringing in newer changes from the Rustup installer it was originally based on. We've also improved compatibility with Linux distributions that don't use the <code>$HOME</code> environment variable.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1958" rel="noopener noreferrer">feat: improve installer.sh with changes from rustup</a></li>
+<li>impl @konstin <a href="https://github.com/axodotdev/cargo-dist/pull/1968" rel="noopener noreferrer">feat: support Linux distros that don't set HOME</a></li>
+</ul>
+<h2>BYO GitHub bearer token for installers</h2>
+<p>In addition to the above, we now allow users to bring their own GitHub token to be used when fetching tarballs from GitHub. This is useful for users who are often rate-limited when downloading artifacts or who need to fetch artifacts from private repositories. Like our other environment variables, this is branded with your application's name in the format <code>{APP_NAME}_GITHUB_TOKEN</code>. This environment variable is supported in both the shell and PowerShell installers. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/installers/usage.html?highlight=bearer#github-bearer-token" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1956" rel="noopener noreferrer">feat: add <code>{APP_NAME}_GITHUB_TOKEN</code> install env-var</a></li>
+</ul>
+<h2>Reduce unnecessary credentials persistence in Actions config</h2>
+<p>This release includes some tweaks to generated Actions config in order to reduce the risk of accidentally persisting credentials longer in the run than necessary. This is always enabled and doesn't require configuration to opt into.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1948" rel="noopener noreferrer">feat: add persist-credentials: false to checkouts</a></li>
+</ul>
+<h2>Allow overriding binaries per-platform</h2>
+<p>It's now possible to override the set of binaries to install on a per-platform basis. For example, a project with three binaries may choose to only install two of them on Windows, or may choose to provide an extra binary on other platforms. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#binaries" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1946" rel="noopener noreferrer">feat: allow overriding per-platform binaries</a></li>
+</ul>
+<h2>New setting for overriding packages to dist</h2>
+<p>A new top-level option, <code>packages</code>, allows specifying a list of exactly which packages should be disted. This overrides any individual <code>dist = true</code> or <code>dist = false</code> set in individual packages, and can be easier to reason about. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html?highlight=packages#packages" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1960" rel="noopener noreferrer">feat: add packages override for externally setting dist=true/false</a></li>
+</ul>
+<h2>Overriding package versions</h2>
+<p>The new top-level <code>version</code> option overrides the individually-configuredversions for every package and instead causes dist to assume every package has the specified version. For more information, see <a href="" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1964" rel="noopener noreferrer">feat: add workspace.version override</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1949" rel="noopener noreferrer">fix: mark homebrew with persist-credentials</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1971" rel="noopener noreferrer">fix: don't write unified checksum with no checksums</a></li>
+</ul>
+</li>
+<li>impl @cibyr <a href="https://github.com/axodotdev/cargo-dist/pull/1978" rel="noopener noreferrer">fix(axoproject): allow building without generic-projects</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.29.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.29.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.29.0-prerelease.1</guid><content:encoded><![CDATA[<p>This is a big release! 0.29.0 includes all of the new features from Astral's fork of dist along with some new bugfixes. It also removes support for Axo Releases.</p>
+<h2>Pinning GitHub Actions to commits</h2>
+<p>By default, dist uses Actions via floating versioned tags such as <code>actions/checkout@v4</code>. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1944" rel="noopener noreferrer">feat: add github-action-commits config</a></li>
+</ul>
+<h2>Recursive source tarballs, including the contents of submodules</h2>
+<p>While we've had support for source tarballs since <a href="https://github.com/axodotdev/cargo-dist/releases/tag/v0.5.0" rel="noopener noreferrer">0.5.0</a>, those tarballs have been limited to the contents of the base repository and didn't contain the contents of submodules. (This is a limitation of the <code>git archive</code> tool that we use to generate them.) This release adds support for recursive tarballs that include the contents of submodules as well. This feature is opt-in and can be enabled with the <code>recursive-tarballs = true</code> setting. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#recursive-tarball" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1966" rel="noopener noreferrer">feat: add recursive-tarballs</a></li>
+</ul>
+<h2>Support cross-compiling from Windows to Windows</h2>
+<p>In previous versions, dist would refuse to cross-compile from one Windows architecture to another. This release fixes that and allows the build to be attempted. We still default to cross-compiling via <code>cargo-xwin</code>; users who would like to try this will need to configure their builds to use a Windows runner. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#89ddff;">[dist.github-custom-runners.aarch64-pc-windows-msvc]
+</span><span style="color:#f07178;">runner </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">windows-2025</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>impl @baszalmstra <a href="https://github.com/axodotdev/cargo-dist/pull/1962" rel="noopener noreferrer">fix: allow cross compiling from windows to windows</a></li>
+</ul>
+<h2>Installer improvements</h2>
+<p>We've improved compatibility for the shell installer by bringing in newer changes from the Rustup installer it was originally based on. We've also improved compatibility with Linux distributions that don't use the <code>$HOME</code> environment variable.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1958" rel="noopener noreferrer">feat: improve installer.sh with changes from rustup</a></li>
+<li>impl @konstin <a href="https://github.com/axodotdev/cargo-dist/pull/1968" rel="noopener noreferrer">feat: support Linux distros that don't set HOME</a></li>
+</ul>
+<h2>BYO GitHub bearer token for installers</h2>
+<p>In addition to the above, we now allow users to bring their own GitHub token to be used when fetching tarballs from GitHub. This is useful for users who are often rate-limited when downloading artifacts or who need to fetch artifacts from private repositories. Like our other environment variables, this is branded with your application's name in the format <code>{APP_NAME}_GITHUB_TOKEN</code>. This environment variable is supported in both the shell and PowerShell installers. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/installers/usage.html?highlight=bearer#github-bearer-token" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1956" rel="noopener noreferrer">feat: add <code>{APP_NAME}_GITHUB_TOKEN</code> install env-var</a></li>
+</ul>
+<h2>Reduce unnecessary credentials persistence in Actions config</h2>
+<p>This release includes some tweaks to generated Actions config in order to reduce the risk of accidentally persisting credentials longer in the run than necessary. This is always enabled and doesn't require configuration to opt into.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1948" rel="noopener noreferrer">feat: add persist-credentials: false to checkouts</a></li>
+</ul>
+<h2>Allow overriding binaries per-platform</h2>
+<p>It's now possible to override the set of binaries to install on a per-platform basis. For example, a project with three binaries may choose to only install two of them on Windows, or may choose to provide an extra binary on other platforms. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#binaries" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1946" rel="noopener noreferrer">feat: allow overriding per-platform binaries</a></li>
+</ul>
+<h2>New setting for overriding packages to dist</h2>
+<p>A new top-level option, <code>packages</code>, allows specifying a list of exactly which packages should be disted. This overrides any individual <code>dist = true</code> or <code>dist = false</code> set in individual packages, and can be easier to reason about. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html?highlight=packages#packages" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1960" rel="noopener noreferrer">feat: add packages override for externally setting dist=true/false</a></li>
+</ul>
+<h2>Overriding package versions</h2>
+<p>The new top-level <code>version</code> option overrides the individually-configuredversions for every package and instead causes dist to assume every package has the specified version. For more information, see <a href="" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1964" rel="noopener noreferrer">feat: add workspace.version override</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1949" rel="noopener noreferrer">fix: mark homebrew with persist-credentials</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1971" rel="noopener noreferrer">fix: don't write unified checksum with no checksums</a></li>
+</ul>
+</li>
+<li>impl @cibyr <a href="https://github.com/axodotdev/cargo-dist/pull/1978" rel="noopener noreferrer">fix(axoproject): allow building without generic-projects</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.28.2 (2025-07-22)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.2</guid><content:encoded><![CDATA[<p>This release updates dependencies and contains no substantive code changes.</p>
+]]></content:encoded></item><item><title>Version 0.28.2-prerelease.3 (2025-07-22)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.2-prerelease.3</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.2-prerelease.3</guid><content:encoded><![CDATA[<p>This release updates dependencies and contains no substantive code changes.</p>
+]]></content:encoded></item><item><title>Version 0.28.2-prerelease.2 (2025-07-22)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.2-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.2-prerelease.2</guid><content:encoded><![CDATA[<p>This release updates dependencies and contains no substantive code changes.</p>
+]]></content:encoded></item><item><title>Version 0.28.2-prerelease.1 (2025-07-20)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.2-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.2-prerelease.1</guid><content:encoded><![CDATA[<p>This release updates dependencies and contains no substantive code changes.</p>
+]]></content:encoded></item><item><title>Version 0.28.1 (2025-07-20)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1</guid><content:encoded><![CDATA[<p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.28.1-prerelease.5 (2025-07-20)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.5</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.5</guid><content:encoded><![CDATA[<p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.28.1-prerelease.4 (2025-07-06)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.4</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.4</guid><content:encoded><![CDATA[<p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.28.1-prerelease.3 (2025-07-06)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.3</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.3</guid><content:encoded><![CDATA[<p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.28.1-prerelease.2 (2025-07-06)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.2</guid><content:encoded><![CDATA[<p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.28.1-prerelease.1 (2025-07-06)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.1-prerelease.1</guid><content:encoded><![CDATA[<p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 1.0.0-rc.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v1.0.0-rc.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v1.0.0-rc.1</guid><content:encoded><![CDATA[<ul>
+<li>Add support for GitHub Attestations in the host phase.</li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.28.0 (2025-01-08)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.28.0</guid><content:encoded><![CDATA[<p>This release contains a new feature that improves the Windows PowerShell installer. We've also made some behind-the-scenes changes which most users won't notice yet - keep an eye out for our next major release!</p>
+<h2>PowerShell improvements</h2>
+<p>While we've always updated the user's <code>Path</code> variable for them, in the past the user had to reboot their system for the change to be reflected or temporarily add the installation directory to the <code>Path</code> themselves. Starting in 0.28.0, we now only require you to restart your shell for the change to take effect, not the entire system. We've also made improvements to our handling of this variable to better support users whose <code>Path</code> contained variable expansions.</p>
+<p>Thanks to open source contributor @DavisVaughan, who did extensive research as well as writing the feature!</p>
+<ul>
+<li>impl @DavisVaughan <a href="https://github.com/axodotdev/cargo-dist/pull/1658" rel="noopener noreferrer">Rework Add-Path to avoid expanding and request an environment refresh</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1681" rel="noopener noreferrer">Properly support installing apt packages from the default cargo-xwin builder</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.27.1 (2025-01-06)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.27.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.27.1</guid><content:encoded><![CDATA[<h2>Fixed a bug where <code>dist migrate</code> would delete <code>dist-workspace.toml</code></h2>
+<p>A bug was introduced in 0.27.0 where, instead of <code>dist migrate</code> <em>never</em> deleting <code>dist-workspace.toml</code>, it would <em>always</em> delete it. This has been fixed.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1661" rel="noopener noreferrer">fix: avoid 'dist migrate' deleting dist-workspace.toml</a></li>
+</ul>
+<h2>Warn if a tool is "shadowed" on your PATH</h2>
+<p>Shell installers now check if the tool it installed is shadowed by another tool on your path.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1659" rel="noopener noreferrer">feat: check for shadowed binaries in shell installer</a></li>
+</ul>
+<h2>Prefer GitHub over Axo Releases</h2>
+<p>This release switches the preferred installation location to GitHub. In prior releases, if the user had both GitHub Releases and Axo Releases selected, generated installation scripts and receipts would prefer to fetch from GitHub.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1673" rel="noopener noreferrer">feat: prioritize github over axo</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.27.1-prerelease.1 (2024-12-20)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.27.1-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.27.1-prerelease.1</guid><content:encoded><![CDATA[<h2>Fixed a bug where <code>dist migrate</code> would delete <code>dist-workspace.toml</code></h2>
+<p>A bug was introduced in 0.27.0 where, instead of <code>dist migrate</code> <em>never</em> deleting <code>dist-workspace.toml</code>, it would <em>always</em> delete it. This has been fixed.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1661" rel="noopener noreferrer">fix: avoid 'dist migrate' deleting dist-workspace.toml</a></li>
+</ul>
+<h2>Warn if a tool is "shadowed" on your PATH</h2>
+<p>Shell installers now check if the tool it installed is shadowed by another tool on your path.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1659" rel="noopener noreferrer">feat: check for shadowed binaries in shell installer</a></li>
+</ul>
+<h2>Prefer GitHub over Axo Releases</h2>
+<p>This release switches the preferred installation location to GitHub. In prior releases, if the user had both GitHub Releases and Axo Releases selected, generated installation scripts and receipts would prefer to fetch from GitHub.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1673" rel="noopener noreferrer">feat: prioritize github over axo</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.27.0 (2024-12-19)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.27.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.27.0</guid><content:encoded><![CDATA[<p>We're back once more with a little holiday gift for you. This release contains a few new features and fixes.</p>
+<h2>Support for XDG_CONFIG_HOME</h2>
+<p>We've always supported standard OS configuration paths. This release adds support for <code>XDG_CONFIG_HOME</code>, an <a href="https://specifications.freedesktop.org/basedir-spec/latest/#variables" rel="noopener noreferrer">environment variable defined in the XDG Base Directory Specification</a>, in order to allow users to override that default. We support this on all platforms, even Windows. Installers created with dist 0.27.0 or later will respect this environment variable and place install receipts in that path; updaters using axoupdater 0.9.0 or later will respect that variable when searching for the receipt.</p>
+<ul>
+<li>impl @brennanfee, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1655" rel="noopener noreferrer">feat: support XDG_CONFIG_HOME</a></li>
+</ul>
+<h2>Improved handling of missing build dependencies</h2>
+<p>While we've always reported if mandatory tools are missing, we previously would only check for their existence right before we'd use them. This made it hard to judge exactly when required tools might be absent, and meant we'd only report about a single tool at a time. With this release, we now check for these tools up front and we check for every tool your build will need simultaneously. This allows us to tell you about <em>every</em> missing tool in one message, and before the builds themselves begin.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1640" rel="noopener noreferrer">Fail early if required tools can't be found.</a></li>
+</ul>
+<h2>Improved generic config handling</h2>
+<p>Since we shipped the new config format, <code>dist-workspace.toml</code>, we've been providing some spurious messages for non-Rust builds using just a <code>dist.toml</code> file. In this release, we now migrate users with <code>dist.toml</code>-alone apps to <code>dist-workspace.toml</code>. This conversion is automatic and requires no user input; it will happen when using <code>dist init</code> to upgrade to a new release.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1656" rel="noopener noreferrer">feat: migrate dist.toml to dist-workspace.toml</a></li>
+</ul>
+<h2>Stabilizing the standalone updater we ship</h2>
+<p>In the past, we always shipped the latest version of the standalone updater provided via <a href="https://github.com/axodotdev/axoupdater" rel="noopener noreferrer">axoupdater</a>. This meant that, if a new version of axoupdater was released after a given version of dist, your app would receive that latest version. As we've stabilized the updater's feature set, we feel that end users are deriving less benefit from this rolling release schedule and it would be more helpful to provide a fixed, known-good stable release instead.</p>
+<p>Beginning with this release, dist will always package the same version of axoupdater when building and shipping your app. If you prefer the old behaviour, and would like to receive whatever's the latest, you can set <code>always-use-latest-updater = true</code> in your configuration.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1598" rel="noopener noreferrer">feat: update axoupdater, fetch known-good version</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.27.0-prerelease.1 (2024-12-19)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.27.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.27.0-prerelease.1</guid><content:encoded><![CDATA[<p>We're back once more with a little holiday gift for you. This release contains a few new features and fixes.</p>
+<h2>Support for XDG_CONFIG_HOME</h2>
+<p>We've always supported standard OS configuration paths. This release adds support for <code>XDG_CONFIG_HOME</code>, an <a href="https://specifications.freedesktop.org/basedir-spec/latest/#variables" rel="noopener noreferrer">environment variable defined in the XDG Base Directory Specification</a>, in order to allow users to override that default. We support this on all platforms, even Windows. Installers created with dist 0.27.0 or later will respect this environment variable and place install receipts in that path; updaters using axoupdater 0.9.0 or later will respect that variable when searching for the receipt.</p>
+<ul>
+<li>impl @brennanfee, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1655" rel="noopener noreferrer">feat: support XDG_CONFIG_HOME</a></li>
+</ul>
+<h2>Improved handling of missing build dependencies</h2>
+<p>While we've always reported if mandatory tools are missing, we previously would only check for their existence right before we'd use them. This made it hard to judge exactly when required tools might be absent, and meant we'd only report about a single tool at a time. With this release, we now check for these tools up front and we check for every tool your build will need simultaneously. This allows us to tell you about <em>every</em> missing tool in one message, and before the builds themselves begin.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1640" rel="noopener noreferrer">Fail early if required tools can't be found.</a></li>
+</ul>
+<h2>Improved generic config handling</h2>
+<p>Since we shipped the new config format, <code>dist-workspace.toml</code>, we've been providing some spurious messages for non-Rust builds using just a <code>dist.toml</code> file. In this release, we now migrate users with <code>dist.toml</code>-alone apps to <code>dist-workspace.toml</code>. This conversion is automatic and requires no user input; it will happen when using <code>dist init</code> to upgrade to a new release.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1656" rel="noopener noreferrer">feat: migrate dist.toml to dist-workspace.toml</a></li>
+</ul>
+<h2>Stabilizing the standalone updater we ship</h2>
+<p>In the past, we always shipped the latest version of the standalone updater provided via <a href="https://github.com/axodotdev/axoupdater" rel="noopener noreferrer">axoupdater</a>. This meant that, if a new version of axoupdater was released after a given version of dist, your app would receive that latest version. As we've stabilized the updater's feature set, we feel that end users are deriving less benefit from this rolling release schedule and it would be more helpful to provide a fixed, known-good stable release instead.</p>
+<p>Beginning with this release, dist will always package the same version of axoupdater when building and shipping your app. If you prefer the old behaviour, and would like to receive whatever's the latest, you can set <code>always-use-latest-updater = true</code> in your configuration.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1598" rel="noopener noreferrer">feat: update axoupdater, fetch known-good version</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.26.1 (2024-12-12)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.1</guid><content:encoded><![CDATA[<p>This is a bugfix release which fixes an issue where aarch64 Windows cross-compilation wouldn't work out of the box. We've updated the default configuration to ensure that this target just works without additional configuration.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1635" rel="noopener noreferrer">fix: always cross-compile to windows via xwin</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.26.0 (2024-12-12)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0</guid><content:encoded><![CDATA[<p>It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.</p>
+<h2>Builtin Rust cross-compilation support</h2>
+<p>You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using <a href="https://github.com/rust-cross/cargo-zigbuild" rel="noopener noreferrer">cargo-zigbuild</a> and Windows (using <a href="https://github.com/rust-cross/cargo-xwin" rel="noopener noreferrer">cargo-xwin</a>. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#cross-compilation" rel="noopener noreferrer">the docs</a>.</p>
+<p>We're also making use of this feature ourselves: we now build our aarch64 Linux binaries using this new tooling.</p>
+<p>(Note: for technical reasons, cargo-zigbuild cross-compiles and cargo-auditable are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @fasterthanlime, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1529" rel="noopener noreferrer">Add cross-compilation support via cargo-zigbuild and cargo-xwin</a></li>
+</ul>
+<h2>Checksum verifications in shell installers</h2>
+<p>While we've always generated checksum information for binary tarballs/ZIPs, we only actually validated those checksums in the Homebrew installer. That changes with this release: we now embed checksum information into the shell installer and validate the tarball before unpacking it.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1497" rel="noopener noreferrer">Verify checksums in install.sh</a></li>
+</ul>
+<h2>cargo-auditable support</h2>
+<p>We've added integrated support for the Rust Secure Code Working Group's <a href="https://github.com/rust-secure-code/cargo-auditable" rel="noopener noreferrer">cargo-auditable</a>, which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#cargo-auditable" rel="noopener noreferrer">our docs</a> and the <a href="https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md" rel="noopener noreferrer">docs for the cargo-audit tool</a>.</p>
+<p>(Note: for technical reasons, this feature and cargo-zigbuild cross-compiles are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1528" rel="noopener noreferrer">Add cargo-auditable config option</a></li>
+</ul>
+<h2>cargo-cyclonedx support</h2>
+<p>We've also added support for generating <a href="https://cyclonedx.org" rel="noopener noreferrer">CyloneDX Software Bill of Materials (SBOM)</a> files for Rust projects. We've implemented this using the <a href="https://github.com/CycloneDX/cyclonedx-rust-cargo/blob/main/cargo-cyclonedx/README.md" rel="noopener noreferrer">cargo-cyclonedx</a> tool. Unlike the cargo-auditable support above, which embeds dependency information directly into your binaries, this data is stored as a standalone <code>bom.xml</code> file which is distributed with your software. Users can then validate that SBOM file using <a href="https://cyclonedx.org/tool-center/" rel="noopener noreferrer">any compatible CycloneDX tool</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1531" rel="noopener noreferrer">Add cargo-cyclonedx config option.</a></li>
+</ul>
+<h2>OmniBOR support</h2>
+<p>Rounding out this release's new security features, we've added support for <a href="https://omnibor.io" rel="noopener noreferrer">generating OmniBOR artifact IDs</a>. We implement this using the <a href="https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli" rel="noopener noreferrer">omnibor-cli</a> tool. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#omnibor" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1568" rel="noopener noreferrer">Add option to generate omnibor artifact IDs.</a></li>
+</ul>
+<h2>Strict error catching in template rendering</h2>
+<p>We've tightened up error handling for undefined values in templates when we create things such as installer scripts and the GitHub Actions YAML config. Any errors that occur here are dist's fault, not users' fault, and stricter error handling ensures we get the information we need to fix dist bugs and make this code more reliable. This was made possible thanks to a contribution by @fasterthanlime to the minijinja project, ensuring that we get actionable messages for these kinds of errors.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1499" rel="noopener noreferrer">Enable jinja "strict undefined behavior", fix templates, improve reporting</a></li>
+</ul>
+<h2>Per-target glibc version overrides</h2>
+<p>Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#min-glibc-version" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1537" rel="noopener noreferrer">Allow per-target glibc version overrides.</a></li>
+</ul>
+<h2>Tag-parsing and library-only mode improvements</h2>
+<p>We've tightened up the tag parsing code, ensuring that a few edge cases are handled more predictably. The <code>dist plan</code> output is now clearer in workspaces with multiple versions, with better instruction text on how to resolve unclear situations. We've also made a small change to <code>dist = false</code> handling, which means that we now refuse to run if a release tag only matches a crate with <code>dist = false</code> instead of going ahead with single library mode.</p>
+<ul>
+<li>impl
+<ul>
+<li>@duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1551" rel="noopener noreferrer">Avoid discarding tag information, so "dist plan --tag={name}-{version}" works.</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1441" rel="noopener noreferrer">Disable single-library mode for dist=false</a></li>
+<li>@alilleybrinker <a href="https://github.com/axodotdev/cargo-dist/pull/1579" rel="noopener noreferrer">Permit tag incoherence for dist plan</a></li>
+</ul>
+</li>
+</ul>
+<h2>Improved pc-windows-gnu support</h2>
+<p>Although we've previously supported <code>pc-windows-gnu</code> builds for Rust software, we had a few notable gotchas: we wouldn't install <code>choco</code> dependencies, and PowerShell installers couldn't install them. We've fixed both of these issues this release, ensuring these targets are a bit closer to <code>pc-windows-msvc</code> in support.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1586" rel="noopener noreferrer">feat: add pc-windows-gnu to powershell installers</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1566" rel="noopener noreferrer">Explicitly set manifest path when building MSI with WiX</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.26.0-prerelease.4</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.4</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.4</guid><content:encoded><![CDATA[<p>It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.</p>
+<h2>Builtin Rust cross-compilation support</h2>
+<p>You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using <a href="https://github.com/rust-cross/cargo-zigbuild" rel="noopener noreferrer">cargo-zigbuild</a> and Windows (using <a href="https://github.com/rust-cross/cargo-xwin" rel="noopener noreferrer">cargo-xwin</a>. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#cross-compilation" rel="noopener noreferrer">the docs</a>.</p>
+<p>We're also making use of this feature ourselves: we now build our aarch64 Linux binaries using this new tooling.</p>
+<p>(Note: for technical reasons, cargo-zigbuild cross-compiles and cargo-auditable are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @fasterthanlime, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1529" rel="noopener noreferrer">Add cross-compilation support via cargo-zigbuild and cargo-xwin</a></li>
+</ul>
+<h2>Checksum verifications in shell installers</h2>
+<p>While we've always generated checksum information for binary tarballs/ZIPs, we only actually validated those checksums in the Homebrew installer. That changes with this release: we now embed checksum information into the shell installer and validate the tarball before unpacking it.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1497" rel="noopener noreferrer">Verify checksums in install.sh</a></li>
+</ul>
+<h2>cargo-auditable support</h2>
+<p>We've added integrated support for the Rust Secure Code Working Group's <a href="https://github.com/rust-secure-code/cargo-auditable" rel="noopener noreferrer">cargo-auditable</a>, which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#cargo-auditable" rel="noopener noreferrer">our docs</a> and the <a href="https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md" rel="noopener noreferrer">docs for the cargo-audit tool</a>.</p>
+<p>(Note: for technical reasons, this feature and cargo-zigbuild cross-compiles are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1528" rel="noopener noreferrer">Add cargo-auditable config option</a></li>
+</ul>
+<h2>cargo-cyclonedx support</h2>
+<p>We've also added support for generating <a href="https://cyclonedx.org" rel="noopener noreferrer">CyloneDX Software Bill of Materials (SBOM)</a> files for Rust projects. We've implemented this using the <a href="https://github.com/CycloneDX/cyclonedx-rust-cargo/blob/main/cargo-cyclonedx/README.md" rel="noopener noreferrer">cargo-cyclonedx</a> tool. Unlike the cargo-auditable support above, which embeds dependency information directly into your binaries, this data is stored as a standalone <code>bom.xml</code> file which is distributed with your software. Users can then validate that SBOM file using <a href="https://cyclonedx.org/tool-center/" rel="noopener noreferrer">any compatible CycloneDX tool</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1531" rel="noopener noreferrer">Add cargo-cyclonedx config option.</a></li>
+</ul>
+<h2>OmniBOR support</h2>
+<p>Rounding out this release's new security features, we've added support for <a href="https://omnibor.io" rel="noopener noreferrer">generating OmniBOR artifact IDs</a>. We implement this using the <a href="https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli" rel="noopener noreferrer">omnibor-cli</a> tool. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#omnibor" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1568" rel="noopener noreferrer">Add option to generate omnibor artifact IDs.</a></li>
+</ul>
+<h2>Strict error catching in template rendering</h2>
+<p>We've tightened up error handling for undefined values in templates when we create things such as installer scripts and the GitHub Actions YAML config. Any errors that occur here are dist's fault, not users' fault, and stricter error handling ensures we get the information we need to fix dist bugs and make this code more reliable. This was made possible thanks to a contribution by @fasterthanlime to the minijinja project, ensuring that we get actionable messages for these kinds of errors.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1499" rel="noopener noreferrer">Enable jinja "strict undefined behavior", fix templates, improve reporting</a></li>
+</ul>
+<h2>Per-target glibc version overrides</h2>
+<p>Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#min-glibc-version" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1537" rel="noopener noreferrer">Allow per-target glibc version overrides.</a></li>
+</ul>
+<h2>Tag-parsing and library-only mode improvements</h2>
+<p>We've tightened up the tag parsing code, ensuring that a few edge cases are handled more predictably. The <code>dist plan</code> output is now clearer in workspaces with multiple versions, with better instruction text on how to resolve unclear situations. We've also made a small change to <code>dist = false</code> handling, which means that we now refuse to run if a release tag only matches a crate with <code>dist = false</code> instead of going ahead with single library mode.</p>
+<ul>
+<li>impl
+<ul>
+<li>@duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1551" rel="noopener noreferrer">Avoid discarding tag information, so "dist plan --tag={name}-{version}" works.</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1441" rel="noopener noreferrer">Disable single-library mode for dist=false</a></li>
+<li>@alilleybrinker <a href="https://github.com/axodotdev/cargo-dist/pull/1579" rel="noopener noreferrer">Permit tag incoherence for dist plan</a></li>
+</ul>
+</li>
+</ul>
+<h2>Improved pc-windows-gnu support</h2>
+<p>Although we've previously supported <code>pc-windows-gnu</code> builds for Rust software, we had a few notable gotchas: we wouldn't install <code>choco</code> dependencies, and PowerShell installers couldn't install them. We've fixed both of these issues this release, ensuring these targets are a bit closer to <code>pc-windows-msvc</code> in support.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1586" rel="noopener noreferrer">feat: add pc-windows-gnu to powershell installers</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1566" rel="noopener noreferrer">Explicitly set manifest path when building MSI with WiX</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.26.0-prerelease.3</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.3</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.3</guid><content:encoded><![CDATA[<p>It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.</p>
+<h2>Builtin Rust cross-compilation support</h2>
+<p>You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using <a href="https://github.com/rust-cross/cargo-zigbuild" rel="noopener noreferrer">cargo-zigbuild</a> and Windows (using <a href="https://github.com/rust-cross/cargo-xwin" rel="noopener noreferrer">cargo-xwin</a>. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#cross-compilation" rel="noopener noreferrer">the docs</a>.</p>
+<p>We're also making use of this feature ourselves: we now build our aarch64 Linux binaries using this new tooling.</p>
+<p>(Note: for technical reasons, cargo-zigbuild cross-compiles and cargo-auditable are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @fasterthanlime, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1529" rel="noopener noreferrer">Add cross-compilation support via cargo-zigbuild and cargo-xwin</a></li>
+</ul>
+<h2>Checksum verifications in shell installers</h2>
+<p>While we've always generated checksum information for binary tarballs/ZIPs, we only actually validated those checksums in the Homebrew installer. That changes with this release: we now embed checksum information into the shell installer and validate the tarball before unpacking it.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1497" rel="noopener noreferrer">Verify checksums in install.sh</a></li>
+</ul>
+<h2>cargo-auditable support</h2>
+<p>We've added integrated support for the Rust Secure Code Working Group's <a href="https://github.com/rust-secure-code/cargo-auditable" rel="noopener noreferrer">cargo-auditable</a>, which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#cargo-auditable" rel="noopener noreferrer">our docs</a> and the <a href="https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md" rel="noopener noreferrer">docs for the cargo-audit tool</a>.</p>
+<p>(Note: for technical reasons, this feature and cargo-zigbuild cross-compiles are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1528" rel="noopener noreferrer">Add cargo-auditable config option</a></li>
+</ul>
+<h2>cargo-cyclonedx support</h2>
+<p>We've also added support for generating <a href="https://cyclonedx.org" rel="noopener noreferrer">CyloneDX Software Bill of Materials (SBOM)</a> files for Rust projects. We've implemented this using the <a href="https://github.com/CycloneDX/cyclonedx-rust-cargo/blob/main/cargo-cyclonedx/README.md" rel="noopener noreferrer">cargo-cyclonedx</a> tool. Unlike the cargo-auditable support above, which embeds dependency information directly into your binaries, this data is stored as a standalone <code>bom.xml</code> file which is distributed with your software. Users can then validate that SBOM file using <a href="https://cyclonedx.org/tool-center/" rel="noopener noreferrer">any compatible CycloneDX tool</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1531" rel="noopener noreferrer">Add cargo-cyclonedx config option.</a></li>
+</ul>
+<h2>OmniBOR support</h2>
+<p>Rounding out this release's new security features, we've added support for <a href="https://omnibor.io" rel="noopener noreferrer">generating OmniBOR artifact IDs</a>. We implement this using the <a href="https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli" rel="noopener noreferrer">omnibor-cli</a> tool. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#omnibor" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1568" rel="noopener noreferrer">Add option to generate omnibor artifact IDs.</a></li>
+</ul>
+<h2>Strict error catching in template rendering</h2>
+<p>We've tightened up error handling for undefined values in templates when we create things such as installer scripts and the GitHub Actions YAML config. Any errors that occur here are dist's fault, not users' fault, and stricter error handling ensures we get the information we need to fix dist bugs and make this code more reliable. This was made possible thanks to a contribution by @fasterthanlime to the minijinja project, ensuring that we get actionable messages for these kinds of errors.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1499" rel="noopener noreferrer">Enable jinja "strict undefined behavior", fix templates, improve reporting</a></li>
+</ul>
+<h2>Per-target glibc version overrides</h2>
+<p>Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#min-glibc-version" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1537" rel="noopener noreferrer">Allow per-target glibc version overrides.</a></li>
+</ul>
+<h2>Tag-parsing and library-only mode improvements</h2>
+<p>We've tightened up the tag parsing code, ensuring that a few edge cases are handled more predictably. The <code>dist plan</code> output is now clearer in workspaces with multiple versions, with better instruction text on how to resolve unclear situations. We've also made a small change to <code>dist = false</code> handling, which means that we now refuse to run if a release tag only matches a crate with <code>dist = false</code> instead of going ahead with single library mode.</p>
+<ul>
+<li>impl
+<ul>
+<li>@duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1551" rel="noopener noreferrer">Avoid discarding tag information, so "dist plan --tag={name}-{version}" works.</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1441" rel="noopener noreferrer">Disable single-library mode for dist=false</a></li>
+<li>@alilleybrinker <a href="https://github.com/axodotdev/cargo-dist/pull/1579" rel="noopener noreferrer">Permit tag incoherence for dist plan</a></li>
+</ul>
+</li>
+</ul>
+<h2>Improved pc-windows-gnu support</h2>
+<p>Although we've previously supported <code>pc-windows-gnu</code> builds for Rust software, we had a few notable gotchas: we wouldn't install <code>choco</code> dependencies, and PowerShell installers couldn't install them. We've fixed both of these issues this release, ensuring these targets are a bit closer to <code>pc-windows-msvc</code> in support.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1586" rel="noopener noreferrer">feat: add pc-windows-gnu to powershell installers</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1566" rel="noopener noreferrer">Explicitly set manifest path when building MSI with WiX</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.26.0-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.2</guid><content:encoded><![CDATA[<p>It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.</p>
+<h2>Builtin Rust cross-compilation support</h2>
+<p>You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using <a href="https://github.com/rust-cross/cargo-zigbuild" rel="noopener noreferrer">cargo-zigbuild</a> and Windows (using <a href="https://github.com/rust-cross/cargo-xwin" rel="noopener noreferrer">cargo-xwin</a>. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#cross-compilation" rel="noopener noreferrer">the docs</a>.</p>
+<p>We're also making use of this feature ourselves: we now build our aarch64 Linux binaries using this new tooling.</p>
+<p>(Note: for technical reasons, cargo-zigbuild cross-compiles and cargo-auditable are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @fasterthanlime, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1529" rel="noopener noreferrer">Add cross-compilation support via cargo-zigbuild and cargo-xwin</a></li>
+</ul>
+<h2>Checksum verifications in shell installers</h2>
+<p>While we've always generated checksum information for binary tarballs/ZIPs, we only actually validated those checksums in the Homebrew installer. That changes with this release: we now embed checksum information into the shell installer and validate the tarball before unpacking it.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1497" rel="noopener noreferrer">Verify checksums in install.sh</a></li>
+</ul>
+<h2>cargo-auditable support</h2>
+<p>We've added integrated support for the Rust Secure Code Working Group's <a href="https://github.com/rust-secure-code/cargo-auditable" rel="noopener noreferrer">cargo-auditable</a>, which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#cargo-auditable" rel="noopener noreferrer">our docs</a> and the <a href="https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md" rel="noopener noreferrer">docs for the cargo-audit tool</a>.</p>
+<p>(Note: for technical reasons, this feature and cargo-zigbuild cross-compiles are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1528" rel="noopener noreferrer">Add cargo-auditable config option</a></li>
+</ul>
+<h2>cargo-cyclonedx support</h2>
+<p>We've also added support for generating <a href="https://cyclonedx.org" rel="noopener noreferrer">CyloneDX Software Bill of Materials (SBOM)</a> files for Rust projects. We've implemented this using the <a href="https://github.com/CycloneDX/cyclonedx-rust-cargo/blob/main/cargo-cyclonedx/README.md" rel="noopener noreferrer">cargo-cyclonedx</a> tool. Unlike the cargo-auditable support above, which embeds dependency information directly into your binaries, this data is stored as a standalone <code>bom.xml</code> file which is distributed with your software. Users can then validate that SBOM file using <a href="https://cyclonedx.org/tool-center/" rel="noopener noreferrer">any compatible CycloneDX tool</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1531" rel="noopener noreferrer">Add cargo-cyclonedx config option.</a></li>
+</ul>
+<h2>OmniBOR support</h2>
+<p>Rounding out this release's new security features, we've added support for <a href="https://omnibor.io" rel="noopener noreferrer">generating OmniBOR artifact IDs</a>. We implement this using the <a href="https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli" rel="noopener noreferrer">omnibor-cli</a> tool. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#omnibor" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1568" rel="noopener noreferrer">Add option to generate omnibor artifact IDs.</a></li>
+</ul>
+<h2>Strict error catching in template rendering</h2>
+<p>We've tightened up error handling for undefined values in templates when we create things such as installer scripts and the GitHub Actions YAML config. Any errors that occur here are dist's fault, not users' fault, and stricter error handling ensures we get the information we need to fix dist bugs and make this code more reliable. This was made possible thanks to a contribution by @fasterthanlime to the minijinja project, ensuring that we get actionable messages for these kinds of errors.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1499" rel="noopener noreferrer">Enable jinja "strict undefined behavior", fix templates, improve reporting</a></li>
+</ul>
+<h2>Per-target glibc version overrides</h2>
+<p>Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#min-glibc-version" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1537" rel="noopener noreferrer">Allow per-target glibc version overrides.</a></li>
+</ul>
+<h2>Tag-parsing and library-only mode improvements</h2>
+<p>We've tightened up the tag parsing code, ensuring that a few edge cases are handled more predictably. The <code>dist plan</code> output is now clearer in workspaces with multiple versions, with better instruction text on how to resolve unclear situations. We've also made a small change to <code>dist = false</code> handling, which means that we now refuse to run if a release tag only matches a crate with <code>dist = false</code> instead of going ahead with single library mode.</p>
+<ul>
+<li>impl
+<ul>
+<li>@duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1551" rel="noopener noreferrer">Avoid discarding tag information, so "dist plan --tag={name}-{version}" works.</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1441" rel="noopener noreferrer">Disable single-library mode for dist=false</a></li>
+<li>@alilleybrinker <a href="https://github.com/axodotdev/cargo-dist/pull/1579" rel="noopener noreferrer">Permit tag incoherence for dist plan</a></li>
+</ul>
+</li>
+</ul>
+<h2>Improved pc-windows-gnu support</h2>
+<p>Although we've previously supported <code>pc-windows-gnu</code> builds for Rust software, we had a few notable gotchas: we wouldn't install <code>choco</code> dependencies, and PowerShell installers couldn't install them. We've fixed both of these issues this release, ensuring these targets are a bit closer to <code>pc-windows-msvc</code> in support.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1586" rel="noopener noreferrer">feat: add pc-windows-gnu to powershell installers</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1566" rel="noopener noreferrer">Explicitly set manifest path when building MSI with WiX</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.26.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.26.0-prerelease.1</guid><content:encoded><![CDATA[<p>It's been slightly longer than usual since our last release, and now we're back with a slightly larger than usual release! This version brings several major new features and improvements, including the long-requested Rust cross-compilation feature and support for a few different Rust dependency version tracking formats.</p>
+<h2>Builtin Rust cross-compilation support</h2>
+<p>You've all asked for it, and it's finally here! Previously, we only supported Rust cross-compilation on macOS. With this release, we've extended Rust cross-compilation support to Linux (using <a href="https://github.com/rust-cross/cargo-zigbuild" rel="noopener noreferrer">cargo-zigbuild</a> and Windows (using <a href="https://github.com/rust-cross/cargo-xwin" rel="noopener noreferrer">cargo-xwin</a>. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#cross-compilation" rel="noopener noreferrer">the docs</a>.</p>
+<p>We're also making use of this feature ourselves: we now build our aarch64 Linux binaries using this new tooling.</p>
+<p>(Note: for technical reasons, cargo-zigbuild cross-compiles and cargo-auditable are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @fasterthanlime, @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1529" rel="noopener noreferrer">Add cross-compilation support via cargo-zigbuild and cargo-xwin</a></li>
+</ul>
+<h2>Checksum verifications in shell installers</h2>
+<p>While we've always generated checksum information for binary tarballs/ZIPs, we only actually validated those checksums in the Homebrew installer. That changes with this release: we now embed checksum information into the shell installer and validate the tarball before unpacking it.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1497" rel="noopener noreferrer">Verify checksums in install.sh</a></li>
+</ul>
+<h2>cargo-auditable support</h2>
+<p>We've added integrated support for the Rust Secure Code Working Group's <a href="https://github.com/rust-secure-code/cargo-auditable" rel="noopener noreferrer">cargo-auditable</a>, which embeds dependency information in your Rust binaries and makes it possible for users to check your binaries for the full dependency tree they were built from with their precise versions. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#cargo-auditable" rel="noopener noreferrer">our docs</a> and the <a href="https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md" rel="noopener noreferrer">docs for the cargo-audit tool</a>.</p>
+<p>(Note: for technical reasons, this feature and cargo-zigbuild cross-compiles are currently mutually exclusive. Users can only enable one or the other. cargo-xwin builds and cargo-auditable can be used together.)</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1528" rel="noopener noreferrer">Add cargo-auditable config option</a></li>
+</ul>
+<h2>cargo-cyclonedx support</h2>
+<p>We've also added support for generating <a href="https://cyclonedx.org" rel="noopener noreferrer">CyloneDX Software Bill of Materials (SBOM)</a> files for Rust projects. We've implemented this using the <a href="https://github.com/CycloneDX/cyclonedx-rust-cargo/blob/main/cargo-cyclonedx/README.md" rel="noopener noreferrer">cargo-cyclonedx</a> tool. Unlike the cargo-auditable support above, which embeds dependency information directly into your binaries, this data is stored as a standalone <code>bom.xml</code> file which is distributed with your software. Users can then validate that SBOM file using <a href="https://cyclonedx.org/tool-center/" rel="noopener noreferrer">any compatible CycloneDX tool</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1531" rel="noopener noreferrer">Add cargo-cyclonedx config option.</a></li>
+</ul>
+<h2>OmniBOR support</h2>
+<p>Rounding out this release's new security features, we've added support for <a href="https://omnibor.io" rel="noopener noreferrer">generating OmniBOR artifact IDs</a>. We implement this using the <a href="https://github.com/omnibor/omnibor-rs/tree/main/omnibor-cli" rel="noopener noreferrer">omnibor-cli</a> tool. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#omnibor" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1568" rel="noopener noreferrer">Add option to generate omnibor artifact IDs.</a></li>
+</ul>
+<h2>Strict error catching in template rendering</h2>
+<p>We've tightened up error handling for undefined values in templates when we create things such as installer scripts and the GitHub Actions YAML config. Any errors that occur here are dist's fault, not users' fault, and stricter error handling ensures we get the information we need to fix dist bugs and make this code more reliable. This was made possible thanks to a contribution by @fasterthanlime to the minijinja project, ensuring that we get actionable messages for these kinds of errors.</p>
+<ul>
+<li>impl @fasterthanlime <a href="https://github.com/axodotdev/cargo-dist/pull/1499" rel="noopener noreferrer">Enable jinja "strict undefined behavior", fix templates, improve reporting</a></li>
+</ul>
+<h2>Per-target glibc version overrides</h2>
+<p>Although we autodetect the glibc version used by your software in order to check the minimum requirements during install, users who bypass our build mechanism and run a custom build job didn't get the benefit of this feature. To compensate, we've added support for manually specifying the glibc version your software needs. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#min-glibc-version" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1537" rel="noopener noreferrer">Allow per-target glibc version overrides.</a></li>
+</ul>
+<h2>Tag-parsing and library-only mode improvements</h2>
+<p>We've tightened up the tag parsing code, ensuring that a few edge cases are handled more predictably. The <code>dist plan</code> output is now clearer in workspaces with multiple versions, with better instruction text on how to resolve unclear situations. We've also made a small change to <code>dist = false</code> handling, which means that we now refuse to run if a release tag only matches a crate with <code>dist = false</code> instead of going ahead with single library mode.</p>
+<ul>
+<li>impl
+<ul>
+<li>@duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1551" rel="noopener noreferrer">Avoid discarding tag information, so "dist plan --tag={name}-{version}" works.</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1441" rel="noopener noreferrer">Disable single-library mode for dist=false</a></li>
+<li>@alilleybrinker <a href="https://github.com/axodotdev/cargo-dist/pull/1579" rel="noopener noreferrer">Permit tag incoherence for dist plan</a></li>
+</ul>
+</li>
+</ul>
+<h2>Improved pc-windows-gnu support</h2>
+<p>Although we've previously supported <code>pc-windows-gnu</code> builds for Rust software, we had a few notable gotchas: we wouldn't install <code>choco</code> dependencies, and PowerShell installers couldn't install them. We've fixed both of these issues this release, ensuring these targets are a bit closer to <code>pc-windows-msvc</code> in support.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1586" rel="noopener noreferrer">feat: add pc-windows-gnu to powershell installers</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@pnehrer <a href="https://github.com/axodotdev/cargo-dist/pull/1566" rel="noopener noreferrer">Explicitly set manifest path when building MSI with WiX</a></li>
+</ul>
+]]></content:encoded></item></channel></rss>
