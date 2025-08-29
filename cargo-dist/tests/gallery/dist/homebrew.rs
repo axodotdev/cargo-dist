@@ -55,9 +55,21 @@ impl AppResult {
             }
 
             eprintln!("running brew install...");
-            homebrew.output_checked(|cmd| cmd.arg("install").arg(&formula_temp_path))?;
-            let prefix_output =
-                homebrew.output_checked(|cmd| cmd.arg("--prefix").arg(&formula_temp_path))?;
+            homebrew.output_checked(|cmd| {
+                // Set HOMEBREW_TESTS and HOMEBREW_DEVELOPER
+                // so we can install from a file path
+                // https://github.com/Homebrew/brew/blob/a1f112f3fea3a47c689317da7dced8818917b03d/Library/Homebrew/env_config.rb#L677-L679
+                cmd.env("HOMEBREW_TESTS", "1")
+                    .env("HOMEBREW_DEVELOPER", "1")
+                    .arg("install")
+                    .arg(&formula_temp_path)
+            })?;
+            let prefix_output = homebrew.output_checked(|cmd| {
+                cmd.env("HOMEBREW_TESTS", "1")
+                    .env("HOMEBREW_DEVELOPER", "1")
+                    .arg("--prefix")
+                    .arg(&formula_temp_path)
+            })?;
             let prefix_raw = String::from_utf8(prefix_output.stdout).unwrap();
             let prefix = prefix_raw.strip_suffix('\n').unwrap();
             let bin = Utf8PathBuf::from(&prefix).join("bin");
@@ -67,7 +79,12 @@ impl AppResult {
                 assert!(bin_path.exists(), "bin wasn't created");
             }
 
-            homebrew.output_checked(|cmd| cmd.arg("uninstall").arg(formula_temp_path))?;
+            homebrew.output_checked(|cmd| {
+                cmd.env("HOMEBREW_TESTS", "1")
+                    .env("HOMEBREW_DEVELOPER", "1")
+                    .arg("uninstall")
+                    .arg(formula_temp_path)
+            })?;
         }
         Ok(())
     }
