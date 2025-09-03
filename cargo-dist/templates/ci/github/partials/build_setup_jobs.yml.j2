@@ -1,0 +1,45 @@
+      {{%- for step in github_build_setup %}}
+      - name: {{{ step.name }}}
+        {{%- if step.id is not undefined %}}
+        id: {{{ step.id }}}
+        {{%- endif %}}
+        {{%- if step.uses is not undefined %}}
+        uses: {{{ step.uses }}}
+        {{%- endif %}}
+        {{%- if step.if is not undefined %}}
+        if: {{{ step.if }}}
+        {{%- endif %}}
+        {{%- if step.run is not undefined %}}
+        {{%- if step.run is multiline %}}
+        run: |
+          {{{ step.run|indent(10) }}}
+        {{%- else %}}
+        run: {{{ step.run }}}
+        {{%- endif %}}
+        {{%- endif %}}
+        {{%- if step.working_directory is not undefined %}}
+        working-directory: {{{ step.working_directory }}}
+        {{%- endif %}}
+        {{%- if step.shell is not undefined %}}
+        shell: {{{ step.shell }}}
+        {{%- endif %}}
+        {{%- if not step.with is empty %}}
+        with:
+          {{%- for (var,value) in step.with|items %}}
+          {{%- if value is mapping %}}
+          {{{ var }}}:
+            {{%- for (var,value) in value|items %}}
+            {{{ var }}}: {{{ value }}}
+            {{%- endfor %}}
+          {{%- else %}}
+          {{{ var }}}: {{{ value }}}
+          {{%- endif %}}
+          {{%- endfor %}}
+        {{%- endif %}}
+        {{%- if not step.env is empty %}}
+        env:
+          {{%- for (var,value) in step.env|items %}}
+          {{{ var }}}: {{{ value }}}
+          {{%- endfor %}}
+        {{%- endif %}}
+      {{%- endfor %}}
