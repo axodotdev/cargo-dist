@@ -100,6 +100,8 @@ pub struct GithubCiInfo {
     pub root_permissions: Option<GithubPermissionMap>,
     /// Extra build steps
     pub github_build_setup: Vec<GithubJobStep>,
+    /// The jobs to which the [`GithubCiInfo::github_build_setup`] steps should be prepended
+    pub github_build_setup_jobs: Vec<String>,
     /// Info about making a GitHub Release (if we're making one)
     #[serde(flatten)]
     pub github_release: Option<GithubReleaseInfo>,
@@ -364,6 +366,7 @@ impl GithubCiInfo {
             })
             .transpose()?
             .unwrap_or_default();
+        let github_build_setup_jobs = ci_config.build_setup_jobs.clone();
 
         let default_action_versions = [
             ("actions/checkout", "v6"),
@@ -412,6 +415,7 @@ impl GithubCiInfo {
             hosting_providers,
             root_permissions,
             github_build_setup,
+            github_build_setup_jobs,
             github_release,
             actions,
             need_cargo_auditable,
