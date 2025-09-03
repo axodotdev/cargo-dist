@@ -96,6 +96,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`github-custom-job-permissions`](#github-custom-job-permissions)
     * [`github-custom-runners`](#github-custom-runners)
     * [`github-build-setup`](#github-build-setup)
+    * [`github-build-setup-jobs`](#github-build-setup-jobs)
     * [`github-action-commits`](#github-action-commits)
 * [custom ci jobs](#custom-ci-jobs)
     * [`plan-jobs`](#plan-jobs)
@@ -1384,8 +1385,28 @@ These settings are specific to [your dist GitHub CI][github-ci].
 
 This configuration value should be a path relative to the repository your `.github/workflows` directory.
 The file located at that path should contain a yaml array of [steps][github-workflow-step] which will be
-performed before we call `dist build`.
+performed before we call `dist build` in the `build-local-artifacts` job. These
+steps can be added to additional jobs by defining
+[`github-build-setup-jobs`](#github-build-setup-jobs).
 
+#### `github-build-setup-jobs`
+
+> <span style="float:right">since 1.0.0<br>[global-only][]</span>
+> 🔧 this is an experimental feature! \
+> [📖 read the ci customization guide!][github-ci] \
+> default = `<none>`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> # Defaults to "build-local-artifacts"
+> github-build-setup-jobs = ["plan", "build-local-artifacts"]
+> ```
+
+This configuration value should accompany
+[`github-build-setup`](#github-build-setup). When not specified, it defaults to
+`["build-local-artifacts"]`. Otherwise, the listed jobs will have the steps
+defined in `github-build-setup` added.
 
 #### `github-custom-job-permissions`
 
