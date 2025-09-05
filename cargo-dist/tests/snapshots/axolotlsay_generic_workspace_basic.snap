@@ -1783,6 +1783,7 @@ function Download($download_url, $platforms) {
   Write-Verbose "  from $url"
   Write-Verbose "  to $dir_path"
   $wc = New-Object Net.Webclient
+  $wc.Proxy = [System.Net.WebRequest]::GetSystemWebProxy()
   if ($auth_token) {
     $wc.Headers["Authorization"] = "Bearer $auth_token"
   }
@@ -3911,6 +3912,7 @@ function Download($download_url, $platforms) {
   Write-Verbose "  from $url"
   Write-Verbose "  to $dir_path"
   $wc = New-Object Net.Webclient
+  $wc.Proxy = [System.Net.WebRequest]::GetSystemWebProxy()
   if ($auth_token) {
     $wc.Headers["Authorization"] = "Bearer $auth_token"
   }
