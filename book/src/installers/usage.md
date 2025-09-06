@@ -115,9 +115,10 @@ requested API structure expectations to match either:
     - Public artifact URLs: https://{CUSTOM}/owner/repo/releases/download/version/artifact-name
     - Releases API: https://{CUSTOM}/api/v3/repos/owner/repo/releases/latest ([docs](https://docs.github.com/en/enterprise-server@3.14/rest/releases/releases?apiVersion=2022-11-28))
 
+Users can also override the entire URL for the artifact by specifying `${app name}_DOWNLOAD_URL` (available since 0.30.0).
+
 `dist` is eager to support enterprise level features like this- so if you have questions
-or related feature requests, please join our [Discord](https://discord.gg/MnyjrpTceV) or send
-us an email at hello@axo.dev.
+or related feature requests, please join our [Discord](https://discord.gg/MnyjrpTceV).
 
 ## GitHub bearer token
 
@@ -126,6 +127,17 @@ us an email at hello@axo.dev.
 By default, the installer fetches archives without using any form of authentication. This is fine for public repos, but users with private projects (or who run into GitHub rate limits) may wish to provide their own tokens when downloading. If set, this will be used when fetching GitHub artifacts.
 
 - `${app name}_GITHUB_TOKEN`
+
+## Verbosity
+
+> since 0.30.0
+
+Users can customize the verbosity of the shell installer by specifying one of two environment variables:
+
+- `${app name}_PRINT_QUIET` (also available as `--quiet` on the commandline)
+- `${app name}_PRINT_VERBOSE` (also available as `--verbose` on the commandline)
+
+`${app name}_PRINT_QUIET` will suppress warnings and error messages, while `${app name}_PRINT_VERBOSE` will print some extra debugging messages.
 
 ## Receipt
 
