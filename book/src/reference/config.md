@@ -1086,6 +1086,8 @@ If you're using GitHub Releases, this will enable GitHub's experimental artifact
 > github-attestations-phase = "host"
 > ```
 
+Most users won't need to use this feature. If you've enabled `github-attestations`, attestations are ordinarily performed while local builds are running. Users making use of the [`build-local-artifacts = false`](#build-local-artifacts) setting to perform their own builds won't be able to make use of attestations in that phase, so these users will need to move attestations to another phase.
+
 Possible values:
 
 * `host`: Create the GitHub Attestations during the `host` phase.
@@ -1105,7 +1107,9 @@ Possible values:
 > github-attestations-filters = ["*.json", "*.sh", "*.ps1", "*.zip", "*.tar.gz"]
 > ```
 
-Allows filtering GitHub Attestations in the `host` phase. All patterns are globed against the pattern `artifacts/{filter}`.
+Allows configuring which artifacts to perform GitHub Attestations for in the `host` phase. All patterns are globed against the pattern `artifacts/{filter}`.
+
+This doesn't currently support attestations performed in the `build-local-artifacts` phase, but support for this may be added in the future.
 
 #### `github-release`
 
