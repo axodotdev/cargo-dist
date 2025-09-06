@@ -8,10 +8,7 @@ Note that GitHub's Artifact Attestations only supports public repositories and p
 
 Currently, verification of GitHub Artifact Attestations is only supported via GitHub CLI with [`gh attestation verify`].
 
-Additionally, you can control which phase attestations occur using the [`github-attestations-phase` setting](../../reference/config.md#github-attestations-phase).
-
-By default, attestations occur during the `build-local-artifacts` phase. This can be alternatively be changed to the `host` phase, which is particularly
-useful when `build-local-artifacts` is set to `false`.
+The phase in which attestations occur can be configured using the [`github-attestations-phase` setting](../../reference/config.md#github-attestations-phase). By default, attestations occur during the `build-local-artifacts` phase. This can be be changed to the `host` phase, which is particularly useful when `build-local-artifacts` is set to `false`.
 
 When performing attestations in the `host` phase, you can control what gets attested by using the [`github-attestations-filters` setting](../../reference/config.md#github-attestations-filters).
 
