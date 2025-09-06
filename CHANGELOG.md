@@ -1,6 +1,75 @@
 # Unreleased
 
-* Add support for GitHub Attestations in the host phase.
+# Version 0.30.0 (2025-09-07)
+
+This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.
+
+## ZIP archive improvements
+
+Previous versions of dist produced uncompressed ZIP archives which meant that they were much larger than necessary. ZIP archives are now compressed.
+
+- impl @trim21 [feat: enable compression on zip](https://github.com/axodotdev/axoasset/pull/312)
+
+In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions. 
+
+- impl @mistydemeo [fix: preserve Unix permissions in ZIPs](https://github.com/axodotdev/axoasset/pull/311)
+
+The npm installer previously used the `unzip` commandline utility to unpack ZIP archives on Windows. This isn't available in all installations, so some users would experience errors at install time. We've improved this by switching to the builtin PowerShell `Expand-Archive` cmdlet.
+
+- impl @jacobtread
+  - [fix: windows use powershell to extract zip file](https://github.com/axodotdev/cargo-dist/pull/2005)
+  - [fix: platform.includes bug](https://github.com/axodotdev/cargo-dist/pull/2046)
+
+## Additional installer configuration environment variables
+
+dist's installers are configurable using a variety of different environment variables, but in previous versions only some of these would be branded with your app's name. We now provide branded versions of all of the other environment variables as well. The previous unbranded environment variables will continue to work. The new variables are:
+
+* `${APP_NAME}_DOWNLOAD_URL`
+* `${APP_NAME}_PRINT_QUIET`
+* `${APP_NAME}_PRINT_VERBOSE`
+
+- impl @Gankra
+  - [make every last INSTALLER_ variable have a branded version](https://github.com/astral-sh/cargo-dist/pull/46)
+  - [support `{BRAND}_DOWNLOAD_URL` in ps1 installer](https://github.com/astral-sh/cargo-dist/pull/48)
+
+This feature previously appeared in version 0.28.7 of Astral's fork.
+
+## Shell installer refuses to use Snap-installed curl
+
+The shell installers will now refuse to fetch archives using a copy of curl installed via the [Snap](https://en.wikipedia.org/wiki/Snap_(software)) package manager for Ubuntu. Snap-installed copies of curl have limitations on their ability to write downloaded files to disk which makes them unsuitable for dist's installers. If a Snap-installed curl is detected, the installer will try to fall back to using another download tool; if no other tool is present, a message will be shown to the user and the installation will abort.
+
+- impl @konstin [Avoid snap curl](https://github.com/astral-sh/cargo-dist/pull/28)
+
+This feature previously appeared in version 0.28.5 of Astral's fork.
+
+## PowerShell installer now supports proxies
+
+The PowerShell installer now respects the `HTTPS_PROXY` and `ANY_PROXY` environment variables and uses them to configure a proxy when fetching artifacts. These were already supported by the shell installer.
+
+- impl @zanieb and @zsol [Powershell installer: respect HTTPS_PROXY and ANY_PROXY env vars](https://github.com/axodotdev/cargo-dist/pull/2078)
+
+## macOS code signing now supports the `--options` flag
+
+When using the experimental macOS codesigning feature, users can now specify a value to be passed to the `--options` flag using the `CODESIGN_OPTIONS` environment variable.
+
+- impl @jackkleeman [Support --options in mac code signing](https://github.com/axodotdev/cargo-dist/pull/1743)
+
+## Linux arm64 GitHub Actions builds now use native arm64 runners by default
+
+In previous versions of dist, we used cross-compilation to build arm64 Linux binaries from an x86_64 host. GitHub now provides free native arm64 runners, so we've switched to using these by default. Users can still use cross-compilation if they prefer by specifying the x86_64 runners using the [custom runners feature](https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners) in the dist config.
+
+## GitHub Actions artifact attestations can now be customized
+
+It's now possible to customize exactly which artifacts are attested, and which phase of the build process to perform the attestations in. Currently, customizing which artifacts to attest requires the attestation to happen during the `host` phase; this restriction may be lifted in the future.
+
+To specify which artifacts to attest, you can use a list of globs; any artifacts matching any of those globs will receive an attestation. For example:
+
+```toml
+github-attestations-phase = "host"
+github-attestations-filters = ["*.json", "*.sh", "*.ps1", "*.zip", "*.tar.gz"]
+```
+
+- impl @samypr100 [Add support for attestations in the host phase](https://github.com/axodotdev/cargo-dist/issues/1754)
 
 # Version 0.29.0 (2025-07-31)
 
