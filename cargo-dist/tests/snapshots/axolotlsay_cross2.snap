@@ -1613,6 +1613,46 @@ function Get-Arch() {
   }
 }
 
+function New-WebProxyFromUrl {
+    param([string]$ProxyUrl)
+
+    if ([string]::IsNullOrWhiteSpace($ProxyUrl)) {
+        return $null
+    }
+
+    try {
+        # Parse the proxy URL
+        $uri = [System.Uri]$ProxyUrl
+
+        # Create WebProxy instance
+        $webProxy = New-Object System.Net.WebProxy($uri)
+
+        # Set credentials if provided in URL
+        if (-not [string]::IsNullOrEmpty($uri.UserInfo)) {
+            $userInfo = $uri.UserInfo.Split(':')
+            if ($userInfo.Length -eq 2) {
+                $username = [System.Uri]::UnescapeDataString($userInfo[0])
+                $password = [System.Uri]::UnescapeDataString($userInfo[1])
+                $webProxy.Credentials = New-Object System.Net.NetworkCredential($username, $password)
+            }
+        }
+
+        return $webProxy
+    }
+    catch {
+        Write-Verbose("Failed to parse proxy URL '$ProxyUrl': $($_.Exception.Message)")
+        return $null
+    }
+}
+
+function New-WebProxyFromEnvironment {
+    $httpsProxy = [System.Environment]::GetEnvironmentVariable("HTTPS_PROXY")
+    $allProxy = [System.Environment]::GetEnvironmentVariable("ALL_PROXY")
+    $proxyUrl = if (-not [string]::IsNullOrWhiteSpace($httpsProxy)) { $httpsProxy } else { $allProxy }
+    $webProxy = New-WebProxyFromUrl -ProxyUrl $proxyUrl
+    return $webProxy
+}
+
 function Download($download_url, $platforms) {
   $arch = Get-TargetTriple $platforms
 
@@ -1639,7 +1679,10 @@ function Download($download_url, $platforms) {
   Write-Verbose "  from $url"
   Write-Verbose "  to $dir_path"
   $wc = New-Object Net.Webclient
-  $wc.Proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+  $proxy = New-WebProxyFromEnvironment
+  if ($null -ne $proxy) {
+    $wc.Proxy = $proxy
+  }
   if ($auth_token) {
     $wc.Headers["Authorization"] = "Bearer $auth_token"
   }
