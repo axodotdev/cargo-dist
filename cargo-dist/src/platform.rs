@@ -979,7 +979,7 @@ lazy_static::lazy_static! {
             map.insert(TARGET_PPC64LE_LINUX_GNU, "PPC64LE Linux");
             map.insert(TARGET_S390X_LINUX_GNU, "S390x Linux");
             map.insert(TARGET_RISCV_LINUX_GNU, "RISCV Linux");
-            map.insert(TARGET_LOONGARCH64_LINUX_GNU, "LOONGARCH64 Linux");
+            map.insert(TARGET_LOONGARCH64_LINUX_GNU, "LoongArch64 Linux");
             map.insert(TARGET_SPARC64_LINUX_GNU, "SPARC64 Linux");
 
             map.insert(TARGET_X86_LINUX_MUSL, "x86 MUSL Linux");
@@ -995,7 +995,7 @@ lazy_static::lazy_static! {
             map.insert(TARGET_PPC64LE_LINUX_MUSL, "PPC64LE MUSL Linux");
             map.insert(TARGET_S390X_LINUX_MUSL, "S390x MUSL Linux");
             map.insert(TARGET_RISCV_LINUX_MUSL, "RISCV MUSL Linux");
-            map.insert(TARGET_LOONGARCH64_LINUX_MUSL, "LOONGARCH64 MUSL Linux");
+            map.insert(TARGET_LOONGARCH64_LINUX_MUSL, "LoongArch64 MUSL Linux");
             map.insert(TARGET_SPARC64_LINUX_MUSL, "SPARC64 MUSL Linux");
 
             map.insert(TARGET_X86_WINDOWS, "x86 Windows");
