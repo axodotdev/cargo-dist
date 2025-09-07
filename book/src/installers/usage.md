@@ -128,6 +128,12 @@ By default, the installer fetches archives without using any form of authenticat
 
 - `${app name}_GITHUB_TOKEN`
 
+## Proxy
+
+> since 0.1.0 (shell), 0.30.0 (powershell)
+
+Users who need to fetch artifacts via a proxy can set the `HTTPS_PROXY` or `ALL_PROXY` environment variables. This is compatible with the syntax used by cURL; for more information, see [cURL's documentation](https://everything.curl.dev/usingcurl/proxies/env.html).
+
 ## Verbosity
 
 > since 0.30.0
