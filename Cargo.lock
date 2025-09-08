@@ -1959,9 +1959,9 @@ dependencies = [
 
 [[package]]
 name = "parse-changelog"
-version = "0.6.12"
+version = "0.6.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "273a60ea03abb9825bb3034849496510a4aa9d438449cb5a7cb842e954e86490"
+checksum = "dae790f630ae8d5eeb38c7b48c62c7a82336531bca0e5fdf98fe6ca2178bbfe6"
 dependencies = [
  "indexmap 2.11.0",
  "lexopt",
