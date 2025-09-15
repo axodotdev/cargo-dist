@@ -2910,7 +2910,7 @@ install(false);
         "axios": "^1.11.0",
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
-        "detect-libc": "^2.0.4",
+        "detect-libc": "^2.1.0",
         "rimraf": "^6.0.1"
       },
       "devDependencies": {
@@ -3118,10 +3118,10 @@ install(false);
       "engines": {
         "node": ">=8"
       },
-      "integrity": "sha512-3UDv+G9CsCKO1WKMGw9fwq/SWJYbI0c5Y7LU1AXYoDdbhE2AHQ6N6Nb34sG8Fj7T5APy8qXDCKuuIHd1BR0tVA==",
+      "integrity": "sha512-vEtk+OcP7VBRtQZ1EJ3bdgzSfBjgnEalLTp5zjJrS+2Z1w2KZly4SBdac/WDU3hhsNAZ9E8SC96ME4Ey8MZ7cg==",
       "license": "Apache-2.0",
-      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.0.4.tgz",
-      "version": "2.0.4"
+      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.0.tgz",
+      "version": "2.1.0"
     },
     "node_modules/dunder-proto": {
       "dependencies": {
@@ -3811,7 +3811,7 @@ install(false);
     "axios": "^1.11.0",
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
-    "detect-libc": "^2.0.4",
+    "detect-libc": "^2.1.0",
     "rimraf": "^6.0.1"
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
