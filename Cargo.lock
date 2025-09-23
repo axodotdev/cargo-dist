@@ -799,7 +799,7 @@ dependencies = [
  "clap-cargo",
  "color-backtrace",
  "comfy-table",
- "console 0.15.11",
+ "console 0.16.0",
  "current_platform",
  "dialoguer",
  "dist-schema",
