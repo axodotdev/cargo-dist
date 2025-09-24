@@ -30,7 +30,7 @@ gazenot = { version = "0.3.3" }
 
 # third-party deps
 clap = { version = "4.5.47", features = ["derive"] }
-console = { version = "0.15.10" }
+console = { version = "0.16.0" }
 clap-cargo = { version = "0.14.1" }
 comfy-table = "7.2.0"
 miette = { version = "7.6.0" }
@@ -42,7 +42,7 @@ cargo_metadata = "0.19.2"
 camino = { version = "1.1.12", features = ["serde1"] }
 semver = "1.0.26"
 newline-converter = "0.3.0"
-dialoguer = "0.11.0"
+dialoguer = "0.12.0"
 sha2 = "0.10.9"
 minijinja = { version = "2.12.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.4"
