@@ -32,7 +32,7 @@ gazenot = { version = "0.3.3" }
 clap = { version = "4.5.47", features = ["derive"] }
 console = { version = "0.16.1" }
 clap-cargo = { version = "0.14.1" }
-comfy-table = "7.2.0"
+comfy-table = "7.2.1"
 miette = { version = "7.6.0" }
 thiserror = "2.0.16"
 tracing = { version = "0.1.41", features = ["log"] }
