@@ -267,7 +267,6 @@ fn generate_installer(version: &axotag::Version, release_type: ReleaseSourceType
 }
 
 #[test]
-#[ignore = "can't be reenabled until after the rename"]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
     if std::env::var(ENV_RUIN_ME)
@@ -277,7 +276,7 @@ fn test_self_update() {
         std::env::remove_var("XDG_CONFIG_HOME");
 
         let mut args = RuntestArgs {
-            app_name: "cargo-dist".to_owned(),
+            app_name: "dist".to_owned(),
             package: "cargo-dist".to_owned(),
             owner: "axodotdev".to_owned(),
             bin: PathBuf::from(BIN),
