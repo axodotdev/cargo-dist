@@ -12,7 +12,7 @@
         "axios": "^1.12.2",
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
-        "detect-libc": "^2.1.1",
+        "detect-libc": "^2.1.2",
         "rimraf": "^6.0.1"
       },
       "devDependencies": {
@@ -213,9 +213,9 @@
       }
     },
     "node_modules/detect-libc": {
-      "version": "2.1.1",
-      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.1.tgz",
-      "integrity": "sha512-ecqj/sy1jcK1uWrwpR67UhYrIFQ+5WlGxth34WquCbamhFA6hkkwiu37o6J5xCHdo1oixJRfVRw+ywV+Hq/0Aw==",
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
       "license": "Apache-2.0",
       "engines": {
         "node": ">=8"
