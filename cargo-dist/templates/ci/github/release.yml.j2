@@ -210,6 +210,12 @@ jobs:
       CODESIGN_CERTIFICATE_PASSWORD: ${{ secrets.CODESIGN_CERTIFICATE_PASSWORD }}
       CODESIGN_IDENTITY: ${{ secrets.CODESIGN_IDENTITY }}
     {{%- endif %}}
+    {{%- if build_local_artifacts_permissions %}}
+    permissions:
+      {{%- for perm_name in build_local_artifacts_permissions %}}
+      {{{ perm_name }}}: {{{ build_local_artifacts_permissions[perm_name] }}}
+      {{%- endfor %}}
+    {{%- endif %}}
     steps:
       - name: enable windows longpaths
         run: |
@@ -500,6 +506,12 @@ jobs:
     runs-on: {{{ global_task.runner }}}
     outputs:
       val: ${{ steps.host.outputs.manifest }}
+    {{%- if host_phase_permissions %}}
+    permissions:
+      {{%- for perm_name in host_phase_permissions %}}
+      {{{ perm_name }}}: {{{ host_phase_permissions[perm_name] }}}
+      {{%- endfor %}}
+    {{%- endif %}}
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
