@@ -1,5 +1,7 @@
 # Unreleased
 
+In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level. 
+
 # Version 0.30.0 (2025-09-07)
 
 This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.
