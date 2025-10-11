@@ -35,7 +35,7 @@ pub enum DistError {
     #[diagnostic(transparent)]
     Cmd(#[from] axoprocess::AxoprocessError),
 
-    /// random gazenot error
+    /// random axoproject error
     #[error(transparent)]
     #[diagnostic(transparent)]
     Project(#[from] axoproject::errors::ProjectError),
