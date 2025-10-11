@@ -26,7 +26,6 @@ axoupdater = { version = "0.9.0", default-features = false, features = ["github_
 axotag = "0.3.0"
 axoasset = { version = "1.3.0", features = ["json-serde", "toml-serde", "toml-edit", "yaml-serde", "compression", "remote"] }
 axoprocess = { version = "0.2.1" }
-gazenot = { version = "0.3.3" }
 
 # third-party deps
 clap = { version = "4.5.48", features = ["derive"] }
