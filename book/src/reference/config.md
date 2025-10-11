@@ -26,6 +26,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`checksum`](#checksum)
 * [`extra-artifacts`](#extra-artifacts)
 * [`source-tarball`](#source-tarball)
+* [`recursive-tarball`](#recursive-tarball)
 * [`ssldotcom-windows-sign`](#ssldotcom-windows-sign)
 * [archive settings](#artifact-settings)
     * [`auto-includes`](#auto-includes)
