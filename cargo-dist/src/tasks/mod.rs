@@ -526,9 +526,6 @@ pub fn build_wrapper_for_cross(
                 // zigbuild works for e.g. x86_64-unknown-linux-gnu => aarch64-unknown-linux-gnu
                 Ok(Some(CargoBuildWrapper::ZigBuild))
             },
-            OperatingSystem::Freebsd => {
-                Ok(Some(CargoBuildWrapper::Cross))
-            },
             _ => {
                 Err(DistError::UnsupportedCrossCompile {
                     host: host.clone(),
@@ -554,6 +551,9 @@ pub fn build_wrapper_for_cross(
                     details: format!("no idea how to cross-compile from {host} to windows with architecture {}", target.architecture),
                 })
             }
+        },
+        OperatingSystem::Freebsd => {
+            Ok(Some(CargoBuildWrapper::Cross))
         },
         _ => {
             Err(DistError::UnsupportedCrossCompile {

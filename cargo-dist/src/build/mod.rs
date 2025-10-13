@@ -5,10 +5,7 @@ use camino::Utf8PathBuf;
 use dist_schema::{AssetInfo, DistManifest, TripleNameRef};
 use tracing::info;
 
-use crate::{
-    copy_file, linkage::determine_linkage, Binary, BinaryIdx, BinaryKind, DistError, DistGraph,
-    DistResult, SortedMap,
-};
+use crate::{copy_file, linkage::determine_linkage, Binary, BinaryIdx, BinaryKind, CargoBuildWrapper, DistError, DistGraph, DistResult, SortedMap};
 
 pub mod cargo;
 pub mod fake;
@@ -89,7 +86,7 @@ impl BuildExpectations {
     ///
     /// NOTE: it is correct/expected to hand this a bunch of random paths to things
     /// that vaguely might be what we want, assuming it knows how to pick the right ones out.
-    pub fn found_bins(&mut self, pkg_id: String, filenames: Vec<Utf8PathBuf>) {
+    pub fn found_bins(&mut self, pkg_id: String, filenames: Vec<Utf8PathBuf>, wrapper: Option<CargoBuildWrapper>) {
         // The files we're given by cargo are one big mush of
         // the executables, libraries, symbols, etc.
         // Try to partition this into what's probably symbols
@@ -111,7 +108,16 @@ impl BuildExpectations {
         // of feature resolution), this can produce a bunch of binaries for examples or
         // packages you don't care about, which cargo/rustc will happily report back to us,
         // and we need to be aware enough to throw those irrelevant results out.
-        for src_path in maybe_bins {
+        for mut src_path in maybe_bins {
+            // Due to cross being docker based we get a weird absolute path back from the analytics
+            // that starts with `/target`.
+            // To handle these kinds of path we simply convert them to relative path.
+            if wrapper.eq(&Some(CargoBuildWrapper::Cross)) && src_path.starts_with("/target") {
+                if let Ok(path) = src_path.strip_prefix("/") {
+                    src_path = Utf8PathBuf::from(path);
+                }
+            }
+
             info!("got a new binary: {}", src_path);
 
             // lookup the binary in the package
