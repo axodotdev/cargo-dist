@@ -995,5 +995,6 @@ pub fn known_desktop_targets() -> Vec<TripleName> {
         t::TARGET_ARM64_MAC.to_owned(),
         t::TARGET_ARM64_LINUX_GNU.to_owned(),
         t::TARGET_ARM64_WINDOWS.to_owned(),
+        t::TARGET_X64_FREEBSD.to_owned(),
     ]
 }
