@@ -688,6 +688,13 @@ fn github_runner_for_target(
             } else {
                 runner_to_config(GithubRunnerRef::from_str("windows-2022"))
             }
+        },
+        OperatingSystem::Freebsd => {
+            if target_triple.architecture == Architecture::X86_64 {
+                runner_to_config(GithubRunnerRef::from_str("ubuntu-latest"))
+            } else {
+                return Ok(None);
+            }
         }
         _ => return Ok(None),
     });
@@ -744,6 +751,8 @@ fn system_deps_install_script(
     let mut chocolatey_packages: SortedSet<(ChocolateyPackageName, Option<PackageVersion>)> =
         Default::default();
 
+    let binstall_needed = targets.iter().any(|t| t.is_freebsd());
+
     let mut lines = Vec::<String>::new();
     let host = rc.real_triple();
     match host.operating_system {
@@ -756,11 +765,16 @@ fn system_deps_install_script(
                     continue;
                 }
                 brew_packages.insert(name.clone());
-                brew_packages.insert(HomebrewPackageName::new("cargo-binstall".to_string()));
+                if binstall_needed {
+                    brew_packages.insert(HomebrewPackageName::new("cargo-binstall".to_string()));
+                }
             }
         }
-        OperatingSystem::Linux => {
-            lines.push("curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash".to_string());
+        // We can use Freebsd here because it is getting cross-compiled from Linux
+        OperatingSystem::Freebsd | OperatingSystem::Linux => {
+            if binstall_needed {
+                lines.push("curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash;".to_string());
+            }
             // We currently don't support non-apt package managers on Linux
             // is_none() means a native build, probably on GitHub's
             // apt-using runners.
@@ -789,7 +803,9 @@ fn system_deps_install_script(
             }
         }
         OperatingSystem::Windows => {
-            lines.push("Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr \"https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1\").Content".to_string());
+            if binstall_needed {
+                lines.push("Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr \"https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1\").Content".to_string());
+            }
             for (name, pkg) in &packages.chocolatey {
                 if !pkg.0.stage_wanted(&DependencyKind::Build) {
                     continue;
