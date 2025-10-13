@@ -289,6 +289,8 @@ pub struct Tools {
     pub cargo_xwin: Option<Tool>,
     /// cargo-zigbuild, for some cross builds
     pub cargo_zigbuild: Option<Tool>,
+    /// cargo-cross, for some cross builds
+    pub cargo_cross: Option<Tool>,
 }
 
 impl Tools {
@@ -331,6 +333,13 @@ impl Tools {
     pub fn cargo_zigbuild(&self) -> DistResult<&Tool> {
         self.cargo_zigbuild.as_ref().ok_or(DistError::ToolMissing {
             tool: "cargo-zigbuild".to_owned(),
+        })
+    }
+
+    /// Returns cargo-cross info or an error
+    pub fn cargo_cross(&self) -> DistResult<&Tool> {
+        self.cargo_cross.as_ref().ok_or(DistError::ToolMissing {
+            tool: "cargo-cross".to_owned(),
         })
     }
 }
@@ -468,6 +477,10 @@ pub enum CargoBuildWrapper {
     /// Run 'cargo xwin' to cross-compile, e.g. from `aarch64-apple-darwin` to `x86_64-pc-windows-msvc`
     /// cf. <https://github.com/rust-cross/cargo-xwin>
     Xwin,
+
+    /// Run 'cargo cross' to cross-compile, e.g. from `x86_64-unknown-linux-gnu` to `x86_64-unknown-freebsd`
+    /// cf. <https://github.com/cross-rs/cross>
+    Cross,
 }
 
 impl std::fmt::Display for CargoBuildWrapper {
@@ -475,6 +488,7 @@ impl std::fmt::Display for CargoBuildWrapper {
         f.pad(match self {
             CargoBuildWrapper::ZigBuild => "cargo-zigbuild",
             CargoBuildWrapper::Xwin => "cargo-xwin",
+            CargoBuildWrapper::Cross => "cargo-cross",
         })
     }
 }
@@ -511,7 +525,10 @@ pub fn build_wrapper_for_cross(
             OperatingSystem::Linux | OperatingSystem::Darwin(_) | OperatingSystem::Windows => {
                 // zigbuild works for e.g. x86_64-unknown-linux-gnu => aarch64-unknown-linux-gnu
                 Ok(Some(CargoBuildWrapper::ZigBuild))
-            }
+            },
+            OperatingSystem::Freebsd => {
+                Ok(Some(CargoBuildWrapper::Cross))
+            },
             _ => {
                 Err(DistError::UnsupportedCrossCompile {
                     host: host.clone(),
@@ -1462,7 +1479,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 if target_is_windows {
                     platform_lib_ext = ".dll";
                     platform_staticlib_ext = ".lib";
-                } else if target.is_linux() {
+                } else if target.is_linux() || target.is_freebsd(){
                     platform_lib_ext = ".so";
                     platform_staticlib_ext = ".a";
                 } else if target.is_darwin() {
@@ -3280,6 +3297,7 @@ fn tool_info() -> DistResult<Tools> {
         cargo_cyclonedx: find_cargo_subcommand("cargo", "cyclonedx", "--version"),
         cargo_xwin: find_cargo_subcommand("cargo", "xwin", "--version"),
         cargo_zigbuild: find_tool("cargo-zigbuild", "--version"),
+        cargo_cross: find_tool("cross", "--version"),
     })
 }
 

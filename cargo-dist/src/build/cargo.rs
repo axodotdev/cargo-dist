@@ -210,6 +210,12 @@ pub fn make_build_cargo_target_command(
             command.env("XWIN_ARCH", arch);
             command.arg("xwin").arg("build");
         }
+        Some(CargoBuildWrapper::Cross) => {
+            Cmd::new("cross", "Cross compile using cross.")
+                .arg("cross")
+                .arg("build")
+                .arg(format!("--target {}", target));
+        }
     }
     command
         .arg("--profile")
@@ -334,7 +340,6 @@ fn determine_brew_rustflags(base_rustflags: &str, environment: &SortedMap<&str, 
 
 #[cfg(test)]
 mod tests {
-
     use super::make_build_cargo_target_command;
     use crate::platform::targets;
     use crate::tasks::{CargoTargetFeatureList, CargoTargetFeatures, CargoTargetPackages};

@@ -39,6 +39,11 @@ impl TripleNameRef {
         self.0.contains("linux")
     }
 
+    /// Returns true if this target triple contains the word "freebsd"
+    pub fn is_freebsd(&self) -> bool {
+        self.0.contains("freebsd")
+    }
+
     /// Returns true if this target triple contains the word "apple"
     pub fn is_apple(&self) -> bool {
         self.0.contains("apple")

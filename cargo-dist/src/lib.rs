@@ -73,6 +73,7 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
     let need_omnibor = builds.omnibor;
     let mut need_xwin = false;
     let mut need_zigbuild = false;
+    let mut need_cross = false;
 
     let tools = dist.tools;
     let host = tools.host_target.parse()?;
@@ -95,6 +96,9 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
                     Some(CargoBuildWrapper::ZigBuild) => {
                         need_zigbuild = true;
                     }
+                    Some(CargoBuildWrapper::Cross) => {
+                        need_cross = true;
+                    }
                     None => {}
                 }
             }
@@ -111,6 +115,7 @@ pub fn do_env_test(cfg: &Config) -> DistResult<()> {
         need_omnibor.then(|| tools.omnibor()),
         need_xwin.then(|| tools.cargo_xwin()),
         need_zigbuild.then(|| tools.cargo_zigbuild()),
+        need_cross.then(|| tools.cargo_cross()),
     ];
 
     // Drop `None`s, then extract the values from the remaining `Option`s.
