@@ -744,6 +744,7 @@ fn system_deps_install_script(
     let mut chocolatey_packages: SortedSet<(ChocolateyPackageName, Option<PackageVersion>)> =
         Default::default();
 
+    let mut lines = Vec::<String>::new();
     let host = rc.real_triple();
     match host.operating_system {
         OperatingSystem::Darwin(_) => {
@@ -755,9 +756,11 @@ fn system_deps_install_script(
                     continue;
                 }
                 brew_packages.insert(name.clone());
+                brew_packages.insert(HomebrewPackageName::new("cargo-binstall".to_string()));
             }
         }
         OperatingSystem::Linux => {
+            lines.push("curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash".to_string());
             // We currently don't support non-apt package managers on Linux
             // is_none() means a native build, probably on GitHub's
             // apt-using runners.
@@ -786,6 +789,7 @@ fn system_deps_install_script(
             }
         }
         OperatingSystem::Windows => {
+            lines.push("Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr \"https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1\").Content".to_string());
             for (name, pkg) in &packages.chocolatey {
                 if !pkg.0.stage_wanted(&DependencyKind::Build) {
                     continue;
@@ -804,7 +808,6 @@ fn system_deps_install_script(
         }
     }
 
-    let mut lines = vec![];
     if !brew_packages.is_empty() {
         lines.push(brew_bundle_command(brew_packages.iter()))
     }
@@ -852,6 +855,11 @@ fn system_deps_install_script(
         pip_pkgs.insert(PipPackageName::new("cargo-xwin".to_owned()));
     }
 
+    let mut cargo_binstall_pkgs: SortedSet<String> = Default::default();
+    if required_wrappers.contains(&CargoBuildWrapper::Cross) {
+        cargo_binstall_pkgs.insert("cross".to_string());
+    }
+
     if !pip_pkgs.is_empty() {
         let push_pip_install_lines = |lines: &mut Vec<String>| {
             if host.operating_system == OperatingSystem::Linux {
@@ -888,6 +896,12 @@ fn system_deps_install_script(
                 }
             }
         }
+    }
+
+    if !cargo_binstall_pkgs.is_empty() {
+        // lines.push()
+        let to_install_packages = cargo_binstall_pkgs.into_iter().join(" ");
+        lines.push(format!("cargo binstall {to_install_packages}"))
     }
 
     Ok(if lines.is_empty() {
