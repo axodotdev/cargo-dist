@@ -252,6 +252,7 @@ fn get_new_dist_metadata(
             package_libraries: None,
             install_libraries: None,
             github_build_setup: None,
+            github_build_setup_jobs: None,
             mac_pkg_config: None,
             min_glibc_version: None,
             binaries: None,
@@ -765,6 +766,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         bin_aliases: _,
         system_dependencies: _,
         github_build_setup: _,
+        github_build_setup_jobs: _,
         binaries: _,
     } = &meta;
 
