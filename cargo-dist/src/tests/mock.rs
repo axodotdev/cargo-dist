@@ -88,6 +88,7 @@ pub fn mock_tools() -> Tools {
         cargo_cyclonedx: None,
         cargo_xwin: None,
         cargo_zigbuild: None,
+        cargo_cross: None,
     }
 }
 

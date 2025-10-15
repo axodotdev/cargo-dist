@@ -40,6 +40,9 @@ lazy_static::lazy_static! {
         m.insert(GithubRunnerRef::from_str("macos-latest"), t::TARGET_ARM64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-latest-xlarge"), t::TARGET_ARM64_MAC);
 
+        //-------- FreeBSD
+        m.insert(GithubRunnerRef::from_str("ubuntu-latest"), t::TARGET_X64_FREEBSD);
+
         m
     };
 }
