@@ -98,10 +98,6 @@ pub struct GithubCiInfo {
     pub tag_namespace: Option<String>,
     /// Extra permissions the workflow file should have
     pub root_permissions: Option<GithubPermissionMap>,
-    /// Extra permissions for builtin local artifacts job
-    pub build_local_artifacts_permissions: Option<GithubPermissionMap>,
-    /// Extra permissions for builtin host job
-    pub host_phase_permissions: Option<GithubPermissionMap>,
     /// Extra build steps
     pub github_build_setup: Vec<GithubJobStep>,
     /// Info about making a GitHub Release (if we're making one)
@@ -304,36 +300,6 @@ impl GithubCiInfo {
         let mut root_permissions = GithubPermissionMap::new();
         root_permissions.insert("contents".to_owned(), GithubPermission::Write);
 
-        let has_attestations = github_release
-            .as_ref()
-            .map(|g| g.github_attestations)
-            .unwrap_or(false);
-        let attestations_phase = github_release
-            .as_ref()
-            .map(|g| g.github_attestations_phase)
-            .unwrap_or(GithubAttestationsPhase::BuildLocalArtifacts);
-        let mut build_local_artifacts_permissions = GithubPermissionMap::new();
-        let mut host_phase_permissions = GithubPermissionMap::new();
-
-        if has_attestations {
-            match attestations_phase {
-                GithubAttestationsPhase::BuildLocalArtifacts => {
-                    build_local_artifacts_permissions.extend([
-                        ("id-token".to_owned(), GithubPermission::Write),
-                        ("contents".to_owned(), GithubPermission::Read),
-                        ("attestations".to_owned(), GithubPermission::Write),
-                    ]);
-                }
-                GithubAttestationsPhase::Host => {
-                    host_phase_permissions.extend([
-                        ("id-token".to_owned(), GithubPermission::Write),
-                        ("contents".to_owned(), GithubPermission::Write),
-                        ("attestations".to_owned(), GithubPermission::Write),
-                    ]);
-                }
-            }
-        }
-
         let mut publish_jobs = vec![];
         if let Some(PublisherConfig { homebrew, npm, .. }) = &dist.global_publishers {
             if homebrew.is_some() {
@@ -352,10 +318,6 @@ impl GithubCiInfo {
         let post_announce_jobs = build_jobs(&ci_config.post_announce_jobs, &job_permissions)?;
 
         let root_permissions = (!root_permissions.is_empty()).then_some(root_permissions);
-        let build_local_artifacts_permissions = (!build_local_artifacts_permissions.is_empty())
-            .then_some(build_local_artifacts_permissions);
-        let host_phase_permissions =
-            (!host_phase_permissions.is_empty()).then_some(host_phase_permissions);
 
         // Figure out what Local Artifact tasks we need
         let local_runs = if ci_config.merge_tasks {
@@ -449,8 +411,6 @@ impl GithubCiInfo {
             macos_sign,
             hosting_providers,
             root_permissions,
-            build_local_artifacts_permissions,
-            host_phase_permissions,
             github_build_setup,
             github_release,
             actions,
