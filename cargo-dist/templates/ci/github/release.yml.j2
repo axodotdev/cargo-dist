@@ -489,8 +489,8 @@ jobs:
     {{%- for job in global_artifacts_jobs %}}
       - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
-    # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success')
+    # Only run if we're "publishing", and only if plan, local and global didn't fail (skipped is fine)
+    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success')
     {{%- for job in global_artifacts_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
     {{%- if build_local_artifacts %}} && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}

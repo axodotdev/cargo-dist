@@ -4478,8 +4478,8 @@ jobs:
       - custom-my-plan-job-1
       - custom-my-plan-job-2
       - build-global-artifacts
-    # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') && (needs.custom-my-plan-job-1.result == 'skipped' || needs.custom-my-plan-job-1.result == 'success') && (needs.custom-my-plan-job-2.result == 'skipped' || needs.custom-my-plan-job-2.result == 'success') }}
+    # Only run if we're "publishing", and only if plan, local and global didn't fail (skipped is fine)
+    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') && (needs.custom-my-plan-job-1.result == 'skipped' || needs.custom-my-plan-job-1.result == 'success') && (needs.custom-my-plan-job-2.result == 'skipped' || needs.custom-my-plan-job-2.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-22.04"
