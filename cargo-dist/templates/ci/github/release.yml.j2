@@ -210,6 +210,12 @@ jobs:
       CODESIGN_CERTIFICATE_PASSWORD: ${{ secrets.CODESIGN_CERTIFICATE_PASSWORD }}
       CODESIGN_IDENTITY: ${{ secrets.CODESIGN_IDENTITY }}
     {{%- endif %}}
+    {{%- if github_attestations is defined and github_attestations and github_attestations_phase == "build-local-artifacts" %}}
+    permissions:
+      "attestations": "write"
+      "contents": "read"
+      "id-token": "write"
+    {{%- endif %}}
     steps:
       - name: enable windows longpaths
         run: |
@@ -500,6 +506,12 @@ jobs:
     runs-on: {{{ global_task.runner }}}
     outputs:
       val: ${{ steps.host.outputs.manifest }}
+    {{%- if github_attestations is defined and github_attestations and github_attestations_phase == "host" %}}
+    permissions:
+      "attestations": "write"
+      "contents": "write"
+      "id-token": "write"
+    {{%- endif %}}
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:

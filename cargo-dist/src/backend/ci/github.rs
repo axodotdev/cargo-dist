@@ -299,14 +299,6 @@ impl GithubCiInfo {
 
         let mut root_permissions = GithubPermissionMap::new();
         root_permissions.insert("contents".to_owned(), GithubPermission::Write);
-        let has_attestations = github_release
-            .as_ref()
-            .map(|g| g.github_attestations)
-            .unwrap_or(false);
-        if has_attestations {
-            root_permissions.insert("id-token".to_owned(), GithubPermission::Write);
-            root_permissions.insert("attestations".to_owned(), GithubPermission::Write);
-        }
 
         let mut publish_jobs = vec![];
         if let Some(PublisherConfig { homebrew, npm, .. }) = &dist.global_publishers {
