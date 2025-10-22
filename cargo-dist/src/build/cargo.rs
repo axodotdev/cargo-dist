@@ -169,7 +169,7 @@ pub fn make_build_cargo_target_command(
     rustflags: &str,
     step: &CargoBuildStep,
     auditable: bool,
-) -> DistResult<Cmd> {
+) -> DistResult<(Cmd, Option<CargoBuildWrapper>)> {
     let target: Triple = step.target_triple.parse()?;
 
     eprint!("building {target} target");
@@ -186,9 +186,11 @@ pub fn make_build_cargo_target_command(
     if auditable {
         command.arg("auditable");
     }
-    match wrapper {
+    let wrapper = match wrapper {
         None => {
             command.arg("build");
+
+            None
         }
         Some(CargoBuildWrapper::ZigBuild) => {
             if auditable {
@@ -198,6 +200,8 @@ pub fn make_build_cargo_target_command(
                 });
             }
             command.arg("zigbuild");
+
+            Some(CargoBuildWrapper::ZigBuild)
         }
         Some(CargoBuildWrapper::Xwin) => {
             // cf. <https://github.com/rust-cross/cargo-xwin?tab=readme-ov-file#customization>
@@ -205,12 +209,20 @@ pub fn make_build_cargo_target_command(
                 Architecture::X86_32(_) => "x86",
                 Architecture::X86_64 => "x86_64",
                 Architecture::Aarch64(_) => "aarch64",
-                _ => panic!("cargo-xwin doesn't support {target} because of its architecture",),
+                _ => panic!("cargo-xwin doesn't support {target} because of its architecture", ),
             };
             command.env("XWIN_ARCH", arch);
             command.arg("xwin").arg("build");
+
+            Some(CargoBuildWrapper::Xwin)
         }
-    }
+        Some(CargoBuildWrapper::Cross) => {
+            command = Cmd::new("cross", "Cross compile using cross.");
+                command.arg("build");
+
+            Some(CargoBuildWrapper::Cross)
+        }
+    };
     command
         .arg("--profile")
         .arg(&step.profile)
@@ -249,7 +261,7 @@ pub fn make_build_cargo_target_command(
         }
     }
 
-    Ok(command)
+    Ok((command, wrapper))
 }
 
 /// Build a cargo target
@@ -273,7 +285,7 @@ pub fn build_cargo_target(
 
     let auditable = dist_graph.config.builds.cargo.cargo_auditable;
     let host = dist_schema::target_lexicon::HOST;
-    let mut command =
+    let (mut command, wrapper) =
         make_build_cargo_target_command(&host, &cargo.cmd, &rustflags, step, auditable)?;
 
     // If we generated any extra environment variables to
@@ -298,7 +310,7 @@ pub fn build_cargo_target(
         match message {
             cargo_metadata::Message::CompilerArtifact(artifact) => {
                 // Hey we got some files, record that fact
-                expected.found_bins(artifact.package_id.to_string(), artifact.filenames);
+                expected.found_bins(artifact.package_id.to_string(), artifact.filenames, wrapper);
             }
             _ => {
                 // Nothing else interesting?
@@ -334,7 +346,6 @@ fn determine_brew_rustflags(base_rustflags: &str, environment: &SortedMap<&str, 
 
 #[cfg(test)]
 mod tests {
-
     use super::make_build_cargo_target_command;
     use crate::platform::targets;
     use crate::tasks::{CargoTargetFeatureList, CargoTargetFeatures, CargoTargetPackages};
@@ -360,14 +371,14 @@ mod tests {
             working_dir: ".".to_string().into(), // this feels mildly cursed -duckinator.
         };
 
-        let cmd = make_build_cargo_target_command(
+        let (cmd, _) = make_build_cargo_target_command(
             &step.target_triple.parse().unwrap(),
             &cargo_cmd,
             &rustflags,
             &step,
             auditable,
         )
-        .unwrap();
+            .unwrap();
 
         let mut args = cmd.inner.get_args();
 
@@ -395,7 +406,7 @@ mod tests {
             working_dir: ".".to_string().into(), // this feels mildly cursed -duckinator.
         };
 
-        let cmd = make_build_cargo_target_command(
+        let (cmd, _) = make_build_cargo_target_command(
             &step.target_triple.parse().unwrap(),
             &cargo_cmd,
             &rustflags,
