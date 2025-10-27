@@ -10,7 +10,7 @@ lazy_static::lazy_static! {
     static ref KNOWN_GITHUB_RUNNERS: HashMap<&'static GithubRunnerRef, &'static TripleNameRef> = {
         let mut m = HashMap::new();
         // cf. https://github.com/actions/runner-images/blob/main/README.md
-        // last updated 2024-10-25
+        // last updated 2025-10-26
 
         //-------- linux
         m.insert(GithubRunnerRef::from_str("ubuntu-22.04"), t::TARGET_X64_LINUX_GNU);
@@ -25,18 +25,18 @@ lazy_static::lazy_static! {
         m.insert(GithubRunnerRef::from_str("windows-latest"), t::TARGET_X64_WINDOWS);
 
         //-------- macos x64
-        m.insert(GithubRunnerRef::from_str("macos-13"), t::TARGET_X64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-13-large"), t::TARGET_X64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-14-large"), t::TARGET_X64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-15-large"), t::TARGET_X64_MAC);
+        m.insert(GithubRunnerRef::from_str("macos-15-intel"), t::TARGET_X64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-latest-large"), t::TARGET_X64_MAC);
 
         //-------- macos arm64
-        m.insert(GithubRunnerRef::from_str("macos-13-xlarge"), t::TARGET_ARM64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-14"), t::TARGET_ARM64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-14-xlarge"), t::TARGET_ARM64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-15"), t::TARGET_ARM64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-15-xlarge"), t::TARGET_ARM64_MAC);
+        m.insert(GithubRunnerRef::from_str("macos-26"), t::TARGET_ARM64_MAC);
+        m.insert(GithubRunnerRef::from_str("macos-26-xlarge"), t::TARGET_ARM64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-latest"), t::TARGET_ARM64_MAC);
         m.insert(GithubRunnerRef::from_str("macos-latest-xlarge"), t::TARGET_ARM64_MAC);
 

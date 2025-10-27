@@ -2383,8 +2383,8 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "artifacts_matrix": {
         "include": [
           {
-            "runner": "macos-13",
-            "host": "x86_64-apple-darwin",
+            "runner": "macos-14",
+            "host": "aarch64-apple-darwin",
             "install_dist": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://dl.bearcove.cloud/dump/dist-cross/cargo-dist-installer.sh | sh"
@@ -2396,7 +2396,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "cache_provider": "github"
           },
           {
-            "runner": "macos-13",
+            "runner": "macos-15-intel",
             "host": "x86_64-apple-darwin",
             "install_dist": {
               "shell": "sh",
