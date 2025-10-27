@@ -518,8 +518,8 @@ stdout:
       "artifacts_matrix": {
         "include": [
           {
-            "runner": "macos-13",
-            "host": "x86_64-apple-darwin",
+            "runner": "macos-14",
+            "host": "aarch64-apple-darwin",
             "install_dist": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
@@ -569,7 +569,7 @@ stdout:
             "cache_provider": "github"
           },
           {
-            "runner": "macos-13",
+            "runner": "macos-15-intel",
             "host": "x86_64-apple-darwin",
             "install_dist": {
               "shell": "sh",
