@@ -680,7 +680,13 @@ fn github_runner_for_target(
                 runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04"))
             }
         }
-        OperatingSystem::Darwin(_) => runner_to_config(GithubRunnerRef::from_str("macos-13")),
+        OperatingSystem::Darwin(_) => {
+            if matches!(target_triple.architecture, Architecture::Aarch64(_)) {
+                runner_to_config(GithubRunnerRef::from_str("macos-14"))
+            } else {
+                runner_to_config(GithubRunnerRef::from_str("macos-15-intel"))
+            }
+        }
         OperatingSystem::Windows => {
             // Default to cargo-xwin for Windows cross-compiles
             if target_triple.architecture != Architecture::X86_64 {
