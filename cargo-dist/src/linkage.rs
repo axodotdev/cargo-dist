@@ -395,7 +395,7 @@ pub fn determine_linkage(path: &Utf8PathBuf, target: &TripleNameRef) -> Linkage 
 fn try_determine_linkage(path: &Utf8PathBuf, target: &TripleNameRef) -> DistResult<Linkage> {
     let libraries = if target.is_darwin() {
         do_otool(path)?
-    } else if target.is_linux() {
+    } else if target.is_linux() || target.is_freebsd() {
         // Currently can only be run on Linux
         if std::env::consts::OS != "linux" {
             return Err(DistError::LinkageCheckInvalidOS {
