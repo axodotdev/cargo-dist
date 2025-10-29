@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.30.1 (2025-10-29)
+
 * Bump default x64 macos runners to macos-15-intel (macos-13 is deprecated)
 * In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level. 
 * Don't run host job if plan fails
