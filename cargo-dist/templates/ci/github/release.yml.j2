@@ -643,6 +643,12 @@ jobs:
     {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
     {{{- " }}" | safe }}}
     runs-on: {{{ global_task.runner }}}
+    {{%- if github_attestations is defined and github_attestations and github_attestations_phase == "announce" %}}
+    permissions:
+      "attestations": "write"
+      "contents": "write"
+      "id-token": "write"
+    {{%- endif %}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:

@@ -9,7 +9,7 @@
         run: |
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
-        {{%- if github_attestations is defined and github_attestations and github_attestations_phase == "host" %}}
+        {{%- if github_attestations is defined and github_attestations and (github_attestations_phase == "host" or github_attestations_phase == "announce") %}}
       - name: Attest
         uses: {{{actions["actions/attest-build-provenance"] | safe }}}
         with:
