@@ -1091,7 +1091,8 @@ Most users won't need to use this feature. If you've enabled `github-attestation
 
 Possible values:
 
-* `host`: Create the GitHub Attestations during the `host` phase.
+* `announce`: Create the GitHub Attestations during the `announce` phase. Make sure `github-release = "announce"` is also set to avoid permission side effects.
+* `host`: Create the GitHub Attestations during the `host` phase. Make sure `github-release = "host"` is also set to avoid permission side effects.
 * `build-local-artifacts`: Create the GitHub Attestations during the `build-local-artifacts` phase (default).
 
 

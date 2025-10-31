@@ -1,7 +1,6 @@
 # Unreleased
 
-Nothing Yet!
-
+* When customizing when artifacts are attested, you can now use the `announce` phase.
 
 # Version 0.30.1 (2025-10-29)
 
