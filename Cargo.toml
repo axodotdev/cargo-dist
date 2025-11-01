@@ -30,7 +30,7 @@ axoprocess = { version = "0.2.1" }
 # third-party deps
 clap = { version = "4.5.51", features = ["derive"] }
 console = { version = "0.16.1" }
-clap-cargo = { version = "0.17.1" }
+clap-cargo = { version = "0.18.3" }
 comfy-table = "7.2.1"
 miette = { version = "7.6.0" }
 thiserror = "2.0.17"
