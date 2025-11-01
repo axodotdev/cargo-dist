@@ -13,16 +13,3 @@ updates:
       interval: daily
       time: "10:00"
     target-branch: main
-  - package-ecosystem: cargo
-    directory: "/"
-    schedule:
-      interval: daily
-      time: "10:00"
-    open-pull-requests-limit: 10
-    target-branch: stable
-  - package-ecosystem: npm
-    directory: "/cargo-dist/templates/installer/npm"
-    schedule:
-      interval: daily
-      time: "10:00"
-    target-branch: stable
