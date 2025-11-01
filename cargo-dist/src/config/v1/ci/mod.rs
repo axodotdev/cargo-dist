@@ -130,7 +130,7 @@ pub struct CommonCiLayer {
     /// only plan out the release without running builds and "skip" will disable
     /// pull request runs entirely.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pr_run_mode: Option<dist_schema::PrRunMode>,
+    pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
 
     /// a prefix to add to the release.yml and tag pattern so that
     /// dist can co-exist with other release workflows in complex workspaces
@@ -203,7 +203,7 @@ pub struct CommonCiConfig {
     pub release_branch: Option<String>,
 
     /// Which actions to run on pull requests.
-    pub pr_run_mode: dist_schema::PrRunMode,
+    pub pr_run_mode: cargo_dist_schema::PrRunMode,
 
     /// a prefix to add to the release.yml and tag pattern so that
     /// dist can co-exist with other release workflows in complex workspaces
@@ -237,7 +237,7 @@ impl CommonCiConfig {
             build_local_artifacts: true,
             dispatch_releases: false,
             release_branch: None,
-            pr_run_mode: dist_schema::PrRunMode::default(),
+            pr_run_mode: cargo_dist_schema::PrRunMode::default(),
             tag_namespace: None,
             plan_jobs: vec![],
             build_local_jobs: vec![],

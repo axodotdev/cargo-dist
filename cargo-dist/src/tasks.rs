@@ -58,8 +58,8 @@ use axoasset::AxoClient;
 use axoprocess::Cmd;
 use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::{Utf8Path, Utf8PathBuf};
-use dist_schema::target_lexicon::{OperatingSystem, Triple};
-use dist_schema::{
+use cargo_dist_schema::target_lexicon::{OperatingSystem, Triple};
+use cargo_dist_schema::{
     ArtifactId, BuildEnvironment, DistManifest, HomebrewPackageName, SystemId, SystemInfo,
     TripleName, TripleNameRef,
 };
@@ -3028,14 +3028,14 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .github_release
                     .as_ref()
                     .and_then(|r| r.external_repo_commit.clone());
-                dist_schema::GithubCiInfo {
+                cargo_dist_schema::GithubCiInfo {
                     artifacts_matrix: Some(info.artifacts_matrix.clone()),
                     pr_run_mode: Some(info.pr_run_mode),
                     external_repo_commit,
                 }
             });
 
-            self.manifest.ci = Some(dist_schema::CiInfo { github });
+            self.manifest.ci = Some(cargo_dist_schema::CiInfo { github });
         }
 
         Ok(())

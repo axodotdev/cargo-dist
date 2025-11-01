@@ -2,7 +2,7 @@
 
 // Various target triples
 
-use dist_schema::TripleNameRef;
+use cargo_dist_schema::TripleNameRef;
 
 macro_rules! define_target_triples {
     ($($(#[$meta:meta])* const $name:ident = $triple:expr;)*) => {

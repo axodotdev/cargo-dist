@@ -9,9 +9,9 @@
 use axoproject::errors::AxoprojectError;
 use backtrace::Backtrace;
 use camino::Utf8PathBuf;
+use cargo_dist_schema::{target_lexicon::Triple, ArtifactId, TripleName};
 use color_backtrace::BacktracePrinter;
 use console::style;
-use dist_schema::{target_lexicon::Triple, ArtifactId, TripleName};
 use miette::{Diagnostic, SourceOffset, SourceSpan};
 use thiserror::Error;
 
@@ -67,11 +67,7 @@ pub enum DistError {
 
     /// random triple parse error
     #[error(transparent)]
-    TripleError(#[from] dist_schema::target_lexicon::ParseError),
-
-    /// error when using axoasset::toml::to_string() or similar
-    #[error(transparent)]
-    AxoassetTomlSerErr(#[from] axoasset::toml::ser::Error),
+    TripleError(#[from] cargo_dist_schema::target_lexicon::ParseError),
 
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
@@ -625,13 +621,6 @@ pub enum DistError {
         /// Version the project uses
         your_version: semver::Version,
     },
-
-    /// No dist manifest
-    #[error("No configuration file (e.g. dist-workspace.toml) was found")]
-    #[diagnostic(help(
-        "Did you run 'dist init'? If you did, this is probably a bug; please file an issue!"
-    ))]
-    NoConfigFile {},
 }
 
 impl From<minijinja::Error> for DistError {

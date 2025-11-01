@@ -25,7 +25,7 @@ pub struct WorkspaceArtifactConfig {
     pub checksum: ChecksumStyle,
 }
 /// artifact config (raw from file)
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ArtifactLayer {
     /// archive config

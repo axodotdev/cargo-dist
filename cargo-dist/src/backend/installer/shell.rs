@@ -1,7 +1,7 @@
 //! Code for generating installer.sh
 
 use axoasset::LocalAsset;
-use dist_schema::DistManifest;
+use cargo_dist_schema::DistManifest;
 
 use crate::{backend::templates::TEMPLATE_INSTALLER_SH, errors::DistResult, DistGraph};
 

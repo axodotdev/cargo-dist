@@ -186,7 +186,7 @@ dependencies = [
 
 [[package]]
 name = "axoproject"
-version = "1.0.0-rc.1"
+version = "0.30.2"
 dependencies = [
  "axoasset",
  "axoprocess",
@@ -351,6 +351,69 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo-dist"
+version = "0.30.2"
+dependencies = [
+ "axoasset",
+ "axocli",
+ "axoprocess",
+ "axoproject",
+ "axotag",
+ "axoupdater",
+ "backtrace",
+ "base64",
+ "blake2",
+ "camino",
+ "cargo-dist-schema",
+ "cargo-wix",
+ "cargo_metadata 0.19.2",
+ "clap",
+ "clap-cargo",
+ "color-backtrace",
+ "comfy-table",
+ "console 0.16.1",
+ "current_platform",
+ "dialoguer",
+ "flate2",
+ "goblin",
+ "include_dir",
+ "insta",
+ "itertools 0.14.0",
+ "lazy_static",
+ "mach_object",
+ "miette 7.6.0",
+ "minijinja",
+ "newline-converter",
+ "schemars",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sha3",
+ "similar",
+ "spdx",
+ "tar",
+ "temp-dir",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "cargo-dist-schema"
+version = "0.30.2"
+dependencies = [
+ "camino",
+ "insta",
+ "schemars",
+ "semver",
+ "serde",
+ "serde_json",
+ "target-lexicon",
+]
+
+[[package]]
 name = "cargo-platform"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -415,20 +478,20 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.29"
+version = "1.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c1599538de2394445747c8cf7935946e3cc27e9625f889d979bfb2aaf569362"
+checksum = "41c270e7540d725e65ac7f1b212ac8ce349719624d7bcff99f8e2e488e8cf03f"
 dependencies = [
  "jobserver",
  "libc",
- "shlex",
+ "once_cell",
 ]
 
 [[package]]
 name = "cfg-expr"
-version = "0.20.1"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d0390889d58f934f01cd49736275b4c2da15bcfc328c78ff2349907e6cabf22"
+checksum = "1a2b34126159980f92da2a08bdec0694fd80fb5eb9e48aff25d20a0d8dfa710d"
 dependencies = [
  "smallvec",
  "target-lexicon",
@@ -549,9 +612,9 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.15.11"
+version = "0.15.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "054ccb5b10f9f2cbf51eb355ca1d05c2d279ce1804688d0db74b4733a5aeafd8"
+checksum = "ea3c6ecd8059b57859df5c69830340ed3c41d30e3da0c1cbed90a96ac853041b"
 dependencies = [
  "encode_unicode",
  "libc",
@@ -778,69 +841,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dist"
-version = "1.0.0-rc.1"
-dependencies = [
- "axoasset",
- "axocli",
- "axoprocess",
- "axoproject",
- "axotag",
- "axoupdater",
- "backtrace",
- "base64",
- "blake2",
- "camino",
- "cargo-wix",
- "cargo_metadata 0.19.2",
- "clap",
- "clap-cargo",
- "color-backtrace",
- "comfy-table",
- "console 0.16.1",
- "current_platform",
- "dialoguer",
- "dist-schema",
- "flate2",
- "goblin",
- "include_dir",
- "insta",
- "itertools 0.14.0",
- "lazy_static",
- "mach_object",
- "miette 7.6.0",
- "minijinja",
- "newline-converter",
- "schemars",
- "semver",
- "serde",
- "serde_json",
- "sha2",
- "sha3",
- "similar",
- "spdx",
- "tar",
- "temp-dir",
- "thiserror 2.0.17",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "dist-schema"
-version = "1.0.0-rc.1"
-dependencies = [
- "camino",
- "insta",
- "schemars",
- "semver",
- "serde",
- "serde_json",
- "target-lexicon",
-]
-
-[[package]]
 name = "document-features"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1020,14 +1020,14 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.3.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43a49c392881ce6d5c3b8cb70f98717b7c07aabbdff06687b9030dbfbe2725f8"
+checksum = "26145e563e54f2cadc477553f1ec5ee650b00862f0a58bcd12cbdc5f0ea2d2f4"
 dependencies = [
  "cfg-if",
  "libc",
- "wasi 0.13.3+wasi-0.2.2",
- "windows-targets 0.52.6",
+ "r-efi",
+ "wasi 0.14.2+wasi-0.2.4",
 ]
 
 [[package]]
@@ -1465,7 +1465,7 @@ version = "1.43.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46fdb647ebde000f43b5b53f773c30cf9b0cb4300453208713fa38b2c70935a0"
 dependencies = [
- "console 0.15.11",
+ "console 0.15.10",
  "once_cell",
  "regex",
  "similar",
@@ -2129,6 +2129,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "r-efi"
+version = "5.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
+
+[[package]]
 name = "rand"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2250,14 +2256,15 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.17.14"
+version = "0.17.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
+checksum = "c17fa4cb658e3583423e915b9f3acc01cceaee1860e33d59ebae66adc3a2dc0d"
 dependencies = [
  "cc",
  "cfg-if",
  "getrandom 0.2.15",
  "libc",
+ "spin",
  "untrusted",
  "windows-sys 0.52.0",
 ]
@@ -2633,12 +2640,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
-name = "shlex"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
-
-[[package]]
 name = "signal-hook-registry"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2702,6 +2703,12 @@ checksum = "41cf87c0efffc158b9dde4d6e0567a43e4383adc4c949e687a2039732db2f23a"
 dependencies = [
  "smallvec",
 ]
+
+[[package]]
+name = "spin"
+version = "0.9.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 
 [[package]]
 name = "stable_deref_trait"
@@ -2833,9 +2840,9 @@ checksum = "e502f78cdbb8ba4718f566c418c52bc729126ffd16baee5baa718cf25dd5a69a"
 
 [[package]]
 name = "target-spec"
-version = "3.5.0"
+version = "3.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53928b291de23967df6740f2e584bb68101890f63d730292c0a5205092c8e0fa"
+checksum = "49424d0fdcba4406e46d1cea3014c4d1987263790b8e5d1be45c4509c9d52553"
 dependencies = [
  "cfg-expr",
  "guppy-workspace-hack",
@@ -3262,7 +3269,7 @@ version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "458f7a779bf54acc9f347480ac654f68407d3aab21269a6e3c9f922acd9e2da9"
 dependencies = [
- "getrandom 0.3.1",
+ "getrandom 0.3.3",
 ]
 
 [[package]]
@@ -3304,9 +3311,9 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
 name = "wasi"
-version = "0.13.3+wasi-0.2.2"
+version = "0.14.2+wasi-0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26816d2e1a4a36a2940b96c5296ce403917633dff8f3440e9b236ed6f6bacad2"
+checksum = "9683f9a5a998d873c0d21fcbe3c083009670149a8fab228644b8bd36b2c48cb3"
 dependencies = [
  "wit-bindgen-rt",
 ]
@@ -3752,9 +3759,9 @@ dependencies = [
 
 [[package]]
 name = "wit-bindgen-rt"
-version = "0.33.0"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3268f3d866458b787f390cf61f4bbb563b922d091359f9608842999eaee3943c"
+checksum = "6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1"
 dependencies = [
  "bitflags 2.9.3",
 ]
@@ -3910,7 +3917,7 @@ dependencies = [
  "constant_time_eq",
  "crc32fast",
  "flate2",
- "getrandom 0.3.1",
+ "getrandom 0.3.3",
  "hmac",
  "indexmap 2.11.4",
  "memchr",

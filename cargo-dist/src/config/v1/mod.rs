@@ -110,10 +110,8 @@ pub mod builds;
 pub mod ci;
 pub mod hosts;
 pub mod installers;
-mod loader;
 pub mod publishers;
 
-use axoproject::generic::{Package, Workspace};
 use axoproject::{PackageIdx, WorkspaceGraph};
 use semver::Version;
 use v0::CargoDistUrlOverride;
@@ -126,21 +124,7 @@ use builds::*;
 use ci::*;
 use hosts::*;
 use installers::*;
-pub use loader::*;
 use publishers::*;
-
-use tracing::log::warn;
-
-/// A representation of an entire dist(-workspace).toml.
-#[derive(Default, Deserialize, Serialize)]
-pub struct DistConfig {
-    /// the `[workspace]` table.
-    pub workspace: Option<Workspace>,
-    /// the `[package]` table.
-    pub package: Option<Package>,
-    /// the `[dist]` table.
-    pub dist: Option<TomlLayer>,
-}
 
 /// Compute the workspace-level config
 pub fn workspace_config(
@@ -266,7 +250,6 @@ impl ApplyLayer for WorkspaceConfigInheritable {
             allow_dirty,
             dist_version,
             dist_url_override,
-            config_version: _,
             // app-scope only
             dist: _,
             targets: _,
@@ -378,7 +361,6 @@ impl ApplyLayer for AppConfigInheritable {
             allow_dirty: _,
             dist_version: _,
             dist_url_override: _,
-            config_version: _,
         }: Self::Layer,
     ) {
         self.artifacts.apply_val_layer(artifacts);
@@ -392,7 +374,7 @@ impl ApplyLayer for AppConfigInheritable {
 }
 
 /// The "raw" input from a toml file containing config
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct TomlLayer {
     /// The intended version of dist to build with. (normal Cargo SemVer syntax)
@@ -405,10 +387,6 @@ pub struct TomlLayer {
     /// things other dist versions can't handle!
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dist_version: Option<Version>,
-
-    /// The configuration file version.
-    #[serde(default)]
-    pub config_version: crate::config::ConfigVersion,
 
     /// see [`CargoDistUrlOverride`]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -464,28 +442,12 @@ pub struct TomlLayer {
 }
 
 impl TomlLayer {
-    /// Update `config_version` to the current default.
-    pub fn with_current_config_version(&self) -> Self {
-        let mut new = self.clone();
-        new.config_version = crate::config::ConfigVersion::default();
-        new
-    }
-
-    /// Update `dist_version` to the current dist version.
-    pub fn with_current_dist_version(&self) -> Self {
-        let current_version: semver::Version = std::env!("CARGO_PKG_VERSION").parse()
-            .expect("CARGO_PKG_VERSION was not set -- this is probably a bug in dist; please file an issue!");
-        let mut new = self.clone();
-        new.dist_version = Some(current_version);
-        new
-    }
-
     /// Take any configs that contain paths that are *relative to the file they came from*
     /// and make them relative to the given basepath.
     ///
     /// This is important to do eagerly, because once we start merging configs
     /// we'll forget what file they came from!
-    pub fn make_relative_to(&mut self, base_path: &Utf8Path) {
+    fn make_relative_to(&mut self, base_path: &Utf8Path) {
         // It's kind of unfortunate that we don't exhaustively match this to
         // force you to update it BUT almost no config is ever applicable for
         // this so even when we used to, everyone just skimmed over this so
@@ -509,170 +471,6 @@ impl TomlLayer {
             if let Some(BoolOr::Val(github)) = &mut hosts.github {
                 if let Some(path) = &mut github.submodule_path {
                     make_path_relative_to(path, base_path);
-                }
-            }
-        }
-    }
-
-    /// Determines whether the configured install paths are compatible with each other
-    pub fn validate_install_paths(&self) -> DistResult<()> {
-        if let Some(installers) = &self.installers {
-            if let Some(paths) = &installers.common.install_path {
-                if paths.len() > 1 && paths.contains(&InstallPathStrategy::CargoHome) {
-                    return Err(DistError::IncompatibleInstallPathConfiguration {});
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    // FIXME(duckinator): We say "value is being ignored", but it seems like we use the "ignored" values anyway?
-    // However, for the v0->v1 migration, I'm going for reproducing behavior
-    // over fixing bugs, so I'm keeping it this way for now. -@duckinator
-    fn merge_warn(name: &str, package_manifest_path: &Utf8Path) {
-        warn!("dist.{} is set, but this is only accepted in workspace.metadata (value is being ignored): {}", name, package_manifest_path);
-    }
-
-    /// Merge a workspace config into a package config (self)
-    pub fn merge_workspace_config(
-        &mut self,
-        workspace_config: &Self,
-        package_manifest_path: &Utf8Path,
-    ) {
-        // This is intentionally written awkwardly to make you update it
-        let Self {
-            config_version: _,
-            dist_version,
-            dist_url_override,
-            dist,
-            allow_dirty,
-            targets,
-            artifacts,
-            builds,
-            ci,
-            hosts,
-            installers,
-            publishers,
-        } = self;
-
-        // Check for global settings on local packages
-        if dist_version.is_some() {
-            Self::merge_warn("dist-version", package_manifest_path);
-        }
-        if dist_url_override.is_some() {
-            Self::merge_warn("dist-url-override", package_manifest_path);
-        }
-
-        if allow_dirty.is_some() {
-            Self::merge_warn("allow-dirty", package_manifest_path);
-        }
-
-        if let Some(artifacts) = artifacts {
-            if artifacts.source_tarball.is_some() {
-                Self::merge_warn("artifacts.source-tarball", package_manifest_path);
-            }
-        }
-
-        if let Some(builds) = builds {
-            if builds.ssldotcom_windows_sign.is_some() {
-                Self::merge_warn("builds.ssldotcom-windows-sign", package_manifest_path);
-            }
-
-            if let Some(macos_sign) = builds.macos_sign {
-                if macos_sign {
-                    Self::merge_warn("builds.macos-sign", package_manifest_path);
-                }
-            }
-
-            if let Some(BoolOr::Val(cargo)) = &builds.cargo {
-                if cargo.features.is_some() {
-                    Self::merge_warn("cargo.features", package_manifest_path);
-                }
-                if cargo.default_features.unwrap_or(false) {
-                    Self::merge_warn("cargo.default-features", package_manifest_path);
-                }
-                if cargo.all_features.unwrap_or(false) {
-                    Self::merge_warn("cargo.all-features", package_manifest_path);
-                }
-                if cargo.cargo_auditable.unwrap_or(false) {
-                    Self::merge_warn("cargo.cargo-auditable", package_manifest_path);
-                }
-                if cargo.cargo_cyclonedx.unwrap_or(false) {
-                    Self::merge_warn("cargo.cargo-cyclonedx", package_manifest_path);
-                }
-            }
-        }
-
-        // The entire CiLayer is global-only.
-        if ci.is_some() {
-            Self::merge_warn("ci", package_manifest_path);
-        }
-
-        // All of `hosts.github` is global-only.
-        if let Some(hosts) = &hosts {
-            if let Some(github) = &hosts.github {
-                if github.is_not_false() {
-                    Self::merge_warn("hosts.github", package_manifest_path);
-                }
-            }
-        }
-
-        // All of `installers` (InstallerLayer) is package-only, so no need to check it.
-
-        // All of PublisherLayer is global-only.
-        if publishers.is_some() {
-            Self::merge_warn("dist.publishers", package_manifest_path);
-        }
-
-        // Merge non-global settings
-        if installers.is_none() {
-            installers.clone_from(&workspace_config.installers);
-        }
-        if targets.is_none() {
-            targets.clone_from(&workspace_config.targets);
-        }
-        if dist.is_none() {
-            *dist = workspace_config.dist;
-        }
-
-        if artifacts.is_none() {
-            artifacts.clone_from(&workspace_config.artifacts);
-        }
-        if builds.is_none() {
-            builds.clone_from(&workspace_config.builds);
-        }
-        if ci.is_none() {
-            ci.clone_from(&workspace_config.ci);
-        }
-
-        if publishers.is_none() {
-            publishers.clone_from(&workspace_config.publishers);
-        }
-
-        // it'd be nice to make this less... cthulu-esque... -@duckinator
-        if let Some(ws_artifacts) = &workspace_config.artifacts {
-            if let Some(ws_archives) = &ws_artifacts.archives {
-                if let Some(ws_include) = &ws_archives.include {
-                    // If we get here, we have something to bother copying.
-
-                    if artifacts.is_none() {
-                        artifacts.clone_from(&Some(Default::default()));
-                    }
-
-                    if let Some(artifacts) = artifacts {
-                        if artifacts.archives.is_none() {
-                            artifacts.archives.clone_from(&Some(Default::default()));
-                        }
-
-                        if let Some(archives) = &mut artifacts.archives {
-                            if let Some(include) = &mut archives.include {
-                                include.extend(ws_include.iter().cloned());
-                            } else {
-                                archives.include.clone_from(&ws_archives.include);
-                            }
-                        }
-                    }
                 }
             }
         }

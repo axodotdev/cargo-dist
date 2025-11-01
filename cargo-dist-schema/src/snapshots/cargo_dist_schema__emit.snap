@@ -802,6 +802,13 @@ expression: json_schema
       "description": "Phase in which to generate GitHub attestations",
       "oneOf": [
         {
+          "description": "Generate attestations during the `announce` phase",
+          "type": "string",
+          "enum": [
+            "announce"
+          ]
+        },
+        {
           "description": "Generate attestations during the `host` phase",
           "type": "string",
           "enum": [

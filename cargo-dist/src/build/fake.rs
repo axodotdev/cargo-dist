@@ -5,7 +5,7 @@
 
 use axoasset::LocalAsset;
 use camino::Utf8PathBuf;
-use dist_schema::DistManifest;
+use cargo_dist_schema::DistManifest;
 
 use crate::{BinaryIdx, CargoBuildStep, DistGraph, DistResult, GenericBuildStep};
 

@@ -1,7 +1,7 @@
 //! Code for generating formula.rb
 
 use axoasset::LocalAsset;
-use dist_schema::{ChecksumValue, DistManifest, HomebrewPackageName};
+use cargo_dist_schema::{ChecksumValue, DistManifest, HomebrewPackageName};
 use serde::Serialize;
 use spdx::{
     expression::{ExprNode, Operator},
