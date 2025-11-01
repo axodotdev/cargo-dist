@@ -61,7 +61,7 @@ flate2 = "1.1.5"
 pathdiff = { version = "0.2.3", features = ["camino"] }
 url = "2.5.7"
 parse-changelog = "0.6.14"
-schemars = "0.8.22"
+schemars = "1.0.4"
 spdx = "0.12.0"
 base64 = "0.22.1"
 lazy_static = "1.5.0"
