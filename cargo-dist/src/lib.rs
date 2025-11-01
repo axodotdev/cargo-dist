@@ -25,17 +25,16 @@ use build::{
     fake::{build_fake_cargo_target, build_fake_generic_target},
 };
 use camino::{Utf8Path, Utf8PathBuf};
+use cargo_dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TripleName};
 use config::{
     ArtifactMode, ChecksumStyle, CompressionImpl, Config, DirtyMode, GenerateMode, ZipStyle,
 };
-use dist_schema::{ArtifactId, ChecksumValue, ChecksumValueRef, DistManifest, TripleName};
 use semver::Version;
 use temp_dir::TempDir;
 use tracing::info;
 
 use errors::*;
-pub use init::{do_init, InitArgs};
-pub use migrate::do_migrate;
+pub use init::{do_init, do_migrate, InitArgs};
 pub use tasks::*;
 
 pub mod announce;
@@ -48,7 +47,6 @@ pub mod host;
 mod init;
 pub mod linkage;
 pub mod manifest;
-mod migrate;
 pub mod net;
 pub mod platform;
 pub mod sign;

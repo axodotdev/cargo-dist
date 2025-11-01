@@ -535,6 +535,9 @@ impl GithubAttestationsFilters {
 /// Phase in which to generate GitHub attestations
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub enum GithubAttestationsPhase {
+    /// Generate attestations during the `announce` phase
+    #[serde(rename = "announce")]
+    Announce,
     /// Generate attestations during the `host` phase
     #[serde(rename = "host")]
     Host,
@@ -553,6 +556,7 @@ impl GithubAttestationsPhase {
 impl std::fmt::Display for GithubAttestationsPhase {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            GithubAttestationsPhase::Announce => write!(f, "announce"),
             GithubAttestationsPhase::Host => write!(f, "host"),
             GithubAttestationsPhase::BuildLocalArtifacts => write!(f, "build-local-artifacts"),
         }

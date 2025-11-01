@@ -40,7 +40,7 @@ fn test_version() {
     assert_eq!(stderr, "");
 
     let (name, ver) = stdout.split_once(' ').unwrap();
-    assert_eq!(name, "dist");
+    assert_eq!(name, "cargo-dist");
     let mut ver_parts = ver.trim().split('.');
     ver_parts.next().unwrap().parse::<u8>().unwrap();
     ver_parts.next().unwrap().parse::<u8>().unwrap();
@@ -123,7 +123,7 @@ fn test_lib_manifest() {
         .arg("--output-format=json")
         .arg("--verbose=error")
         .arg("--tag")
-        .arg(format!("dist-schema-v{}", version))
+        .arg(format!("cargo-dist-schema-v{}", version))
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
@@ -149,7 +149,7 @@ fn test_lib_manifest_slash() {
         .arg("--output-format=json")
         .arg("--verbose=error")
         .arg("--tag")
-        .arg(format!("dist-schema/v{}", version))
+        .arg(format!("cargo-dist-schema/v{}", version))
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
@@ -267,7 +267,7 @@ fn generate_installer(version: &axotag::Version, release_type: ReleaseSourceType
 }
 
 #[test]
-#[ignore = "can't be reenabled until after the rename"]
+#[ignore = "running into frequent rate limits in GH Actions"]
 fn test_self_update() {
     // Only do this if RUIN_MY_COMPUTER_WITH_INSTALLERS is set
     if std::env::var(ENV_RUIN_ME)

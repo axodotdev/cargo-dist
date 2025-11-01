@@ -369,8 +369,6 @@ impl DistMetadata {
 
         TomlLayer {
             dist_version: cargo_dist_version,
-            // v0_to_v1 means we're using a v0 config, so just set that.
-            config_version: crate::config::ConfigVersion::V0,
             dist_url_override: cargo_dist_url_override,
             dist,
             allow_dirty,

@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use axoasset::{toml_edit, SourceFile};
 use axoproject::local_repo::LocalRepo;
 use camino::{Utf8Path, Utf8PathBuf};
-use dist_schema::{
+use cargo_dist_schema::{
     AptPackageName, ChecksumExtensionRef, ChocolateyPackageName, GithubAttestationsFilters,
     GithubAttestationsPhase, HomebrewPackageName, PackageVersion, TripleName, TripleNameRef,
 };
@@ -18,14 +18,11 @@ use crate::{
     METADATA_DIST,
 };
 
-mod version;
-pub use version::{get_version, want_v1, ConfigVersion};
-
 pub mod v0;
 pub mod v0_to_v1;
 pub mod v1;
 
-pub(crate) use v0::{parse_metadata_table_or_manifest, reject_metadata_table, DistMetadata};
+pub use v0::{DistMetadata, GenericConfig};
 
 /// values of the form `permission-name: read`
 pub type GithubPermissionMap = SortedMap<String, GithubPermission>;
@@ -178,13 +175,13 @@ impl std::str::FromStr for LibraryStyle {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum InstallerStyle {
-    /// Generate a shell script that fetches from [`dist_schema::Release::artifact_download_url`][]
+    /// Generate a shell script that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
     Shell,
-    /// Generate a powershell script that fetches from [`dist_schema::Release::artifact_download_url`][]
+    /// Generate a powershell script that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
     Powershell,
-    /// Generate an npm project that fetches from [`dist_schema::Release::artifact_download_url`][]
+    /// Generate an npm project that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
     Npm,
-    /// Generate a Homebrew formula that fetches from [`dist_schema::Release::artifact_download_url`][]
+    /// Generate a Homebrew formula that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
     Homebrew,
     /// Generate an msi installer that embeds the binary
     Msi,
@@ -677,12 +674,6 @@ impl ChecksumStyle {
     }
 }
 
-impl std::fmt::Display for ChecksumStyle {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.ext())
-    }
-}
-
 /// Which style(s) of configuration to generate
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum GenerateMode {
@@ -932,6 +923,58 @@ impl std::fmt::Display for ProductionMode {
             ProductionMode::Prod => "prod".fmt(f),
         }
     }
+}
+
+pub(crate) fn parse_metadata_table_or_manifest(
+    manifest_path: &Utf8Path,
+    dist_manifest_path: Option<&Utf8Path>,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<DistMetadata> {
+    if let Some(dist_manifest_path) = dist_manifest_path {
+        reject_metadata_table(manifest_path, dist_manifest_path, metadata_table)?;
+        // Generic dist.toml
+        let src = SourceFile::load_local(dist_manifest_path)?;
+        parse_generic_config(src)
+    } else {
+        // Pre-parsed Rust metadata table
+        parse_metadata_table(manifest_path, metadata_table)
+    }
+}
+
+pub(crate) fn parse_generic_config(src: SourceFile) -> DistResult<DistMetadata> {
+    let config: GenericConfig = src.deserialize_toml()?;
+    Ok(config.dist.unwrap_or_default())
+}
+
+pub(crate) fn reject_metadata_table(
+    manifest_path: &Utf8Path,
+    dist_manifest_path: &Utf8Path,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<()> {
+    let has_dist_metadata = metadata_table.and_then(|t| t.get(METADATA_DIST)).is_some();
+    if has_dist_metadata {
+        Err(DistError::UnusedMetadata {
+            manifest_path: manifest_path.to_owned(),
+            dist_manifest_path: dist_manifest_path.to_owned(),
+        })
+    } else {
+        Ok(())
+    }
+}
+
+pub(crate) fn parse_metadata_table(
+    manifest_path: &Utf8Path,
+    metadata_table: Option<&serde_json::Value>,
+) -> DistResult<DistMetadata> {
+    Ok(metadata_table
+        .and_then(|t| t.get(METADATA_DIST))
+        .map(DistMetadata::deserialize)
+        .transpose()
+        .map_err(|cause| DistError::CargoTomlParse {
+            manifest_path: manifest_path.to_owned(),
+            cause,
+        })?
+        .unwrap_or_default())
 }
 
 /// Find the dist workspaces relative to the current directory

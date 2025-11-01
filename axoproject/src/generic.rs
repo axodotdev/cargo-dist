@@ -2,7 +2,7 @@
 
 use axoasset::{AxoassetError, SourceFile};
 use camino::{Utf8Path, Utf8PathBuf};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::{
     errors::GenericManifestParseError, PackageInfo, Result, Version, WorkspaceInfo,
@@ -25,10 +25,9 @@ struct WorkspaceManifest {
     package: Option<Package>,
 }
 
-/// The internal representation of the `[workspace]` table from dist-workspace.toml
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
-pub struct Workspace {
+struct Workspace {
     members: Vec<WorkspaceMember>,
     /// If non-empty, reject the false gods of `dist = true/false`
     /// and force distability of packages based on name-matching this list.
@@ -78,9 +77,9 @@ impl std::fmt::Display for WorkspaceMember {
         match self {
             WorkspaceMember::Generic(path) => write!(f, "{MEMBER_GENERIC}:{path}"),
             #[cfg(feature = "cargo-projects")]
-            WorkspaceMember::Cargo(path) => write!(f, "{MEMBER_CARGO}:{path}"),
+            WorkspaceMember::Cargo(path) => write!(f, "{MEMBER_CARGO}/{path}"),
             #[cfg(feature = "npm-projects")]
-            WorkspaceMember::Npm(path) => write!(f, "${MEMBER_NPM}:{path}"),
+            WorkspaceMember::Npm(path) => write!(f, "${MEMBER_NPM}/{path}"),
         }
     }
 }
@@ -111,43 +110,23 @@ struct PackageManifest {
     package: Option<Package>,
 }
 
-/// The internal representation of the `[package]` table from dist(-workspace).toml.
-#[derive(Deserialize, Debug, Default, Serialize)]
+#[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case")]
-pub struct Package {
-    /// The name of the package.
+struct Package {
     name: Option<String>,
-    /// A URL to the repository hosting this package.
     repository: Option<String>,
-    /// A URL to the homepage of the package.
     homepage: Option<String>,
-    /// A URL to the documentation of the package.
     documentation: Option<String>,
-    /// A brief description of the package.
     description: Option<String>,
-    /// A relative path to the readme file for your package.
     readme: Option<Utf8PathBuf>,
-    /// The authors of the package.
     authors: Option<Vec<String>>,
-    /// Names of binaries (without the extension) your package is expected
-    /// to build and distribute.
     binaries: Option<Vec<String>>,
-    /// The license(s) of your package, in SPDX format.
     license: Option<String>,
-    /// A relative path to the changelog file for your package.
     changelog: Option<Utf8PathBuf>,
-    /// Relative paths to the license files for your package.
     license_files: Option<Vec<Utf8PathBuf>>,
-    /// Names of c-style static libraries (without the extension) your
-    /// package is expected to build and distribute.
     cstaticlibs: Option<Vec<String>>,
-    /// Names of c-style dynamic libraries (without the extension) your
-    /// package is expected to build and distribute.
     cdylibs: Option<Vec<String>>,
-    /// A command to run in your package's root directory to build its
-    /// binaries, cstaticlibs, and cdylibs.
     build_command: Option<Vec<String>>,
-    /// The version of the package. Syntax must be a valid Cargo SemVer Version.
     version: Option<semver::Version>,
 }
 

@@ -2,7 +2,7 @@
 
 use axoproject::PackageId;
 use camino::Utf8PathBuf;
-use dist_schema::{AssetInfo, DistManifest, TripleNameRef};
+use cargo_dist_schema::{AssetInfo, DistManifest, TripleNameRef};
 use tracing::info;
 
 use crate::{
@@ -207,8 +207,8 @@ impl BuildExpectations {
         // If we're faking it, don't run the linkage stuff
         let linkage = if self.fake {
             // FIXME: fake this more interestingly!
-            let mut linkage = dist_schema::Linkage::default();
-            linkage.other.insert(dist_schema::Library {
+            let mut linkage = cargo_dist_schema::Linkage::default();
+            linkage.other.insert(cargo_dist_schema::Library {
                 path: "fakelib".to_owned(),
                 source: None,
                 package_manager: None,

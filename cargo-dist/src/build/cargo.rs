@@ -4,8 +4,8 @@ use std::env;
 
 use axoprocess::Cmd;
 use axoproject::WorkspaceIdx;
-use dist_schema::target_lexicon::{Architecture, Environment, Triple};
-use dist_schema::{DistManifest, TripleName};
+use cargo_dist_schema::target_lexicon::{Architecture, Environment, Triple};
+use cargo_dist_schema::{DistManifest, TripleName};
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
 
@@ -272,7 +272,7 @@ pub fn build_cargo_target(
     }
 
     let auditable = dist_graph.config.builds.cargo.cargo_auditable;
-    let host = dist_schema::target_lexicon::HOST;
+    let host = cargo_dist_schema::target_lexicon::HOST;
     let mut command =
         make_build_cargo_target_command(&host, &cargo.cmd, &rustflags, step, auditable)?;
 

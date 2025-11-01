@@ -1,6 +1,17 @@
 # Unreleased
 
-In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level. 
+Nothing Yet!
+
+
+# Version 0.30.2 (2025-10-31)
+
+* When customizing when artifacts are attested, you can now use the `announce` phase.
+
+# Version 0.30.1 (2025-10-29)
+
+* Bump default x64 macos runners to macos-15-intel (macos-13 is deprecated)
+* In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level. 
+* Don't run host job if plan fails
 
 # Version 0.30.0 (2025-09-07)
 
@@ -150,7 +161,7 @@ The new top-level `version` option overrides the individually-configuredversions
 This release updates dependencies and contains no substantive code changes.
 
 
-# Version 0.28.1 (2025-07-22)
+# Version 0.28.1 (2025-07-20)
 
 This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.
 

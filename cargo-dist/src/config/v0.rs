@@ -1,8 +1,7 @@
 //! v0 config
 
-use axoproject::generic::{Package, Workspace};
 use camino::{Utf8Path, Utf8PathBuf};
-use dist_schema::{
+use cargo_dist_schema::{
     declare_strongly_typed_string, GithubRunner, GithubRunnerConfigInput, StringLikeOr,
 };
 use semver::Version;
@@ -13,82 +12,10 @@ use super::*;
 use crate::platform::MinGlibcVersion;
 use crate::SortedMap;
 
-pub(crate) fn parse_metadata_table_or_manifest(
-    manifest_path: &Utf8Path,
-    dist_manifest_path: Option<&Utf8Path>,
-    metadata_table: Option<&serde_json::Value>,
-) -> DistResult<DistMetadata> {
-    if let Some(dist_manifest_path) = dist_manifest_path {
-        reject_metadata_table(manifest_path, dist_manifest_path, metadata_table)?;
-        // Generic dist.toml
-        v0::load_dist(dist_manifest_path)
-    } else {
-        // Pre-parsed Rust metadata table
-        parse_metadata_table(manifest_path, metadata_table)
-    }
-}
-
-pub(crate) fn reject_metadata_table(
-    manifest_path: &Utf8Path,
-    dist_manifest_path: &Utf8Path,
-    metadata_table: Option<&serde_json::Value>,
-) -> DistResult<()> {
-    let has_dist_metadata = metadata_table.and_then(|t| t.get(METADATA_DIST)).is_some();
-    if has_dist_metadata {
-        Err(DistError::UnusedMetadata {
-            manifest_path: manifest_path.to_owned(),
-            dist_manifest_path: dist_manifest_path.to_owned(),
-        })
-    } else {
-        Ok(())
-    }
-}
-
-pub(crate) fn parse_metadata_table(
-    manifest_path: &Utf8Path,
-    metadata_table: Option<&serde_json::Value>,
-) -> DistResult<DistMetadata> {
-    Ok(metadata_table
-        .and_then(|t| t.get(METADATA_DIST))
-        .map(DistMetadata::deserialize)
-        .transpose()
-        .map_err(|cause| DistError::CargoTomlParse {
-            manifest_path: manifest_path.to_owned(),
-            cause,
-        })?
-        .unwrap_or_default())
-}
-
-/// Loads a dist(-workspace).toml from disk.
-pub fn load(dist_manifest_path: &Utf8Path) -> DistResult<V0DistConfig> {
-    let src = SourceFile::load_local(dist_manifest_path)?;
-    parse(src)
-}
-
-/// Load a dist(-workspace).toml from disk and return its `[dist]` table.
-pub fn load_dist(dist_manifest_path: &Utf8Path) -> DistResult<DistMetadata> {
-    Ok(load(dist_manifest_path)?.dist.unwrap_or_default())
-}
-
-/// Given a SourceFile of a dist(-workspace).toml, deserializes it.
-pub fn parse(src: SourceFile) -> DistResult<V0DistConfig> {
-    // parse() can probably be consolidated into load() eventually.
-    Ok(src.deserialize_toml()?)
-}
-
-/// Given a SourceFile of a dist(-workspace).toml, deserialize its `[dist]` table.
-pub fn parse_dist(src: SourceFile) -> DistResult<DistMetadata> {
-    Ok(parse(src)?.dist.unwrap_or_default())
-}
-
 /// A container to assist deserializing metadata from dist(-workspace).tomls
 #[derive(Debug, Deserialize)]
-pub struct V0DistConfig {
-    /// the `[workspace]` table.
-    pub workspace: Option<Workspace>,
-    /// the `[package]` table.
-    pub package: Option<Package>,
-    /// the `[dist]` table.
+pub struct GenericConfig {
+    /// The dist field within dist.toml
     pub dist: Option<DistMetadata>,
 }
 
@@ -151,7 +78,7 @@ pub struct DistMetadata {
     /// only plan out the release without running builds and "skip" will disable
     /// pull request runs entirely.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pr_run_mode: Option<dist_schema::PrRunMode>,
+    pub pr_run_mode: Option<cargo_dist_schema::PrRunMode>,
 
     /// Generate targets whose dist should avoid checking for up-to-dateness.
     #[serde(skip_serializing_if = "Option::is_none")]

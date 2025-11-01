@@ -1,6 +1,6 @@
 //! Support for generating CI scripts for running dist
 
-use dist_schema::{
+use cargo_dist_schema::{
     target_lexicon::{OperatingSystem, Triple},
     DashScript, GhaRunStep, PowershellScript,
 };
@@ -34,8 +34,6 @@ const BASE_OMNIBOR_FETCH_URL: &str = "https://github.com/omnibor/omnibor-rs/rele
 // NOTE: This is hard-coded to a specific version because omnibor-cli,
 //       omnibor-rs, and gitoid are released on the same repo.
 //       This means the "latest" release is sometimes NOT actually omnibor-cli!
-//
-// SEE ALSO: .github/workflows/ci.yml
 const OMNIBOR_VERSION: &str = "0.7.0";
 
 /// Info about all the enabled CI backends
@@ -103,7 +101,7 @@ impl DistInstallSettings<'_> {
         }
 
         let version = self.version;
-        let format = dist_schema::format_of_version(version);
+        let format = cargo_dist_schema::format_of_version(version);
         let installer_name = if format.unsupported() {
             // FIXME: we should probably do this check way higher up and produce a proper err...
             panic!("requested dist v{version}, which is not supported by the this copy of dist ({SELF_DIST_VERSION})");

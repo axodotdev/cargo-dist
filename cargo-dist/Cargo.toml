@@ -1,5 +1,5 @@
 [package]
-name = "dist"
+name = "cargo-dist"
 description = "Shippable application packaging for Rust"
 version.workspace = true
 edition.workspace = true
@@ -35,7 +35,7 @@ axocli.workspace = true
 axoupdater.workspace = true
 
 # Features used by the cli and library
-dist-schema.workspace = true
+cargo-dist-schema.workspace = true
 axoproject.workspace = true
 
 axotag.workspace = true
