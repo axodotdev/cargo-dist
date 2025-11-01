@@ -3,7 +3,7 @@ source: cargo-dist-schema/src/lib.rs
 expression: json_schema
 ---
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "DistManifest",
   "description": "A report of the releases and artifacts that dist generated",
   "type": "object",
@@ -24,8 +24,8 @@ expression: json_schema
     },
     "announcement_is_prerelease": {
       "description": "Whether this announcement appears to be a prerelease",
-      "default": false,
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     },
     "announcement_tag": {
       "description": "The (git) tag associated with this announcement",
@@ -35,9 +35,9 @@ expression: json_schema
       ]
     },
     "announcement_tag_is_implicit": {
-      "description": "True if --tag wasn't explicitly passed to dist. This usually indicates some kind of dry-run state like pr-run-mode=upload. Some third-party tools may use this as a proxy for \"is dry run\"",
-      "default": false,
-      "type": "boolean"
+      "description": "True if --tag wasn't explicitly passed to dist. This usually indicates\nsome kind of dry-run state like pr-run-mode=upload. Some third-party tools\nmay use this as a proxy for \"is dry run\"",
+      "type": "boolean",
+      "default": false
     },
     "announcement_title": {
       "description": "A title for the announcement",
@@ -50,21 +50,21 @@ expression: json_schema
       "description": "The artifacts included in this Announcement, referenced by releases.",
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/definitions/Artifact"
+        "$ref": "#/$defs/Artifact"
       }
     },
     "assets": {
       "description": "The assets contained within artifacts (binaries)",
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/definitions/AssetInfo"
+        "$ref": "#/$defs/AssetInfo"
       }
     },
     "ci": {
       "description": "ci backend info",
       "anyOf": [
         {
-          "$ref": "#/definitions/CiInfo"
+          "$ref": "#/$defs/CiInfo"
         },
         {
           "type": "null"
@@ -80,8 +80,8 @@ expression: json_schema
     },
     "force_latest": {
       "description": "Where possible, announce/publish a release as \"latest\" regardless of semver version",
-      "default": false,
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     },
     "github_attestations": {
       "description": "Whether Artifact Attestations should be found in the GitHub Release\n\n<https://github.blog/2024-05-02-introducing-artifact-attestations-now-in-public-beta/>",
@@ -89,45 +89,37 @@ expression: json_schema
     },
     "github_attestations_filters": {
       "description": "Patterns to attest when creating Artifact Attestations",
-      "allOf": [
-        {
-          "$ref": "#/definitions/GithubAttestationsFilters"
-        }
-      ]
+      "$ref": "#/$defs/GithubAttestationsFilters"
     },
     "github_attestations_phase": {
       "description": "When to generate Artifact Attestations\n\nDefaults to \"build-local-artifacts\" for backwards compatibility",
-      "allOf": [
-        {
-          "$ref": "#/definitions/GithubAttestationsPhase"
-        }
-      ]
+      "$ref": "#/$defs/GithubAttestationsPhase"
     },
     "linkage": {
       "description": "Data about dynamic linkage in the built libraries",
-      "default": [],
       "type": "array",
+      "default": [],
       "items": {
-        "$ref": "#/definitions/Linkage"
+        "$ref": "#/$defs/Linkage"
       }
     },
     "publish_prereleases": {
       "description": "Whether to publish prereleases to package managers",
-      "default": false,
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     },
     "releases": {
       "description": "App releases we're distributing",
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Release"
+        "$ref": "#/$defs/Release"
       }
     },
     "system_info": {
       "description": "Info about the toolchain used to build this announcement\n\nDEPRECATED: never appears anymore",
       "anyOf": [
         {
-          "$ref": "#/definitions/SystemInfo"
+          "$ref": "#/$defs/SystemInfo"
         },
         {
           "type": "null"
@@ -138,209 +130,46 @@ expression: json_schema
       "description": "The systems that artifacts were built on",
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/definitions/SystemInfo"
+        "$ref": "#/$defs/SystemInfo"
       }
     },
     "upload_files": {
       "description": "Files to upload",
-      "default": [],
       "type": "array",
+      "default": [],
       "items": {
         "type": "string"
       }
     }
   },
-  "definitions": {
+  "$defs": {
     "Artifact": {
       "description": "A distributable artifact that's part of a Release\n\ni.e. a zip or installer",
       "type": "object",
-      "oneOf": [
-        {
-          "description": "A zip or a tarball",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "executable-zip"
-              ]
-            }
-          }
-        },
-        {
-          "description": "Standalone Symbols/Debuginfo for a build",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "symbols"
-              ]
-            }
-          }
-        },
-        {
-          "description": "Installer",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "installer"
-              ]
-            }
-          }
-        },
-        {
-          "description": "A checksum of another artifact",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "checksum"
-              ]
-            }
-          }
-        },
-        {
-          "description": "The checksums of many artifacts",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "unified-checksum"
-              ]
-            }
-          }
-        },
-        {
-          "description": "A tarball containing the source code",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "source-tarball"
-              ]
-            }
-          }
-        },
-        {
-          "description": "Some form of extra artifact produced by a sidecar build",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "extra-artifact"
-              ]
-            }
-          }
-        },
-        {
-          "description": "An updater executable",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "updater"
-              ]
-            }
-          }
-        },
-        {
-          "description": "A file that already exists",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "sbom"
-              ]
-            }
-          }
-        },
-        {
-          "description": "An OmniBOR Artifact ID",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "omnibor-artifact-id"
-              ]
-            }
-          }
-        },
-        {
-          "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "type": "string",
-              "enum": [
-                "unknown"
-              ]
-            }
-          }
-        }
-      ],
       "properties": {
         "assets": {
           "description": "Assets included in the bundle (like executables and READMEs)",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Asset"
+            "$ref": "#/$defs/Asset"
           }
         },
         "checksum": {
           "description": "id of an Artifact that contains the checksum for this Artifact",
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactId"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "checksums": {
-          "description": "checksums for this artifact\n\nkeys are the name of an algorithm like \"sha256\" or \"sha512\" values are the actual hex string of the checksum",
+          "description": "checksums for this artifact\n\nkeys are the name of an algorithm like \"sha256\" or \"sha512\"\nvalues are the actual hex string of the checksum",
           "type": "object",
           "additionalProperties": {
-            "type": "string"
+            "$ref": "#/$defs/ChecksumValue"
           }
         },
         "description": {
@@ -358,10 +187,14 @@ expression: json_schema
           ]
         },
         "name": {
-          "description": "The unique name of the artifact (e.g. `myapp-v1.0.0-x86_64-pc-windows-msvc.zip`)\n\nIf this is missing then that indicates the artifact is purely informative and has no physical files associated with it. This may be used (in the future) to e.g. indicate you can install the application with `cargo install` or `npm install`.",
-          "type": [
-            "string",
-            "null"
+          "description": "The unique name of the artifact (e.g. `myapp-v1.0.0-x86_64-pc-windows-msvc.zip`)\n\nIf this is missing then that indicates the artifact is purely informative and has\nno physical files associated with it. This may be used (in the future) to e.g.\nindicate you can install the application with `cargo install` or `npm install`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactId"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "path": {
@@ -375,142 +208,163 @@ expression: json_schema
           "description": "The target triple of the bundle",
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/TripleName"
           }
         }
-      }
-    },
-    "Asset": {
-      "description": "An asset contained in an artifact (executable, license, etc.)",
-      "type": "object",
+      },
       "oneOf": [
         {
-          "description": "An executable artifact",
+          "description": "A zip or a tarball",
           "type": "object",
-          "required": [
-            "kind"
-          ],
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "executable"
-              ]
-            },
-            "symbols_artifact": {
-              "description": "The name of the Artifact containing symbols for this executable",
-              "type": [
-                "string",
-                "null"
-              ]
+              "const": "executable-zip"
             }
-          }
+          },
+          "required": [
+            "kind"
+          ]
         },
         {
-          "description": "A C dynamic library",
+          "description": "Standalone Symbols/Debuginfo for a build",
           "type": "object",
-          "required": [
-            "kind"
-          ],
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "c_dynamic_library"
-              ]
-            },
-            "symbols_artifact": {
-              "description": "The name of the Artifact containing symbols for this library",
-              "type": [
-                "string",
-                "null"
-              ]
+              "const": "symbols"
             }
-          }
+          },
+          "required": [
+            "kind"
+          ]
         },
         {
-          "description": "A C static library",
+          "description": "Installer",
           "type": "object",
-          "required": [
-            "kind"
-          ],
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "c_static_library"
-              ]
-            },
-            "symbols_artifact": {
-              "description": "The name of the Artifact containing symbols for this library",
-              "type": [
-                "string",
-                "null"
-              ]
+              "const": "installer"
             }
-          }
+          },
+          "required": [
+            "kind"
+          ]
         },
         {
-          "description": "A README file",
+          "description": "A checksum of another artifact",
           "type": "object",
-          "required": [
-            "kind"
-          ],
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "readme"
-              ]
+              "const": "checksum"
             }
-          }
+          },
+          "required": [
+            "kind"
+          ]
         },
         {
-          "description": "A LICENSE file",
+          "description": "The checksums of many artifacts",
           "type": "object",
-          "required": [
-            "kind"
-          ],
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "license"
-              ]
+              "const": "unified-checksum"
             }
-          }
+          },
+          "required": [
+            "kind"
+          ]
         },
         {
-          "description": "A CHANGELOG or RELEASES file",
+          "description": "A tarball containing the source code",
           "type": "object",
-          "required": [
-            "kind"
-          ],
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "changelog"
-              ]
+              "const": "source-tarball"
             }
-          }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Some form of extra artifact produced by a sidecar build",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "extra-artifact"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "An updater executable",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "updater"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "A file that already exists",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "sbom"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "An OmniBOR Artifact ID",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "omnibor-artifact-id"
+            }
+          },
+          "required": [
+            "kind"
+          ]
         },
         {
           "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
           "type": "object",
-          "required": [
-            "kind"
-          ],
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "unknown"
-              ]
+              "const": "unknown"
             }
-          }
+          },
+          "required": [
+            "kind"
+          ]
         }
-      ],
+      ]
+    },
+    "ArtifactId": {
+      "description": "The unique ID of an Artifact",
+      "type": "string"
+    },
+    "Asset": {
+      "description": "An asset contained in an artifact (executable, license, etc.)",
+      "type": "object",
       "properties": {
         "id": {
           "description": "A unique opaque id for an Asset",
@@ -533,17 +387,107 @@ expression: json_schema
             "null"
           ]
         }
-      }
+      },
+      "oneOf": [
+        {
+          "description": "An executable artifact",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "executable"
+            }
+          },
+          "$ref": "#/$defs/ExecutableAsset",
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "A C dynamic library",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "c_dynamic_library"
+            }
+          },
+          "$ref": "#/$defs/DynamicLibraryAsset",
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "A C static library",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "c_static_library"
+            }
+          },
+          "$ref": "#/$defs/StaticLibraryAsset",
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "A README file",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "readme"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "A LICENSE file",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "license"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "A CHANGELOG or RELEASES file",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "changelog"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Unknown to this version of cargo-dist-schema\n\nThis is a fallback for forward/backward-compat",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "unknown"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
     },
     "AssetInfo": {
       "description": "Info about an Asset (binary)",
       "type": "object",
-      "required": [
-        "id",
-        "name",
-        "system",
-        "target_triples"
-      ],
       "properties": {
         "id": {
           "description": "unique id of the Asset",
@@ -553,7 +497,7 @@ expression: json_schema
           "description": "the linkage of this Asset",
           "anyOf": [
             {
-              "$ref": "#/definitions/Linkage"
+              "$ref": "#/$defs/Linkage"
             },
             {
               "type": "null"
@@ -569,13 +513,19 @@ expression: json_schema
           "type": "string"
         },
         "target_triples": {
-          "description": "rust-style target triples the Asset natively supports\n\n* length 0: not a meaningful question, maybe some static file * length 1: typical of binaries * length 2+: some kind of universal binary",
+          "description": "rust-style target triples the Asset natively supports\n\n* length 0: not a meaningful question, maybe some static file\n* length 1: typical of binaries\n* length 2+: some kind of universal binary",
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/TripleName"
           }
         }
-      }
+      },
+      "required": [
+        "id",
+        "name",
+        "system",
+        "target_triples"
+      ]
     },
     "BuildEnvironment": {
       "description": "Information about the build environment on this system",
@@ -583,18 +533,15 @@ expression: json_schema
         {
           "description": "Linux-specific information",
           "type": "object",
-          "required": [
-            "linux"
-          ],
           "properties": {
             "linux": {
               "type": "object",
               "properties": {
                 "glibc_version": {
-                  "description": "The builder's glibc version, relevant to glibc-based builds.",
+                  "description": "The builder's glibc version, relevant to glibc-based\nbuilds.",
                   "anyOf": [
                     {
-                      "$ref": "#/definitions/GlibcVersion"
+                      "$ref": "#/$defs/GlibcVersion"
                     },
                     {
                       "type": "null"
@@ -604,45 +551,48 @@ expression: json_schema
               }
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "required": [
+            "linux"
+          ]
         },
         {
           "description": "macOS-specific information",
           "type": "object",
-          "required": [
-            "macos"
-          ],
           "properties": {
             "macos": {
               "type": "object",
-              "required": [
-                "os_version"
-              ],
               "properties": {
                 "os_version": {
                   "description": "The version of macOS used by the builder",
                   "type": "string"
                 }
-              }
+              },
+              "required": [
+                "os_version"
+              ]
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "required": [
+            "macos"
+          ]
         },
         {
           "description": "Windows-specific information",
           "type": "string",
-          "enum": [
-            "windows"
-          ]
+          "const": "windows"
         },
         {
           "description": "Unable to determine what the host OS was - error?",
           "type": "string",
-          "enum": [
-            "indeterminate"
-          ]
+          "const": "indeterminate"
         }
       ]
+    },
+    "ChecksumValue": {
+      "description": "A checksum value, usually the lower-cased hex string of the checksum",
+      "type": "string"
     },
     "CiInfo": {
       "description": "CI backend info",
@@ -652,7 +602,7 @@ expression: json_schema
           "description": "GitHub CI backend",
           "anyOf": [
             {
-              "$ref": "#/definitions/GithubCiInfo"
+              "$ref": "#/$defs/GithubCiInfo"
             },
             {
               "type": "null"
@@ -664,24 +614,49 @@ expression: json_schema
     "ContainerConfig": {
       "description": "GitHub config that's common between different kinds of jobs (global, local)",
       "type": "object",
-      "required": [
-        "host",
-        "image"
-      ],
       "properties": {
         "host": {
-          "description": "The host triple of the container, something like `x86_64-unknown-linux-gnu` or `aarch64-unknown-linux-musl` or whatever.",
-          "type": "string"
+          "description": "The host triple of the container, something like `x86_64-unknown-linux-gnu`\nor `aarch64-unknown-linux-musl` or whatever.",
+          "$ref": "#/$defs/TripleName"
         },
         "image": {
-          "description": "The container image to run, something like `ubuntu:22.04` or `quay.io/pypa/manylinux_2_28_x86_64`",
-          "type": "string"
+          "description": "The container image to run, something like `ubuntu:22.04` or\n`quay.io/pypa/manylinux_2_28_x86_64`",
+          "$ref": "#/$defs/ContainerImage"
         },
         "package_manager": {
           "description": "The package manager to use within the container, like `apt`.",
           "anyOf": [
             {
-              "$ref": "#/definitions/PackageManager"
+              "$ref": "#/$defs/PackageManager"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "image",
+        "host"
+      ]
+    },
+    "ContainerImage": {
+      "description": "A container image, like `quay.io/pypa/manylinux_2_28_x86_64`",
+      "type": "string"
+    },
+    "DashScript": {
+      "description": "A bit of shell script (that can run with `/bin/sh`), ran on CI runners. Can be multi-line.",
+      "type": "string"
+    },
+    "DynamicLibraryAsset": {
+      "description": "A C dynamic library artifact (so/dylib/dll)",
+      "type": "object",
+      "properties": {
+        "symbols_artifact": {
+          "description": "The name of the Artifact containing symbols for this library",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactId"
             },
             {
               "type": "null"
@@ -693,18 +668,6 @@ expression: json_schema
     "EnvironmentVariables": {
       "description": "Release-specific environment variables",
       "type": "object",
-      "required": [
-        "disable_update_env_var",
-        "download_url_env_var",
-        "ghe_base_url_env_var",
-        "github_base_url_env_var",
-        "github_token_env_var",
-        "install_dir_env_var",
-        "no_modify_path_env_var",
-        "print_quiet_env_var",
-        "print_verbose_env_var",
-        "unmanaged_dir_env_var"
-      ],
       "properties": {
         "disable_update_env_var": {
           "description": "Environment variable to disable updater features",
@@ -715,11 +678,11 @@ expression: json_schema
           "type": "string"
         },
         "ghe_base_url_env_var": {
-          "description": "Environment variable to set the GitHub Enterprise base URL\n\n`{owner}/{repo}` will be added to the end of this value to construct the installer_download_url.",
+          "description": "Environment variable to set the GitHub Enterprise base URL\n\n`{owner}/{repo}` will be added to the end of this value to\nconstruct the installer_download_url.",
           "type": "string"
         },
         "github_base_url_env_var": {
-          "description": "Environment variable to set the GitHub base URL\n\n`{owner}/{repo}` will be added to the end of this value to construct the installer_download_url.",
+          "description": "Environment variable to set the GitHub base URL\n\n`{owner}/{repo}` will be added to the end of this value to\nconstruct the installer_download_url.",
           "type": "string"
         },
         "github_token_env_var": {
@@ -746,6 +709,35 @@ expression: json_schema
           "description": "Environment variable to force an unmanaged install location",
           "type": "string"
         }
+      },
+      "required": [
+        "install_dir_env_var",
+        "unmanaged_dir_env_var",
+        "disable_update_env_var",
+        "no_modify_path_env_var",
+        "print_quiet_env_var",
+        "print_verbose_env_var",
+        "download_url_env_var",
+        "github_base_url_env_var",
+        "ghe_base_url_env_var",
+        "github_token_env_var"
+      ]
+    },
+    "ExecutableAsset": {
+      "description": "An executable artifact (exe/binary)",
+      "type": "object",
+      "properties": {
+        "symbols_artifact": {
+          "description": "The name of the Artifact containing symbols for this executable",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
     "GhaRunStep": {
@@ -754,40 +746,36 @@ expression: json_schema
         {
           "description": "see [`DashScript`]",
           "type": "object",
-          "required": [
-            "run",
-            "shell"
-          ],
           "properties": {
             "run": {
-              "type": "string"
+              "$ref": "#/$defs/DashScript"
             },
             "shell": {
               "type": "string",
-              "enum": [
-                "sh"
-              ]
+              "const": "sh"
             }
-          }
+          },
+          "required": [
+            "shell",
+            "run"
+          ]
         },
         {
           "description": "see [`PowershellScript`]",
           "type": "object",
-          "required": [
-            "run",
-            "shell"
-          ],
           "properties": {
             "run": {
-              "type": "string"
+              "$ref": "#/$defs/PowershellScript"
             },
             "shell": {
               "type": "string",
-              "enum": [
-                "pwsh"
-              ]
+              "const": "pwsh"
             }
-          }
+          },
+          "required": [
+            "shell",
+            "run"
+          ]
         }
       ]
     },
@@ -804,23 +792,17 @@ expression: json_schema
         {
           "description": "Generate attestations during the `announce` phase",
           "type": "string",
-          "enum": [
-            "announce"
-          ]
+          "const": "announce"
         },
         {
           "description": "Generate attestations during the `host` phase",
           "type": "string",
-          "enum": [
-            "host"
-          ]
+          "const": "host"
         },
         {
           "description": "Generate attestations during `build-local-artifacts` (default for backwards compatibility)",
           "type": "string",
-          "enum": [
-            "build-local-artifacts"
-          ]
+          "const": "build-local-artifacts"
         }
       ]
     },
@@ -832,7 +814,7 @@ expression: json_schema
           "description": "Github CI Matrix for upload-artifacts",
           "anyOf": [
             {
-              "$ref": "#/definitions/GithubMatrix"
+              "$ref": "#/$defs/GithubMatrix"
             },
             {
               "type": "null"
@@ -850,7 +832,7 @@ expression: json_schema
           "description": "What kind of job to run on pull request",
           "anyOf": [
             {
-              "$ref": "#/definitions/PrRunMode"
+              "$ref": "#/$defs/PrRunMode"
             },
             {
               "type": "null"
@@ -862,15 +844,9 @@ expression: json_schema
     "GithubHosting": {
       "description": "Github Hosting",
       "type": "object",
-      "required": [
-        "artifact_base_url",
-        "artifact_download_path",
-        "owner",
-        "repo"
-      ],
       "properties": {
         "artifact_base_url": {
-          "description": "The URL of the host for GitHub, usually `\"https://github.com\"` (This can vary for GitHub Enterprise)",
+          "description": "The URL of the host for GitHub, usually `\"https://github.com\"`\n(This can vary for GitHub Enterprise)",
           "type": "string"
         },
         "artifact_download_path": {
@@ -885,17 +861,17 @@ expression: json_schema
           "description": "The name of the repo",
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "artifact_base_url",
+        "artifact_download_path",
+        "owner",
+        "repo"
+      ]
     },
     "GithubLocalJobConfig": {
       "description": "Used in `github/release.yml.j2` to template out \"local\" build jobs",
       "type": "object",
-      "required": [
-        "dist_args",
-        "host",
-        "install_dist",
-        "runner"
-      ],
       "properties": {
         "cache_provider": {
           "description": "What cache provider to use",
@@ -905,10 +881,10 @@ expression: json_schema
           ]
         },
         "container": {
-          "description": "Container image to run the job in, using GitHub's builtin container support, see <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/running-jobs-in-a-container>\n\nThis doesn't allow mounting volumes, or anything, because we're only able to set the `container` key to something stringy",
+          "description": "Container image to run the job in, using GitHub's builtin\ncontainer support, see <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/running-jobs-in-a-container>\n\nThis doesn't allow mounting volumes, or anything, because we're only able\nto set the `container` key to something stringy",
           "anyOf": [
             {
-              "$ref": "#/definitions/ContainerConfig"
+              "$ref": "#/$defs/ContainerConfig"
             },
             {
               "type": "null"
@@ -920,14 +896,14 @@ expression: json_schema
           "type": "string"
         },
         "host": {
-          "description": "Host triple of the runner (well-known, custom, or best guess). If the runner is one of GitHub's official runner images, the platform is hardcoded. If it's custom, then we have a `target_triple => runner` in the config",
-          "type": "string"
+          "description": "Host triple of the runner (well-known, custom, or best guess).\nIf the runner is one of GitHub's official runner images, the platform\nis hardcoded. If it's custom, then we have a `target_triple => runner` in the config",
+          "$ref": "#/$defs/TripleName"
         },
         "install_cargo_auditable": {
           "description": "Expression to execute to install cargo-auditable",
           "anyOf": [
             {
-              "$ref": "#/definitions/GhaRunStep"
+              "$ref": "#/$defs/GhaRunStep"
             },
             {
               "type": "null"
@@ -936,17 +912,13 @@ expression: json_schema
         },
         "install_dist": {
           "description": "Expression to execute to install dist",
-          "allOf": [
-            {
-              "$ref": "#/definitions/GhaRunStep"
-            }
-          ]
+          "$ref": "#/$defs/GhaRunStep"
         },
         "install_omnibor": {
           "description": "Expression to execute to install omnibor-cli",
           "anyOf": [
             {
-              "$ref": "#/definitions/GhaRunStep"
+              "$ref": "#/$defs/GhaRunStep"
             },
             {
               "type": "null"
@@ -955,14 +927,18 @@ expression: json_schema
         },
         "packages_install": {
           "description": "Command to run to install dependencies",
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageInstallScript"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "runner": {
-          "description": "GHA's `runs-on` key: Github Runner image to use, see <https://github.com/actions/runner-images> and <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/choosing-the-runner-for-a-job>\n\nThis is not necessarily a well-known runner, it could be something self-hosted, it could be from BuildJet, Namespace, etc.",
-          "type": "string"
+          "description": "GHA's `runs-on` key: Github Runner image to use, see <https://github.com/actions/runner-images>\nand <https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/choosing-the-runner-for-a-job>\n\nThis is not necessarily a well-known runner, it could be something self-hosted, it\ncould be from BuildJet, Namespace, etc.",
+          "$ref": "#/$defs/GithubRunner"
         },
         "targets": {
           "description": "Target triples to build for",
@@ -971,10 +947,16 @@ expression: json_schema
             "null"
           ],
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/TripleName"
           }
         }
-      }
+      },
+      "required": [
+        "runner",
+        "host",
+        "install_dist",
+        "dist_args"
+      ]
     },
     "GithubMatrix": {
       "description": "Github CI Matrix",
@@ -984,32 +966,36 @@ expression: json_schema
           "description": "define each task manually rather than doing cross-product stuff",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/GithubLocalJobConfig"
+            "$ref": "#/$defs/GithubLocalJobConfig"
           }
         }
       }
     },
+    "GithubRunner": {
+      "description": "The name of a Github Actions Runner, like `ubuntu-22.04` or `macos-13`",
+      "type": "string"
+    },
     "GlibcVersion": {
       "description": "Minimum glibc version required to run software",
       "type": "object",
-      "required": [
-        "major",
-        "series"
-      ],
       "properties": {
         "major": {
           "description": "Major version",
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0
         },
         "series": {
           "description": "Series (minor) version",
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0
         }
-      }
+      },
+      "required": [
+        "major",
+        "series"
+      ]
     },
     "Hosting": {
       "description": "Possible hosting providers",
@@ -1019,7 +1005,7 @@ expression: json_schema
           "description": "Hosted on Github Releases",
           "anyOf": [
             {
-              "$ref": "#/definitions/GithubHosting"
+              "$ref": "#/$defs/GithubHosting"
             },
             {
               "type": "null"
@@ -1031,15 +1017,12 @@ expression: json_schema
     "Library": {
       "description": "Represents a dynamic library located somewhere on the system",
       "type": "object",
-      "required": [
-        "path"
-      ],
       "properties": {
         "package_manager": {
           "description": "Which package manager provided this library",
           "anyOf": [
             {
-              "$ref": "#/definitions/PackageManager"
+              "$ref": "#/$defs/PackageManager"
             },
             {
               "type": "null"
@@ -1057,7 +1040,10 @@ expression: json_schema
             "null"
           ]
         }
-      }
+      },
+      "required": [
+        "path"
+      ]
     },
     "Linkage": {
       "description": "Information about dynamic libraries used by a binary",
@@ -1067,7 +1053,7 @@ expression: json_schema
           "description": "Frameworks, only used on macOS",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Library"
+            "$ref": "#/$defs/Library"
           },
           "uniqueItems": true
         },
@@ -1075,7 +1061,7 @@ expression: json_schema
           "description": "Libraries provided by the Homebrew package manager",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Library"
+            "$ref": "#/$defs/Library"
           },
           "uniqueItems": true
         },
@@ -1083,7 +1069,7 @@ expression: json_schema
           "description": "Libraries which don't fall into any other categories",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Library"
+            "$ref": "#/$defs/Library"
           },
           "uniqueItems": true
         },
@@ -1091,7 +1077,7 @@ expression: json_schema
           "description": "Public libraries not provided by the system and not managed by any package manager",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Library"
+            "$ref": "#/$defs/Library"
           },
           "uniqueItems": true
         },
@@ -1099,11 +1085,15 @@ expression: json_schema
           "description": "Libraries included with the operating system",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Library"
+            "$ref": "#/$defs/Library"
           },
           "uniqueItems": true
         }
       }
+    },
+    "PackageInstallScript": {
+      "description": "A bit of shell script to install brew/apt/chocolatey/etc. packages",
+      "type": "string"
     },
     "PackageManager": {
       "description": "Represents the package manager a library was installed by",
@@ -1111,18 +1101,18 @@ expression: json_schema
         {
           "description": "Homebrew (usually for Mac)",
           "type": "string",
-          "enum": [
-            "homebrew"
-          ]
+          "const": "homebrew"
         },
         {
           "description": "Apt (Debian, Ubuntu, etc)",
           "type": "string",
-          "enum": [
-            "apt"
-          ]
+          "const": "apt"
         }
       ]
+    },
+    "PowershellScript": {
+      "description": "A bit of powershell script, ran on CI runners. Can be multi-line.",
+      "type": "string"
     },
     "PrRunMode": {
       "description": "Type of job to run on pull request",
@@ -1130,33 +1120,23 @@ expression: json_schema
         {
           "description": "Do not run on pull requests at all",
           "type": "string",
-          "enum": [
-            "skip"
-          ]
+          "const": "skip"
         },
         {
           "description": "Only run the plan step",
           "type": "string",
-          "enum": [
-            "plan"
-          ]
+          "const": "plan"
         },
         {
           "description": "Build and upload artifacts",
           "type": "string",
-          "enum": [
-            "upload"
-          ]
+          "const": "upload"
         }
       ]
     },
     "Release": {
       "description": "A Release of an Application",
       "type": "object",
-      "required": [
-        "app_name",
-        "app_version"
-      ],
       "properties": {
         "app_name": {
           "description": "The name of the app",
@@ -1170,7 +1150,7 @@ expression: json_schema
           "description": "The artifacts for this release (zips, debuginfo, metadata...)",
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ArtifactId"
           }
         },
         "display": {
@@ -1191,7 +1171,7 @@ expression: json_schema
           "description": "Environment variables which control this release's installer's behaviour",
           "anyOf": [
             {
-              "$ref": "#/definitions/EnvironmentVariables"
+              "$ref": "#/$defs/EnvironmentVariables"
             },
             {
               "type": "null"
@@ -1200,9 +1180,26 @@ expression: json_schema
         },
         "hosting": {
           "description": "Hosting info",
-          "allOf": [
+          "$ref": "#/$defs/Hosting"
+        }
+      },
+      "required": [
+        "app_name",
+        "app_version"
+      ]
+    },
+    "StaticLibraryAsset": {
+      "description": "A C static library artifact (a/lib)",
+      "type": "object",
+      "properties": {
+        "symbols_artifact": {
+          "description": "The name of the Artifact containing symbols for this library",
+          "anyOf": [
             {
-              "$ref": "#/definitions/Hosting"
+              "$ref": "#/$defs/ArtifactId"
+            },
+            {
+              "type": "null"
             }
           ]
         }
@@ -1211,18 +1208,10 @@ expression: json_schema
     "SystemInfo": {
       "description": "Info about a system used to build this announcement.",
       "type": "object",
-      "required": [
-        "build_environment",
-        "id"
-      ],
       "properties": {
         "build_environment": {
           "description": "Environment of the System",
-          "allOf": [
-            {
-              "$ref": "#/definitions/BuildEnvironment"
-            }
-          ]
+          "$ref": "#/$defs/BuildEnvironment"
         },
         "cargo_version_line": {
           "description": "The version of Cargo used (first line of cargo -vV)",
@@ -1235,7 +1224,15 @@ expression: json_schema
           "description": "The unique id of the System",
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "id",
+        "build_environment"
+      ]
+    },
+    "TripleName": {
+      "description": "A rustc-like target triple/tuple (e.g. \"x86_64-pc-windows-msvc\")",
+      "type": "string"
     }
   }
 }
