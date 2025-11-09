@@ -738,6 +738,7 @@ fn get_new_dist_metadata(
                 InstallerStyle::Npm,
                 InstallerStyle::Homebrew,
                 InstallerStyle::Msi,
+                InstallerStyle::Pkg,
             ]
         } else {
             eprintln!("{notice} no CI backends enabled, most installers have been hidden");
@@ -853,6 +854,72 @@ fn get_new_dist_metadata(
             publish_jobs.retain(|job| job != &PublishStyle::Homebrew);
         }
     }
+
+    // Special handling of the pkg installer
+    if meta
+        .installers
+        .as_deref()
+        .unwrap_or_default()
+        .contains(&InstallerStyle::Pkg)
+    {
+        let pkg_is_new = !orig_meta
+            .installers
+            .as_deref()
+            .unwrap_or_default()
+            .contains(&InstallerStyle::Pkg);
+
+        if pkg_is_new && orig_meta.mac_pkg_config.is_none() {
+            let prompt = r#"you've enabled a Mac .pkg installer. This requires a unique bundle ID;
+    please enter one now. This is in reverse-domain name format.
+    For more information, consult the Apple documentation:
+    https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW1"#;
+            let default = "".to_string();
+
+            let identifier: String = if args.yes {
+                default
+            } else {
+                let res = Input::with_theme(&theme)
+                    .with_prompt(prompt)
+                    .allow_empty(true)
+                    .interact_text()?;
+                eprintln!();
+                res
+            };
+            let identifier = identifier.trim();
+            if identifier.is_empty() {
+                return Err(DistError::MacPkgBundleIdentifierMissing {});
+            }
+
+            let prompt = r#"Please enter the installation prefix this .pkg should use."#;
+            let prefix = if args.yes {
+                None
+            } else {
+                let res: String = Input::with_theme(&theme)
+                    .with_prompt(prompt)
+                    .allow_empty(true)
+                    .interact_text()?;
+                eprintln!();
+
+                let trimmed = res.trim();
+                if trimmed.is_empty() {
+                    None
+                } else {
+                    Some(trimmed.to_owned())
+                }
+            };
+
+            meta.mac_pkg_config = Some(config::MacPkgConfig {
+                identifier: Some(identifier.to_owned()),
+                install_location: prefix,
+            })
+        }
+    }
+
+    meta.publish_jobs = if publish_jobs.is_empty() {
+        None
+    } else {
+        Some(publish_jobs.to_owned())
+    };
 
     // Special handling of the npm installer
     if meta

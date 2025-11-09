@@ -18,6 +18,7 @@
   - [npm](./installers/npm.md)
   - [homebrew](./installers/homebrew.md)
   - [msi](./installers/msi.md)
+  - [pkg](./installers/pkg.md)
   - [updater](./installers/updater.md)
   - [Usage](./installers/usage.md)
 - [Artifacts](./artifacts/index.md)
