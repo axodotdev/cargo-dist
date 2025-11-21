@@ -351,6 +351,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo-config2"
+version = "0.1.39"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3795d3a48839a46854805f56c8fe9c558f10804bcf57df53925ca843d87c788f"
+dependencies = [
+ "serde",
+ "serde_derive",
+ "toml",
+ "windows-sys 0.61.0",
+]
+
+[[package]]
 name = "cargo-dist"
 version = "0.30.2"
 dependencies = [
@@ -364,6 +376,7 @@ dependencies = [
  "base64",
  "blake2",
  "camino",
+ "cargo-config2",
  "cargo-dist-schema",
  "cargo-wix",
  "cargo_metadata 0.23.0",
