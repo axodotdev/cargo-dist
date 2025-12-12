@@ -30,6 +30,6 @@
     "rimraf": "^6.1.2"
   },
   "devDependencies": {
-    "prettier": "^3.7.0"
+    "prettier": "^3.7.4"
   }
 }
