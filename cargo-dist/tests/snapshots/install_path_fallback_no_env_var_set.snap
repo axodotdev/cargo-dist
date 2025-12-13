@@ -319,7 +319,7 @@ download_binary_and_run_installer() {
             ;;
 
         ".tar."*)
-            ensure tar xf "$_file" --strip-components 1 -C "$_dir"
+            ensure tar xf "$_file" --no-same-owner --strip-components 1 -C "$_dir"
             ;;
         *)
             err "unknown archive format: $_zip_ext"
