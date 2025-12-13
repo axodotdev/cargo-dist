@@ -3,6 +3,17 @@
 Nothing Yet!
 
 
+# Version 0.30.3 (2025-12-14)
+
+This release contains a few minor bugfixes. It also updates dependencies, including a rimraf upgrade that resolves [a CVE in glob](https://security.snyk.io/vuln/SNYK-JS-GLOB-14040952). This vulnerability was not exploitable in the way dist used rimraf.
+
+## Fixes
+
+- impl @AThePeanut4 [fix: invalid file permissions when running the shell installer under `sudo`](https://github.com/axodotdev/cargo-dist/pull/2195)
+- impl @ryanobjc [fix: macOS codesigning configuration not being respected](https://github.com/axodotdev/cargo-dist/pull/2214)
+
+Thanks to @zachstence for handling the rimraf/glob upgrade!
+
 # Version 0.30.2 (2025-10-31)
 
 * When customizing when artifacts are attested, you can now use the `announce` phase.
