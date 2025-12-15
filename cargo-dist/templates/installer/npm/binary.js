@@ -17,7 +17,7 @@ const {
 } = require("./package.json");
 
 const builderGlibcMajorVersion = glibcMinimum.major;
-const builderGlibcMInorVersion = glibcMinimum.series;
+const builderGlibcMinorVersion = glibcMinimum.series;
 
 const getPlatform = () => {
   const rawOsType = os.type();
@@ -63,7 +63,7 @@ const getPlatform = () => {
       let libcMinorVersion = splitLibcVersion[1];
       if (
         libcMajorVersion != builderGlibcMajorVersion ||
-        libcMinorVersion < builderGlibcMInorVersion
+        libcMinorVersion < builderGlibcMinorVersion
       ) {
         // We can't run the glibc binaries, but we can run the static musl ones
         // if they exist
