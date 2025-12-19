@@ -84,6 +84,29 @@ get_home() {
         getent passwd "$(id -un)" | cut -d: -f6
     fi
 }
+
+# Check if running on Windows with POSIX-compliant shell (CYGWIN, MSYS, MINGW)
+is_windows_posix() {
+    case "$(uname)" in
+        CYGWIN*|MSYS*|MINGW*)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+# Convert POSIX path to Windows path
+convert_path_for_receipt() {
+    local _path="$1"
+    if is_windows_posix && command -v cygpath > /dev/null 2>&1; then
+        # Use cygpath to convert path, then escape backslashes for JSON
+        cygpath -w "$_path" | sed 's/\\/\\\\/g'
+    else
+        echo "$_path"
+    fi
+}
+
 # The HOME reference to show in user output. If `$HOME` isn't set, we show the absolute path instead.
 get_home_expression() {
     if [ -n "${HOME:-}" ]; then
@@ -98,7 +121,13 @@ get_home_expression() {
 INFERRED_HOME=$(get_home)
 # shellcheck disable=SC2034
 INFERRED_HOME_EXPRESSION=$(get_home_expression)
-RECEIPT_HOME="${XDG_CONFIG_HOME:-$INFERRED_HOME/.config}/akaikatana-repack"
+
+# On Windows POSIX shells, use LOCALAPPDATA for receipt storage to match axoupdater expectations
+if is_windows_posix && [ -n "${LOCALAPPDATA:-}" ]; then
+    RECEIPT_HOME="$LOCALAPPDATA/akaikatana-repack"
+else
+    RECEIPT_HOME="${XDG_CONFIG_HOME:-$INFERRED_HOME/.config}/akaikatana-repack"
+fi
 
 usage() {
     # print help (this cat/EOF stuff is a "heredoc" string)
@@ -675,7 +704,7 @@ install() {
     _fish_env_script_path_expr="${_env_script_path_expr}.fish"
 
     # Replace the temporary cargo home with the calculated one
-    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$_receipt_install_dir,")
+    RECEIPT=$(echo "$RECEIPT" | sed "s,AXO_INSTALL_PREFIX,$(convert_path_for_receipt "$_receipt_install_dir"),")
     # Also replace the aliases with the arch-specific one
     RECEIPT=$(echo "$RECEIPT" | sed "s'\"binary_aliases\":{}'\"binary_aliases\":$(json_binary_aliases "$_arch")'")
     # And replace the install layout
