@@ -94,7 +94,7 @@ is_windows_posix() {
 # Convert POSIX path to Windows path
 convert_path_for_receipt() {
     local _path="$1"
-    if is_windows_posix && command -v cygpath > /dev/null 2>&1; then
+    if is_windows_posix && check_cmd cygpath; then
         # Use cygpath to convert path, then escape backslashes for JSON
         cygpath -w "$_path" | sed 's/\\/\\\\/g'
     else
