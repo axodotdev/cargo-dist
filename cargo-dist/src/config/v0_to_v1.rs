@@ -88,6 +88,7 @@ impl DistMetadata {
             package_libraries,
             install_libraries,
             github_build_setup,
+            github_build_setup_jobs,
             min_glibc_version,
             binaries,
             cargo_auditable,
@@ -166,6 +167,7 @@ impl DistMetadata {
             if github_custom_runners.is_some()
                 || github_custom_job_permissions.is_some()
                 || github_build_setup.is_some()
+                || github_build_setup_jobs.is_some()
                 || github_action_commits.is_some()
             {
                 Some(GithubCiLayer {
@@ -173,6 +175,7 @@ impl DistMetadata {
                     runners: github_custom_runners,
                     permissions: github_custom_job_permissions,
                     build_setup: github_build_setup,
+                    build_setup_jobs: github_build_setup_jobs,
                     action_commits: github_action_commits,
                 })
             } else {

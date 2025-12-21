@@ -1,6 +1,17 @@
 # Unreleased
 
-Nothing Yet!
+## `github-build-setup` Job Customization
+
+It's now possible to specify to which jobs `github-build-setup` steps are added.
+
+```toml
+github-build-setup = "build-steps.yml"
+github-build-setup-jobs = ["plan", "build-local-artifacts", "build-global-artifacts", "host"]
+```
+
+If not configured, this defaults to `["build-local-artifacts"]`.
+
+- impl @arusahni [feat: optionally apply `github-build-setup` steps to additional jobs](https://github.com/axodotdev/cargo-dist/pull/2070)
 
 
 # Version 0.30.3 (2025-12-14)
