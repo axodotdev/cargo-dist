@@ -29,16 +29,16 @@ axoprocess = { version = "0.2.1" }
 
 # third-party deps
 clap = { version = "4.5.53", features = ["derive"] }
-console = { version = "0.16.1" }
+console = { version = "0.16.2" }
 clap-cargo = { version = "0.18.3" }
 comfy-table = "7.2.1"
 miette = { version = "7.6.0" }
 thiserror = "2.0.17"
-tracing = { version = "0.1.43", features = ["log"] }
+tracing = { version = "0.1.44", features = ["log"] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = { version = "1.0.143" }
+serde_json = { version = "1.0.147" }
 cargo_metadata = "0.23.1"
-camino = { version = "1.2.1", features = ["serde1"] }
+camino = { version = "1.2.2", features = ["serde1"] }
 semver = "1.0.27"
 newline-converter = "0.3.0"
 dialoguer = "0.12.0"
@@ -55,14 +55,14 @@ tokio = { version = "1.48.0", features = ["full"] }
 temp-dir = "0.1.16"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
-insta = { version = "1.44.3", features = ["filters"] }
+insta = { version = "1.45.0", features = ["filters"] }
 tar = "0.4.44"
 flate2 = "1.1.7"
 pathdiff = { version = "0.2.3", features = ["camino"] }
 url = "2.5.7"
 parse-changelog = "0.6.14"
-schemars = "1.1.0"
-spdx = "0.13.2"
+schemars = "1.2.0"
+spdx = "0.13.3"
 base64 = "0.22.1"
 lazy_static = "1.5.0"
 current_platform = "0.2.0"
