@@ -366,12 +366,12 @@ impl GithubCiInfo {
             .unwrap_or_default();
 
         let default_action_versions = [
-            ("actions/checkout", "v4"),
-            ("actions/upload-artifact", "v4"),
-            ("actions/download-artifact", "v4"),
-            ("actions/attest-build-provenance", "v2"),
+            ("actions/checkout", "v6"),
+            ("actions/upload-artifact", "v6"),
+            ("actions/download-artifact", "v7"),
+            ("actions/attest-build-provenance", "v3"),
             ("swatinem/rust-cache", "v2"),
-            ("actions/setup-node", "v4"),
+            ("actions/setup-node", "v6"),
         ];
         let actions = default_action_versions
             .iter()
