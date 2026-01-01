@@ -466,9 +466,13 @@ pub struct DistMetadata {
     #[serde(default, with = "opt_string_or_vec")]
     pub install_libraries: Option<Vec<LibraryStyle>>,
 
-    /// Any additional steps that need to be performed before building local artifacts
+    /// Any additional steps that need to be performed before executing certain job steps
     #[serde(default)]
     pub github_build_setup: Option<String>,
+
+    /// The jobs to which the [`DistMetadata::github_build_setup`] steps should be prepended
+    #[serde(default)]
+    pub github_build_setup_jobs: Option<Vec<String>>,
 
     /// Configuration specific to Mac .pkg installers
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -572,6 +576,7 @@ impl DistMetadata {
             package_libraries: _,
             install_libraries: _,
             github_build_setup: _,
+            github_build_setup_jobs: _,
             mac_pkg_config: _,
             min_glibc_version: _,
             binaries: _,
@@ -679,6 +684,7 @@ impl DistMetadata {
             package_libraries,
             install_libraries,
             github_build_setup,
+            github_build_setup_jobs,
             mac_pkg_config,
             min_glibc_version,
             binaries,
@@ -806,6 +812,9 @@ impl DistMetadata {
         }
         if github_build_setup.is_some() {
             warn!("package.metadata.dist.github-build-setup is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if github_build_setup_jobs.is_some() {
+            warn!("package.metadata.dist.github-build-setup-jobs is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings
