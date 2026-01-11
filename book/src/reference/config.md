@@ -71,6 +71,8 @@ We're currently in the middle of [a major config migration](https://github.com/a
 
 [hosting settings](#hosting-settings)
 * [`hosting`](#hosting)
+* [`artifact-download-url`](#artifact-download-url)
+* [`artifact-download-fallback`](#artifact-download-fallback)
 * [`display`](#display)
 * [`display-name`](#display-name)
 * [`force-latest`](#force-latest)
@@ -1001,6 +1003,59 @@ Possible values:
 Specifies what hosting provider to use when hosting/announcing new releases.
 
 By default we will automatically use the native hosting of your CI provider, so when running on GitHub CI, we'll default to using GitHub Releases for hosting/announcing.
+
+
+### `artifact-download-url`
+
+> <span style="float:right">since 0.27.0<br>[global-only][]</span>
+> default = `<none>`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist.hosts]
+> artifact-download-url = "https://cdn.example.com/{tag}/"
+> ```
+
+Specifies a custom base URL for downloading artifacts. When configured, the generated [shell][shell-installer] and [powershell][powershell-installer] installers will download artifacts from this URL instead of [GitHub Releases](#hosting).
+
+#### Template Variables
+
+The URL supports the following template variables:
+* `{tag}` - The release tag (e.g., `v1.0.0`)
+
+#### Use Cases
+
+This is useful for:
+* Serving artifacts from your own CDN or hosting
+* Improving download speeds via a geographically distributed CDN
+* Self-hosting releases independent of GitHub
+
+#### Fallback Behavior
+
+By default, if the custom URL fails, the installer will simply fail. To enable fallback to GitHub Releases, set [`artifact-download-fallback`](#artifact-download-fallback) to `true`.
+
+#### Runtime Override
+
+The artifact download URL can be overridden at runtime via the `{APP_NAME}_DOWNLOAD_URL` or `INSTALLER_DOWNLOAD_URL` environment variables. When set, these override the custom URL and no fallback occurs.
+
+
+### `artifact-download-fallback`
+
+> <span style="float:right">since 0.27.0<br>[global-only][]</span>
+> default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist.hosts]
+> artifact-download-url = "https://cdn.example.com/{tag}/"
+> artifact-download-fallback = true
+> ```
+
+When `true` and [`artifact-download-url`](#artifact-download-url) is configured, the generated installers will fall back to GitHub Releases if the custom URL fails.
+
+This provides redundancy: artifacts are first fetched from your custom URL, and if that fails (e.g., the CDN is temporarily unavailable), the installer will retry using GitHub Releases.
+
+**Note**: If the user overrides the download URL via the `{APP_NAME}_DOWNLOAD_URL` or `INSTALLER_DOWNLOAD_URL` environment variables, the fallback is bypassed entirely.
 
 
 ### `display`

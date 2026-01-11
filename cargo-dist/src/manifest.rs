@@ -106,9 +106,19 @@ pub(crate) fn load_and_merge_manifests(
             let out_release =
                 output.ensure_release(release.app_name.clone(), release.app_version.clone());
             // If the input has hosting info, apply it
-            let Hosting { github } = release.hosting;
+            let Hosting {
+                github,
+                artifact_download_url,
+                artifact_download_fallback,
+            } = release.hosting;
             if let Some(hosting) = github {
                 out_release.hosting.github = Some(hosting);
+            }
+            if artifact_download_url.is_some() {
+                out_release.hosting.artifact_download_url = artifact_download_url;
+            }
+            if artifact_download_fallback {
+                out_release.hosting.artifact_download_fallback = artifact_download_fallback;
             }
             // If the input has a list of artifacts for this release, merge them
             for artifact in release.artifacts {

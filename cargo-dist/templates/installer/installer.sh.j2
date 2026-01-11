@@ -63,7 +63,10 @@ if [ -n "${UNMANAGED_INSTALL}" ]; then
     INSTALL_UPDATER=0
 fi
 AUTH_TOKEN="{{ '${' }}{{ env_vars.github_token_env_var }}:-}"
-
+{% if artifact_download_url %}# Custom artifact download URL (with optional GitHub fallback)
+CUSTOM_DOWNLOAD_URL="{{ artifact_download_url }}"
+{% if fallback_base_url %}FALLBACK_BASE_URL="{{ fallback_base_url }}"
+{% endif %}{% endif %}
 read -r RECEIPT <<EORECEIPT
 {{ receipt | tojson }}
 EORECEIPT
@@ -255,15 +258,55 @@ download_binary_and_run_installer() {
 
     # download the archive
     local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
+{%- if artifact_download_url %}
+    local _custom_url="$CUSTOM_DOWNLOAD_URL/$_artifact_name"
+{% if fallback_base_url %}    local _fallback_url="$FALLBACK_BASE_URL/$_artifact_name"
+{% endif %}    # Check if user overrode the download URL via env var
+    local _use_custom=1
+    if [ -n "{{ '${' }}{{ env_vars.download_url_env_var }}:-}" ] || [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
+        _use_custom=0
+    fi
+{%- endif %}
     local _dir
     _dir="$(ensure mktemp -d)" || return 1
     local _file="$_dir/input$_zip_ext"
 
     say "downloading $APP_NAME $APP_VERSION ${_arch}" 1>&2
+{%- if artifact_download_url %}
+    if [ "$_use_custom" = "1" ]; then
+{% if fallback_base_url %}        say_verbose "  from $_custom_url (with fallback to $_fallback_url)" 1>&2
+{% else %}        say_verbose "  from $_custom_url" 1>&2
+{% endif %}    else
+        say_verbose "  from $_url" 1>&2
+    fi
+{%- else %}
     say_verbose "  from $_url" 1>&2
+{%- endif %}
     say_verbose "  to $_file" 1>&2
 
     ensure mkdir -p "$_dir"
+{%- if artifact_download_url %}
+
+    if [ "$_use_custom" = "1" ]; then
+{% if fallback_base_url %}        if ! download_with_fallback "$_custom_url" "$_file" "$_fallback_url"; then
+          say "failed to download from custom URL and fallback"
+{% else %}        if ! downloader "$_custom_url" "$_file"; then
+          say "failed to download $_custom_url"
+{% endif %}          say "this may be a standard network error, but it may also indicate"
+          say "that $APP_NAME's release process is not working. When in doubt"
+          say "please feel free to open an issue!"
+          exit 1
+        fi
+    else
+        if ! downloader "$_url" "$_file"; then
+          say "failed to download $_url"
+          say "this may be a standard network error, but it may also indicate"
+          say "that $APP_NAME's release process is not working. When in doubt"
+          say "please feel free to open an issue!"
+          exit 1
+        fi
+    fi
+{%- else %}
 
     if ! downloader "$_url" "$_file"; then
       say "failed to download $_url"
@@ -272,6 +315,7 @@ download_binary_and_run_installer() {
       say "please feel free to open an issue!"
       exit 1
     fi
+{%- endif %}
 
     if [ -n "${_checksum_style:-}" ]; then
         verify_checksum "$_file" "$_checksum_style" "$_checksum_value"
@@ -282,9 +326,35 @@ download_binary_and_run_installer() {
     # ...and then the updater, if it exists
     if [ -n "$_updater_name" ] && [ "$INSTALL_UPDATER" = "1" ]; then
         local _updater_url="$ARTIFACT_DOWNLOAD_URL/$_updater_name"
+{%- if artifact_download_url %}
+        local _updater_custom_url="$CUSTOM_DOWNLOAD_URL/$_updater_name"
+{% if fallback_base_url %}        local _updater_fallback_url="$FALLBACK_BASE_URL/$_updater_name"
+{% endif %}{%- endif %}
         # This renames the artifact while doing the download, removing the
         # target triple and leaving just the appname-update format
         local _updater_file="$_dir/$APP_NAME-update"
+{%- if artifact_download_url %}
+
+        if [ "$_use_custom" = "1" ]; then
+{% if fallback_base_url %}            if ! download_with_fallback "$_updater_custom_url" "$_updater_file" "$_updater_fallback_url"; then
+              say "failed to download updater from custom URL and fallback"
+{% else %}            if ! downloader "$_updater_custom_url" "$_updater_file"; then
+              say "failed to download $_updater_custom_url"
+{% endif %}              say "this may be a standard network error, but it may also indicate"
+              say "that $APP_NAME's release process is not working. When in doubt"
+              say "please feel free to open an issue!"
+              exit 1
+            fi
+        else
+            if ! downloader "$_updater_url" "$_updater_file"; then
+              say "failed to download $_updater_url"
+              say "this may be a standard network error, but it may also indicate"
+              say "that $APP_NAME's release process is not working. When in doubt"
+              say "please feel free to open an issue!"
+              exit 1
+            fi
+        fi
+{%- else %}
 
         if ! downloader "$_updater_url" "$_updater_file"; then
           say "failed to download $_updater_url"
@@ -293,6 +363,7 @@ download_binary_and_run_installer() {
           say "please feel free to open an issue!"
           exit 1
         fi
+{%- endif %}
 
         # Add the updater to the list of binaries to install
         _bins="$_bins $APP_NAME-update"
@@ -1378,6 +1449,28 @@ downloader() {
     else err "Unknown downloader"   # should not reach here
     fi
 }
+{%- if artifact_download_url %}
+
+# Download with fallback support - tries primary URL first, then fallback
+download_with_fallback() {
+    local _url="$1"
+    local _file="$2"
+    local _fallback_url="${3:-}"
+
+    if downloader "$_url" "$_file"; then
+        return 0
+    fi
+
+    if [ -n "$_fallback_url" ]; then
+        say "primary download failed, trying fallback..." >&2
+        if downloader "$_fallback_url" "$_file"; then
+            return 0
+        fi
+    fi
+
+    return 1
+}
+{%- endif %}
 
 verify_checksum() {
     local _file="$1"

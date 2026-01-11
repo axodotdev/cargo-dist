@@ -2054,6 +2054,19 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let runtime_conditions = release.platform_support.safe_conflated_runtime_conditions();
 
+        // Custom artifact download URL with optional GitHub fallback
+        // Replace {tag} template variable with actual version tag
+        let artifact_download_url = hosting
+            .artifact_download_url
+            .as_ref()
+            .map(|url| url.replace("{tag}", &format!("v{}", release.version)));
+        let fallback_base_url =
+            if artifact_download_url.is_some() && hosting.artifact_download_fallback {
+                Some(download_url.to_owned())
+            } else {
+                None
+            };
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -2083,6 +2096,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 runtime_conditions,
                 platform_support: None,
                 env_vars,
+                artifact_download_url,
+                fallback_base_url,
             })),
             is_global: true,
         };
@@ -2222,6 +2237,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             platform_support: None,
             // Not actually needed for this installer type
             env_vars: None,
+            artifact_download_url: None,
+            fallback_base_url: None,
         };
 
         let installer_artifact = Artifact {
@@ -2297,6 +2314,20 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             return Ok(());
         };
         let bin_aliases = BinaryAliases(config.bin_aliases.clone()).for_targets(&target_triples);
+
+        // Custom artifact download URL with optional GitHub fallback
+        // Replace {tag} template variable with actual version tag
+        let artifact_download_url = hosting
+            .artifact_download_url
+            .as_ref()
+            .map(|url| url.replace("{tag}", &format!("v{}", release.version)));
+        let fallback_base_url =
+            if artifact_download_url.is_some() && hosting.artifact_download_fallback {
+                Some(download_url.to_owned())
+            } else {
+                None
+            };
+
         let installer_artifact = Artifact {
             id: artifact_name,
             target_triples,
@@ -2326,6 +2357,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 runtime_conditions: RuntimeConditions::default(),
                 platform_support: None,
                 env_vars,
+                artifact_download_url,
+                fallback_base_url,
             })),
             is_global: true,
         };
@@ -2444,6 +2477,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     platform_support: None,
                     // Not actually needed for this installer type
                     env_vars: None,
+                    artifact_download_url: None,
+                    fallback_base_url: None,
                 },
             })),
             is_global: true,

@@ -93,6 +93,10 @@ pub struct InstallerInfo {
     pub platform_support: Option<PlatformSupport>,
     /// Environment variables for installer customization
     pub env_vars: Option<EnvironmentVariables>,
+    /// Custom artifact download URL template (if configured)
+    pub artifact_download_url: Option<String>,
+    /// Fallback download URL (GitHub), used when custom URL is configured with fallback enabled
+    pub fallback_base_url: Option<String>,
 }
 
 /// A fake fragment of an ExecutableZip artifact for installers

@@ -266,7 +266,10 @@ impl DistMetadata {
             || display.is_some()
             || display_name.is_some();
         let host_layer = needs_host_layer.then_some(HostLayer {
-            common: CommonHostLayer {},
+            common: CommonHostLayer {
+                artifact_download_url: None,
+                artifact_download_fallback: None,
+            },
             github: github_host_layer,
             force_latest,
             display,

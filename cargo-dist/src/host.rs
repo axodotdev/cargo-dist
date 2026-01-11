@@ -60,11 +60,17 @@ impl<'a> DistGraphBuilder<'a> {
         }
 
         let mut hosting = vec![];
+        let artifact_download_url;
+        let artifact_download_fallback;
         {
             let WorkspaceHostConfig {
                 github,
                 force_latest: _,
+                artifact_download_url: custom_url,
+                artifact_download_fallback: fallback,
             } = &self.inner.config.hosts;
+            artifact_download_url = custom_url.clone();
+            artifact_download_fallback = *fallback;
             if github.is_some() {
                 hosting.push(HostingStyle::Github);
             }
@@ -124,15 +130,18 @@ impl<'a> DistGraphBuilder<'a> {
                     let repo_path = &hosting.repo_path;
                     for (name, version) in &releases_without_hosting {
                         let tag = &announcing.tag;
-                        self.manifest
+                        let release_hosting = &mut self
+                            .manifest
                             .ensure_release(name.clone(), version.clone())
-                            .hosting
-                            .github = Some(cargo_dist_schema::GithubHosting {
+                            .hosting;
+                        release_hosting.github = Some(cargo_dist_schema::GithubHosting {
                             artifact_base_url: hosting.domain.clone(),
                             artifact_download_path: format!("{repo_path}/releases/download/{tag}"),
                             owner: hosting.owner.clone(),
                             repo: hosting.project.clone(),
-                        })
+                        });
+                        release_hosting.artifact_download_url = artifact_download_url.clone();
+                        release_hosting.artifact_download_fallback = artifact_download_fallback;
                     }
                 }
             }

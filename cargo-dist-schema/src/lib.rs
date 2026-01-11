@@ -1070,6 +1070,17 @@ pub struct Hosting {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github: Option<GithubHosting>,
+    /// Custom artifact download URL template (e.g., "https://mycdn.com/{tag}/")
+    ///
+    /// Supports template variables: {tag}
+    /// When set, this URL is used instead of GitHub Releases for downloading artifacts.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub artifact_download_url: Option<String>,
+    /// Whether to fall back to GitHub Releases if the custom artifact_download_url fails
+    #[serde(default)]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub artifact_download_fallback: bool,
 }
 
 /// Github Hosting
@@ -1091,7 +1102,11 @@ pub struct GithubHosting {
 impl Hosting {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
     pub fn artifact_download_url(&self) -> Option<String> {
-        let Hosting { github } = &self;
+        let Hosting {
+            github,
+            artifact_download_url: _,
+            artifact_download_fallback: _,
+        } = &self;
         if let Some(host) = &github {
             return Some(format!(
                 "{}{}",
@@ -1102,7 +1117,11 @@ impl Hosting {
     }
     /// Gets whether there's no hosting
     pub fn is_empty(&self) -> bool {
-        let Hosting { github } = &self;
+        let Hosting {
+            github,
+            artifact_download_url: _,
+            artifact_download_fallback: _,
+        } = &self;
         github.is_none()
     }
 }

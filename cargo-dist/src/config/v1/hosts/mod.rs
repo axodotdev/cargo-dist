@@ -22,6 +22,10 @@ pub struct WorkspaceHostConfig {
     pub force_latest: bool,
     /// github host config (github releases)
     pub github: Option<GithubHostConfig>,
+    /// Custom artifact download URL template (e.g., "https://mycdn.com/{tag}/")
+    pub artifact_download_url: Option<String>,
+    /// Whether to fall back to GitHub Releases if the custom download URL fails
+    pub artifact_download_fallback: bool,
 }
 /// host config (inheritance not folded in yet)
 #[derive(Debug, Clone)]
@@ -123,6 +127,8 @@ impl HostConfigInheritable {
             display: _,
             display_name: _,
         } = self;
+        let artifact_download_url = common.artifact_download_url.clone();
+        let artifact_download_fallback = common.artifact_download_fallback.unwrap_or(false);
         let github = github.map(|github| {
             let mut default = GithubHostConfig::defaults_for_workspace(workspaces, &common);
             default.apply_layer(github);
@@ -131,6 +137,8 @@ impl HostConfigInheritable {
         WorkspaceHostConfig {
             github,
             force_latest: force_latest.unwrap_or(false),
+            artifact_download_url,
+            artifact_download_fallback,
         }
     }
 }
@@ -158,26 +166,64 @@ impl ApplyLayer for HostConfigInheritable {
 /// inheritable hosting config
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct CommonHostLayer {}
+pub struct CommonHostLayer {
+    /// Custom artifact download URL template (e.g., "https://mycdn.com/{tag}/")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub artifact_download_url: Option<String>,
+    /// Whether to fall back to GitHub Releases if the custom download URL fails
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub artifact_download_fallback: Option<bool>,
+}
 
 /// inheritable hosting config
 #[derive(Debug, Default, Clone)]
-pub struct CommonHostConfig {}
+pub struct CommonHostConfig {
+    /// Custom artifact download URL template (e.g., "https://mycdn.com/{tag}/")
+    pub artifact_download_url: Option<String>,
+    /// Whether to fall back to GitHub Releases if the custom download URL fails
+    pub artifact_download_fallback: Option<bool>,
+}
 impl CommonHostConfig {
     /// defaults for package
     pub fn defaults_for_package(_workspaces: &WorkspaceGraph, _pkg_idx: PackageIdx) -> Self {
-        Self {}
+        Self {
+            artifact_download_url: None,
+            artifact_download_fallback: None,
+        }
     }
     /// defaults for workspace
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph) -> Self {
-        Self {}
+        Self {
+            artifact_download_url: None,
+            artifact_download_fallback: None,
+        }
     }
 }
 impl ApplyLayer for CommonHostConfig {
     type Layer = CommonHostLayer;
-    fn apply_layer(&mut self, Self::Layer {}: Self::Layer) {}
+    fn apply_layer(
+        &mut self,
+        Self::Layer {
+            artifact_download_url,
+            artifact_download_fallback,
+        }: Self::Layer,
+    ) {
+        self.artifact_download_url = artifact_download_url.or(self.artifact_download_url.take());
+        self.artifact_download_fallback =
+            artifact_download_fallback.or(self.artifact_download_fallback.take());
+    }
 }
 impl ApplyLayer for CommonHostLayer {
     type Layer = CommonHostLayer;
-    fn apply_layer(&mut self, Self::Layer {}: Self::Layer) {}
+    fn apply_layer(
+        &mut self,
+        Self::Layer {
+            artifact_download_url,
+            artifact_download_fallback,
+        }: Self::Layer,
+    ) {
+        self.artifact_download_url = artifact_download_url.or(self.artifact_download_url.take());
+        self.artifact_download_fallback =
+            artifact_download_fallback.or(self.artifact_download_fallback.take());
+    }
 }
