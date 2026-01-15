@@ -2178,7 +2178,7 @@ install(false);
         "rimraf": "^6.1.2"
       },
       "devDependencies": {
-        "prettier": "^3.7.4"
+        "prettier": "^3.8.0"
       },
       "engines": {
         "node": ">=14",
@@ -2628,10 +2628,10 @@ install(false);
       "funding": {
         "url": "https://github.com/prettier/prettier?sponsor=1"
       },
-      "integrity": "sha512-v6UNi1+3hSlVvv8fSaoUbggEM5VErKmmpGA7Pl3HF8V6uKY7rvClBOJlH6yNwQtfTueNkGVpOv/mtWL9L4bgRA==",
+      "integrity": "sha512-yEPsovQfpxYfgWNhCfECjG5AQaO+K3dp6XERmOepyPDVqcJm+bjyCVO3pmU+nAPe0N5dDvekfGezt/EIiRe1TA==",
       "license": "MIT",
-      "resolved": "https://registry.npmjs.org/prettier/-/prettier-3.7.4.tgz",
-      "version": "3.7.4"
+      "resolved": "https://registry.npmjs.org/prettier/-/prettier-3.8.0.tgz",
+      "version": "3.8.0"
     },
     "node_modules/proxy-from-env": {
       "integrity": "sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==",
@@ -2697,7 +2697,7 @@ install(false);
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "devDependencies": {
-    "prettier": "^3.7.4"
+    "prettier": "^3.8.0"
   },
   "engines": {
     "node": ">=14",
