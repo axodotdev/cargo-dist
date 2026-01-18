@@ -249,7 +249,7 @@ jobs:
         {{%- if step.run is not undefined %}}
         {{%- if step.run is multiline %}}
         run: |
-          {{{ step.run|indent(10) }}}
+          {{{ step.run|indent(10)|safe }}}
         {{%- else %}}
         run: {{{ step.run }}}
         {{%- endif %}}
