@@ -743,31 +743,53 @@ install() {
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
     ensure mkdir -p "$_lib_install_dir"
+    _install_temp=$(mktemp -d "$_install_dir/tmp.XXXXXXXXXX")
+    _lib_install_temp=$(mktemp -d "$_lib_install_dir/tmp.XXXXXXXXXX")
 
-    # copy all the binaries to the install dir
+    # First move all the binaries and libraries to temporary directories within
+    # the target installation directories. This is done because those
+    # directories may be on a different filesystem to the temporary directory
+    # and as such this process might take time. This in turn increases the
+    # chance of an interruption leading to a broken installation.
+
     local _src_dir="$1"
     local _bins="$2"
     local _libs="$3"
     local _staticlibs="$4"
     local _arch="$5"
     for _bin_name in $_bins; do
-        local _bin="$_src_dir/$_bin_name"
-        ensure mv "$_bin" "$_install_dir"
+        ensure mv "$_src_dir/$_bin_name" "$_install_temp"
         # unzip seems to need this chmod
-        ensure chmod +x "$_install_dir/$_bin_name"
-        for _dest in $(aliases_for_binary "$_bin_name" "$_arch"); do
-            ln -sf "$_install_dir/$_bin_name" "$_install_dir/$_dest"
-        done
+        ensure chmod +x "$_install_temp/$_bin_name"
         say "  $_bin_name"
     done
     # Like the above, but no aliases
     for _lib_name in $_libs $_staticlibs; do
-        local _lib="$_src_dir/$_lib_name"
-        ensure mv "$_lib" "$_lib_install_dir"
+        ensure mv "$_src_dir/$_lib_name" "$_lib_install_temp"
         # unzip seems to need this chmod
         ensure chmod +x "$_lib_install_dir/$_lib_name"
         say "  $_lib_name"
     done
+
+    # Now move all the binaries and libraries into their final locations with
+    # plain mv. There's still a possibility of interruption here, but we've
+    # already written everything to the target filesystem (if it was ever
+    # different from the source) which means that this operation should be very
+    # fast, and we've already created directories within the target
+    # directories, so it's unlikely for anything here to fail due to missing
+    # permissions.
+
+    for _bin_name in $_bins; do
+            ensure mv "$_install_temp/$_bin_name" "$_install_dir"
+            for _dest in $(aliases_for_binary "$_bin_name" "$_arch"); do
+                    ln -sf "$_install_dir/$_bin_name" "$_install_dir/$_dest"
+            done
+    done
+    for _lib_name in $_libs $_staticlibs; do
+        ensure mv "$_lib_install_temp/$_lib_name" "$_lib_install_dir"
+    done
+
+    ignore rm -rf "$_install_temp" "$_lib_install_temp"
 
     say "everything's installed!"
 
