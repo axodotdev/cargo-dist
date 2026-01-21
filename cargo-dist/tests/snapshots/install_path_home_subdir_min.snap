@@ -720,14 +720,7 @@ install() {
         say "  $_bin_name"
     done
     # Like the above, but no aliases
-    for _lib_name in $_libs; do
-        local _lib="$_src_dir/$_lib_name"
-        ensure mv "$_lib" "$_lib_install_dir"
-        # unzip seems to need this chmod
-        ensure chmod +x "$_lib_install_dir/$_lib_name"
-        say "  $_lib_name"
-    done
-    for _lib_name in $_staticlibs; do
+    for _lib_name in $_libs $_staticlibs; do
         local _lib="$_src_dir/$_lib_name"
         ensure mv "$_lib" "$_lib_install_dir"
         # unzip seems to need this chmod
