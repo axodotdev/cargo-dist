@@ -1727,8 +1727,7 @@ function Install-Binary($install_args) {
       "aliases_json" = '{}'
     }
   }
-
-  $fetched = Download "$ArtifactDownloadUrl" $platforms
+  $fetched = Download "$ArtifactDownloadUrl" $null $platforms
   # FIXME: add a flag that lets the user not do this step
   try {
     Invoke-Installer -artifacts $fetched -platforms $platforms "$install_args"
@@ -1824,7 +1823,7 @@ function WebProxyFromEnvironment {
     return $webProxy
 }
 
-function Download($download_url, $platforms) {
+function Download($download_url, $fallback_url, $platforms) {
   $arch = Get-TargetTriple $platforms
 
   if (-not $platforms.ContainsKey($arch)) {
@@ -1857,7 +1856,30 @@ function Download($download_url, $platforms) {
   if ($auth_token) {
     $wc.Headers["Authorization"] = "Bearer $auth_token"
   }
-  $wc.downloadFile($url, $dir_path)
+  try {
+    $wc.downloadFile($url, $dir_path)
+  } catch {
+    $statusCode = $null
+    if ($_.Exception -is [System.Net.WebException] -and $_.Exception.Response) {
+      $statusCode = [int]$_.Exception.Response.StatusCode
+    }
+    if ($fallback_url) {
+      $fallback_artifact_url = "$fallback_url/$artifact_name"
+      $msg = "Primary download failed"
+      if ($statusCode) { $msg += " (HTTP $statusCode)" }
+      Write-Information "$msg, trying fallback..."
+      Write-Verbose "  from $fallback_artifact_url"
+      try {
+        $wc.downloadFile($fallback_artifact_url, $dir_path)
+      } catch {
+        throw "ERROR: Failed to download from both primary ($url) and fallback ($fallback_artifact_url): $_"
+      }
+    } else {
+      $msg = "Failed to download from $url"
+      if ($statusCode) { $msg += " (HTTP $statusCode)" }
+      throw "ERROR: $msg : $_"
+    }
+  }
 
   Write-Verbose "Unpacking to $tmp"
 
@@ -1902,7 +1924,30 @@ function Download($download_url, $platforms) {
     $updater_url = "$download_url/$updater_id"
     $out_name = "$tmp\axolotlsay-js-update.exe"
 
-    $wc.downloadFile($updater_url, $out_name)
+    try {
+      $wc.downloadFile($updater_url, $out_name)
+    } catch {
+      $statusCode = $null
+      if ($_.Exception -is [System.Net.WebException] -and $_.Exception.Response) {
+        $statusCode = [int]$_.Exception.Response.StatusCode
+      }
+      if ($fallback_url) {
+        $fallback_updater_url = "$fallback_url/$updater_id"
+        $msg = "Primary updater download failed"
+        if ($statusCode) { $msg += " (HTTP $statusCode)" }
+        Write-Information "$msg, trying fallback..."
+        Write-Verbose "  from $fallback_updater_url"
+        try {
+          $wc.downloadFile($fallback_updater_url, $out_name)
+        } catch {
+          throw "ERROR: Failed to download updater from both primary ($updater_url) and fallback ($fallback_updater_url): $_"
+        }
+      } else {
+        $msg = "Failed to download updater from $updater_url"
+        if ($statusCode) { $msg += " (HTTP $statusCode)" }
+        throw "ERROR: $msg : $_"
+      }
+    }
     $bin_paths += $out_name
   }
 
@@ -3926,8 +3971,7 @@ function Install-Binary($install_args) {
       "aliases_json" = '{}'
     }
   }
-
-  $fetched = Download "$ArtifactDownloadUrl" $platforms
+  $fetched = Download "$ArtifactDownloadUrl" $null $platforms
   # FIXME: add a flag that lets the user not do this step
   try {
     Invoke-Installer -artifacts $fetched -platforms $platforms "$install_args"
@@ -4023,7 +4067,7 @@ function WebProxyFromEnvironment {
     return $webProxy
 }
 
-function Download($download_url, $platforms) {
+function Download($download_url, $fallback_url, $platforms) {
   $arch = Get-TargetTriple $platforms
 
   if (-not $platforms.ContainsKey($arch)) {
@@ -4056,7 +4100,30 @@ function Download($download_url, $platforms) {
   if ($auth_token) {
     $wc.Headers["Authorization"] = "Bearer $auth_token"
   }
-  $wc.downloadFile($url, $dir_path)
+  try {
+    $wc.downloadFile($url, $dir_path)
+  } catch {
+    $statusCode = $null
+    if ($_.Exception -is [System.Net.WebException] -and $_.Exception.Response) {
+      $statusCode = [int]$_.Exception.Response.StatusCode
+    }
+    if ($fallback_url) {
+      $fallback_artifact_url = "$fallback_url/$artifact_name"
+      $msg = "Primary download failed"
+      if ($statusCode) { $msg += " (HTTP $statusCode)" }
+      Write-Information "$msg, trying fallback..."
+      Write-Verbose "  from $fallback_artifact_url"
+      try {
+        $wc.downloadFile($fallback_artifact_url, $dir_path)
+      } catch {
+        throw "ERROR: Failed to download from both primary ($url) and fallback ($fallback_artifact_url): $_"
+      }
+    } else {
+      $msg = "Failed to download from $url"
+      if ($statusCode) { $msg += " (HTTP $statusCode)" }
+      throw "ERROR: $msg : $_"
+    }
+  }
 
   Write-Verbose "Unpacking to $tmp"
 
@@ -4101,7 +4168,30 @@ function Download($download_url, $platforms) {
     $updater_url = "$download_url/$updater_id"
     $out_name = "$tmp\axolotlsay-update.exe"
 
-    $wc.downloadFile($updater_url, $out_name)
+    try {
+      $wc.downloadFile($updater_url, $out_name)
+    } catch {
+      $statusCode = $null
+      if ($_.Exception -is [System.Net.WebException] -and $_.Exception.Response) {
+        $statusCode = [int]$_.Exception.Response.StatusCode
+      }
+      if ($fallback_url) {
+        $fallback_updater_url = "$fallback_url/$updater_id"
+        $msg = "Primary updater download failed"
+        if ($statusCode) { $msg += " (HTTP $statusCode)" }
+        Write-Information "$msg, trying fallback..."
+        Write-Verbose "  from $fallback_updater_url"
+        try {
+          $wc.downloadFile($fallback_updater_url, $out_name)
+        } catch {
+          throw "ERROR: Failed to download updater from both primary ($updater_url) and fallback ($fallback_updater_url): $_"
+        }
+      } else {
+        $msg = "Failed to download updater from $updater_url"
+        if ($statusCode) { $msg += " (HTTP $statusCode)" }
+        throw "ERROR: $msg : $_"
+      }
+    }
     $bin_paths += $out_name
   }
 
