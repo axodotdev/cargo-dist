@@ -115,6 +115,7 @@ pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
         license_files: vec![],
         changelog_file: None,
         binaries: vec![],
+        out_dir: None,
         cstaticlibs: vec![],
         cdylibs: vec![],
         cargo_metadata_table: None,

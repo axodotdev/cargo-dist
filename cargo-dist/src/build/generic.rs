@@ -51,11 +51,16 @@ impl<'a> DistGraphBuilder<'a> {
             }
             for (pkg_idx, expected_binaries) in builds_by_pkg_idx {
                 let package = self.workspaces.package(pkg_idx);
+                let out_dir = if let Some(dir) = package.out_dir.as_ref() {
+                    package.package_root.join(dir)
+                } else {
+                    package.package_root.clone()
+                };
                 builds.push(BuildStep::Generic(GenericBuildStep {
                     target_triple: target.clone(),
                     expected_binaries,
                     working_dir: package.package_root.clone(),
-                    out_dir: package.package_root.clone(),
+                    out_dir,
                     build_command: package
                         .build_command
                         .clone()

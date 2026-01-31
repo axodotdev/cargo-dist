@@ -153,6 +153,7 @@ fn read_workspace(manifest_path: &Utf8Path) -> Result<WorkspaceStructure> {
         // FIXME: is there any JS equivalent to this?
         changelog_file: None,
         binaries,
+        out_dir: None,
         // FIXME: is there any JS equivalent to this?
         cdylibs: vec![],
         // FIXME: is there any JS equivalent to this?
