@@ -55,7 +55,9 @@ impl<'a> DistGraphBuilder<'a> {
                     target_triple: target.clone(),
                     expected_binaries,
                     working_dir: package.package_root.clone(),
-                    out_dir: package.package_root.clone(),
+                    out_dir: package
+                        .package_root
+                        .join(package.out_dir.clone().unwrap_or(".".to_string())),
                     build_command: package
                         .build_command
                         .clone()
