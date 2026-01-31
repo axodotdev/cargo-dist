@@ -276,6 +276,7 @@ fn package_info(
             .collect(),
         changelog_file: None,
         binaries,
+        out_dir: None,
         cdylibs,
         cstaticlibs,
         cargo_metadata_table,

@@ -513,6 +513,8 @@ pub struct PackageInfo {
     /// For JS I *think* this is computed in its full complexity but Tests Needed
     /// and also there's so many ways to define things who can ever be sure.
     pub binaries: Vec<String>,
+    /// Path to the build directory for this package
+    pub out_dir: Option<String>,
     /// Names of C-style staticlibs (.a) this library defines.
     ///
     /// For Cargo this is currently properly computed in all its complexity.
