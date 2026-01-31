@@ -121,6 +121,7 @@ struct Package {
     readme: Option<Utf8PathBuf>,
     authors: Option<Vec<String>>,
     binaries: Option<Vec<String>>,
+    out_dir: Option<String>,
     license: Option<String>,
     changelog: Option<Utf8PathBuf>,
     license_files: Option<Vec<Utf8PathBuf>>,
@@ -401,6 +402,7 @@ fn process_package(
         license_files: package.license_files.unwrap_or_default(),
         changelog_file: package.changelog,
         binaries: package.binaries.unwrap_or_default(),
+        out_dir: package.out_dir,
         cstaticlibs: package.cstaticlibs.unwrap_or_default(),
         cdylibs: package.cdylibs.unwrap_or_default(),
         build_command: Some(build_command),
@@ -448,6 +450,7 @@ fn merge_package_with_raw_generic(
         readme,
         authors,
         binaries,
+        out_dir,
         license,
         changelog,
         license_files,
@@ -485,6 +488,9 @@ fn merge_package_with_raw_generic(
     }
     if let Some(val) = binaries {
         package.binaries = val;
+    }
+    if let Some(val) = out_dir {
+        package.out_dir = Some(val);
     }
     if let Some(val) = license {
         package.license = Some(val);
