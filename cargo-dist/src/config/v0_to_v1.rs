@@ -15,6 +15,8 @@ use installers::{CommonInstallerLayer, InstallerLayer};
 use layer::BoolOr;
 use publishers::{CommonPublisherLayer, PublisherLayer};
 
+use crate::config::v1::hosts::mirror::MirrorHostLayer;
+
 use super::v0::DistMetadata;
 use super::{v1::*, CiStyle, HostingStyle, InstallerStyle, JobStyle, MacPkgConfig, PublishStyle};
 
@@ -94,6 +96,7 @@ impl DistMetadata {
             cargo_auditable,
             cargo_cyclonedx,
             omnibor,
+            mirror_download_url,
         } = self.clone();
 
         // Archives
@@ -261,14 +264,28 @@ impl DistMetadata {
         if github_host_layer.is_none() && has_github_ci {
             github_host_layer = Some(BoolOr::Bool(true));
         }
+        let mirror_host_layer =
+            list_to_bool_layer(is_global, &hosting, HostingStyle::Mirror, || {
+                if mirror_download_url.is_some() {
+                    Some(MirrorHostLayer {
+                        common: CommonHostLayer::default(),
+                        download_url: mirror_download_url,
+                    })
+                } else {
+                    None
+                }
+            });
 
         let needs_host_layer = github_host_layer.is_some()
+            || mirror_host_layer.is_some()
             || force_latest.is_some()
             || display.is_some()
             || display_name.is_some();
         let host_layer = needs_host_layer.then_some(HostLayer {
             common: CommonHostLayer {},
+            order: hosting,
             github: github_host_layer,
+            mirror: mirror_host_layer,
             force_latest,
             display,
             display_name,
@@ -308,11 +325,15 @@ impl DistMetadata {
                     identifier,
                     install_location,
                 } = mac_pkg_config?;
-                Some(PkgInstallerLayer {
-                    common: CommonInstallerLayer::default(),
-                    identifier,
-                    install_location,
-                })
+                if install_location.is_some() || identifier.is_some() {
+                    Some(PkgInstallerLayer {
+                        common: CommonInstallerLayer::default(),
+                        identifier,
+                        install_location,
+                    })
+                } else {
+                    None
+                }
             });
         let powershell_installer_layer =
             list_to_bool_layer(is_global, &installers, InstallerStyle::Powershell, || None);

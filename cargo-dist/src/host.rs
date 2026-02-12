@@ -35,6 +35,9 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
                 HostingStyle::Github => {
                     // implemented in CI backend
                 }
+                HostingStyle::Mirror => {
+                    // currently download-only
+                }
             }
         }
     }
@@ -63,11 +66,19 @@ impl<'a> DistGraphBuilder<'a> {
         {
             let WorkspaceHostConfig {
                 github,
+                mirror,
+                order,
                 force_latest: _,
             } = &self.inner.config.hosts;
+            if mirror.is_some() {
+                hosting.push(HostingStyle::Mirror);
+            }
             if github.is_some() {
                 hosting.push(HostingStyle::Github);
             }
+            // This is very silly but it's a list of like, 2 elements,
+            // and works fine with no defined order
+            hosting.sort_by_key(|val| order.iter().position(|order_key| order_key == val))
         }
         let hosting = if hosting.is_empty() {
             None
@@ -135,6 +146,37 @@ impl<'a> DistGraphBuilder<'a> {
                         })
                     }
                 }
+                HostingStyle::Mirror => {
+                    for (name, version) in &releases_without_hosting {
+                        let tag = &announcing.tag;
+                        let mirror_config = self.inner.config.hosts.mirror.as_ref().expect("should not be possible to select mirror hosting without it defined in config!");
+                        // Apply templates to the mirror URL
+                        let download_url = mirror_config.download_url.replace("{tag}", tag);
+                        self.manifest
+                            .ensure_release(name.clone(), version.clone())
+                            .hosting
+                            .mirror = Some(cargo_dist_schema::MirrorHosting { download_url })
+                    }
+                }
+            }
+        }
+
+        // Record the preferred order if it's non-trivial
+        let order = &self.inner.config.hosts.order;
+        if !order.is_empty() {
+            for (name, version) in &releases_without_hosting {
+                self.manifest
+                    .ensure_release(name.clone(), version.clone())
+                    .hosting
+                    .order = Some(
+                    order
+                        .iter()
+                        .map(|style| match style {
+                            HostingStyle::Github => cargo_dist_schema::HostingStyle::Github,
+                            HostingStyle::Mirror => cargo_dist_schema::HostingStyle::Mirror,
+                        })
+                        .collect(),
+                );
             }
         }
 

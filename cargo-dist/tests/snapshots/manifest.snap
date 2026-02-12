@@ -54,6 +54,9 @@ stdout:
         "cargo-dist-x86_64-unknown-linux-musl.tar.xz.sha256"
       ],
       "hosting": {
+        "order": [
+          "github"
+        ],
         "github": {
           "artifact_base_url": "https://github.com",
           "artifact_download_path": "/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION",

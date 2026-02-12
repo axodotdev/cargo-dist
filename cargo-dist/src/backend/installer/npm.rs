@@ -189,7 +189,7 @@ fn mangle_package_json(
     // installer expects to find them when it reads its own package.json (with `require`).
     // It's fairly normal to add random stuff to a package.json like this,
     // as it's a format that's infamously ill-defined with minimal validation.
-    package_json["artifactDownloadUrl"] = info.inner.base_url.clone().into();
+    package_json["artifactDownloadUrls"] = info.inner.base_urls.clone().into();
     package_json["supportedPlatforms"] = platforms.platform_support_json();
 
     match info.inner.runtime_conditions.min_glibc_version {

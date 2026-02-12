@@ -30,6 +30,9 @@ stdout:
       "display_name": "cargo-dist-schema",
       "display": true,
       "hosting": {
+        "order": [
+          "github"
+        ],
         "github": {
           "artifact_base_url": "https://github.com",
           "artifact_download_path": "/axodotdev/cargo-dist/releases/download/cargo-dist-schema-v1.0.0-FAKEVERSION",

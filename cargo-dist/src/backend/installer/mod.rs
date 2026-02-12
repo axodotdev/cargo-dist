@@ -68,7 +68,7 @@ pub struct InstallerInfo {
     /// App version to use (display only)
     pub app_version: String,
     /// URL of the directory where artifacts can be fetched from
-    pub base_url: String,
+    pub base_urls: Vec<String>,
     /// Full information about configured hosting
     pub hosting: Hosting,
     /// Artifacts this installer can fetch

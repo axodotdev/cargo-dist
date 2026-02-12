@@ -1057,8 +1057,8 @@ impl DistManifest {
 
 impl Release {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
-    pub fn artifact_download_url(&self) -> Option<String> {
-        self.hosting.artifact_download_url()
+    pub fn artifact_download_urls(&self) -> Option<Vec<String>> {
+        self.hosting.artifact_download_urls()
     }
 }
 
@@ -1066,10 +1066,18 @@ impl Release {
 #[derive(Clone, Debug, Default, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct Hosting {
+    /// Order the hosts should be preferred in
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order: Option<Vec<HostingStyle>>,
     /// Hosted on Github Releases
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github: Option<GithubHosting>,
+    /// Files mirrored to some static file server
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mirror: Option<MirrorHosting>,
 }
 
 /// Github Hosting
@@ -1088,22 +1096,75 @@ pub struct GithubHosting {
     pub repo: String,
 }
 
+/// Github Hosting
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+pub struct MirrorHosting {
+    /// The URL to download artifacts from
+    ///
+    /// e.g. `https://mymirror.com/mycoolapp/v1.0.0/`
+    pub download_url: String,
+}
+
+/// Kinds of hosting
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum HostingStyle {
+    /// Hosting via GitHub
+    Github,
+    /// Hosting via a Mirror
+    Mirror,
+}
+
 impl Hosting {
     /// Get the base URL that artifacts should be downloaded from (append the artifact name to the URL)
-    pub fn artifact_download_url(&self) -> Option<String> {
-        let Hosting { github } = &self;
-        if let Some(host) = &github {
-            return Some(format!(
-                "{}{}",
-                host.artifact_base_url, host.artifact_download_path
-            ));
+    pub fn artifact_download_urls(&self) -> Option<Vec<String>> {
+        let Hosting {
+            github,
+            mirror,
+            order,
+        } = &self;
+        let mut results = vec![];
+        let priority_matters = order.as_ref().map(|list| !list.is_empty()).unwrap_or(false);
+
+        if let Some(host) = &mirror {
+            let priority = order
+                .iter()
+                .flatten()
+                .position(|key| *key == HostingStyle::Mirror);
+            if priority.is_some() || !priority_matters {
+                results.push((priority, host.download_url.clone()));
+            }
         }
-        None
+
+        if let Some(host) = &github {
+            let priority = order
+                .iter()
+                .flatten()
+                .position(|key| *key == HostingStyle::Github);
+            if priority.is_some() || !priority_matters {
+                results.push((
+                    priority,
+                    format!("{}{}", host.artifact_base_url, host.artifact_download_path),
+                ));
+            }
+        }
+
+        if results.is_empty() {
+            return None;
+        }
+
+        results.sort_by_key(|(priority, _)| *priority);
+        Some(results.into_iter().map(|(_, val)| val).collect())
     }
+
     /// Gets whether there's no hosting
     pub fn is_empty(&self) -> bool {
-        let Hosting { github } = &self;
-        github.is_none()
+        let Hosting {
+            github,
+            mirror,
+            order: _,
+        } = &self;
+        github.is_none() && mirror.is_none()
     }
 }
 

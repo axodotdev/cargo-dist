@@ -552,6 +552,7 @@ fn get_new_dist_metadata(
             cargo_auditable: None,
             cargo_cyclonedx: None,
             omnibor: None,
+            mirror_download_url: None,
         }
     };
 
@@ -1051,6 +1052,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         min_glibc_version,
         cargo_auditable,
         cargo_cyclonedx,
+        mirror_download_url,
         omnibor,
         // These settings are complex enough that we don't support editing them in init
         github_action_commits: _,
@@ -1522,6 +1524,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "omnibor",
         "# Whether to use omnibor-cli to generate OmniBOR Artifact IDs\n",
         *omnibor,
+    );
+
+    apply_optional_value(
+        table,
+        "mirror-download-url",
+        "# The preferred mirror URL to download artifacts from\n",
+        mirror_download_url.clone(),
     );
 
     // Finalize the table

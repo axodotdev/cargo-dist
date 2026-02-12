@@ -1,10 +1,12 @@
 //! host config
 
 pub mod github;
+pub mod mirror;
 
 use super::*;
 
 use github::*;
+use mirror::*;
 
 #[derive(Debug, Clone)]
 /// package-specific host config (final)
@@ -20,8 +22,12 @@ pub struct AppHostConfig {
 pub struct WorkspaceHostConfig {
     /// Always regard releases as stable
     pub force_latest: bool,
+    /// The order the hosts are preferred in for downloads
+    pub order: Vec<HostingStyle>,
     /// github host config (github releases)
     pub github: Option<GithubHostConfig>,
+    /// mirror host config
+    pub mirror: Option<MirrorHostConfig>,
 }
 /// host config (inheritance not folded in yet)
 #[derive(Debug, Clone)]
@@ -34,8 +40,12 @@ pub struct HostConfigInheritable {
     pub display: Option<bool>,
     /// How to refer to the app in release bodies
     pub display_name: Option<String>,
+    /// The order the hosts are preferred in for downloads
+    pub order: Option<Vec<HostingStyle>>,
     /// github hosting
     pub github: Option<GithubHostLayer>,
+    /// mirror hosting
+    pub mirror: Option<MirrorHostLayer>,
 }
 
 /// host config (raw from file)
@@ -66,9 +76,16 @@ pub struct HostLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
 
+    /// Order of hosts for downloads
+    pub order: Option<Vec<HostingStyle>>,
+
     /// github hosting
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github: Option<BoolOr<GithubHostLayer>>,
+
+    /// mirror hosting
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mirror: Option<BoolOr<MirrorHostLayer>>,
 }
 impl HostConfigInheritable {
     /// get defaults for a package
@@ -76,6 +93,8 @@ impl HostConfigInheritable {
         Self {
             common: CommonHostConfig::defaults_for_package(workspaces, pkg_idx),
             github: None,
+            mirror: None,
+            order: None,
             force_latest: None,
             display: None,
             display_name: None,
@@ -86,6 +105,8 @@ impl HostConfigInheritable {
         Self {
             common: CommonHostConfig::defaults_for_workspace(workspaces),
             github: None,
+            mirror: None,
+            order: None,
             force_latest: None,
             display: None,
             display_name: None,
@@ -100,6 +121,8 @@ impl HostConfigInheritable {
         let Self {
             common: _,
             github: _,
+            mirror: _,
+            order: _,
             force_latest: _,
             display,
             display_name,
@@ -119,6 +142,8 @@ impl HostConfigInheritable {
         let Self {
             common,
             github,
+            mirror,
+            order,
             force_latest,
             display: _,
             display_name: _,
@@ -128,8 +153,15 @@ impl HostConfigInheritable {
             default.apply_layer(github);
             default
         });
+        let mirror = mirror.map(|mirror| {
+            let mut default = MirrorHostConfig::defaults_for_workspace(workspaces, &common);
+            default.apply_layer(mirror);
+            default
+        });
         WorkspaceHostConfig {
             github,
+            mirror,
+            order: order.unwrap_or_default(),
             force_latest: force_latest.unwrap_or(false),
         }
     }
@@ -141,7 +173,9 @@ impl ApplyLayer for HostConfigInheritable {
         &mut self,
         Self::Layer {
             common,
+            order,
             github,
+            mirror,
             force_latest,
             display,
             display_name,
@@ -149,6 +183,8 @@ impl ApplyLayer for HostConfigInheritable {
     ) {
         self.common.apply_layer(common);
         self.github.apply_bool_layer(github);
+        self.mirror.apply_bool_layer(mirror);
+        self.order.apply_opt(order);
         self.force_latest.apply_opt(force_latest);
         self.display.apply_opt(display);
         self.display_name.apply_opt(display_name);

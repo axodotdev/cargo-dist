@@ -237,8 +237,56 @@ download_binary_and_run_installer() {
 
     # destructure selected archive info into locals
     case "$_artifact_name" in 
-        "axolotlsay-aarch64-pc-windows-msvc.tar.gz")
-            _arch="aarch64-pc-windows-msvc"
+        "axolotlsay-aarch64-apple-darwin.tar.gz")
+            _arch="aarch64-apple-darwin"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
+            _libs=""
+            _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
+            _updater_name=""
+            _updater_bin=""
+            ;;
+        "axolotlsay-aarch64-unknown-linux-gnu.tar.gz")
+            _arch="aarch64-unknown-linux-gnu"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
+            _libs=""
+            _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
+            _updater_name=""
+            _updater_bin=""
+            ;;
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz")
+            _arch="i686-unknown-linux-gnu"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
+            _libs=""
+            _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
+            _updater_name=""
+            _updater_bin=""
+            ;;
+        "axolotlsay-x86_64-apple-darwin.tar.gz")
+            _arch="x86_64-apple-darwin"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay"
+            _bins_js_array='"axolotlsay"'
+            _libs=""
+            _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
+            _updater_name=""
+            _updater_bin=""
+            ;;
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz")
+            _arch="x86_64-pc-windows-gnu"
             _zip_ext=".tar.gz"
             _bins="axolotlsay.exe"
             _bins_js_array='"axolotlsay.exe"'
@@ -249,8 +297,20 @@ download_binary_and_run_installer() {
             _updater_name=""
             _updater_bin=""
             ;;
-        "axolotlsay-aarch64-unknown-linux-gnu.tar.gz")
-            _arch="aarch64-unknown-linux-gnu"
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz")
+            _arch="x86_64-pc-windows-msvc"
+            _zip_ext=".tar.gz"
+            _bins="axolotlsay.exe"
+            _bins_js_array='"axolotlsay.exe"'
+            _libs=""
+            _libs_js_array=""
+            _staticlibs=""
+            _staticlibs_js_array=""
+            _updater_name=""
+            _updater_bin=""
+            ;;
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz")
+            _arch="x86_64-unknown-linux-gnu"
             _zip_ext=".tar.gz"
             _bins="axolotlsay"
             _bins_js_array='"axolotlsay"'
@@ -385,10 +445,25 @@ json_binary_aliases() {
     local _arch="$1"
 
     case "$_arch" in 
+    "aarch64-apple-darwin")
+        echo '{}'
+        ;;
     "aarch64-pc-windows-gnu")
         echo '{}'
         ;;
     "aarch64-unknown-linux-gnu")
+        echo '{}'
+        ;;
+    "i686-unknown-linux-gnu")
+        echo '{}'
+        ;;
+    "x86_64-apple-darwin")
+        echo '{}'
+        ;;
+    "x86_64-pc-windows-gnu")
+        echo '{}'
+        ;;
+    "x86_64-unknown-linux-gnu")
         echo '{}'
         ;;
     *)
@@ -402,6 +477,13 @@ aliases_for_binary() {
     local _arch="$2"
 
     case "$_arch" in 
+    "aarch64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
     "aarch64-pc-windows-gnu")
         case "$_bin" in
         *)
@@ -410,6 +492,34 @@ aliases_for_binary() {
         esac
         ;;
     "aarch64-unknown-linux-gnu")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "i686-unknown-linux-gnu")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-apple-darwin")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-pc-windows-gnu")
+        case "$_bin" in
+        *)
+            echo ""
+            ;;
+        esac
+        ;;
+    "x86_64-unknown-linux-gnu")
         case "$_bin" in
         *)
             echo ""
@@ -429,15 +539,27 @@ select_archive_for_arch() {
     # try each archive, checking runtime conditions like libc versions
     # accepting the first one that matches, as it's the best match
     case "$_true_arch" in 
+        "aarch64-apple-darwin")
+            _archive="axolotlsay-aarch64-apple-darwin.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            _archive="axolotlsay-x86_64-apple-darwin.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
         "aarch64-pc-windows-gnu")
-            _archive="axolotlsay-aarch64-pc-windows-msvc.tar.gz"
+            _archive="axolotlsay-x86_64-pc-windows-gnu.tar.gz"
             if [ -n "$_archive" ]; then
                 echo "$_archive"
                 return 0
             fi
             ;;
         "aarch64-pc-windows-msvc")
-            _archive="axolotlsay-aarch64-pc-windows-msvc.tar.gz"
+            _archive="axolotlsay-x86_64-pc-windows-msvc.tar.gz"
             if [ -n "$_archive" ]; then
                 echo "$_archive"
                 return 0
@@ -445,6 +567,52 @@ select_archive_for_arch() {
             ;;
         "aarch64-unknown-linux-gnu")
             _archive="axolotlsay-aarch64-unknown-linux-gnu.tar.gz"
+            if ! check_glibc "2" "31"; then
+                _archive=""
+            fi
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "i686-unknown-linux-gnu")
+            _archive="axolotlsay-i686-unknown-linux-gnu.tar.gz"
+            if ! check_glibc "2" "31"; then
+                _archive=""
+            fi
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "x86_64-apple-darwin")
+            _archive="axolotlsay-x86_64-apple-darwin.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "x86_64-pc-windows-gnu")
+            _archive="axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            _archive="axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "x86_64-pc-windows-msvc")
+            _archive="axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+            if [ -n "$_archive" ]; then
+                echo "$_archive"
+                return 0
+            fi
+            ;;
+        "x86_64-unknown-linux-gnu")
+            _archive="axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
             if ! check_glibc "2" "31"; then
                 _archive=""
             fi
@@ -682,7 +850,7 @@ install() {
         say "  $_lib_name"
     done
 
-    say "everything's installed!"
+    say ">o_o< everything's installed!"
 
     # Avoid modifying the users PATH if they are managing their PATH manually
     case :$PATH:
@@ -1478,6 +1646,80 @@ verify_checksum() {
 
 download_binary_and_run_installer "$@" || exit 1
 
+================ axolotlsay.rb ================
+class Axolotlsay < Formula
+  desc "💬 a CLI for learning to distribute CLIs in rust"
+  homepage "https://github.com/axodotdev/axolotlsay"
+  version "0.2.2"
+  if OS.mac?
+    if Hardware::CPU.arm?
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz"
+    end
+    if Hardware::CPU.intel?
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz"
+    end
+  end
+  if OS.linux?
+    if Hardware::CPU.arm?
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-unknown-linux-gnu.tar.gz"
+    end
+    if Hardware::CPU.intel?
+      url "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz"
+    end
+  end
+  license any_of: ["MIT", "Apache-2.0"]
+
+  BINARY_ALIASES = {
+    "aarch64-apple-darwin": {},
+    "aarch64-pc-windows-gnu": {},
+    "aarch64-unknown-linux-gnu": {},
+    "i686-unknown-linux-gnu": {},
+    "x86_64-apple-darwin": {},
+    "x86_64-pc-windows-gnu": {},
+    "x86_64-unknown-linux-gnu": {}
+  }
+
+  def target_triple
+    cpu = Hardware::CPU.arm? ? "aarch64" : "x86_64"
+    os = OS.mac? ? "apple-darwin" : "unknown-linux-gnu"
+
+    "#{cpu}-#{os}"
+  end
+
+  def install_binary_aliases!
+    BINARY_ALIASES[target_triple.to_sym].each do |source, dests|
+      dests.each do |dest|
+        bin.install_symlink bin/source.to_s => dest
+      end
+    end
+  end
+
+  def install
+    if OS.mac? && Hardware::CPU.arm?
+      bin.install "axolotlsay"
+    end
+    if OS.mac? && Hardware::CPU.intel?
+      bin.install "axolotlsay"
+    end
+    if OS.linux? && Hardware::CPU.arm?
+      bin.install "axolotlsay"
+    end
+    if OS.linux? && Hardware::CPU.intel?
+      bin.install "axolotlsay"
+    end
+
+    install_binary_aliases!
+
+    # Homebrew will automatically install these, so we don't need to do that
+    doc_files = Dir["README.*", "readme.*", "LICENSE", "LICENSE.*", "CHANGELOG.*"]
+    leftover_contents = Dir["*"] - doc_files
+
+    # Install any leftover files in pkgshare; these are probably config or
+    # sample files.
+    pkgshare.install(*leftover_contents) unless leftover_contents.empty?
+  end
+end
+
 ================ axolotlsay-installer.ps1 ================
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
@@ -1573,7 +1815,7 @@ function Install-Binary($install_args) {
   # Platform info injected by dist
   $platforms = @{
     "aarch64-pc-windows-gnu" = @{
-      "artifact_name" = "axolotlsay-aarch64-pc-windows-msvc.tar.gz"
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-gnu.tar.gz"
       "bins" = @("axolotlsay.exe")
       "libs" = @()
       "staticlibs" = @()
@@ -1583,7 +1825,27 @@ function Install-Binary($install_args) {
       "aliases_json" = '{}'
     }
     "aarch64-pc-windows-msvc" = @{
-      "artifact_name" = "axolotlsay-aarch64-pc-windows-msvc.tar.gz"
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
+      "bins" = @("axolotlsay.exe")
+      "libs" = @()
+      "staticlibs" = @()
+      "zip_ext" = ".tar.gz"
+      "aliases" = @{
+      }
+      "aliases_json" = '{}'
+    }
+    "x86_64-pc-windows-gnu" = @{
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-gnu.tar.gz"
+      "bins" = @("axolotlsay.exe")
+      "libs" = @()
+      "staticlibs" = @()
+      "zip_ext" = ".tar.gz"
+      "aliases" = @{
+      }
+      "aliases_json" = '{}'
+    }
+    "x86_64-pc-windows-msvc" = @{
+      "artifact_name" = "axolotlsay-x86_64-pc-windows-msvc.tar.gz"
       "bins" = @("axolotlsay.exe")
       "libs" = @()
       "staticlibs" = @()
@@ -1956,7 +2218,7 @@ function Invoke-Installer($artifacts, $platforms) {
     $NoModifyPath = $env:INSTALLER_NO_MODIFY_PATH
   }
 
-  Write-Information "everything's installed!"
+  Write-Information ">o_o< everything's installed!"
   if (-not $NoModifyPath) {
     Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {
@@ -2081,7 +2343,1294 @@ try {
   exit 1
 }
 
+================ axolotlsay-npm-package.tar.gz/package/.gitignore ================
+/node_modules
+
+
+================ axolotlsay-npm-package.tar.gz/package/CHANGELOG.md ================
+# Version 0.2.2
+
+```text
+         +----------------------------------+
+         | now with arm64 linux binaries!!! |
+         +----------------------------------+
+        /
+≽(◕ ᴗ ◕)≼
+```
+
+# Version 0.2.1
+
+```text
+         +--------------------------------------+
+         | now with linux static musl binary!!! |
+         +--------------------------------------+
+        /
+≽(◕ ᴗ ◕)≼
+```
+
+# Version 0.2.0
+
+```text
+         +-----------------------------------------+
+         | now with homebrew and msi installers!!! |
+         +-----------------------------------------+
+        /
+≽(◕ ᴗ ◕)≼
+```
+
+# Version 0.1.0
+
+```text
+         +------------------------+
+         | the initial release!!! |
+         +------------------------+
+        /
+≽(◕ ᴗ ◕)≼
+```
+
+================ axolotlsay-npm-package.tar.gz/package/LICENSE-APACHE ================
+                              Apache License
+                        Version 2.0, January 2004
+                     http://www.apache.org/licenses/
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+1. Definitions.
+
+   "License" shall mean the terms and conditions for use, reproduction,
+   and distribution as defined by Sections 1 through 9 of this document.
+
+   "Licensor" shall mean the copyright owner or entity authorized by
+   the copyright owner that is granting the License.
+
+   "Legal Entity" shall mean the union of the acting entity and all
+   other entities that control, are controlled by, or are under common
+   control with that entity. For the purposes of this definition,
+   "control" means (i) the power, direct or indirect, to cause the
+   direction or management of such entity, whether by contract or
+   otherwise, or (ii) ownership of fifty percent (50%) or more of the
+   outstanding shares, or (iii) beneficial ownership of such entity.
+
+   "You" (or "Your") shall mean an individual or Legal Entity
+   exercising permissions granted by this License.
+
+   "Source" form shall mean the preferred form for making modifications,
+   including but not limited to software source code, documentation
+   source, and configuration files.
+
+   "Object" form shall mean any form resulting from mechanical
+   transformation or translation of a Source form, including but
+   not limited to compiled object code, generated documentation,
+   and conversions to other media types.
+
+   "Work" shall mean the work of authorship, whether in Source or
+   Object form, made available under the License, as indicated by a
+   copyright notice that is included in or attached to the work
+   (an example is provided in the Appendix below).
+
+   "Derivative Works" shall mean any work, whether in Source or Object
+   form, that is based on (or derived from) the Work and for which the
+   editorial revisions, annotations, elaborations, or other modifications
+   represent, as a whole, an original work of authorship. For the purposes
+   of this License, Derivative Works shall not include works that remain
+   separable from, or merely link (or bind by name) to the interfaces of,
+   the Work and Derivative Works thereof.
+
+   "Contribution" shall mean any work of authorship, including
+   the original version of the Work and any modifications or additions
+   to that Work or Derivative Works thereof, that is intentionally
+   submitted to Licensor for inclusion in the Work by the copyright owner
+   or by an individual or Legal Entity authorized to submit on behalf of
+   the copyright owner. For the purposes of this definition, "submitted"
+   means any form of electronic, verbal, or written communication sent
+   to the Licensor or its representatives, including but not limited to
+   communication on electronic mailing lists, source code control systems,
+   and issue tracking systems that are managed by, or on behalf of, the
+   Licensor for the purpose of discussing and improving the Work, but
+   excluding communication that is conspicuously marked or otherwise
+   designated in writing by the copyright owner as "Not a Contribution."
+
+   "Contributor" shall mean Licensor and any individual or Legal Entity
+   on behalf of whom a Contribution has been received by Licensor and
+   subsequently incorporated within the Work.
+
+2. Grant of Copyright License. Subject to the terms and conditions of
+   this License, each Contributor hereby grants to You a perpetual,
+   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+   copyright license to reproduce, prepare Derivative Works of,
+   publicly display, publicly perform, sublicense, and distribute the
+   Work and such Derivative Works in Source or Object form.
+
+3. Grant of Patent License. Subject to the terms and conditions of
+   this License, each Contributor hereby grants to You a perpetual,
+   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+   (except as stated in this section) patent license to make, have made,
+   use, offer to sell, sell, import, and otherwise transfer the Work,
+   where such license applies only to those patent claims licensable
+   by such Contributor that are necessarily infringed by their
+   Contribution(s) alone or by combination of their Contribution(s)
+   with the Work to which such Contribution(s) was submitted. If You
+   institute patent litigation against any entity (including a
+   cross-claim or counterclaim in a lawsuit) alleging that the Work
+   or a Contribution incorporated within the Work constitutes direct
+   or contributory patent infringement, then any patent licenses
+   granted to You under this License for that Work shall terminate
+   as of the date such litigation is filed.
+
+4. Redistribution. You may reproduce and distribute copies of the
+   Work or Derivative Works thereof in any medium, with or without
+   modifications, and in Source or Object form, provided that You
+   meet the following conditions:
+
+   (a) You must give any other recipients of the Work or
+       Derivative Works a copy of this License; and
+
+   (b) You must cause any modified files to carry prominent notices
+       stating that You changed the files; and
+
+   (c) You must retain, in the Source form of any Derivative Works
+       that You distribute, all copyright, patent, trademark, and
+       attribution notices from the Source form of the Work,
+       excluding those notices that do not pertain to any part of
+       the Derivative Works; and
+
+   (d) If the Work includes a "NOTICE" text file as part of its
+       distribution, then any Derivative Works that You distribute must
+       include a readable copy of the attribution notices contained
+       within such NOTICE file, excluding those notices that do not
+       pertain to any part of the Derivative Works, in at least one
+       of the following places: within a NOTICE text file distributed
+       as part of the Derivative Works; within the Source form or
+       documentation, if provided along with the Derivative Works; or,
+       within a display generated by the Derivative Works, if and
+       wherever such third-party notices normally appear. The contents
+       of the NOTICE file are for informational purposes only and
+       do not modify the License. You may add Your own attribution
+       notices within Derivative Works that You distribute, alongside
+       or as an addendum to the NOTICE text from the Work, provided
+       that such additional attribution notices cannot be construed
+       as modifying the License.
+
+   You may add Your own copyright statement to Your modifications and
+   may provide additional or different license terms and conditions
+   for use, reproduction, or distribution of Your modifications, or
+   for any such Derivative Works as a whole, provided Your use,
+   reproduction, and distribution of the Work otherwise complies with
+   the conditions stated in this License.
+
+5. Submission of Contributions. Unless You explicitly state otherwise,
+   any Contribution intentionally submitted for inclusion in the Work
+   by You to the Licensor shall be under the terms and conditions of
+   this License, without any additional terms or conditions.
+   Notwithstanding the above, nothing herein shall supersede or modify
+   the terms of any separate license agreement you may have executed
+   with Licensor regarding such Contributions.
+
+6. Trademarks. This License does not grant permission to use the trade
+   names, trademarks, service marks, or product names of the Licensor,
+   except as required for reasonable and customary use in describing the
+   origin of the Work and reproducing the content of the NOTICE file.
+
+7. Disclaimer of Warranty. Unless required by applicable law or
+   agreed to in writing, Licensor provides the Work (and each
+   Contributor provides its Contributions) on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied, including, without limitation, any warranties or conditions
+   of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+   PARTICULAR PURPOSE. You are solely responsible for determining the
+   appropriateness of using or redistributing the Work and assume any
+   risks associated with Your exercise of permissions under this License.
+
+8. Limitation of Liability. In no event and under no legal theory,
+   whether in tort (including negligence), contract, or otherwise,
+   unless required by applicable law (such as deliberate and grossly
+   negligent acts) or agreed to in writing, shall any Contributor be
+   liable to You for damages, including any direct, indirect, special,
+   incidental, or consequential damages of any character arising as a
+   result of this License or out of the use or inability to use the
+   Work (including but not limited to damages for loss of goodwill,
+   work stoppage, computer failure or malfunction, or any and all
+   other commercial damages or losses), even if such Contributor
+   has been advised of the possibility of such damages.
+
+9. Accepting Warranty or Additional Liability. While redistributing
+   the Work or Derivative Works thereof, You may choose to offer,
+   and charge a fee for, acceptance of support, warranty, indemnity,
+   or other liability obligations and/or rights consistent with this
+   License. However, in accepting such obligations, You may act only
+   on Your own behalf and on Your sole responsibility, not on behalf
+   of any other Contributor, and only if You agree to indemnify,
+   defend, and hold each Contributor harmless for any liability
+   incurred by, or claims asserted against, such Contributor by reason
+   of your accepting any such warranty or additional liability.
+
+END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work.
+
+   To apply the Apache License to your work, attach the following
+   boilerplate notice, with the fields enclosed by brackets "[]"
+   replaced with your own identifying information. (Don't include
+   the brackets!)  The text should be enclosed in the appropriate
+   comment syntax for the file format. We also recommend that a
+   file or class name and description of purpose be included on the
+   same "printed page" as the copyright notice for easier
+   identification within third-party archives.
+
+Copyright 2022-2024 Axo Developer Co.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+================ axolotlsay-npm-package.tar.gz/package/LICENSE-MIT ================
+Copyright (c) 2022-2024 Axo Developer Co.
+
+Permission is hereby granted, free of charge, to any
+person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the
+Software without restriction, including without
+limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice
+shall be included in all copies or substantial portions
+of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+================ axolotlsay-npm-package.tar.gz/package/README.md ================
+# axolotlsay
+> 💬 a CLI for learning to distribute CLIs in rust
+
+
+## Usage
+
+```sh
+> axolotlsay "hello world"
+
+         +-------------+
+         | hello world |
+         +-------------+
+        /
+≽(◕ ᴗ ◕)≼
+```
+
+## License
+
+Licensed under either of
+
+* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or [apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0))
+* MIT license ([LICENSE-MIT](LICENSE-MIT) or [opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
+
+at your option.
+
+================ axolotlsay-npm-package.tar.gz/package/binary-install.js ================
+const { createWriteStream, existsSync, mkdirSync, mkdtemp } = require("fs");
+const { join, sep } = require("path");
+const { spawnSync } = require("child_process");
+const { tmpdir } = require("os");
+
+const axios = require("axios");
+const rimraf = require("rimraf");
+const tmpDir = tmpdir();
+
+const error = (msg) => {
+  console.error(msg);
+  process.exit(1);
+};
+
+class Package {
+  constructor(platform, name, url, filename, zipExt, binaries) {
+    let errors = [];
+    if (typeof url !== "string") {
+      errors.push("url must be a string");
+    } else {
+      try {
+        new URL(url);
+      } catch (e) {
+        errors.push(e);
+      }
+    }
+    if (name && typeof name !== "string") {
+      errors.push("package name must be a string");
+    }
+    if (!name) {
+      errors.push("You must specify the name of your package");
+    }
+    if (binaries && typeof binaries !== "object") {
+      errors.push("binaries must be a string => string map");
+    }
+    if (!binaries) {
+      errors.push("You must specify the binaries in the package");
+    }
+
+    if (errors.length > 0) {
+      let errorMsg =
+        "One or more of the parameters you passed to the Binary constructor are invalid:\n";
+      errors.forEach((error) => {
+        errorMsg += error;
+      });
+      errorMsg +=
+        '\n\nCorrect usage: new Package("my-binary", "https://example.com/binary/download.tar.gz", {"my-binary": "my-binary"})';
+      error(errorMsg);
+    }
+
+    this.platform = platform;
+    this.url = url;
+    this.name = name;
+    this.filename = filename;
+    this.zipExt = zipExt;
+    this.installDirectory = join(__dirname, "node_modules", ".bin_real");
+    this.binaries = binaries;
+
+    if (!existsSync(this.installDirectory)) {
+      mkdirSync(this.installDirectory, { recursive: true });
+    }
+  }
+
+  exists() {
+    for (const binaryName in this.binaries) {
+      const binRelPath = this.binaries[binaryName];
+      const binPath = join(this.installDirectory, binRelPath);
+      if (!existsSync(binPath)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  install(fetchOptions, suppressLogs = false) {
+    if (this.exists()) {
+      if (!suppressLogs) {
+        console.error(
+          `${this.name} is already installed, skipping installation.`,
+        );
+      }
+      return Promise.resolve();
+    }
+
+    if (existsSync(this.installDirectory)) {
+      rimraf.sync(this.installDirectory);
+    }
+
+    mkdirSync(this.installDirectory, { recursive: true });
+
+    if (!suppressLogs) {
+      console.error(`Downloading release from ${this.url}`);
+    }
+
+    return axios({ ...fetchOptions, url: this.url, responseType: "stream" })
+      .then((res) => {
+        return new Promise((resolve, reject) => {
+          mkdtemp(`${tmpDir}${sep}`, (err, directory) => {
+            let tempFile = join(directory, this.filename);
+            const sink = res.data.pipe(createWriteStream(tempFile));
+            sink.on("error", (err) => reject(err));
+            sink.on("close", () => {
+              if (/\.tar\.*/.test(this.zipExt)) {
+                const result = spawnSync("tar", [
+                  "xf",
+                  tempFile,
+                  // The tarballs are stored with a leading directory
+                  // component; we strip one component in the
+                  // shell installers too.
+                  "--strip-components",
+                  "1",
+                  "-C",
+                  this.installDirectory,
+                ]);
+                if (result.status == 0) {
+                  resolve();
+                } else if (result.error) {
+                  reject(result.error);
+                } else {
+                  reject(
+                    new Error(
+                      `An error occurred untarring the artifact: stdout: ${result.stdout}; stderr: ${result.stderr}`,
+                    ),
+                  );
+                }
+              } else if (this.zipExt == ".zip") {
+                let result;
+                if (this.platform.artifactName.includes("windows")) {
+                  // Windows does not have "unzip" by default on many installations, instead
+                  // we use Expand-Archive from powershell
+                  result = spawnSync("powershell.exe", [
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    `& {
+                        param([string]$LiteralPath, [string]$DestinationPath)
+                        Expand-Archive -LiteralPath $LiteralPath -DestinationPath $DestinationPath -Force
+                    }`,
+                    tempFile,
+                    this.installDirectory,
+                  ]);
+                } else {
+                  result = spawnSync("unzip", [
+                    "-q",
+                    tempFile,
+                    "-d",
+                    this.installDirectory,
+                  ]);
+                }
+
+                if (result.status == 0) {
+                  resolve();
+                } else if (result.error) {
+                  reject(result.error);
+                } else {
+                  reject(
+                    new Error(
+                      `An error occurred unzipping the artifact: stdout: ${result.stdout}; stderr: ${result.stderr}`,
+                    ),
+                  );
+                }
+              } else {
+                reject(
+                  new Error(`Unrecognized file extension: ${this.zipExt}`),
+                );
+              }
+            });
+          });
+        });
+      })
+      .then(() => {
+        if (!suppressLogs) {
+          console.error(`${this.name} has been installed!`);
+        }
+      })
+      .catch((e) => {
+        error(`Error fetching release: ${e.message}`);
+      });
+  }
+
+  run(binaryName, fetchOptions) {
+    const promise = !this.exists()
+      ? this.install(fetchOptions, true)
+      : Promise.resolve();
+
+    promise
+      .then(() => {
+        const [, , ...args] = process.argv;
+
+        const options = { cwd: process.cwd(), stdio: "inherit" };
+
+        const binRelPath = this.binaries[binaryName];
+        if (!binRelPath) {
+          error(`${binaryName} is not a known binary in ${this.name}`);
+        }
+        const binPath = join(this.installDirectory, binRelPath);
+        const result = spawnSync(binPath, args, options);
+
+        if (result.error) {
+          error(result.error);
+        }
+
+        process.exit(result.status);
+      })
+      .catch((e) => {
+        error(e.message);
+        process.exit(1);
+      });
+  }
+}
+
+module.exports.Package = Package;
+
+================ axolotlsay-npm-package.tar.gz/package/binary.js ================
+const { Package } = require("./binary-install");
+const os = require("os");
+const cTable = require("console.table");
+const libc = require("detect-libc");
+const { configureProxy } = require("axios-proxy-builder");
+
+const error = (msg) => {
+  console.error(msg);
+  process.exit(1);
+};
+
+const {
+  name,
+  artifactDownloadUrls,
+  supportedPlatforms,
+  glibcMinimum,
+} = require("./package.json");
+
+// FIXME: implement NPM installer handling of fallback download URLs
+const artifactDownloadUrl = artifactDownloadUrls[0];
+const builderGlibcMajorVersion = glibcMinimum.major;
+const builderGlibcMinorVersion = glibcMinimum.series;
+
+const getPlatform = () => {
+  const rawOsType = os.type();
+  const rawArchitecture = os.arch();
+
+  // We want to use rust-style target triples as the canonical key
+  // for a platform, so translate the "os" library's concepts into rust ones
+  let osType = "";
+  switch (rawOsType) {
+    case "Windows_NT":
+      osType = "pc-windows-msvc";
+      break;
+    case "Darwin":
+      osType = "apple-darwin";
+      break;
+    case "Linux":
+      osType = "unknown-linux-gnu";
+      break;
+  }
+
+  let arch = "";
+  switch (rawArchitecture) {
+    case "x64":
+      arch = "x86_64";
+      break;
+    case "arm64":
+      arch = "aarch64";
+      break;
+  }
+
+  if (rawOsType === "Linux") {
+    if (libc.familySync() == "musl") {
+      osType = "unknown-linux-musl-dynamic";
+    } else if (libc.isNonGlibcLinuxSync()) {
+      console.warn(
+        "Your libc is neither glibc nor musl; trying static musl binary instead",
+      );
+      osType = "unknown-linux-musl-static";
+    } else {
+      let libcVersion = libc.versionSync();
+      let splitLibcVersion = libcVersion.split(".");
+      let libcMajorVersion = splitLibcVersion[0];
+      let libcMinorVersion = splitLibcVersion[1];
+      if (
+        libcMajorVersion != builderGlibcMajorVersion ||
+        libcMinorVersion < builderGlibcMinorVersion
+      ) {
+        // We can't run the glibc binaries, but we can run the static musl ones
+        // if they exist
+        console.warn(
+          "Your glibc isn't compatible; trying static musl binary instead",
+        );
+        osType = "unknown-linux-musl-static";
+      }
+    }
+  }
+
+  // Assume the above succeeded and build a target triple to look things up with.
+  // If any of it failed, this lookup will fail and we'll handle it like normal.
+  let targetTriple = `${arch}-${osType}`;
+  let platform = supportedPlatforms[targetTriple];
+
+  if (!platform) {
+    error(
+      `Platform with type "${rawOsType}" and architecture "${rawArchitecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${Object.keys(
+        supportedPlatforms,
+      ).join(",")}`,
+    );
+  }
+
+  return platform;
+};
+
+const getPackage = () => {
+  const platform = getPlatform();
+  const url = `${artifactDownloadUrl}/${platform.artifactName}`;
+  let filename = platform.artifactName;
+  let ext = platform.zipExt;
+  let binary = new Package(platform, name, url, filename, ext, platform.bins);
+
+  return binary;
+};
+
+const install = (suppressLogs) => {
+  if (!artifactDownloadUrl || artifactDownloadUrl.length === 0) {
+    console.warn("in demo mode, not installing binaries");
+    return;
+  }
+  const package = getPackage();
+  const proxy = configureProxy(package.url);
+
+  return package.install(proxy, suppressLogs);
+};
+
+const run = (binaryName) => {
+  const package = getPackage();
+  const proxy = configureProxy(package.url);
+
+  package.run(binaryName, proxy);
+};
+
+module.exports = {
+  install,
+  run,
+  getPackage,
+};
+
+================ axolotlsay-npm-package.tar.gz/package/install.js ================
+#!/usr/bin/env node
+
+const { install } = require("./binary");
+install(false);
+
+================ axolotlsay-npm-package.tar.gz/package/npm-shrinkwrap.json ================
+{
+  "lockfileVersion": 3,
+  "name": "@axodotdev/axolotlsay",
+  "packages": {
+    "": {
+      "bin": {
+        "axolotlsay": "run-axolotlsay.js"
+      },
+      "dependencies": {
+        "axios": "^1.13.2",
+        "axios-proxy-builder": "^0.1.2",
+        "console.table": "^0.10.0",
+        "detect-libc": "^2.1.2",
+        "rimraf": "^6.1.2"
+      },
+      "devDependencies": {
+        "prettier": "^3.8.0"
+      },
+      "engines": {
+        "node": ">=14",
+        "npm": ">=6"
+      },
+      "hasInstallScript": true,
+      "license": "MIT OR Apache-2.0",
+      "name": "@axodotdev/axolotlsay",
+      "version": "0.2.2"
+    },
+    "node_modules/@isaacs/balanced-match": {
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "integrity": "sha512-yzMTt9lEb8Gv7zRioUilSglI0c0smZ9k5D65677DLWLtWJaXIS3CqcGyUFByYKlnUj6TkjLVs54fBl6+TiGQDQ==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/@isaacs/balanced-match/-/balanced-match-4.0.1.tgz",
+      "version": "4.0.1"
+    },
+    "node_modules/@isaacs/brace-expansion": {
+      "dependencies": {
+        "@isaacs/balanced-match": "^4.0.1"
+      },
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "integrity": "sha512-ZT55BDLV0yv0RBm2czMiZ+SqCGO7AvmOM3G/w2xhVPH+te0aKgFjmBvGlL1dH+ql2tgGO3MVrbb3jCKyvpgnxA==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/@isaacs/brace-expansion/-/brace-expansion-5.0.0.tgz",
+      "version": "5.0.0"
+    },
+    "node_modules/asynckit": {
+      "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz",
+      "version": "0.4.0"
+    },
+    "node_modules/axios": {
+      "dependencies": {
+        "follow-redirects": "^1.15.6",
+        "form-data": "^4.0.4",
+        "proxy-from-env": "^1.1.0"
+      },
+      "integrity": "sha512-VPk9ebNqPcy5lRGuSlKx752IlDatOjT9paPlm8A7yOuW2Fbvp4X3JznJtT4f0GzGLLiWE9W8onz51SqLYwzGaA==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.13.2.tgz",
+      "version": "1.13.2"
+    },
+    "node_modules/axios-proxy-builder": {
+      "dependencies": {
+        "tunnel": "^0.0.6"
+      },
+      "integrity": "sha512-6uBVsBZzkB3tCC8iyx59mCjQckhB8+GQrI9Cop8eC7ybIsvs/KtnNgEBfRMSEa7GqK2VBGUzgjNYMdPIfotyPA==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/axios-proxy-builder/-/axios-proxy-builder-0.1.2.tgz",
+      "version": "0.1.2"
+    },
+    "node_modules/call-bind-apply-helpers": {
+      "dependencies": {
+        "es-errors": "^1.3.0",
+        "function-bind": "^1.1.2"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.2.tgz",
+      "version": "1.0.2"
+    },
+    "node_modules/clone": {
+      "engines": {
+        "node": ">=0.8"
+      },
+      "integrity": "sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==",
+      "license": "MIT",
+      "optional": true,
+      "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.4.tgz",
+      "version": "1.0.4"
+    },
+    "node_modules/combined-stream": {
+      "dependencies": {
+        "delayed-stream": "~1.0.0"
+      },
+      "engines": {
+        "node": ">= 0.8"
+      },
+      "integrity": "sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/combined-stream/-/combined-stream-1.0.8.tgz",
+      "version": "1.0.8"
+    },
+    "node_modules/console.table": {
+      "dependencies": {
+        "easy-table": "1.1.0"
+      },
+      "engines": {
+        "node": "> 0.10"
+      },
+      "integrity": "sha512-dPyZofqggxuvSf7WXvNjuRfnsOk1YazkVP8FdxH4tcH2c37wc79/Yl6Bhr7Lsu00KMgy2ql/qCMuNu8xctZM8g==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/console.table/-/console.table-0.10.0.tgz",
+      "version": "0.10.0"
+    },
+    "node_modules/defaults": {
+      "dependencies": {
+        "clone": "^1.0.2"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/sindresorhus"
+      },
+      "integrity": "sha512-eFuaLoy/Rxalv2kr+lqMlUnrDWV+3j4pljOIJgLIhI058IQfWJ7vXhyEIHu+HtC738klGALYxOKDO0bQP3tg8A==",
+      "license": "MIT",
+      "optional": true,
+      "resolved": "https://registry.npmjs.org/defaults/-/defaults-1.0.4.tgz",
+      "version": "1.0.4"
+    },
+    "node_modules/delayed-stream": {
+      "engines": {
+        "node": ">=0.4.0"
+      },
+      "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz",
+      "version": "1.0.0"
+    },
+    "node_modules/detect-libc": {
+      "engines": {
+        "node": ">=8"
+      },
+      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
+      "license": "Apache-2.0",
+      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "version": "2.1.2"
+    },
+    "node_modules/dunder-proto": {
+      "dependencies": {
+        "call-bind-apply-helpers": "^1.0.1",
+        "es-errors": "^1.3.0",
+        "gopd": "^1.2.0"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "node_modules/easy-table": {
+      "integrity": "sha512-oq33hWOSSnl2Hoh00tZWaIPi1ievrD9aFG82/IgjlycAnW9hHx5PkJiXpxPsgEE+H7BsbVQXFVFST8TEXS6/pA==",
+      "license": "MIT",
+      "optionalDependencies": {
+        "wcwidth": ">=1.0.1"
+      },
+      "resolved": "https://registry.npmjs.org/easy-table/-/easy-table-1.1.0.tgz",
+      "version": "1.1.0"
+    },
+    "node_modules/es-define-property": {
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "node_modules/es-errors": {
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz",
+      "version": "1.3.0"
+    },
+    "node_modules/es-object-atoms": {
+      "dependencies": {
+        "es-errors": "^1.3.0"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-FGgH2h8zKNim9ljj7dankFPcICIK9Cp5bm+c2gQSYePhpaG5+esrLODihIorn+Pe6FGJzWhXQotPv73jTaldXA==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/es-object-atoms/-/es-object-atoms-1.1.1.tgz",
+      "version": "1.1.1"
+    },
+    "node_modules/es-set-tostringtag": {
+      "dependencies": {
+        "es-errors": "^1.3.0",
+        "get-intrinsic": "^1.2.6",
+        "has-tostringtag": "^1.0.2",
+        "hasown": "^2.0.2"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/es-set-tostringtag/-/es-set-tostringtag-2.1.0.tgz",
+      "version": "2.1.0"
+    },
+    "node_modules/follow-redirects": {
+      "engines": {
+        "node": ">=4.0"
+      },
+      "funding": [
+        {
+          "type": "individual",
+          "url": "https://github.com/sponsors/RubenVerborgh"
+        }
+      ],
+      "integrity": "sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==",
+      "license": "MIT",
+      "peerDependenciesMeta": {
+        "debug": {
+          "optional": true
+        }
+      },
+      "resolved": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.6.tgz",
+      "version": "1.15.6"
+    },
+    "node_modules/form-data": {
+      "dependencies": {
+        "asynckit": "^0.4.0",
+        "combined-stream": "^1.0.8",
+        "es-set-tostringtag": "^2.1.0",
+        "hasown": "^2.0.2",
+        "mime-types": "^2.1.12"
+      },
+      "engines": {
+        "node": ">= 6"
+      },
+      "integrity": "sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/form-data/-/form-data-4.0.4.tgz",
+      "version": "4.0.4"
+    },
+    "node_modules/function-bind": {
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      },
+      "integrity": "sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz",
+      "version": "1.1.2"
+    },
+    "node_modules/get-intrinsic": {
+      "dependencies": {
+        "call-bind-apply-helpers": "^1.0.2",
+        "es-define-property": "^1.0.1",
+        "es-errors": "^1.3.0",
+        "es-object-atoms": "^1.1.1",
+        "function-bind": "^1.1.2",
+        "get-proto": "^1.0.1",
+        "gopd": "^1.2.0",
+        "has-symbols": "^1.1.0",
+        "hasown": "^2.0.2",
+        "math-intrinsics": "^1.1.0"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      },
+      "integrity": "sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/get-intrinsic/-/get-intrinsic-1.3.0.tgz",
+      "version": "1.3.0"
+    },
+    "node_modules/get-proto": {
+      "dependencies": {
+        "dunder-proto": "^1.0.1",
+        "es-object-atoms": "^1.0.0"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-sTSfBjoXBp89JvIKIefqw7U2CCebsc74kiY6awiGogKtoSGbgjYE/G/+l9sF3MWFPNc9IcoOC4ODfKHfxFmp0g==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/get-proto/-/get-proto-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "node_modules/glob": {
+      "dependencies": {
+        "minimatch": "^10.1.1",
+        "minipass": "^7.1.2",
+        "path-scurry": "^2.0.0"
+      },
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/isaacs"
+      },
+      "integrity": "sha512-tvZgpqk6fz4BaNZ66ZsRaZnbHvP/jG3uKJvAZOwEVUL4RTA5nJeeLYfyN9/VA8NX/V3IBG+hkeuGpKjvELkVhA==",
+      "license": "BlueOak-1.0.0",
+      "resolved": "https://registry.npmjs.org/glob/-/glob-13.0.0.tgz",
+      "version": "13.0.0"
+    },
+    "node_modules/gopd": {
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      },
+      "integrity": "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz",
+      "version": "1.2.0"
+    },
+    "node_modules/has-symbols": {
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      },
+      "integrity": "sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/has-symbols/-/has-symbols-1.1.0.tgz",
+      "version": "1.1.0"
+    },
+    "node_modules/has-tostringtag": {
+      "dependencies": {
+        "has-symbols": "^1.0.3"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      },
+      "integrity": "sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/has-tostringtag/-/has-tostringtag-1.0.2.tgz",
+      "version": "1.0.2"
+    },
+    "node_modules/hasown": {
+      "dependencies": {
+        "function-bind": "^1.1.2"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/hasown/-/hasown-2.0.2.tgz",
+      "version": "2.0.2"
+    },
+    "node_modules/lru-cache": {
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "integrity": "sha512-B5Y16Jr9LB9dHVkh6ZevG+vAbOsNOYCX+sXvFWFu7B3Iz5mijW3zdbMyhsh8ANd2mSWBYdJgnqi+mL7/LrOPYg==",
+      "license": "BlueOak-1.0.0",
+      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.2.4.tgz",
+      "version": "11.2.4"
+    },
+    "node_modules/math-intrinsics": {
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "integrity": "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz",
+      "version": "1.1.0"
+    },
+    "node_modules/mime-db": {
+      "engines": {
+        "node": ">= 0.6"
+      },
+      "integrity": "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz",
+      "version": "1.52.0"
+    },
+    "node_modules/mime-types": {
+      "dependencies": {
+        "mime-db": "1.52.0"
+      },
+      "engines": {
+        "node": ">= 0.6"
+      },
+      "integrity": "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.35.tgz",
+      "version": "2.1.35"
+    },
+    "node_modules/minimatch": {
+      "dependencies": {
+        "@isaacs/brace-expansion": "^5.0.0"
+      },
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/isaacs"
+      },
+      "integrity": "sha512-enIvLvRAFZYXJzkCYG5RKmPfrFArdLv+R+lbQ53BmIMLIry74bjKzX6iHAm8WYamJkhSSEabrWN5D97XnKObjQ==",
+      "license": "BlueOak-1.0.0",
+      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-10.1.1.tgz",
+      "version": "10.1.1"
+    },
+    "node_modules/minipass": {
+      "engines": {
+        "node": ">=16 || 14 >=14.17"
+      },
+      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
+      "license": "ISC",
+      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
+      "version": "7.1.2"
+    },
+    "node_modules/package-json-from-dist": {
+      "integrity": "sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==",
+      "license": "BlueOak-1.0.0",
+      "resolved": "https://registry.npmjs.org/package-json-from-dist/-/package-json-from-dist-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "node_modules/path-scurry": {
+      "dependencies": {
+        "lru-cache": "^11.0.0",
+        "minipass": "^7.1.2"
+      },
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/isaacs"
+      },
+      "integrity": "sha512-oWyT4gICAu+kaA7QWk/jvCHWarMKNs6pXOGWKDTr7cw4IGcUbW+PeTfbaQiLGheFRpjo6O9J0PmyMfQPjH71oA==",
+      "license": "BlueOak-1.0.0",
+      "resolved": "https://registry.npmjs.org/path-scurry/-/path-scurry-2.0.1.tgz",
+      "version": "2.0.1"
+    },
+    "node_modules/prettier": {
+      "bin": {
+        "prettier": "bin/prettier.cjs"
+      },
+      "dev": true,
+      "engines": {
+        "node": ">=14"
+      },
+      "funding": {
+        "url": "https://github.com/prettier/prettier?sponsor=1"
+      },
+      "integrity": "sha512-yEPsovQfpxYfgWNhCfECjG5AQaO+K3dp6XERmOepyPDVqcJm+bjyCVO3pmU+nAPe0N5dDvekfGezt/EIiRe1TA==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/prettier/-/prettier-3.8.0.tgz",
+      "version": "3.8.0"
+    },
+    "node_modules/proxy-from-env": {
+      "integrity": "sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-1.1.0.tgz",
+      "version": "1.1.0"
+    },
+    "node_modules/rimraf": {
+      "bin": {
+        "rimraf": "dist/esm/bin.mjs"
+      },
+      "dependencies": {
+        "glob": "^13.0.0",
+        "package-json-from-dist": "^1.0.1"
+      },
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/isaacs"
+      },
+      "integrity": "sha512-cFCkPslJv7BAXJsYlK1dZsbP8/ZNLkCAQ0bi1hf5EKX2QHegmDFEFA6QhuYJlk7UDdc+02JjO80YSOrWPpw06g==",
+      "license": "BlueOak-1.0.0",
+      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-6.1.2.tgz",
+      "version": "6.1.2"
+    },
+    "node_modules/tunnel": {
+      "engines": {
+        "node": ">=0.6.11 <=0.7.0 || >=0.7.3"
+      },
+      "integrity": "sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/tunnel/-/tunnel-0.0.6.tgz",
+      "version": "0.0.6"
+    },
+    "node_modules/wcwidth": {
+      "dependencies": {
+        "defaults": "^1.0.3"
+      },
+      "integrity": "sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==",
+      "license": "MIT",
+      "optional": true,
+      "resolved": "https://registry.npmjs.org/wcwidth/-/wcwidth-1.0.1.tgz",
+      "version": "1.0.1"
+    }
+  },
+  "requires": true,
+  "version": "0.2.2"
+}
+================ axolotlsay-npm-package.tar.gz/package/package.json ================
+{
+  "artifactDownloadUrls": [
+    "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2"
+  ],
+  "author": "axodotdev <hello@axo.dev>",
+  "bin": {
+    "axolotlsay": "run-axolotlsay.js"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "axios-proxy-builder": "^0.1.2",
+    "console.table": "^0.10.0",
+    "detect-libc": "^2.1.2",
+    "rimraf": "^6.1.2"
+  },
+  "description": "💬 a CLI for learning to distribute CLIs in rust",
+  "devDependencies": {
+    "prettier": "^3.8.0"
+  },
+  "engines": {
+    "node": ">=14",
+    "npm": ">=6"
+  },
+  "glibcMinimum": {
+    "major": 2,
+    "series": 31
+  },
+  "homepage": "https://github.com/axodotdev/axolotlsay",
+  "license": "MIT OR Apache-2.0",
+  "name": "@axodotdev/axolotlsay",
+  "preferUnplugged": true,
+  "repository": "https://github.com/axodotdev/axolotlsay.git",
+  "scripts": {
+    "fmt": "prettier --write **/*.js",
+    "fmt:check": "prettier --check **/*.js",
+    "postinstall": "node ./install.js"
+  },
+  "supportedPlatforms": {
+    "aarch64-apple-darwin": {
+      "artifactName": "axolotlsay-aarch64-apple-darwin.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "aarch64-pc-windows-gnu": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "aarch64-pc-windows-msvc": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "aarch64-unknown-linux-gnu": {
+      "artifactName": "axolotlsay-aarch64-unknown-linux-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "i686-unknown-linux-gnu": {
+      "artifactName": "axolotlsay-i686-unknown-linux-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "x86_64-apple-darwin": {
+      "artifactName": "axolotlsay-x86_64-apple-darwin.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "x86_64-pc-windows-gnu": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "x86_64-pc-windows-msvc": {
+      "artifactName": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay.exe"
+      },
+      "zipExt": ".tar.gz"
+    },
+    "x86_64-unknown-linux-gnu": {
+      "artifactName": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
+      "bins": {
+        "axolotlsay": "axolotlsay"
+      },
+      "zipExt": ".tar.gz"
+    }
+  },
+  "version": "0.2.2",
+  "volta": {
+    "node": "18.14.1",
+    "npm": "9.5.0"
+  }
+}
+================ axolotlsay-npm-package.tar.gz/package/run-axolotlsay.js ================
+#!/usr/bin/env node
+
+const { run } = require("./binary");
+run("axolotlsay");
+
 ================ sha256.sum ================
+CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  axolotlsay-npm-package.tar.gz
 CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.gz
 
 
@@ -2093,7 +3642,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
   "announcement_is_prerelease": false,
   "announcement_title": "Version 0.2.2",
   "announcement_changelog": "```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```",
-  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy Bypass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-pc-windows-msvc.tar.gz) | ARM64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-aarch64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-unknown-linux-gnu.tar.gz) | ARM64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
+  "announcement_github_body": "## Release Notes\n\n```text\n         +----------------------------------+\n         | now with arm64 linux binaries!!! |\n         +----------------------------------+\n        /\n≽(◕ ᴗ ◕)≼\n```\n\n## Install axolotlsay 0.2.2\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -ExecutionPolicy Bypass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n### Install prebuilt binaries into your npm project\n\n```sh\nnpm install @axodotdev/axolotlsay@0.2.2\n```\n\n## Download axolotlsay 0.2.2\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-aarch64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz) | Apple Silicon macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-apple-darwin.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-apple-darwin.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.tar.gz) | x64 MinGW | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256) |\n| [axolotlsay-aarch64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-unknown-linux-gnu.tar.gz) | ARM64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-i686-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz) | x86 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.gz](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "axolotlsay",
@@ -2117,11 +3666,23 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "source.tar.gz.sha256",
         "axolotlsay-installer.sh",
         "axolotlsay-installer.ps1",
+        "axolotlsay.rb",
+        "axolotlsay-npm-package.tar.gz",
         "sha256.sum",
-        "axolotlsay-aarch64-pc-windows-msvc.tar.gz",
-        "axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256",
+        "axolotlsay-aarch64-apple-darwin.tar.gz",
+        "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
         "axolotlsay-aarch64-unknown-linux-gnu.tar.gz",
-        "axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256"
+        "axolotlsay-aarch64-unknown-linux-gnu.tar.gz.sha256",
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz",
+        "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256",
+        "axolotlsay-x86_64-apple-darwin.tar.gz",
+        "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+        "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256",
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+        "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
+        "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
       ],
       "hosting": {
         "github": {
@@ -2134,11 +3695,11 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
     }
   ],
   "artifacts": {
-    "axolotlsay-aarch64-pc-windows-msvc.tar.gz": {
-      "name": "axolotlsay-aarch64-pc-windows-msvc.tar.gz",
+    "axolotlsay-aarch64-apple-darwin.tar.gz": {
+      "name": "axolotlsay-aarch64-apple-darwin.tar.gz",
       "kind": "executable-zip",
       "target_triples": [
-        "aarch64-pc-windows-msvc"
+        "aarch64-apple-darwin"
       ],
       "assets": [
         {
@@ -2162,19 +3723,19 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
           "kind": "readme"
         },
         {
-          "id": "axolotlsay-aarch64-pc-windows-msvc-exe-axolotlsay",
+          "id": "axolotlsay-aarch64-apple-darwin-exe-axolotlsay",
           "name": "axolotlsay",
-          "path": "axolotlsay.exe",
+          "path": "axolotlsay",
           "kind": "executable"
         }
       ],
-      "checksum": "axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256"
+      "checksum": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256"
     },
-    "axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256": {
-      "name": "axolotlsay-aarch64-pc-windows-msvc.tar.gz.sha256",
+    "axolotlsay-aarch64-apple-darwin.tar.gz.sha256": {
+      "name": "axolotlsay-aarch64-apple-darwin.tar.gz.sha256",
       "kind": "checksum",
       "target_triples": [
-        "aarch64-pc-windows-msvc"
+        "aarch64-apple-darwin"
       ]
     },
     "axolotlsay-aarch64-unknown-linux-gnu.tar.gz": {
@@ -2220,12 +3781,57 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "aarch64-unknown-linux-gnu"
       ]
     },
+    "axolotlsay-i686-unknown-linux-gnu.tar.gz": {
+      "name": "axolotlsay-i686-unknown-linux-gnu.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "i686-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "axolotlsay-i686-unknown-linux-gnu-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256"
+    },
+    "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-i686-unknown-linux-gnu.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "i686-unknown-linux-gnu"
+      ]
+    },
     "axolotlsay-installer.ps1": {
       "name": "axolotlsay-installer.ps1",
       "kind": "installer",
       "target_triples": [
         "aarch64-pc-windows-gnu",
-        "aarch64-pc-windows-msvc"
+        "aarch64-pc-windows-msvc",
+        "x86_64-pc-windows-gnu",
+        "x86_64-pc-windows-msvc"
       ],
       "install_hint": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
@@ -2234,11 +3840,277 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "name": "axolotlsay-installer.sh",
       "kind": "installer",
       "target_triples": [
+        "aarch64-apple-darwin",
         "aarch64-pc-windows-gnu",
-        "aarch64-unknown-linux-gnu"
+        "aarch64-unknown-linux-gnu",
+        "i686-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
+        "x86_64-unknown-linux-gnu"
       ],
       "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2/axolotlsay-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
+    },
+    "axolotlsay-npm-package.tar.gz": {
+      "name": "axolotlsay-npm-package.tar.gz",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
+        "aarch64-pc-windows-msvc",
+        "aarch64-unknown-linux-gnu",
+        "i686-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
+        "x86_64-pc-windows-msvc",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": ".gitignore",
+          "path": ".gitignore",
+          "kind": "unknown"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "binary-install.js",
+          "path": "binary-install.js",
+          "kind": "unknown"
+        },
+        {
+          "name": "binary.js",
+          "path": "binary.js",
+          "kind": "unknown"
+        },
+        {
+          "name": "install.js",
+          "path": "install.js",
+          "kind": "unknown"
+        },
+        {
+          "name": "npm-shrinkwrap.json",
+          "path": "npm-shrinkwrap.json",
+          "kind": "unknown"
+        },
+        {
+          "name": "package.json",
+          "path": "package.json",
+          "kind": "unknown"
+        },
+        {
+          "name": "run.js",
+          "path": "run.js",
+          "kind": "unknown"
+        }
+      ],
+      "install_hint": "npm install @axodotdev/axolotlsay@0.2.2",
+      "description": "Install prebuilt binaries into your npm project"
+    },
+    "axolotlsay-x86_64-apple-darwin.tar.gz": {
+      "name": "axolotlsay-x86_64-apple-darwin.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "axolotlsay-x86_64-apple-darwin-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-apple-darwin.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-apple-darwin.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ]
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.tar.gz": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "axolotlsay-x86_64-pc-windows-gnu-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-gnu.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-gnu"
+      ]
+    },
+    "axolotlsay-x86_64-pc-windows-msvc.tar.gz": {
+      "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "axolotlsay-x86_64-pc-windows-msvc-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-pc-windows-msvc.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ]
+    },
+    "axolotlsay-x86_64-unknown-linux-gnu.tar.gz": {
+      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE-APACHE",
+          "path": "LICENSE-APACHE",
+          "kind": "license"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "path": "LICENSE-MIT",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "id": "axolotlsay-x86_64-unknown-linux-gnu-exe-axolotlsay",
+          "name": "axolotlsay",
+          "path": "axolotlsay",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
+    },
+    "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256": {
+      "name": "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ]
+    },
+    "axolotlsay.rb": {
+      "name": "axolotlsay.rb",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin",
+        "aarch64-pc-windows-gnu",
+        "aarch64-unknown-linux-gnu",
+        "i686-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "x86_64-pc-windows-gnu",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "install_hint": "brew install axodotdev/packages/axolotlsay",
+      "description": "Install prebuilt binaries via Homebrew"
     },
     "sha256.sum": {
       "name": "sha256.sum",
@@ -2268,32 +4140,21 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "artifacts_matrix": {
         "include": [
           {
-            "runner": "ubuntu-22.04",
-            "host": "x86_64-unknown-linux-gnu",
-            "container": {
-              "image": "messense/cargo-xwin",
-              "host": "x86_64-unknown-linux-musl",
-              "package_manager": "apt"
-            },
+            "runner": "macos-14",
+            "host": "aarch64-apple-darwin",
             "install_dist": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
             },
-            "dist_args": "--artifacts=local --target=aarch64-pc-windows-msvc",
+            "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "targets": [
-              "aarch64-pc-windows-msvc"
+              "aarch64-apple-darwin"
             ],
-            "packages_install": "if ! command -v cargo-xwin > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-xwin\nfi",
             "cache_provider": "github"
           },
           {
-            "runner": "ubuntu-22.04",
-            "host": "x86_64-unknown-linux-gnu",
-            "container": {
-              "image": "quay.io/pypa/manylinux_2_28_x86_64",
-              "host": "aarch64-unknown-linux-gnu",
-              "package_manager": null
-            },
+            "runner": "ubuntu-22.04-arm",
+            "host": "aarch64-unknown-linux-gnu",
             "install_dist": {
               "shell": "sh",
               "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
@@ -2301,6 +4162,72 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu",
             "targets": [
               "aarch64-unknown-linux-gnu"
+            ],
+            "cache_provider": "github"
+          },
+          {
+            "runner": "ubuntu-22.04",
+            "host": "x86_64-unknown-linux-gnu",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=i686-unknown-linux-gnu",
+            "targets": [
+              "i686-unknown-linux-gnu"
+            ],
+            "packages_install": "if ! command -v cargo-zigbuild > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-zigbuild\nfi",
+            "cache_provider": "github"
+          },
+          {
+            "runner": "macos-15-intel",
+            "host": "x86_64-apple-darwin",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
+            "targets": [
+              "x86_64-apple-darwin"
+            ],
+            "cache_provider": "github"
+          },
+          {
+            "runner": "windows-2022",
+            "host": "x86_64-pc-windows-msvc",
+            "install_dist": {
+              "shell": "pwsh",
+              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
+            },
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-gnu",
+            "targets": [
+              "x86_64-pc-windows-gnu"
+            ],
+            "cache_provider": "github"
+          },
+          {
+            "runner": "windows-2022",
+            "host": "x86_64-pc-windows-msvc",
+            "install_dist": {
+              "shell": "pwsh",
+              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
+            },
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
+            "targets": [
+              "x86_64-pc-windows-msvc"
+            ],
+            "cache_provider": "github"
+          },
+          {
+            "runner": "ubuntu-22.04",
+            "host": "x86_64-unknown-linux-gnu",
+            "install_dist": {
+              "shell": "sh",
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+            },
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
+            "targets": [
+              "x86_64-unknown-linux-gnu"
             ],
             "cache_provider": "github"
           }
@@ -2594,14 +4521,90 @@ jobs:
 
           gh release create "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
 
+  publish-homebrew-formula:
+    needs:
+      - plan
+      - host
+    runs-on: "ubuntu-22.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PLAN: ${{ needs.plan.outputs.val }}
+      GITHUB_USER: "axo bot"
+      GITHUB_EMAIL: "admin+bot@axo.dev"
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+          repository: "axodotdev/homebrew-packages"
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      # So we have access to the formula
+      - name: Fetch homebrew formulae
+        uses: actions/download-artifact@v7
+        with:
+          pattern: artifacts-*
+          path: Formula/
+          merge-multiple: true
+      # This is extra complex because you can make your Formula name not match your app name
+      # so we need to find releases with a *.rb file, and publish with that filename.
+      - name: Commit formula files
+        run: |
+          git config --global user.name "${GITHUB_USER}"
+          git config --global user.email "${GITHUB_EMAIL}"
+
+          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith(".rb")] | any)'); do
+            filename=$(echo "$release" | jq '.artifacts[] | select(endswith(".rb"))' --raw-output)
+            name=$(echo "$filename" | sed "s/\.rb$//")
+            version=$(echo "$release" | jq .app_version --raw-output)
+
+            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+            brew update
+            # We avoid reformatting user-provided data such as the app description and homepage.
+            brew style --except-cops FormulaAudit/Homepage,FormulaAudit/Desc,FormulaAuditStrict --fix "Formula/${filename}" || true
+
+            git add "Formula/${filename}"
+            git commit -m "${name} ${version}"
+          done
+          git push
+
+  publish-npm:
+    needs:
+      - plan
+      - host
+    runs-on: "ubuntu-22.04"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PLAN: ${{ needs.plan.outputs.val }}
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    steps:
+      - name: Fetch npm packages
+        uses: actions/download-artifact@v7
+        with:
+          pattern: artifacts-*
+          path: npm/
+          merge-multiple: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: |
+          for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith("-npm-package.tar.gz")] | any)'); do
+            pkg=$(echo "$release" | jq '.artifacts[] | select(endswith("-npm-package.tar.gz"))' --raw-output)
+            npm publish --access public "./npm/${pkg}"
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   announce:
     needs:
       - plan
       - host
+      - publish-homebrew-formula
+      - publish-npm
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
-    if: ${{ always() && needs.host.result == 'success' }}
+    if: ${{ always() && needs.host.result == 'success' && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') && (needs.publish-npm.result == 'skipped' || needs.publish-npm.result == 'success') }}
     runs-on: "ubuntu-22.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

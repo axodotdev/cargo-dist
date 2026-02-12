@@ -10,13 +10,15 @@ class {{ formula_class }} < Formula
   {%- if frag %}
     {%- if cond is defined %}
     if {{ cond }}
-      url "{{ inner.base_url }}/{{ frag.id }}"
+      {#- FIXME: implement support for fallback URLs #}
+      url "{{ inner.base_urls[0] }}/{{ frag.id }}"
       {%- if frag.sha256 %}
       sha256 "{{ frag.sha256 }}"
       {%- endif %}
     end
     {%- else %}
-    url "{{ inner.base_url }}/{{ frag.id }}"
+    {#- FIXME: implement support for fallback URLs #}
+    url "{{ inner.base_urls[0] }}/{{ frag.id }}"
     {%- if frag.sha256 %}
     sha256 "{{ frag.sha256 }}"
     {%- endif %}

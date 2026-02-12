@@ -1011,8 +1011,44 @@ expression: json_schema
               "type": "null"
             }
           ]
+        },
+        "mirror": {
+          "description": "Files mirrored to some static file server",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MirrorHosting"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "order": {
+          "description": "Order the hosts should be preferred in",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/HostingStyle"
+          }
         }
       }
+    },
+    "HostingStyle": {
+      "description": "Kinds of hosting",
+      "oneOf": [
+        {
+          "description": "Hosting via GitHub",
+          "type": "string",
+          "const": "github"
+        },
+        {
+          "description": "Hosting via a Mirror",
+          "type": "string",
+          "const": "mirror"
+        }
+      ]
     },
     "Library": {
       "description": "Represents a dynamic library located somewhere on the system",
@@ -1090,6 +1126,19 @@ expression: json_schema
           "uniqueItems": true
         }
       }
+    },
+    "MirrorHosting": {
+      "description": "Github Hosting",
+      "type": "object",
+      "properties": {
+        "download_url": {
+          "description": "The URL to download artifacts from\n\ne.g. `https://mymirror.com/mycoolapp/v1.0.0/`",
+          "type": "string"
+        }
+      },
+      "required": [
+        "download_url"
+      ]
     },
     "PackageInstallScript": {
       "description": "A bit of shell script to install brew/apt/chocolatey/etc. packages",
