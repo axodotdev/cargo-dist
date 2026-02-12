@@ -91,6 +91,8 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+
+mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
 "#
         ))?;
 
@@ -123,6 +125,9 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+
+mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
+hosting = ["mirror"]
 "#
         ))?;
 
@@ -155,6 +160,9 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+
+mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
+hosting = ["mirror", "github"]
 "#
         ))?;
 
@@ -187,6 +195,9 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+
+mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
+hosting = ["github", "mirror"]
 "#
         ))?;
 
