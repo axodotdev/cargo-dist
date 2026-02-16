@@ -2940,7 +2940,7 @@ install(false);
         "axios-proxy-builder": "^0.1.2",
         "console.table": "^0.10.0",
         "detect-libc": "^2.1.2",
-        "rimraf": "^6.1.2"
+        "rimraf": "^6.1.3"
       },
       "devDependencies": {
         "prettier": "^3.8.0"
@@ -2954,26 +2954,14 @@ install(false);
       "name": "@axodotdev/axolotlsay",
       "version": "0.2.2"
     },
-    "node_modules/@isaacs/balanced-match": {
+    "node_modules/@isaacs/cliui": {
       "engines": {
-        "node": "20 || >=22"
+        "node": ">=18"
       },
-      "integrity": "sha512-yzMTt9lEb8Gv7zRioUilSglI0c0smZ9k5D65677DLWLtWJaXIS3CqcGyUFByYKlnUj6TkjLVs54fBl6+TiGQDQ==",
-      "license": "MIT",
-      "resolved": "https://registry.npmjs.org/@isaacs/balanced-match/-/balanced-match-4.0.1.tgz",
-      "version": "4.0.1"
-    },
-    "node_modules/@isaacs/brace-expansion": {
-      "dependencies": {
-        "@isaacs/balanced-match": "^4.0.1"
-      },
-      "engines": {
-        "node": "20 || >=22"
-      },
-      "integrity": "sha512-ZT55BDLV0yv0RBm2czMiZ+SqCGO7AvmOM3G/w2xhVPH+te0aKgFjmBvGlL1dH+ql2tgGO3MVrbb3jCKyvpgnxA==",
-      "license": "MIT",
-      "resolved": "https://registry.npmjs.org/@isaacs/brace-expansion/-/brace-expansion-5.0.0.tgz",
-      "version": "5.0.0"
+      "integrity": "sha512-AokJm4tuBHillT+FpMtxQ60n8ObyXBatq7jD2/JA9dxbDDokKQm8KMht5ibGzLVU9IJDIKK4TPKgMHEYMn3lMg==",
+      "license": "BlueOak-1.0.0",
+      "resolved": "https://registry.npmjs.org/@isaacs/cliui/-/cliui-9.0.0.tgz",
+      "version": "9.0.0"
     },
     "node_modules/asynckit": {
       "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==",
@@ -3000,6 +2988,30 @@ install(false);
       "license": "MIT",
       "resolved": "https://registry.npmjs.org/axios-proxy-builder/-/axios-proxy-builder-0.1.2.tgz",
       "version": "0.1.2"
+    },
+    "node_modules/balanced-match": {
+      "dependencies": {
+        "jackspeak": "^4.2.3"
+      },
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "integrity": "sha512-x0K50QvKQ97fdEz2kPehIerj+YTeptKF9hyYkKf6egnwmMWAkADiO0QCzSp0R5xN8FTZgYaBfSaue46Ej62nMg==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.2.tgz",
+      "version": "4.0.2"
+    },
+    "node_modules/brace-expansion": {
+      "dependencies": {
+        "balanced-match": "^4.0.2"
+      },
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "integrity": "sha512-Pdk8c9poy+YhOgVWw1JNN22/HcivgKWwpxKq04M/jTmHyCZn12WPJebZxdjSa5TmBqISrUSgNYU3eRORljfCCw==",
+      "license": "MIT",
+      "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.2.tgz",
+      "version": "5.0.2"
     },
     "node_modules/call-bind-apply-helpers": {
       "dependencies": {
@@ -3231,7 +3243,7 @@ install(false);
     },
     "node_modules/glob": {
       "dependencies": {
-        "minimatch": "^10.1.1",
+        "minimatch": "^10.2.0",
         "minipass": "^7.1.2",
         "path-scurry": "^2.0.0"
       },
@@ -3241,10 +3253,10 @@ install(false);
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
       },
-      "integrity": "sha512-tvZgpqk6fz4BaNZ66ZsRaZnbHvP/jG3uKJvAZOwEVUL4RTA5nJeeLYfyN9/VA8NX/V3IBG+hkeuGpKjvELkVhA==",
+      "integrity": "sha512-/g3B0mC+4x724v1TgtBlBtt2hPi/EWptsIAmXUx9Z2rvBYleQcsrmaOzd5LyL50jf/Soi83ZDJmw2+XqvH/EeA==",
       "license": "BlueOak-1.0.0",
-      "resolved": "https://registry.npmjs.org/glob/-/glob-13.0.0.tgz",
-      "version": "13.0.0"
+      "resolved": "https://registry.npmjs.org/glob/-/glob-13.0.3.tgz",
+      "version": "13.0.3"
     },
     "node_modules/gopd": {
       "engines": {
@@ -3297,14 +3309,29 @@ install(false);
       "resolved": "https://registry.npmjs.org/hasown/-/hasown-2.0.2.tgz",
       "version": "2.0.2"
     },
+    "node_modules/jackspeak": {
+      "dependencies": {
+        "@isaacs/cliui": "^9.0.0"
+      },
+      "engines": {
+        "node": "20 || >=22"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/isaacs"
+      },
+      "integrity": "sha512-ykkVRwrYvFm1nb2AJfKKYPr0emF6IiXDYUaFx4Zn9ZuIH7MrzEZ3sD5RlqGXNRpHtvUHJyOnCEFxOlNDtGo7wg==",
+      "license": "BlueOak-1.0.0",
+      "resolved": "https://registry.npmjs.org/jackspeak/-/jackspeak-4.2.3.tgz",
+      "version": "4.2.3"
+    },
     "node_modules/lru-cache": {
       "engines": {
         "node": "20 || >=22"
       },
-      "integrity": "sha512-B5Y16Jr9LB9dHVkh6ZevG+vAbOsNOYCX+sXvFWFu7B3Iz5mijW3zdbMyhsh8ANd2mSWBYdJgnqi+mL7/LrOPYg==",
+      "integrity": "sha512-ESL2CrkS/2wTPfuend7Zhkzo2u0daGJ/A2VucJOgQ/C48S/zB8MMeMHSGKYpXhIjbPxfuezITkaBH1wqv00DDQ==",
       "license": "BlueOak-1.0.0",
-      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.2.4.tgz",
-      "version": "11.2.4"
+      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.2.6.tgz",
+      "version": "11.2.6"
     },
     "node_modules/math-intrinsics": {
       "engines": {
@@ -3338,7 +3365,7 @@ install(false);
     },
     "node_modules/minimatch": {
       "dependencies": {
-        "@isaacs/brace-expansion": "^5.0.0"
+        "brace-expansion": "^5.0.2"
       },
       "engines": {
         "node": "20 || >=22"
@@ -3346,10 +3373,10 @@ install(false);
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
       },
-      "integrity": "sha512-enIvLvRAFZYXJzkCYG5RKmPfrFArdLv+R+lbQ53BmIMLIry74bjKzX6iHAm8WYamJkhSSEabrWN5D97XnKObjQ==",
+      "integrity": "sha512-ugkC31VaVg9cF0DFVoADH12k6061zNZkZON+aX8AWsR9GhPcErkcMBceb6znR8wLERM2AkkOxy2nWRLpT9Jq5w==",
       "license": "BlueOak-1.0.0",
-      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-10.1.1.tgz",
-      "version": "10.1.1"
+      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.0.tgz",
+      "version": "10.2.0"
     },
     "node_modules/minipass": {
       "engines": {
@@ -3409,7 +3436,7 @@ install(false);
         "rimraf": "dist/esm/bin.mjs"
       },
       "dependencies": {
-        "glob": "^13.0.0",
+        "glob": "^13.0.3",
         "package-json-from-dist": "^1.0.1"
       },
       "engines": {
@@ -3418,10 +3445,10 @@ install(false);
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
       },
-      "integrity": "sha512-cFCkPslJv7BAXJsYlK1dZsbP8/ZNLkCAQ0bi1hf5EKX2QHegmDFEFA6QhuYJlk7UDdc+02JjO80YSOrWPpw06g==",
+      "integrity": "sha512-LKg+Cr2ZF61fkcaK1UdkH2yEBBKnYjTyWzTJT6KNPcSPaiT7HSdhtMXQuN5wkTX0Xu72KQ1l8S42rlmexS2hSA==",
       "license": "BlueOak-1.0.0",
-      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-6.1.2.tgz",
-      "version": "6.1.2"
+      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-6.1.3.tgz",
+      "version": "6.1.3"
     },
     "node_modules/tunnel": {
       "engines": {
@@ -3460,7 +3487,7 @@ install(false);
     "axios-proxy-builder": "^0.1.2",
     "console.table": "^0.10.0",
     "detect-libc": "^2.1.2",
-    "rimraf": "^6.1.2"
+    "rimraf": "^6.1.3"
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "devDependencies": {
