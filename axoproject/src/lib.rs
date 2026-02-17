@@ -5,6 +5,11 @@
 
 #![deny(missing_docs)]
 #![allow(clippy::result_large_err)]
+// Since Rust 1.92, the unused_assignments lint incorrectly
+// flags values used by miette. This can be removed once this
+// is fixed.
+// https://github.com/rust-lang/rust/issues/147648
+#![allow(unused_assignments)]
 
 use std::fmt::Display;
 

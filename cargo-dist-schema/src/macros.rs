@@ -280,7 +280,7 @@ macro_rules! declare_strongly_typed_string {
             $(#[$attr])*
             pub struct $name(String);
 
-            #[automatically_derived]
+
             impl $name {
                 /// Constructs a new strongly-typed value
                 #[inline]
@@ -366,7 +366,7 @@ macro_rules! declare_strongly_typed_string {
             $(#[$attr])*
             pub struct $ref_name(str);
 
-            #[automatically_derived]
+
             impl $ref_name {
                 #[allow(unsafe_code)]
                 #[inline]

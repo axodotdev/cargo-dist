@@ -75,7 +75,7 @@
 //! This is because the "common" fields need to exist in the Layer types and be preserved
 //! as we fold in all the fields *BUT* we want them to go away in the final Config types
 //! because we want a single source of truth (we don't want code to forget to consult
-//! the inheritance chain). So a bunch of places grew [`...ConfigInheritable`] types that
+//! the inheritance chain). So a bunch of places grew `...ConfigInheritable` types that
 //! represent a hybrid between Config and Layer where the fields are ostensibly final
 //! but the "common" fields are still not folded in.
 //!
