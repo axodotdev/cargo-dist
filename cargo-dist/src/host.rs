@@ -35,7 +35,7 @@ pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
                 HostingStyle::Github => {
                     // implemented in CI backend
                 }
-                HostingStyle::Mirror => {
+                HostingStyle::Simple => {
                     // currently download-only
                 }
             }
@@ -66,12 +66,12 @@ impl<'a> DistGraphBuilder<'a> {
         {
             let WorkspaceHostConfig {
                 github,
-                mirror,
+                simple,
                 order,
                 force_latest: _,
             } = &self.inner.config.hosts;
-            if mirror.is_some() {
-                hosting.push(HostingStyle::Mirror);
+            if simple.is_some() {
+                hosting.push(HostingStyle::Simple);
             }
             if github.is_some() {
                 hosting.push(HostingStyle::Github);
@@ -146,16 +146,16 @@ impl<'a> DistGraphBuilder<'a> {
                         })
                     }
                 }
-                HostingStyle::Mirror => {
+                HostingStyle::Simple => {
                     for (name, version) in &releases_without_hosting {
                         let tag = &announcing.tag;
-                        let mirror_config = self.inner.config.hosts.mirror.as_ref().expect("should not be possible to select mirror hosting without it defined in config!");
-                        // Apply templates to the mirror URL
-                        let download_url = mirror_config.download_url.replace("{tag}", tag);
+                        let simple_config = self.inner.config.hosts.simple.as_ref().expect("should not be possible to select simple hosting without it defined in config!");
+                        // Apply templates to the simple URL
+                        let download_url = simple_config.download_url.replace("{tag}", tag);
                         self.manifest
                             .ensure_release(name.clone(), version.clone())
                             .hosting
-                            .mirror = Some(cargo_dist_schema::MirrorHosting { download_url })
+                            .simple = Some(cargo_dist_schema::SimpleHosting { download_url })
                     }
                 }
             }
@@ -173,7 +173,7 @@ impl<'a> DistGraphBuilder<'a> {
                         .iter()
                         .map(|style| match style {
                             HostingStyle::Github => cargo_dist_schema::HostingStyle::Github,
-                            HostingStyle::Mirror => cargo_dist_schema::HostingStyle::Mirror,
+                            HostingStyle::Simple => cargo_dist_schema::HostingStyle::Simple,
                         })
                         .collect(),
                 );

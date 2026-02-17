@@ -1,11 +1,11 @@
-//! Mirror host
+//! Simple host
 
 use super::*;
 
-/// Mirror host config (raw)
+/// Simple host config (raw)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct MirrorHostLayer {
+pub struct SimpleHostLayer {
     /// Common options
     #[serde(flatten)]
     pub common: CommonHostLayer,
@@ -14,9 +14,9 @@ pub struct MirrorHostLayer {
     pub download_url: Option<String>,
 }
 
-/// Mirror host config (final)
+/// Simple host config (final)
 #[derive(Debug, Default, Clone)]
-pub struct MirrorHostConfig {
+pub struct SimpleHostConfig {
     /// Common options
     pub common: CommonHostConfig,
 
@@ -24,7 +24,7 @@ pub struct MirrorHostConfig {
     pub download_url: String,
 }
 
-impl MirrorHostConfig {
+impl SimpleHostConfig {
     /// Get defaults for the given package
     pub fn defaults_for_workspace(_workspaces: &WorkspaceGraph, common: &CommonHostConfig) -> Self {
         Self {
@@ -34,8 +34,8 @@ impl MirrorHostConfig {
     }
 }
 
-impl ApplyLayer for MirrorHostConfig {
-    type Layer = MirrorHostLayer;
+impl ApplyLayer for SimpleHostConfig {
+    type Layer = SimpleHostLayer;
     fn apply_layer(
         &mut self,
         Self::Layer {
@@ -47,8 +47,8 @@ impl ApplyLayer for MirrorHostConfig {
         self.download_url.apply_val(download_url);
     }
 }
-impl ApplyLayer for MirrorHostLayer {
-    type Layer = MirrorHostLayer;
+impl ApplyLayer for SimpleHostLayer {
+    type Layer = SimpleHostLayer;
     fn apply_layer(
         &mut self,
         Self::Layer {
@@ -61,7 +61,7 @@ impl ApplyLayer for MirrorHostLayer {
     }
 }
 
-impl std::ops::Deref for MirrorHostConfig {
+impl std::ops::Deref for SimpleHostConfig {
     type Target = CommonHostConfig;
     fn deref(&self) -> &Self::Target {
         &self.common

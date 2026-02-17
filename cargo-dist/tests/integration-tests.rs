@@ -75,7 +75,7 @@ identifier = "dev.axo.axolotsay"
 }
 
 #[test]
-fn axolotlsay_mirror_only() -> Result<(), miette::Report> {
+fn axolotlsay_simple_only() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
@@ -92,7 +92,7 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
 
-mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
+simple-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
 "#
         ))?;
 
@@ -109,7 +109,7 @@ mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/downloa
 }
 
 #[test]
-fn axolotlsay_mirror_and_order_no_github() -> Result<(), miette::Report> {
+fn axolotlsay_simple_and_order_no_github() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
@@ -126,8 +126,8 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
 
-mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
-hosting = ["mirror"]
+simple-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
+hosting = ["simple"]
 "#
         ))?;
 
@@ -144,7 +144,7 @@ hosting = ["mirror"]
 }
 
 #[test]
-fn axolotlsay_mirror_and_order1() -> Result<(), miette::Report> {
+fn axolotlsay_simple_and_order1() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
@@ -161,8 +161,8 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
 
-mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
-hosting = ["mirror", "github"]
+simple-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
+hosting = ["simple", "github"]
 "#
         ))?;
 
@@ -179,7 +179,7 @@ hosting = ["mirror", "github"]
 }
 
 #[test]
-fn axolotlsay_mirror_and_order2() -> Result<(), miette::Report> {
+fn axolotlsay_simple_and_order2() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
         let dist_version = ctx.tools.cargo_dist.version().unwrap();
@@ -196,8 +196,8 @@ unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
 
-mirror-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
-hosting = ["github", "mirror"]
+simple-download-url = "https://github.com/axodotdev//axolotlsay/releases/download/{{tag}}"
+hosting = ["github", "simple"]
 "#
         ))?;
 

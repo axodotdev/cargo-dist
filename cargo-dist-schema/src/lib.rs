@@ -565,7 +565,7 @@ impl std::fmt::Display for GithubAttestationsPhase {
 
 /// A GitHub Actions "run" step, either bash or powershell
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-// this mirrors GHA's structure, see
+// this simples GHA's structure, see
 //   * <https://serde.rs/enum-representations.html>
 //   * <https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell>
 #[serde(tag = "shell", content = "run")]
@@ -1074,10 +1074,10 @@ pub struct Hosting {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github: Option<GithubHosting>,
-    /// Files mirrored to some static file server
+    /// Files simply hosted on some static file server
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub mirror: Option<MirrorHosting>,
+    pub simple: Option<SimpleHosting>,
 }
 
 /// Github Hosting
@@ -1098,10 +1098,10 @@ pub struct GithubHosting {
 
 /// Github Hosting
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
-pub struct MirrorHosting {
+pub struct SimpleHosting {
     /// The URL to download artifacts from
     ///
-    /// e.g. `https://mymirror.com/mycoolapp/v1.0.0/`
+    /// e.g. `https://mysimple.com/mycoolapp/v1.0.0/`
     pub download_url: String,
 }
 
@@ -1111,8 +1111,8 @@ pub struct MirrorHosting {
 pub enum HostingStyle {
     /// Hosting via GitHub
     Github,
-    /// Hosting via a Mirror
-    Mirror,
+    /// Hosting via a Simple
+    Simple,
 }
 
 impl Hosting {
@@ -1120,17 +1120,17 @@ impl Hosting {
     pub fn artifact_download_urls(&self) -> Option<Vec<String>> {
         let Hosting {
             github,
-            mirror,
+            simple,
             order,
         } = &self;
         let mut results = vec![];
         let priority_matters = order.as_ref().map(|list| !list.is_empty()).unwrap_or(false);
 
-        if let Some(host) = &mirror {
+        if let Some(host) = &simple {
             let priority = order
                 .iter()
                 .flatten()
-                .position(|key| *key == HostingStyle::Mirror);
+                .position(|key| *key == HostingStyle::Simple);
             if priority.is_some() || !priority_matters {
                 results.push((priority, host.download_url.clone()));
             }
@@ -1161,10 +1161,10 @@ impl Hosting {
     pub fn is_empty(&self) -> bool {
         let Hosting {
             github,
-            mirror,
+            simple,
             order: _,
         } = &self;
-        github.is_none() && mirror.is_none()
+        github.is_none() && simple.is_none()
     }
 }
 

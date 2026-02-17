@@ -1012,17 +1012,6 @@ expression: json_schema
             }
           ]
         },
-        "mirror": {
-          "description": "Files mirrored to some static file server",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/MirrorHosting"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "order": {
           "description": "Order the hosts should be preferred in",
           "type": [
@@ -1032,6 +1021,17 @@ expression: json_schema
           "items": {
             "$ref": "#/$defs/HostingStyle"
           }
+        },
+        "simple": {
+          "description": "Files simply hosted on some static file server",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SimpleHosting"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1044,9 +1044,9 @@ expression: json_schema
           "const": "github"
         },
         {
-          "description": "Hosting via a Mirror",
+          "description": "Hosting via a Simple",
           "type": "string",
-          "const": "mirror"
+          "const": "simple"
         }
       ]
     },
@@ -1126,19 +1126,6 @@ expression: json_schema
           "uniqueItems": true
         }
       }
-    },
-    "MirrorHosting": {
-      "description": "Github Hosting",
-      "type": "object",
-      "properties": {
-        "download_url": {
-          "description": "The URL to download artifacts from\n\ne.g. `https://mymirror.com/mycoolapp/v1.0.0/`",
-          "type": "string"
-        }
-      },
-      "required": [
-        "download_url"
-      ]
     },
     "PackageInstallScript": {
       "description": "A bit of shell script to install brew/apt/chocolatey/etc. packages",
@@ -1235,6 +1222,19 @@ expression: json_schema
       "required": [
         "app_name",
         "app_version"
+      ]
+    },
+    "SimpleHosting": {
+      "description": "Github Hosting",
+      "type": "object",
+      "properties": {
+        "download_url": {
+          "description": "The URL to download artifacts from\n\ne.g. `https://mysimple.com/mycoolapp/v1.0.0/`",
+          "type": "string"
+        }
+      },
+      "required": [
+        "download_url"
       ]
     },
     "StaticLibraryAsset": {

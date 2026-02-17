@@ -111,14 +111,14 @@ pub(crate) fn load_and_merge_manifests(
             // If the input has hosting info, apply it
             let Hosting {
                 github,
-                mirror,
+                simple,
                 order,
             } = release.hosting;
             if let Some(hosting) = github {
                 out_release.hosting.github = Some(hosting);
             }
-            if let Some(hosting) = mirror {
-                out_release.hosting.mirror = Some(hosting);
+            if let Some(hosting) = simple {
+                out_release.hosting.simple = Some(hosting);
             }
             if let Some(order) = order {
                 out_release.hosting.order = Some(order);

@@ -3688,7 +3688,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "hosting": {
         "order": [
           "github",
-          "mirror"
+          "simple"
         ],
         "github": {
           "artifact_base_url": "https://github.com",
@@ -3696,7 +3696,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
           "owner": "axodotdev",
           "repo": "axolotlsay"
         },
-        "mirror": {
+        "simple": {
           "download_url": "https://github.com/axodotdev//axolotlsay/releases/download/v0.2.2"
         }
       }

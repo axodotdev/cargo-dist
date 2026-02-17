@@ -41,7 +41,7 @@ elif [ -n "${AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL:-}" ]; then
     INSTALLER_BASE_URL="$AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL"
     ARTIFACT_DOWNLOAD_URLS="${INSTALLER_BASE_URL}/axodotdev/axolotlsay/releases/download/v0.2.2"
 else
-    ARTIFACT_DOWNLOAD_URLS="https://github.com/axodotdev//axolotlsay/releases/download/v0.2.2 https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2"
+    ARTIFACT_DOWNLOAD_URLS="https://github.com/axodotdev//axolotlsay/releases/download/v0.2.2"
 fi
 if [ -n "${AXOLOTLSAY_PRINT_VERBOSE:-}" ]; then
     PRINT_VERBOSE="$AXOLOTLSAY_PRINT_VERBOSE"
@@ -1769,7 +1769,7 @@ if ($env:AXOLOTLSAY_DOWNLOAD_URL) {
   $installer_base_url = $env:AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL
   $ArtifactDownloadUrls = @("$installer_base_url/axodotdev/axolotlsay/releases/download/v0.2.2")
 } else {
-  $ArtifactDownloadUrls = @("https://github.com/axodotdev//axolotlsay/releases/download/v0.2.2", "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2")
+  $ArtifactDownloadUrls = @("https://github.com/axodotdev//axolotlsay/releases/download/v0.2.2")
 }
 
 $auth_token = $env:AXOLOTLSAY_GITHUB_TOKEN
@@ -3517,8 +3517,7 @@ install(false);
 ================ axolotlsay-npm-package.tar.gz/package/package.json ================
 {
   "artifactDownloadUrls": [
-    "https://github.com/axodotdev//axolotlsay/releases/download/v0.2.2",
-    "https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2"
+    "https://github.com/axodotdev//axolotlsay/releases/download/v0.2.2"
   ],
   "author": "axodotdev <hello@axo.dev>",
   "bin": {
@@ -3686,13 +3685,16 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
         "axolotlsay-x86_64-unknown-linux-gnu.tar.gz.sha256"
       ],
       "hosting": {
+        "order": [
+          "simple"
+        ],
         "github": {
           "artifact_base_url": "https://github.com",
           "artifact_download_path": "/axodotdev/axolotlsay/releases/download/v0.2.2",
           "owner": "axodotdev",
           "repo": "axolotlsay"
         },
-        "mirror": {
+        "simple": {
           "download_url": "https://github.com/axodotdev//axolotlsay/releases/download/v0.2.2"
         }
       }

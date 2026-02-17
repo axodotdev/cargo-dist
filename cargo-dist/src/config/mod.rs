@@ -233,15 +233,15 @@ impl std::fmt::Display for GithubReleasePhase {
 pub enum HostingStyle {
     /// Host on Github Releases
     Github,
-    /// Hosted on a mirror (currently download-only)
-    Mirror,
+    /// Hosted on a simple (currently download-only)
+    Simple,
 }
 
 impl std::fmt::Display for HostingStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let string = match self {
             HostingStyle::Github => "github",
-            HostingStyle::Mirror => "mirror",
+            HostingStyle::Simple => "simple",
         };
         string.fmt(f)
     }
@@ -252,7 +252,7 @@ impl std::str::FromStr for HostingStyle {
     fn from_str(val: &str) -> DistResult<Self> {
         let res = match val {
             "github" => HostingStyle::Github,
-            "mirror" => HostingStyle::Mirror,
+            "simple" => HostingStyle::Simple,
             s => {
                 return Err(DistError::UnrecognizedHostingStyle {
                     style: s.to_string(),
