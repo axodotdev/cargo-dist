@@ -233,7 +233,7 @@ impl std::fmt::Display for GithubReleasePhase {
 pub enum HostingStyle {
     /// Host on Github Releases
     Github,
-    /// Hosted on a simple (currently download-only)
+    /// Hosted on a simple static file server (currently download-only)
     Simple,
 }
 

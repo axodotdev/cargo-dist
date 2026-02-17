@@ -1044,7 +1044,7 @@ expression: json_schema
           "const": "github"
         },
         {
-          "description": "Hosting via a Simple",
+          "description": "Hosting via a simple static file server",
           "type": "string",
           "const": "simple"
         }
@@ -1229,7 +1229,7 @@ expression: json_schema
       "type": "object",
       "properties": {
         "download_url": {
-          "description": "The URL to download artifacts from\n\ne.g. `https://mysimple.com/mycoolapp/v1.0.0/`",
+          "description": "The URL to download artifacts from\n\ne.g. `https://mymirror.com/mycoolapp/v1.0.0/`",
           "type": "string"
         }
       },

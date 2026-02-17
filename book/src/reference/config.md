@@ -83,6 +83,8 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`github-release`](#github-release)
     * [`github-releases-repo`](#github-releases-repo)
     * [`github-releases-submodule-path`](#github-releases-submodule-path)
+* [simple hosting settings](#simple-hosting-settings)
+    * [`simple-download-url`](#simple-download-url)
 
 [ci settings](#ci-settings)
 * [`ci`](#ci)
@@ -1007,16 +1009,33 @@ These settings govern how we host your files with platforms like [GitHub Release
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
 > [dist]
-> hosting = ["axodotdev", "github"]
+> hosting = ["simple", "github"]
 > ```
 
 Possible values:
 
-* `github`: Use GitHub Releases (default if ci = "github")
+* `github`: Use GitHub Releases (enabled if [ci = "github"](#ci))
+* `simple`: Use a simple static file server (enabled if [simple-download-url](#simple-download-url) is set)
 
-Specifies what hosting provider to use when hosting/announcing new releases.
+Specifies what hosting provider to use when downloading files for installers.
 
-By default we will automatically use the native hosting of your CI provider, so when running on GitHub CI, we'll default to using GitHub Releases for hosting/announcing.
+By default we will automatically use the native hosting of your CI provider, so when running on GitHub CI,
+we'll default to using GitHub Releases for hosting/announcing.
+
+If both `ci = "github"` and `simple-download-url = ...` are set, installers will be aware of both download sources,
+and try `simple-download-url` first, falling back to downloading from GitHub Releases if that fails
+(currently this fallback behaviour is only implemented for [shell](../installers/shell.md) and
+[powershell](../installers/powershell.md), other downloading installers will only try the highest priority one).
+
+We prefer the simple URL over GitHub because this feature is often requested to work around GitHub Releases being unreliable.
+
+By explicitly specifying `hosting` you can change the priority and whether a download source is consulted by installers:
+
+* `hosting = ["simple", "github"]` is the implicit default when both are enabled
+* `hosting = ["github", "simple"]` specifies to instead try GitHub first and fallback to the simple URL if it fails
+* `hosting = ["simple"]` specifies to *only* use the simple URL and ignore GitHub (if `ci = "github"` is set we will still upload to there) 
+
+The preferred entry will also be the one rendered into things like `curl | sh` strings we emit.
 
 
 ### `display`
@@ -1216,6 +1235,37 @@ If false, dist will assume a draft GitHub Release for the current git tag
 already exists with the title/body you want, and just upload artifacts to it, undrafting when all artifacts are uploaded.
 
 See also: [`github-release`](#github-release)
+
+
+### simple hosting settings
+
+These settings govern how we host your files on a simple static file server.
+
+This is an alternative to [GitHub Hosting](#github-hosting-settings). Installers that fetch binaries from the internet
+can be configured to use only one of them or both. See the [hosting setting](#hosting) for details.
+
+This hosting mode is currently read-only -- it's up to you to actually upload the files to your servers.
+
+#### `simple-download-url`
+
+> <span style="float:right">since 0.16.0<br>[global-only][]</span>
+> default = `<none>`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> simple-download-url = "https://static.myapp.com/{tag}"
+> ```
+
+A template for a url to download a release from when using the simple host. `{tag}` will be replaced with the git tag
+of the release (so if you tag like `v1.0.0` we will use that, if you tag like `1.0.0` we will use that). Currently
+only `{tag}` is supported as a template variable.
+
+The given URL is expected to be a directory containing the same filenames that we upload to a GitHub Release. So with
+the above example URL, we will try to fetch something like
+`https://static.myapp.com/v1.0.0/myapp-x86_64-unknown-linux-gnu.tar.gz`
+or
+`https://static.myapp.com/v1.0.0/myapp-x86_64-pc-windows-msvc.zip`.
 
 
 ## ci settings

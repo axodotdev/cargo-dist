@@ -565,7 +565,7 @@ impl std::fmt::Display for GithubAttestationsPhase {
 
 /// A GitHub Actions "run" step, either bash or powershell
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-// this simples GHA's structure, see
+// this mirrors GHA's structure, see
 //   * <https://serde.rs/enum-representations.html>
 //   * <https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell>
 #[serde(tag = "shell", content = "run")]
@@ -1101,7 +1101,7 @@ pub struct GithubHosting {
 pub struct SimpleHosting {
     /// The URL to download artifacts from
     ///
-    /// e.g. `https://mysimple.com/mycoolapp/v1.0.0/`
+    /// e.g. `https://mymirror.com/mycoolapp/v1.0.0/`
     pub download_url: String,
 }
 
@@ -1111,7 +1111,7 @@ pub struct SimpleHosting {
 pub enum HostingStyle {
     /// Hosting via GitHub
     Github,
-    /// Hosting via a Simple
+    /// Hosting via a simple static file server
     Simple,
 }
 

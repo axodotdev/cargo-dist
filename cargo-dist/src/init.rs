@@ -1529,7 +1529,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
     apply_optional_value(
         table,
         "simple-download-url",
-        "# The preferred simple URL to download artifacts from\n",
+        "# A URL to download artifacts from\n",
         simple_download_url.clone(),
     );
 
