@@ -80,4 +80,18 @@ npm-package = "cli"
 You'll end up publish the binaries in "axolotlsay" to an npm package called "@axodotdev/cli".
 
 
+## Locked dependencies
+
+> since 0.31.0
+
+The npm package has a few module dependencies which are used to fetch your binary after the package itself is installed. By default, these dependencies are locked via an `npm-shrinkwrap.json`, so your end users will use the exact versions used by dist at the time the package was generated. If you prefer, you can disable `npm-shrinkwrap.json` so that your end users may end up using newer versions of these packages instead. For example:
+
+```toml
+[package]
+name = "axolotlsay"
+
+[package.metadata.dist]
+npm-shrinkwrap = false
+```
+
 [artifact-url]: ../reference/artifact-url.md
