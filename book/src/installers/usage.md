@@ -118,7 +118,7 @@ requested API structure expectations to match either:
 Users can also override the entire URL for the artifact by specifying `${app name}_DOWNLOAD_URL` (available since 0.30.0).
 
 `dist` is eager to support enterprise level features like this- so if you have questions
-or related feature requests, please join our [Discord](https://discord.gg/MnyjrpTceV).
+or related feature requests, please join our [Discord](https://discord.gg/ry3f3HZXWN).
 
 ## GitHub bearer token
 

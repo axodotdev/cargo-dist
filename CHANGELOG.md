@@ -1482,7 +1482,7 @@ in their `[workspace.metadata.dist]`.
 
 To sign up for the Axo Releases closed beta, go to https://dash.axo.dev/
 
-You can ask for more details by [joining our discord](https://discord.gg/MnyjrpTceV) or sending a message to `hello@axo.dev`!
+You can ask for more details by [joining our discord](https://discord.gg/ry3f3HZXWN) or sending a message to `hello@axo.dev`!
 
 Axo Releases has a more robust pipelined model for creating and hosting a release, which more
 closely matches the actual design of cargo-dist. But since we'd only ever supported Github Releases,
