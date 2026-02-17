@@ -3,6 +3,18 @@
 Nothing Yet!
 
 
+# Version 0.30.4 (2025-02-16)
+
+This release contains a few minor bugfixes. It also updates dependencies, including a rimraf upgrade that resolves [a CVE in @isaacs/brace-expansion](https://github.com/isaacs/brace-expansion/security/advisories/GHSA-7h2j-956f-4vf2). This vulnerability was not exploitable in the way dist used rimraf.
+
+## Fixes
+
+- impl @eegli [fix: installer receipt for windows with posix shell](https://github.com/axodotdev/cargo-dist/pull/2227)
+- impl @kazutoiris [fix: prevent unintended escaping of multiline run](https://github.com/axodotdev/cargo-dist/pull/2258)
+- impl @20jasper [fix: typo in variable name](https://github.com/axodotdev/cargo-dist/pull/2223)
+- impl @OpenSauce [chore(actions): bump default github actions](https://github.com/axodotdev/cargo-dist/pull/2235)
+
+
 # Version 0.30.3 (2025-12-14)
 
 This release contains a few minor bugfixes. It also updates dependencies, including a rimraf upgrade that resolves [a CVE in glob](https://security.snyk.io/vuln/SNYK-JS-GLOB-14040952). This vulnerability was not exploitable in the way dist used rimraf.
