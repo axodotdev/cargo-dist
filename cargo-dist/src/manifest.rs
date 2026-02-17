@@ -47,7 +47,9 @@ use crate::{
     announce::AnnouncementTag,
     backend::{
         installer::{
-            homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, HomebrewImpl, InstallerImpl,
+            homebrew::HomebrewInstallerInfo,
+            npm::{NpmInstallerInfo, PACKAGE_LOCK},
+            HomebrewImpl, InstallerImpl,
         },
         templates::{TemplateEntry, TEMPLATE_INSTALLER_NPM},
     },
@@ -297,7 +299,7 @@ fn add_manifest_artifact(
     //
     // These can't be pre-included in the normal static assets list above because
     // they're generated from templates, and not copied from the user's project.
-    if let ArtifactKind::Installer(InstallerImpl::Npm(..)) = &artifact.kind {
+    if let ArtifactKind::Installer(InstallerImpl::Npm(info)) = &artifact.kind {
         let root_dir = dist
             .templates
             .get_template_dir(TEMPLATE_INSTALLER_NPM)
@@ -310,6 +312,9 @@ fn add_manifest_artifact(
                         queue.push(dir);
                     }
                     TemplateEntry::File(file) => {
+                        if !info.npm_package_shrinkwrap && file.name == PACKAGE_LOCK {
+                            continue;
+                        }
                         static_assets.push(Asset {
                             id: None,
                             name: Some(file.name.clone()),

@@ -43,6 +43,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 cargo-auditable = true
 cargo-cyclonedx = true
 omnibor = true
@@ -90,6 +91,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 github-attestations = true
 cache-builds = true
 
@@ -200,6 +202,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -241,6 +244,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 [workspace.metadata.dist.binaries]
 "*" = ["axolotlsay"]
@@ -262,6 +266,35 @@ identifier = "dev.axo.axolotsay"
         // Do usual build+plan checks (the axolotlsayw binary is fake!)
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all_no_ruin(&ctx, ".cargo/bin/")?;
+        // snapshot all
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
+fn axolotlsay_npm_no_shrinkwrap() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(
+            r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["npm"]
+targets = ["x86_64-unknown-linux-gnu"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+npm-scope = "@axodotdev"
+"#
+        ))?;
+
+        // Run generate to make sure stuff is up to date before running other commands
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        // Do usual build+plan checks
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
         // snapshot all
         main_snap.join(ci_snap).snap();
         Ok(())
@@ -439,6 +472,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope = "@axodotdev"
+npm-shrinkwrap = true
 npm-package = "coolbeans"
 cache-builds = true
 
@@ -474,6 +508,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 create-release = false
 
 "#
@@ -584,6 +619,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 github-create-release-phase = "host"
 pr-run-mode = "upload"
 
@@ -619,6 +655,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 "#
         ))?;
@@ -652,6 +689,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 "#
         ))?;
 
@@ -684,6 +722,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 "#
         ))?;
 
@@ -715,6 +754,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 "#
         ))?;
 
@@ -745,6 +785,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 "#
         ))?;
@@ -776,6 +817,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 "#
         ))?;
@@ -841,6 +883,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 install-updater = true
 always-use-latest-updater = true
 
@@ -884,6 +927,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 [workspace.metadata.dist.dependencies.homebrew]
 "homebrew/cask/macfuse" = "*"
@@ -923,6 +967,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -966,6 +1011,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -1008,6 +1054,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 
 [package.metadata.wix]
 upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
@@ -1653,6 +1700,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope = "@axodotdev"
+npm-shrinkwrap = true
 dist = false
 
 [package.metadata.wix]
@@ -1687,6 +1735,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 source-tarball = false
 
 [package.metadata.wix]
@@ -1881,6 +1930,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 github-build-setup = "build_setup.yml"
 
 [package.metadata.wix]
@@ -2022,6 +2072,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 github-attestations = true
 github-attestations-phase = "host"
 "#
@@ -2056,6 +2107,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 github-release = "announce"
 github-attestations = true
 github-attestations-phase = "announce"
@@ -2091,6 +2143,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = true
 github-attestations = true
 github-attestations-phase = "host"
 github-attestations-filters = ["*.json", "*.sh", "*.ps1", "*.zip", "*.tar.gz"]

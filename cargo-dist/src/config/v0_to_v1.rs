@@ -42,6 +42,7 @@ impl DistMetadata {
             unix_archive,
             npm_package,
             npm_scope,
+            npm_shrinkwrap,
             checksum,
             precise_builds,
             merge_tasks,
@@ -288,11 +289,12 @@ impl DistMetadata {
             });
         let npm_installer_layer =
             list_to_bool_layer(is_global, &installers, InstallerStyle::Npm, || {
-                if npm_package.is_some() || npm_scope.is_some() {
+                if npm_package.is_some() || npm_scope.is_some() || npm_shrinkwrap.is_some() {
                     Some(NpmInstallerLayer {
                         common: CommonInstallerLayer::default(),
                         package: npm_package,
                         scope: npm_scope,
+                        shrinkwrap: npm_shrinkwrap,
                     })
                 } else {
                     None

@@ -32,6 +32,8 @@ pub struct NpmInstallerInfo {
     pub npm_package_license: Option<String>,
     /// Array of keywords for this package
     pub npm_package_keywords: Option<Vec<String>>,
+    /// Whether to include npm-shrinkwrap.json in the generated npm package
+    pub npm_package_shrinkwrap: bool,
     /// Dir to build the package in
     pub package_dir: Utf8PathBuf,
     /// Generic installer info
@@ -40,7 +42,7 @@ pub struct NpmInstallerInfo {
 
 const RUN_JS: &str = "run.js";
 const PACKAGE_JSON: &str = "package.json";
-const PACKAGE_LOCK: &str = "npm-shrinkwrap.json";
+pub(crate) const PACKAGE_LOCK: &str = "npm-shrinkwrap.json";
 
 type PackageJsonPlatforms = SortedMap<TripleName, PackageJsonPlatform>;
 #[derive(Debug, Clone, Serialize)]
@@ -70,7 +72,11 @@ pub(crate) fn write_npm_project(dist: &DistGraph, info: &NpmInstallerInfo) -> Di
     let platforms = platforms(info);
     mangle_run_js(templates, &platforms, &mut files)?;
     mangle_package_json(info, &platforms, &mut files)?;
-    mangle_package_lock(info, &platforms, &mut files)?;
+    if info.npm_package_shrinkwrap {
+        mangle_package_lock(info, &platforms, &mut files)?;
+    } else {
+        files.remove(Utf8Path::new(PACKAGE_LOCK));
+    }
 
     // Finally, write the results
     let zip_dir = &info.package_dir;
@@ -114,7 +120,7 @@ fn mangle_package_lock(
     // Now mangle the package.json with data we want
     let orig_package_lock = files
         .remove(package_lock_path)
-        .expect("npm template didn't have package.json!?");
+        .expect("npm template didn't have npm-shrinkwrap.json!?");
     let package_lock_src = SourceFile::new(PACKAGE_LOCK, orig_package_lock);
     let mut package_lock = package_lock_src.deserialize_json::<serde_json::Value>()?;
 

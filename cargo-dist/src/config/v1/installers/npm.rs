@@ -17,10 +17,14 @@ pub struct NpmInstallerLayer {
     /// A scope to prefix the npm package with (@ should be included).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scope: Option<String>,
+
+    /// Whether to include an npm-shrinkwrap.json in generated npm installers
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shrinkwrap: Option<bool>,
 }
 
 /// Options for npm installer (final)
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct NpmInstallerConfig {
     /// Common options
     pub common: CommonInstallerConfig,
@@ -30,6 +34,20 @@ pub struct NpmInstallerConfig {
 
     /// A scope to prefix the npm package with (@ should be included).
     pub scope: Option<String>,
+
+    /// Whether to include an npm-shrinkwrap.json in generated npm installers
+    pub shrinkwrap: bool,
+}
+
+impl Default for NpmInstallerConfig {
+    fn default() -> Self {
+        Self {
+            common: CommonInstallerConfig::default(),
+            package: String::new(),
+            scope: None,
+            shrinkwrap: false,
+        }
+    }
 }
 
 impl NpmInstallerConfig {
@@ -44,6 +62,7 @@ impl NpmInstallerConfig {
             common: common.clone(),
             package: pkg.name.clone(),
             scope: pkg.npm_scope.clone(),
+            shrinkwrap: false,
         }
     }
 }
@@ -56,11 +75,13 @@ impl ApplyLayer for NpmInstallerConfig {
             common,
             scope,
             package,
+            shrinkwrap,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
         self.scope.apply_opt(scope);
         self.package.apply_val(package);
+        self.shrinkwrap.apply_val(shrinkwrap);
     }
 }
 impl ApplyLayer for NpmInstallerLayer {
@@ -71,11 +92,13 @@ impl ApplyLayer for NpmInstallerLayer {
             common,
             scope,
             package,
+            shrinkwrap,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
         self.scope.apply_opt(scope);
         self.package.apply_opt(package);
+        self.shrinkwrap.apply_opt(shrinkwrap);
     }
 }
 

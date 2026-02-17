@@ -173,6 +173,12 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub npm_scope: Option<String>,
 
+    /// Whether to include npm-shrinkwrap.json in generated npm installers.
+    ///
+    /// Defaults to false.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub npm_shrinkwrap: Option<bool>,
+
     /// Which checksum algorithm to use, from: sha256, sha512, sha3-256,
     /// sha3-512, blake2s, blake2b, or false (to disable checksums)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -525,6 +531,7 @@ impl DistMetadata {
             unix_archive: _,
             npm_package: _,
             npm_scope: _,
+            npm_shrinkwrap: _,
             checksum: _,
             precise_builds: _,
             fail_fast: _,
@@ -631,6 +638,7 @@ impl DistMetadata {
             unix_archive,
             npm_package,
             npm_scope,
+            npm_shrinkwrap,
             checksum,
             precise_builds,
             merge_tasks,
@@ -832,6 +840,9 @@ impl DistMetadata {
         }
         if npm_scope.is_none() {
             npm_scope.clone_from(&workspace_config.npm_scope);
+        }
+        if npm_shrinkwrap.is_none() {
+            *npm_shrinkwrap = workspace_config.npm_shrinkwrap;
         }
         if checksum.is_none() {
             *checksum = workspace_config.checksum;

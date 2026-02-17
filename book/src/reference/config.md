@@ -61,6 +61,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [npm installer settings](#npm-installer-settings)
     * [`npm-scope`](#npm-scope)
     * [`npm-package`](#npm-package)
+    * [`npm-shrinkwrap`](#npm-shrinkwrap)
 * [homebrew installer settings](#homebrew-installer-settings)
     * [`tap`](#tap)
     * [`formula`](#formula)
@@ -920,6 +921,24 @@ See also: [npm-package](#npm-package)
 Specifies that an [npm installer][npm-installer] should be published under the given name, as opposed to the [name of the package](#packagename) they are defined by.
 
 This does not set the [scope][] the package is published under, for that see [npm-scope](#npm-scope).
+
+#### `npm-shrinkwrap`
+
+> <span style="float:right">since 0.31.0<br>[package-local][]</span>
+> [📖 read the npm installer guide!][npm-installer] \
+> default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> npm-shrinkwrap = true
+> ```
+
+Specifies whether generated [npm installers][npm-installer] should convert your `package-lock.json` to a `npm-shrinkwrap.json`.
+
+Set this to `true` if you want force consumers of your npm package to use your locked dependency versions.
+
+Use this carefully as it overrides the ability for package consumers to manage their own dependency tree overrides - see [npm/cli#8938](https://github.com/npm/cli/issues/8938).
 
 
 ### homebrew installer settings

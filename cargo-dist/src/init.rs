@@ -497,6 +497,7 @@ fn get_new_dist_metadata(
             unix_archive: None,
             npm_scope: None,
             npm_package: None,
+            npm_shrinkwrap: None,
             checksum: None,
             precise_builds: None,
             merge_tasks: None,
@@ -1003,6 +1004,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         unix_archive,
         npm_scope,
         npm_package,
+        npm_shrinkwrap,
         checksum,
         precise_builds,
         merge_tasks,
@@ -1189,6 +1191,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "npm-scope",
         "# A namespace to use when publishing this package to the npm registry\n",
         npm_scope.as_deref(),
+    );
+
+    apply_optional_value(
+        table,
+        "npm-shrinkwrap",
+        "# Whether to include npm-shrinkwrap.json in generated npm installers (default false)\n",
+        *npm_shrinkwrap,
     );
 
     apply_optional_value(

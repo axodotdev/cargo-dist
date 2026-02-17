@@ -210,3 +210,27 @@ targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
         .map_err(miette::Report::new)
         .unwrap();
 }
+
+#[test]
+fn npm_shrinkwrap_roundtrip() {
+    let input_kind = WorkspaceKind::Rust;
+    let input = r##"
+[package]
+name = "whatever"
+version = "1.0.0"
+
+# Config for 'dist'
+[workspace.metadata.dist]
+# The installers to generate for each app
+installers = ["npm"]
+# Whether to include npm-shrinkwrap.json in generated npm installers (default false)
+npm-shrinkwrap = false
+"##;
+
+    let src = source(input, input_kind);
+    let config = parse_config(&src, input_kind).unwrap();
+    let result = format_config(&src, input_kind, &config).unwrap();
+    diff_source(src, result.contents())
+        .map_err(miette::Report::new)
+        .unwrap();
+}
