@@ -61,6 +61,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [npm installer settings](#npm-installer-settings)
     * [`npm-scope`](#npm-scope)
     * [`npm-package`](#npm-package)
+    * [`npm-shrinkwrap`](#npm-shrinkwrap)
 * [homebrew installer settings](#homebrew-installer-settings)
     * [`tap`](#tap)
     * [`formula`](#formula)
@@ -920,6 +921,21 @@ See also: [npm-package](#npm-package)
 Specifies that an [npm installer][npm-installer] should be published under the given name, as opposed to the [name of the package](#packagename) they are defined by.
 
 This does not set the [scope][] the package is published under, for that see [npm-scope](#npm-scope).
+
+
+#### `npm-shrinkwrap`
+
+> <span style="float:right">since 0.31.0<br>[package-local][]</span>
+> [📖 read the npm installer guide!][npm-installer] \
+> default = true
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> npm-shrinkwrap = false
+> ```
+
+Specifies whether an `npm-shrinkwrap.json` should be written for the generated npm package. This affects the versions used for modules used to fetch your binary.
 
 
 ### homebrew installer settings
