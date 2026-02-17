@@ -8,7 +8,7 @@ use axoproject::errors::AxoprojectError;
 use axoproject::{PackageIdx, WorkspaceGraph};
 use semver::Version;
 
-fn mock_announce(workspaces: &mut WorkspaceGraph) -> (DistGraphBuilder, AnnouncementTag) {
+fn mock_announce(workspaces: &mut WorkspaceGraph) -> (DistGraphBuilder<'_>, AnnouncementTag) {
     let version: Version = BIN_AXO_VER.parse().unwrap();
     let tag = format!("{version}");
 

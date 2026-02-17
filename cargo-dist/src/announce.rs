@@ -928,37 +928,38 @@ pub fn announcement_github(manifest: &mut DistManifest) {
         other_artifacts.sort_by_cached_key(|a| sortable_triples(&a.target_triples));
 
         let download_url = release.artifact_download_url();
-        if !other_artifacts.is_empty() && download_url.is_some() {
-            let download_url = download_url.as_ref().unwrap();
-            writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();
-            gh_body.push_str("|  File  | Platform | Checksum |\n");
-            gh_body.push_str("|--------|----------|----------|\n");
+        if !other_artifacts.is_empty() {
+            if let Some(download_url) = download_url {
+                writeln!(gh_body, "## Download {heading_suffix}\n",).unwrap();
+                gh_body.push_str("|  File  | Platform | Checksum |\n");
+                gh_body.push_str("|--------|----------|----------|\n");
 
-            for artifact in &other_artifacts {
-                // Artifacts with no name do not exist as files, and should have had install-hints
-                let Some(name) = &artifact.name else {
-                    continue;
-                };
+                for artifact in &other_artifacts {
+                    // Artifacts with no name do not exist as files, and should have had install-hints
+                    let Some(name) = &artifact.name else {
+                        continue;
+                    };
 
-                let artifact_download_url = format!("{download_url}/{name}");
-                let download = format!("[{name}]({artifact_download_url})");
-                let checksum = if let Some(checksum_name) = &artifact.checksum {
-                    let checksum_download_url = format!("{download_url}/{checksum_name}");
-                    format!("[checksum]({checksum_download_url})")
-                } else {
-                    String::new()
-                };
-                let mut triple = artifact
-                    .target_triples
-                    .iter()
-                    .map(|t| triple_to_display_name(t).unwrap_or_else(|| t.as_str()))
-                    .join(", ");
-                if triple.is_empty() {
-                    triple = "Unknown".to_string();
+                    let artifact_download_url = format!("{download_url}/{name}");
+                    let download = format!("[{name}]({artifact_download_url})");
+                    let checksum = if let Some(checksum_name) = &artifact.checksum {
+                        let checksum_download_url = format!("{download_url}/{checksum_name}");
+                        format!("[checksum]({checksum_download_url})")
+                    } else {
+                        String::new()
+                    };
+                    let mut triple = artifact
+                        .target_triples
+                        .iter()
+                        .map(|t| triple_to_display_name(t).unwrap_or_else(|| t.as_str()))
+                        .join(", ");
+                    if triple.is_empty() {
+                        triple = "Unknown".to_string();
+                    }
+                    writeln!(&mut gh_body, "| {download} | {triple} | {checksum} |").unwrap();
                 }
-                writeln!(&mut gh_body, "| {download} | {triple} | {checksum} |").unwrap();
+                writeln!(&mut gh_body).unwrap();
             }
-            writeln!(&mut gh_body).unwrap();
         }
 
         if !other_artifacts.is_empty() && manifest.github_attestations {
