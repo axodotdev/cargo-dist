@@ -17,6 +17,10 @@ pub struct NpmInstallerLayer {
     /// A scope to prefix the npm package with (@ should be included).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scope: Option<String>,
+
+    /// Whether to generate an npm-shrinkwrap.json
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shrinkwrap: Option<bool>,
 }
 
 /// Options for npm installer (final)
@@ -30,6 +34,9 @@ pub struct NpmInstallerConfig {
 
     /// A scope to prefix the npm package with (@ should be included).
     pub scope: Option<String>,
+
+    /// Whether to generate an npm-shrinkwrap.json
+    pub shrinkwrap: bool,
 }
 
 impl NpmInstallerConfig {
@@ -44,6 +51,7 @@ impl NpmInstallerConfig {
             common: common.clone(),
             package: pkg.name.clone(),
             scope: pkg.npm_scope.clone(),
+            shrinkwrap: true,
         }
     }
 }
@@ -56,11 +64,13 @@ impl ApplyLayer for NpmInstallerConfig {
             common,
             scope,
             package,
+            shrinkwrap,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
         self.scope.apply_opt(scope);
         self.package.apply_val(package);
+        self.shrinkwrap.apply_val(shrinkwrap);
     }
 }
 impl ApplyLayer for NpmInstallerLayer {
@@ -71,11 +81,13 @@ impl ApplyLayer for NpmInstallerLayer {
             common,
             scope,
             package,
+            shrinkwrap,
         }: Self::Layer,
     ) {
         self.common.apply_layer(common);
         self.scope.apply_opt(scope);
         self.package.apply_opt(package);
+        self.shrinkwrap.apply_opt(shrinkwrap);
     }
 }
 

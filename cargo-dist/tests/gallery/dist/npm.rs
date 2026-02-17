@@ -261,8 +261,14 @@ fn lint_package(
     _scope: &str,
     _package_name: &str,
 ) -> Result<()> {
+    let subcommand = if package_dir.join("npm-shrinkwrap.json").exists() {
+        "ci"
+    } else {
+        "install"
+    };
+
     // Setup its deps
-    npm.output_checked(|cmd| cmd.current_dir(package_dir).arg("ci"))?;
+    npm.output_checked(|cmd| cmd.current_dir(package_dir).arg(subcommand))?;
     // Lint check it
     npm.output_checked(|cmd| cmd.current_dir(package_dir).arg("run").arg("fmt:check"))?;
 

@@ -2420,6 +2420,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 npm_package_repository_url,
                 npm_package_homepage_url,
                 npm_package_keywords,
+                create_shrinkwrap: config.shrinkwrap,
                 package_dir: dir_path,
                 inner: InstallerInfo {
                     release: to_release,

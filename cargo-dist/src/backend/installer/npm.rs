@@ -7,7 +7,10 @@ use serde::Serialize;
 
 use super::InstallerInfo;
 use crate::{
-    backend::templates::{Templates, TEMPLATE_INSTALLER_NPM, TEMPLATE_INSTALLER_NPM_RUN_JS},
+    backend::templates::{
+        Templates, TEMPLATE_INSTALLER_NPM, TEMPLATE_INSTALLER_NPM_PACKAGE_JSON,
+        TEMPLATE_INSTALLER_NPM_RUN_JS, TEMPLATE_INSTALLER_NPM_SHRINKWRAP,
+    },
     errors::DistResult,
     platform::LibcVersion,
     DistGraph, SortedMap, SortedSet,
@@ -36,11 +39,13 @@ pub struct NpmInstallerInfo {
     pub package_dir: Utf8PathBuf,
     /// Generic installer info
     pub inner: InstallerInfo,
+    /// Whether to write an npm-shrinkwrap.json
+    pub create_shrinkwrap: bool,
 }
 
 const RUN_JS: &str = "run.js";
-const PACKAGE_JSON: &str = "package.json";
-const PACKAGE_LOCK: &str = "npm-shrinkwrap.json";
+pub(crate) const PACKAGE_JSON: &str = "package.json";
+pub(crate) const PACKAGE_LOCK: &str = "npm-shrinkwrap.json";
 
 type PackageJsonPlatforms = SortedMap<TripleName, PackageJsonPlatform>;
 #[derive(Debug, Clone, Serialize)]
@@ -69,9 +74,10 @@ pub(crate) fn write_npm_project(dist: &DistGraph, info: &NpmInstallerInfo) -> Di
     let mut files = templates.render_dir_to_clean_strings(TEMPLATE_INSTALLER_NPM, info)?;
     let platforms = platforms(info);
     mangle_run_js(templates, &platforms, &mut files)?;
-    mangle_package_json(info, &platforms, &mut files)?;
-    mangle_package_lock(info, &platforms, &mut files)?;
-
+    mangle_package_json(templates, info, &platforms, &mut files)?;
+    if info.create_shrinkwrap {
+        mangle_package_lock(templates, info, &platforms, &mut files)?;
+    }
     // Finally, write the results
     let zip_dir = &info.package_dir;
     for (relpath, rendered) in files {
@@ -106,15 +112,16 @@ fn mangle_run_js(
 }
 
 fn mangle_package_lock(
+    templates: &Templates,
     info: &NpmInstallerInfo,
     platforms: &PlatformSummary,
     files: &mut SortedMap<Utf8PathBuf, String>,
 ) -> DistResult<()> {
     let package_lock_path = Utf8Path::new(PACKAGE_LOCK);
+    let orig_package_lock =
+        templates.render_file_to_clean_string(TEMPLATE_INSTALLER_NPM_SHRINKWRAP, &info)?;
+
     // Now mangle the package.json with data we want
-    let orig_package_lock = files
-        .remove(package_lock_path)
-        .expect("npm template didn't have package.json!?");
     let package_lock_src = SourceFile::new(PACKAGE_LOCK, orig_package_lock);
     let mut package_lock = package_lock_src.deserialize_json::<serde_json::Value>()?;
 
@@ -140,15 +147,16 @@ fn mangle_package_lock(
 }
 
 fn mangle_package_json(
+    templates: &Templates,
     info: &NpmInstallerInfo,
     platforms: &PlatformSummary,
     files: &mut SortedMap<Utf8PathBuf, String>,
 ) -> DistResult<()> {
     let package_json_path = Utf8Path::new(PACKAGE_JSON);
+    let orig_package_json =
+        templates.render_file_to_clean_string(TEMPLATE_INSTALLER_NPM_PACKAGE_JSON, &info)?;
+
     // Now mangle the package.json with data we want
-    let orig_package_json = files
-        .remove(package_json_path)
-        .expect("npm template didn't have package.json!?");
     let package_json_src = SourceFile::new(PACKAGE_JSON, orig_package_json);
     let mut package_json = package_json_src.deserialize_json::<serde_json::Value>()?;
 
