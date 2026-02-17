@@ -49,7 +49,10 @@ use crate::{
         installer::{
             homebrew::HomebrewInstallerInfo, npm::NpmInstallerInfo, HomebrewImpl, InstallerImpl,
         },
-        templates::{TemplateEntry, TEMPLATE_INSTALLER_NPM},
+        templates::{
+            TemplateEntry, TEMPLATE_INSTALLER_NPM, TEMPLATE_INSTALLER_NPM_PACKAGE_JSON,
+            TEMPLATE_INSTALLER_NPM_SHRINKWRAP,
+        },
     },
     config::Config,
     errors::DistResult,
@@ -297,7 +300,7 @@ fn add_manifest_artifact(
     //
     // These can't be pre-included in the normal static assets list above because
     // they're generated from templates, and not copied from the user's project.
-    if let ArtifactKind::Installer(InstallerImpl::Npm(..)) = &artifact.kind {
+    if let ArtifactKind::Installer(InstallerImpl::Npm(info)) = &artifact.kind {
         let root_dir = dist
             .templates
             .get_template_dir(TEMPLATE_INSTALLER_NPM)
@@ -319,6 +322,30 @@ fn add_manifest_artifact(
                     }
                 }
             }
+        }
+
+        // These two are rooted separately
+        let package_json = dist
+            .templates
+            .get_template_file(TEMPLATE_INSTALLER_NPM_PACKAGE_JSON)
+            .expect("npm package.json template missing!?");
+        static_assets.push(Asset {
+            id: None,
+            name: Some(package_json.name.clone()),
+            path: Some(package_json.name.clone()),
+            kind: AssetKind::Unknown,
+        });
+        if info.create_shrinkwrap {
+            let npm_shrinkwrap = dist
+                .templates
+                .get_template_file(TEMPLATE_INSTALLER_NPM_SHRINKWRAP)
+                .expect("npm package.json template missing!?");
+            static_assets.push(Asset {
+                id: None,
+                name: Some(npm_shrinkwrap.name.clone()),
+                path: Some(npm_shrinkwrap.name.clone()),
+                kind: AssetKind::Unknown,
+            });
         }
     }
 

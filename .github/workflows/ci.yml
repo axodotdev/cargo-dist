@@ -29,6 +29,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      # linter requires package.json to be in the same folder
+      # as the package contents.
+      - name: Copy package.json to npm installer folder
+        working-directory: cargo-dist/templates/installer/npm
+        run: |
+          cp ../package.json .
+          cp ../npm-shrinkwrap.json .
       - name: npm fmt
         working-directory: cargo-dist/templates/installer/npm
         run: npm ci && npm run fmt:check

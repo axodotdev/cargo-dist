@@ -43,6 +43,7 @@ ci = ["github"]
 unix-archive = ".tar.gz"
 windows-archive = ".tar.gz"
 npm-scope ="@axodotdev"
+npm-shrinkwrap = false
 cargo-auditable = true
 cargo-cyclonedx = true
 omnibor = true

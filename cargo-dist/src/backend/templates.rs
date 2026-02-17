@@ -21,6 +21,10 @@ pub const TEMPLATE_INSTALLER_RB: TemplateId = "installer/homebrew.rb";
 pub const TEMPLATE_INSTALLER_NPM: TemplateId = "installer/npm";
 /// Template key for the npm installer dir
 pub const TEMPLATE_INSTALLER_NPM_RUN_JS: TemplateId = "installer/npm/run.js";
+/// Template key for the npm package.json
+pub const TEMPLATE_INSTALLER_NPM_PACKAGE_JSON: TemplateId = "installer/package.json";
+/// Template key for the npm-shrinkwrap.json
+pub const TEMPLATE_INSTALLER_NPM_SHRINKWRAP: TemplateId = "installer/npm-shrinkwrap.json";
 /// Template key for the github ci.yml
 pub const TEMPLATE_CI_GITHUB: TemplateId = "ci/github/release.yml";
 
