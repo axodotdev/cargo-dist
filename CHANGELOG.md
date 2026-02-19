@@ -3,7 +3,7 @@
 Nothing Yet!
 
 
-# Version 0.30.4 (2025-02-16)
+# Version 0.30.4 (2026-02-16)
 
 This release contains a few minor bugfixes. It also updates dependencies, including a rimraf upgrade that resolves [a CVE in @isaacs/brace-expansion](https://github.com/isaacs/brace-expansion/security/advisories/GHSA-7h2j-956f-4vf2). This vulnerability was not exploitable in the way dist used rimraf.
 
