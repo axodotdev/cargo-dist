@@ -27,6 +27,9 @@ pub use v0::{DistMetadata, GenericConfig};
 /// values of the form `permission-name: read`
 pub type GithubPermissionMap = SortedMap<String, GithubPermission>;
 
+/// values of the form `workflow-secret-name: repository-secret-name`
+pub type GithubSecretMap = SortedMap<String, String>;
+
 /// Possible values for a github ci permission
 ///
 /// These are assumed to be strictly increasing in power, so admin includes write includes read.
@@ -39,6 +42,61 @@ pub enum GithubPermission {
     Write,
     /// Admin (max)
     Admin,
+}
+
+/// Either a list of secret names or a map from workflow input names to repo secret names
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(untagged)]
+pub enum GithubSecretSpec {
+    /// List of secret names with an identity mapping
+    List(Vec<String>),
+    /// Explicit mapping from workflow input name to repository secret name
+    Map(GithubSecretMap),
+}
+
+impl GithubSecretSpec {
+    /// Normalize to a name->name map used by CI rendering.
+    pub fn into_map(self) -> GithubSecretMap {
+        match self {
+            Self::List(names) => names.into_iter().map(|name| (name.clone(), name)).collect(),
+            Self::Map(map) => map,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn github_secret_spec_list_normalizes_to_identity_map() {
+        let spec = GithubSecretSpec::List(vec!["TOKEN_A".to_owned(), "TOKEN_B".to_owned()]);
+        let map = spec.into_map();
+        assert_eq!(map.get("TOKEN_A"), Some(&"TOKEN_A".to_owned()));
+        assert_eq!(map.get("TOKEN_B"), Some(&"TOKEN_B".to_owned()));
+    }
+
+    #[test]
+    fn github_secret_spec_map_normalizes_to_explicit_mapping() {
+        let spec = GithubSecretSpec::Map(SortedMap::from_iter([(
+            "NPM_TOKEN".to_owned(),
+            "ORG_NPM_TOKEN".to_owned(),
+        )]));
+        let map = spec.into_map();
+        assert_eq!(map.get("NPM_TOKEN"), Some(&"ORG_NPM_TOKEN".to_owned()));
+    }
+
+    #[test]
+    fn github_secret_spec_empty_list_normalizes_to_empty_map() {
+        let spec = GithubSecretSpec::List(vec![]);
+        assert!(spec.into_map().is_empty());
+    }
+
+    #[test]
+    fn github_secret_spec_empty_map_normalizes_to_empty_map() {
+        let spec = GithubSecretSpec::Map(SortedMap::new());
+        assert!(spec.into_map().is_empty());
+    }
 }
 
 /// Global config for commands

@@ -158,7 +158,14 @@ jobs:
 
   custom-{{{ job.name|safe }}}:
     uses: ./.github/workflows/{{{ job.name|safe }}}.yml
+    {{%- if job.secrets is none %}}
     secrets: inherit
+    {{%- elif job.secrets %}}
+    secrets:
+      {{%- for input_name in job.secrets %}}
+      {{{ input_name }}}: {{{ '${{ secrets.' ~ job.secrets[input_name] ~ ' }}' }}}
+      {{%- endfor %}}
+    {{%- endif %}}
     {{%- if job.permissions %}}
     permissions:
       {{%- for perm_name in job.permissions %}}
@@ -362,7 +369,14 @@ jobs:
     uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
+    {{%- if job.secrets is none %}}
     secrets: inherit
+    {{%- elif job.secrets %}}
+    secrets:
+      {{%- for input_name in job.secrets %}}
+      {{{ input_name }}}: {{{ '${{ secrets.' ~ job.secrets[input_name] ~ ' }}' }}}
+      {{%- endfor %}}
+    {{%- endif %}}
     {{%- if job.permissions %}}
     permissions:
       {{%- for perm_name in job.permissions %}}
@@ -473,7 +487,14 @@ jobs:
     uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
+    {{%- if job.secrets is none %}}
     secrets: inherit
+    {{%- elif job.secrets %}}
+    secrets:
+      {{%- for input_name in job.secrets %}}
+      {{{ input_name }}}: {{{ '${{ secrets.' ~ job.secrets[input_name] ~ ' }}' }}}
+      {{%- endfor %}}
+    {{%- endif %}}
     {{%- if job.permissions %}}
     permissions:
       {{%- for perm_name in job.permissions %}}
@@ -570,7 +591,14 @@ jobs:
     uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
+    {{%- if job.secrets is none %}}
     secrets: inherit
+    {{%- elif job.secrets %}}
+    secrets:
+      {{%- for input_name in job.secrets %}}
+      {{{ input_name }}}: {{{ '${{ secrets.' ~ job.secrets[input_name] ~ ' }}' }}}
+      {{%- endfor %}}
+    {{%- endif %}}
     {{%- if job.permissions %}}
     permissions:
       {{%- for perm_name in job.permissions %}}
@@ -602,7 +630,14 @@ jobs:
     uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
+    {{%- if job.secrets is none %}}
     secrets: inherit
+    {{%- elif job.secrets %}}
+    secrets:
+      {{%- for input_name in job.secrets %}}
+      {{{ input_name }}}: {{{ '${{ secrets.' ~ job.secrets[input_name] ~ ' }}' }}}
+      {{%- endfor %}}
+    {{%- endif %}}
     # publish jobs get escalated permissions
     {{%- if job.permissions %}}
     permissions:
@@ -669,7 +704,14 @@ jobs:
     uses: ./.github/workflows/{{{ job.name|safe }}}.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
+    {{%- if job.secrets is none %}}
     secrets: inherit
+    {{%- elif job.secrets %}}
+    secrets:
+      {{%- for input_name in job.secrets %}}
+      {{{ input_name }}}: {{{ '${{ secrets.' ~ job.secrets[input_name] ~ ' }}' }}}
+      {{%- endfor %}}
+    {{%- endif %}}
     {{%- if job.permissions %}}
     permissions:
       {{%- for perm_name in job.permissions %}}
