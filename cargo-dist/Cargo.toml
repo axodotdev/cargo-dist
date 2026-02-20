@@ -23,7 +23,6 @@ path = "src/main.rs"
 # Use bleeding edge features that might mess up people using 'cargo install'
 # with older toolchains. This is used for our prebuilt binaries.
 fear_no_msrv = ["axoprocess/stdout_to_stderr_modern"]
-tls_native_roots = ["axoasset/tls-native-roots", "axoupdater/tls_native_roots"]
 
 [dependencies]
 # Features only used by the cli
