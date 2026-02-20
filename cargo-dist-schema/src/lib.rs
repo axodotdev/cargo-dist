@@ -1096,7 +1096,7 @@ pub struct GithubHosting {
     pub repo: String,
 }
 
-/// Github Hosting
+/// Simple Hosting
 #[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct SimpleHosting {
     /// The URL to download artifacts from

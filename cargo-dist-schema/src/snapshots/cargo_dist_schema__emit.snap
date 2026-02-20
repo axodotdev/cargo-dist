@@ -1225,7 +1225,7 @@ expression: json_schema
       ]
     },
     "SimpleHosting": {
-      "description": "Github Hosting",
+      "description": "Simple Hosting",
       "type": "object",
       "properties": {
         "download_url": {
