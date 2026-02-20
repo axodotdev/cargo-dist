@@ -565,6 +565,54 @@ release-branch = "production"
 }
 
 #[test]
+fn axolotlsay_custom_job_secrets_mixed() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = []
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+build-local-artifacts = false
+release-branch = "production"
+plan-jobs = ["./plan-inherit", "./plan-list"]
+local-artifacts-jobs = ["./local-map", "./local-empty-list"]
+global-artifacts-jobs = ["./global-empty-map"]
+host-jobs = ["./host-list-multi"]
+publish-jobs = ["./publish-map", "./publish-inherit"]
+post-announce-jobs = ["./post-list", "./post-inherit"]
+
+[workspace.metadata.dist.github-custom-job-secrets]
+plan-list = ["PLAN_TOKEN"]
+local-empty-list = []
+host-list-multi = ["CLOUDFLARE_API_TOKEN", "DEPLOY_KEY"]
+post-list = ["POST_TOKEN"]
+unknown-job = ["SHOULD_BE_IGNORED"]
+
+[workspace.metadata.dist.github-custom-job-secrets.local-map]
+DEPLOY_TOKEN = "ORG_DEPLOY_TOKEN"
+
+[workspace.metadata.dist.github-custom-job-secrets.global-empty-map]
+
+[workspace.metadata.dist.github-custom-job-secrets.publish-map]
+NPM_TOKEN = "ORG_NPM_TOKEN"
+SIGNING_KEY = "ORG_SIGNING_KEY"
+
+"#
+        ))?;
+
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        let ci_snap = ci_result.check_all()?;
+        let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
+        let main_snap = main_result.check_all_no_ruin(&ctx, ".cargo/bin/")?;
+        main_snap.join(ci_snap).snap();
+        Ok(())
+    })
+}
+
+#[test]
 fn axolotlsay_no_homebrew_publish() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|mut ctx| {
