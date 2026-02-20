@@ -97,6 +97,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`tag-namespace`](#tag-namespace)
 * [github ci settings](#github-ci-settings)
     * [`github-custom-job-permissions`](#github-custom-job-permissions)
+    * [`github-custom-job-secrets`](#github-custom-job-secrets)
     * [`github-custom-runners`](#github-custom-runners)
     * [`github-build-setup`](#github-build-setup)
     * [`github-action-commits`](#github-action-commits)
@@ -1471,6 +1472,45 @@ Allows you to customize the permissions given to your custom CI jobs.
 By default all custom `publish-jobs` get `{ id-token = "write", packages = "write" }`.
 If you override a publish job's permissions, the default permissions will be removed.
 All other custom jobs default to no special permissions.
+
+
+#### `github-custom-job-secrets`
+
+> <span style="float:right">since 0.31.0<br>[global-only][]</span>
+> [📖 read the ci customization guide!][github-ci] \
+> default = `<none>`
+>
+> *in your dist-workspace.toml or dist.toml (v0 style):*
+> ```toml
+> [dist]
+> publish-jobs = ["./my-custom-publish"]
+> github-custom-job-secrets = { "my-custom-publish" = ["NPM_TOKEN"] }
+> ```
+
+Allows you to customize the secrets passed to your custom CI jobs.
+
+Jobs not present in this map keep the legacy `secrets: inherit` behavior.
+If a configured job has an empty list/map, `secrets` is omitted entirely for that job.
+
+You can use either:
+
+1. A list of secret names for identity mapping (`TOKEN` -> `${{ secrets.TOKEN }}`).
+2. A map of workflow input name to repository secret name for explicit remapping.
+
+Example with explicit remapping:
+
+```toml
+[dist]
+publish-jobs = ["./my-custom-publish"]
+github-custom-job-secrets = { "my-custom-publish" = { NPM_TOKEN = "ORG_NPM_TOKEN" } }
+```
+
+Equivalent v1-style config under `dist.github-ci`:
+
+```toml
+[dist.github-ci]
+secrets = { "my-custom-publish" = ["NPM_TOKEN"] }
+```
 
 
 
