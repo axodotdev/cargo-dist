@@ -10,18 +10,20 @@ class {{ formula_class }} < Formula
   {%- if frag %}
     {%- if cond is defined %}
     if {{ cond }}
-      {#- FIXME: implement support for fallback URLs #}
-      url "{{ inner.base_urls[0] }}/{{ frag.id }}"
+      {%- for url in inner.base_urls %}
+      {{ "url" if loop.first else "mirror" }} "{{ url }}/{{ frag.id }}"
       {%- if frag.sha256 %}
       sha256 "{{ frag.sha256 }}"
       {%- endif %}
+      {%- endfor %}
     end
     {%- else %}
-    {#- FIXME: implement support for fallback URLs #}
-    url "{{ inner.base_urls[0] }}/{{ frag.id }}"
+    {%- for url in inner.base_urls %}
+    {{ "url" if loop.first else "mirror" }} "{{ url }}/{{ frag.id }}"
     {%- if frag.sha256 %}
     sha256 "{{ frag.sha256 }}"
     {%- endif %}
+    {%- endfor %}
     {%- endif %}
   {%- endif %}
   {%- endmacro %}
