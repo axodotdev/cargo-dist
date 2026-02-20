@@ -11,11 +11,13 @@ const error = (msg) => {
 
 const {
   name,
-  artifactDownloadUrl,
+  artifactDownloadUrls,
   supportedPlatforms,
   glibcMinimum,
 } = require("./package.json");
 
+// FIXME: implement NPM installer handling of fallback download URLs
+const artifactDownloadUrl = artifactDownloadUrls[0];
 const builderGlibcMajorVersion = glibcMinimum.major;
 const builderGlibcMinorVersion = glibcMinimum.series;
 

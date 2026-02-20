@@ -6,6 +6,7 @@ expression: self.payload
 #!/bin/sh
 # shellcheck shell=dash
 # shellcheck disable=SC2039  # local is non-POSIX
+# shellcheck disable=SC2268  # no harm in supporting older shells
 #
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
@@ -29,18 +30,18 @@ set -u
 
 APP_NAME="akaikatana-repack"
 APP_VERSION="0.2.0"
-# Look for GitHub Enterprise-style base URL first
-if [ -n "${AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL:-}" ]; then
-    INSTALLER_BASE_URL="$AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL"
-else
-    INSTALLER_BASE_URL="${AKAIKATANA_REPACK_INSTALLER_GITHUB_BASE_URL:-https://github.com}"
-fi
 if [ -n "${AKAIKATANA_REPACK_DOWNLOAD_URL:-}" ]; then
-    ARTIFACT_DOWNLOAD_URL="$AKAIKATANA_REPACK_DOWNLOAD_URL"
+    ARTIFACT_DOWNLOAD_URLS="$AKAIKATANA_REPACK_DOWNLOAD_URL"
 elif [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
-    ARTIFACT_DOWNLOAD_URL="$INSTALLER_DOWNLOAD_URL"
+    ARTIFACT_DOWNLOAD_URLS="$INSTALLER_DOWNLOAD_URL"
+elif [ -n "${AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL:-}" ]; then
+    INSTALLER_BASE_URL="$AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL"
+    ARTIFACT_DOWNLOAD_URLS="${INSTALLER_BASE_URL}/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
+elif [ -n "${AKAIKATANA_REPACK_INSTALLER_GITHUB_BASE_URL:-}" ]; then
+    INSTALLER_BASE_URL="$AKAIKATANA_REPACK_INSTALLER_GITHUB_BASE_URL"
+    ARTIFACT_DOWNLOAD_URLS="${INSTALLER_BASE_URL}/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
 else
-    ARTIFACT_DOWNLOAD_URL="${INSTALLER_BASE_URL}/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
+    ARTIFACT_DOWNLOAD_URLS="https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
 fi
 if [ -n "${AKAIKATANA_REPACK_PRINT_VERBOSE:-}" ]; then
     PRINT_VERBOSE="$AKAIKATANA_REPACK_PRINT_VERBOSE"
@@ -295,49 +296,63 @@ download_binary_and_run_installer() {
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_DYLIBS"'/"$_libs_js_array"/)"
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_STATICLIBS"'/"$_staticlibs_js_array"/)"
 
-    # download the archive
-    local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
     local _dir
-    _dir="$(ensure mktemp -d)" || return 1
-    local _file="$_dir/input$_zip_ext"
-
+    local _download_result=0
+    local _is_first_url=1
     say "downloading $APP_NAME $APP_VERSION ${_arch}" 1>&2
-    say_verbose "  from $_url" 1>&2
-    say_verbose "  to $_file" 1>&2
+    for _base_url in $ARTIFACT_DOWNLOAD_URLS; do
+        if [ "$_is_first_url" = "0" ]; then
+            say "trying alternative download URL" 1>&2
+        fi
+        _is_first_url=0
 
-    ensure mkdir -p "$_dir"
+        # download the archive
+        local _url="$_base_url/$_artifact_name"
+        
+        _dir="$(ensure mktemp -d)" || return 1
+        local _file="$_dir/input$_zip_ext"
 
-    if ! downloader "$_url" "$_file"; then
-      say "failed to download $_url"
-      say "this may be a standard network error, but it may also indicate"
-      say "that $APP_NAME's release process is not working. When in doubt"
-      say "please feel free to open an issue!"
-      exit 1
-    fi
+        say_verbose "  from $_url" 1>&2
+        say_verbose "  to $_file" 1>&2
 
-    if [ -n "${_checksum_style:-}" ]; then
-        verify_checksum "$_file" "$_checksum_style" "$_checksum_value"
-    else
-        say "no checksums to verify"
-    fi
+        ensure mkdir -p "$_dir"
 
-    # ...and then the updater, if it exists
-    if [ -n "$_updater_name" ] && [ "$INSTALL_UPDATER" = "1" ]; then
-        local _updater_url="$ARTIFACT_DOWNLOAD_URL/$_updater_name"
-        # This renames the artifact while doing the download, removing the
-        # target triple and leaving just the appname-update format
-        local _updater_file="$_dir/$APP_NAME-update"
-
-        if ! downloader "$_updater_url" "$_updater_file"; then
-          say "failed to download $_updater_url"
-          say "this may be a standard network error, but it may also indicate"
-          say "that $APP_NAME's release process is not working. When in doubt"
-          say "please feel free to open an issue!"
-          exit 1
+        if ! downloader "$_url" "$_file"; then
+            say "failed to download $_url" 1>&2
+            continue
         fi
 
-        # Add the updater to the list of binaries to install
-        _bins="$_bins $APP_NAME-update"
+        if [ -n "${_checksum_style:-}" ]; then
+            verify_checksum "$_file" "$_checksum_style" "$_checksum_value"
+        else
+            say "no checksums to verify" 1>&2
+        fi
+
+        # ...and then the updater, if it exists
+        if [ -n "$_updater_name" ] && [ "$INSTALL_UPDATER" = "1" ]; then
+            local _updater_url="$_base_url/$_updater_name"
+            # This renames the artifact while doing the download, removing the
+            # target triple and leaving just the appname-update format
+            local _updater_file="$_dir/$APP_NAME-update"
+
+            if ! downloader "$_updater_url" "$_updater_file"; then
+                say "failed to download $_updater_url"
+                continue
+            fi
+
+            # Add the updater to the list of binaries to install
+            _bins="$_bins $APP_NAME-update"
+        fi
+
+        _download_result=1
+        break
+    done
+
+    if [ "$_download_result" = "0" ]; then
+        say "this may be a standard network error, but it may also indicate" 1>&2
+        say "that $APP_NAME's release process is not working. When in doubt" 1>&2
+        say "please feel free to open an issue!" 1>&2
+        exit 1
     fi
 
     # unpack the archive
@@ -1647,9 +1662,6 @@ then unpacks the binaries and installs them to
 
 It will then add that dir to PATH by editing your Environment.Path registry key
 
-.PARAMETER ArtifactDownloadUrl
-The URL of the directory where artifacts can be fetched from
-
 .PARAMETER NoModifyPath
 Don't add the install directory to PATH
 
@@ -1659,8 +1671,6 @@ Print help
 #>
 
 param (
-    [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
-    [string]$ArtifactDownloadUrl = 'https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0',
     [Parameter(HelpMessage = "Don't add the install directory to PATH")]
     [switch]$NoModifyPath,
     [Parameter(HelpMessage = "Print Help")]
@@ -1669,20 +1679,20 @@ param (
 
 $app_name = 'akaikatana-repack'
 $app_version = '0.2.0'
-if ($env:AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL) {
+if ($env:AKAIKATANA_REPACK_DOWNLOAD_URL) {
+  $ArtifactDownloadUrls = @($env:AKAIKATANA_REPACK_DOWNLOAD_URL)
+} elseif ($env:INSTALLER_DOWNLOAD_URL) {
+  $ArtifactDownloadUrls = @($env:INSTALLER_DOWNLOAD_URL)
+} elseif ($env:AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL) {
   $installer_base_url = $env:AKAIKATANA_REPACK_INSTALLER_GHE_BASE_URL
+  $ArtifactDownloadUrls = @("$installer_base_url/mistydemeo/akaikatana-repack/releases/download/v0.2.0")
 } elseif ($env:AKAIKATANA_REPACK_INSTALLER_GITHUB_BASE_URL) {
   $installer_base_url = $env:AKAIKATANA_REPACK_INSTALLER_GITHUB_BASE_URL
+  $ArtifactDownloadUrls = @("$installer_base_url/mistydemeo/akaikatana-repack/releases/download/v0.2.0")
 } else {
-  $installer_base_url = "https://github.com"
+  $ArtifactDownloadUrls = @("https://github.com/mistydemeo/akaikatana-repack/releases/download/v0.2.0")
 }
-if ($env:AKAIKATANA_REPACK_DOWNLOAD_URL) {
-  $ArtifactDownloadUrl = $env:AKAIKATANA_REPACK_DOWNLOAD_URL
-} elseif ($env:INSTALLER_DOWNLOAD_URL) {
-  $ArtifactDownloadUrl = $env:INSTALLER_DOWNLOAD_URL
-} else {
-  $ArtifactDownloadUrl = "$installer_base_url/mistydemeo/akaikatana-repack/releases/download/v0.2.0"
-}
+
 $auth_token = $env:AKAIKATANA_REPACK_GITHUB_TOKEN
 
 $receipt = @"
@@ -1760,7 +1770,34 @@ function Install-Binary($install_args) {
     }
   }
 
-  $fetched = Download "$ArtifactDownloadUrl" $platforms
+  $arch = Get-TargetTriple $platforms
+  if (-not $platforms.ContainsKey($arch)) {
+    $platforms_json = ConvertTo-Json $platforms
+    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
+  }
+  Write-Information "downloading $app_name $app_version ($arch)"
+
+  $download_result = $false
+  $first_url = $true
+  foreach ($url in $ArtifactDownloadUrls) {
+    if (-not $first_url) {
+      Write-Information "trying alternative download URL"
+    }
+    $first_url = $false
+
+    try {
+      $fetched = Download -download_url "$url" -platforms $platforms -arch $arch
+      $download_result = $true
+      break
+    } catch {
+      Write-Information "failed to download from $url"
+      # keep going, maybe we have backup download URLs
+    }
+  }
+  if (-not $download_result) {
+    throw "failed to download binaries"
+  }
+
   # FIXME: add a flag that lets the user not do this step
   try {
     Invoke-Installer -artifacts $fetched -platforms $platforms "$install_args"
@@ -1856,14 +1893,7 @@ function WebProxyFromEnvironment {
     return $webProxy
 }
 
-function Download($download_url, $platforms) {
-  $arch = Get-TargetTriple $platforms
-
-  if (-not $platforms.ContainsKey($arch)) {
-    $platforms_json = ConvertTo-Json $platforms
-    throw "ERROR: could not find binaries for this platform. Last platform tried: $arch platform info: $platforms_json"
-  }
-
+function Download($download_url, $platforms, $arch) {
   # Lookup what we expect this platform to look like
   $info = $platforms[$arch]
   $zip_ext = $info["zip_ext"]
@@ -1878,7 +1908,6 @@ function Download($download_url, $platforms) {
 
   # Download and unpack!
   $url = "$download_url/$artifact_name"
-  Write-Information "Downloading $app_name $app_version ($arch)"
   Write-Verbose "  from $url"
   Write-Verbose "  to $dir_path"
   $wc = New-Object Net.Webclient
@@ -2046,7 +2075,7 @@ function Invoke-Installer($artifacts, $platforms) {
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
   $dest_dir_lib = New-Item -Force -ItemType Directory -Path $dest_dir_lib
-  Write-Information "Installing to $dest_dir"
+  Write-Information "installing to $dest_dir"
   # Just copy the binaries from the temp location to the install dir
   foreach ($bin_path in $artifacts["bin_paths"]) {
     $installed_file = Split-Path -Path "$bin_path" -Leaf
@@ -2216,7 +2245,7 @@ function New-Temp-Dir() {
 }
 
 # PSScriptAnalyzer doesn't like how we use our params as globals, this calms it
-$Null = $ArtifactDownloadUrl, $NoModifyPath, $Help
+$Null = $ArtifactDownloadUrls, $NoModifyPath, $Help
 # Make Write-Information statements be visible
 $InformationPreference = "Continue"
 

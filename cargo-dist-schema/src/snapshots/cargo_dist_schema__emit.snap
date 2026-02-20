@@ -1011,8 +1011,44 @@ expression: json_schema
               "type": "null"
             }
           ]
+        },
+        "order": {
+          "description": "Order the hosts should be preferred in",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/HostingStyle"
+          }
+        },
+        "simple": {
+          "description": "Files simply hosted on some static file server",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SimpleHosting"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
+    },
+    "HostingStyle": {
+      "description": "Kinds of hosting",
+      "oneOf": [
+        {
+          "description": "Hosting via GitHub",
+          "type": "string",
+          "const": "github"
+        },
+        {
+          "description": "Hosting via a simple static file server",
+          "type": "string",
+          "const": "simple"
+        }
+      ]
     },
     "Library": {
       "description": "Represents a dynamic library located somewhere on the system",
@@ -1186,6 +1222,19 @@ expression: json_schema
       "required": [
         "app_name",
         "app_version"
+      ]
+    },
+    "SimpleHosting": {
+      "description": "Simple Hosting",
+      "type": "object",
+      "properties": {
+        "download_url": {
+          "description": "The URL to download artifacts from\n\ne.g. `https://mymirror.com/mycoolapp/v1.0.0/`",
+          "type": "string"
+        }
+      },
+      "required": [
+        "download_url"
       ]
     },
     "StaticLibraryAsset": {

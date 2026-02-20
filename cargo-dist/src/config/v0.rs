@@ -503,6 +503,9 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub omnibor: Option<bool>,
+
+    /// Where to download artifacts from on the Simple host
+    pub simple_download_url: Option<String>,
 }
 
 impl DistMetadata {
@@ -583,6 +586,7 @@ impl DistMetadata {
             cargo_auditable: _,
             cargo_cyclonedx: _,
             omnibor: _,
+            simple_download_url: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -691,6 +695,7 @@ impl DistMetadata {
             cargo_auditable,
             cargo_cyclonedx,
             omnibor,
+            simple_download_url,
         } = self;
 
         // Check for global settings on local packages
@@ -812,6 +817,9 @@ impl DistMetadata {
         }
         if github_build_setup.is_some() {
             warn!("package.metadata.dist.github-build-setup is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if simple_download_url.is_some() {
+            warn!("package.metadata.dist.simple-download-url is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
 
         // Merge non-global settings

@@ -175,13 +175,13 @@ impl std::str::FromStr for LibraryStyle {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum InstallerStyle {
-    /// Generate a shell script that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
+    /// Generate a shell script that fetches from [`cargo_dist_schema::Release::artifact_download_urls`][]
     Shell,
-    /// Generate a powershell script that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
+    /// Generate a powershell script that fetches from [`cargo_dist_schema::Release::artifact_download_urls`][]
     Powershell,
-    /// Generate an npm project that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
+    /// Generate an npm project that fetches from [`cargo_dist_schema::Release::artifact_download_urls`][]
     Npm,
-    /// Generate a Homebrew formula that fetches from [`cargo_dist_schema::Release::artifact_download_url`][]
+    /// Generate a Homebrew formula that fetches from [`cargo_dist_schema::Release::artifact_download_urls`][]
     Homebrew,
     /// Generate an msi installer that embeds the binary
     Msi,
@@ -233,12 +233,15 @@ impl std::fmt::Display for GithubReleasePhase {
 pub enum HostingStyle {
     /// Host on Github Releases
     Github,
+    /// Hosted on a simple static file server (currently download-only)
+    Simple,
 }
 
 impl std::fmt::Display for HostingStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let string = match self {
             HostingStyle::Github => "github",
+            HostingStyle::Simple => "simple",
         };
         string.fmt(f)
     }
@@ -249,6 +252,7 @@ impl std::str::FromStr for HostingStyle {
     fn from_str(val: &str) -> DistResult<Self> {
         let res = match val {
             "github" => HostingStyle::Github,
+            "simple" => HostingStyle::Simple,
             s => {
                 return Err(DistError::UnrecognizedHostingStyle {
                     style: s.to_string(),

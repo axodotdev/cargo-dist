@@ -6,6 +6,7 @@ expression: self.payload
 #!/bin/sh
 # shellcheck shell=dash
 # shellcheck disable=SC2039  # local is non-POSIX
+# shellcheck disable=SC2268  # no harm in supporting older shells
 #
 # Licensed under the MIT license
 # <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
@@ -29,18 +30,18 @@ set -u
 
 APP_NAME="axolotlsay"
 APP_VERSION="0.2.2"
-# Look for GitHub Enterprise-style base URL first
-if [ -n "${AXOLOTLSAY_INSTALLER_GHE_BASE_URL:-}" ]; then
-    INSTALLER_BASE_URL="$AXOLOTLSAY_INSTALLER_GHE_BASE_URL"
-else
-    INSTALLER_BASE_URL="${AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL:-https://github.com}"
-fi
 if [ -n "${AXOLOTLSAY_DOWNLOAD_URL:-}" ]; then
-    ARTIFACT_DOWNLOAD_URL="$AXOLOTLSAY_DOWNLOAD_URL"
+    ARTIFACT_DOWNLOAD_URLS="$AXOLOTLSAY_DOWNLOAD_URL"
 elif [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
-    ARTIFACT_DOWNLOAD_URL="$INSTALLER_DOWNLOAD_URL"
+    ARTIFACT_DOWNLOAD_URLS="$INSTALLER_DOWNLOAD_URL"
+elif [ -n "${AXOLOTLSAY_INSTALLER_GHE_BASE_URL:-}" ]; then
+    INSTALLER_BASE_URL="$AXOLOTLSAY_INSTALLER_GHE_BASE_URL"
+    ARTIFACT_DOWNLOAD_URLS="${INSTALLER_BASE_URL}/axodotdev/axolotlsay/releases/download/v0.2.2"
+elif [ -n "${AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL:-}" ]; then
+    INSTALLER_BASE_URL="$AXOLOTLSAY_INSTALLER_GITHUB_BASE_URL"
+    ARTIFACT_DOWNLOAD_URLS="${INSTALLER_BASE_URL}/axodotdev/axolotlsay/releases/download/v0.2.2"
 else
-    ARTIFACT_DOWNLOAD_URL="${INSTALLER_BASE_URL}/axodotdev/axolotlsay/releases/download/v0.2.2"
+    ARTIFACT_DOWNLOAD_URLS="https://github.com/axodotdev/axolotlsay/releases/download/v0.2.2"
 fi
 if [ -n "${AXOLOTLSAY_PRINT_VERBOSE:-}" ]; then
     PRINT_VERBOSE="$AXOLOTLSAY_PRINT_VERBOSE"
@@ -295,49 +296,63 @@ download_binary_and_run_installer() {
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_DYLIBS"'/"$_libs_js_array"/)"
     RECEIPT="$(echo "$RECEIPT" | sed s/'"CARGO_DIST_STATICLIBS"'/"$_staticlibs_js_array"/)"
 
-    # download the archive
-    local _url="$ARTIFACT_DOWNLOAD_URL/$_artifact_name"
     local _dir
-    _dir="$(ensure mktemp -d)" || return 1
-    local _file="$_dir/input$_zip_ext"
-
+    local _download_result=0
+    local _is_first_url=1
     say "downloading $APP_NAME $APP_VERSION ${_arch}" 1>&2
-    say_verbose "  from $_url" 1>&2
-    say_verbose "  to $_file" 1>&2
+    for _base_url in $ARTIFACT_DOWNLOAD_URLS; do
+        if [ "$_is_first_url" = "0" ]; then
+            say "trying alternative download URL" 1>&2
+        fi
+        _is_first_url=0
 
-    ensure mkdir -p "$_dir"
+        # download the archive
+        local _url="$_base_url/$_artifact_name"
+        
+        _dir="$(ensure mktemp -d)" || return 1
+        local _file="$_dir/input$_zip_ext"
 
-    if ! downloader "$_url" "$_file"; then
-      say "failed to download $_url"
-      say "this may be a standard network error, but it may also indicate"
-      say "that $APP_NAME's release process is not working. When in doubt"
-      say "please feel free to open an issue!"
-      exit 1
-    fi
+        say_verbose "  from $_url" 1>&2
+        say_verbose "  to $_file" 1>&2
 
-    if [ -n "${_checksum_style:-}" ]; then
-        verify_checksum "$_file" "$_checksum_style" "$_checksum_value"
-    else
-        say "no checksums to verify"
-    fi
+        ensure mkdir -p "$_dir"
 
-    # ...and then the updater, if it exists
-    if [ -n "$_updater_name" ] && [ "$INSTALL_UPDATER" = "1" ]; then
-        local _updater_url="$ARTIFACT_DOWNLOAD_URL/$_updater_name"
-        # This renames the artifact while doing the download, removing the
-        # target triple and leaving just the appname-update format
-        local _updater_file="$_dir/$APP_NAME-update"
-
-        if ! downloader "$_updater_url" "$_updater_file"; then
-          say "failed to download $_updater_url"
-          say "this may be a standard network error, but it may also indicate"
-          say "that $APP_NAME's release process is not working. When in doubt"
-          say "please feel free to open an issue!"
-          exit 1
+        if ! downloader "$_url" "$_file"; then
+            say "failed to download $_url" 1>&2
+            continue
         fi
 
-        # Add the updater to the list of binaries to install
-        _bins="$_bins $APP_NAME-update"
+        if [ -n "${_checksum_style:-}" ]; then
+            verify_checksum "$_file" "$_checksum_style" "$_checksum_value"
+        else
+            say "no checksums to verify" 1>&2
+        fi
+
+        # ...and then the updater, if it exists
+        if [ -n "$_updater_name" ] && [ "$INSTALL_UPDATER" = "1" ]; then
+            local _updater_url="$_base_url/$_updater_name"
+            # This renames the artifact while doing the download, removing the
+            # target triple and leaving just the appname-update format
+            local _updater_file="$_dir/$APP_NAME-update"
+
+            if ! downloader "$_updater_url" "$_updater_file"; then
+                say "failed to download $_updater_url"
+                continue
+            fi
+
+            # Add the updater to the list of binaries to install
+            _bins="$_bins $APP_NAME-update"
+        fi
+
+        _download_result=1
+        break
+    done
+
+    if [ "$_download_result" = "0" ]; then
+        say "this may be a standard network error, but it may also indicate" 1>&2
+        say "that $APP_NAME's release process is not working. When in doubt" 1>&2
+        say "please feel free to open an issue!" 1>&2
+        exit 1
     fi
 
     # unpack the archive

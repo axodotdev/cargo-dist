@@ -2024,13 +2024,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let env_vars = schema_release.env.clone();
 
-        let download_url = schema_release
-            .artifact_download_url()
+        let download_urls = schema_release
+            .artifact_download_urls()
             .expect("couldn't compute a URL to download artifacts from!?");
         let hosting = schema_release.hosting.clone();
         let artifact_name = ArtifactId::new(format!("{release_id}-installer.sh"));
         let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
-        let installer_url = format!("{download_url}/{artifact_name}");
+        let best_download_url = download_urls
+            .first()
+            .expect("returned empty list of artifact URLs!?");
+        let installer_url = format!("{best_download_url}/{artifact_name}");
         let hint = format!("curl --proto '=https' --tlsv1.2 -LsSf {installer_url} | sh");
         let desc = "Install prebuilt binaries via shell script".to_owned();
 
@@ -2072,7 +2075,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .map(|p| p.clone().into_jinja())
                     .collect(),
                 install_success_msg: config.install_success_msg.to_owned(),
-                base_url: download_url.to_owned(),
+                base_urls: download_urls.to_owned(),
                 hosting,
                 artifacts,
                 hint,
@@ -2109,8 +2112,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .manifest
             .release_by_name(&release.id)
             .expect("couldn't find the release!?");
-        let download_url = schema_release
-            .artifact_download_url()
+        let download_urls = schema_release
+            .artifact_download_urls()
             .expect("couldn't compute a URL to download artifacts from!?");
         let hosting = schema_release.hosting.clone();
 
@@ -2210,7 +2213,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                 .map(|p| p.clone().into_jinja())
                 .collect(),
             install_success_msg: config.install_success_msg.to_owned(),
-            base_url: download_url.to_owned(),
+            base_urls: download_urls,
             hosting,
             artifacts,
             hint,
@@ -2271,13 +2274,16 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
 
         let env_vars = schema_release.env.clone();
 
-        let download_url = schema_release
-            .artifact_download_url()
+        let download_urls = schema_release
+            .artifact_download_urls()
             .expect("couldn't compute a URL to download artifacts from!?");
         let hosting = schema_release.hosting.clone();
         let artifact_name = ArtifactId::new(format!("{release_id}-installer.ps1"));
         let artifact_path = self.inner.dist_dir.join(artifact_name.as_str());
-        let installer_url = format!("{download_url}/{artifact_name}");
+        let best_download_url = download_urls
+            .first()
+            .expect("returned empty list of artifact URLs!?");
+        let installer_url = format!("{best_download_url}/{artifact_name}");
         let hint = format!(r#"powershell -ExecutionPolicy Bypass -c "irm {installer_url} | iex""#);
         let desc = "Install prebuilt binaries via powershell script".to_owned();
 
@@ -2315,7 +2321,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                     .map(|p| p.clone().into_jinja())
                     .collect(),
                 install_success_msg: config.install_success_msg.to_owned(),
-                base_url: download_url.to_owned(),
+                base_urls: download_urls,
                 hosting,
                 artifacts,
                 hint,
@@ -2348,8 +2354,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .manifest
             .release_by_name(&release.app_name)
             .expect("couldn't find the release!?");
-        let download_url = schema_release
-            .artifact_download_url()
+        let download_urls = schema_release
+            .artifact_download_urls()
             .expect("couldn't compute a URL to download artifacts from!?");
         let hosting = schema_release.hosting.clone();
 
@@ -2433,7 +2439,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                         .map(|p| p.clone().into_jinja())
                         .collect(),
                     install_success_msg: config.install_success_msg.to_owned(),
-                    base_url: download_url.to_owned(),
+                    base_urls: download_urls,
                     hosting,
                     artifacts,
                     hint,
