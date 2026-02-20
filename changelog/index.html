@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://axodotdev.github.io/cargo-dist" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+    
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>
+      Releases
+      
+        <a href="/cargo-dist/changelog.rss" class="inline-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+  <path d="M3.75 3a.75.75 0 00-.75.75v.5c0 .414.336.75.75.75H4c6.075 0 11 4.925 11 11v.25c0 .414.336.75.75.75h.5a.75.75 0 00.75-.75V16C17 8.82 11.18 3 4 3h-.25z" />
+  <path d="M3 8.75A.75.75 0 013.75 8H4a8 8 0 018 8v.25a.75.75 0 01-.75.75h-.5a.75.75 0 01-.75-.75V16a6 6 0 00-6-6h-.25A.75.75 0 013 9.25v-.5zM7 15a2 2 0 11-4 0 2 2 0 014 0z" />
+</svg></a>
+      
+    </h1>
+    <div class="releases-wrapper">
+      <nav class="releases-nav">
+        
+          <div class="prereleases-toggle">
+            <div class="flex h-6 items-center">
+              <input type="checkbox" id="show-prereleases" />
+            </div>
+            <div class="ml-3">
+              <label for="show-prereleases">Show prereleases</label>
+            </div>
+          </div>
+        
+
+        
+        <ul>
+          
+            <li class="">
+              <a href="v0.30.4/">v0.30.4</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.4-prerelease.1/">v0.30.4-prerelease.1</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.30.3/">v0.30.3</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.30.2/">v0.30.2</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.2-prerelease.1/">v0.30.2-prerelease.1</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.30.1/">v0.30.1</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.1-prerelease.2/">v0.30.1-prerelease.2</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.1-prerelease.1/">v0.30.1-prerelease.1</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.30.0/">v0.30.0</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.0-prerelease.5/">v0.30.0-prerelease.5</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.0-prerelease.4/">v0.30.0-prerelease.4</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.0-prerelease.3/">v0.30.0-prerelease.3</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.0-prerelease.2/">v0.30.0-prerelease.2</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.30.0-prerelease.1/">v0.30.0-prerelease.1</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.29.0/">v0.29.0</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.29.0-prerelease.2/">v0.29.0-prerelease.2</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.29.0-prerelease.1/">v0.29.0-prerelease.1</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.28.2/">v0.28.2</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.28.2-prerelease.3/">v0.28.2-prerelease.3</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.28.2-prerelease.2/">v0.28.2-prerelease.2</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.28.2-prerelease.1/">v0.28.2-prerelease.1</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.28.1/">v0.28.1</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.28.1-prerelease.5/">v0.28.1-prerelease.5</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.28.1-prerelease.4/">v0.28.1-prerelease.4</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.28.1-prerelease.3/">v0.28.1-prerelease.3</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.28.1-prerelease.2/">v0.28.1-prerelease.2</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v0.28.1-prerelease.1/">v0.28.1-prerelease.1</a>
+            </li>
+          
+            <li class="pre-release hidden">
+              <a href="v1.0.0-rc.1/">v1.0.0-rc.1</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.28.0/">v0.28.0</a>
+            </li>
+          
+            <li class="">
+              <a href="v0.27.1/">v0.27.1</a>
+            </li>
+          
+        </ul>
+      </nav>
+
+      <div class="releases-list">
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.30.4">
+    <a href="v0.30.4/">
+      
+        Version 0.30.4 (2026-02-16)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.4
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Feb 17 2026 at 18:12 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains a few minor bugfixes. It also updates dependencies, including a rimraf upgrade that resolves <a href="https://github.com/isaacs/brace-expansion/security/advisories/GHSA-7h2j-956f-4vf2" rel="noopener noreferrer">a CVE in @isaacs/brace-expansion</a>. This vulnerability was not exploitable in the way dist used rimraf.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @eegli <a href="https://github.com/axodotdev/cargo-dist/pull/2227" rel="noopener noreferrer">fix: installer receipt for windows with posix shell</a></li>
+<li>impl @kazutoiris <a href="https://github.com/axodotdev/cargo-dist/pull/2258" rel="noopener noreferrer">fix: prevent unintended escaping of multiline run</a></li>
+<li>impl @20jasper <a href="https://github.com/axodotdev/cargo-dist/pull/2223" rel="noopener noreferrer">fix: typo in variable name</a></li>
+<li>impl @OpenSauce <a href="https://github.com/axodotdev/cargo-dist/pull/2235" rel="noopener noreferrer">chore(actions): bump default github actions</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.4-prerelease.1">
+    <a href="v0.30.4-prerelease.1/">
+      
+        Version 0.30.4-prerelease.1 (2025-02-16)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.4-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Feb 17 2026 at 17:43 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains a few minor bugfixes. It also updates dependencies, including a rimraf upgrade that resolves <a href="https://github.com/isaacs/brace-expansion/security/advisories/GHSA-7h2j-956f-4vf2" rel="noopener noreferrer">a CVE in @isaacs/brace-expansion</a>. This vulnerability was not exploitable in the way dist used rimraf.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @eegli <a href="https://github.com/axodotdev/cargo-dist/pull/2227" rel="noopener noreferrer">fix: installer receipt for windows with posix shell</a></li>
+<li>impl @kazutoiris <a href="https://github.com/axodotdev/cargo-dist/pull/2258" rel="noopener noreferrer">fix: prevent unintended escaping of multiline run</a></li>
+<li>impl @20jasper <a href="https://github.com/axodotdev/cargo-dist/pull/2223" rel="noopener noreferrer">fix: typo in variable name</a></li>
+<li>impl @OpenSauce <a href="https://github.com/axodotdev/cargo-dist/pull/2235" rel="noopener noreferrer">chore(actions): bump default github actions</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.30.3">
+    <a href="v0.30.3/">
+      
+        Version 0.30.3 (2025-12-14)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.3
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Dec 15 2025 at 06:06 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains a few minor bugfixes. It also updates dependencies, including a rimraf upgrade that resolves <a href="https://security.snyk.io/vuln/SNYK-JS-GLOB-14040952" rel="noopener noreferrer">a CVE in glob</a>. This vulnerability was not exploitable in the way dist used rimraf.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @AThePeanut4 <a href="https://github.com/axodotdev/cargo-dist/pull/2195" rel="noopener noreferrer">fix: invalid file permissions when running the shell installer under <code>sudo</code></a></li>
+<li>impl @ryanobjc <a href="https://github.com/axodotdev/cargo-dist/pull/2214" rel="noopener noreferrer">fix: macOS codesigning configuration not being respected</a></li>
+</ul>
+<p>Thanks to @zachstence for handling the rimraf/glob upgrade!</p>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.30.2">
+    <a href="v0.30.2/">
+      
+        Version 0.30.2 (2025-10-31)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.2
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Oct 31 2025 at 02:07 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <ul>
+<li>When customizing when artifacts are attested, you can now use the <code>announce</code> phase.</li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.2-prerelease.1">
+    <a href="v0.30.2-prerelease.1/">
+      
+        Version 0.30.2-prerelease.1
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.2-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Oct 31 2025 at 01:51 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <ul>
+<li>When customizing when artifacts are attested, you can now use the <code>announce</code> phase.</li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.30.1">
+    <a href="v0.30.1/">
+      
+        Version 0.30.1 (2025-10-29)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Oct 29 2025 at 21:02 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <ul>
+<li>Bump default x64 macos runners to macos-15-intel (macos-13 is deprecated)</li>
+<li>In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level.</li>
+<li>Don't run host job if plan fails</li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.1-prerelease.2">
+    <a href="v0.30.1-prerelease.2/">
+      
+        Version 0.30.1-prerelease.2
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.1-prerelease.2
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Oct 29 2025 at 20:45 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <ul>
+<li>Bump default x64 macos runners to macos-15-intel (macos-13 is deprecated)</li>
+<li>In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level.</li>
+<li>Don't run host job if plan fails</li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.1-prerelease.1">
+    <a href="v0.30.1-prerelease.1/">
+      
+        Version 0.30.1-prerelease.1
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.1-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Oct 29 2025 at 20:28 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <ul>
+<li>Bump default x64 macos runners to macos-15-intel (macos-13 is deprecated)</li>
+<li>In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level.</li>
+<li>Don't run host job if plan fails</li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.30.0">
+    <a href="v0.30.0/">
+      
+        Version 0.30.0 (2025-09-07)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.0
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Sep  7 2025 at 20:55 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.</p>
+<h2>ZIP archive improvements</h2>
+<p>Previous versions of dist produced uncompressed ZIP archives which meant that they were much larger than necessary. ZIP archives are now compressed.</p>
+<ul>
+<li>impl @trim21 <a href="https://github.com/axodotdev/axoasset/pull/312" rel="noopener noreferrer">feat: enable compression on zip</a></li>
+</ul>
+<p>In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/axoasset/pull/311" rel="noopener noreferrer">fix: preserve Unix permissions in ZIPs</a></li>
+</ul>
+<p>The npm installer previously used the <code>unzip</code> commandline utility to unpack ZIP archives on Windows. This isn't available in all installations, so some users would experience errors at install time. We've improved this by switching to the builtin PowerShell <code>Expand-Archive</code> cmdlet.</p>
+<ul>
+<li>impl @jacobtread
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2005" rel="noopener noreferrer">fix: windows use powershell to extract zip file</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2046" rel="noopener noreferrer">fix: platform.includes bug</a></li>
+</ul>
+</li>
+</ul>
+<h2>Additional installer configuration environment variables</h2>
+<p>dist's installers are configurable using a variety of different environment variables, but in previous versions only some of these would be branded with your app's name. We now provide branded versions of all of the other environment variables as well. The previous unbranded environment variables will continue to work. The new variables are:</p>
+<ul>
+<li><code>${APP_NAME}_DOWNLOAD_URL</code></li>
+<li><code>${APP_NAME}_PRINT_QUIET</code></li>
+<li><code>${APP_NAME}_PRINT_VERBOSE</code></li>
+</ul>
+<ul>
+<li>impl @Gankra
+<ul>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/46" rel="noopener noreferrer">make every last INSTALLER_ variable have a branded version</a></li>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/48" rel="noopener noreferrer">support <code>{BRAND}_DOWNLOAD_URL</code> in ps1 installer</a></li>
+</ul>
+</li>
+</ul>
+<p>This feature previously appeared in version 0.28.7 of Astral's fork.</p>
+<h2>Shell installer refuses to use Snap-installed curl</h2>
+<p>The shell installers will now refuse to fetch archives using a copy of curl installed via the <a href="https://en.wikipedia.org/wiki/Snap_(software)" rel="noopener noreferrer">Snap</a> package manager for Ubuntu. Snap-installed copies of curl have limitations on their ability to write downloaded files to disk which makes them unsuitable for dist's installers. If a Snap-installed curl is detected, the installer will try to fall back to using another download tool; if no other tool is present, a message will be shown to the user and the installation will abort.</p>
+<ul>
+<li>impl @konstin <a href="https://github.com/astral-sh/cargo-dist/pull/28" rel="noopener noreferrer">Avoid snap curl</a></li>
+</ul>
+<p>This feature previously appeared in version 0.28.5 of Astral's fork.</p>
+<h2>PowerShell installer now supports proxies</h2>
+<p>The PowerShell installer now respects the <code>HTTPS_PROXY</code> and <code>ANY_PROXY</code> environment variables and uses them to configure a proxy when fetching artifacts. These were already supported by the shell installer.</p>
+<ul>
+<li>impl @zanieb and @zsol <a href="https://github.com/axodotdev/cargo-dist/pull/2078" rel="noopener noreferrer">Powershell installer: respect HTTPS_PROXY and ANY_PROXY env vars</a></li>
+</ul>
+<h2>macOS code signing now supports the <code>--options</code> flag</h2>
+<p>When using the experimental macOS codesigning feature, users can now specify a value to be passed to the <code>--options</code> flag using the <code>CODESIGN_OPTIONS</code> environment variable.</p>
+<ul>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1743" rel="noopener noreferrer">Support --options in mac code signing</a></li>
+</ul>
+<h2>Linux arm64 GitHub Actions builds now use native arm64 runners by default</h2>
+<p>In previous versions of dist, we used cross-compilation to build arm64 Linux binaries from an x86_64 host. GitHub now provides free native arm64 runners, so we've switched to using these by default. Users can still use cross-compilation if they prefer by specifying the x86_64 runners using the <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">custom runners feature</a> in the dist config.</p>
+<h2>GitHub Actions artifact attestations can now be customized</h2>
+<p>It's now possible to customize exactly which artifacts are attested, and which phase of the build process to perform the attestations in. Currently, customizing which artifacts to attest requires the attestation to happen during the <code>host</code> phase; this restriction may be lifted in the future.</p>
+<p>To specify which artifacts to attest, you can use a list of globs; any artifacts matching any of those globs will receive an attestation. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">github-attestations-phase </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">host</span><span style="color:#89ddff;">"
+</span><span style="color:#f07178;">github-attestations-filters </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">*.json</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.sh</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.ps1</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.zip</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.tar.gz</span><span style="color:#89ddff;">"]
+</span></pre>
+
+<ul>
+<li>impl @samypr100 <a href="https://github.com/axodotdev/cargo-dist/issues/1754" rel="noopener noreferrer">Add support for attestations in the host phase</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.0-prerelease.5">
+    <a href="v0.30.0-prerelease.5/">
+      
+        Version 0.30.0-prerelease.5
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.0-prerelease.5
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Aug 29 2025 at 02:43 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.</p>
+<h2>ZIP archive improvements</h2>
+<p>Previous versions of dist produced uncompressed ZIP archives which meant that they were much larger than necessary. ZIP archives are now compressed.</p>
+<ul>
+<li>impl @trim21 <a href="https://github.com/axodotdev/axoasset/pull/312" rel="noopener noreferrer">feat: enable compression on zip</a></li>
+</ul>
+<p>In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/axoasset/pull/311" rel="noopener noreferrer">fix: preserve Unix permissions in ZIPs</a></li>
+</ul>
+<p>The npm installer previously used the <code>unzip</code> commandline utility to unpack ZIP archives on Windows. This isn't available in all installations, so some users would experience errors at install time. We've improved this by switching to the builtin PowerShell <code>Expand-Archive</code> cmdlet.</p>
+<ul>
+<li>impl @jacobtread
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2005" rel="noopener noreferrer">fix: windows use powershell to extract zip file</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2046" rel="noopener noreferrer">fix: platform.includes bug</a></li>
+</ul>
+</li>
+</ul>
+<h2>Additional installer configuration environment variables</h2>
+<p>dist's installers are configurable using a variety of different environment variables, but in previous versions only some of these would be branded with your app's name. We now provide branded versions of all of the other environment variables as well. The previous unbranded environment variables will continue to work. The new variables are:</p>
+<ul>
+<li><code>${APP_NAME}_DOWNLOAD_URL</code></li>
+<li><code>${APP_NAME}_PRINT_QUIET</code></li>
+<li><code>${APP_NAME}_PRINT_VERBOSE</code></li>
+</ul>
+<ul>
+<li>impl @Gankra
+<ul>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/46" rel="noopener noreferrer">make every last INSTALLER_ variable have a branded version</a></li>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/48" rel="noopener noreferrer">support <code>{BRAND}_DOWNLOAD_URL</code> in ps1 installer</a></li>
+</ul>
+</li>
+</ul>
+<p>This feature previously appeared in version 0.28.7 of Astral's fork.</p>
+<h2>Shell installer refuses to use Snap-installed curl</h2>
+<p>The shell installers will now refuse to fetch archives using a copy of curl installed via the <a href="https://en.wikipedia.org/wiki/Snap_(software)" rel="noopener noreferrer">Snap</a> package manager for Ubuntu. Snap-installed copies of curl have limitations on their ability to write downloaded files to disk which makes them unsuitable for dist's installers. If a Snap-installed curl is detected, the installer will try to fall back to using another download tool; if no other tool is present, a message will be shown to the user and the installation will abort.</p>
+<ul>
+<li>impl @konstin <a href="https://github.com/astral-sh/cargo-dist/pull/28" rel="noopener noreferrer">Avoid snap curl</a></li>
+</ul>
+<p>This feature previously appeared in version 0.28.5 of Astral's fork.</p>
+<h2>PowerShell installer now supports proxies</h2>
+<p>The PowerShell installer now respects the <code>HTTPS_PROXY</code> and <code>ANY_PROXY</code> environment variables and uses them to configure a proxy when fetching artifacts. These were already supported by the shell installer.</p>
+<ul>
+<li>impl @zanieb and @zsol <a href="https://github.com/axodotdev/cargo-dist/pull/2078" rel="noopener noreferrer">Powershell installer: respect HTTPS_PROXY and ANY_PROXY env vars</a></li>
+</ul>
+<h2>macOS code signing now supports the <code>--options</code> flag</h2>
+<p>When using the experimental macOS codesigning feature, users can now specify a value to be passed to the <code>--options</code> flag using the <code>CODESIGN_OPTIONS</code> environment variable.</p>
+<ul>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1743" rel="noopener noreferrer">Support --options in mac code signing</a></li>
+</ul>
+<h2>Linux arm64 GitHub Actions builds now use native arm64 runners by default</h2>
+<p>In previous versions of dist, we used cross-compilation to build arm64 Linux binaries from an x86_64 host. GitHub now provides free native arm64 runners, so we've switched to using these by default. Users can still use cross-compilation if they prefer by specifying the x86_64 runners using the <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">custom runners feature</a> in the dist config.</p>
+<h2>GitHub Actions artifact attestations can now be customized</h2>
+<p>It's now possible to customize exactly which artifacts are attested, and which phase of the build process to perform the attestations in. Currently, customizing which artifacts to attest requires the attestation to happen during the <code>host</code> phase; this restriction may be lifted in the future.</p>
+<p>To specify which artifacts to attest, you can use a list of globs; any artifacts matching any of those globs will receive an attestation. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">github-attestations-phase </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">host</span><span style="color:#89ddff;">"
+</span><span style="color:#f07178;">github-attestations-filters </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">*.json</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.sh</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.ps1</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.zip</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.tar.gz</span><span style="color:#89ddff;">"]
+</span></pre>
+
+<ul>
+<li>impl @samypr100 <a href="https://github.com/axodotdev/cargo-dist/issues/1754" rel="noopener noreferrer">Add support for attestations in the host phase</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.0-prerelease.4">
+    <a href="v0.30.0-prerelease.4/">
+      
+        Version 0.30.0-prerelease.4
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.0-prerelease.4
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Aug 29 2025 at 01:39 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.</p>
+<h2>ZIP archive improvements</h2>
+<p>Previous versions of dist produced uncompressed ZIP archives which meant that they were much larger than necessary. ZIP archives are now compressed.</p>
+<ul>
+<li>impl @trim21 <a href="https://github.com/axodotdev/axoasset/pull/312" rel="noopener noreferrer">feat: enable compression on zip</a></li>
+</ul>
+<p>In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/axoasset/pull/311" rel="noopener noreferrer">fix: preserve Unix permissions in ZIPs</a></li>
+</ul>
+<p>The npm installer previously used the <code>unzip</code> commandline utility to unpack ZIP archives on Windows. This isn't available in all installations, so some users would experience errors at install time. We've improved this by switching to the builtin PowerShell <code>Expand-Archive</code> cmdlet.</p>
+<ul>
+<li>impl @jacobtread
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2005" rel="noopener noreferrer">fix: windows use powershell to extract zip file</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2046" rel="noopener noreferrer">fix: platform.includes bug</a></li>
+</ul>
+</li>
+</ul>
+<h2>Additional installer configuration environment variables</h2>
+<p>dist's installers are configurable using a variety of different environment variables, but in previous versions only some of these would be branded with your app's name. We now provide branded versions of all of the other environment variables as well. The previous unbranded environment variables will continue to work. The new variables are:</p>
+<ul>
+<li><code>${APP_NAME}_DOWNLOAD_URL</code></li>
+<li><code>${APP_NAME}_PRINT_QUIET</code></li>
+<li><code>${APP_NAME}_PRINT_VERBOSE</code></li>
+</ul>
+<ul>
+<li>impl @Gankra
+<ul>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/46" rel="noopener noreferrer">make every last INSTALLER_ variable have a branded version</a></li>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/48" rel="noopener noreferrer">support <code>{BRAND}_DOWNLOAD_URL</code> in ps1 installer</a></li>
+</ul>
+</li>
+</ul>
+<p>This feature previously appeared in version 0.28.7 of Astral's fork.</p>
+<h2>Shell installer refuses to use Snap-installed curl</h2>
+<p>The shell installers will now refuse to fetch archives using a copy of curl installed via the <a href="https://en.wikipedia.org/wiki/Snap_(software)" rel="noopener noreferrer">Snap</a> package manager for Ubuntu. Snap-installed copies of curl have limitations on their ability to write downloaded files to disk which makes them unsuitable for dist's installers. If a Snap-installed curl is detected, the installer will try to fall back to using another download tool; if no other tool is present, a message will be shown to the user and the installation will abort.</p>
+<ul>
+<li>impl @konstin <a href="https://github.com/astral-sh/cargo-dist/pull/28" rel="noopener noreferrer">Avoid snap curl</a></li>
+</ul>
+<p>This feature previously appeared in version 0.28.5 of Astral's fork.</p>
+<h2>PowerShell installer now supports proxies</h2>
+<p>The PowerShell installer now respects the <code>HTTPS_PROXY</code> and <code>ANY_PROXY</code> environment variables and uses them to configure a proxy when fetching artifacts. These were already supported by the shell installer.</p>
+<ul>
+<li>impl @zanieb and @zsol <a href="https://github.com/axodotdev/cargo-dist/pull/2078" rel="noopener noreferrer">Powershell installer: respect HTTPS_PROXY and ANY_PROXY env vars</a></li>
+</ul>
+<h2>macOS code signing now supports the <code>--options</code> flag</h2>
+<p>When using the experimental macOS codesigning feature, users can now specify a value to be passed to the <code>--options</code> flag using the <code>CODESIGN_OPTIONS</code> environment variable.</p>
+<ul>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1743" rel="noopener noreferrer">Support --options in mac code signing</a></li>
+</ul>
+<h2>Linux arm64 GitHub Actions builds now use native arm64 runners by default</h2>
+<p>In previous versions of dist, we used cross-compilation to build arm64 Linux binaries from an x86_64 host. GitHub now provides free native arm64 runners, so we've switched to using these by default. Users can still use cross-compilation if they prefer by specifying the x86_64 runners using the <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">custom runners feature</a> in the dist config.</p>
+<h2>GitHub Actions artifact attestations can now be customized</h2>
+<p>It's now possible to customize exactly which artifacts are attested, and which phase of the build process to perform the attestations in. Currently, customizing which artifacts to attest requires the attestation to happen during the <code>host</code> phase; this restriction may be lifted in the future.</p>
+<p>To specify which artifacts to attest, you can use a list of globs; any artifacts matching any of those globs will receive an attestation. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">github-attestations-phase </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">host</span><span style="color:#89ddff;">"
+</span><span style="color:#f07178;">github-attestations-filters </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">*.json</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.sh</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.ps1</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.zip</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.tar.gz</span><span style="color:#89ddff;">"]
+</span></pre>
+
+<ul>
+<li>impl @samypr100 <a href="https://github.com/axodotdev/cargo-dist/issues/1754" rel="noopener noreferrer">Add support for attestations in the host phase</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.0-prerelease.3">
+    <a href="v0.30.0-prerelease.3/">
+      
+        Version 0.30.0-prerelease.3
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.0-prerelease.3
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Aug 28 2025 at 00:34 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.</p>
+<h2>ZIP archive improvements</h2>
+<p>Previous versions of dist produced uncompressed ZIP archives which meant that they were much larger than necessary. ZIP archives are now compressed.</p>
+<ul>
+<li>impl @trim21 <a href="https://github.com/axodotdev/axoasset/pull/312" rel="noopener noreferrer">feat: enable compression on zip</a></li>
+</ul>
+<p>In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/axoasset/pull/311" rel="noopener noreferrer">fix: preserve Unix permissions in ZIPs</a></li>
+</ul>
+<p>The npm installer previously used the <code>unzip</code> commandline utility to unpack ZIP archives on Windows. This isn't available in all installations, so some users would experience errors at install time. We've improved this by switching to the builtin PowerShell <code>Expand-Archive</code> cmdlet.</p>
+<ul>
+<li>impl @jacobtread
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2005" rel="noopener noreferrer">fix: windows use powershell to extract zip file</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2046" rel="noopener noreferrer">fix: platform.includes bug</a></li>
+</ul>
+</li>
+</ul>
+<h2>Additional installer configuration environment variables</h2>
+<p>dist's installers are configurable using a variety of different environment variables, but in previous versions only some of these would be branded with your app's name. We now provide branded versions of all of the other environment variables as well. The previous unbranded environment variables will continue to work. The new variables are:</p>
+<ul>
+<li><code>${APP_NAME}_DOWNLOAD_URL</code></li>
+<li><code>${APP_NAME}_PRINT_QUIET</code></li>
+<li><code>${APP_NAME}_PRINT_VERBOSE</code></li>
+</ul>
+<ul>
+<li>impl @Gankra
+<ul>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/46" rel="noopener noreferrer">make every last INSTALLER_ variable have a branded version</a></li>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/48" rel="noopener noreferrer">support <code>{BRAND}_DOWNLOAD_URL</code> in ps1 installer</a></li>
+</ul>
+</li>
+</ul>
+<p>This feature previously appeared in version 0.28.7 of Astral's fork.</p>
+<h2>Shell installer refuses to use Snap-installed curl</h2>
+<p>The shell installers will now refuse to fetch archives using a copy of curl installed via the <a href="https://en.wikipedia.org/wiki/Snap_(software)" rel="noopener noreferrer">Snap</a> package manager for Ubuntu. Snap-installed copies of curl have limitations on their ability to write downloaded files to disk which makes them unsuitable for dist's installers. If a Snap-installed curl is detected, the installer will try to fall back to using another download tool; if no other tool is present, a message will be shown to the user and the installation will abort.</p>
+<ul>
+<li>impl @konstin <a href="https://github.com/astral-sh/cargo-dist/pull/28" rel="noopener noreferrer">Avoid snap curl</a></li>
+</ul>
+<p>This feature previously appeared in version 0.28.5 of Astral's fork.</p>
+<h2>PowerShell installer now supports proxies</h2>
+<p>The PowerShell installer now respects the <code>HTTPS_PROXY</code> and <code>ANY_PROXY</code> environment variables and uses them to configure a proxy when fetching artifacts. These were already supported by the shell installer.</p>
+<ul>
+<li>impl @zanieb and @zsol <a href="https://github.com/axodotdev/cargo-dist/pull/2078" rel="noopener noreferrer">Powershell installer: respect HTTPS_PROXY and ANY_PROXY env vars</a></li>
+</ul>
+<h2>macOS code signing now supports the <code>--options</code> flag</h2>
+<p>When using the experimental macOS codesigning feature, users can now specify a value to be passed to the <code>--options</code> flag using the <code>CODESIGN_OPTIONS</code> environment variable.</p>
+<ul>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1743" rel="noopener noreferrer">Support --options in mac code signing</a></li>
+</ul>
+<h2>Linux arm64 GitHub Actions builds now use native arm64 runners by default</h2>
+<p>In previous versions of dist, we used cross-compilation to build arm64 Linux binaries from an x86_64 host. GitHub now provides free native arm64 runners, so we've switched to using these by default. Users can still use cross-compilation if they prefer by specifying the x86_64 runners using the <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">custom runners feature</a> in the dist config.</p>
+<h2>GitHub Actions artifact attestations can now be customized</h2>
+<p>It's now possible to customize exactly which artifacts are attested, and which phase of the build process to perform the attestations in. Currently, customizing which artifacts to attest requires the attestation to happen during the <code>host</code> phase; this restriction may be lifted in the future.</p>
+<p>To specify which artifacts to attest, you can use a list of globs; any artifacts matching any of those globs will receive an attestation. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">github-attestations-phase </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">host</span><span style="color:#89ddff;">"
+</span><span style="color:#f07178;">github-attestations-filters </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">*.json</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.sh</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.ps1</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.zip</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.tar.gz</span><span style="color:#89ddff;">"]
+</span></pre>
+
+<ul>
+<li>impl @samypr100 <a href="https://github.com/axodotdev/cargo-dist/issues/1754" rel="noopener noreferrer">Add support for attestations in the host phase</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.0-prerelease.2">
+    <a href="v0.30.0-prerelease.2/">
+      
+        Version 0.30.0-prerelease.2
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.0-prerelease.2
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Aug 27 2025 at 23:29 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.</p>
+<h2>ZIP archive improvements</h2>
+<p>Previous versions of dist produced uncompressed ZIP archives which meant that they were much larger than necessary. ZIP archives are now compressed.</p>
+<ul>
+<li>impl @trim21 <a href="https://github.com/axodotdev/axoasset/pull/312" rel="noopener noreferrer">feat: enable compression on zip</a></li>
+</ul>
+<p>In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/axoasset/pull/311" rel="noopener noreferrer">fix: preserve Unix permissions in ZIPs</a></li>
+</ul>
+<p>The npm installer previously used the <code>unzip</code> commandline utility to unpack ZIP archives on Windows. This isn't available in all installations, so some users would experience errors at install time. We've improved this by switching to the builtin PowerShell <code>Expand-Archive</code> cmdlet.</p>
+<ul>
+<li>impl @jacobtread
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2005" rel="noopener noreferrer">fix: windows use powershell to extract zip file</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2046" rel="noopener noreferrer">fix: platform.includes bug</a></li>
+</ul>
+</li>
+</ul>
+<h2>Additional installer configuration environment variables</h2>
+<p>dist's installers are configurable using a variety of different environment variables, but in previous versions only some of these would be branded with your app's name. We now provide branded versions of all of the other environment variables as well. The previous unbranded environment variables will continue to work. The new variables are:</p>
+<ul>
+<li><code>${APP_NAME}_DOWNLOAD_URL</code></li>
+<li><code>${APP_NAME}_PRINT_QUIET</code></li>
+<li><code>${APP_NAME}_PRINT_VERBOSE</code></li>
+</ul>
+<ul>
+<li>impl @Gankra
+<ul>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/46" rel="noopener noreferrer">make every last INSTALLER_ variable have a branded version</a></li>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/48" rel="noopener noreferrer">support <code>{BRAND}_DOWNLOAD_URL</code> in ps1 installer</a></li>
+</ul>
+</li>
+</ul>
+<p>This feature previously appeared in version 0.28.7 of Astral's fork.</p>
+<h2>Shell installer refuses to use Snap-installed curl</h2>
+<p>The shell installers will now refuse to fetch archives using a copy of curl installed via the <a href="https://en.wikipedia.org/wiki/Snap_(software)" rel="noopener noreferrer">Snap</a> package manager for Ubuntu. Snap-installed copies of curl have limitations on their ability to write downloaded files to disk which makes them unsuitable for dist's installers. If a Snap-installed curl is detected, the installer will try to fall back to using another download tool; if no other tool is present, a message will be shown to the user and the installation will abort.</p>
+<ul>
+<li>impl @konstin <a href="https://github.com/astral-sh/cargo-dist/pull/28" rel="noopener noreferrer">Avoid snap curl</a></li>
+</ul>
+<p>This feature previously appeared in version 0.28.5 of Astral's fork.</p>
+<h2>PowerShell installer now supports proxies</h2>
+<p>The PowerShell installer now respects the <code>HTTPS_PROXY</code> and <code>ANY_PROXY</code> environment variables and uses them to configure a proxy when fetching artifacts. These were already supported by the shell installer.</p>
+<ul>
+<li>impl @zanieb and @zsol <a href="https://github.com/axodotdev/cargo-dist/pull/2078" rel="noopener noreferrer">Powershell installer: respect HTTPS_PROXY and ANY_PROXY env vars</a></li>
+</ul>
+<h2>macOS code signing now supports the <code>--options</code> flag</h2>
+<p>When using the experimental macOS codesigning feature, users can now specify a value to be passed to the <code>--options</code> flag using the <code>CODESIGN_OPTIONS</code> environment variable.</p>
+<ul>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1743" rel="noopener noreferrer">Support --options in mac code signing</a></li>
+</ul>
+<h2>Linux arm64 GitHub Actions builds now use native arm64 runners by default</h2>
+<p>In previous versions of dist, we used cross-compilation to build arm64 Linux binaries from an x86_64 host. GitHub now provides free native arm64 runners, so we've switched to using these by default. Users can still use cross-compilation if they prefer by specifying the x86_64 runners using the <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">custom runners feature</a> in the dist config.</p>
+<h2>GitHub Actions artifact attestations can now be customized</h2>
+<p>It's now possible to customize exactly which artifacts are attested, and which phase of the build process to perform the attestations in. Currently, customizing which artifacts to attest requires the attestation to happen during the <code>host</code> phase; this restriction may be lifted in the future.</p>
+<p>To specify which artifacts to attest, you can use a list of globs; any artifacts matching any of those globs will receive an attestation. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">github-attestations-phase </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">host</span><span style="color:#89ddff;">"
+</span><span style="color:#f07178;">github-attestations-filters </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">*.json</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.sh</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.ps1</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.zip</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.tar.gz</span><span style="color:#89ddff;">"]
+</span></pre>
+
+<ul>
+<li>impl @samypr100 <a href="https://github.com/axodotdev/cargo-dist/issues/1754" rel="noopener noreferrer">Add support for attestations in the host phase</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.30.0-prerelease.1">
+    <a href="v0.30.0-prerelease.1/">
+      
+        Version 0.30.0-prerelease.1
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.0-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Aug  2 2025 at 02:24 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.</p>
+<h2>ZIP archive improvements</h2>
+<p>Previous versions of dist produced uncompressed ZIP archives which meant that they were much larger than necessary. ZIP archives are now compressed.</p>
+<ul>
+<li>impl @trim21 <a href="https://github.com/axodotdev/axoasset/pull/312" rel="noopener noreferrer">feat: enable compression on zip</a></li>
+</ul>
+<p>In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/axoasset/pull/311" rel="noopener noreferrer">fix: preserve Unix permissions in ZIPs</a></li>
+</ul>
+<p>The npm installer previously used the <code>unzip</code> commandline utility to unpack ZIP archives on Windows. This isn't available in all installations, so some users would experience errors at install time. We've improved this by switching to the builtin PowerShell <code>Expand-Archive</code> cmdlet.</p>
+<ul>
+<li>impl @jacobtread
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2005" rel="noopener noreferrer">fix: windows use powershell to extract zip file</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2046" rel="noopener noreferrer">fix: platform.includes bug</a></li>
+</ul>
+</li>
+</ul>
+<h2>Additional installer configuration environment variables</h2>
+<p>dist's installers are configurable using a variety of different environment variables, but in previous versions only some of these would be branded with your app's name. We now provide branded versions of all of the other environment variables as well. The previous unbranded environment variables will continue to work. The new variables are:</p>
+<ul>
+<li><code>${APP_NAME}_DOWNLOAD_URL</code></li>
+<li><code>${APP_NAME}_PRINT_QUIET</code></li>
+<li><code>${APP_NAME}_PRINT_VERBOSE</code></li>
+</ul>
+<ul>
+<li>impl @Gankra
+<ul>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/46" rel="noopener noreferrer">make every last INSTALLER_ variable have a branded version</a></li>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/48" rel="noopener noreferrer">support <code>{BRAND}_DOWNLOAD_URL</code> in ps1 installer</a></li>
+</ul>
+</li>
+</ul>
+<p>This feature previously appeared in version 0.28.7 of Astral's fork.</p>
+<h2>Shell installer refuses to use Snap-installed curl</h2>
+<p>The shell installers will now refuse to fetch archives using a copy of curl installed via the <a href="https://en.wikipedia.org/wiki/Snap_(software)" rel="noopener noreferrer">Snap</a> package manager for Ubuntu. Snap-installed copies of curl have limitations on their ability to write downloaded files to disk which makes them unsuitable for dist's installers. If a Snap-installed curl is detected, the installer will try to fall back to using another download tool; if no other tool is present, a message will be shown to the user and the installation will abort.</p>
+<ul>
+<li>impl @konstin <a href="https://github.com/astral-sh/cargo-dist/pull/28" rel="noopener noreferrer">Avoid snap curl</a></li>
+</ul>
+<p>This feature previously appeared in version 0.28.5 of Astral's fork.</p>
+<h2>PowerShell installer now supports proxies</h2>
+<p>The PowerShell installer now respects the <code>HTTPS_PROXY</code> and <code>ANY_PROXY</code> environment variables and uses them to configure a proxy when fetching artifacts. These were already supported by the shell installer.</p>
+<ul>
+<li>impl @zanieb and @zsol <a href="https://github.com/axodotdev/cargo-dist/pull/2078" rel="noopener noreferrer">Powershell installer: respect HTTPS_PROXY and ANY_PROXY env vars</a></li>
+</ul>
+<h2>macOS code signing now supports the <code>--options</code> flag</h2>
+<p>When using the experimental macOS codesigning feature, users can now specify a value to be passed to the <code>--options</code> flag using the <code>CODESIGN_OPTIONS</code> environment variable.</p>
+<ul>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1743" rel="noopener noreferrer">Support --options in mac code signing</a></li>
+</ul>
+<h2>Linux arm64 GitHub Actions builds now use native arm64 runners by default</h2>
+<p>In previous versions of dist, we used cross-compilation to build arm64 Linux binaries from an x86_64 host. GitHub now provides free native arm64 runners, so we've switched to using these by default. Users can still use cross-compilation if they prefer by specifying the x86_64 runners using the <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">custom runners feature</a> in the dist config.</p>
+<h2>GitHub Actions artifact attestations can now be customized</h2>
+<p>It's now possible to customize exactly which artifacts are attested, and which phase of the build process to perform the attestations in. Currently, customizing which artifacts to attest requires the attestation to happen during the <code>host</code> phase; this restriction may be lifted in the future.</p>
+<p>To specify which artifacts to attest, you can use a list of globs; any artifacts matching any of those globs will receive an attestation. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">github-attestations-phase </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">host</span><span style="color:#89ddff;">"
+</span><span style="color:#f07178;">github-attestations-filters </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">*.json</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.sh</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.ps1</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.zip</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.tar.gz</span><span style="color:#89ddff;">"]
+</span></pre>
+
+<ul>
+<li>impl @samypr100 <a href="https://github.com/axodotdev/cargo-dist/issues/1754" rel="noopener noreferrer">Add support for attestations in the host phase</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.29.0">
+    <a href="v0.29.0/">
+      
+        Version 0.29.0 (2025-07-31)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.29.0
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Aug  1 2025 at 05:54 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This is a big release! 0.29.0 includes all of the new features from Astral's fork of dist along with some new bugfixes. It also removes support for Axo Releases.</p>
+<h2>Pinning GitHub Actions to commits</h2>
+<p>By default, dist uses Actions via floating versioned tags such as <code>actions/checkout@v4</code>. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1944" rel="noopener noreferrer">feat: add github-action-commits config</a></li>
+</ul>
+<h2>Recursive source tarballs, including the contents of submodules</h2>
+<p>While we've had support for source tarballs since <a href="https://github.com/axodotdev/cargo-dist/releases/tag/v0.5.0" rel="noopener noreferrer">0.5.0</a>, those tarballs have been limited to the contents of the base repository and didn't contain the contents of submodules. (This is a limitation of the <code>git archive</code> tool that we use to generate them.) This release adds support for recursive tarballs that include the contents of submodules as well. This feature is opt-in and can be enabled with the <code>recursive-tarballs = true</code> setting. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#recursive-tarball" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1966" rel="noopener noreferrer">feat: add recursive-tarballs</a></li>
+</ul>
+<h2>Support cross-compiling from Windows to Windows</h2>
+<p>In previous versions, dist would refuse to cross-compile from one Windows architecture to another. This release fixes that and allows the build to be attempted. We still default to cross-compiling via <code>cargo-xwin</code>; users who would like to try this will need to configure their builds to use a Windows runner. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#89ddff;">[dist.github-custom-runners.aarch64-pc-windows-msvc]
+</span><span style="color:#f07178;">runner </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">windows-2025</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>impl @baszalmstra <a href="https://github.com/axodotdev/cargo-dist/pull/1962" rel="noopener noreferrer">fix: allow cross compiling from windows to windows</a></li>
+</ul>
+<h2>Installer improvements</h2>
+<p>We've improved compatibility for the shell installer by bringing in newer changes from the Rustup installer it was originally based on. We've also improved compatibility with Linux distributions that don't use the <code>$HOME</code> environment variable.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1958" rel="noopener noreferrer">feat: improve installer.sh with changes from rustup</a></li>
+<li>impl @konstin <a href="https://github.com/axodotdev/cargo-dist/pull/1968" rel="noopener noreferrer">feat: support Linux distros that don't set HOME</a></li>
+</ul>
+<h2>BYO GitHub bearer token for installers</h2>
+<p>In addition to the above, we now allow users to bring their own GitHub token to be used when fetching tarballs from GitHub. This is useful for users who are often rate-limited when downloading artifacts or who need to fetch artifacts from private repositories. Like our other environment variables, this is branded with your application's name in the format <code>{APP_NAME}_GITHUB_TOKEN</code>. This environment variable is supported in both the shell and PowerShell installers. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/installers/usage.html?highlight=bearer#github-bearer-token" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1956" rel="noopener noreferrer">feat: add <code>{APP_NAME}_GITHUB_TOKEN</code> install env-var</a></li>
+</ul>
+<h2>Reduce unnecessary credentials persistence in Actions config</h2>
+<p>This release includes some tweaks to generated Actions config in order to reduce the risk of accidentally persisting credentials longer in the run than necessary. This is always enabled and doesn't require configuration to opt into.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1948" rel="noopener noreferrer">feat: add persist-credentials: false to checkouts</a></li>
+</ul>
+<h2>Allow overriding binaries per-platform</h2>
+<p>It's now possible to override the set of binaries to install on a per-platform basis. For example, a project with three binaries may choose to only install two of them on Windows, or may choose to provide an extra binary on other platforms. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#binaries" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1946" rel="noopener noreferrer">feat: allow overriding per-platform binaries</a></li>
+</ul>
+<h2>New setting for overriding packages to dist</h2>
+<p>A new top-level option, <code>packages</code>, allows specifying a list of exactly which packages should be disted. This overrides any individual <code>dist = true</code> or <code>dist = false</code> set in individual packages, and can be easier to reason about. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html?highlight=packages#packages" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1960" rel="noopener noreferrer">feat: add packages override for externally setting dist=true/false</a></li>
+</ul>
+<h2>Overriding package versions</h2>
+<p>The new top-level <code>version</code> option overrides the individually-configuredversions for every package and instead causes dist to assume every package has the specified version. For more information, see <a href="" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1964" rel="noopener noreferrer">feat: add workspace.version override</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1949" rel="noopener noreferrer">fix: mark homebrew with persist-credentials</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1971" rel="noopener noreferrer">fix: don't write unified checksum with no checksums</a></li>
+</ul>
+</li>
+<li>impl @cibyr <a href="https://github.com/axodotdev/cargo-dist/pull/1978" rel="noopener noreferrer">fix(axoproject): allow building without generic-projects</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.29.0-prerelease.2">
+    <a href="v0.29.0-prerelease.2/">
+      
+        Version 0.29.0-prerelease.2 (2025-07-31)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.29.0-prerelease.2
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Aug  1 2025 at 05:31 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This is a big release! 0.29.0 includes all of the new features from Astral's fork of dist along with some new bugfixes. It also removes support for Axo Releases.</p>
+<h2>Pinning GitHub Actions to commits</h2>
+<p>By default, dist uses Actions via floating versioned tags such as <code>actions/checkout@v4</code>. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1944" rel="noopener noreferrer">feat: add github-action-commits config</a></li>
+</ul>
+<h2>Recursive source tarballs, including the contents of submodules</h2>
+<p>While we've had support for source tarballs since <a href="https://github.com/axodotdev/cargo-dist/releases/tag/v0.5.0" rel="noopener noreferrer">0.5.0</a>, those tarballs have been limited to the contents of the base repository and didn't contain the contents of submodules. (This is a limitation of the <code>git archive</code> tool that we use to generate them.) This release adds support for recursive tarballs that include the contents of submodules as well. This feature is opt-in and can be enabled with the <code>recursive-tarballs = true</code> setting. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#recursive-tarball" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1966" rel="noopener noreferrer">feat: add recursive-tarballs</a></li>
+</ul>
+<h2>Support cross-compiling from Windows to Windows</h2>
+<p>In previous versions, dist would refuse to cross-compile from one Windows architecture to another. This release fixes that and allows the build to be attempted. We still default to cross-compiling via <code>cargo-xwin</code>; users who would like to try this will need to configure their builds to use a Windows runner. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#89ddff;">[dist.github-custom-runners.aarch64-pc-windows-msvc]
+</span><span style="color:#f07178;">runner </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">windows-2025</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>impl @baszalmstra <a href="https://github.com/axodotdev/cargo-dist/pull/1962" rel="noopener noreferrer">fix: allow cross compiling from windows to windows</a></li>
+</ul>
+<h2>Installer improvements</h2>
+<p>We've improved compatibility for the shell installer by bringing in newer changes from the Rustup installer it was originally based on. We've also improved compatibility with Linux distributions that don't use the <code>$HOME</code> environment variable.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1958" rel="noopener noreferrer">feat: improve installer.sh with changes from rustup</a></li>
+<li>impl @konstin <a href="https://github.com/axodotdev/cargo-dist/pull/1968" rel="noopener noreferrer">feat: support Linux distros that don't set HOME</a></li>
+</ul>
+<h2>BYO GitHub bearer token for installers</h2>
+<p>In addition to the above, we now allow users to bring their own GitHub token to be used when fetching tarballs from GitHub. This is useful for users who are often rate-limited when downloading artifacts or who need to fetch artifacts from private repositories. Like our other environment variables, this is branded with your application's name in the format <code>{APP_NAME}_GITHUB_TOKEN</code>. This environment variable is supported in both the shell and PowerShell installers. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/installers/usage.html?highlight=bearer#github-bearer-token" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1956" rel="noopener noreferrer">feat: add <code>{APP_NAME}_GITHUB_TOKEN</code> install env-var</a></li>
+</ul>
+<h2>Reduce unnecessary credentials persistence in Actions config</h2>
+<p>This release includes some tweaks to generated Actions config in order to reduce the risk of accidentally persisting credentials longer in the run than necessary. This is always enabled and doesn't require configuration to opt into.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1948" rel="noopener noreferrer">feat: add persist-credentials: false to checkouts</a></li>
+</ul>
+<h2>Allow overriding binaries per-platform</h2>
+<p>It's now possible to override the set of binaries to install on a per-platform basis. For example, a project with three binaries may choose to only install two of them on Windows, or may choose to provide an extra binary on other platforms. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#binaries" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1946" rel="noopener noreferrer">feat: allow overriding per-platform binaries</a></li>
+</ul>
+<h2>New setting for overriding packages to dist</h2>
+<p>A new top-level option, <code>packages</code>, allows specifying a list of exactly which packages should be disted. This overrides any individual <code>dist = true</code> or <code>dist = false</code> set in individual packages, and can be easier to reason about. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html?highlight=packages#packages" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1960" rel="noopener noreferrer">feat: add packages override for externally setting dist=true/false</a></li>
+</ul>
+<h2>Overriding package versions</h2>
+<p>The new top-level <code>version</code> option overrides the individually-configuredversions for every package and instead causes dist to assume every package has the specified version. For more information, see <a href="" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1964" rel="noopener noreferrer">feat: add workspace.version override</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1949" rel="noopener noreferrer">fix: mark homebrew with persist-credentials</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1971" rel="noopener noreferrer">fix: don't write unified checksum with no checksums</a></li>
+</ul>
+</li>
+<li>impl @cibyr <a href="https://github.com/axodotdev/cargo-dist/pull/1978" rel="noopener noreferrer">fix(axoproject): allow building without generic-projects</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.29.0-prerelease.1">
+    <a href="v0.29.0-prerelease.1/">
+      
+        Version 0.29.0-prerelease.1
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.29.0-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 25 2025 at 16:50 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This is a big release! 0.29.0 includes all of the new features from Astral's fork of dist along with some new bugfixes. It also removes support for Axo Releases.</p>
+<h2>Pinning GitHub Actions to commits</h2>
+<p>By default, dist uses Actions via floating versioned tags such as <code>actions/checkout@v4</code>. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1944" rel="noopener noreferrer">feat: add github-action-commits config</a></li>
+</ul>
+<h2>Recursive source tarballs, including the contents of submodules</h2>
+<p>While we've had support for source tarballs since <a href="https://github.com/axodotdev/cargo-dist/releases/tag/v0.5.0" rel="noopener noreferrer">0.5.0</a>, those tarballs have been limited to the contents of the base repository and didn't contain the contents of submodules. (This is a limitation of the <code>git archive</code> tool that we use to generate them.) This release adds support for recursive tarballs that include the contents of submodules as well. This feature is opt-in and can be enabled with the <code>recursive-tarballs = true</code> setting. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#recursive-tarball" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1966" rel="noopener noreferrer">feat: add recursive-tarballs</a></li>
+</ul>
+<h2>Support cross-compiling from Windows to Windows</h2>
+<p>In previous versions, dist would refuse to cross-compile from one Windows architecture to another. This release fixes that and allows the build to be attempted. We still default to cross-compiling via <code>cargo-xwin</code>; users who would like to try this will need to configure their builds to use a Windows runner. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#89ddff;">[dist.github-custom-runners.aarch64-pc-windows-msvc]
+</span><span style="color:#f07178;">runner </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">windows-2025</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>impl @baszalmstra <a href="https://github.com/axodotdev/cargo-dist/pull/1962" rel="noopener noreferrer">fix: allow cross compiling from windows to windows</a></li>
+</ul>
+<h2>Installer improvements</h2>
+<p>We've improved compatibility for the shell installer by bringing in newer changes from the Rustup installer it was originally based on. We've also improved compatibility with Linux distributions that don't use the <code>$HOME</code> environment variable.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1958" rel="noopener noreferrer">feat: improve installer.sh with changes from rustup</a></li>
+<li>impl @konstin <a href="https://github.com/axodotdev/cargo-dist/pull/1968" rel="noopener noreferrer">feat: support Linux distros that don't set HOME</a></li>
+</ul>
+<h2>BYO GitHub bearer token for installers</h2>
+<p>In addition to the above, we now allow users to bring their own GitHub token to be used when fetching tarballs from GitHub. This is useful for users who are often rate-limited when downloading artifacts or who need to fetch artifacts from private repositories. Like our other environment variables, this is branded with your application's name in the format <code>{APP_NAME}_GITHUB_TOKEN</code>. This environment variable is supported in both the shell and PowerShell installers. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/installers/usage.html?highlight=bearer#github-bearer-token" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1956" rel="noopener noreferrer">feat: add <code>{APP_NAME}_GITHUB_TOKEN</code> install env-var</a></li>
+</ul>
+<h2>Reduce unnecessary credentials persistence in Actions config</h2>
+<p>This release includes some tweaks to generated Actions config in order to reduce the risk of accidentally persisting credentials longer in the run than necessary. This is always enabled and doesn't require configuration to opt into.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1948" rel="noopener noreferrer">feat: add persist-credentials: false to checkouts</a></li>
+</ul>
+<h2>Allow overriding binaries per-platform</h2>
+<p>It's now possible to override the set of binaries to install on a per-platform basis. For example, a project with three binaries may choose to only install two of them on Windows, or may choose to provide an extra binary on other platforms. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#binaries" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1946" rel="noopener noreferrer">feat: allow overriding per-platform binaries</a></li>
+</ul>
+<h2>New setting for overriding packages to dist</h2>
+<p>A new top-level option, <code>packages</code>, allows specifying a list of exactly which packages should be disted. This overrides any individual <code>dist = true</code> or <code>dist = false</code> set in individual packages, and can be easier to reason about. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html?highlight=packages#packages" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1960" rel="noopener noreferrer">feat: add packages override for externally setting dist=true/false</a></li>
+</ul>
+<h2>Overriding package versions</h2>
+<p>The new top-level <code>version</code> option overrides the individually-configuredversions for every package and instead causes dist to assume every package has the specified version. For more information, see <a href="" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1964" rel="noopener noreferrer">feat: add workspace.version override</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1949" rel="noopener noreferrer">fix: mark homebrew with persist-credentials</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1971" rel="noopener noreferrer">fix: don't write unified checksum with no checksums</a></li>
+</ul>
+</li>
+<li>impl @cibyr <a href="https://github.com/axodotdev/cargo-dist/pull/1978" rel="noopener noreferrer">fix(axoproject): allow building without generic-projects</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.28.2">
+    <a href="v0.28.2/">
+      
+        Version 0.28.2 (2025-07-22)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.2
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 23 2025 at 04:47 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release updates dependencies and contains no substantive code changes.</p>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.28.2-prerelease.3">
+    <a href="v0.28.2-prerelease.3/">
+      
+        Version 0.28.2-prerelease.3 (2025-07-22)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.2-prerelease.3
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 23 2025 at 03:46 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release updates dependencies and contains no substantive code changes.</p>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.28.2-prerelease.2">
+    <a href="v0.28.2-prerelease.2/">
+      
+        Version 0.28.2-prerelease.2 (2025-07-22)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.2-prerelease.2
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 23 2025 at 01:44 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release updates dependencies and contains no substantive code changes.</p>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.28.2-prerelease.1">
+    <a href="v0.28.2-prerelease.1/">
+      
+        Version 0.28.2-prerelease.1 (2025-07-20)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.2-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 21 2025 at 06:18 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release updates dependencies and contains no substantive code changes.</p>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.28.1">
+    <a href="v0.28.1/">
+      
+        Version 0.28.1 (2025-07-20)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 20 2025 at 21:48 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.28.1-prerelease.5">
+    <a href="v0.28.1-prerelease.5/">
+      
+        Version 0.28.1-prerelease.5 (2025-07-20)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.1-prerelease.5
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 20 2025 at 21:02 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.28.1-prerelease.4">
+    <a href="v0.28.1-prerelease.4/">
+      
+        Version 0.28.1-prerelease.4 (2025-07-06)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.1-prerelease.4
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 20 2025 at 01:49 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.28.1-prerelease.3">
+    <a href="v0.28.1-prerelease.3/">
+      
+        Version 0.28.1-prerelease.3 (2025-07-06)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.1-prerelease.3
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 17 2025 at 03:11 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.28.1-prerelease.2">
+    <a href="v0.28.1-prerelease.2/">
+      
+        Version 0.28.1-prerelease.2 (2025-07-06)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.1-prerelease.2
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul  8 2025 at 00:50 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v0.28.1-prerelease.1">
+    <a href="v0.28.1-prerelease.1/">
+      
+        Version 0.28.1-prerelease.1 (2025-07-06)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.1-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul  7 2025 at 03:42 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several important bugfixes. This primarily ensures that GitHub Actions builds work again, but there are also several fixes for minor configuration issues and updates to the runtime dependencies for the npm installer.</p>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1832" rel="noopener noreferrer">Bump Rust version to 1.87.0</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1834" rel="noopener noreferrer">feat: synchronize runners with github</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1836" rel="noopener noreferrer">fix: use --locked for from-git installs</a></li>
+</ul>
+</li>
+<li>impl @Lee-W <a href="https://github.com/axodotdev/cargo-dist/pull/1766" rel="noopener noreferrer">feat: update ubuntu version from 20.04 to 22.04</a></li>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1838" rel="noopener noreferrer">Support publishing prereleases even if there are only custom publish jobs</a></li>
+<li>impl @geofft <a href="https://github.com/axodotdev/cargo-dist/pull/1735" rel="noopener noreferrer">fix: Do not report shadowed binaries when no binary exists</a></li>
+<li>impl @rdbisme <a href="https://github.com/axodotdev/cargo-dist/pull/1841" rel="noopener noreferrer">Fix typo for installer base url override</a></li>
+<li>impl @CramBL <a href="https://github.com/axodotdev/cargo-dist/pull/1842" rel="noopener noreferrer">fix ignored configuration key 'msvc-crt-static'</a></li>
+<li>impl @gtema <a href="https://github.com/axodotdev/cargo-dist/pull/1702" rel="noopener noreferrer">update version of github provenance action</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release pre-release hidden">
+  <h2 id="tag-v1.0.0-rc.1">
+    <a href="v1.0.0-rc.1/">
+      
+        Version 1.0.0-rc.1
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v1.0.0-rc.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jan  9 2025 at 20:58 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>Nothing Yet!</p>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.28.0">
+    <a href="v0.28.0/">
+      
+        Version 0.28.0 (2025-01-08)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.28.0
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jan  8 2025 at 18:10 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains a new feature that improves the Windows PowerShell installer. We've also made some behind-the-scenes changes which most users won't notice yet - keep an eye out for our next major release!</p>
+<h2>PowerShell improvements</h2>
+<p>While we've always updated the user's <code>Path</code> variable for them, in the past the user had to reboot their system for the change to be reflected or temporarily add the installation directory to the <code>Path</code> themselves. Starting in 0.28.0, we now only require you to restart your shell for the change to take effect, not the entire system. We've also made improvements to our handling of this variable to better support users whose <code>Path</code> contained variable expansions.</p>
+<p>Thanks to open source contributor @DavisVaughan, who did extensive research as well as writing the feature!</p>
+<ul>
+<li>impl @DavisVaughan <a href="https://github.com/axodotdev/cargo-dist/pull/1658" rel="noopener noreferrer">Rework Add-Path to avoid expanding and request an environment refresh</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1681" rel="noopener noreferrer">Properly support installing apt packages from the default cargo-xwin builder</a></li>
+</ul>
+
+  </div>
+</section>
+        
+          
+          <section class="release ">
+  <h2 id="tag-v0.27.1">
+    <a href="v0.27.1/">
+      
+        Version 0.27.1 (2025-01-06)
+      
+    </a>
+  </h2>
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.27.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jan  6 2025 at 23:13 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <h2>Fixed a bug where <code>dist migrate</code> would delete <code>dist-workspace.toml</code></h2>
+<p>A bug was introduced in 0.27.0 where, instead of <code>dist migrate</code> <em>never</em> deleting <code>dist-workspace.toml</code>, it would <em>always</em> delete it. This has been fixed.</p>
+<ul>
+<li>impl @duckinator <a href="https://github.com/axodotdev/cargo-dist/pull/1661" rel="noopener noreferrer">fix: avoid 'dist migrate' deleting dist-workspace.toml</a></li>
+</ul>
+<h2>Warn if a tool is "shadowed" on your PATH</h2>
+<p>Shell installers now check if the tool it installed is shadowed by another tool on your path.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1659" rel="noopener noreferrer">feat: check for shadowed binaries in shell installer</a></li>
+</ul>
+<h2>Prefer GitHub over Axo Releases</h2>
+<p>This release switches the preferred installation location to GitHub. In prior releases, if the user had both GitHub Releases and Axo Releases selected, generated installation scripts and receipts would prefer to fetch from GitHub.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1673" rel="noopener noreferrer">feat: prioritize github over axo</a></li>
+</ul>
+
+  </div>
+</section>
+        
+      </div>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+    
+
+    
+  <script src="/cargo-dist/artifacts.js"></script>
+
+  </body>
+</html>

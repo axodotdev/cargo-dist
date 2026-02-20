@@ -1,0 +1,416 @@
+
+/* Globals */
+
+:root {
+    --sidebar-width: 300px;
+    --page-padding: 15px;
+    --content-max-width: 750px;
+    --menu-bar-height: 50px;
+    
+    --mono-font: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
+    --code-font-size: 0.875em /* please adjust the ace font size accordingly in editor.js */
+
+    /* axomdbook mods to add some more knobs to themes */
+    --title-fg: var(--fg);
+    --subtitle-fg: var(--title-fg);
+    --main-font: "Open Sans", sans-serif;
+}
+
+/* Themes */
+
+.ayu {
+    --bg: hsl(210, 25%, 8%);
+    --fg: #c5c5c5;
+
+    --sidebar-bg: #14191f;
+    --sidebar-fg: #c8c9db;
+    --sidebar-non-existant: #5c6773;
+    --sidebar-active: #ffb454;
+    --sidebar-spacer: #2d334f;
+
+    --scrollbar: var(--sidebar-fg);
+
+    --icons: #737480;
+    --icons-hover: #b7b9cc;
+
+    --links: #0096cf;
+
+    --inline-code-color: #ffb454;
+
+    --theme-popup-bg: #14191f;
+    --theme-popup-border: #5c6773;
+    --theme-hover: #191f26;
+
+    --quote-bg: hsl(226, 15%, 17%);
+    --quote-border: hsl(226, 15%, 22%);
+
+    --table-border-color: hsl(210, 25%, 13%);
+    --table-header-bg: hsl(210, 25%, 28%);
+    --table-alternate-bg: hsl(210, 25%, 11%);
+
+    --searchbar-border-color: #848484;
+    --searchbar-bg: #424242;
+    --searchbar-fg: #fff;
+    --searchbar-shadow-color: #d4c89f;
+    --searchresults-header-fg: #666;
+    --searchresults-border-color: #888;
+    --searchresults-li-bg: #252932;
+    --search-mark-bg: #e3b171;
+}
+
+.coal {
+    --bg: hsl(200, 7%, 8%);
+    --fg: #98a3ad;
+
+    --sidebar-bg: #292c2f;
+    --sidebar-fg: #a1adb8;
+    --sidebar-non-existant: #505254;
+    --sidebar-active: #3473ad;
+    --sidebar-spacer: #393939;
+
+    --scrollbar: var(--sidebar-fg);
+
+    --icons: #43484d;
+    --icons-hover: #b3c0cc;
+
+    --links: #2b79a2;
+
+    --inline-code-color: #c5c8c6;
+
+    --theme-popup-bg: #141617;
+    --theme-popup-border: #43484d;
+    --theme-hover: #1f2124;
+
+    --quote-bg: hsl(234, 21%, 18%);
+    --quote-border: hsl(234, 21%, 23%);
+
+    --table-border-color: hsl(200, 7%, 13%);
+    --table-header-bg: hsl(200, 7%, 28%);
+    --table-alternate-bg: hsl(200, 7%, 11%);
+
+    --searchbar-border-color: #aaa;
+    --searchbar-bg: #b7b7b7;
+    --searchbar-fg: #000;
+    --searchbar-shadow-color: #aaa;
+    --searchresults-header-fg: #666;
+    --searchresults-border-color: #98a3ad;
+    --searchresults-li-bg: #2b2b2f;
+    --search-mark-bg: #355c7d;
+}
+
+.light {
+    --bg: hsl(0, 0%, 100%);
+    --fg: hsl(0, 0%, 0%);
+
+    --sidebar-bg: #fafafa;
+    --sidebar-fg: hsl(0, 0%, 0%);
+    --sidebar-non-existant: #aaaaaa;
+    --sidebar-active: #1f1fff;
+    --sidebar-spacer: #f4f4f4;
+
+    --scrollbar: #8F8F8F;
+
+    --icons: #747474;
+    --icons-hover: #000000;
+
+    --links: #20609f;
+
+    --inline-code-color: #301900;
+
+    --theme-popup-bg: #fafafa;
+    --theme-popup-border: #cccccc;
+    --theme-hover: #e6e6e6;
+
+    --quote-bg: hsl(197, 37%, 96%);
+    --quote-border: hsl(197, 37%, 91%);
+
+    --table-border-color: hsl(0, 0%, 95%);
+    --table-header-bg: hsl(0, 0%, 80%);
+    --table-alternate-bg: hsl(0, 0%, 97%);
+
+    --searchbar-border-color: #aaa;
+    --searchbar-bg: #fafafa;
+    --searchbar-fg: #000;
+    --searchbar-shadow-color: #aaa;
+    --searchresults-header-fg: #666;
+    --searchresults-border-color: #888;
+    --searchresults-li-bg: #e4f2fe;
+    --search-mark-bg: #a2cff5;
+}
+
+.navy {
+    --bg: hsl(226, 23%, 11%);
+    --fg: #bcbdd0;
+
+    --sidebar-bg: #282d3f;
+    --sidebar-fg: #c8c9db;
+    --sidebar-non-existant: #505274;
+    --sidebar-active: #2b79a2;
+    --sidebar-spacer: #2d334f;
+
+    --scrollbar: var(--sidebar-fg);
+
+    --icons: #737480;
+    --icons-hover: #b7b9cc;
+
+    --links: #2b79a2;
+
+    --inline-code-color: #c5c8c6;
+
+    --theme-popup-bg: #161923;
+    --theme-popup-border: #737480;
+    --theme-hover: #282e40;
+
+    --quote-bg: hsl(226, 15%, 17%);
+    --quote-border: hsl(226, 15%, 22%);
+
+    --table-border-color: hsl(226, 23%, 16%);
+    --table-header-bg: hsl(226, 23%, 31%);
+    --table-alternate-bg: hsl(226, 23%, 14%);
+
+    --searchbar-border-color: #aaa;
+    --searchbar-bg: #aeaec6;
+    --searchbar-fg: #000;
+    --searchbar-shadow-color: #aaa;
+    --searchresults-header-fg: #5f5f71;
+    --searchresults-border-color: #5c5c68;
+    --searchresults-li-bg: #242430;
+    --search-mark-bg: #a2cff5;
+}
+
+.rust {
+    --bg: hsl(60, 9%, 87%);
+    --fg: #262625;
+
+    --sidebar-bg: #3b2e2a;
+    --sidebar-fg: #c8c9db;
+    --sidebar-non-existant: #505254;
+    --sidebar-active: #e69f67;
+    --sidebar-spacer: #45373a;
+
+    --scrollbar: var(--sidebar-fg);
+
+    --icons: #737480;
+    --icons-hover: #262625;
+
+    --links: #2b79a2;
+
+    --inline-code-color: #6e6b5e;
+
+    --theme-popup-bg: #e1e1db;
+    --theme-popup-border: #b38f6b;
+    --theme-hover: #99908a;
+
+    --quote-bg: hsl(60, 5%, 75%);
+    --quote-border: hsl(60, 5%, 70%);
+
+    --table-border-color: hsl(60, 9%, 82%);
+    --table-header-bg: #b3a497;
+    --table-alternate-bg: hsl(60, 9%, 84%);
+
+    --searchbar-border-color: #aaa;
+    --searchbar-bg: #fafafa;
+    --searchbar-fg: #000;
+    --searchbar-shadow-color: #aaa;
+    --searchresults-header-fg: #666;
+    --searchresults-border-color: #888;
+    --searchresults-li-bg: #dec2a2;
+    --search-mark-bg: #e69f67;
+}
+
+@media (prefers-color-scheme: dark) {
+    .light.no-js {
+        --bg: hsl(200, 7%, 8%);
+        --fg: #98a3ad;
+
+        --sidebar-bg: #292c2f;
+        --sidebar-fg: #a1adb8;
+        --sidebar-non-existant: #505254;
+        --sidebar-active: #3473ad;
+        --sidebar-spacer: #393939;
+
+        --scrollbar: var(--sidebar-fg);
+
+        --icons: #43484d;
+        --icons-hover: #b3c0cc;
+
+        --links: #2b79a2;
+
+        --inline-code-color: #c5c8c6;
+
+        --theme-popup-bg: #141617;
+        --theme-popup-border: #43484d;
+        --theme-hover: #1f2124;
+
+        --quote-bg: hsl(234, 21%, 18%);
+        --quote-border: hsl(234, 21%, 23%);
+
+        --table-border-color: hsl(200, 7%, 13%);
+        --table-header-bg: hsl(200, 7%, 28%);
+        --table-alternate-bg: hsl(200, 7%, 11%);
+
+        --searchbar-border-color: #aaa;
+        --searchbar-bg: #b7b7b7;
+        --searchbar-fg: #000;
+        --searchbar-shadow-color: #aaa;
+        --searchresults-header-fg: #666;
+        --searchresults-border-color: #98a3ad;
+        --searchresults-li-bg: #2b2b2f;
+        --search-mark-bg: #355c7d;
+    }
+}
+
+/* oranda theme gets injected here */
+.oranda-dark {
+    /*
+      This part is just defining constants that are consistent
+      between both axo themes, which fringe/oranda-css should probably
+      be injecting into this file. For now, they're hardcoded.
+    */
+    --color-axo-pink: hsla(326, 100%, 73%, 1);
+    --color-axo-pink-dark: hsla(326, 52%, 58%, 1);
+    --color-axo-orange: hsla(0, 87%, 70%, 1);
+    --color-axo-orange-dark: hsla(356, 75%, 64%, 1);
+    --color-axo-highlighter: hsla(51, 100%, 50%, 1);
+    --color-axo-black: hsla(0, 0%, 5%, 1);
+    /* i think this is defined by fringe, but it didn't have a name so i made this one */
+    --color-axo-purple: rgb(167 139 250);
+    /* fringe builtins */
+    --color-slate-50: #f8fafc;
+    --color-slate-300: #cbd5e1;
+    --color-slate-700: #334155;
+    --color-slate-800: #1e293b;
+    /* another maybe-fringe-no-good-name */
+    --color-wellish: rgb(17 24 39);
+    /* this one is totally made up, idk */
+    --color-wellish-light: rgb(50, 71, 116);
+
+    /*
+      Here we select which colors/fonts to use for this specific theme.
+      This first block calls a lot of the shots, most other definitions just
+      defer to these values.
+    */
+    --bg: var(--color-axo-black);
+    --fg: var(--color-slate-300);
+    --well-bg: var(--color-wellish);
+    --well-bg-highlight: var(--color-wellish-light);
+    --title-fg: var(--color-axo-pink);
+    --subtitle-fg: var(--color-axo-purple);
+    --border-color: var(--color-slate-700);
+    --main-font: Comfortaa, Comfortaa override, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+
+    --sidebar-bg: var(--bg);
+    --sidebar-fg: var(--fg);
+    --sidebar-non-existant: var(--bg);
+    --sidebar-active: var(--color-axo-pink);
+    --sidebar-spacer: var(--border-color);
+
+    --scrollbar: default;
+
+    --icons: var(--color-axo-orange);
+    --icons-hover: var(--color-axo-pink);
+
+    --links: var(--color-axo-orange);
+    --links-hover: var(--color-axo-pink);
+
+    --inline-code-color: var(--color-axo-purple);
+
+    --theme-popup-bg: var(--well-bg);
+    --theme-popup-border: var(--border-color);
+    --theme-hover: var(--well-bg-highlight);
+
+    --quote-bg: var(--bg);
+    --quote-border: var(--border-color);
+
+    --table-border-color: var(--border-color);
+    --table-header-bg: var(--well-bg-highlight);
+    --table-alternate-bg: var(--well-bg);
+
+    --searchbar-border-color: var(--border-color);
+    --searchbar-bg: var(--well-bg);
+    --searchbar-fg: var(--fg);
+    --searchbar-shadow-color: var(--border-color);
+    --searchresults-header-fg: var(--title-fg);
+    --searchresults-border-color: var(--border-color);
+    --searchresults-li-bg: var(--well-bg);
+    --search-mark-bg: var(--color-axo-highlighter);
+}
+
+.oranda-light {
+    /*
+      This part is just defining constants that are consistent
+      between both axo themes, which fringe/oranda-css should probably
+      be injecting into this file. For now, they're hardcoded.
+    */
+    --color-axo-pink: hsla(326, 100%, 73%, 1);
+    --color-axo-pink-dark: hsla(326, 52%, 58%, 1);
+    --color-axo-orange: hsla(0, 87%, 70%, 1);
+    --color-axo-orange-dark: hsla(356, 75%, 64%, 1);
+    --color-axo-highlighter: hsla(51, 100%, 50%, 1);
+    --color-axo-black: hsla(0, 0%, 5%, 1);
+    /* i think this is defined by fringe, but it didn't have a name so i made this one */
+    --color-axo-purple: rgb(167 139 250);
+    /* fringe builtins */
+    --color-slate-50: #f8fafc;
+    --color-slate-300: #cbd5e1;
+    --color-slate-500: #64748b;
+    --color-slate-700: #334155;
+    --color-slate-800: #1e293b;
+    /* another maybe-fringe-no-good-name */
+    --color-wellish: rgb(17 24 39);
+    /* this one is totally made up, idk */
+    --color-wellish-light: rgb(50, 71, 116);
+
+    /*
+      Here we select which colors/fonts to use for this specific theme.
+      This first block calls a lot of the shots, most other definitions just
+      defer to these values.
+    */
+    --bg: var(--color-slate-50);
+    --fg: var(--color-slate-800);
+    --well-bg: var(--color-slate-300);
+    --well-bg-highlight: var(--color-slate-500);
+    --title-fg: var(--color-axo-pink);
+    --subtitle-fg: var(--color-axo-purple);
+    --border-color: var(--color-slate-700);
+    --main-font: Comfortaa, Comfortaa override, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+
+    --sidebar-bg: var(--bg);
+    --sidebar-fg: var(--fg);
+    --sidebar-non-existant: var(--bg);
+    --sidebar-active: var(--color-axo-pink);
+    --sidebar-spacer: var(--border-color);
+
+    --scrollbar: default;
+
+    --icons: var(--color-axo-orange);
+    --icons-hover: var(--color-axo-pink);
+
+    --links: var(--color-axo-orange);
+    --links-hover: var(--color-axo-pink);
+
+    --inline-code-color: var(--color-axo-purple);
+
+    --theme-popup-bg: var(--well-bg);
+    --theme-popup-border: var(--border-color);
+    --theme-hover: var(--well-bg-highlight);
+
+    --quote-bg: var(--bg);
+    --quote-border: var(--border-color);
+
+    --table-border-color: var(--border-color);
+    --table-header-bg: var(--well-bg-highlight);
+    --table-alternate-bg: var(--well-bg);
+
+    --searchbar-border-color: var(--border-color);
+    --searchbar-bg: var(--well-bg);
+    --searchbar-fg: var(--fg);
+    --searchbar-shadow-color: var(--border-color);
+    --searchresults-header-fg: var(--title-fg);
+    --searchresults-border-color: var(--border-color);
+    --searchresults-li-bg: var(--well-bg);
+    --search-mark-bg: var(--color-axo-highlighter);
+}
+
