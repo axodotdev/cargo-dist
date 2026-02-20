@@ -82,6 +82,7 @@ impl DistMetadata {
             extra_artifacts,
             github_custom_runners,
             github_custom_job_permissions,
+            github_custom_job_secrets,
             bin_aliases,
             tag_namespace,
             install_updater,
@@ -169,6 +170,7 @@ impl DistMetadata {
         let github_ci_layer = list_to_bool_layer(is_global, &ci, CiStyle::Github, || {
             if github_custom_runners.is_some()
                 || github_custom_job_permissions.is_some()
+                || github_custom_job_secrets.is_some()
                 || github_build_setup.is_some()
                 || github_action_commits.is_some()
             {
@@ -176,6 +178,7 @@ impl DistMetadata {
                     common: CommonCiLayer::default(),
                     runners: github_custom_runners,
                     permissions: github_custom_job_permissions,
+                    secrets: github_custom_job_secrets,
                     build_setup: github_build_setup,
                     action_commits: github_action_commits,
                 })
