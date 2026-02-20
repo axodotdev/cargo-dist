@@ -768,10 +768,10 @@ install() {
     # permissions.
 
     for _bin_name in $_bins; do
-            ensure mv "$_install_temp/$_bin_name" "$_install_dir"
-            for _dest in $(aliases_for_binary "$_bin_name" "$_arch"); do
-                    ln -sf "$_install_dir/$_bin_name" "$_install_dir/$_dest"
-            done
+        ensure mv "$_install_temp/$_bin_name" "$_install_dir"
+        for _dest in $(aliases_for_binary "$_bin_name" "$_arch"); do
+            ln -sf "$_install_dir/$_bin_name" "$_install_dir/$_dest"
+        done
     done
     for _lib_name in $_libs $_staticlibs; do
         ensure mv "$_lib_install_temp/$_lib_name" "$_lib_install_dir"
@@ -1544,7 +1544,7 @@ verify_checksum() {
             local _test_blake2s
             _test_blake2s="$(printf "can do blake2s" | b2sum -a blake2s | awk '{printf $1}')" || _test_blake2s=""
 
-            if [ "$_test_blake2s" = "$_well_known_blake2s_checksum" ]; then
+            if [ "X$_test_blake2s" = "X$_well_known_blake2s_checksum" ]; then
                 _calculated_checksum="$(b2sum -a blake2s "$_file" | awk '{printf $1}')" || _calculated_checksum=""
             else
                 say "skipping blake2s checksum verification (installed b2sum doesn't support blake2s)"
