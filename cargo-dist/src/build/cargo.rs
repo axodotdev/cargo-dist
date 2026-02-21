@@ -70,7 +70,22 @@ impl<'a> DistGraphBuilder<'a> {
         let mut builds = vec![];
         for (target_triple, binaries) in targets {
             let target = target_triple.parse()?;
-            let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
+
+            // If RUSTFLAGS is set, use that.
+            // Otherwise, read .cargo/config.toml.
+            let mut rustflags = match std::env::var("RUSTFLAGS") {
+                Ok(rustflags) => rustflags,
+                Err(_) => {
+                    let config = cargo_config2::Config::load()?;
+                    let flags = config
+                        .rustflags(target_triple.as_str())?
+                        .unwrap_or_default();
+                    // Convert from Vec<String> to a single space-separated String.
+                    flags.flags.join(" ")
+                }
+            };
+
+            // let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
 
             // FIXME: is there a more principled way for us to add things to RUSTFLAGS
             // without breaking everything. Cargo has some builtin ways like keys
