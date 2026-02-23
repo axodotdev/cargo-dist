@@ -1015,7 +1015,7 @@ These settings govern how we host your files with platforms like [GitHub Release
 Possible values:
 
 * `github`: Use GitHub Releases (enabled if [ci = "github"](#ci))
-* `simple`: Use a simple static file server (enabled if [simple-download-url](#simple-download-url) is set)
+* `simple`: Use a simple static file server (enabled if [simple-download-url](#simple-download-url) is set; since 0.31.0)
 
 Specifies what hosting provider to use when downloading files for installers.
 
@@ -1248,7 +1248,7 @@ This hosting mode is currently read-only -- it's up to you to actually upload th
 
 #### `simple-download-url`
 
-> <span style="float:right">since 0.16.0<br>[global-only][]</span>
+> <span style="float:right">since 0.31.0<br>[global-only][]</span>
 > default = `<none>`
 >
 > *in your dist-workspace.toml or dist.toml:*
