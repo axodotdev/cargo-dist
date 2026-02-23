@@ -1,5 +1,10 @@
 # Unreleased
 
+Nothing Yet!
+
+
+# Version 0.31.0 (2026-02-23)
+
 This release includes several new features, including the major introduction of [mirrors](https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings) that installers can fallback to.
 
 ## Simple hosting (aka mirrors)
