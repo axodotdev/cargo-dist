@@ -2,15 +2,48 @@
 
 This release includes several new features, including the major introduction of [mirrors](https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings) that installers can fallback to.
 
-## Features
+## Simple hosting (aka mirrors)
 
-- A new "simple" hosting style that lets installers source from a mirror
-    - [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings) 
-    - [impl](https://github.com/axodotdev/cargo-dist/pull/2285) @gankra
-    - [impl](https://github.com/axodotdev/cargo-dist/pull/2302) @mistydemeo
-- add option to skip npm-shrinkwrap.json generation
-    - [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#npm-shrinkwrap)
-    - [impl](https://github.com/axodotdev/cargo-dist/pull/2294) @mistydemeo 
+This release adds a new hosting method, `simple`, which supports static file hosting. This allows you to host your artifacts on the hosting provider of your choice so long as it follows a similar URL structure to GitHub Releases hosting. It can also be used alongside GitHub hosting; if you specify more than one hosting provider, the secondary hosting source will be used as a mirror. The priority is determined by the order of the keys in your config. For example, this will use GitHub first and fall back to your static host if GitHub is unavailable:
+
+```toml
+hosting = ["github", "simple"]
+simple-download-url = "https://static.myapp.com/{tag}"
+```
+
+And this will use your static host first and fall back to GitHub if necessary:
+
+```toml
+hosting = ["simple", "github"]
+simple-download-url = "https://static.myapp.com/{tag}"
+```
+
+For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings).
+
+Note: currently, dist won't *upload* artifacts to static hosts; it expects you to handle that, either manually or via writing a [custom job](https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-jobs).
+
+- impl @Gankra [Add "simple" hosting style](https://github.com/axodotdev/cargo-dist/pull/2285)
+- impl @mistydemeo [feat(homebrew): mirror support with multi-urls](https://github.com/axodotdev/cargo-dist/pull/2302)
+
+## Disabling npm-shrinkwrap.json for npm installers
+
+Currently, the npm installer includes an `npm-shrinkwrap.json` to specify the exact versions of its runtime dependencies as used at the time dist was released. Since some users would prefer looser dependency specification, this release provides an option to disable this. For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#npm-shrinkwrap).
+
+```toml
+npm-shrinkwrap = false
+```
+
+- impl @mistydemeo [feat: option to skip npm-shrinkwrap.json generation](https://github.com/axodotdev/cargo-dist/pull/2294)
+
+## Configurable build directory for generic projects
+
+Until now, generic (non-Rust) project support has assumed that artifacts are always written to the root of the project directory. This path is now configurable using the `out-dir` setting in your `dist.toml`. For example, if your project generates a binary named `example` in a subdirectory called `build`, you can specify:
+
+```toml
+binaries = ["example"]
+out-dir = "build"
+```
+
 - impl @CatBraaain [support out_dir in config](https://github.com/axodotdev/cargo-dist/pull/2271)
 
 ## Fixes
