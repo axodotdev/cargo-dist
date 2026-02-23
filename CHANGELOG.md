@@ -1,6 +1,21 @@
 # Unreleased
 
-Nothing Yet!
+This release includes several new features, including the major introduction of [mirrors](https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings) that installers can fallback to.
+
+## Features
+
+- A new "simple" hosting style that lets installers source from a mirror
+    - [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings) 
+    - [impl](https://github.com/axodotdev/cargo-dist/pull/2285) @gankra
+    - [impl](https://github.com/axodotdev/cargo-dist/pull/2302) @mistydemeo
+- add option to skip npm-shrinkwrap.json generation
+    - [docs](https://axodotdev.github.io/cargo-dist/book/reference/config.html#npm-shrinkwrap)
+    - [impl](https://github.com/axodotdev/cargo-dist/pull/2294) @mistydemeo 
+- impl @CatBraaain [support out_dir in config](https://github.com/axodotdev/cargo-dist/pull/2271)
+
+## Fixes
+
+- impl @EliteTK + @gankra [Reduce risk of an interrupted installation leading to a partial installation](https://github.com/axodotdev/cargo-dist/pull/2261)
 
 
 # Version 0.30.4 (2026-02-16)
