@@ -589,7 +589,6 @@ plan-list = ["PLAN_TOKEN"]
 local-empty-list = []
 host-list-multi = ["CLOUDFLARE_API_TOKEN", "DEPLOY_KEY"]
 post-list = ["POST_TOKEN"]
-unknown-job = ["SHOULD_BE_IGNORED"]
 
 [workspace.metadata.dist.github-custom-job-secrets.local-map]
 DEPLOY_TOKEN = "ORG_DEPLOY_TOKEN"

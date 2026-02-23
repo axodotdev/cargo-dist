@@ -1491,6 +1491,7 @@ Allows you to customize the secrets passed to your custom CI jobs.
 
 Jobs not present in this map keep the legacy `secrets: inherit` behavior.
 If a configured job has an empty list/map, `secrets` is omitted entirely for that job.
+Unknown job names in this map are an error.
 
 You can use either:
 
