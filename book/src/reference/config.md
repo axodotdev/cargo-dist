@@ -1852,7 +1852,7 @@ This may be used in the metadata of various [installers][].
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
 > [package]
-> readme = ["../LICENSE-MIT", "../LICENSE-APACHE"]
+> license-files = ["../LICENSE-MIT", "../LICENSE-APACHE"]
 > ```
 
 Relative paths to the license files for your package.
