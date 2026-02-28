@@ -914,7 +914,7 @@ downloader() {
     if [ "$1" = --check ]
     then need_cmd "$_dld"
     elif [ "$_dld" = curl ]
-    then curl -sSfL --retry 3 --retry-delay 3 --retry-all-errors "$1" -o "$2"
+    then curl -sSfL --retry 3 --retry-delay 3 "$1" -o "$2"
     elif [ "$_dld" = wget ]
     then wget --tries=4 --waitretry=3 "$1" -O "$2"
     else err "Unknown downloader"   # should not reach here

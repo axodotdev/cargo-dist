@@ -1453,9 +1453,9 @@ downloader() {
     then need_cmd "$_dld"
     elif [ "$_dld" = curl ]; then
         if [ -n "${AUTH_TOKEN:-}" ]; then
-            curl -sSfL --retry 3 --retry-delay 3 --retry-all-errors --header "Authorization: Bearer ${AUTH_TOKEN}" "$1" -o "$2"
+            curl -sSfL --retry 3 --retry-delay 3 --header "Authorization: Bearer ${AUTH_TOKEN}" "$1" -o "$2"
         else
-            curl -sSfL --retry 3 --retry-delay 3 --retry-all-errors "$1" -o "$2"
+            curl -sSfL --retry 3 --retry-delay 3 "$1" -o "$2"
         fi
     elif [ "$_dld" = wget ]; then
         if [ -n "${AUTH_TOKEN:-}" ]; then
