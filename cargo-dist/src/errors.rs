@@ -552,18 +552,6 @@ pub enum DistError {
         details: String,
     },
 
-    /// Cannot use cross-compilation with cargo-auditable
-    #[error(
-        "Cross-compilation builds from {host} to {target} cannot be used with cargo-auditable"
-    )]
-    #[diagnostic(help("set cargo-auditable to false or don't do cross-compilation"))]
-    CannotDoCargoAuditableAndCrossCompile {
-        /// The host system
-        host: Triple,
-        /// The target system
-        target: Triple,
-    },
-
     /// Generic build with Cargo-only build options
     #[error("You're building a generic package but have a Cargo-only option enabled")]
     #[diagnostic(help("Please disable the following from your configuration: {}", options.join(", ")))]
