@@ -111,6 +111,8 @@ pub struct GithubCiInfo {
     pub need_cargo_cyclonedx: bool,
     /// Whether to install and run omnibor-cli
     pub need_omnibor: bool,
+    /// npm registry URL for publishing
+    pub npm_registry_url: String,
 }
 
 /// Details for github releases
@@ -286,6 +288,13 @@ impl GithubCiInfo {
 
         let tap = dist.global_homebrew_tap.clone();
 
+        let npm_registry_url = dist
+            .global_publishers
+            .as_ref()
+            .and_then(|p| p.npm.as_ref())
+            .and_then(|npm| npm.registry.clone())
+            .unwrap_or_else(|| "https://registry.npmjs.org".to_string());
+
         let mut job_permissions = ci_config.permissions.clone();
         // user publish jobs default to elevated privileges
         for JobStyle::User(name) in &ci_config.publish_jobs {
@@ -417,6 +426,7 @@ impl GithubCiInfo {
             need_cargo_auditable,
             need_cargo_cyclonedx,
             need_omnibor,
+            npm_registry_url,
         })
     }
 
