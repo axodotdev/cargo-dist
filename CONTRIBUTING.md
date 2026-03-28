@@ -20,12 +20,12 @@ that your fix works.
 **3. Overcommunicate**
 
 In all scenarios, please provide as much context as possible- you may not think
-it's important but it may be! 
+it's important but it may be!
 
 **4. Patience**
 
 Axo is a very small company, it's possible that we may not be able to
-immediately prioritize your issue. We are excite to develop a community of 
+immediately prioritize your issue. We are excited to develop a community of
 contributors around this project, but it won't always be on the top of our to-do
 list, even if we wish it could be.
 
@@ -34,9 +34,14 @@ at-mention @ashleygwilliams- but please be kind while doing so!
 
 ## Running tests
 
+Run `just dev-install` to install required binaries into your path
+
 The test suite can be run with `cargo test`. [insta](https://insta.rs/docs/cli/)
 is used for snapshots; after running the test suite, use `cargo insta review` to
 review any changed snapshots.
+
+The test suite specifically requires v0.7.0 of `omnibor-cli`. Other versions may
+not work as expected
 
 The test suite cannot be run in parallel. Using an alternative test runner like
 `nextest` will cause unexpected behavior as tests will override each other's
