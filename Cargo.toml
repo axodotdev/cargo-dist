@@ -28,8 +28,8 @@ axoasset = { version = "2.0.0", features = ["json-serde", "toml-serde", "toml-ed
 axoprocess = { version = "0.2.1" }
 
 # third-party deps
-clap = { version = "4.5.60", features = ["derive"] }
-console = { version = "0.16.2" }
+clap = { version = "4.6.0", features = ["derive"] }
+console = { version = "0.16.3" }
 clap-cargo = { version = "0.18.3" }
 comfy-table = "7.2.2"
 miette = { version = "7.6.0" }
@@ -43,7 +43,7 @@ semver = "1.0.27"
 newline-converter = "0.3.0"
 dialoguer = "0.12.0"
 sha2 = "0.10.9"
-minijinja = { version = "2.16.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
+minijinja = { version = "2.18.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.4"
 itertools = "0.14.0"
 cargo-wix = "0.3.9"
@@ -51,16 +51,16 @@ uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
 goblin = "0.10.5"
 similar = "2.7.0"
-tokio = { version = "1.49.0", features = ["full"] }
+tokio = { version = "1.50.0", features = ["full"] }
 temp-dir = "0.2.0"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
 insta = { version = "1.45.1", features = ["filters"] }
-tar = "0.4.44"
+tar = "0.4.45"
 flate2 = "1.1.9"
 pathdiff = { version = "0.2.3", features = ["camino"] }
 url = "2.5.8"
-parse-changelog = "0.6.15"
+parse-changelog = "0.6.16"
 schemars = "1.2.1"
 spdx = "0.13.4"
 base64 = "0.22.1"

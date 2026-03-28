@@ -367,8 +367,8 @@ impl GithubCiInfo {
 
         let default_action_versions = [
             ("actions/checkout", "v6"),
-            ("actions/upload-artifact", "v6"),
-            ("actions/download-artifact", "v7"),
+            ("actions/upload-artifact", "v7"),
+            ("actions/download-artifact", "v8"),
             ("actions/attest-build-provenance", "v3"),
             ("swatinem/rust-cache", "v2"),
             ("actions/setup-node", "v6"),

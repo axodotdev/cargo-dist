@@ -191,12 +191,6 @@ pub fn make_build_cargo_target_command(
             command.arg("build");
         }
         Some(CargoBuildWrapper::ZigBuild) => {
-            if auditable {
-                return Err(DistError::CannotDoCargoAuditableAndCrossCompile {
-                    host: host.to_owned(),
-                    target,
-                });
-            }
             command.arg("zigbuild");
         }
         Some(CargoBuildWrapper::Xwin) => {
