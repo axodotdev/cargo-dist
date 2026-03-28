@@ -26,6 +26,104 @@
 mod gallery;
 use gallery::*;
 
+/// Tests that the npm installer correctly forwards proxy authentication
+/// credentials when HTTPS_PROXY contains username:password.
+///
+/// This is a regression test for a bug in axios-proxy-builder, which silently
+/// drops proxy auth credentials — it passes only host and port to
+/// tunnel.httpsOverHttp(), ignoring proxyAuth entirely. The fix replaces
+/// axios with native fetch + undici's EnvHttpProxyAgent, which correctly
+/// handles authenticated proxies.
+///
+/// The test installs the template's npm dependencies, then runs a Node.js
+/// script that starts a local CONNECT proxy requiring Basic auth and verifies
+/// the Proxy-Authorization header is actually sent.
+#[test]
+fn npm_installer_sends_proxy_auth() {
+    // Skip if node/npm not available
+    let node_ok = std::process::Command::new("node")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+    let npm_ok = std::process::Command::new("npm")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+    if !node_ok || !npm_ok {
+        eprintln!("Skipping npm_installer_sends_proxy_auth: node/npm not found");
+        return;
+    }
+
+    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let template_dir = manifest_dir.join("templates").join("installer");
+    let fixture_script = manifest_dir
+        .join("tests")
+        .join("fixtures")
+        .join("test-npm-proxy-auth.js");
+
+    // Set up temp directory with the template's dependencies
+    let tempdir = std::env::temp_dir().join("cargo-dist-proxy-auth-test");
+    if tempdir.exists() {
+        std::fs::remove_dir_all(&tempdir).unwrap();
+    }
+    std::fs::create_dir_all(&tempdir).unwrap();
+
+    std::fs::copy(
+        template_dir.join("package.json"),
+        tempdir.join("package.json"),
+    )
+    .unwrap();
+    std::fs::copy(
+        template_dir.join("npm-shrinkwrap.json"),
+        tempdir.join("npm-shrinkwrap.json"),
+    )
+    .unwrap();
+
+    // Copy the npm/ subdirectory (binary.js, binary-install.js)
+    let npm_src = template_dir.join("npm");
+    let npm_dst = tempdir.join("npm");
+    std::fs::create_dir_all(&npm_dst).unwrap();
+    for entry in std::fs::read_dir(&npm_src).unwrap() {
+        let entry = entry.unwrap();
+        if entry.file_type().unwrap().is_file() {
+            std::fs::copy(entry.path(), npm_dst.join(entry.file_name())).unwrap();
+        }
+    }
+
+    let install = std::process::Command::new("npm")
+        .args(["install", "--ignore-scripts"])
+        .current_dir(&tempdir)
+        .output()
+        .unwrap();
+    assert!(
+        install.status.success(),
+        "npm install failed: {}",
+        String::from_utf8_lossy(&install.stderr)
+    );
+
+    // Copy and run the proxy auth test script
+    std::fs::copy(&fixture_script, tempdir.join("test-npm-proxy-auth.js")).unwrap();
+
+    let result = std::process::Command::new("node")
+        .arg("test-npm-proxy-auth.js")
+        .current_dir(&tempdir)
+        .output()
+        .unwrap();
+
+    let _ = std::fs::remove_dir_all(&tempdir);
+
+    let stdout = String::from_utf8_lossy(&result.stdout);
+    let stderr = String::from_utf8_lossy(&result.stderr);
+    assert!(
+        result.status.success(),
+        "npm installer did not forward proxy auth credentials.\n\
+         Authenticated proxies (HTTPS_PROXY=http://user:pass@host:port) are broken.\n\
+         stdout: {stdout}\nstderr: {stderr}"
+    );
+}
+
 #[test]
 fn axolotlsay_basic() -> Result<(), miette::Report> {
     let test_name = _function_name!();
