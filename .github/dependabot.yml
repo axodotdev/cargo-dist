@@ -7,9 +7,13 @@ updates:
       time: "10:00"
     open-pull-requests-limit: 10
     target-branch: main
+    cooldown:
+      default-days: 7
   - package-ecosystem: npm
     directory: "/cargo-dist/templates/installer"
     schedule:
       interval: daily
       time: "10:00"
     target-branch: main
+    cooldown:
+      default-days: 7
