@@ -10,7 +10,7 @@
 // 6. Checks whether the proxy actually received Proxy-Authorization
 //
 // On the buggy code (axios-proxy-builder): FAILS — credentials are dropped
-// On the fixed code (undici EnvHttpProxyAgent): PASSES — credentials are sent
+// On the fixed code: PASSES — credentials are sent
 
 "use strict";
 
@@ -28,9 +28,10 @@ setTimeout(() => {
 async function main() {
   let authReceived = false;
 
-  // Start a minimal CONNECT proxy that inspects the Proxy-Authorization header
-  const proxy = http.createServer();
-  proxy.on("connect", (req, clientSocket) => {
+  // Start a minimal proxy that inspects the Proxy-Authorization header.
+  // We check both plain HTTP proxy requests and CONNECT tunneling requests,
+  // since different HTTP clients use different proxy styles.
+  function checkAuth(req) {
     const auth = req.headers["proxy-authorization"];
     if (auth) {
       const decoded = Buffer.from(
@@ -41,7 +42,17 @@ async function main() {
         authReceived = true;
       }
     }
-    // Always reject — we only need to observe whether auth was sent
+  }
+
+  const proxy = http.createServer((req, res) => {
+    // Plain HTTP proxy request (e.g. GET https://... through proxy)
+    checkAuth(req);
+    res.writeHead(502);
+    res.end();
+  });
+  proxy.on("connect", (req, clientSocket) => {
+    // CONNECT tunneling request
+    checkAuth(req);
     clientSocket.write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
     clientSocket.end();
   });
@@ -104,9 +115,6 @@ async function main() {
   process.exit = () => {};
 
   // NOW require binary.js — this is the actual installer code under test.
-  // On the fixed version, this calls setGlobalDispatcher(new EnvHttpProxyAgent())
-  // at module load time, configuring proxy for all subsequent fetch() calls.
-  // On the buggy version, this just loads axios-proxy-builder.
   const { install } = require("./binary");
 
   // Call install() — exactly what the npm postinstall hook does.
@@ -129,7 +137,7 @@ async function main() {
   } else {
     console.error(
       "FAIL: Proxy did NOT receive authentication credentials\n" +
-        "The installer sent a CONNECT request to the proxy without " +
+        "The installer sent a request to the proxy without " +
         "Proxy-Authorization.\nThis means authenticated proxies " +
         "(HTTPS_PROXY=http://user:pass@host:port) are broken.",
     );
