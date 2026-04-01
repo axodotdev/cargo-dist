@@ -309,7 +309,10 @@ download_binary_and_run_installer() {
             continue
         fi
 
-        if [ -n "${_checksum_style:-}" ]; then
+        {# Skip checksum verification when using a custom download URL #}
+        if [ -n "{{ '${' }}{{ env_vars.download_url_env_var }}:-}" ] || [ -n "${INSTALLER_DOWNLOAD_URL:-}" ]; then
+            say "skipping checksum verification (using custom download URL)" 1>&2
+        elif [ -n "${_checksum_style:-}" ]; then
             verify_checksum "$_file" "$_checksum_style" "$_checksum_value"
         else
             say "no checksums to verify" 1>&2
