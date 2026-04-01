@@ -1,8 +1,6 @@
 const { Package } = require("./binary-install");
 const os = require("os");
-const cTable = require("console.table");
 const libc = require("detect-libc");
-const { configureProxy } = require("axios-proxy-builder");
 
 const error = (msg) => {
   console.error(msg);
@@ -108,17 +106,15 @@ const install = (suppressLogs) => {
     console.warn("in demo mode, not installing binaries");
     return;
   }
-  const package = getPackage();
-  const proxy = configureProxy(package.url);
+  const pkg = getPackage();
 
-  return package.install(proxy, suppressLogs);
+  return pkg.install(suppressLogs);
 };
 
 const run = (binaryName) => {
-  const package = getPackage();
-  const proxy = configureProxy(package.url);
+  const pkg = getPackage();
 
-  package.run(binaryName, proxy);
+  pkg.run(binaryName);
 };
 
 module.exports = {
