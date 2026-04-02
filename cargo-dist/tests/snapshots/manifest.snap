@@ -525,7 +525,7 @@ stdout:
             "host": "aarch64-apple-darwin",
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version 1.0.0-FAKEVERSION"
             },
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "targets": [
@@ -543,7 +543,7 @@ stdout:
             },
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version 1.0.0-FAKEVERSION"
             },
             "dist_args": "--artifacts=local --target=aarch64-unknown-linux-gnu",
             "targets": [
@@ -562,7 +562,7 @@ stdout:
             },
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version 1.0.0-FAKEVERSION"
             },
             "dist_args": "--artifacts=local --target=aarch64-unknown-linux-musl",
             "targets": [
@@ -576,7 +576,7 @@ stdout:
             "host": "x86_64-apple-darwin",
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version 1.0.0-FAKEVERSION"
             },
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "targets": [
@@ -589,7 +589,7 @@ stdout:
             "host": "x86_64-pc-windows-msvc",
             "install_dist": {
               "shell": "pwsh",
-              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex"
+              "run": "try { irm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex } catch { cargo install cargo-dist --locked --version 1.0.0-FAKEVERSION }"
             },
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
             "targets": [
@@ -602,7 +602,7 @@ stdout:
             "host": "x86_64-unknown-linux-gnu",
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version 1.0.0-FAKEVERSION"
             },
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
             "targets": [
@@ -615,7 +615,7 @@ stdout:
             "host": "x86_64-unknown-linux-gnu",
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version 1.0.0-FAKEVERSION"
             },
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
             "targets": [
