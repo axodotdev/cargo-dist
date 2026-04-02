@@ -1,0 +1,29 @@
+/* Dark mode colors. */
+:root {
+	--sl-color-accent-low: #3c112e;
+	--sl-color-accent: #b7008b;
+	--sl-color-accent-high: #eeb5d6;
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: #f8e7fc;
+	--sl-color-gray-2: #cebad3;
+	--sl-color-gray-3: #a17bab;
+	--sl-color-gray-4: #6c4875;
+	--sl-color-gray-5: #4a2953;
+	--sl-color-gray-6: #371740;
+	--sl-color-black: #201224;
+}
+/* Light mode colors. */
+:root[data-theme='light'] {
+	--sl-color-accent-low: #f4c8e1;
+	--sl-color-accent: #ba008d;
+	--sl-color-accent-high: #570f42;
+	--sl-color-white: #201224;
+	--sl-color-gray-1: #371740;
+	--sl-color-gray-2: #4a2953;
+	--sl-color-gray-3: #6c4875;
+	--sl-color-gray-4: #a17bab;
+	--sl-color-gray-5: #cebad3;
+	--sl-color-gray-6: #f8e7fc;
+	--sl-color-gray-7: #fbf3fe;
+	--sl-color-black: #ffffff;
+}
