@@ -3168,7 +3168,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "targets": [
               "x86_64-unknown-linux-musl"
             ],
-            "packages_install": "sudo apt-get update\nsudo apt-get install musl-tools",
+            "packages_install": "sudo apt-get update\nsudo apt-get install -y musl-tools",
             "cache_provider": "github"
           }
         ]
