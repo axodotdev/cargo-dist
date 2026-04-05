@@ -16,7 +16,7 @@ This setting yields the following attestation step by default:
 
 ```yaml
 - name: Attest
-  uses: actions/attest-build-provenance@v2
+  uses: actions/attest@v4
   with:
     subject-path: |
       artifacts/*
@@ -26,7 +26,7 @@ When set to a different set of values such as `github-attestations-filters = ["*
 
 ```yaml
 - name: Attest
-  uses: actions/attest-build-provenance@v2
+  uses: actions/attest@v4
   with:
     subject-path: |
       artifacts/*.json
