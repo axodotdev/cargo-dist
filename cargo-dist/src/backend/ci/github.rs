@@ -23,8 +23,9 @@ use crate::{
     build_wrapper_for_cross,
     config::{
         v1::{ci::github::GithubCiConfig, publishers::PublisherConfig},
-        DependencyKind, GithubPermission, GithubPermissionMap, GithubReleasePhase, HostingStyle,
-        JinjaGithubRepoPair, JobStyle, ProductionMode, PublishStyle, SystemDependencies,
+        DependencyKind, GithubPermission, GithubPermissionMap, GithubReleasePhase, GithubSecretMap,
+        HostingStyle, JinjaGithubRepoPair, JobStyle, ProductionMode, PublishStyle,
+        SystemDependencies,
     },
     errors::DistResult,
     platform::{github_runners::target_for_github_runner_or_default, targets},
@@ -200,6 +201,12 @@ pub struct GithubCiJob {
     pub name: String,
     /// Permissions to give the job
     pub permissions: Option<GithubPermissionMap>,
+    /// Secrets to provide to the job.
+    ///
+    /// None: preserve legacy `secrets: inherit`.
+    /// Some(empty): pass no secrets.
+    /// Some(non-empty): explicitly map provided secrets.
+    pub secrets: Option<GithubSecretMap>,
 }
 
 impl GithubCiInfo {
@@ -287,6 +294,10 @@ impl GithubCiInfo {
         let tap = dist.global_homebrew_tap.clone();
 
         let mut job_permissions = ci_config.permissions.clone();
+        let job_secrets = ci_config.secrets.clone();
+        let configured_secret_jobs = &ci_config.configured_secret_jobs;
+        let known_custom_jobs = collect_custom_job_names(ci_config);
+        validate_job_secret_config_keys(configured_secret_jobs, &known_custom_jobs)?;
         // user publish jobs default to elevated privileges
         for JobStyle::User(name) in &ci_config.publish_jobs {
             job_permissions.entry(name.clone()).or_insert_with(|| {
@@ -310,12 +321,42 @@ impl GithubCiInfo {
             }
         }
 
-        let plan_jobs = build_jobs(&ci_config.plan_jobs, &job_permissions)?;
-        let local_artifacts_jobs = build_jobs(&ci_config.build_local_jobs, &job_permissions)?;
-        let global_artifacts_jobs = build_jobs(&ci_config.build_global_jobs, &job_permissions)?;
-        let host_jobs = build_jobs(&ci_config.host_jobs, &job_permissions)?;
-        let user_publish_jobs = build_jobs(&ci_config.publish_jobs, &job_permissions)?;
-        let post_announce_jobs = build_jobs(&ci_config.post_announce_jobs, &job_permissions)?;
+        let plan_jobs = build_jobs(
+            &ci_config.plan_jobs,
+            &job_permissions,
+            &job_secrets,
+            configured_secret_jobs,
+        )?;
+        let local_artifacts_jobs = build_jobs(
+            &ci_config.build_local_jobs,
+            &job_permissions,
+            &job_secrets,
+            configured_secret_jobs,
+        )?;
+        let global_artifacts_jobs = build_jobs(
+            &ci_config.build_global_jobs,
+            &job_permissions,
+            &job_secrets,
+            configured_secret_jobs,
+        )?;
+        let host_jobs = build_jobs(
+            &ci_config.host_jobs,
+            &job_permissions,
+            &job_secrets,
+            configured_secret_jobs,
+        )?;
+        let user_publish_jobs = build_jobs(
+            &ci_config.publish_jobs,
+            &job_permissions,
+            &job_secrets,
+            configured_secret_jobs,
+        )?;
+        let post_announce_jobs = build_jobs(
+            &ci_config.post_announce_jobs,
+            &job_permissions,
+            &job_secrets,
+            configured_secret_jobs,
+        )?;
 
         let root_permissions = (!root_permissions.is_empty()).then_some(root_permissions);
 
@@ -562,18 +603,61 @@ fn submodule_head(submodule_path: &Utf8PathBuf) -> DistResult<Option<String>> {
 fn build_jobs(
     jobs: &[JobStyle],
     perms: &SortedMap<String, GithubPermissionMap>,
+    secrets: &SortedMap<String, GithubSecretMap>,
+    configured_secret_jobs: &SortedSet<String>,
 ) -> DistResult<Vec<GithubCiJob>> {
     let mut output = vec![];
     for JobStyle::User(name) in jobs {
         let perms_for_job = perms.get(name);
+        let secrets_for_job = if configured_secret_jobs.contains(name) {
+            Some(secrets.get(name).cloned().unwrap_or_default())
+        } else {
+            None
+        };
 
         // Create the job
         output.push(GithubCiJob {
             name: name.clone(),
             permissions: perms_for_job.cloned(),
+            secrets: secrets_for_job,
         });
     }
     Ok(output)
+}
+
+fn collect_custom_job_names(ci_config: &GithubCiConfig) -> SortedSet<String> {
+    ci_config
+        .plan_jobs
+        .iter()
+        .chain(ci_config.build_local_jobs.iter())
+        .chain(ci_config.build_global_jobs.iter())
+        .chain(ci_config.host_jobs.iter())
+        .chain(ci_config.publish_jobs.iter())
+        .chain(ci_config.post_announce_jobs.iter())
+        .filter_map(|job| match job {
+            JobStyle::User(name) => Some(name.clone()),
+        })
+        .collect()
+}
+
+fn validate_job_secret_config_keys(
+    configured_secret_jobs: &SortedSet<String>,
+    known_custom_jobs: &SortedSet<String>,
+) -> DistResult<()> {
+    let unknown_jobs = configured_secret_jobs
+        .iter()
+        .filter(|job_name| !known_custom_jobs.contains(*job_name))
+        .cloned()
+        .collect::<Vec<_>>();
+
+    if unknown_jobs.is_empty() {
+        return Ok(());
+    }
+
+    Err(DistError::GithubUnknownCustomJobSecrets {
+        jobs: unknown_jobs,
+        known_jobs: known_custom_jobs.iter().cloned().collect(),
+    })
 }
 
 /// Get the best `cache-provider` key to use for <https://github.com/Swatinem/rust-cache>.
@@ -1034,6 +1118,34 @@ mod tests {
     use serde_json::Value;
 
     use super::*;
+
+    #[test]
+    fn validate_job_secret_config_keys_rejects_unknown_jobs() {
+        let configured_secret_jobs = SortedSet::from_iter(["unknown-job".to_owned()]);
+        let known_custom_jobs = SortedSet::from_iter(["known-job".to_owned()]);
+
+        let err = validate_job_secret_config_keys(&configured_secret_jobs, &known_custom_jobs)
+            .expect_err("unknown job keys should fail closed");
+
+        let DistError::GithubUnknownCustomJobSecrets { jobs, known_jobs } = err else {
+            panic!("expected GithubUnknownCustomJobSecrets");
+        };
+        assert_eq!(jobs, vec!["unknown-job".to_owned()]);
+        assert_eq!(known_jobs, vec!["known-job".to_owned()]);
+    }
+
+    #[test]
+    fn build_jobs_preserves_explicit_empty_secret_maps() {
+        let jobs = vec![JobStyle::User("empty-job".to_owned())];
+        let perms = SortedMap::new();
+        let secrets = SortedMap::from_iter([("empty-job".to_owned(), SortedMap::new())]);
+        let configured_secret_jobs = SortedSet::from_iter(["empty-job".to_owned()]);
+
+        let built = build_jobs(&jobs, &perms, &secrets, &configured_secret_jobs).unwrap();
+        assert_eq!(built.len(), 1);
+        assert_eq!(built[0].name, "empty-job");
+        assert_eq!(built[0].secrets, Some(SortedMap::new()));
+    }
 
     #[test]
     fn validator_works() {
