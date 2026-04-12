@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Setup
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
@@ -80,7 +80,7 @@ jobs:
       # go into repo's settings > pages and set "deploy from branch: gh-pages"
       # the other defaults work fine.
       - name: Deploy to Github Pages
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        uses: JamesIves/github-pages-deploy-action@v4.8.0
         # ONLY if we're on main (so no PRs or feature branches allowed!)
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
