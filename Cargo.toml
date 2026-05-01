@@ -39,7 +39,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.149" }
 cargo_metadata = "0.23.1"
 camino = { version = "1.2.2", features = ["serde1"] }
-semver = "1.0.27"
+semver = "1.0.28"
 newline-converter = "0.3.0"
 dialoguer = "0.12.0"
 sha2 = "0.10.9"
