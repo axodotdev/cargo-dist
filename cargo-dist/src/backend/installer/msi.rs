@@ -87,13 +87,13 @@ impl MsiInstallerInfo {
         Ok(renders)
     }
 
-    /// msi's impl of `dist genenerate --check`
+    /// msi's impl of `dist generate --check`
     pub fn check_config(&self) -> DistResult<()> {
         self.check_wix_guids()?;
         self.check_wxs()?;
         Ok(())
     }
-    /// msi's impl of `dist genenerate`
+    /// msi's impl of `dist generate`
     pub fn write_config_to_disk(&self) -> DistResult<()> {
         self.write_wix_guids_to_disk()?;
         self.write_wxs_to_disk()?;
