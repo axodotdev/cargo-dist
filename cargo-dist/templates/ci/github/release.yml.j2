@@ -95,16 +95,14 @@ jobs:
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
       {{%- if dispatch_releases %}}
-      tag: ${{ (inputs.tag != 'dry-run' && inputs.tag) || '' }}
-      tag-flag: ${{ inputs.tag && inputs.tag != 'dry-run' && format('--tag={0}', inputs.tag) || '' }}
+      tag: ${{ steps.tag.outputs.tag }}
       publishing: ${{ inputs.tag && inputs.tag != 'dry-run' }}
       {{%- elif release_branch %}}
       tag: ${{ steps.plan.outputs.tag }}
-      tag-flag: ${{ steps.plan.outputs.tag-flag }}
+      force-tag: ${{ steps.plan.outputs.force-tag }}
       publishing: ${{ !github.event.pull_request }}
       {{%- else %}}
-      tag: ${{ !github.event.pull_request && github.ref_name || '' }}
-      tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
+      tag: ${{ steps.tag.outputs.tag }}
       publishing: ${{ !github.event.pull_request }}
       {{%- endif %}}
     env:
@@ -128,25 +126,62 @@ jobs:
         with:
           name: cargo-dist-cache
           path: ~/.cargo/bin/dist
+      {{%- if dispatch_releases %}}
+      - id: tag
+        if: ${{ inputs.tag && inputs.tag != 'dry-run' }}
+        shell: bash
+        env:
+          REF_NAME: ${{ inputs.tag }}
+        run: |
+          printf 'tag=%s\n' "$REF_NAME" >> "$GITHUB_OUTPUT"
+      {{%- elif not release_branch %}}
+      - id: tag
+        if: ${{ !github.event.pull_request }}
+        shell: bash
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          printf 'tag=%s\n' "$REF_NAME" >> "$GITHUB_OUTPUT"
+      {{%- endif %}}
       # sure would be cool if github gave us proper conditionals...
       # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
       # functionality based on whether this is a pull_request, and whether it's from a fork.
       # (PRs run on the *source* but secrets are usually on the *target* -- that's *good*
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
+        shell: bash
+        env:
+          IS_PULL_REQUEST: ${{ github.event_name == 'pull_request' }}
+          DIST_TAG: ${{ steps.tag.outputs.tag }}
         run: |
-          dist
-          {{%- if dispatch_releases %}} ${{ (inputs.tag && inputs.tag != 'dry-run' && format('host --steps=create --tag={0}', inputs.tag))
-          {{%- elif release_branch %}} ${{ (!github.event.pull_request && 'host --steps=create --tag=timestamp --force-tag')
-          {{%- else %}} ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name))
+          dist_args=()
+          {{%- if dispatch_releases %}}
+          if [[ -n "$DIST_TAG" ]]; then
+            dist_args+=(host --steps=create "--tag=$DIST_TAG")
+          else
+            dist_args+=(plan)
+          fi
+          {{%- elif release_branch %}}
+          if [[ "$IS_PULL_REQUEST" == "true" ]]; then
+            dist_args+=(plan)
+          else
+            dist_args+=(host --steps=create --tag=timestamp --force-tag)
+          fi
+          {{%- else %}}
+          if [[ "$IS_PULL_REQUEST" == "true" ]]; then
+            dist_args+=(plan)
+          else
+            dist_args+=(host --steps=create "--tag=$DIST_TAG")
+          fi
           {{%- endif %}}
-          {{{- " || 'plan' }} --output-format=json > plan-dist-manifest.json" | safe }}}
+          dist "${dist_args[@]}" --output-format=json > plan-dist-manifest.json
           echo "dist ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
           {{%- if release_branch %}}
-          echo "tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
-          echo "tag-flag=--tag=$(jq --raw-output ".announcement_tag" plan-dist-manifest.json) --force-tag" >> "$GITHUB_OUTPUT"
+          tag="$(jq --raw-output ".announcement_tag" plan-dist-manifest.json)"
+          printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
+          printf 'force-tag=true\n' >> "$GITHUB_OUTPUT"
           {{%- endif %}}
       - name: "Upload dist-manifest.json"
         uses: {{{actions["actions/upload-artifact"] | safe }}}
@@ -199,6 +234,8 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
+      DIST_TAG: ${{ needs.plan.outputs.tag }}
+      DIST_FORCE_TAG: ${{ needs.plan.outputs.force-tag }}
     {{%- if ssldotcom_windows_sign %}}
       SSLDOTCOM_USERNAME: ${{ secrets.SSLDOTCOM_USERNAME }}
       SSLDOTCOM_PASSWORD: ${{ secrets.SSLDOTCOM_PASSWORD }}
@@ -316,9 +353,17 @@ jobs:
         run: |
           ${{ matrix.packages_install }}
       - name: Build artifacts
+        shell: bash
         run: |
           # Actually do builds and make zips and whatnot
-          dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          dist_tag_args=()
+          if [[ -n "$DIST_TAG" ]]; then
+            dist_tag_args+=("--tag=$DIST_TAG")
+          fi
+          if [[ "$DIST_FORCE_TAG" == "true" ]]; then
+            dist_tag_args+=(--force-tag)
+          fi
+          dist build "${dist_tag_args[@]}" --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "dist ran successfully"
       {{%- if github_attestations is defined and github_attestations and github_attestations_phase == "build-local-artifacts" %}}
       - name: Attest
@@ -385,6 +430,8 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
+      DIST_TAG: ${{ needs.plan.outputs.tag }}
+      DIST_FORCE_TAG: ${{ needs.plan.outputs.force-tag }}
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
@@ -424,7 +471,14 @@ jobs:
       - id: cargo-dist
         shell: bash
         run: |
-          dist build ${{ needs.plan.outputs.tag-flag }} --output-format=json {{{ global_task.dist_args }}} > dist-manifest.json
+          dist_tag_args=()
+          if [[ -n "$DIST_TAG" ]]; then
+            dist_tag_args+=("--tag=$DIST_TAG")
+          fi
+          if [[ "$DIST_FORCE_TAG" == "true" ]]; then
+            dist_tag_args+=(--force-tag)
+          fi
+          dist build "${dist_tag_args[@]}" --output-format=json {{{ global_task.dist_args }}} > dist-manifest.json
           echo "dist ran successfully"
 
           # Parse out what we just built and upload it to scratch storage
@@ -483,6 +537,10 @@ jobs:
 {{%- endfor %}}
   # Determines if we should publish/announce
   host:
+    {{%- if "github" in hosting_providers and release_phase == "host" and not (github_attestations is defined and github_attestations and github_attestations_phase == "host") %}}
+    permissions:
+      "contents": "write"
+    {{%- endif %}}
     needs:
       - plan
     {{%- if build_local_artifacts %}}
@@ -503,6 +561,8 @@ jobs:
     {{{- " }}" | safe }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DIST_TAG: ${{ needs.plan.outputs.tag }}
+      DIST_FORCE_TAG: ${{ needs.plan.outputs.force-tag }}
     runs-on: {{{ global_task.runner }}}
     outputs:
       val: ${{ steps.host.outputs.manifest }}
@@ -540,7 +600,14 @@ jobs:
       - id: host
         shell: bash
         run: |
-          dist host ${{ needs.plan.outputs.tag-flag }} --steps=upload --steps=release --output-format=json > dist-manifest.json
+          dist_tag_args=()
+          if [[ -n "$DIST_TAG" ]]; then
+            dist_tag_args+=("--tag=$DIST_TAG")
+          fi
+          if [[ "$DIST_FORCE_TAG" == "true" ]]; then
+            dist_tag_args+=(--force-tag)
+          fi
+          dist host "${dist_tag_args[@]}" --steps=upload --steps=release --output-format=json > dist-manifest.json
           echo "artifacts uploaded and released successfully"
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
@@ -643,6 +710,10 @@ jobs:
     {{%- for job in user_publish_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
     {{{- " }}" | safe }}}
     runs-on: {{{ global_task.runner }}}
+    {{%- if "github" in hosting_providers and release_phase == "announce" and not (github_attestations is defined and github_attestations and github_attestations_phase == "announce") %}}
+    permissions:
+      "contents": "write"
+    {{%- endif %}}
     {{%- if github_attestations is defined and github_attestations and github_attestations_phase == "announce" %}}
     permissions:
       "attestations": "write"
