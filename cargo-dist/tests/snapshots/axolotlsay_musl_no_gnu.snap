@@ -2308,15 +2308,15 @@ const install = (suppressLogs) => {
     console.warn("in demo mode, not installing binaries");
     return;
   }
-  const pkg = getPackage();
+  const package = getPackage();
 
-  return pkg.install(suppressLogs);
+  return package.install(suppressLogs);
 };
 
 const run = (binaryName) => {
-  const pkg = getPackage();
+  const package = getPackage();
 
-  pkg.run(binaryName);
+  package.run(binaryName);
 };
 
 module.exports = {
