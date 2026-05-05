@@ -45,9 +45,10 @@ function getProxyForUrl(urlString) {
   return {
     hostname: proxyUrl.hostname,
     port: proxyUrl.port || (proxyUrl.protocol === "https:" ? 443 : 80),
-    auth: proxyUrl.username
-      ? `${proxyUrl.username}:${proxyUrl.password}`
-      : null,
+    auth:
+      proxyUrl.username || proxyUrl.password
+        ? `${proxyUrl.username}:${proxyUrl.password}`
+        : null,
   };
 }
 
@@ -145,7 +146,7 @@ function download(urlString, maxRedirects) {
 }
 
 class Package {
-  constructor (platform, name, url, filename, zipExt, binaries) {
+  constructor(platform, name, url, filename, zipExt, binaries) {
     let errors = [];
     if (typeof url !== "string") {
       errors.push("url must be a string");
