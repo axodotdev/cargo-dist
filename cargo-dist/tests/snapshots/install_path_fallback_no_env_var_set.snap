@@ -1772,6 +1772,7 @@ function Install-Binary($install_args) {
       break
     } catch {
       Write-Information "failed to download from $url"
+      Write-Information "  $(Get-ExceptionMessage $_.Exception)"
       # keep going, maybe we have backup download URLs
     }
   }
@@ -1874,6 +1875,27 @@ function WebProxyFromEnvironment {
     return $webProxy
 }
 
+function Get-ExceptionMessage($exception) {
+  if ($null -eq $exception) {
+    return ""
+  }
+
+  while (($null -ne $exception.InnerException) -and (-not [string]::IsNullOrWhiteSpace($exception.InnerException.Message))) {
+    $exception = $exception.InnerException
+  }
+
+  return $exception.Message
+}
+
+function Invoke-DownloadFile($client, $url, $path) {
+  try {
+    $client.DownloadFile($url, $path)
+  } catch {
+    $message = Get-ExceptionMessage $_.Exception
+    throw "failed to download $url to ${path}: $message"
+  }
+}
+
 function Download($download_url, $platforms, $arch) {
   # Lookup what we expect this platform to look like
   $info = $platforms[$arch]
@@ -1899,7 +1921,7 @@ function Download($download_url, $platforms, $arch) {
   if ($auth_token) {
     $wc.Headers["Authorization"] = "Bearer $auth_token"
   }
-  $wc.downloadFile($url, $dir_path)
+  Invoke-DownloadFile -client $wc -url $url -path $dir_path
 
   Write-Verbose "Unpacking to $tmp"
 
@@ -1944,7 +1966,7 @@ function Download($download_url, $platforms, $arch) {
     $updater_url = "$download_url/$updater_id"
     $out_name = "$tmp\axolotlsay-update.exe"
 
-    $wc.downloadFile($updater_url, $out_name)
+    Invoke-DownloadFile -client $wc -url $updater_url -path $out_name
     $bin_paths += $out_name
   }
 
