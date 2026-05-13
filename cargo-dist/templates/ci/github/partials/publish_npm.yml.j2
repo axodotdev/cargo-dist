@@ -20,7 +20,7 @@
       - uses: {{{ actions["actions/setup-node"] | safe }}}
         with:
           node-version: '20.x'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: {{{ npm_registry_url }}}
       - run: |
           for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith("-npm-package.tar.gz")] | any)'); do
             pkg=$(echo "$release" | jq '.artifacts[] | select(endswith("-npm-package.tar.gz"))' --raw-output)
