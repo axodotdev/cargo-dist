@@ -1,0 +1,40 @@
+---
+title: Rust (simple)
+description: An example of project structure for a simple Rust project
+---
+
+import { Aside,FileTree,Tabs,TabItem } from '@astrojs/starlight/components';
+
+All dist projects, regardless of how many packages they may contain, are
+considered workspaces. A minimalist dist project would be a workspace that contains
+a single package.
+
+## `dist-workspace.toml`
+
+`dist` infers your project structure based on the location of the `dist-workspace.toml`
+file. This file is usually at the root of your repo, however, if you only ever intend
+to use `dist` on a single project or set of projects within your repo, you can
+place the `dist-workspace.toml` at the root of that part of the repo structure.
+
+<Tabs>
+    <TabItem label="File structure">
+        <FileTree>
+            - Cargo.toml
+            - Cargo.lock
+            - **dist-workspace.toml**
+            - README.md
+            - src
+                - main.rs
+        </FileTree>
+    </TabItem>
+    <TabItem label="Config (dist-workspace.toml)">
+        ```toml
+        ```
+    </TabItem>
+</Tabs>
+
+<Aside type="note">
+Before version 1.0, `dist` allowed Rust users to put all configuration in their
+`Cargo.toml` file. If you are still on an early version and need help updating,
+you can check out our documentation on [migrating configuration](TODO).
+</Aside>
