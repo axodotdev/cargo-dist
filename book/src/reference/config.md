@@ -28,6 +28,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`source-tarball`](#source-tarball)
 * [`recursive-tarball`](#recursive-tarball)
 * [`ssldotcom-windows-sign`](#ssldotcom-windows-sign)
+* [`macos-sign`](#macos-sign)
 * [archive settings](#artifact-settings)
     * [`auto-includes`](#auto-includes)
     * [`include`](#include)
