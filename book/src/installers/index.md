@@ -14,6 +14,7 @@ Currently supported installers include:
 * [npm][]: an npm project that fetches and runs executables (for `npx`)
 * [homebrew][]: a Homebrew formula that fetches and installs executables
 * [msi][]: a Windows msi that bundles and installs executables
+* [pkg][]: a Mac pkg that bundles and installs executables
 
 These keys can be specified via [`installer` in your dist config][config-installers]. The [`dist init` command][init] provides an interactive UI for enabling/disabling them.
 
@@ -80,6 +81,7 @@ Our installers are meant to be usable as-is, without requiring any special optio
 [msi]: ./msi.md
 [npm]: ./npm.md
 [homebrew]: ./homebrew.md
+[pkg]: ./pkg.md
 [usage]: ./usage.md
 
 [archives]: ../artifacts/archives.md
