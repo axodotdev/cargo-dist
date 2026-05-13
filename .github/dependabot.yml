@@ -17,3 +17,11 @@ updates:
     target-branch: main
     cooldown:
       default-days: 7
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily
+      time: "10:00"
+    target-branch: main
+    cooldown:
+      default-days: 7
