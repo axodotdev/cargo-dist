@@ -50,7 +50,7 @@ cargo-wix = "0.3.9"
 uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
 goblin = "0.10.5"
-similar = "2.7.0"
+similar = "3.1.0"
 tokio = { version = "1.50.0", features = ["full"] }
 temp-dir = "0.2.0"
 sha3 = "0.10.8"
