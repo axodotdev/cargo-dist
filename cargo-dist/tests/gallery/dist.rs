@@ -544,6 +544,29 @@ impl BuildAndPlanResult {
 
 impl GenerateResult {
     pub fn check_all(&self) -> Result<Snapshots> {
+        self.check_release_tag_shell_safety()?;
         self.snapshot()
+    }
+
+    fn check_release_tag_shell_safety(&self) -> Result<()> {
+        let Some(github_ci_path) = self.github_ci_path.as_deref() else {
+            return Ok(());
+        };
+        let workflow = LocalAsset::load_string(github_ci_path)?;
+        for unsafe_pattern in [
+            "format('--tag={0}'",
+            "needs.plan.outputs.tag-flag",
+            "dist ${{",
+            "dist build ${{",
+            "dist host ${{",
+            "gh release create \"${{ needs.plan.outputs.tag }}\"",
+            "gh release upload \"${{ needs.plan.outputs.tag }}\"",
+        ] {
+            assert!(
+                !workflow.contains(unsafe_pattern),
+                "generated GitHub workflow contains unsafe tag shell interpolation: {unsafe_pattern}"
+            );
+        }
+        Ok(())
     }
 }

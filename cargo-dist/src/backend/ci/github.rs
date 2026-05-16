@@ -298,7 +298,7 @@ impl GithubCiInfo {
         }
 
         let mut root_permissions = GithubPermissionMap::new();
-        root_permissions.insert("contents".to_owned(), GithubPermission::Write);
+        root_permissions.insert("contents".to_owned(), GithubPermission::Read);
 
         let mut publish_jobs = vec![];
         if let Some(PublisherConfig { homebrew, npm, .. }) = &dist.global_publishers {
@@ -491,7 +491,7 @@ impl GithubReleaseInfo {
         let mut release_args = vec![];
         let action;
         // Always need to use the tag flag
-        release_args.push("\"${{ needs.plan.outputs.tag }}\"");
+        release_args.push("\"$RELEASE_TAG\"");
 
         // If using remote repos, specify the repo
         if github_releases_repo.is_some() {
