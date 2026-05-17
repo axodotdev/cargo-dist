@@ -15,6 +15,8 @@ pub struct WorkspaceBuildConfig {
     pub cargo: WorkspaceCargoBuildConfig,
     /// whether to sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// whether to sign windows binaries with Azure Artifact Signing
+    pub azure_windows_sign: bool,
     /// whether to sign macos binaries with apple
     pub macos_sign: bool,
     /// Overrides the minimum supported glibc version.
@@ -45,6 +47,8 @@ pub struct BuildConfigInheritable {
     pub common: CommonBuildConfig,
     /// whether to sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// whether to sign windows binaries with Azure Artifact Signing
+    pub azure_windows_sign: Option<bool>,
     /// whether to sign macos binaries with apple
     pub macos_sign: Option<bool>,
     /// cargo builds
@@ -70,6 +74,10 @@ pub struct BuildLayer {
     /// Whether we should sign windows binaries with ssl.com
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+
+    /// Whether we should sign windows binaries with Azure Artifact Signing
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub azure_windows_sign: Option<bool>,
 
     /// whether to sign macos binaries with apple
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -101,6 +109,7 @@ impl BuildConfigInheritable {
             generic: None,
             system_dependencies: Default::default(),
             ssldotcom_windows_sign: None,
+            azure_windows_sign: None,
             macos_sign: None,
             min_glibc_version: None,
             omnibor: None,
@@ -114,6 +123,7 @@ impl BuildConfigInheritable {
             generic: None,
             system_dependencies: Default::default(),
             ssldotcom_windows_sign: None,
+            azure_windows_sign: None,
             macos_sign: None,
             min_glibc_version: None,
             omnibor: None,
@@ -128,6 +138,7 @@ impl BuildConfigInheritable {
             common,
             cargo,
             ssldotcom_windows_sign,
+            azure_windows_sign,
             macos_sign,
             min_glibc_version,
             omnibor,
@@ -143,6 +154,7 @@ impl BuildConfigInheritable {
             cargo: cargo_out,
             macos_sign: macos_sign.unwrap_or(false),
             ssldotcom_windows_sign,
+            azure_windows_sign: azure_windows_sign.unwrap_or(false),
             min_glibc_version,
             omnibor: omnibor.unwrap_or(false),
         }
@@ -162,6 +174,7 @@ impl BuildConfigInheritable {
             omnibor,
             // local-only
             ssldotcom_windows_sign: _,
+            azure_windows_sign: _,
             macos_sign: _,
         } = self;
         let mut cargo_out = AppCargoBuildConfig::defaults_for_package(workspaces, pkg_idx, &common);
@@ -193,6 +206,7 @@ impl ApplyLayer for BuildConfigInheritable {
             generic,
             system_dependencies,
             ssldotcom_windows_sign,
+            azure_windows_sign,
             macos_sign,
             min_glibc_version,
             omnibor,
@@ -204,6 +218,7 @@ impl ApplyLayer for BuildConfigInheritable {
         self.system_dependencies.apply_val(system_dependencies);
         self.ssldotcom_windows_sign
             .apply_opt(ssldotcom_windows_sign);
+        self.azure_windows_sign.apply_opt(azure_windows_sign);
         self.macos_sign.apply_opt(macos_sign);
         self.min_glibc_version.apply_opt(min_glibc_version);
         self.omnibor.apply_opt(omnibor);

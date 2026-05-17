@@ -90,6 +90,8 @@ pub struct GithubCiInfo {
     pub post_announce_jobs: Vec<GithubCiJob>,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// \[unstable\] whether to add Azure Artifact Signing for Windows binaries
+    pub azure_windows_sign: bool,
     /// Whether to enable macOS codesigning
     pub macos_sign: bool,
     /// what hosting provider we're using
@@ -221,6 +223,7 @@ impl GithubCiInfo {
         let dispatch_releases = ci_config.dispatch_releases;
         let release_branch = ci_config.release_branch.clone();
         let ssldotcom_windows_sign = dist.config.builds.ssldotcom_windows_sign.clone();
+        let azure_windows_sign = dist.config.builds.azure_windows_sign;
         let macos_sign = dist.config.builds.macos_sign;
         let tag_namespace = ci_config.tag_namespace.clone();
         let pr_run_mode = ci_config.pr_run_mode;
@@ -299,6 +302,9 @@ impl GithubCiInfo {
 
         let mut root_permissions = GithubPermissionMap::new();
         root_permissions.insert("contents".to_owned(), GithubPermission::Write);
+        if azure_windows_sign {
+            root_permissions.insert("id-token".to_owned(), GithubPermission::Write);
+        }
 
         let mut publish_jobs = vec![];
         if let Some(PublisherConfig { homebrew, npm, .. }) = &dist.global_publishers {
@@ -372,6 +378,7 @@ impl GithubCiInfo {
             ("actions/attest-build-provenance", "v3"),
             ("swatinem/rust-cache", "v2"),
             ("actions/setup-node", "v6"),
+            ("azure/login", "v2"),
         ];
         let actions = default_action_versions
             .iter()
@@ -408,6 +415,7 @@ impl GithubCiInfo {
             pr_run_mode,
             global_task,
             ssldotcom_windows_sign,
+            azure_windows_sign,
             macos_sign,
             hosting_providers,
             root_permissions,

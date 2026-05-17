@@ -1,19 +1,19 @@
-# Windows Artifact Signing with SSL.com Certificates
+# Windows Artifact Signing
 
 > since 0.15.0
 
-dist can automatically codesign Windows EXEs and [MSIs](../../installers/msi.md) using SSL.com's [eSigner cloud signing service](https://www.ssl.com/esigner/).
+dist can automatically codesign Windows EXEs, PowerShell installers, and [MSIs](../../installers/msi.md) using SSL.com's [eSigner cloud signing service](https://www.ssl.com/esigner/) or Azure Artifact Signing.
 
 Although there are many ways to do code signing, this process is specifically concerned with ensuring [Windows SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who [downloads your application with a web browser](https://en.wikipedia.org/wiki/Mark_of_the_Web) will get a popup warning them against running it. (Alternative methods of downloading and installing, such as [dist's powershell installers](../../installers/powershell.md) do not trigger SmartScreen.)
 
 Windows code signing is done using essentially the same certificate infrastructure as HTTPS, just with stricter requirements on issuance and management of the private keys. In principle this means you can go to your favourite SSL/TLS Certificate vendor and ask for an EV Code Signing Certificate and follow the same process regardless of which vendor you picked. **However [as of July 2023](https://knowledge.digicert.com/alerts/code-signing-changes-in-2023), all the relevant kinds of code signing certificates can only be issued via hardware security modules (HSMs) like Yubikeys.** This poses a significant challenge for CI/CD pipelines, because you can't just plug a USB key into GitHub CI.
 
-Although this will hopefully improve in the future, for now this has resulted in a fragmented system where each certificate vendor has its own cloud signing service where they host the HSMs and you send them the things you want signed. As a result it's no longer possible to provide a reasonable *generic* Windows code signing workflow, so for now we've made ours specific to one vendor: [SSL.com](https://www.ssl.com/).
+Although this will hopefully improve in the future, for now this has resulted in a fragmented system where each certificate vendor has its own cloud signing service where they host the HSMs and you send them the things you want signed. As a result it's no longer possible to provide a reasonable *generic* Windows code signing workflow, so dist has vendor-specific support for [SSL.com](https://www.ssl.com/) and Azure Artifact Signing.
 
 Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file an issue](https://github.com/axodotdev/cargo-dist/issues).
 
 
-## Quickstart
+## SSL.com Quickstart
 
 ### Part 1: Create an SSL.com certificate (real or sandbox)
 
@@ -81,3 +81,40 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
     If you used a sandbox (test) certificate, SmartScreen won't acknowledge the code signing at all, but you should be able to see a "Digital Signatures" entry in the properties of the file:
 
     ![](../../img/signing-properties.png)
+
+
+## Azure Artifact Signing Quickstart
+
+1. **Create Azure Artifact Signing resources**
+
+    Create an Artifact Signing account, complete identity validation, and create a certificate profile. For real releases, use a Public Trust profile. For testing, use a Public Trust Test profile.
+
+2. **Grant signing permissions**
+
+    The identity used by CI must have the `Artifact Signing Certificate Profile Signer` role on the certificate profile or signing account.
+
+3. **Add GitHub Secrets to your repository**
+
+    - `AZURE_CLIENT_ID`: the client id of the app registration used for GitHub OIDC
+    - `AZURE_TENANT_ID`: the Azure tenant id
+    - `AZURE_SUBSCRIPTION_ID`: the Azure subscription id
+    - `AZURE_CODESIGNING_ENDPOINT`: the Artifact Signing endpoint, such as `https://weu.codesigning.azure.net/`
+    - `AZURE_CODESIGNING_ACCOUNT_NAME`: the Artifact Signing account name
+    - `AZURE_CODESIGNING_CERT_PROFILE_NAME`: the certificate profile name
+
+    The generated GitHub workflow uses `azure/login` with OpenID Connect. Configure a federated credential for your repository on the app registration.
+
+4. **Configure dist to codesign**
+
+    Add the following to your `Cargo.toml` or `dist.toml`:
+
+    ```toml
+    [workspace.metadata.dist]
+    azure-windows-sign = true
+    ```
+
+    Do not enable `ssldotcom-windows-sign` at the same time.
+
+5. **Run `dist init` on your project**
+
+    This regenerates your GitHub workflow with the Azure login and signing module setup. End-to-end signing requires a Windows runner.

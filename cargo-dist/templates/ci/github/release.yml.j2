@@ -205,6 +205,11 @@ jobs:
       SSLDOTCOM_CREDENTIAL_ID: ${{ secrets.SSLDOTCOM_CREDENTIAL_ID }}
       SSLDOTCOM_TOTP_SECRET: ${{ secrets.SSLDOTCOM_TOTP_SECRET }}
     {{%- endif %}}
+    {{%- if azure_windows_sign %}}
+      AZURE_CODESIGNING_ENDPOINT: ${{ secrets.AZURE_CODESIGNING_ENDPOINT }}
+      AZURE_CODESIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_CODESIGNING_ACCOUNT_NAME }}
+      AZURE_CODESIGNING_CERT_PROFILE_NAME: ${{ secrets.AZURE_CODESIGNING_CERT_PROFILE_NAME }}
+    {{%- endif %}}
     {{%- if macos_sign %}}
       CODESIGN_CERTIFICATE: ${{ secrets.CODESIGN_CERTIFICATE }}
       CODESIGN_CERTIFICATE_PASSWORD: ${{ secrets.CODESIGN_CERTIFICATE_PASSWORD }}
@@ -315,6 +320,19 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
+      {{%- if azure_windows_sign %}}
+      - name: Azure login
+        if: ${{ contains(join(matrix.targets, ','), 'windows') }}
+        uses: {{{actions["azure/login"] | safe }}}
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Install Azure Artifact Signing module
+        if: ${{ contains(join(matrix.targets, ','), 'windows') }}
+        shell: pwsh
+        run: Install-Module -Name ArtifactSigning -Force -Repository PSGallery
+      {{%- endif %}}
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot

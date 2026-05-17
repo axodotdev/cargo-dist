@@ -1205,6 +1205,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             &tools.host_target,
             &dist_dir,
             config.builds.ssldotcom_windows_sign.clone(),
+            config.builds.azure_windows_sign,
             config.builds.macos_sign,
         )?;
         let github_attestations = config

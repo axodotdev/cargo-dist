@@ -28,6 +28,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`source-tarball`](#source-tarball)
 * [`recursive-tarball`](#recursive-tarball)
 * [`ssldotcom-windows-sign`](#ssldotcom-windows-sign)
+* [`azure-windows-sign`](#azure-windows-sign)
 * [archive settings](#artifact-settings)
     * [`auto-includes`](#auto-includes)
     * [`include`](#include)
@@ -369,6 +370,32 @@ This setting takes one of two values:
 * "test": use the testing ("sandbox") ssl.com signing service
 
 These strings match the [environment_name setting](https://github.com/SSLcom/esigner-codesign/blob/32825070bd8ca335577862dc735343ae155f2652/README.md#L48) that [SSL.com's code signing action uses](https://github.com/SSLcom/esigner-codesign) uses.
+
+
+### `azure-windows-sign`
+
+> <span style="float:right">since 0.32.0<br>[global-only][]</span>
+> [📖 read the windows signing guide!](../supplychain-security/signing/windows.md) \
+> default = `false`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> azure-windows-sign = true
+> ```
+
+If enabled, dist signs Windows artifacts with Azure Artifact Signing. The certificate profile selected by `AZURE_CODESIGNING_CERT_PROFILE_NAME` determines whether Azure uses a real Public Trust certificate or a Public Trust Test certificate.
+
+This setting cannot be used with `ssldotcom-windows-sign`.
+
+The generated GitHub workflow expects these secrets:
+
+* `AZURE_CLIENT_ID`
+* `AZURE_TENANT_ID`
+* `AZURE_SUBSCRIPTION_ID`
+* `AZURE_CODESIGNING_ENDPOINT`
+* `AZURE_CODESIGNING_ACCOUNT_NAME`
+* `AZURE_CODESIGNING_CERT_PROFILE_NAME`
 
 
 ### archive settings
