@@ -1,3 +1,6 @@
+dev-install: 
+  cargo binstall -y cargo-insta
+  cargo binstall -y omnibor-cli@0.7.0
 
 build-all-platforms:
   #!/bin/bash -eux
