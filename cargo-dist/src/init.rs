@@ -528,6 +528,7 @@ fn get_new_dist_metadata(
             pr_run_mode: None,
             allow_dirty: None,
             ssldotcom_windows_sign: None,
+            azure_windows_sign: None,
             macos_sign: None,
             github_attestations: None,
             github_attestations_filters: None,
@@ -1034,6 +1035,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         pr_run_mode,
         allow_dirty,
         ssldotcom_windows_sign,
+        azure_windows_sign,
         macos_sign,
         github_attestations,
         github_attestations_filters,
@@ -1412,6 +1414,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "ssldotcom-windows-sign",
         "",
         ssldotcom_windows_sign.as_ref().map(|p| p.to_string()),
+    );
+
+    apply_optional_value(
+        table,
+        "azure-windows-sign",
+        "# Whether to sign Windows executables with Azure Artifact Signing\n",
+        *azure_windows_sign,
     );
 
     apply_optional_value(

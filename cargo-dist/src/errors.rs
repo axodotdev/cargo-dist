@@ -423,6 +423,10 @@ pub enum DistError {
     #[diagnostic(help("The CargoHome `install-path` configuration can't be combined with other install path strategies."))]
     IncompatibleInstallPathConfiguration,
 
+    /// Multiple Windows signing providers are configured
+    #[error("ssldotcom-windows-sign and azure-windows-sign cannot both be enabled")]
+    IncompatibleWindowsSigningProviders,
+
     /// Passed --artifacts but no --target
     #[error("You specified --artifacts, disabling host mode, but specified no targets to build!")]
     #[diagnostic(help("try adding --target={host_target}"))]
