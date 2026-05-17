@@ -195,6 +195,9 @@ jobs:
       # - N "local" tasks that build each platform's binaries and platform-specific installers
       matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix }}
     runs-on: ${{ matrix.runner }}
+    {{%- if azure_windows_sign %}}
+    environment: release
+    {{%- endif %}}
     container: ${{ matrix.container && matrix.container.image || null }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

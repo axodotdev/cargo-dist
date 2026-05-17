@@ -397,6 +397,8 @@ The generated GitHub workflow expects these secrets:
 * `AZURE_CODESIGNING_ACCOUNT_NAME`
 * `AZURE_CODESIGNING_CERT_PROFILE_NAME`
 
+The generated GitHub workflow runs the artifact build job in the `release` environment so Azure federated credentials can use a subject such as `repo:OWNER/REPO:environment:release`. These values may be repository secrets or secrets on the `release` environment.
+
 
 ### archive settings
 

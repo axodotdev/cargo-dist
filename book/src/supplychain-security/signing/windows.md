@@ -102,7 +102,9 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
     - `AZURE_CODESIGNING_ACCOUNT_NAME`: the Artifact Signing account name
     - `AZURE_CODESIGNING_CERT_PROFILE_NAME`: the certificate profile name
 
-    The generated GitHub workflow uses `azure/login` with OpenID Connect. Configure a federated credential for your repository on the app registration.
+    The generated GitHub workflow uses `azure/login` with OpenID Connect and runs the artifact build job in the `release` GitHub environment. Configure a federated credential for your repository on the app registration using an environment subject such as `repo:OWNER/REPO:environment:release`.
+
+    If you store these values as GitHub environment secrets instead of repository secrets, add them to the `release` environment.
 
 4. **Configure dist to codesign**
 
