@@ -72,6 +72,8 @@ pub struct GithubCiInfo {
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
     /// global task
     pub global_task: GithubGlobalJobConfig,
+    /// Runner for global artifact builds
+    pub global_artifacts_runner: GithubRunnerConfig,
     /// homebrew tap
     pub tap: Option<String>,
     /// plan jobs
@@ -274,7 +276,7 @@ impl GithubCiInfo {
         //
         // If we've done a Good Job, then these artifacts should be possible to build on *any*
         // platform. Linux is usually fast/cheap, so that's a reasonable choice.
-        let global_runner = if azure_windows_sign {
+        let global_artifacts_runner = if azure_windows_sign {
             default_windows_runner_config()
         } else {
             ci_config
@@ -284,7 +286,11 @@ impl GithubCiInfo {
                 .unwrap_or_else(default_global_runner_config)
         };
         let global_task = GithubGlobalJobConfig {
-            runner: global_runner.to_owned(),
+            runner: ci_config
+                .runners
+                .get("global")
+                .cloned()
+                .unwrap_or_else(default_global_runner_config),
             dist_args: "--artifacts=global".into(),
             install_dist: if azure_windows_sign {
                 dist_install_strategy.powershell()
@@ -432,6 +438,7 @@ impl GithubCiInfo {
             artifacts_matrix: GithubMatrix { include: tasks },
             pr_run_mode,
             global_task,
+            global_artifacts_runner,
             ssldotcom_windows_sign,
             azure_windows_sign,
             macos_sign,

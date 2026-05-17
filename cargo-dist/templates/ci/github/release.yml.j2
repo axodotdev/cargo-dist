@@ -402,7 +402,7 @@ jobs:
     {{%- for job in local_artifacts_jobs %}}
       - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
-    runs-on: {{{ global_task.runner }}}
+    runs-on: {{{ global_artifacts_runner.runner }}}
     {{%- if azure_windows_sign %}}
     environment: release
     {{%- endif %}}
