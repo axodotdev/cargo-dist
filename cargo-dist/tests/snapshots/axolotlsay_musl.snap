@@ -1884,8 +1884,8 @@ const { join, sep } = require("path");
 const { spawnSync } = require("child_process");
 const { tmpdir } = require("os");
 
-const https = require("node:https");
-const http = require("node:http");
+const https = require("https");
+const http = require("http");
 
 const tmpDir = tmpdir();
 
