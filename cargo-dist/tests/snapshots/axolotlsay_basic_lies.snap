@@ -2716,7 +2716,7 @@ function download(urlString, maxRedirects) {
 }
 
 class Package {
-  constructor (platform, name, url, filename, zipExt, binaries) {
+  constructor(platform, name, url, filename, zipExt, binaries) {
     let errors = [];
     if (typeof url !== "string") {
       errors.push("url must be a string");
