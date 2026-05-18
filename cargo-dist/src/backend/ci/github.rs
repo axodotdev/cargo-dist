@@ -830,7 +830,7 @@ fn system_deps_install_script(
                 }
             })
             .join(" ");
-        lines.push(format!("{sudo}apt-get install {args}"));
+        lines.push(format!("{sudo}apt-get install -y {args}"));
     }
 
     for (pkg, version) in &chocolatey_packages {
