@@ -465,6 +465,20 @@ pub enum DistError {
         levels: Vec<String>,
     },
 
+    /// Unknown custom job key specified in GitHub custom job secrets config
+    #[error(
+        "One or more github-custom-job-secrets entries didn't match configured custom jobs: {jobs:?}"
+    )]
+    #[diagnostic(help(
+        "Configured custom jobs are: {known_jobs:?}. Make sure each key matches a job name (without leading './') from plan-jobs, local-artifacts-jobs, global-artifacts-jobs, host-jobs, publish-jobs, or post-announce-jobs."
+    ))]
+    GithubUnknownCustomJobSecrets {
+        /// Unknown custom job keys from github-custom-job-secrets
+        jobs: Vec<String>,
+        /// Known custom job names from configured job lists
+        known_jobs: Vec<String>,
+    },
+
     /// An unknown target was found
     #[error("Unrecognized target: {target}")]
     #[diagnostic(help("The full list of supported targets can be found here: https://axodotdev.github.io/cargo-dist/book/reference/config.html#targets"))]

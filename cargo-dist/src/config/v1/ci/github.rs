@@ -6,6 +6,7 @@ use cargo_dist_schema::{
 };
 
 use crate::platform::{github_runners::target_for_github_runner, targets};
+use crate::SortedSet;
 
 use super::*;
 
@@ -25,7 +26,11 @@ pub struct GithubCiLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<SortedMap<String, GithubPermissionMap>>,
 
-    /// Custom permissions for jobs
+    /// Custom secrets for jobs
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub secrets: Option<SortedMap<String, GithubSecretSpec>>,
+
+    /// Custom build setup for jobs
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build_setup: Option<String>,
 
@@ -46,7 +51,13 @@ pub struct GithubCiConfig {
     /// Custom permissions for jobs
     pub permissions: SortedMap<String, GithubPermissionMap>,
 
-    /// Custom permissions for jobs
+    /// Custom secrets for jobs
+    pub secrets: SortedMap<String, GithubSecretMap>,
+
+    /// Jobs which had secrets configured (used to distinguish unset vs empty maps)
+    pub configured_secret_jobs: SortedSet<String>,
+
+    /// Custom build setup for jobs
     pub build_setup: Option<String>,
 
     /// Use these commits for github actions
@@ -60,6 +71,8 @@ impl GithubCiConfig {
             common: common.clone(),
             runners: Default::default(),
             permissions: Default::default(),
+            secrets: Default::default(),
+            configured_secret_jobs: Default::default(),
             action_commits: Default::default(),
             build_setup: None,
         }
@@ -74,6 +87,7 @@ impl ApplyLayer for GithubCiConfig {
             common,
             runners,
             permissions,
+            secrets,
             build_setup,
             action_commits,
         }: Self::Layer,
@@ -142,6 +156,14 @@ impl ApplyLayer for GithubCiConfig {
                 .collect()
         }));
         self.permissions.apply_val(permissions);
+        if let Some(secrets) = secrets {
+            self.configured_secret_jobs
+                .apply_val(Some(secrets.keys().cloned().collect()));
+            self.secrets = secrets
+                .into_iter()
+                .map(|(job_name, spec)| (job_name, spec.into_map()))
+                .collect();
+        }
         self.build_setup.apply_opt(build_setup);
         self.action_commits.apply_val(action_commits);
     }
@@ -154,6 +176,7 @@ impl ApplyLayer for GithubCiLayer {
             common,
             runners,
             permissions,
+            secrets,
             build_setup,
             action_commits,
         }: Self::Layer,
@@ -161,6 +184,7 @@ impl ApplyLayer for GithubCiLayer {
         self.common.apply_layer(common);
         self.runners.apply_opt(runners);
         self.permissions.apply_opt(permissions);
+        self.secrets.apply_opt(secrets);
         self.build_setup.apply_opt(build_setup);
         self.action_commits.apply_opt(action_commits);
     }
@@ -170,5 +194,65 @@ impl std::ops::Deref for GithubCiConfig {
     type Target = CommonCiConfig;
     fn deref(&self) -> &Self::Target {
         &self.common
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn github_ci_layer_normalizes_secret_specs() {
+        let mut config = GithubCiConfig::default();
+        config.apply_layer(GithubCiLayer {
+            common: CommonCiLayer::default(),
+            runners: None,
+            permissions: None,
+            secrets: Some(SortedMap::from_iter([
+                (
+                    "job-list".to_owned(),
+                    GithubSecretSpec::List(vec!["TOKEN_A".to_owned(), "TOKEN_B".to_owned()]),
+                ),
+                (
+                    "job-map".to_owned(),
+                    GithubSecretSpec::Map(SortedMap::from_iter([(
+                        "NPM_TOKEN".to_owned(),
+                        "ORG_NPM_TOKEN".to_owned(),
+                    )])),
+                ),
+                ("job-empty-list".to_owned(), GithubSecretSpec::List(vec![])),
+                (
+                    "job-empty-map".to_owned(),
+                    GithubSecretSpec::Map(SortedMap::new()),
+                ),
+            ])),
+            build_setup: None,
+            action_commits: None,
+        });
+
+        assert_eq!(
+            config.secrets.get("job-list"),
+            Some(&SortedMap::from_iter([
+                ("TOKEN_A".to_owned(), "TOKEN_A".to_owned()),
+                ("TOKEN_B".to_owned(), "TOKEN_B".to_owned()),
+            ]))
+        );
+        assert_eq!(
+            config.secrets.get("job-map"),
+            Some(&SortedMap::from_iter([(
+                "NPM_TOKEN".to_owned(),
+                "ORG_NPM_TOKEN".to_owned(),
+            )]))
+        );
+        assert_eq!(
+            config.secrets.get("job-empty-list"),
+            Some(&SortedMap::new())
+        );
+        assert_eq!(config.secrets.get("job-empty-map"), Some(&SortedMap::new()));
+
+        assert!(config.configured_secret_jobs.contains("job-list"));
+        assert!(config.configured_secret_jobs.contains("job-map"));
+        assert!(config.configured_secret_jobs.contains("job-empty-list"));
+        assert!(config.configured_secret_jobs.contains("job-empty-map"));
     }
 }
