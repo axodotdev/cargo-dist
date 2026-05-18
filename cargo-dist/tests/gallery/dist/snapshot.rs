@@ -152,6 +152,10 @@ pub fn snapshot_settings_with_gallery_filter() -> insta::Settings {
         r"cargo-dist/releases/download/v\d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?/",
         "cargo-dist/releases/download/vSOME_VERSION/",
     );
+    settings.add_filter(
+        r"cargo install cargo-dist --locked --version \d+\.\d+\.\d+(\-prerelease\d*)?(\.\d+)?",
+        "cargo install cargo-dist --locked --version SOME_VERSION",
+    );
     settings.add_filter(r#"sha256 ".*""#, r#"sha256 "CENSORED""#);
     settings.add_filter(r#""sha256": .*"#, r#""sha256": "CENSORED""#);
     settings.add_filter(r#""sha512": .*"#, r#""sha512": "CENSORED""#);

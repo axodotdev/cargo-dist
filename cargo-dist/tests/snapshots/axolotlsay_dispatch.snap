@@ -261,7 +261,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "host": "aarch64-apple-darwin",
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version SOME_VERSION"
             },
             "dist_args": "--artifacts=local --target=aarch64-apple-darwin",
             "targets": [
@@ -274,7 +274,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "host": "x86_64-apple-darwin",
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version SOME_VERSION"
             },
             "dist_args": "--artifacts=local --target=x86_64-apple-darwin",
             "targets": [
@@ -287,7 +287,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "host": "x86_64-pc-windows-msvc",
             "install_dist": {
               "shell": "pwsh",
-              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
+              "run": "try { irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex } catch { cargo install cargo-dist --locked --version SOME_VERSION }"
             },
             "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc",
             "targets": [
@@ -300,7 +300,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
             "host": "x86_64-unknown-linux-gnu",
             "install_dist": {
               "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version SOME_VERSION"
             },
             "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu",
             "targets": [
@@ -388,7 +388,7 @@ jobs:
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh || cargo install cargo-dist --locked --version SOME_VERSION"
       - name: Cache dist
         uses: actions/upload-artifact@v7
         with:

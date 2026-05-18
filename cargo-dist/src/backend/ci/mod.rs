@@ -77,6 +77,8 @@ pub enum DistInstallStrategy {
         installer_url: String,
         /// the installer name, without `.sh` or `.ps1`
         installer_name: String,
+        /// the version to install, used for cargo install fallback
+        version: String,
     },
     /// Run `cargo install --git` (slow!)
     GitBranch {
@@ -97,6 +99,7 @@ impl DistInstallSettings<'_> {
             return DistInstallStrategy::Installer {
                 installer_url: url.as_str().to_owned(),
                 installer_name: "cargo-dist-installer".to_owned(),
+                version: self.version.to_string(),
             };
         }
 
@@ -116,6 +119,7 @@ impl DistInstallSettings<'_> {
             // to compute these values for packages we build *BUT* it's messy and not that important
             installer_url: format!("{BASE_DIST_FETCH_URL}/v{version}"),
             installer_name,
+            version: version.to_string(),
         }
     }
 }
@@ -124,8 +128,8 @@ impl InstallStrategy for DistInstallStrategy {
     /// Returns a bit of sh/dash to install the requested version of dist
     fn dash(&self) -> GhaRunStep {
         DashScript::new(match self {
-            DistInstallStrategy::Installer { installer_url, installer_name } => format!(
-                "curl --proto '=https' --tlsv1.2 -LsSf {installer_url}/{installer_name}.sh | sh"
+            DistInstallStrategy::Installer { installer_url, installer_name, version } => format!(
+                "curl --proto '=https' --tlsv1.2 -LsSf {installer_url}/{installer_name}.sh | sh || cargo install cargo-dist --locked --version {version}"
             ),
             DistInstallStrategy::GitBranch { branch } => format!(
                 "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} --locked cargo-dist"
@@ -136,8 +140,8 @@ impl InstallStrategy for DistInstallStrategy {
     /// Returns a bit of powershell to install the requested version of dist
     fn powershell(&self) -> GhaRunStep {
         PowershellScript::new(match self {
-            DistInstallStrategy::Installer { installer_url, installer_name } => format!(
-                "irm {installer_url}/{installer_name}.ps1 | iex"
+            DistInstallStrategy::Installer { installer_url, installer_name, version } => format!(
+                "try {{ irm {installer_url}/{installer_name}.ps1 | iex }} catch {{ cargo install cargo-dist --locked --version {version} }}"
             ),
             DistInstallStrategy::GitBranch { branch } => format!(
                 "cargo install --git https://github.com/axodotdev/cargo-dist/ --branch={branch} --locked cargo-dist"
