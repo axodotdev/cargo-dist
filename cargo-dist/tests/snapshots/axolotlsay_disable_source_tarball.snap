@@ -2606,12 +2606,16 @@ function getProxyForUrl(urlString) {
   if (!proxyEnv) return null;
 
   const proxyUrl = new URL(proxyEnv);
+
+  let auth = null;
+  if (proxyUrl.username || proxyUrl.password) {
+    auth = `${proxyUrl.username}:${proxyUrl.password}`;
+  }
+
   return {
     hostname: proxyUrl.hostname,
     port: proxyUrl.port || (proxyUrl.protocol === "https:" ? 443 : 80),
-    auth: proxyUrl.username
-      ? `${proxyUrl.username}:${proxyUrl.password}`
-      : null,
+    auth: auth,
   };
 }
 
