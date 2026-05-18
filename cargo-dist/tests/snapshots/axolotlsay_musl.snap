@@ -1903,7 +1903,9 @@ function rmSync(target, options) {
   }
   if (stat.isDirectory()) {
     if (!recursive) {
-      const err = new Error(`EISDIR: illegal operation on a directory, ${target}`);
+      const err = new Error(
+        `EISDIR: illegal operation on a directory, ${target}`,
+      );
       err.code = "EISDIR";
       throw err;
     }
