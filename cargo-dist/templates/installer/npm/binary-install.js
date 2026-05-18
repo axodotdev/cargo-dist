@@ -1,9 +1,12 @@
 const {
   createWriteStream,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtemp,
-  rmSync,
+  readdirSync,
+  rmdirSync,
+  unlinkSync,
 } = require("fs");
 const { join, sep } = require("path");
 const { spawnSync } = require("child_process");
@@ -13,6 +16,33 @@ const https = require("https");
 const http = require("http");
 
 const tmpDir = tmpdir();
+
+// Drop-in replacement for fs.rmSync, which was only added in Node 14.14.0.
+// Once our minimum supported Node version is >= 14.14.0, this can be removed
+// and callers can switch back to fs.rmSync directly.
+function rmSync(target, options) {
+  const { recursive = false, force = false } = options || {};
+  let stat;
+  try {
+    stat = lstatSync(target);
+  } catch (e) {
+    if (force && e.code === "ENOENT") return;
+    throw e;
+  }
+  if (stat.isDirectory()) {
+    if (!recursive) {
+      const err = new Error(`EISDIR: illegal operation on a directory, ${target}`);
+      err.code = "EISDIR";
+      throw err;
+    }
+    for (const entry of readdirSync(target)) {
+      rmSync(join(target, entry), { recursive: true, force });
+    }
+    rmdirSync(target);
+  } else {
+    unlinkSync(target);
+  }
+}
 
 const error = (msg) => {
   console.error(msg);

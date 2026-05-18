@@ -15,7 +15,7 @@
     "fmt:check": "prettier --check **/*.js"
   },
   "engines": {
-    "node": ">=18",
+    "node": ">=14",
     "npm": ">=6"
   },
   "volta": {
