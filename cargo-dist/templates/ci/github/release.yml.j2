@@ -322,7 +322,7 @@ jobs:
           echo "dist ran successfully"
       {{%- if github_attestations is defined and github_attestations and github_attestations_phase == "build-local-artifacts" %}}
       - name: Attest
-        uses: {{{actions["actions/attest-build-provenance"] | safe }}}
+        uses: {{{actions["actions/attest"] | safe }}}
         with:
           subject-path: "target/distrib/*${{ join(matrix.targets, ', ') }}*"
       {{%- endif %}}
