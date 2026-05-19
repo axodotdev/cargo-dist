@@ -3174,7 +3174,7 @@ install(false);
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "devDependencies": {
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.3"
   },
   "engines": {
     "node": ">=14.14",
