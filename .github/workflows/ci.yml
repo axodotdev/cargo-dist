@@ -127,7 +127,7 @@ jobs:
         with:
           key: ${{ matrix.os }}
       # install pnpm for npm runtests
-      - run: npm i -g pnpm
+      - run: npm i -g pnpm@10
       # install omnibor-cli for tests
       # NOTE: This is hard-coded to a specific version because omnibor-cli,
       #       omnibor-rs, and gitoid are released on the same repo.
