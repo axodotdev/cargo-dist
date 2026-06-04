@@ -44,60 +44,24 @@ impl AppResult {
             // CARGO_HOME=null             (cargo test sets this so we have to clear it)
             let app_home = tempdir.join(format!(".{app_name}"));
             let xdg_data_home = tempdir.join(".local/share");
-            let mut seeded_path = None;
-
-            if test_name == "install_path_uv" {
-                let bin_dir = tempdir.join(".local/share/../bin");
-                let bin_dir_expr = "$HOME/.local/share/../bin";
-                let legacy_env_script = bin_dir.join("env");
-                let legacy_fish_env_script = bin_dir.join("env.fish");
-                let fish_conf_dir = tempdir.join(".config/fish/conf.d");
-
-                std::fs::create_dir_all(&bin_dir).unwrap();
-                std::fs::create_dir_all(&fish_conf_dir).unwrap();
-                LocalAsset::write_new(
-                    &format!(
-                        r#"#!/bin/sh
-# add binaries to PATH if they aren't added yet
-# affix colons on either side of $PATH to simplify matching
-case ":${{PATH}}:" in
-    *:"{bin_dir_expr}":*)
-        ;;
-    *)
-        export PATH="{bin_dir_expr}:$PATH"
-        ;;
-esac
-"#
-                    ),
-                    &legacy_env_script,
-                )?;
-                LocalAsset::write_new(
-                    &format!(
-                        r#"if not contains "{bin_dir_expr}" $PATH
-    set -x PATH "{bin_dir_expr}" $PATH
-end
-"#
-                    ),
-                    &legacy_fish_env_script,
-                )?;
-                LocalAsset::write_new(
-                    &format!(". \"{bin_dir_expr}/env\"\n"),
-                    tempdir.join(".profile"),
-                )?;
-                LocalAsset::write_new(
-                    &format!("source \"{bin_dir_expr}/env\"\n"),
-                    tempdir.join(".zshrc"),
-                )?;
-                LocalAsset::write_new(
-                    &format!("source \"{bin_dir_expr}/env.fish\"\n"),
-                    fish_conf_dir.join(format!("{app_name}.env.fish")),
-                )?;
-                seeded_path = Some(format!(
-                    "{}:{}",
-                    bin_dir,
-                    std::env::var("PATH").unwrap_or_default()
-                ));
-            }
+            let test_legacy_env_migration = ctx.options.shell_legacy_env_migration(app_name);
+            let test_user_owned_env = ctx.options.shell_user_owned_env(app_name);
+            assert!(
+                !(test_legacy_env_migration && test_user_owned_env),
+                "shell migration fixtures are mutually exclusive"
+            );
+            let seeded_path = if test_legacy_env_migration {
+                Some(seed_legacy_env_install(
+                    &tempdir,
+                    app_name,
+                    expected_bin_dir,
+                )?)
+            } else {
+                if test_user_owned_env {
+                    seed_user_owned_env_install(&tempdir, app_name, expected_bin_dir)?;
+                }
+                None
+            };
 
             let _output = script.output_checked(|cmd| {
                 let cmd = cmd
@@ -148,40 +112,22 @@ end
             assert!(env_script.exists(), "env script wasn't created");
             assert!(fish_env_script.exists(), "fish env script wasn't created");
 
-            if test_name == "install_path_uv" {
-                assert!(
-                    !bin_dir.join("env").exists(),
-                    "legacy env script was left in the binary directory"
+            if test_legacy_env_migration {
+                assert_legacy_env_migrated(
+                    &tempdir,
+                    app_name,
+                    expected_bin_dir.as_str(),
+                    &bin_dir,
+                    rcfiles,
                 );
-                assert!(
-                    !bin_dir.join("env.fish").exists(),
-                    "legacy fish env script was left in the binary directory"
-                );
-                for rcfile in rcfiles {
-                    let contents = std::fs::read_to_string(rcfile).unwrap();
-                    assert!(
-                        contents.contains(". \"$HOME/.config/axolotlsay/env.sh\"")
-                            || contents.contains("source \"$HOME/.config/axolotlsay/env.sh\""),
-                        "{} wasn't migrated to the new env script",
-                        rcfile
-                    );
-                    assert!(
-                        !contents.contains("$HOME/.local/share/../bin/env"),
-                        "{} still sources the legacy env script",
-                        rcfile
-                    );
-                }
-                let fish_rcfile = tempdir.join(format!(".config/fish/conf.d/{app_name}.env.fish"));
-                let contents = std::fs::read_to_string(&fish_rcfile).unwrap();
-                assert!(
-                    contents.contains("source \"$HOME/.config/axolotlsay/env.fish\""),
-                    "{} wasn't migrated to the new fish env script",
-                    fish_rcfile
-                );
-                assert!(
-                    !contents.contains("$HOME/.local/share/../bin/env.fish"),
-                    "{} still sources the legacy fish env script",
-                    fish_rcfile
+            }
+            if test_user_owned_env {
+                assert_user_owned_env_preserved(
+                    &tempdir,
+                    app_name,
+                    expected_bin_dir.as_str(),
+                    &bin_dir,
+                    rcfiles,
                 );
             }
 
@@ -250,4 +196,206 @@ end
         }
         Ok(())
     }
+}
+
+#[cfg(target_family = "unix")]
+fn seed_legacy_env_install(
+    tempdir: &Utf8Path,
+    app_name: &str,
+    expected_bin_dir: &str,
+) -> Result<String> {
+    let bin_dir = tempdir.join(expected_bin_dir);
+    let bin_dir_expr = format!("$HOME/{expected_bin_dir}");
+    let legacy_env_script = bin_dir.join("env");
+    let legacy_fish_env_script = bin_dir.join("env.fish");
+    let fish_conf_dir = tempdir.join(".config/fish/conf.d");
+
+    std::fs::create_dir_all(&bin_dir).unwrap();
+    std::fs::create_dir_all(&fish_conf_dir).unwrap();
+    LocalAsset::write_new(&legacy_env_script_sh(&bin_dir_expr), &legacy_env_script)?;
+    LocalAsset::write_new(
+        &legacy_env_script_fish(&bin_dir_expr),
+        &legacy_fish_env_script,
+    )?;
+    seed_legacy_source_lines(tempdir, app_name, &bin_dir_expr)?;
+
+    Ok(format!(
+        "{}:{}",
+        bin_dir,
+        std::env::var("PATH").unwrap_or_default()
+    ))
+}
+
+#[cfg(target_family = "unix")]
+fn seed_user_owned_env_install(
+    tempdir: &Utf8Path,
+    app_name: &str,
+    expected_bin_dir: &str,
+) -> Result<()> {
+    let bin_dir = tempdir.join(expected_bin_dir);
+    let bin_dir_expr = format!("$HOME/{expected_bin_dir}");
+    let legacy_env_script = bin_dir.join("env");
+    let legacy_fish_env_script = bin_dir.join("env.fish");
+    let fish_conf_dir = tempdir.join(".config/fish/conf.d");
+
+    std::fs::create_dir_all(&bin_dir).unwrap();
+    std::fs::create_dir_all(&fish_conf_dir).unwrap();
+    LocalAsset::write_new(
+        &format!(
+            "{}# user customization\n",
+            legacy_env_script_sh(&bin_dir_expr)
+        ),
+        &legacy_env_script,
+    )?;
+    LocalAsset::write_new(
+        &format!(
+            "{}# user customization\n",
+            legacy_env_script_fish(&bin_dir_expr)
+        ),
+        &legacy_fish_env_script,
+    )?;
+    seed_legacy_source_lines(tempdir, app_name, &bin_dir_expr)
+}
+
+#[cfg(target_family = "unix")]
+fn seed_legacy_source_lines(tempdir: &Utf8Path, app_name: &str, bin_dir_expr: &str) -> Result<()> {
+    let fish_conf_dir = tempdir.join(".config/fish/conf.d");
+    std::fs::create_dir_all(&fish_conf_dir).unwrap();
+    LocalAsset::write_new(
+        &format!(". \"{bin_dir_expr}/env\"\n"),
+        tempdir.join(".profile"),
+    )?;
+    LocalAsset::write_new(
+        &format!("source \"{bin_dir_expr}/env\"\n"),
+        tempdir.join(".zshrc"),
+    )?;
+    LocalAsset::write_new(
+        &format!("source \"{bin_dir_expr}/env.fish\"\n"),
+        fish_conf_dir.join(format!("{app_name}.env.fish")),
+    )?;
+    Ok(())
+}
+
+#[cfg(target_family = "unix")]
+fn legacy_env_script_sh(bin_dir_expr: &str) -> String {
+    format!(
+        r#"#!/bin/sh
+# add binaries to PATH if they aren't added yet
+# affix colons on either side of $PATH to simplify matching
+case ":${{PATH}}:" in
+    *:"{bin_dir_expr}":*)
+        ;;
+    *)
+        # Prepending path in case a system-installed binary needs to be overridden
+        export PATH="{bin_dir_expr}:$PATH"
+        ;;
+esac
+"#
+    )
+}
+
+#[cfg(target_family = "unix")]
+fn legacy_env_script_fish(bin_dir_expr: &str) -> String {
+    format!(
+        r#"if not contains "{bin_dir_expr}" $PATH
+    # Prepending path in case a system-installed binary needs to be overridden
+    set -x PATH "{bin_dir_expr}" $PATH
+end
+"#
+    )
+}
+
+#[cfg(target_family = "unix")]
+fn assert_legacy_env_migrated(
+    tempdir: &Utf8Path,
+    app_name: &str,
+    expected_bin_dir: &str,
+    bin_dir: &Utf8Path,
+    rcfiles: &[Utf8PathBuf],
+) {
+    assert!(
+        !bin_dir.join("env").exists(),
+        "legacy env script was left in the binary directory"
+    );
+    assert!(
+        !bin_dir.join("env.fish").exists(),
+        "legacy fish env script was left in the binary directory"
+    );
+
+    let legacy_env_script = format!("$HOME/{expected_bin_dir}/env");
+    let env_script = format!("$HOME/.config/{app_name}/env.sh");
+    for rcfile in rcfiles {
+        let contents = std::fs::read_to_string(rcfile).unwrap();
+        assert!(
+            contents.contains(&format!(". \"{env_script}\""))
+                || contents.contains(&format!("source \"{env_script}\"")),
+            "{} wasn't migrated to the new env script",
+            rcfile
+        );
+        assert!(
+            !contents.contains(&legacy_env_script),
+            "{} still sources the legacy env script",
+            rcfile
+        );
+    }
+
+    let fish_rcfile = tempdir.join(format!(".config/fish/conf.d/{app_name}.env.fish"));
+    let contents = std::fs::read_to_string(&fish_rcfile).unwrap();
+    let legacy_fish_env_script = format!("$HOME/{expected_bin_dir}/env.fish");
+    let fish_env_script = format!("$HOME/.config/{app_name}/env.fish");
+    assert!(
+        contents.contains(&format!("source \"{fish_env_script}\"")),
+        "{} wasn't migrated to the new fish env script",
+        fish_rcfile
+    );
+    assert!(
+        !contents.contains(&legacy_fish_env_script),
+        "{} still sources the legacy fish env script",
+        fish_rcfile
+    );
+}
+
+#[cfg(target_family = "unix")]
+fn assert_user_owned_env_preserved(
+    tempdir: &Utf8Path,
+    app_name: &str,
+    expected_bin_dir: &str,
+    bin_dir: &Utf8Path,
+    rcfiles: &[Utf8PathBuf],
+) {
+    let bin_dir_expr = format!("$HOME/{expected_bin_dir}");
+    assert_eq!(
+        std::fs::read_to_string(bin_dir.join("env")).unwrap(),
+        format!(
+            "{}# user customization\n",
+            legacy_env_script_sh(&bin_dir_expr)
+        ),
+        "user-owned env script was modified"
+    );
+    assert_eq!(
+        std::fs::read_to_string(bin_dir.join("env.fish")).unwrap(),
+        format!(
+            "{}# user customization\n",
+            legacy_env_script_fish(&bin_dir_expr)
+        ),
+        "user-owned fish env script was modified"
+    );
+
+    let legacy_env_script = format!("$HOME/{expected_bin_dir}/env");
+    for rcfile in rcfiles {
+        let contents = std::fs::read_to_string(rcfile).unwrap();
+        assert!(
+            contents.contains(&legacy_env_script),
+            "{} no longer sources the user-owned env script",
+            rcfile
+        );
+    }
+
+    let fish_rcfile = tempdir.join(format!(".config/fish/conf.d/{app_name}.env.fish"));
+    let contents = std::fs::read_to_string(&fish_rcfile).unwrap();
+    assert!(
+        contents.contains(&format!("$HOME/{expected_bin_dir}/env.fish")),
+        "{} no longer sources the user-owned fish env script",
+        fish_rcfile
+    );
 }
