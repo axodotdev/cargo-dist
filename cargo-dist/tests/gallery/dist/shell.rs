@@ -43,12 +43,75 @@ impl AppResult {
             // MY_ENV_VAR=".{app_name}"    (for install-path=$MY_ENV_VAR/...)
             // CARGO_HOME=null             (cargo test sets this so we have to clear it)
             let app_home = tempdir.join(format!(".{app_name}"));
+            let xdg_data_home = tempdir.join(".local/share");
+            let mut seeded_path = None;
+
+            if test_name == "install_path_uv" {
+                let bin_dir = tempdir.join(".local/share/../bin");
+                let bin_dir_expr = "$HOME/.local/share/../bin";
+                let legacy_env_script = bin_dir.join("env");
+                let legacy_fish_env_script = bin_dir.join("env.fish");
+                let fish_conf_dir = tempdir.join(".config/fish/conf.d");
+
+                std::fs::create_dir_all(&bin_dir).unwrap();
+                std::fs::create_dir_all(&fish_conf_dir).unwrap();
+                LocalAsset::write_new(
+                    &format!(
+                        r#"#!/bin/sh
+# add binaries to PATH if they aren't added yet
+# affix colons on either side of $PATH to simplify matching
+case ":${{PATH}}:" in
+    *:"{bin_dir_expr}":*)
+        ;;
+    *)
+        export PATH="{bin_dir_expr}:$PATH"
+        ;;
+esac
+"#
+                    ),
+                    &legacy_env_script,
+                )?;
+                LocalAsset::write_new(
+                    &format!(
+                        r#"if not contains "{bin_dir_expr}" $PATH
+    set -x PATH "{bin_dir_expr}" $PATH
+end
+"#
+                    ),
+                    &legacy_fish_env_script,
+                )?;
+                LocalAsset::write_new(
+                    &format!(". \"{bin_dir_expr}/env\"\n"),
+                    tempdir.join(".profile"),
+                )?;
+                LocalAsset::write_new(
+                    &format!("source \"{bin_dir_expr}/env\"\n"),
+                    tempdir.join(".zshrc"),
+                )?;
+                LocalAsset::write_new(
+                    &format!("source \"{bin_dir_expr}/env.fish\"\n"),
+                    fish_conf_dir.join(format!("{app_name}.env.fish")),
+                )?;
+                seeded_path = Some(format!(
+                    "{}:{}",
+                    bin_dir,
+                    std::env::var("PATH").unwrap_or_default()
+                ));
+            }
+
             let _output = script.output_checked(|cmd| {
-                cmd.env("HOME", &tempdir)
+                let cmd = cmd
+                    .env("HOME", &tempdir)
                     .env("ZDOTDIR", &tempdir)
                     .env("MY_ENV_VAR", &app_home)
+                    .env("XDG_DATA_HOME", &xdg_data_home)
+                    .env_remove("XDG_BIN_HOME")
                     .env_remove("CARGO_HOME")
-                    .env_remove("XDG_CONFIG_HOME")
+                    .env_remove("XDG_CONFIG_HOME");
+                if let Some(path) = &seeded_path {
+                    cmd.env("PATH", path);
+                }
+                cmd
             })?;
             // we could theoretically look at the above output and parse out the `source` line...
 
@@ -61,21 +124,66 @@ impl AppResult {
             let receipt_file = tempdir.join(format!(".config/{app_name}/{app_name}-receipt.json"));
             let expected_bin_dir = Utf8PathBuf::from(expected_bin_dir);
             let bin_dir = tempdir.join(&expected_bin_dir);
-            let env_dir = if expected_bin_dir
+            let env_script = if expected_bin_dir
                 .components()
                 .any(|d| d.as_str() == ".cargo")
             {
-                bin_dir.parent().unwrap()
+                bin_dir.parent().unwrap().join("env")
             } else {
-                &bin_dir
+                tempdir.join(format!(".config/{app_name}/env.sh"))
             };
-            let env_script = env_dir.join("env");
+            let fish_env_script = if expected_bin_dir
+                .components()
+                .any(|d| d.as_str() == ".cargo")
+            {
+                bin_dir.parent().unwrap().join("env.fish")
+            } else {
+                tempdir.join(format!(".config/{app_name}/env.fish"))
+            };
 
             assert!(bin_dir.exists(), "bin dir wasn't created");
             for rcfile in rcfiles {
                 assert!(rcfile.exists(), "{} wasn't created", rcfile);
             }
             assert!(env_script.exists(), "env script wasn't created");
+            assert!(fish_env_script.exists(), "fish env script wasn't created");
+
+            if test_name == "install_path_uv" {
+                assert!(
+                    !bin_dir.join("env").exists(),
+                    "legacy env script was left in the binary directory"
+                );
+                assert!(
+                    !bin_dir.join("env.fish").exists(),
+                    "legacy fish env script was left in the binary directory"
+                );
+                for rcfile in rcfiles {
+                    let contents = std::fs::read_to_string(rcfile).unwrap();
+                    assert!(
+                        contents.contains(". \"$HOME/.config/axolotlsay/env.sh\"")
+                            || contents.contains("source \"$HOME/.config/axolotlsay/env.sh\""),
+                        "{} wasn't migrated to the new env script",
+                        rcfile
+                    );
+                    assert!(
+                        !contents.contains("$HOME/.local/share/../bin/env"),
+                        "{} still sources the legacy env script",
+                        rcfile
+                    );
+                }
+                let fish_rcfile = tempdir.join(format!(".config/fish/conf.d/{app_name}.env.fish"));
+                let contents = std::fs::read_to_string(&fish_rcfile).unwrap();
+                assert!(
+                    contents.contains("source \"$HOME/.config/axolotlsay/env.fish\""),
+                    "{} wasn't migrated to the new fish env script",
+                    fish_rcfile
+                );
+                assert!(
+                    !contents.contains("$HOME/.local/share/../bin/env.fish"),
+                    "{} still sources the legacy fish env script",
+                    fish_rcfile
+                );
+            }
 
             // Check that all the binaries work
             for bin_name in ctx.options.bins_with_aliases(&self.app_name, &self.bins) {
