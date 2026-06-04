@@ -1615,6 +1615,33 @@ windows-archive = ".tar.gz"
 }
 
 #[test]
+fn install_path_uv() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+
+        ctx.patch_cargo_toml(format!(
+            r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell"]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin"]
+ci = ["github"]
+allow-dirty = ["ci"]
+install-path = ["$XDG_BIN_HOME/", "$XDG_DATA_HOME/../bin", "~/.local/bin"]
+unix-archive = ".tar.gz"
+
+"#
+        ))?;
+
+        let results = ctx.cargo_dist_build_and_plan(test_name)?;
+        results.check_all(&ctx, ".local/share/../bin")?.snap();
+
+        Ok(())
+    })
+}
+
+#[test]
 fn install_path_fallback_no_env_var_set() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {
