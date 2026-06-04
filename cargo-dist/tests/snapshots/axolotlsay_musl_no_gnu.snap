@@ -688,10 +688,10 @@ install() {
     _legacy_env_script_path="$_env_script_path"
     _legacy_env_script_path_expr="$_env_script_path_expr"
 
-    # Cargo's env script has a standardized location outside its bin directory.
-    # Other layouts use our per-app config directory so source-only files never
-    # appear in a directory that will be added to PATH.
-    if [ "$_install_layout" != "cargo-home" ]; then
+    # Flat layouts used to place env scripts beside the installed binaries.
+    # Keep source-only files out of PATH by placing them in our per-app config
+    # directory instead. Other layouts already keep env scripts outside bin.
+    if [ "$_install_layout" = "flat" ]; then
         _env_script_path="$RECEIPT_HOME/env.sh"
         _env_script_path_expr="$(replace_home "$_env_script_path")"
         _fish_env_script_path="$RECEIPT_HOME/env.fish"
@@ -780,7 +780,7 @@ install() {
          *) ;;
     esac
 
-    if [ "$_install_layout" != "cargo-home" ]; then
+    if [ "$_install_layout" = "flat" ]; then
         if [ "$NO_MODIFY_PATH" = "0" ] ||
             is_legacy_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path" ||
             is_legacy_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"
@@ -926,19 +926,45 @@ migrate_legacy_env_scripts() {
 is_legacy_env_script_sh() {
     local _install_dir_expr="$1"
     local _env_script_path="$2"
+    local _expected_env_script
+    local _result=1
 
-    [ -f "$_env_script_path" ] &&
-        grep -F "# add binaries to PATH if they aren't added yet" "$_env_script_path" > /dev/null 2>/dev/null &&
-        grep -F "export PATH=\"$_install_dir_expr:\$PATH\"" "$_env_script_path" > /dev/null 2>/dev/null
+    if ! check_cmd cmp ||
+       [ ! -f "$_env_script_path" ] ||
+       [ -L "$_env_script_path" ]
+    then
+        return 1
+    fi
+
+    _expected_env_script="$(mktemp "${TMPDIR:-/tmp}/cargo-dist-env.XXXXXXXXXX")" || return 1
+    write_env_script_sh "$_install_dir_expr" "$_expected_env_script"
+    if cmp -s "$_env_script_path" "$_expected_env_script"; then
+        _result=0
+    fi
+    ignore rm -f "$_expected_env_script"
+    return "$_result"
 }
 
 is_legacy_env_script_fish() {
     local _install_dir_expr="$1"
     local _env_script_path="$2"
+    local _expected_env_script
+    local _result=1
 
-    [ -f "$_env_script_path" ] &&
-        grep -F "if not contains \"$_install_dir_expr\" \$PATH" "$_env_script_path" > /dev/null 2>/dev/null &&
-        grep -F "set -x PATH \"$_install_dir_expr\" \$PATH" "$_env_script_path" > /dev/null 2>/dev/null
+    if ! check_cmd cmp ||
+       [ ! -f "$_env_script_path" ] ||
+       [ -L "$_env_script_path" ]
+    then
+        return 1
+    fi
+
+    _expected_env_script="$(mktemp "${TMPDIR:-/tmp}/cargo-dist-env.XXXXXXXXXX")" || return 1
+    write_env_script_fish "$_install_dir_expr" "$_expected_env_script"
+    if cmp -s "$_env_script_path" "$_expected_env_script"; then
+        _result=0
+    fi
+    ignore rm -f "$_expected_env_script"
+    return "$_result"
 }
 
 migrate_legacy_source_lines() {
