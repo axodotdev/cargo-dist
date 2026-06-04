@@ -82,10 +82,12 @@ impl TestOptions {
             .collect()
     }
 
+    #[cfg(target_family = "unix")]
     pub fn shell_legacy_env_migration(&self, app_name: &str) -> bool {
         self.options(app_name).shell_legacy_env_migration
     }
 
+    #[cfg(target_family = "unix")]
     pub fn shell_user_owned_env(&self, app_name: &str) -> bool {
         self.options(app_name).shell_user_owned_env
     }
