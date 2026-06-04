@@ -81,6 +81,14 @@ impl TestOptions {
             .chain(bins.to_owned())
             .collect()
     }
+
+    pub fn shell_legacy_env_migration(&self, app_name: &str) -> bool {
+        self.options(app_name).shell_legacy_env_migration
+    }
+
+    pub fn shell_user_owned_env(&self, app_name: &str) -> bool {
+        self.options(app_name).shell_user_owned_env
+    }
 }
 
 #[derive(Debug, Default)]
@@ -94,6 +102,8 @@ pub struct AppOverrides {
     /// cf. https://github.com/axodotdev/cargo-dist/issues/1525
     pub homebrew_skip_install: bool,
     pub bin_aliases: Option<Vec<String>>,
+    pub shell_legacy_env_migration: bool,
+    pub shell_user_owned_env: bool,
 }
 
 static EMPTY_OVERRIDES: AppOverrides = AppOverrides {
@@ -103,6 +113,8 @@ static EMPTY_OVERRIDES: AppOverrides = AppOverrides {
     homebrew_package_name: None,
     homebrew_skip_install: false,
     bin_aliases: None,
+    shell_legacy_env_migration: false,
+    shell_user_owned_env: false,
 };
 
 impl<'a, Tools> std::ops::Deref for TestContext<'a, Tools> {
