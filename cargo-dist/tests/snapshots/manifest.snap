@@ -204,7 +204,7 @@ stdout:
         "x86_64-pc-windows-gnu",
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex\"",
+      "install_hint": "powershell -NoProfile -ExecutionPolicy Bypass -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/v1.0.0-FAKEVERSION/cargo-dist-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "cargo-dist-installer.sh": {

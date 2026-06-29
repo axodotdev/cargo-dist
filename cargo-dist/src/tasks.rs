@@ -2284,7 +2284,9 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             .first()
             .expect("returned empty list of artifact URLs!?");
         let installer_url = format!("{best_download_url}/{artifact_name}");
-        let hint = format!(r#"powershell -ExecutionPolicy Bypass -c "irm {installer_url} | iex""#);
+        let hint = format!(
+            r#"powershell -NoProfile -ExecutionPolicy Bypass -c "irm {installer_url} | iex""#
+        );
         let desc = "Install prebuilt binaries via powershell script".to_owned();
 
         // Gather up the bundles the installer supports
