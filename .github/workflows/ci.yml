@@ -102,7 +102,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Check spelling of entire workspace
-        uses: crate-ci/typos@f8a58b6b53f2279f71eb605f03a4ae4d10608f45 # v1.47.0
+        uses: crate-ci/typos@bee27e3a4fd1ea2111cf90ab89cd076c870fce14 # v1.48.0
 
   # Build and run tests/doctests/examples on all platforms
   # FIXME: look into `cargo-hack` which lets you more aggressively
