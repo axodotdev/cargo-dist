@@ -43,6 +43,8 @@ jobs:
       - name: npm fmt
         working-directory: cargo-dist/templates/installer/npm
         run: npm ci && npm run fmt:check
+      - name: npm installer tests
+        run: node --test cargo-dist/tests/npm-installer.test.js
 
   # Check that rustfmt is a no-op
   fmt:
