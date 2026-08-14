@@ -32,7 +32,7 @@ impl Signing {
         macos_sign: bool,
     ) -> DistResult<Self> {
         if ssldotcom_windows_sign.is_some() && azure_windows_sign {
-            return Err(crate::errors::DistError::IncompatibleWindowsSigningProviders);
+            return Err(crate::errors::DistError::MultipleWindowsSigningProviders);
         }
         let ssldotcom =
             ssldotcom::CodeSignTool::new(client, host_target, dist_dir, ssldotcom_windows_sign)?;
