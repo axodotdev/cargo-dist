@@ -93,7 +93,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     The identity used by CI must have the `Artifact Signing Certificate Profile Signer` role on the certificate profile or signing account.
 
-3. **Add GitHub Secrets to your repository**
+3. **Add the Azure configuration to GitHub**
 
     - `AZURE_CLIENT_ID`: the client id of the app registration used for GitHub OIDC
     - `AZURE_TENANT_ID`: the Azure tenant id
@@ -102,9 +102,9 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
     - `AZURE_CODESIGNING_ACCOUNT_NAME`: the Artifact Signing account name
     - `AZURE_CODESIGNING_CERT_PROFILE_NAME`: the certificate profile name
 
-    The generated GitHub workflow uses `azure/login` with OpenID Connect and runs the artifact build jobs in the `release` GitHub environment. Configure a federated credential for your repository on the app registration using an environment subject such as `repo:OWNER/REPO:environment:release`.
+    These values identify the Azure identity and signing profile; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so add them as repository secrets or secrets on the `release` environment.
 
-    If you store these values as GitHub environment secrets instead of repository secrets, add them to the `release` environment.
+    The generated GitHub workflow uses `azure/login` with OpenID Connect and runs the artifact build jobs in the `release` GitHub environment. Configure a federated credential for your repository on the app registration using an environment subject such as `repo:OWNER/REPO:environment:release`.
 
 4. **Configure dist to codesign**
 

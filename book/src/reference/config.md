@@ -388,7 +388,7 @@ If enabled, dist signs Windows artifacts with Azure Artifact Signing. The certif
 
 This setting cannot be used with `ssldotcom-windows-sign`.
 
-The generated GitHub workflow expects these secrets:
+The generated GitHub workflow expects these Azure identity and signing profile settings:
 
 * `AZURE_CLIENT_ID`
 * `AZURE_TENANT_ID`
@@ -397,7 +397,9 @@ The generated GitHub workflow expects these secrets:
 * `AZURE_CODESIGNING_ACCOUNT_NAME`
 * `AZURE_CODESIGNING_CERT_PROFILE_NAME`
 
-The generated GitHub workflow runs artifact build jobs in the `release` environment so Azure federated credentials can use a subject such as `repo:OWNER/REPO:environment:release`. These values may be repository secrets or secrets on the `release` environment. Enabling this option also makes the global artifact job run on Windows so PowerShell installers are signed before checksums are generated.
+These values identify the Azure identity and signing profile; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so configure them as repository secrets or secrets on the `release` environment.
+
+The generated GitHub workflow runs artifact build jobs in the `release` environment so Azure federated authentication can use a subject such as `repo:OWNER/REPO:environment:release`. Enabling this option also makes the global artifact job run on Windows so PowerShell installers are signed before checksums are generated.
 
 
 ### archive settings

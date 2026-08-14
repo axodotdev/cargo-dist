@@ -12,28 +12,18 @@ use crate::platform::targets::TARGET_X64_WINDOWS;
 /// An instance of Azure Artifact Signing.
 #[derive(Debug)]
 pub struct AzureArtifactSigning {
-    env: AzureArtifactSigningEnv,
+    profile: AzureArtifactSigningProfile,
 }
 
-/// Required env vars for Azure Artifact Signing.
-struct AzureArtifactSigningEnv {
+/// Identifies the Azure Artifact Signing certificate profile to use.
+#[derive(Debug)]
+struct AzureArtifactSigningProfile {
     endpoint: String,
     account_name: String,
     certificate_profile_name: String,
 }
 
-// manual debug impl to prevent anyone adding derive(Debug) and leaking new auth fields later
-impl std::fmt::Debug for AzureArtifactSigningEnv {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("AzureArtifactSigningEnv")
-            .field("endpoint", &self.endpoint)
-            .field("account_name", &self.account_name)
-            .field("certificate_profile_name", &self.certificate_profile_name)
-            .finish()
-    }
-}
-
-impl AzureArtifactSigningEnv {
+impl AzureArtifactSigningProfile {
     fn new() -> Option<Self> {
         if let (Some(endpoint), Some(account_name), Some(certificate_profile_name)) = (
             Self::var("AZURE_CODESIGNING_ENDPOINT"),
@@ -70,10 +60,12 @@ impl AzureArtifactSigning {
             return Ok(None);
         }
 
-        if let Some(env) = AzureArtifactSigningEnv::new() {
-            Ok(Some(Self { env }))
+        if let Some(profile) = AzureArtifactSigningProfile::new() {
+            Ok(Some(Self { profile }))
         } else {
-            warn!("skipping codesigning, required AZURE_CODESIGNING env-vars aren't set");
+            warn!(
+                "skipping codesigning, required Azure Artifact Signing profile settings aren't set"
+            );
             Ok(None)
         }
     }
@@ -81,11 +73,11 @@ impl AzureArtifactSigning {
     pub fn sign(&self, file: &Utf8Path) -> DistResult<()> {
         info!("Azure Artifact Signing {file}");
 
-        let AzureArtifactSigningEnv {
+        let AzureArtifactSigningProfile {
             endpoint,
             account_name,
             certificate_profile_name,
-        } = &self.env;
+        } = &self.profile;
 
         // Match Azure's official GitHub Action integration, which wraps this module.
         let script = r#"
