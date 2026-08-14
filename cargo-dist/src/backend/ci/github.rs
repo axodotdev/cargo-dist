@@ -399,7 +399,7 @@ impl GithubCiInfo {
             ("actions/checkout", "v6"),
             ("actions/upload-artifact", "v7"),
             ("actions/download-artifact", "v8"),
-            ("actions/attest-build-provenance", "v3"),
+            ("actions/attest", "v4"),
             ("swatinem/rust-cache", "v2"),
             ("actions/setup-node", "v6"),
             ("azure/login", "v2"),

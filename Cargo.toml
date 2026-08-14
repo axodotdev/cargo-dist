@@ -12,13 +12,13 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/axodotdev/cargo-dist"
 homepage = "https://axodotdev.github.io/cargo-dist"
-version = "0.31.0"
+version = "0.32.0"
 rust-version = "1.74"
 
 [workspace.dependencies]
 # intra-workspace deps (you need to bump these versions when you cut releases too!
-cargo-dist-schema = { version = "=0.31.0", path = "cargo-dist-schema" }
-axoproject = { version = "=0.31.0", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
+cargo-dist-schema = { version = "=0.32.0", path = "cargo-dist-schema" }
+axoproject = { version = "=0.32.0", path = "axoproject", default-features = false, features = ["cargo-projects", "generic-projects", "npm-projects"] }
 
 # first-party deps
 axocli = { version = "0.3.0" }
@@ -28,7 +28,7 @@ axoasset = { version = "2.0.0", features = ["json-serde", "toml-serde", "toml-ed
 axoprocess = { version = "0.2.1" }
 
 # third-party deps
-clap = { version = "4.6.0", features = ["derive"] }
+clap = { version = "4.6.1", features = ["derive"] }
 console = { version = "0.16.3" }
 clap-cargo = { version = "0.18.3" }
 comfy-table = "7.2.2"
@@ -39,24 +39,24 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.149" }
 cargo_metadata = "0.23.1"
 camino = { version = "1.2.2", features = ["serde1"] }
-semver = "1.0.27"
+semver = "1.0.28"
 newline-converter = "0.3.0"
 dialoguer = "0.12.0"
 sha2 = "0.10.9"
-minijinja = { version = "2.18.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
+minijinja = { version = "2.19.0", features = ["debug", "loader", "builtins", "json", "custom_syntax"] }
 include_dir = "0.7.4"
 itertools = "0.14.0"
 cargo-wix = "0.3.9"
 uuid = { version = "1", features = ["v4"] }
 mach_object = "0.1"
 goblin = "0.10.5"
-similar = "2.7.0"
-tokio = { version = "1.50.0", features = ["full"] }
+similar = "3.1.1"
+tokio = { version = "1.52.3", features = ["full"] }
 temp-dir = "0.2.0"
 sha3 = "0.10.8"
 blake2 = "0.10.6"
 insta = { version = "1.45.1", features = ["filters"] }
-tar = "0.4.45"
+tar = "0.4.46"
 flate2 = "1.1.9"
 pathdiff = { version = "0.2.3", features = ["camino"] }
 url = "2.5.8"

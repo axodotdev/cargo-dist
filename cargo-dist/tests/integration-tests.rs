@@ -237,7 +237,7 @@ cache-builds = true
 "actions/checkout" = "abcd1234"
 "actions/upload-artifact" = "ababcdcd"
 "actions/download-artifact" = "efef1212"
-"actions/attest-build-provenance" = "34253426"
+"actions/attest" = "34253426"
 "swatinem/rust-cache" = "1ab23467"
 "#
         ))?;

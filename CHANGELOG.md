@@ -3,6 +3,30 @@
 Nothing Yet!
 
 
+# Version 0.32.0 (2026-05-21)
+
+This release contains several bugfixes and an update to the npm installer to reduce its dependencies. It also updates the default versions of all GitHub actions.
+
+## npm installer
+
+The npm installer now relies on builtin node modules in place of the external axios and rimraf libraries. In order to support this, we've raised the minimum supported node version to [14.14](https://nodejs.org/en/blog/release/v14.14.0).
+
+- impl @rafaeelaudibert [chore(npm): replace axios with native node:http/node:https](https://github.com/axodotdev/cargo-dist/pull/2350)
+
+## cargo-zigbuild and cargo-auditable
+
+It's now possible to use cargo-auditable together with cross-compilation via cargo-zigbuild. In previous versions of dist, these two features were mutually exclusive.
+
+- impl @mistydemeo [feat(auditable): remove zigbuild limitation](https://github.com/axodotdev/cargo-dist/pull/2318)
+
+## Fixes
+
+- impl @eegli [fix: double escape windows path in receipt](https://github.com/axodotdev/cargo-dist/pull/2313)
+- impl @woodruffw [ps1: peek the inner exception on download failure](https://github.com/axodotdev/cargo-dist/pull/2392)
+- impl @mistydemeo [feat(ci): migrate from attest-build-provenance@v3 to attest@v4](https://github.com/axodotdev/cargo-dist/pull/2357)
+- impl @OpenSauce [chore(deps): bump github actions](https://github.com/axodotdev/cargo-dist/pull/2322)
+
+
 # Version 0.31.0 (2026-02-23)
 
 This release includes several new features, including the major introduction of [mirrors](https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings) that installers can fallback to.

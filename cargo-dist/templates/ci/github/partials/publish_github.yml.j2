@@ -11,7 +11,7 @@
           rm -f artifacts/*-dist-manifest.json
         {{%- if github_attestations is defined and github_attestations and (github_attestations_phase == "host" or github_attestations_phase == "announce") %}}
       - name: Attest
-        uses: {{{actions["actions/attest-build-provenance"] | safe }}}
+        uses: {{{actions["actions/attest"] | safe }}}
         with:
           subject-path: |
           {{%- for filter in github_attestations_filters %}}
