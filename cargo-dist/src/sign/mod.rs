@@ -7,7 +7,10 @@ use axoasset::AxoClient;
 use camino::Utf8Path;
 use cargo_dist_schema::TripleNameRef;
 
-use crate::{config::ProductionMode, DistResult};
+use crate::{
+    config::{AzureArtifactSigningConfig, ProductionMode},
+    DistResult,
+};
 
 mod azure;
 mod macos;
@@ -28,10 +31,10 @@ impl Signing {
         host_target: &TripleNameRef,
         dist_dir: &Utf8Path,
         ssldotcom_windows_sign: Option<ProductionMode>,
-        azure_windows_sign: bool,
+        azure_windows_sign: Option<AzureArtifactSigningConfig>,
         macos_sign: bool,
     ) -> DistResult<Self> {
-        if ssldotcom_windows_sign.is_some() && azure_windows_sign {
+        if ssldotcom_windows_sign.is_some() && azure_windows_sign.is_some() {
             return Err(crate::errors::DistError::MultipleWindowsSigningProviders);
         }
         let ssldotcom =

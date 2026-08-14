@@ -397,9 +397,9 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 
-    /// \[unstable\] Whether we should sign windows binaries with Azure Artifact Signing
+    /// \[unstable\] Azure Artifact Signing configuration
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub azure_windows_sign: Option<bool>,
+    pub azure_windows_sign: Option<AzureArtifactSigningConfig>,
 
     /// Whether we should sign Mac binaries
     #[serde(skip_serializing_if = "Option::is_none")]

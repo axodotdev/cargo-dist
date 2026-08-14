@@ -428,6 +428,14 @@ pub enum DistError {
     #[diagnostic(help("disable either `ssldotcom-windows-sign` or `azure-windows-sign`"))]
     MultipleWindowsSigningProviders,
 
+    /// Azure Artifact Signing configuration is invalid
+    #[error("Azure Artifact Signing requires non-empty configuration:\n- {}", settings.join("\n- "))]
+    #[diagnostic(help("set each listed field under `azure-windows-sign`"))]
+    InvalidAzureArtifactSigningConfig {
+        /// Empty profile configuration fields
+        settings: Vec<&'static str>,
+    },
+
     /// Passed --artifacts but no --target
     #[error("You specified --artifacts, disabling host mode, but specified no targets to build!")]
     #[diagnostic(help("try adding --target={host_target}"))]

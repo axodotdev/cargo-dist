@@ -896,6 +896,18 @@ pub enum ProductionMode {
     Prod,
 }
 
+/// Configuration for Azure Artifact Signing.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct AzureArtifactSigningConfig {
+    /// Artifact Signing account endpoint.
+    pub endpoint: String,
+    /// Artifact Signing account name.
+    pub account_name: String,
+    /// Artifact Signing certificate profile name.
+    pub certificate_profile_name: String,
+}
+
 /// An extra artifact to upload alongside the release tarballs,
 /// and the build command which produces it.
 #[derive(Debug, Clone, Deserialize, Serialize)]

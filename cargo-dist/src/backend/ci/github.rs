@@ -225,7 +225,7 @@ impl GithubCiInfo {
         let dispatch_releases = ci_config.dispatch_releases;
         let release_branch = ci_config.release_branch.clone();
         let ssldotcom_windows_sign = dist.config.builds.ssldotcom_windows_sign.clone();
-        let azure_windows_sign = dist.config.builds.azure_windows_sign;
+        let azure_windows_sign = dist.config.builds.azure_windows_sign.is_some();
         let macos_sign = dist.config.builds.macos_sign;
         let tag_namespace = ci_config.tag_namespace.clone();
         let pr_run_mode = ci_config.pr_run_mode;

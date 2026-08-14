@@ -15,8 +15,8 @@ pub struct WorkspaceBuildConfig {
     pub cargo: WorkspaceCargoBuildConfig,
     /// whether to sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
-    /// whether to sign windows binaries with Azure Artifact Signing
-    pub azure_windows_sign: bool,
+    /// Azure Artifact Signing configuration
+    pub azure_windows_sign: Option<AzureArtifactSigningConfig>,
     /// whether to sign macos binaries with apple
     pub macos_sign: bool,
     /// Overrides the minimum supported glibc version.
@@ -47,8 +47,8 @@ pub struct BuildConfigInheritable {
     pub common: CommonBuildConfig,
     /// whether to sign windows binaries with ssl.com
     pub ssldotcom_windows_sign: Option<ProductionMode>,
-    /// whether to sign windows binaries with Azure Artifact Signing
-    pub azure_windows_sign: Option<bool>,
+    /// Azure Artifact Signing configuration
+    pub azure_windows_sign: Option<AzureArtifactSigningConfig>,
     /// whether to sign macos binaries with apple
     pub macos_sign: Option<bool>,
     /// cargo builds
@@ -75,9 +75,9 @@ pub struct BuildLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssldotcom_windows_sign: Option<ProductionMode>,
 
-    /// Whether we should sign windows binaries with Azure Artifact Signing
+    /// Azure Artifact Signing configuration
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub azure_windows_sign: Option<bool>,
+    pub azure_windows_sign: Option<AzureArtifactSigningConfig>,
 
     /// whether to sign macos binaries with apple
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -154,7 +154,7 @@ impl BuildConfigInheritable {
             cargo: cargo_out,
             macos_sign: macos_sign.unwrap_or(false),
             ssldotcom_windows_sign,
-            azure_windows_sign: azure_windows_sign.unwrap_or(false),
+            azure_windows_sign,
             min_glibc_version,
             omnibor: omnibor.unwrap_or(false),
         }

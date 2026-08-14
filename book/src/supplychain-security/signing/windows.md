@@ -93,16 +93,13 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     The identity used by CI must have the `Artifact Signing Certificate Profile Signer` role on the certificate profile or signing account.
 
-3. **Add the Azure configuration to GitHub**
+3. **Add the Azure identity configuration to GitHub**
 
     - `AZURE_CLIENT_ID`: the client id of the app registration used for GitHub OIDC
     - `AZURE_TENANT_ID`: the Azure tenant id
     - `AZURE_SUBSCRIPTION_ID`: the Azure subscription id
-    - `AZURE_CODESIGNING_ENDPOINT`: the Artifact Signing endpoint, such as `https://weu.codesigning.azure.net/`
-    - `AZURE_CODESIGNING_ACCOUNT_NAME`: the Artifact Signing account name
-    - `AZURE_CODESIGNING_CERT_PROFILE_NAME`: the certificate profile name
 
-    These values identify the Azure identity and signing profile; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so add them as repository secrets or secrets on the `release` environment.
+    These values identify the Azure identity; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so add them as repository secrets or secrets on the `release` environment.
 
     The generated GitHub workflow uses `azure/login` with OpenID Connect and runs the artifact build jobs in the `release` GitHub environment. Configure a federated credential for your repository on the app registration using an environment subject such as `repo:OWNER/REPO:environment:release`.
 
@@ -111,11 +108,13 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
     Add the following to your `Cargo.toml` or `dist.toml`:
 
     ```toml
-    [workspace.metadata.dist]
-    azure-windows-sign = true
+    [workspace.metadata.dist.azure-windows-sign]
+    endpoint = "https://weu.codesigning.azure.net/"
+    account-name = "my-signing-account"
+    certificate-profile-name = "my-certificate-profile"
     ```
 
-    Do not enable `ssldotcom-windows-sign` at the same time.
+    Do not configure `ssldotcom-windows-sign` at the same time.
 
 5. **Run `dist init` on your project**
 

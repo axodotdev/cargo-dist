@@ -376,28 +376,35 @@ These strings match the [environment_name setting](https://github.com/SSLcom/esi
 
 > <span style="float:right">since 0.32.0<br>[global-only][]</span>
 > [📖 read the windows signing guide!](../supplychain-security/signing/windows.md) \
-> default = `false`
+> default = `<none>` (disabled)
 >
 > *in your dist-workspace.toml or dist.toml:*
 > ```toml
-> [dist]
-> azure-windows-sign = true
+> [dist.azure-windows-sign]
+> endpoint = "https://weu.codesigning.azure.net/"
+> account-name = "my-signing-account"
+> certificate-profile-name = "my-certificate-profile"
 > ```
 
-If enabled, dist signs Windows artifacts with Azure Artifact Signing. The certificate profile selected by `AZURE_CODESIGNING_CERT_PROFILE_NAME` determines whether Azure uses a real Public Trust certificate or a Public Trust Test certificate.
+If configured, dist signs Windows artifacts with Azure Artifact Signing. The selected certificate profile determines whether Azure uses a real Public Trust certificate or a Public Trust Test certificate.
 
 This setting cannot be used with `ssldotcom-windows-sign`.
 
-The generated GitHub workflow expects these Azure identity and signing profile settings:
+The table contains these fields:
+
+* `endpoint`: the regional Artifact Signing endpoint
+* `account-name`: the Artifact Signing account name
+* `certificate-profile-name`: the certificate profile name
+
+The generated GitHub workflow expects these Azure identity settings for OpenID Connect:
 
 * `AZURE_CLIENT_ID`
 * `AZURE_TENANT_ID`
 * `AZURE_SUBSCRIPTION_ID`
-* `AZURE_CODESIGNING_ENDPOINT`
-* `AZURE_CODESIGNING_ACCOUNT_NAME`
-* `AZURE_CODESIGNING_CERT_PROFILE_NAME`
 
-These values identify the Azure identity and signing profile; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so configure them as repository secrets or secrets on the `release` environment.
+These values identify the Azure identity; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so configure them as repository secrets or secrets on the `release` environment.
+
+All signing profile fields are required and must not be blank.
 
 The generated GitHub workflow runs artifact build jobs in the `release` environment so Azure federated authentication can use a subject such as `repo:OWNER/REPO:environment:release`. Enabling this option also makes the global artifact job run on Windows so PowerShell installers are signed before checksums are generated.
 

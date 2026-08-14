@@ -208,11 +208,6 @@ jobs:
       SSLDOTCOM_CREDENTIAL_ID: ${{ secrets.SSLDOTCOM_CREDENTIAL_ID }}
       SSLDOTCOM_TOTP_SECRET: ${{ secrets.SSLDOTCOM_TOTP_SECRET }}
     {{%- endif %}}
-    {{%- if azure_windows_sign %}}
-      AZURE_CODESIGNING_ENDPOINT: ${{ secrets.AZURE_CODESIGNING_ENDPOINT }}
-      AZURE_CODESIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_CODESIGNING_ACCOUNT_NAME }}
-      AZURE_CODESIGNING_CERT_PROFILE_NAME: ${{ secrets.AZURE_CODESIGNING_CERT_PROFILE_NAME }}
-    {{%- endif %}}
     {{%- if macos_sign %}}
       CODESIGN_CERTIFICATE: ${{ secrets.CODESIGN_CERTIFICATE }}
       CODESIGN_CERTIFICATE_PASSWORD: ${{ secrets.CODESIGN_CERTIFICATE_PASSWORD }}
@@ -409,11 +404,6 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
-    {{%- if azure_windows_sign %}}
-      AZURE_CODESIGNING_ENDPOINT: ${{ secrets.AZURE_CODESIGNING_ENDPOINT }}
-      AZURE_CODESIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_CODESIGNING_ACCOUNT_NAME }}
-      AZURE_CODESIGNING_CERT_PROFILE_NAME: ${{ secrets.AZURE_CODESIGNING_CERT_PROFILE_NAME }}
-    {{%- endif %}}
     steps:
       - uses: {{{actions["actions/checkout"] | safe }}}
         with:
