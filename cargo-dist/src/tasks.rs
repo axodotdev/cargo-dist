@@ -2504,7 +2504,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                             artifact_name,
                             spec1: existing_spec.clone(),
                             spec2: binary.pkg_spec.clone(),
-                        })?;
+                        });
                     }
                 } else {
                     package_info = Some((binary.pkg_spec.clone(), binary.pkg_idx));
@@ -2611,7 +2611,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                             artifact_name,
                             spec1: existing_spec.clone(),
                             spec2: binary.pkg_spec.clone(),
-                        })?;
+                        });
                     }
                 } else {
                     package_info = Some((binary.pkg_spec.clone(), binary.pkg_idx));
