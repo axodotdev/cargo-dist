@@ -127,7 +127,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
       - uses: swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
-          key: ${{ matrix.os }}-v2
+          key: ${{ matrix.os }}
       # install pnpm for npm runtests
       - run: npm i -g pnpm@10
       # install omnibor-cli for tests
