@@ -31,7 +31,7 @@ axoprocess = { version = "0.2.1" }
 clap = { version = "4.6.1", features = ["derive"] }
 console = { version = "0.16.3" }
 clap-cargo = { version = "0.18.3" }
-comfy-table = "7.2.2"
+comfy-table = "8.0.0"
 miette = { version = "7.6.0" }
 thiserror = "2.0.18"
 tracing = { version = "0.1.44", features = ["log"] }
