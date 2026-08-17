@@ -85,3 +85,8 @@ npm-package = "dist"
 pre-release-replacements = [
   {file="../CHANGELOG.md", search="# Unreleased", replace="# Unreleased\n\nNothing Yet!\n\n\n# Version {{version}} ({{date}})", exactly=1},
 ]
+
+[lints.clippy]
+# This produces broken suggestions at the moment
+# https://github.com/rust-lang/rust-clippy/issues/16860
+collapsible_match = "allow"
