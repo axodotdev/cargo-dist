@@ -190,7 +190,7 @@ checksum = "d827c45eaab9362d301182063c6d10923c4ec1e19fe051e0ec192b5564fbb0e2"
 dependencies = [
  "backtrace",
  "backtrace-ext",
- "console 0.16.3",
+ "console 0.16.4",
  "miette 7.6.0",
  "serde",
  "serde_json",
@@ -407,7 +407,7 @@ dependencies = [
  "clap-cargo",
  "color-backtrace",
  "comfy-table",
- "console 0.16.3",
+ "console 0.16.4",
  "current_platform",
  "dialoguer",
  "flate2",
@@ -706,9 +706,9 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.16.3"
+version = "0.16.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d64e8af5551369d19cf50138de61f1c42074ab970f74e99be916646777f8fc87"
+checksum = "4fe5f465a4f6fee88fad41b85d990f84c835335e85b5d9e6e63e0d06d28cba7c"
 dependencies = [
  "encode_unicode",
  "libc",
@@ -891,7 +891,7 @@ version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25f104b501bf2364e78d0d3974cbc774f738f5865306ed128e1e0d7499c0ad96"
 dependencies = [
- "console 0.16.3",
+ "console 0.16.4",
  "shell-words",
  "tempfile",
  "zeroize",
