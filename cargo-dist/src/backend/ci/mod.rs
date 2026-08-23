@@ -163,7 +163,10 @@ impl InstallStrategy for CargoAuditableInstallStrategy {
     fn powershell(&self) -> GhaRunStep {
         let installer_url =
             format!("{BASE_CARGO_AUDITABLE_FETCH_LATEST_URL}/cargo-auditable-installer.ps1");
-        PowershellScript::new(format!(r#"powershell -c "irm {installer_url} | iex""#)).into()
+        PowershellScript::new(format!(
+            r#"powershell -NoProfile -c "irm {installer_url} | iex""#
+        ))
+        .into()
     }
 }
 
@@ -185,7 +188,10 @@ impl InstallStrategy for CargoCyclonedxInstallStrategy {
     fn powershell(&self) -> GhaRunStep {
         let installer_url =
             format!("{BASE_CARGO_CYCLONEDX_FETCH_URL}/cargo-cyclonedx-{CARGO_CYCLONEDX_VERSION}/cargo-cyclonedx-installer.ps1");
-        PowershellScript::new(format!(r#"powershell -c "irm {installer_url} | iex""#)).into()
+        PowershellScript::new(format!(
+            r#"powershell -NoProfile -c "irm {installer_url} | iex""#
+        ))
+        .into()
     }
 }
 
@@ -209,6 +215,9 @@ impl InstallStrategy for OmniborInstallStrategy {
         let installer_url = format!(
             "{BASE_OMNIBOR_FETCH_URL}/omnibor-cli-v{OMNIBOR_VERSION}/omnibor-cli-installer.ps1"
         );
-        PowershellScript::new(format!(r#"powershell -c "irm {installer_url} | iex""#)).into()
+        PowershellScript::new(format!(
+            r#"powershell -NoProfile -c "irm {installer_url} | iex""#
+        ))
+        .into()
     }
 }
