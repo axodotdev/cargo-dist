@@ -57,7 +57,8 @@ impl AzureArtifactSigning {
             certificate_profile_name,
         } = &self.config;
 
-        // Match Azure's official GitHub Action integration, which wraps this module.
+        // Match Azure's official GitHub Action integration, which wraps this module:
+        // https://github.com/Azure/artifact-signing-action
         let script = r#"
 $ErrorActionPreference = 'Stop'
 Import-Module ArtifactSigning
