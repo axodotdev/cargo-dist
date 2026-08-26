@@ -87,13 +87,13 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
 1. **Create Azure Artifact Signing resources**
 
-    Create an Artifact Signing account, complete identity validation, and create a certificate profile. For real releases, use a Public Trust profile. For testing, use a Public Trust Test profile.
+    Follow Azure's [Artifact Signing quickstart](https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart) to create an Artifact Signing account, complete identity validation, and create a certificate profile. For real releases, use a Public Trust profile. For testing, use a Public Trust Test profile.
 
 2. **Grant signing permissions**
 
     The identity used by CI must have the `Artifact Signing Certificate Profile Signer` role on the certificate profile or signing account.
 
-3. **Add the Azure identity configuration to GitHub**
+3. **Add the Azure identity configuration to [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)**
 
     - `AZURE_CLIENT_ID`: the client id of the app registration used for GitHub OIDC
     - `AZURE_TENANT_ID`: the Azure tenant id
@@ -101,7 +101,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
     These values identify the Azure identity; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so add them as repository secrets or secrets on the `release` environment.
 
-    The generated GitHub workflow uses `azure/login` with OpenID Connect and runs the artifact build jobs in the `release` GitHub environment. Configure a federated credential for your repository on the app registration using an environment subject such as `repo:OWNER/REPO:environment:release`.
+    The generated GitHub workflow uses `azure/login` with OpenID Connect and runs the artifact build jobs in the `release` GitHub environment. Follow Azure's [OpenID Connect guide](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect) to configure a federated credential for your repository on the app registration, using an environment subject such as `repo:OWNER/REPO:environment:release`.
 
 4. **Configure dist to codesign**
 

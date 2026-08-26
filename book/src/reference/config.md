@@ -390,7 +390,7 @@ If configured, dist signs Windows artifacts with Azure Artifact Signing. The sel
 
 This setting cannot be used with `ssldotcom-windows-sign`.
 
-The table contains these fields:
+These fields correspond to the [account details used by Azure's official Artifact Signing action](https://github.com/Azure/artifact-signing-action#account-details):
 
 * `endpoint`: the regional Artifact Signing endpoint
 * `account-name`: the Artifact Signing account name
