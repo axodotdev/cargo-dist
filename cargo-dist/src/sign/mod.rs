@@ -52,6 +52,11 @@ impl Signing {
         })
     }
 
+    /// Whether a Windows signing provider is ready to sign files
+    pub(crate) fn has_windows_signer(&self) -> bool {
+        self.ssldotcom.is_some() || self.azure.is_some()
+    }
+
     /// Sign a file
     pub fn sign(&self, file: &Utf8Path) -> DistResult<()> {
         if let Some(signer) = &self.ssldotcom {

@@ -72,8 +72,8 @@ pub struct GithubCiInfo {
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
     /// global task
     pub global_task: GithubGlobalJobConfig,
-    /// Runner for global artifact builds
-    pub global_artifacts_runner: GithubRunnerConfig,
+    /// How to install dist in the Windows signing job
+    pub dist_install_for_signing: GhaRunStep,
     /// homebrew tap
     pub tap: Option<String>,
     /// plan jobs
@@ -276,40 +276,19 @@ impl GithubCiInfo {
         //
         // If we've done a Good Job, then these artifacts should be possible to build on *any*
         // platform. Linux is usually fast/cheap, so that's a reasonable choice.
-        let global_artifacts_runner = if azure_windows_sign {
-            default_windows_runner_config()
-        } else {
-            ci_config
-                .runners
-                .get("global")
-                .cloned()
-                .unwrap_or_else(default_global_runner_config)
-        };
+        let global_runner = ci_config
+            .runners
+            .get("global")
+            .cloned()
+            .unwrap_or_else(default_global_runner_config);
         let global_task = GithubGlobalJobConfig {
-            runner: ci_config
-                .runners
-                .get("global")
-                .cloned()
-                .unwrap_or_else(default_global_runner_config),
+            runner: global_runner,
             dist_args: "--artifacts=global".into(),
-            install_dist: if azure_windows_sign {
-                dist_install_strategy.powershell()
-            } else {
-                dist_install_strategy.dash()
-            },
-            install_cargo_cyclonedx: Some(if azure_windows_sign {
-                cargo_cyclonedx_install_strategy.powershell()
-            } else {
-                cargo_cyclonedx_install_strategy.dash()
-            }),
-            install_omnibor: need_omnibor.then(|| {
-                if azure_windows_sign {
-                    omnibor_install_strategy.powershell()
-                } else {
-                    omnibor_install_strategy.dash()
-                }
-            }),
+            install_dist: dist_install_strategy.dash(),
+            install_cargo_cyclonedx: Some(cargo_cyclonedx_install_strategy.dash()),
+            install_omnibor: need_omnibor.then_some(omnibor_install_strategy.dash()),
         };
+        let dist_install_for_signing = dist_install_strategy.powershell();
 
         let tap = dist.global_homebrew_tap.clone();
 
@@ -438,7 +417,7 @@ impl GithubCiInfo {
             artifacts_matrix: GithubMatrix { include: tasks },
             pr_run_mode,
             global_task,
-            global_artifacts_runner,
+            dist_install_for_signing,
             ssldotcom_windows_sign,
             azure_windows_sign,
             macos_sign,
@@ -685,14 +664,8 @@ pub fn runner_to_config(runner: &GithubRunnerRef) -> GithubRunnerConfig {
 }
 
 const DEFAULT_LINUX_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("ubuntu-22.04");
-const DEFAULT_WINDOWS_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("windows-2022");
-
 fn default_global_runner_config() -> GithubRunnerConfig {
     runner_to_config(DEFAULT_LINUX_RUNNER)
-}
-
-fn default_windows_runner_config() -> GithubRunnerConfig {
-    runner_to_config(DEFAULT_WINDOWS_RUNNER)
 }
 
 /// Get the appropriate Github Runner for building a target

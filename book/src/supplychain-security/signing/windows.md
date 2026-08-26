@@ -118,4 +118,4 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
 
 5. **Run `dist init` on your project**
 
-    This regenerates your GitHub workflow with the Azure login and signing module setup. When Azure signing is enabled, dist uses Windows runners for both Windows artifacts and global artifacts so PowerShell installers are signed before checksums are generated.
+    This regenerates your GitHub workflow with the Azure login and signing module setup. Windows build jobs sign executables and MSIs as they are built. After the global artifacts are built, a dedicated Windows signing job signs the PowerShell installer before the release is hosted.

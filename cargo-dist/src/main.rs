@@ -61,6 +61,7 @@ fn real_main(cli: &axocli::CliApp<Cli>) -> Result<(), miette::Report> {
         Commands::PrintUploadFilesFromManifest(args) => {
             cmd_print_upload_files_from_manifest(config, args)
         }
+        Commands::Sign => cmd_sign(config),
         Commands::Host(args) => cmd_host(config, args),
         Commands::Selfupdate(args) => runtime.block_on(cmd_update(config, args)),
     }
@@ -235,6 +236,22 @@ fn cmd_build(cli: &Cli, args: &BuildArgs) -> Result<(), miette::Report> {
         args.print.contains(&"linkage".to_owned()),
         None,
     )
+}
+
+fn cmd_sign(cli: &Cli) -> Result<(), miette::Report> {
+    let config = cargo_dist::config::Config {
+        tag_settings: cli.tag_settings(true),
+        create_hosting: false,
+        artifact_mode: config::ArtifactMode::Global,
+        no_local_paths: false,
+        allow_all_dirty: cli.allow_dirty,
+        targets: cli.target.clone(),
+        ci: cli.ci.iter().map(|ci| ci.to_lib()).collect(),
+        installers: cli.installer.iter().map(|ins| ins.to_lib()).collect(),
+        root_cmd: "sign".to_owned(),
+    };
+    let report = do_sign(&config)?;
+    print(cli, &report, false, None)
 }
 
 fn cmd_print_upload_files_from_manifest(

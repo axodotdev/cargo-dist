@@ -185,6 +185,24 @@ pub fn do_build(cfg: &Config) -> DistResult<DistManifest> {
     Ok(manifest)
 }
 
+/// Sign previously built global artifacts.
+pub fn do_sign(cfg: &Config) -> DistResult<DistManifest> {
+    check_integrity(cfg)?;
+    let (dist, manifest) = tasks::gather_work(cfg)?;
+
+    let windows_signing_configured = dist.config.builds.ssldotcom_windows_sign.is_some()
+        || dist.config.builds.azure_windows_sign.is_some();
+    if windows_signing_configured && !dist.signer.has_windows_signer() {
+        return Err(DistError::WindowsSigningUnavailable);
+    }
+
+    for artifact in &dist.artifacts {
+        dist.signer.sign(&artifact.file_path)?;
+    }
+
+    Ok(manifest)
+}
+
 /// Just generate the manifest produced by `dist build` without building
 pub fn do_manifest(cfg: &Config) -> DistResult<DistManifest> {
     check_integrity(cfg)?;

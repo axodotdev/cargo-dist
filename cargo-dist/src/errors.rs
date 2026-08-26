@@ -436,6 +436,11 @@ pub enum DistError {
         settings: Vec<&'static str>,
     },
 
+    /// A configured Windows signing provider is unavailable
+    #[error("the configured Windows signing provider is unavailable")]
+    #[diagnostic(help("run the signing job on x86_64 Windows with all required credentials"))]
+    WindowsSigningUnavailable,
+
     /// Passed --artifacts but no --target
     #[error("You specified --artifacts, disabling host mode, but specified no targets to build!")]
     #[diagnostic(help("try adding --target={host_target}"))]

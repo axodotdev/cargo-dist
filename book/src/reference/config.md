@@ -406,7 +406,7 @@ These values identify the Azure identity; they are not authentication credential
 
 All signing profile fields are required and must not be blank.
 
-The generated GitHub workflow runs artifact build jobs in the `release` environment so Azure federated authentication can use a subject such as `repo:OWNER/REPO:environment:release`. Enabling this option also makes the global artifact job run on Windows so PowerShell installers are signed before checksums are generated.
+The generated GitHub workflow runs Azure signing jobs in the `release` environment so federated authentication can use a subject such as `repo:OWNER/REPO:environment:release`. Windows build jobs sign executables and MSIs, and a dedicated Windows signing job signs the PowerShell installer after global artifacts are built.
 
 
 ### archive settings
