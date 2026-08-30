@@ -534,7 +534,7 @@ jobs:
       - name: Fetch artifacts
         uses: {{{actions["actions/download-artifact"] | safe }}}
         with:
-          pattern: artifacts-*
+          pattern: artifacts-build-global
           path: target/distrib/
           merge-multiple: true
       {{%- if azure_windows_sign %}}

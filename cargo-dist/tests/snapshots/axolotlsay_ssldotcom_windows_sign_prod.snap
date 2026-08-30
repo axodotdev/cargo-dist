@@ -2856,7 +2856,7 @@ jobs:
       - name: Fetch artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: artifacts-*
+          pattern: artifacts-build-global
           path: target/distrib/
           merge-multiple: true
       - name: Sign artifacts
