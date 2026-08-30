@@ -402,7 +402,7 @@ The generated GitHub workflow expects these Azure identity settings for OpenID C
 * `AZURE_TENANT_ID`
 * `AZURE_SUBSCRIPTION_ID`
 
-These values identify the Azure identity; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so configure them as repository secrets or secrets on the `release` environment.
+These values identify the Azure identity; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so configure them as repository secrets.
 
 All signing profile fields are required and must not be blank.
 

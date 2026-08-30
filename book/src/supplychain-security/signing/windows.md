@@ -4,6 +4,8 @@
 
 dist can automatically codesign Windows EXEs, PowerShell installers, and [MSIs](../../installers/msi.md) using SSL.com's [eSigner cloud signing service](https://www.ssl.com/esigner/) or Azure Artifact Signing.
 
+> Windows artifact signing currently supports only the `x86_64-pc-windows-msvc` target. Artifacts for `aarch64-pc-windows-msvc` are not signed.
+
 Although there are many ways to do code signing, this process is specifically concerned with ensuring [Windows SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who [downloads your application with a web browser](https://en.wikipedia.org/wiki/Mark_of_the_Web) will get a popup warning them against running it. (Alternative methods of downloading and installing, such as [dist's powershell installers](../../installers/powershell.md) do not trigger SmartScreen.)
 
 Windows code signing is done using essentially the same certificate infrastructure as HTTPS, just with stricter requirements on issuance and management of the private keys. In principle this means you can go to your favourite SSL/TLS Certificate vendor and ask for an EV Code Signing Certificate and follow the same process regardless of which vendor you picked. **However [as of July 2023](https://knowledge.digicert.com/alerts/code-signing-changes-in-2023), all the relevant kinds of code signing certificates can only be issued via hardware security modules (HSMs) like Yubikeys.** This poses a significant challenge for CI/CD pipelines, because you can't just plug a USB key into GitHub CI.
@@ -99,7 +101,7 @@ Want support for another vendor? [Drop us a line](mailto:hello@axo.dev) or [file
     - `AZURE_TENANT_ID`: the Azure tenant id
     - `AZURE_SUBSCRIPTION_ID`: the Azure subscription id
 
-    These values identify the Azure identity; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so add them as repository secrets or secrets on the `release` environment.
+    These values identify the Azure identity; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so add them as repository secrets.
 
     The generated GitHub workflow uses `azure/login` with OpenID Connect and runs the artifact build jobs in the `release` GitHub environment. Follow Azure's [OpenID Connect guide](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect) to configure a federated credential for your repository on the app registration, using an environment subject such as `repo:OWNER/REPO:environment:release`.
 
