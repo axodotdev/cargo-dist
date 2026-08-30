@@ -53,6 +53,7 @@ use std::collections::BTreeMap;
 use crate::backend::installer::{ExecutableZipFragment, HomebrewImpl};
 use crate::platform::targets::{
     TARGET_ARM64_LINUX_GNU, TARGET_ARM64_MAC, TARGET_X64_LINUX_GNU, TARGET_X64_MAC,
+    TARGET_X64_WINDOWS,
 };
 use axoasset::AxoClient;
 use axoprocess::Cmd;
@@ -951,6 +952,33 @@ pub(crate) struct DistGraphBuilder<'pkg_graph> {
     package_configs: Vec<AppConfig>,
 }
 
+fn validate_windows_signing_targets<'a>(
+    config: &WorkspaceConfig,
+    targets: impl IntoIterator<Item = &'a TripleName>,
+) -> DistResult<()> {
+    if config.builds.ssldotcom_windows_sign.is_none()
+        && config.builds.azure_windows_sign.is_none()
+    {
+        return Ok(());
+    }
+
+    let targets = targets
+        .into_iter()
+        .filter(|target| {
+            target.is_windows() && target.as_explicit_ref() != TARGET_X64_WINDOWS
+        })
+        .map(ToString::to_string)
+        .collect::<SortedSet<_>>();
+
+    if targets.is_empty() {
+        Ok(())
+    } else {
+        Err(DistError::UnsupportedWindowsSigningTargets {
+            targets: targets.into_iter().collect(),
+        })
+    }
+}
+
 impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
     pub(crate) fn new(
         system_id: SystemId,
@@ -1029,6 +1057,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             package_metadata.validate_install_paths()?;
             package_metadatas.push(package_metadata);
         }
+
+        validate_windows_signing_targets(
+            &config,
+            package_configs
+                .iter()
+                .flat_map(|package| package.targets.iter()),
+        )?;
 
         // check cargo build settings for precise-builds
         let mut global_cargo_build_config = None::<AppCargoBuildConfig>;
@@ -3181,6 +3216,8 @@ pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
         &cfg.targets[..]
     };
     info!("selected triples: {:?}", triples);
+
+    validate_windows_signing_targets(&graph.inner.config, triples.iter())?;
 
     // Figure out what packages we're announcing
     let announcing = announce::select_tag(&mut graph, &cfg.tag_settings)?;

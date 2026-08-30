@@ -436,6 +436,16 @@ pub enum DistError {
         settings: Vec<&'static str>,
     },
 
+    /// Windows signing was configured with unsupported Windows targets
+    #[error("Windows artifact signing only supports `x86_64-pc-windows-msvc`, but unsupported Windows targets were configured:\n- {}", targets.join("\n- "))]
+    #[diagnostic(help(
+        "remove the unsupported Windows targets or disable `ssldotcom-windows-sign`/`azure-windows-sign`"
+    ))]
+    UnsupportedWindowsSigningTargets {
+        /// Unsupported target triples
+        targets: Vec<String>,
+    },
+
     /// A configured Windows signing provider is unavailable
     #[error("the configured Windows signing provider is unavailable")]
     #[diagnostic(help("run the signing job on x86_64 Windows with all required credentials"))]

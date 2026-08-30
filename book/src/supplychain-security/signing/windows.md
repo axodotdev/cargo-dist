@@ -4,7 +4,7 @@
 
 dist can automatically codesign Windows EXEs, PowerShell installers, and [MSIs](../../installers/msi.md) using SSL.com's [eSigner cloud signing service](https://www.ssl.com/esigner/) or Azure Artifact Signing.
 
-> Windows artifact signing currently supports only the `x86_64-pc-windows-msvc` target. Artifacts for `aarch64-pc-windows-msvc` are not signed.
+> Windows artifact signing currently supports only the `x86_64-pc-windows-msvc` target. Other Windows targets are not supported.
 
 Although there are many ways to do code signing, this process is specifically concerned with ensuring [Windows SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who [downloads your application with a web browser](https://en.wikipedia.org/wiki/Mark_of_the_Web) will get a popup warning them against running it. (Alternative methods of downloading and installing, such as [dist's powershell installers](../../installers/powershell.md) do not trigger SmartScreen.)
 
