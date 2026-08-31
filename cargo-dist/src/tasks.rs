@@ -956,17 +956,14 @@ fn validate_windows_signing_targets<'a>(
     config: &WorkspaceConfig,
     targets: impl IntoIterator<Item = &'a TripleName>,
 ) -> DistResult<()> {
-    if config.builds.ssldotcom_windows_sign.is_none()
-        && config.builds.azure_windows_sign.is_none()
+    if config.builds.ssldotcom_windows_sign.is_none() && config.builds.azure_windows_sign.is_none()
     {
         return Ok(());
     }
 
     let targets = targets
         .into_iter()
-        .filter(|target| {
-            target.is_windows() && !target.is_x86_64()
-        })
+        .filter(|target| target.is_windows() && !target.is_x86_64())
         .map(ToString::to_string)
         .collect::<SortedSet<_>>();
 
