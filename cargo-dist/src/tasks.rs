@@ -965,7 +965,7 @@ fn validate_windows_signing_targets<'a>(
     let targets = targets
         .into_iter()
         .filter(|target| {
-            target.is_windows() && target.as_explicit_ref() != TARGET_X64_WINDOWS
+            target.is_windows() && !target.is_x86_64()
         })
         .map(ToString::to_string)
         .collect::<SortedSet<_>>();
