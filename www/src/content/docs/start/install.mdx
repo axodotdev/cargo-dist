@@ -1,0 +1,167 @@
+---
+title: Installation
+description: How to install dist
+---
+
+import { Aside,Tabs,TabItem } from '@astrojs/starlight/components';
+
+## Installers
+
+`dist` offers several installer types to create a streamlined experience for
+users on a variety of platforms. If you don't see your favorite method listed
+here, take a look at the [community-contirbuted installers](#community-installers).
+Still not finding what you want? [File an issue!](https://github.com/axodotdev/cargo-dist/issues/new)
+
+<Tabs>
+  <TabItem label="Shell">
+    ```shell
+    curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/dist/releases/latest/download/dist-installer.sh | sh
+    ```
+  </TabItem>
+  <TabItem label="Powershell">
+    ```powershell
+    powershell -c "irm https://github.com/axodotdev/dist/releases/latest/download/dist-installer.ps1 | iex"
+    ```
+  </TabItem>
+  <TabItem label="Homebrew">
+    ```shell
+    brew install axodotdev/tap/dist
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```shell
+    npm install @axodotdev/dist
+    ```
+  </TabItem>
+</Tabs>
+
+`dist` installers handle fetching binaries and putting them in the correct install
+location (which you can [customize](#customizing)). They also ensure that the install
+location is appropriately on your PATH and will update any dotfiles that may be
+present. They also create an "install receipt" which enables our [updater](/start/update).
+
+<Aside type="tip">
+`dist` is packaged and distributed with `dist` so installing `dist` is also using `dist`!
+</Aside>
+
+<Aside type="note">
+`dist`'s installers are binary fetching installers- which means that they execute
+a light wrapper script which fetches an artifact that contains [pre-built binary](#pre-built-binaries)
+from a remote host. Those binaries are always available and inspectable on the
+[latest release](https://github.com/axodotdev/cargo-dist/releases/latest) We also
+provide [checksums](#checksums) for all binary assets and installers as well as [provenance attestation](#provenance)
+for all artifacts.
+</Aside>
+
+### Customizing
+
+`dist`'s installers enable end users to customize how software is installed on
+their machine.
+
+- `DIST_INSTALL_DIR`: This environment variable tells the installer what to use
+as the "base" directory for the installation task. For example, if you set this
+variable to `/mydir` we will install `dist`'s binaries in `/mydir/bin`.
+
+## Pre-built binaries
+
+We currently build and provide pre-built binaries for a variety of platforms.
+These are the same binaries that our installers fetch.
+
+### Platform support
+
+- Apple Silicon macOS
+- Intel maxOS
+- x64 Windows
+- ARM64 Linux
+- x64 Linux
+- ARM64 MUSL Linux (static)
+- x64 MUSL Linux (static)
+
+If you would like to request additional platform support, please [file an issue](https://github.com/axodotdev/cargo-dist/issues/new)!
+
+### Checksums
+
+We also generate checksums to allow user to independently verify the integrity
+of the pre-built binaries that we provide. To do so:
+
+<Tabs>
+  <TabItem label="Linux">
+    ```shell
+    sha256sum -c sha256.sum
+    ```
+  </TabItem>
+  <TabItem label="Mac">
+    ```shell
+    shasum -a256 -c sha256.sum
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    ```powershell
+    certutil -hashfile sha256.sum SHA256   
+    ```
+  </TabItem>
+</Tabs>
+
+
+### Provenance 
+
+<Aside type="note">
+    Artifact attestations enable you to increase the supply chain security of your builds by establishing where and how your software was built.
+</Aside>
+
+All artifacts generated in a `dist` release have attestations generated with [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations).
+These can be verified by using the [GitHub CLI](https://cli.github.com/):
+
+```shell
+gh attestation verify <file-path of downloaded artifact> --repo axodotdev/dist
+```
+
+You can also download the attestation from GitHub and verify against that directly:
+
+```shell
+gh attestation verify <file-path of downloaded artifact> --bundle <file-path of downloaded attestation>
+```
+
+## Build from source
+
+For users who need to `dist` to work on platforms that we do not yet provide
+pre-built binaries for, you will need to build from source. Thankfully, `dist`
+is and always will be open soruce, licensed under a dual MIT/Apache2.0 license.
+
+<Aside type="tip">
+`dist` is written in Rust and uses `cargo` to build. To install Rust and `cargo`
+visit: https://rustup.rs/.
+
+`dist` requires stable Rust, version 0.79 or greater.
+</Aside>
+
+Once you have a Rust toolchain set up, run:
+
+```shell
+git clone git@github.com:axodotdev/dist.git
+cd dist
+cargo install cargo-dist --locked
+```
+
+## Community installers
+
+These methods are contributed by the `dist` community:
+
+<Tabs>
+  <TabItem label="Arch (extra)">
+    ```shell
+    pacman -S cargo-dist
+    ```
+  </TabItem>
+  <TabItem label="Nix">
+    ```shell
+    nix-env -i cargo-dist
+    ```
+  </TabItem>
+  <TabItem label="cargo-binstall">
+    ```shell
+    cargo binstall cargo-dist
+    ```
+  </TabItem>
+</Tabs>
+
