@@ -952,7 +952,7 @@ fn generate_installer(
             installer::shell::write_install_sh_script(dist, info, manifest)?
         }
         InstallerImpl::Powershell(info) => {
-            installer::powershell::write_install_ps_script(dist, info)?
+            installer::powershell::write_install_ps_script(dist, info, manifest)?
         }
         InstallerImpl::Npm(info) => installer::npm::write_npm_project(dist, info)?,
         InstallerImpl::Homebrew(HomebrewImpl { info, fragments }) => {

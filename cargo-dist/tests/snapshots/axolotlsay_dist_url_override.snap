@@ -1858,6 +1858,19 @@ function Download($download_url, $platforms, $arch) {
   }
   Invoke-DownloadFile -client $wc -url $url -path $dir_path
 
+  if ($info.ContainsKey("sha256")) {
+    $expected_hash = $info["sha256"]
+    if ($expected_hash -notmatch '\A[0-9a-fA-F]{64}\z') {
+      throw "invalid SHA-256 checksum for $artifact_name"
+    }
+    $actual_hash = (Get-FileHash -LiteralPath $dir_path -Algorithm SHA256 -ErrorAction Stop).Hash
+    if ($actual_hash -ine $expected_hash) {
+      throw "checksum mismatch for ${artifact_name}: expected $expected_hash, got $actual_hash"
+    }
+  } else {
+    Write-Information "no checksums to verify"
+  }
+
   Write-Verbose "Unpacking to $tmp"
 
   # Select the tool to unpack the files with.
