@@ -976,7 +976,7 @@ pub fn announcement_github(manifest: &mut DistManifest) {
                 writeln!(&mut gh_body, "You can also download the attestation from [GitHub](https://github.com/{owner}/{repo}/attestations) and verify against that directly:").unwrap();
                 writeln!(
                     &mut gh_body,
-                    "```sh\ngh attestation verify <file-path of downloaded artifact> --bundle <file-path of downloaded attestation>\n```\n",
+                    "```sh\ngh attestation verify <file-path of downloaded artifact> --bundle <file-path of downloaded attestation> --repo {owner}/{repo}\n```\n",
                 ).unwrap();
             }
         }
