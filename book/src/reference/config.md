@@ -364,7 +364,7 @@ By default, dist's source tarballs only includes the contents of your repository
 
 If you wish to sign your Windows artifacts ([EXEs][binaries] and [MSIs](../installers/msi.md)) such that Windows SmartScreen won't complain about them, this is the feature for you.
 
-Windows artifact signing only supports the `x86_64-pc-windows-msvc` target. Other Windows targets are not supported.
+Windows artifact signing only supports x86_64 Windows targets. Other Windows architectures are not supported.
 
 This setting takes one of two values:
 
@@ -390,7 +390,7 @@ These strings match the [environment_name setting](https://github.com/SSLcom/esi
 
 If configured, dist signs Windows artifacts with Azure Artifact Signing. The selected certificate profile determines whether Azure uses a real Public Trust certificate or a Public Trust Test certificate.
 
-Windows artifact signing only supports the `x86_64-pc-windows-msvc` target. Other Windows targets are not supported.
+Windows artifact signing only supports x86_64 Windows targets. Other Windows architectures are not supported.
 
 This setting cannot be used with `ssldotcom-windows-sign`.
 
