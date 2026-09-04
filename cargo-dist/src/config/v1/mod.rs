@@ -370,6 +370,7 @@ impl ApplyLayer for AppConfigInheritable {
             allow_dirty: _,
             dist_version: _,
             dist_url_override: _,
+            repository: _,
         }: Self::Layer,
     ) {
         self.artifacts.apply_val_layer(artifacts);

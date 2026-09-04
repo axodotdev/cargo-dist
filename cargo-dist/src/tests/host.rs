@@ -38,7 +38,7 @@ fn github_simple() {
     let ci = Some(vec![CiStyle::Github]);
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref(), None);
 
     let hosting = hosting.unwrap().unwrap();
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
@@ -55,7 +55,7 @@ fn github_implicit() {
     let ci = Some(vec![CiStyle::Github]);
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref(), None);
 
     let hosting = hosting.unwrap().unwrap();
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
@@ -80,7 +80,7 @@ fn github_diff_repository_on_non_distables() {
     let ci = Some(vec![CiStyle::Github]);
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref(), None);
 
     let hosting = hosting.unwrap().unwrap();
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
@@ -103,7 +103,7 @@ fn github_no_repository() {
     let ci = Some(vec![CiStyle::Github]);
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref(), None);
 
     if let Err(DistError::CantEnableGithubNoUrl { manifest_list }) = &hosting {
         assert!(manifest_list.contains(".toml"));
@@ -130,7 +130,7 @@ fn github_diff_repository() {
     let ci = Some(vec![CiStyle::Github]);
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref(), None);
 
     if let Err(DistError::CantEnableGithubUrlInconsistent {
         inner:
@@ -165,7 +165,7 @@ fn github_not_github_repository() {
     let ci = Some(vec![CiStyle::Github]);
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref(), None);
 
     if let Err(DistError::CantEnableGithubUrlNotGithub {
         inner: AxoprojectError::NotGitHubError { url },
@@ -191,7 +191,7 @@ fn no_ci_no_problem() {
     let ci = None;
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci);
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci, None);
 
     assert!(matches!(hosting, Ok(None)))
 }
@@ -209,7 +209,7 @@ fn github_dot_git() {
     let ci = Some(vec![CiStyle::Github]);
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref(), None);
 
     let hosting = hosting.unwrap().unwrap();
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
@@ -234,7 +234,7 @@ fn github_trail_slash() {
     let ci = Some(vec![CiStyle::Github]);
 
     let (_graph, announcing) = mock_announce(&mut workspaces);
-    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref());
+    let hosting = select_hosting(&workspaces, &announcing, hosting, ci.as_deref(), None);
 
     let hosting = hosting.unwrap().unwrap();
     assert_eq!(hosting.hosts, &[HostingStyle::Github]);
