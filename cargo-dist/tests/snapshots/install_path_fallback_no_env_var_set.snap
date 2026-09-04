@@ -71,7 +71,7 @@ fi
 AUTH_TOKEN="${AXOLOTLSAY_GITHUB_TOKEN:-}"
 
 read -r RECEIPT <<EORECEIPT
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_layout":"unspecified","install_prefix":"AXO_INSTALL_PREFIX","modify_path":true,"provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"install_prefix":"AXO_INSTALL_PREFIX","install_layout":"unspecified","binaries":["CARGO_DIST_BINS"],"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"source":{"release_type":"github","owner":"axodotdev","name":"axolotlsay","app_name":"axolotlsay"},"version":"CENSORED","provider":{"source":"cargo-dist","version":"CENSORED"},"binary_aliases":{},"modify_path":true}
 EORECEIPT
 
 # Some Linux distributions don't set HOME
@@ -1856,7 +1856,7 @@ if ($env:AXOLOTLSAY_DOWNLOAD_URL) {
 $auth_token = $env:AXOLOTLSAY_GITHUB_TOKEN
 
 $receipt = @"
-{"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"install_layout":"unspecified","install_prefix":"AXO_INSTALL_PREFIX","modify_path":true,"provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
+{"install_prefix":"AXO_INSTALL_PREFIX","install_layout":"unspecified","binaries":["CARGO_DIST_BINS"],"cdylibs":["CARGO_DIST_DYLIBS"],"cstaticlibs":["CARGO_DIST_STATICLIBS"],"source":{"release_type":"github","owner":"axodotdev","name":"axolotlsay","app_name":"axolotlsay"},"version":"CENSORED","provider":{"source":"cargo-dist","version":"CENSORED"},"binary_aliases":{},"modify_path":true}
 "@
 if ($env:XDG_CONFIG_HOME) {
   $receipt_home = "${env:XDG_CONFIG_HOME}\axolotlsay"
