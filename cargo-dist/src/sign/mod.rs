@@ -7,8 +7,12 @@ use axoasset::AxoClient;
 use camino::Utf8Path;
 use cargo_dist_schema::TripleNameRef;
 
-use crate::{config::ProductionMode, DistResult};
+use crate::{
+    config::{AzureArtifactSigningConfig, ProductionMode},
+    DistResult,
+};
 
+mod azure;
 mod macos;
 mod ssldotcom;
 
@@ -17,6 +21,7 @@ mod ssldotcom;
 pub struct Signing {
     macos: Option<macos::Codesign>,
     ssldotcom: Option<ssldotcom::CodeSignTool>,
+    azure: Option<azure::AzureArtifactSigning>,
 }
 
 impl Signing {
@@ -26,21 +31,41 @@ impl Signing {
         host_target: &TripleNameRef,
         dist_dir: &Utf8Path,
         ssldotcom_windows_sign: Option<ProductionMode>,
+        azure_windows_sign: Option<AzureArtifactSigningConfig>,
         macos_sign: bool,
     ) -> DistResult<Self> {
+        if ssldotcom_windows_sign.is_some() && azure_windows_sign.is_some() {
+            return Err(crate::errors::DistError::MultipleWindowsSigningProviders);
+        }
         let ssldotcom =
             ssldotcom::CodeSignTool::new(client, host_target, dist_dir, ssldotcom_windows_sign)?;
+        let azure = azure::AzureArtifactSigning::new(host_target, azure_windows_sign)?;
         let macos = if macos_sign {
             macos::Codesign::new(host_target)?
         } else {
             None
         };
-        Ok(Self { macos, ssldotcom })
+        Ok(Self {
+            macos,
+            ssldotcom,
+            azure,
+        })
+    }
+
+    /// Whether a Windows signing provider is ready to sign files
+    pub(crate) fn has_windows_signer(&self) -> bool {
+        self.ssldotcom.is_some() || self.azure.is_some()
     }
 
     /// Sign a file
     pub fn sign(&self, file: &Utf8Path) -> DistResult<()> {
         if let Some(signer) = &self.ssldotcom {
+            let extension = file.extension().unwrap_or_default();
+            if let "exe" | "msi" | "ps1" = extension {
+                signer.sign(file)?;
+            }
+        }
+        if let Some(signer) = &self.azure {
             let extension = file.extension().unwrap_or_default();
             if let "exe" | "msi" | "ps1" = extension {
                 signer.sign(file)?;

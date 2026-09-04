@@ -117,6 +117,11 @@ pub enum Commands {
     #[clap(hide = true)]
     PrintUploadFilesFromManifest(PrintUploadFilesFromManifestArgs),
 
+    /// Sign previously built global artifacts
+    #[clap(disable_version_flag = true)]
+    #[clap(hide = true)]
+    Sign,
+
     /// Setup or update dist
     ///
     /// This will interactively guide you through the process of selecting configuration options

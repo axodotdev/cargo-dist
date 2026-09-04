@@ -423,6 +423,34 @@ pub enum DistError {
     #[diagnostic(help("The CargoHome `install-path` configuration can't be combined with other install path strategies."))]
     IncompatibleInstallPathConfiguration,
 
+    /// Multiple Windows signing providers are enabled
+    #[error("multiple Windows signing providers are enabled")]
+    #[diagnostic(help("disable either `ssldotcom-windows-sign` or `azure-windows-sign`"))]
+    MultipleWindowsSigningProviders,
+
+    /// Azure Artifact Signing configuration is invalid
+    #[error("Azure Artifact Signing requires non-empty configuration:\n- {}", settings.join("\n- "))]
+    #[diagnostic(help("set each listed field under `azure-windows-sign`"))]
+    InvalidAzureArtifactSigningConfig {
+        /// Empty profile configuration fields
+        settings: Vec<&'static str>,
+    },
+
+    /// Windows signing was configured with unsupported Windows targets
+    #[error("Windows artifact signing only supports x86_64 Windows targets, but unsupported Windows targets were configured:\n- {}", targets.join("\n- "))]
+    #[diagnostic(help(
+        "remove the unsupported Windows targets or disable `ssldotcom-windows-sign`/`azure-windows-sign`"
+    ))]
+    UnsupportedWindowsSigningTargets {
+        /// Unsupported target triples
+        targets: Vec<String>,
+    },
+
+    /// A configured Windows signing provider is unavailable
+    #[error("the configured Windows signing provider is unavailable")]
+    #[diagnostic(help("run the signing job on x86_64 Windows with all required credentials"))]
+    WindowsSigningUnavailable,
+
     /// Passed --artifacts but no --target
     #[error("You specified --artifacts, disabling host mode, but specified no targets to build!")]
     #[diagnostic(help("try adding --target={host_target}"))]

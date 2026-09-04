@@ -73,6 +73,7 @@ impl DistMetadata {
             github_release,
             github_action_commits,
             ssldotcom_windows_sign,
+            azure_windows_sign,
             macos_sign,
             mac_pkg_config,
             github_attestations,
@@ -150,6 +151,7 @@ impl DistMetadata {
         let needs_build_layer = cargo_layer.is_some()
             || system_dependencies.is_some()
             || ssldotcom_windows_sign.is_some()
+            || azure_windows_sign.is_some()
             || macos_sign.is_some()
             || msvc_crt_static.is_some()
             || min_glibc_version.is_some()
@@ -157,6 +159,7 @@ impl DistMetadata {
         let build_layer = needs_build_layer.then_some(BuildLayer {
             common: CommonBuildLayer {},
             ssldotcom_windows_sign,
+            azure_windows_sign,
             macos_sign,
             system_dependencies,
             cargo: cargo_layer,

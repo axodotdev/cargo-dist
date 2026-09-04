@@ -708,6 +708,41 @@ install-location = "/opt/axolotlsay"
 }
 
 #[test]
+fn axolotlsay_azure_windows_sign() -> Result<(), miette::Report> {
+    let test_name = _function_name!();
+    AXOLOTLSAY.run_test(|ctx| {
+        let dist_version = ctx.tools.cargo_dist.version().unwrap();
+        ctx.patch_cargo_toml(format!(r#"
+[workspace.metadata.dist]
+cargo-dist-version = "{dist_version}"
+installers = ["shell", "powershell", "msi", "pkg"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+ci = ["github"]
+unix-archive = ".tar.gz"
+windows-archive = ".tar.gz"
+
+[workspace.metadata.dist.azure-windows-sign]
+endpoint = "https://weu.codesigning.azure.net/"
+account-name = "my-signing-account"
+certificate-profile-name = "my-certificate-profile"
+
+[package.metadata.wix]
+upgrade-guid = "B36177BE-EA4D-44FB-B05C-EDDABDAA95CA"
+path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
+
+[package.metadata.dist.mac-pkg-config]
+identifier = "dev.axo.axolotsay"
+install-location = "/opt/axolotlsay"
+"#
+        ))?;
+
+        let ci_result = ctx.cargo_dist_generate(test_name)?;
+        ci_result.check_all()?.snap();
+        Ok(())
+    })
+}
+
+#[test]
 fn axolotlsay_user_plan_job() -> Result<(), miette::Report> {
     let test_name = _function_name!();
     AXOLOTLSAY.run_test(|ctx| {

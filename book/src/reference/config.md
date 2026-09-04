@@ -28,6 +28,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
 * [`source-tarball`](#source-tarball)
 * [`recursive-tarball`](#recursive-tarball)
 * [`ssldotcom-windows-sign`](#ssldotcom-windows-sign)
+* [`azure-windows-sign`](#azure-windows-sign)
 * [archive settings](#artifact-settings)
     * [`auto-includes`](#auto-includes)
     * [`include`](#include)
@@ -363,12 +364,53 @@ By default, dist's source tarballs only includes the contents of your repository
 
 If you wish to sign your Windows artifacts ([EXEs][binaries] and [MSIs](../installers/msi.md)) such that Windows SmartScreen won't complain about them, this is the feature for you.
 
+Windows artifact signing only supports x86_64 Windows targets. Other Windows architectures are not supported.
+
 This setting takes one of two values:
 
 * "prod": use the production ssl.com signing service
 * "test": use the testing ("sandbox") ssl.com signing service
 
 These strings match the [environment_name setting](https://github.com/SSLcom/esigner-codesign/blob/32825070bd8ca335577862dc735343ae155f2652/README.md#L48) that [SSL.com's code signing action uses](https://github.com/SSLcom/esigner-codesign) uses.
+
+
+### `azure-windows-sign`
+
+> <span style="float:right">since 0.32.0<br>[global-only][]</span>
+> [📖 read the windows signing guide!](../supplychain-security/signing/windows.md) \
+> default = `<none>` (disabled)
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist.azure-windows-sign]
+> endpoint = "https://weu.codesigning.azure.net/"
+> account-name = "my-signing-account"
+> certificate-profile-name = "my-certificate-profile"
+> ```
+
+If configured, dist signs Windows artifacts with Azure Artifact Signing. The selected certificate profile determines whether Azure uses a real Public Trust certificate or a Public Trust Test certificate.
+
+Windows artifact signing only supports x86_64 Windows targets. Other Windows architectures are not supported.
+
+This setting cannot be used with `ssldotcom-windows-sign`.
+
+These fields correspond to the [account details used by Azure's official Artifact Signing action](https://github.com/Azure/artifact-signing-action#account-details):
+
+* `endpoint`: the regional Artifact Signing endpoint
+* `account-name`: the Artifact Signing account name
+* `certificate-profile-name`: the certificate profile name
+
+The generated GitHub workflow expects these Azure identity settings for OpenID Connect:
+
+* `AZURE_CLIENT_ID`
+* `AZURE_TENANT_ID`
+* `AZURE_SUBSCRIPTION_ID`
+
+These values identify the Azure identity; they are not authentication credentials. The generated workflow currently reads them from the GitHub `secrets` context, so configure them as repository secrets.
+
+All signing profile fields are required and must not be blank.
+
+The generated GitHub workflow runs Azure signing jobs in the `release` environment so federated authentication can use a subject such as `repo:OWNER/REPO:environment:release`. Windows build jobs sign executables and MSIs, and a dedicated Windows signing job signs the PowerShell installer after global artifacts are built.
 
 
 ### archive settings

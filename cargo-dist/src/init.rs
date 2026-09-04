@@ -7,8 +7,8 @@ use serde::Deserialize;
 
 use crate::{
     config::{
-        self, CiStyle, Config, DistMetadata, HostingStyle, InstallPathStrategy, InstallerStyle,
-        MacPkgConfig, PublishStyle,
+        self, AzureArtifactSigningConfig, CiStyle, Config, DistMetadata, HostingStyle,
+        InstallPathStrategy, InstallerStyle, MacPkgConfig, PublishStyle,
     },
     do_generate,
     errors::{DistError, DistResult},
@@ -528,6 +528,7 @@ fn get_new_dist_metadata(
             pr_run_mode: None,
             allow_dirty: None,
             ssldotcom_windows_sign: None,
+            azure_windows_sign: None,
             macos_sign: None,
             github_attestations: None,
             github_attestations_filters: None,
@@ -1034,6 +1035,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         pr_run_mode,
         allow_dirty,
         ssldotcom_windows_sign,
+        azure_windows_sign,
         macos_sign,
         github_attestations,
         github_attestations_filters,
@@ -1414,6 +1416,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         ssldotcom_windows_sign.as_ref().map(|p| p.to_string()),
     );
 
+    apply_optional_azure_artifact_signing(
+        table,
+        "azure-windows-sign",
+        "# Sign Windows executables with Azure Artifact Signing\n",
+        azure_windows_sign.as_ref(),
+    );
+
     apply_optional_value(
         table,
         "macos-sign",
@@ -1625,6 +1634,43 @@ fn apply_optional_mac_pkg(
                 "install-location",
                 "# The location to which the software should be installed\n",
                 install_location.as_ref(),
+            );
+            new_table.decor_mut().set_prefix(desc);
+        }
+        new_item.or_insert(new_table);
+    } else {
+        table.remove(key);
+    }
+}
+
+/// Apply Azure Artifact Signing configuration as a nested table.
+fn apply_optional_azure_artifact_signing(
+    table: &mut toml_edit::Table,
+    key: &str,
+    desc: &str,
+    val: Option<&AzureArtifactSigningConfig>,
+) {
+    if let Some(config) = val {
+        let new_item = &mut table[key];
+        let mut new_table = toml_edit::table();
+        if let Some(new_table) = new_table.as_table_mut() {
+            apply_optional_value(
+                new_table,
+                "endpoint",
+                "# The Azure Artifact Signing account endpoint\n",
+                Some(config.endpoint.as_str()),
+            );
+            apply_optional_value(
+                new_table,
+                "account-name",
+                "# The Azure Artifact Signing account name\n",
+                Some(config.account_name.as_str()),
+            );
+            apply_optional_value(
+                new_table,
+                "certificate-profile-name",
+                "# The Azure Artifact Signing certificate profile name\n",
+                Some(config.certificate_profile_name.as_str()),
             );
             new_table.decor_mut().set_prefix(desc);
         }

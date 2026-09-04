@@ -210,3 +210,68 @@ targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
         .map_err(miette::Report::new)
         .unwrap();
 }
+
+#[test]
+fn azure_artifact_signing_config_roundtrips() {
+    let input_kind = WorkspaceKind::Rust;
+    let input = r##"
+[package]
+name = "whatever"
+version = "1.0.0"
+
+# Config for 'dist'
+[workspace.metadata.dist]
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.32.0"
+
+[workspace.metadata.dist.azure-windows-sign]
+endpoint = "https://weu.codesigning.azure.net/"
+account-name = "my-signing-account"
+certificate-profile-name = "my-certificate-profile"
+"##;
+
+    let src = source(input, input_kind);
+    let config = parse_config(&src, input_kind).unwrap();
+    let azure = config.azure_windows_sign.as_ref().unwrap();
+    assert_eq!(azure.endpoint, "https://weu.codesigning.azure.net/");
+    assert_eq!(azure.account_name, "my-signing-account");
+    assert_eq!(azure.certificate_profile_name, "my-certificate-profile");
+
+    let result = format_config(&src, input_kind, &config).unwrap();
+    diff_source(src, result.contents())
+        .map_err(miette::Report::new)
+        .unwrap();
+
+    let blank = source(
+        r##"
+[package]
+name = "whatever"
+version = "1.0.0"
+"##,
+        input_kind,
+    );
+    let generated = format_config(&blank, input_kind, &config).unwrap();
+    assert!(generated
+        .contents()
+        .contains("[workspace.metadata.dist.azure-windows-sign]"));
+    assert!(generated
+        .contents()
+        .contains("certificate-profile-name = \"my-certificate-profile\""));
+}
+
+#[test]
+fn azure_artifact_signing_config_requires_all_fields() {
+    let input_kind = WorkspaceKind::Rust;
+    let input = r##"
+[package]
+name = "whatever"
+version = "1.0.0"
+
+[workspace.metadata.dist.azure-windows-sign]
+endpoint = "https://weu.codesigning.azure.net/"
+account-name = "my-signing-account"
+"##;
+
+    let error = parse_config(&source(input, input_kind), input_kind).unwrap_err();
+    assert!(format!("{error:?}").contains("certificate-profile-name"));
+}

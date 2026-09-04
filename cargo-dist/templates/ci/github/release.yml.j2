@@ -195,6 +195,9 @@ jobs:
       # - N "local" tasks that build each platform's binaries and platform-specific installers
       matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix }}
     runs-on: ${{ matrix.runner }}
+    {{%- if azure_windows_sign %}}
+    environment: release
+    {{%- endif %}}
     container: ${{ matrix.container && matrix.container.image || null }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -315,6 +318,19 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
+      {{%- if azure_windows_sign %}}
+      - name: Azure login
+        if: ${{ contains(join(matrix.targets, ','), 'windows') }}
+        uses: {{{actions["azure/login"] | safe }}}
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Install Azure Artifact Signing module
+        if: ${{ contains(join(matrix.targets, ','), 'windows') }}
+        shell: pwsh
+        run: Install-Module -Name ArtifactSigning -Force -Repository PSGallery
+      {{%- endif %}}
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot
@@ -481,6 +497,83 @@ jobs:
       {{%- endfor %}}
     {{%- endif %}}
 {{%- endfor %}}
+
+{{%- if azure_windows_sign or ssldotcom_windows_sign %}}
+
+  # Sign globally-built Windows artifacts after all artifact builds complete
+  sign-artifacts:
+    needs:
+      - plan
+      - build-global-artifacts
+    {{%- for job in global_artifacts_jobs %}}
+      - custom-{{{ job.name|safe }}}
+    {{%- endfor %}}
+    if: ${{ always() && needs.build-global-artifacts.result == 'success'
+    {{%- for job in global_artifacts_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
+    {{{- " }}" | safe }}}
+    runs-on: windows-2022
+    {{%- if azure_windows_sign %}}
+    environment: release
+    {{%- endif %}}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
+    {{%- if ssldotcom_windows_sign %}}
+      SSLDOTCOM_USERNAME: ${{ secrets.SSLDOTCOM_USERNAME }}
+      SSLDOTCOM_PASSWORD: ${{ secrets.SSLDOTCOM_PASSWORD }}
+      SSLDOTCOM_CREDENTIAL_ID: ${{ secrets.SSLDOTCOM_CREDENTIAL_ID }}
+      SSLDOTCOM_TOTP_SECRET: ${{ secrets.SSLDOTCOM_TOTP_SECRET }}
+    {{%- endif %}}
+    steps:
+      - uses: {{{actions["actions/checkout"] | safe }}}
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - name: Install dist
+        run: {{{ dist_install_for_signing.run }}}
+      - name: Fetch artifacts
+        uses: {{{actions["actions/download-artifact"] | safe }}}
+        with:
+          pattern: artifacts-build-global
+          path: target/distrib/
+          merge-multiple: true
+      {{%- if azure_windows_sign %}}
+      - name: Azure login
+        uses: {{{actions["azure/login"] | safe }}}
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Install Azure Artifact Signing module
+        shell: pwsh
+        run: Install-Module -Name ArtifactSigning -Force -Repository PSGallery
+      {{%- endif %}}
+      - name: Sign artifacts
+        shell: pwsh
+        run: |
+          dist sign ${{ needs.plan.outputs.tag-flag }} --output-format=json | Out-File -FilePath dist-manifest.json -Encoding utf8
+          Write-Host "artifacts signed successfully"
+      - id: cargo-dist
+        name: Post-signing
+        shell: bash
+        run: |
+          echo "paths<<EOF" >> "$GITHUB_OUTPUT"
+          dist print-upload-files-from-manifest --manifest dist-manifest.json >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          cp dist-manifest.json "$BUILD_MANIFEST_NAME"
+      - name: "Replace global artifacts"
+        uses: {{{actions["actions/upload-artifact"] | safe }}}
+        with:
+          name: artifacts-build-global
+          overwrite: true
+          path: |
+            ${{ steps.cargo-dist.outputs.paths }}
+            {{%- if need_cargo_cyclonedx %}}
+            target/distrib/*.cdx.xml
+            {{%- endif %}}
+            ${{ env.BUILD_MANIFEST_NAME }}
+{{%- endif %}}
   # Determines if we should publish/announce
   host:
     needs:
@@ -495,11 +588,15 @@ jobs:
     {{%- for job in global_artifacts_jobs %}}
       - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
+    {{%- if azure_windows_sign or ssldotcom_windows_sign %}}
+      - sign-artifacts
+    {{%- endif %}}
     # Only run if we're "publishing", and only if plan, local and global didn't fail (skipped is fine)
     if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success')
     {{%- for job in global_artifacts_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
     {{%- if build_local_artifacts %}} && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') {{%- endif %}}
     {{%- for job in local_artifacts_jobs %}} && (needs.custom-{{{ job.name|safe }}}.result == 'skipped' || needs.custom-{{{ job.name|safe }}}.result == 'success') {{%- endfor %}}
+    {{%- if azure_windows_sign or ssldotcom_windows_sign %}} && needs.sign-artifacts.result == 'success' {{%- endif %}}
     {{{- " }}" | safe }}}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -564,6 +661,9 @@ jobs:
       - build-local-artifacts
     {{%- endif %}}
       - build-global-artifacts
+    {{%- if azure_windows_sign or ssldotcom_windows_sign %}}
+      - sign-artifacts
+    {{%- endif %}}
     {{%- for job in global_artifacts_jobs %}}
       - custom-{{{ job.name|safe }}}
     {{%- endfor %}}

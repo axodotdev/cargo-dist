@@ -72,6 +72,8 @@ pub struct GithubCiInfo {
     pub pr_run_mode: cargo_dist_schema::PrRunMode,
     /// global task
     pub global_task: GithubGlobalJobConfig,
+    /// How to install dist in the Windows signing job
+    pub dist_install_for_signing: GhaRunStep,
     /// homebrew tap
     pub tap: Option<String>,
     /// plan jobs
@@ -90,6 +92,8 @@ pub struct GithubCiInfo {
     pub post_announce_jobs: Vec<GithubCiJob>,
     /// \[unstable\] whether to add ssl.com windows binary signing
     pub ssldotcom_windows_sign: Option<ProductionMode>,
+    /// \[unstable\] whether to add Azure Artifact Signing for Windows binaries
+    pub azure_windows_sign: bool,
     /// Whether to enable macOS codesigning
     pub macos_sign: bool,
     /// what hosting provider we're using
@@ -221,6 +225,7 @@ impl GithubCiInfo {
         let dispatch_releases = ci_config.dispatch_releases;
         let release_branch = ci_config.release_branch.clone();
         let ssldotcom_windows_sign = dist.config.builds.ssldotcom_windows_sign.clone();
+        let azure_windows_sign = dist.config.builds.azure_windows_sign.is_some();
         let macos_sign = dist.config.builds.macos_sign;
         let tag_namespace = ci_config.tag_namespace.clone();
         let pr_run_mode = ci_config.pr_run_mode;
@@ -277,12 +282,13 @@ impl GithubCiInfo {
             .cloned()
             .unwrap_or_else(default_global_runner_config);
         let global_task = GithubGlobalJobConfig {
-            runner: global_runner.to_owned(),
+            runner: global_runner,
             dist_args: "--artifacts=global".into(),
             install_dist: dist_install_strategy.dash(),
             install_cargo_cyclonedx: Some(cargo_cyclonedx_install_strategy.dash()),
             install_omnibor: need_omnibor.then_some(omnibor_install_strategy.dash()),
         };
+        let dist_install_for_signing = dist_install_strategy.powershell();
 
         let tap = dist.global_homebrew_tap.clone();
 
@@ -299,6 +305,9 @@ impl GithubCiInfo {
 
         let mut root_permissions = GithubPermissionMap::new();
         root_permissions.insert("contents".to_owned(), GithubPermission::Write);
+        if azure_windows_sign {
+            root_permissions.insert("id-token".to_owned(), GithubPermission::Write);
+        }
 
         let mut publish_jobs = vec![];
         if let Some(PublisherConfig { homebrew, npm, .. }) = &dist.global_publishers {
@@ -372,6 +381,7 @@ impl GithubCiInfo {
             ("actions/attest", "v4"),
             ("swatinem/rust-cache", "v2"),
             ("actions/setup-node", "v6"),
+            ("azure/login", "v2"),
         ];
         let actions = default_action_versions
             .iter()
@@ -407,7 +417,9 @@ impl GithubCiInfo {
             artifacts_matrix: GithubMatrix { include: tasks },
             pr_run_mode,
             global_task,
+            dist_install_for_signing,
             ssldotcom_windows_sign,
+            azure_windows_sign,
             macos_sign,
             hosting_providers,
             root_permissions,
@@ -652,7 +664,6 @@ pub fn runner_to_config(runner: &GithubRunnerRef) -> GithubRunnerConfig {
 }
 
 const DEFAULT_LINUX_RUNNER: &GithubRunnerRef = GithubRunnerRef::from_str("ubuntu-22.04");
-
 fn default_global_runner_config() -> GithubRunnerConfig {
     runner_to_config(DEFAULT_LINUX_RUNNER)
 }
