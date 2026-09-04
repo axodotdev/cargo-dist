@@ -85,7 +85,7 @@ impl<'a> DistGraphBuilder<'a> {
         } else {
             Some(hosting)
         };
-        self.inner.hosting = select_hosting(self.workspaces, announcing, hosting, Some(&ci))?;
+        self.inner.hosting = select_hosting(self.workspaces, announcing, hosting, Some(&ci), self.inner.config.repository.as_deref())?;
         // If we don't think we can host things, don't bother
         let Some(hosting) = &self.inner.hosting else {
             return Ok(());
@@ -189,6 +189,7 @@ pub(crate) fn select_hosting(
     announcing: &AnnouncementTag,
     hosting: Option<Vec<HostingStyle>>,
     ci: Option<&[CiStyle]>,
+    workspace_repository: Option<&str>,
 ) -> DistResult<Option<HostingInfo>> {
     // Either use the explicit one, or default to the CI provider's native solution
     let Some(hosting_providers) = hosting
@@ -209,19 +210,24 @@ pub(crate) fn select_hosting(
         .map(|release| release.package_idx)
         .collect::<Vec<_>>();
 
-    let raw_repository_url = match workspaces.repository_url(Some(&package_list)) {
-        Ok(Some(url)) => url,
-        Ok(None) => {
-            let mut manifest_list = String::new();
-            for pkg_idx in package_list {
-                let package = workspaces.package(pkg_idx);
-                manifest_list.push('\n');
-                manifest_list.push_str(package.manifest_path.as_str());
+    let raw_repository_url = if let Some(repo_url) = workspace_repository {
+        // Use workspace-level override if provided
+        axoproject::RepositoryUrl::from_string(repo_url)
+    } else {
+        match workspaces.repository_url(Some(&package_list)) {
+            Ok(Some(url)) => url,
+            Ok(None) => {
+                let mut manifest_list = String::new();
+                for pkg_idx in package_list {
+                    let package = workspaces.package(pkg_idx);
+                    manifest_list.push('\n');
+                    manifest_list.push_str(package.manifest_path.as_str());
+                }
+                return Err(DistError::CantEnableGithubNoUrl { manifest_list });
             }
-            return Err(DistError::CantEnableGithubNoUrl { manifest_list });
-        }
-        Err(e) => {
-            return Err(DistError::CantEnableGithubUrlInconsistent { inner: e });
+            Err(e) => {
+                return Err(DistError::CantEnableGithubUrlInconsistent { inner: e });
+            }
         }
     };
 
