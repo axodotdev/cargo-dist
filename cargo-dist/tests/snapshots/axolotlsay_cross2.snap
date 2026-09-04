@@ -521,6 +521,13 @@ install() {
     local _install_dir_expr
     # Potentially-late-bound version of env_script_path to write to rcfiles like $HOME/.profile
     local _env_script_path_expr
+    local _fish_env_script_path
+    local _fish_env_script_path_expr
+    # The paths older cargo-dist installers used for their env scripts.
+    local _legacy_env_script_path
+    local _legacy_env_script_path_expr
+    local _legacy_fish_env_script_path
+    local _legacy_fish_env_script_path_expr
     # Forces the install to occur at this path, not the default
     local _force_install_dir
     # Which install layout to use - "flat" or "hierarchical"
@@ -620,11 +627,24 @@ install() {
         err "could not find a valid path to install to!"
     fi
 
-    # Identical to the sh version, just with a .fish file extension
-    # We place it down here to wait until it's been assigned in every
-    # path.
-    _fish_env_script_path="${_env_script_path}.fish"
-    _fish_env_script_path_expr="${_env_script_path_expr}.fish"
+    _legacy_env_script_path="$_env_script_path"
+    _legacy_env_script_path_expr="$_env_script_path_expr"
+
+    # Flat layouts used to place env scripts beside the installed binaries.
+    # Keep source-only files out of PATH by placing them in our per-app config
+    # directory instead. Other layouts already keep env scripts outside bin.
+    if [ "$_install_layout" = "flat" ]; then
+        _env_script_path="$RECEIPT_HOME/env.sh"
+        _env_script_path_expr="$(replace_home "$_env_script_path")"
+        _fish_env_script_path="$RECEIPT_HOME/env.fish"
+        _fish_env_script_path_expr="$(replace_home "$_fish_env_script_path")"
+    else
+        _fish_env_script_path="${_env_script_path}.fish"
+        _fish_env_script_path_expr="${_env_script_path_expr}.fish"
+    fi
+
+    _legacy_fish_env_script_path="${_legacy_env_script_path}.fish"
+    _legacy_fish_env_script_path_expr="${_legacy_env_script_path_expr}.fish"
 
     # Replace the temporary cargo home with the calculated one
     if is_windows_posix && check_cmd cygpath; then
@@ -701,6 +721,25 @@ install() {
       in *:$_install_dir:*) NO_MODIFY_PATH=1 ;;
          *) ;;
     esac
+
+    if [ "$_install_layout" = "flat" ]; then
+        if [ "$NO_MODIFY_PATH" = "0" ] ||
+            is_legacy_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path" ||
+            is_legacy_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"
+        then
+            ensure mkdir -p "$RECEIPT_HOME"
+            migrate_legacy_env_scripts \
+                "$_install_dir_expr" \
+                "$_legacy_env_script_path" \
+                "$_legacy_env_script_path_expr" \
+                "$_legacy_fish_env_script_path" \
+                "$_legacy_fish_env_script_path_expr" \
+                "$_env_script_path" \
+                "$_env_script_path_expr" \
+                "$_fish_env_script_path" \
+                "$_fish_env_script_path_expr"
+        fi
+    fi
 
     if [ "0" = "$NO_MODIFY_PATH" ]; then
         add_install_dir_to_ci_path "$_install_dir"
@@ -782,6 +821,146 @@ add_install_dir_to_ci_path() {
     if [ -n "${GITHUB_PATH:-}" ]; then
         ensure echo "$_install_dir" >> "$GITHUB_PATH"
     fi
+}
+
+migrate_legacy_env_scripts() {
+    # Move cargo-dist's old env scripts out of the binary directory and update
+    # the shell profiles that source them. Only files matching our generated
+    # contents are migrated.
+    local _install_dir_expr="$1"
+    local _legacy_env_script_path="$2"
+    local _legacy_env_script_path_expr="$3"
+    local _legacy_fish_env_script_path="$4"
+    local _legacy_fish_env_script_path_expr="$5"
+    local _env_script_path="$6"
+    local _env_script_path_expr="$7"
+    local _fish_env_script_path="$8"
+    local _fish_env_script_path_expr="$9"
+
+    if is_legacy_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path"; then
+        if [ ! -f "$_env_script_path" ]; then
+            say_verbose "creating $_env_script_path"
+            write_env_script_sh "$_install_dir_expr" "$_env_script_path"
+        fi
+
+        migrate_legacy_source_lines \
+            "$_legacy_env_script_path_expr" \
+            "$_env_script_path_expr" \
+            ".profile .bashrc .bash_profile .bash_login .zshrc .zshenv"
+        ensure rm -f "$_legacy_env_script_path"
+    fi
+
+    if is_legacy_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"; then
+        if [ ! -f "$_fish_env_script_path" ]; then
+            say_verbose "creating $_fish_env_script_path"
+            write_env_script_fish "$_install_dir_expr" "$_fish_env_script_path"
+        fi
+
+        local _fish_rcfile="$INFERRED_HOME/.config/fish/conf.d/$APP_NAME.env.fish"
+        replace_source_line_in_file \
+            "$_fish_rcfile" \
+            "$_legacy_fish_env_script_path_expr" \
+            "$_fish_env_script_path_expr"
+        ensure rm -f "$_legacy_fish_env_script_path"
+    fi
+}
+
+is_legacy_env_script_sh() {
+    local _install_dir_expr="$1"
+    local _env_script_path="$2"
+    local _expected_env_script
+    local _result=1
+
+    if ! check_cmd cmp ||
+       [ ! -f "$_env_script_path" ] ||
+       [ -L "$_env_script_path" ]
+    then
+        return 1
+    fi
+
+    _expected_env_script="$(mktemp "${TMPDIR:-/tmp}/cargo-dist-env.XXXXXXXXXX")" || return 1
+    write_env_script_sh "$_install_dir_expr" "$_expected_env_script"
+    if cmp -s "$_env_script_path" "$_expected_env_script"; then
+        _result=0
+    fi
+    ignore rm -f "$_expected_env_script"
+    return "$_result"
+}
+
+is_legacy_env_script_fish() {
+    local _install_dir_expr="$1"
+    local _env_script_path="$2"
+    local _expected_env_script
+    local _result=1
+
+    if ! check_cmd cmp ||
+       [ ! -f "$_env_script_path" ] ||
+       [ -L "$_env_script_path" ]
+    then
+        return 1
+    fi
+
+    _expected_env_script="$(mktemp "${TMPDIR:-/tmp}/cargo-dist-env.XXXXXXXXXX")" || return 1
+    write_env_script_fish "$_install_dir_expr" "$_expected_env_script"
+    if cmp -s "$_env_script_path" "$_expected_env_script"; then
+        _result=0
+    fi
+    ignore rm -f "$_expected_env_script"
+    return "$_result"
+}
+
+migrate_legacy_source_lines() {
+    local _legacy_env_script_path_expr="$1"
+    local _env_script_path_expr="$2"
+    local _rcfiles="$3"
+    local _rcfile_relative
+    local _home
+
+    for _rcfile_relative in $_rcfiles; do
+        _home="$(print_home_for_script "$_rcfile_relative")"
+        replace_source_line_in_file \
+            "$_home/$_rcfile_relative" \
+            "$_legacy_env_script_path_expr" \
+            "$_env_script_path_expr"
+    done
+}
+
+replace_source_line_in_file() {
+    local _rcfile="$1"
+    local _legacy_env_script_path_expr="$2"
+    local _env_script_path_expr="$3"
+
+    if [ ! -f "$_rcfile" ]; then
+        return
+    fi
+
+    local _legacy_robust_line=". \"$_legacy_env_script_path_expr\""
+    local _legacy_pretty_line="source \"$_legacy_env_script_path_expr\""
+    local _robust_line=". \"$_env_script_path_expr\""
+    local _pretty_line="source \"$_env_script_path_expr\""
+    local _temp
+    local _line
+
+    if ! grep -F -x "$_legacy_robust_line" "$_rcfile" > /dev/null 2>/dev/null &&
+       ! grep -F -x "$_legacy_pretty_line" "$_rcfile" > /dev/null 2>/dev/null
+    then
+        return
+    fi
+
+    _temp="$(ensure mktemp "$_rcfile.tmp.XXXXXXXXXX")"
+
+    while IFS= read -r _line || [ -n "$_line" ]; do
+        if [ "$_line" = "$_legacy_robust_line" ]; then
+            printf '%s\n' "$_robust_line"
+        elif [ "$_line" = "$_legacy_pretty_line" ]; then
+            printf '%s\n' "$_pretty_line"
+        else
+            printf '%s\n' "$_line"
+        fi
+    done < "$_rcfile" > "$_temp"
+
+    ensure cat "$_temp" > "$_rcfile"
+    ignore rm -f "$_temp"
 }
 
 add_install_dir_to_path() {
