@@ -3,6 +3,13 @@
 Nothing Yet!
 
 
+# Version 0.32.1 (2026-08-13)
+
+## npm installer
+
+The generated npm installer now retries transient download failures up to three times after the initial request, with exponential backoff. Retries cover HTTP 408, HTTP 429, HTTP 5xx, connection failures, and interrupted response streams while permanent failures such as HTTP 404 still fail immediately.
+
+
 # Version 0.32.0 (2026-05-21)
 
 This release contains several bugfixes and an update to the npm installer to reduce its dependencies. It also updates the default versions of all GitHub actions.
