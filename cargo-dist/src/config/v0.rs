@@ -520,8 +520,8 @@ pub struct DistMetadata {
     /// Where to download artifacts from on the Simple host
     pub simple_download_url: Option<String>,
 
-    /// Workspace-level repository URL (from [workspace] section in dist-workspace.toml)
-    /// This is internal-only and not serialized from TOML directly
+    /// Workspace-level repository URL (for `[workspace]` section in dist-workspace.toml),
+    /// internal-only and not serialized from TOML directly.
     #[serde(skip)]
     pub workspace_repository: Option<String>,
 }

@@ -211,7 +211,7 @@ pub(crate) fn select_hosting(
         .collect::<Vec<_>>();
 
     let raw_repository_url = if let Some(repo_url) = workspace_repository {
-        // Use workspace-level override if provided
+        // Use workspace override if present
         axoproject::RepositoryUrl::from_string(repo_url)
     } else {
         match workspaces.repository_url(Some(&package_list)) {
