@@ -1075,7 +1075,7 @@ By explicitly specifying `hosting` you can change the priority and whether a dow
 
 * `hosting = ["simple", "github"]` is the implicit default when both are enabled
 * `hosting = ["github", "simple"]` specifies to instead try GitHub first and fallback to the simple URL if it fails
-* `hosting = ["simple"]` specifies to *only* use the simple URL and ignore GitHub (if `ci = "github"` is set we will still upload to there) 
+* `hosting = ["simple"]` specifies to *only* use the simple URL and ignore GitHub (if `ci = "github"` is set we will still upload to there)
 
 The preferred entry will also be the one rendered into things like `curl | sh` strings we emit.
 
@@ -1684,6 +1684,22 @@ be managed by dist. Each member is of the format `<project-type>:<relative-path>
 * cargo: expect a Cargo.toml for a cargo-based Rust project in that dir
 * npm: expect a package.json for an npm-based JavaScript project in that dir
 * dist: expect a dist.toml for a dist-based generic project in that dir
+
+
+### `workspace.repository`
+
+> <span style="float:right">since 0.33.0<br>[global-only][]</span>
+> default = `<none>`
+>
+> *in your dist-workspace.toml:*
+> ```toml
+> [workspace]
+> repository = "https://github.com/your-org/your-repo"
+> ```
+
+An optional workspace-level repository URL that overrides package-level URLs.
+Useful for monorepos with inconsistent package repository URLs. Also supported
+in `[workspace.metadata.dist]` of Cargo.toml.
 
 
 # the `[package]` section
