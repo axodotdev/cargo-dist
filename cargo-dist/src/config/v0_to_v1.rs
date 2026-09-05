@@ -98,6 +98,7 @@ impl DistMetadata {
             cargo_cyclonedx,
             omnibor,
             simple_download_url,
+            workspace_repository,
         } = self.clone();
 
         // Archives
@@ -397,7 +398,7 @@ impl DistMetadata {
         TomlLayer {
             dist_version: cargo_dist_version,
             dist_url_override: cargo_dist_url_override,
-            repository: None,
+            repository: workspace_repository,
             dist,
             allow_dirty,
             targets,

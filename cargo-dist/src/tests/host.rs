@@ -242,3 +242,26 @@ fn github_trail_slash() {
     assert_eq!(hosting.project, REPO_PROJECT);
     assert_eq!(hosting.source_host, "github");
 }
+
+#[test]
+fn github_workspace_repository_override() {
+    let mut workspaces = workspace_unified();
+    let hosting = Some(vec![HostingStyle::Github]);
+    let ci = Some(vec![CiStyle::Github]);
+
+    let (_graph, announcing) = mock_announce(&mut workspaces);
+    let override_repo = Some("https://github.com/override-owner/override-project");
+    let hosting = select_hosting(
+        &workspaces,
+        &announcing,
+        hosting,
+        ci.as_deref(),
+        override_repo,
+    );
+
+    let hosting = hosting.unwrap().unwrap();
+    assert_eq!(hosting.hosts, &[HostingStyle::Github]);
+    assert_eq!(hosting.owner, "override-owner");
+    assert_eq!(hosting.project, "override-project");
+    assert_eq!(hosting.source_host, "github");
+}
