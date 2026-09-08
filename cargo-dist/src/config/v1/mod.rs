@@ -166,6 +166,8 @@ pub struct WorkspaceConfig {
     pub dist_url_override: Option<CargoDistUrlOverride>,
     /// Generate targets whose dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
+    /// Workspace-level repository URL that overrides package-level URLs
+    pub repository: Option<String>,
     /// ci config
     pub ci: CiConfig,
     /// artifact config
@@ -188,6 +190,8 @@ pub struct WorkspaceConfigInheritable {
     pub dist_url_override: Option<CargoDistUrlOverride>,
     /// Generate targets whose dist should avoid checking for up-to-dateness.
     pub allow_dirty: Vec<GenerateMode>,
+    /// Workspace-level repository URL that overrides package-level URLs
+    pub repository: Option<String>,
     /// artifact config
     pub artifacts: WorkspaceArtifactConfig,
     /// ci config
@@ -211,6 +215,7 @@ impl WorkspaceConfigInheritable {
             dist_version: None,
             dist_url_override: None,
             allow_dirty: vec![],
+            repository: None,
         }
     }
     /// Apply the inheritance to get the final WorkspaceConfig
@@ -224,6 +229,7 @@ impl WorkspaceConfigInheritable {
             dist_version,
             dist_url_override,
             allow_dirty,
+            repository,
         } = self;
         WorkspaceConfig {
             artifacts,
@@ -234,6 +240,7 @@ impl WorkspaceConfigInheritable {
             dist_version,
             dist_url_override,
             allow_dirty,
+            repository,
         }
     }
 }
@@ -250,6 +257,7 @@ impl ApplyLayer for WorkspaceConfigInheritable {
             allow_dirty,
             dist_version,
             dist_url_override,
+            repository,
             // app-scope only
             dist: _,
             targets: _,
@@ -264,6 +272,7 @@ impl ApplyLayer for WorkspaceConfigInheritable {
         self.dist_version.apply_opt(dist_version);
         self.dist_url_override.apply_opt(dist_url_override);
         self.allow_dirty.apply_val(allow_dirty);
+        self.repository.apply_opt(repository);
     }
 }
 
@@ -361,6 +370,7 @@ impl ApplyLayer for AppConfigInheritable {
             allow_dirty: _,
             dist_version: _,
             dist_url_override: _,
+            repository: _,
         }: Self::Layer,
     ) {
         self.artifacts.apply_val_layer(artifacts);
@@ -405,6 +415,10 @@ pub struct TomlLayer {
     /// Generate targets whose dist should avoid checking for up-to-dateness.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_dirty: Option<Vec<GenerateMode>>,
+
+    /// Workspace-level repository URL that overrides package-level URLs
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repository: Option<String>,
 
     /// The full set of target triples to build for.
     ///

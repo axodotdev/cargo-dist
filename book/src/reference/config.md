@@ -17,10 +17,9 @@ We're currently in the middle of [a major config migration](https://github.com/a
 [`[dist]`](#the-dist-section)
 * [`allow-dirty`](#allow-dirty)
 * [`cargo-dist-version`](#cargo-dist-version)
+* [`cargo-dist-url-override`](#cargo-dist-url-override)
 * [`dist`](#dist)
-* [`packages`](#packages)
 * [`targets`](#targets)
-* [`version`](#version)
 
 [artifact settings](#artifact-settings)
 * [`checksum`](#checksum)
@@ -111,6 +110,8 @@ We're currently in the middle of [a major config migration](https://github.com/a
 
 [`[workspace]`](#the-workspace-section)
 * [`members`](#workspacemembers)
+* [`packages`](#workspacepackages)
+* [`version`](#workspaceversion)
 
 [`[package]`](#the-package-section)
 * [`name`](#packagename)
@@ -178,6 +179,30 @@ Your [release CI][github-ci] will fetch and use the given version of dist to bui
 The syntax must be a valid [Cargo-style SemVer Version][semver-version] (not a VersionReq!).
 
 
+## `cargo-dist-url-override`
+
+> <span style="float:right">since 0.26.0<br>[global-only][]</span>
+> default = `<none>`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> cargo-dist-url-override = "https://github.com/axodotdev/cargo-dist/releases/download/v0.26.0"
+> ```
+
+Overrides the URL that your [release CI][github-ci] uses to fetch and install
+dist itself, replacing the default
+`https://github.com/axodotdev/cargo-dist/releases/download/v{VERSION}`
+location.
+
+This is useful if you want to pin CI to a fork or mirror of dist, or to a custom build of dist that you host yourself.
+
+The value is used verbatim as the base URL, with `/cargo-dist-installer.sh`/`.ps1`
+appended to it. The version is **not** appended automatically, so the base URL must include the version.
+
+Setting this overrides [`cargo-dist-version`](#cargo-dist-version) for the purpose of fetching dist in CI.
+
+
 ## `dist`
 
 > <span style="float:right">since 0.3.0<br>[package-local][]</span>
@@ -197,21 +222,6 @@ There are 3 major cases where you might use this:
 * `dist = false` on a package can be used to force dist to ignore it
 * `dist = true` on a package can be used to force dist to distribute it in spite of signals like Cargo's `publish = false` that would suggest otherwise.
 * `dist = false` on a whole workspace defaults all packages to do-not-distribute, forcing you to manually allow-list packages with `dist = true` (large monorepos often find this to be a better way of managing project distribution when most developers aren't release engineers).
-
-
-## `packages`
-
-> <span style="float:right">since 0.29.0<br>[global-only][]</span>
-> [📖 read the guide for this feature!][distribute] \
-> default = `<none>` (infer it)
->
-> *in your dist-workspace.toml or dist.toml:*
-> ```toml
-> [dist]
-> packages = ["a", "b"]
-> ```
-
-`packages` provides a more explicit way of specifying which packages to dist (or not). If `packages` is set, it provides a list of exactly which packages should be distributed within the workspace. It overrides individual package-level `dist = true` or `dist = false` configuration.
 
 
 ## `targets`
@@ -244,19 +254,6 @@ The supported choices are:
 * arm64 Linux (static musl): "aarch64-unknown-linux-musl"
 
 By default all runs of `dist` will be trying to handle all platforms specified here at once. If you specify `--target=...` on the CLI this will focus the run to only those platforms. As discussed in [concepts][], this cannot be used to specify platforms that are not listed in `metadata.dist`, to ensure different runs agree on the maximum set of platforms.
-
-
-## `version`
-> <span style="float:right">since 0.29.0<br>[global-only][]</span>
-> default = `<none>` (infer it)
->
-> *in your dist-workspace.toml or dist.toml:*
-> ```toml
-> [dist]
-> version = "0.0.1"
-> ```
-
-If set, this value will override the actual version configured for each package. For example, if the workspace contains packages versioned "0.2" and "0.3", and this value is set to "0.1", then dist will consider every package in the workspace to have the version "0.1".
 
 
 ## artifact settings
@@ -1075,7 +1072,7 @@ By explicitly specifying `hosting` you can change the priority and whether a dow
 
 * `hosting = ["simple", "github"]` is the implicit default when both are enabled
 * `hosting = ["github", "simple"]` specifies to instead try GitHub first and fallback to the simple URL if it fails
-* `hosting = ["simple"]` specifies to *only* use the simple URL and ignore GitHub (if `ci = "github"` is set we will still upload to there) 
+* `hosting = ["simple"]` specifies to *only* use the simple URL and ignore GitHub (if `ci = "github"` is set we will still upload to there)
 
 The preferred entry will also be the one rendered into things like `curl | sh` strings we emit.
 
@@ -1684,6 +1681,57 @@ be managed by dist. Each member is of the format `<project-type>:<relative-path>
 * cargo: expect a Cargo.toml for a cargo-based Rust project in that dir
 * npm: expect a package.json for an npm-based JavaScript project in that dir
 * dist: expect a dist.toml for a dist-based generic project in that dir
+
+
+### `workspace.packages`
+
+> <span style="float:right">since 0.30.3<br>[global-only][]</span>
+> [📖 read the guide for this feature!][distribute] \
+> default = `<none>` (infer it)
+>
+> *in your dist-workspace.toml:*
+> ```toml
+> [workspace]
+> packages = ["a", "b"]
+> ```
+
+`packages` provides a more explicit way of specifying which packages to dist
+(or not). If `packages` is set, it provides a list of exactly which packages
+should be distributed within the workspace. It overrides individual
+package-level `dist = true` or `dist = false` configuration.
+
+
+### `workspace.version`
+
+> <span style="float:right">since 0.30.3<br>[global-only][]</span>
+> default = `<none>` (infer it)
+>
+> *in your dist-workspace.toml:*
+> ```toml
+> [workspace]
+> version = "0.0.1"
+> ```
+
+If set, this value will override the actual version configured for each
+package. For example, if the workspace contains packages versioned "0.2" and
+"0.3", and this value is set to "0.1", then dist will consider every package in
+the workspace to have the version "0.1".
+
+
+### `workspace.repository`
+
+> <span style="float:right">since 0.33.0<br>[global-only][]</span>
+> default = `<none>`
+>
+> *in your dist-workspace.toml:*
+> ```toml
+> [workspace]
+> repository = "https://github.com/your-org/your-repo"
+> ```
+
+An optional workspace-level repository URL that overrides package-level URLs.
+Useful for monorepos with inconsistent package repository URLs. Also supported
+in `[workspace.metadata.dist]` of Cargo.toml.
 
 
 # the `[package]` section
