@@ -794,8 +794,8 @@ install() {
 
     if [ "$_install_layout" = "flat" ]; then
         if [ "$NO_MODIFY_PATH" = "0" ] ||
-            is_legacy_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path" ||
-            is_legacy_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"
+            is_dist_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path" ||
+            is_dist_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"
         then
             ensure mkdir -p "$RECEIPT_HOME"
             migrate_legacy_env_scripts \
@@ -907,7 +907,7 @@ migrate_legacy_env_scripts() {
     local _fish_env_script_path="$8"
     local _fish_env_script_path_expr="$9"
 
-    if is_legacy_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path"; then
+    if is_dist_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path"; then
         if [ ! -f "$_env_script_path" ]; then
             say_verbose "creating $_env_script_path"
             write_env_script_sh "$_install_dir_expr" "$_env_script_path"
@@ -920,7 +920,7 @@ migrate_legacy_env_scripts() {
         ensure rm -f "$_legacy_env_script_path"
     fi
 
-    if is_legacy_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"; then
+    if is_dist_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"; then
         if [ ! -f "$_fish_env_script_path" ]; then
             say_verbose "creating $_fish_env_script_path"
             write_env_script_fish "$_install_dir_expr" "$_fish_env_script_path"
@@ -935,7 +935,7 @@ migrate_legacy_env_scripts() {
     fi
 }
 
-is_legacy_env_script_sh() {
+is_dist_env_script_sh() {
     local _install_dir_expr="$1"
     local _env_script_path="$2"
     local _expected_env_script
@@ -957,7 +957,7 @@ is_legacy_env_script_sh() {
     return "$_result"
 }
 
-is_legacy_env_script_fish() {
+is_dist_env_script_fish() {
     local _install_dir_expr="$1"
     local _env_script_path="$2"
     local _expected_env_script
@@ -3234,8 +3234,8 @@ install() {
 
     if [ "$_install_layout" = "flat" ]; then
         if [ "$NO_MODIFY_PATH" = "0" ] ||
-            is_legacy_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path" ||
-            is_legacy_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"
+            is_dist_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path" ||
+            is_dist_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"
         then
             ensure mkdir -p "$RECEIPT_HOME"
             migrate_legacy_env_scripts \
@@ -3347,7 +3347,7 @@ migrate_legacy_env_scripts() {
     local _fish_env_script_path="$8"
     local _fish_env_script_path_expr="$9"
 
-    if is_legacy_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path"; then
+    if is_dist_env_script_sh "$_install_dir_expr" "$_legacy_env_script_path"; then
         if [ ! -f "$_env_script_path" ]; then
             say_verbose "creating $_env_script_path"
             write_env_script_sh "$_install_dir_expr" "$_env_script_path"
@@ -3360,7 +3360,7 @@ migrate_legacy_env_scripts() {
         ensure rm -f "$_legacy_env_script_path"
     fi
 
-    if is_legacy_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"; then
+    if is_dist_env_script_fish "$_install_dir_expr" "$_legacy_fish_env_script_path"; then
         if [ ! -f "$_fish_env_script_path" ]; then
             say_verbose "creating $_fish_env_script_path"
             write_env_script_fish "$_install_dir_expr" "$_fish_env_script_path"
@@ -3375,7 +3375,7 @@ migrate_legacy_env_scripts() {
     fi
 }
 
-is_legacy_env_script_sh() {
+is_dist_env_script_sh() {
     local _install_dir_expr="$1"
     local _env_script_path="$2"
     local _expected_env_script
@@ -3397,7 +3397,7 @@ is_legacy_env_script_sh() {
     return "$_result"
 }
 
-is_legacy_env_script_fish() {
+is_dist_env_script_fish() {
     local _install_dir_expr="$1"
     local _env_script_path="$2"
     local _expected_env_script
