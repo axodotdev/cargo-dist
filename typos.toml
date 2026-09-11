@@ -11,3 +11,6 @@ extend-ignore-re = ["CLIENT_ID=[A-Za-z0-9_-]+"]
 
 [default.extend-identifiers]
 PnP = "PnP"
+
+[default.extend-words]
+Bre = "Bre"
