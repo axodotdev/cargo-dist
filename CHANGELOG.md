@@ -3,6 +3,29 @@
 Nothing Yet!
 
 
+# Version 0.33.0 (2026-09-10)
+
+This release includes several new features and a change to the shell installers in certain environments.
+
+## Azure Artifact Signing for Windows binaries and installers
+
+We now include support for codesigning Windows binaries and installers using [Azure Artifact Signing](https://azure.microsoft.com/en-us/products/artifact-signing). For more information, see [the docs](https://axodotdev.github.io/cargo-dist/book/supplychain-security/signing/windows.html#azure-artifact-signing-quickstart).
+
+This currently only supports x86_64 Windows targets, and doesn't support aarch64 Windows targets or non-Windows targets.
+
+- impl @blyedev [Add Azure signing support and improve workflow for releases](https://github.com/axodotdev/cargo-dist/pull/2396)
+
+## Shell installers now place `env` helper alongside receipts for flat installs
+
+In previous versions of dist, we would place the `env` helper scripts which add your program to the user's `PATH` alongside the binary when using a "flat" install layout. ("Flat" layouts consist of only a single directory, as opposed to the default "hierarchical" layout that places binaries in a "bin" subdirectory.) Beginning with dist 0.33.0, we instead place the `env` script in the app-specific config path alongside the install receipt. By default, this is `~/.config/$APP_NAME`. If users had installed a previous version of your app, newer versions of the installer will migrate old `env` files to the new location in addition to updating the user's dotfiles.
+
+-impl @Gankra [Install env scripts in receipts dir instead of bin dir](https://github.com/axodotdev/cargo-dist/pull/2423)
+
+## Fixes
+
+- impl @ntBre [Include `--repo` in both `gh attestation` commands](https://github.com/axodotdev/cargo-dist/pull/2498)
+
+
 # Version 0.32.0 (2026-05-21)
 
 This release contains several bugfixes and an update to the npm installer to reduce its dependencies. It also updates the default versions of all GitHub actions.
