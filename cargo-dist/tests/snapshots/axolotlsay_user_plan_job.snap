@@ -3882,11 +3882,11 @@ jobs:
           path: plan-dist-manifest.json
 
   custom-my-plan-job-1:
-    uses: ./.github/workflows/my-plan-job-1.yml
+    uses: $/.github/workflows/my-plan-job-1.yml
     secrets: inherit
 
   custom-my-plan-job-2:
-    uses: ./.github/workflows/my-plan-job-2.yml
+    uses: $/.github/workflows/my-plan-job-2.yml
     secrets: inherit
 
   # Build and packages all the platform-specific things

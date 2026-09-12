@@ -4077,7 +4077,7 @@ jobs:
       - plan
       - build-local-artifacts
       - build-global-artifacts
-    uses: ./.github/workflows/my-plan-job-1.yml
+    uses: $/.github/workflows/my-plan-job-1.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
@@ -4087,7 +4087,7 @@ jobs:
       - plan
       - build-local-artifacts
       - build-global-artifacts
-    uses: ./.github/workflows/my-plan-job-2.yml
+    uses: $/.github/workflows/my-plan-job-2.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit

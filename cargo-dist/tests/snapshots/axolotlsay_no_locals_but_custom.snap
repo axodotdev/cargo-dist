@@ -397,7 +397,7 @@ jobs:
     needs:
       - plan
     if: ${{ needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload' }}
-    uses: ./.github/workflows/local-artifacts.yml
+    uses: $/.github/workflows/local-artifacts.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
