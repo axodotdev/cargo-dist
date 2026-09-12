@@ -4123,7 +4123,7 @@ jobs:
       - plan
       - host
     if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    uses: ./.github/workflows/custom-task-1.yml
+    uses: $/.github/workflows/custom-task-1.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
@@ -4137,7 +4137,7 @@ jobs:
       - plan
       - host
     if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
-    uses: ./.github/workflows/custom-task-2.yml
+    uses: $/.github/workflows/custom-task-2.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
