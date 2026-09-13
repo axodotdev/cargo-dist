@@ -1,0 +1,323 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>A Simple Application - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html" class="active"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/workspaces/simple-guide.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="guide-a-simple-application"><a class="header" href="#guide-a-simple-application">Guide: A Simple Application</a></h1>
+<ul>
+<li><a href="#setup-and-updates">Setup (and Updates)</a>
+<ul>
+<li><a href="#the-dist-profile">The "dist" Profile</a></li>
+<li><a href="#the-workspace-config">The Workspace Config</a></li>
+<li><a href="#the-ci-script">The CI Script</a></li>
+<li><a href="#finishing-setup">Finishing Setup</a></li>
+</ul>
+</li>
+<li><a href="#cutting-releases">Cutting Releases</a>
+<ul>
+<li><a href="#release-notes">Release Notes</a></li>
+</ul>
+</li>
+</ul>
+<p>Let's start with the kind of simple <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html">Cargo Workspace</a> you would get from <code>cargo new my-app</code> (or <code>cargo init my-app</code>): a single package that defines a <a href="https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries">binary target</a>. This is exactly the situation the <a href="../quickstart/index.html">quickstart</a> should work perfectly for. Here we're going to take it a bit slower.</p>
+<p>Our goal will be to setup a Github CI workflow that announces a new release of our application with a Github Release. The workflow will also build our application for the 3 major desktop platforms, wrap the binaries in zips/tarballs, and upload them to the Github Release. The Github Release's text will also include the relevant release notes from our RELEASES.md file.</p>
+<p>The workflow will be triggered whenever you push a <a href="https://git-scm.com/book/en/v2/Git-Basics-Tagging">Git Tag</a> specifying the application's new version, like "v1.0.0". Don't worry, you won't need to write those workflows yourself, dist will generate them for you!</p>
+<blockquote>
+<p>TO BE EXTREMELY PEDANTIC: The workflow will trigger whenever Github sees that the git tag <em>and</em> the commit it refers to are part of the repo <em>and</em> the timestamp(?) of both(?) is <em>after</em> the commit that introduced the workflow's yml file. That last part is an absolute headache, and may require you to delete the tag <em>both locally and on github</em> if you created it before the workflow. Basically, setup dist <em>before</em> you start cutting releases!</p>
+</blockquote>
+<h2 id="setup-and-updates"><a class="header" href="#setup-and-updates">Setup (and Updates)</a></h2>
+<p>To setup dist on our project (after we've <a href="../install.html">installed it</a>), we "need" to run <code>dist init</code>, which will provide us with a series of interactive prompts and explanations to configure our project. The recommended option can always be selected by hitting ENTER, and you can automate that by just passing <code>--yes</code>.</p>
+<p>You can rerun <code>init</code> as many times as you want, as it also functions as an "update" command for your config. This is especially convenient for updating your project to the version of dist you're running, as it will prompt you to do that whenever the versions don't match (refusing to proceed if declined).</p>
+<pre><code class="language-sh">dist init
+</code></pre>
+<p><a href="../reference/cli.html#dist-init"><code>init</code></a> on its own just edits your Cargo.toml to include the recommended defaults. If you have enabled CI support, it will also run <code>dist generate</code> after setting things up. This ensures your config and your CI scripts are in sync, but will unfortunately clobber any hand-edits you made to the scripts.</p>
+<p>Let's look at those defaults that were added (yes those comments are generated too, you will never stop me from adding more docs!!!):</p>
+<pre><code class="language-toml"># The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Config for 'dist'
+[workspace.metadata.dist]
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.0.6"
+# CI backends to support
+ci = ["github"]
+# The installers to generate for each app
+installers = []
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+</code></pre>
+<blockquote>
+<p>If your config doesn't have <code>ci = ["github"]</code> by default, then you probably don't have <code>repository = "https://github.com/..."</code> consistently set in your Cargo.toml(s). The rest of this guide will assume you did. dist will work fine without it, you just won't get Github CI integration or <a href="../installers/index.html">installers</a>.</p>
+</blockquote>
+<h3 id="the-dist-profile"><a class="header" href="#the-dist-profile">The "dist" Profile</a></h3>
+<p>First let's talk about <code>[profile.dist]</code>. This is a custom <a href="https://doc.rust-lang.org/cargo/reference/profiles.html">Cargo Profile</a> that dist will use to build your app. If you want to, you can use it yourself by passing <code>--profile=dist</code> to cargo (i.e. <code>cargo run --profile=dist</code>). We define a separate profile from the normal "release" one so that you can be comfortable giving your Shippable Builds more aggressive settings without making local development too tedious.</p>
+<p>In this case the default profile dist recommends is essentially the same as --release (hence <code>inherits = "release"</code>), but with <a href="https://doc.rust-lang.org/cargo/reference/profiles.html#lto">thin LTO</a> enabled (<code>lto = "thin"</code>). This will make the build take longer, but produce more optimized builds.</p>
+<p>dist uses the existence of <code>[profile.dist]</code> in your Cargo.toml to detect if your project has been properly initialized, and will generally refuse to run other commands otherwise. Sorry but you can't delete the profile!</p>
+<h3 id="the-workspace-config"><a class="header" href="#the-workspace-config">The Workspace Config</a></h3>
+<p>Next let's talk about <code>[workspace.metadata.dist]</code>. Cargo allows other tools to include their own project-wide settings in this kind of <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html#the-metadata-table">metadata table</a>. See <a href="../reference/config.html">config</a> for the full set of options, but here we'll look at the defaults.</p>
+<p><code>cargo-dist-version = "0.0.6"</code> is dist recording its own version in your config for the sake of reproducibility and documentation. When you run <a href="../reference/cli.html#dist-generate">generate</a> the resulting CI scripts will use that version of dist.</p>
+<p><code>ci = ["github"]</code> lets subsequent runs of <a href="../reference/cli.html#dist-generate">generate</a> know what CI scripts to generate. Its presence also enables certain Github-specific features like generating the body for a Github Release and telling installers to fetch binaries from a Github Release. It will be enabled by default if you have <code>repository = "https://github.com/..."</code> consistently set in your Cargo.toml(s). ("github" is currently the only supported CI backend.)</p>
+<p><code>installer = []</code> is just saying that we haven't enabled any <a href="../installers/index.html">installers</a>. Installers are intentionally excluded here to keep this example focused.</p>
+<p><code>targets = ...</code> is listing the <a href="https://doc.rust-lang.org/nightly/rustc/platform-support.html">platforms</a> to build your application for. In this case, because we didn't specify the targets with <code>--target</code>, <a href="../reference/cli.html#dist-init">init</a> has selected the "recommended desktop suite": "x64 linux", "x64 macos", "x64 windows", and "arm64 macos (Apple silicon)". In v0.0.6 these are the only properly supported choices, because we wanted to get the core of dist solid first. Future versions should hopefully introduce proper support for important targets like "musl linux".</p>
+<h3 id="the-ci-script"><a class="header" href="#the-ci-script">The CI Script</a></h3>
+<p>Because we set <code>ci = ["github"]</code>, <a href="../reference/cli.html#dist-init">init</a> invoked <a href="../reference/cli.html#dist-generate">generate</a> for us. Creating the Github CI workflow we wanted at <code>.github/workflows/release.yml</code>. Rather than including the full text here, I'll just link <a href="https://github.com/axodotdev/cargo-dist/blob/main/.github/workflows/release.yml">dist's own release.yml</a>, because dist is self-hosting and has an extremely boring build/config that is basically equivalent to the one we're looking at in this example.</p>
+<p>The first thing you might notice is that there's a <em>lot</em> of comments describing the script. As always: you will never stop me from writing more docs and shoving them in your face. Actually ok you <em>can</em> stop me because I need to write a lot of docs here and those comments are already decent docs. Feel free to peruse them to get a feel for it.</p>
+<p>One thing I want to emphasize is that each job of the workflow essentially boils down to "install dist, run dist exactly once, then upload the files it tells you to". Ideally this means you can run that one dist command and get the same things that CI produced!</p>
+<p>Anyway, the CI totally does all the things we said it should! Yay!</p>
+<h3 id="finishing-setup"><a class="header" href="#finishing-setup">Finishing Setup</a></h3>
+<p>Now that we've run <code>dist init</code>, all we need to do is commit the results and push them up:</p>
+<pre><code class="language-sh">git add .
+git commit -am 'wow cool new dist CI!'
+git push
+</code></pre>
+<p>Actually wait we should... probably test that we set things up properly? The devil's always in the details when it comes to CI, but we can do some initial checking of things with the <a href="../reference/cli.html#dist-plan">plan</a> command:</p>
+<pre><code class="language-sh">dist plan
+</code></pre>
+<p><a href="../reference/cli.html#dist-plan">plan</a> is the same as <a href="../reference/cli.html#dist-build">build</a> but it doesn't actually <em>run</em> the build and defaults to reporting info for all platforms. This makes it ideal for asking dist about the full Announcement a CI run would produce.</p>
+<p>If everything went right, you should see something like the following:</p>
+<p><img src="../img/simple-app-manifest.png" alt="The result of running the plan command, described below" />.</p>
+<p>This output has two parts: "analyzing workspace" and "announcing"</p>
+<p>"analyzing workspace" describes what dist found in your workspace. In this case there's a package called "my-app" with a <a href="https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries">binary target</a> of the same name.</p>
+<p>"announcing v0.1.0" tells us the tag that should be pushed to announce a release of the current workspace ("v0.1.0"). Underneath it we see that the announcement will include "my-app 0.1.0" as expected. Underneath that we see 4 artifacts will be produced and uploaded:</p>
+<ul>
+<li>The Intel macOS build: my-app-v0.1.0-x86_64-apple-darwin.tar.xz</li>
+<li>The M1 macOS build: my-app-v0.1.0-aarch64-apple-darwin.tar.xz</li>
+<li>The Windows build: my-app-v0.1.0-x86_64-pc-windows-msvc.zip</li>
+<li>The Linux build: my-app-v0.1.0-x86_64-unknown-linux-gnu.tar.xz</li>
+</ul>
+<p>It also helpfully lists the contents of each zip. In this case I didn't properly setup my project at all, so it only contains a prebuilt binary. If I actually add files like README.md, LICENSE, and RELEASES.md, dist will helpfully pick those up and include them (disable this with the <code>auto-includes=false</code> <a href="../reference/config.html">config</a>):</p>
+<p><img src="../img/simple-app-manifest-with-files.png" alt="The same as the last screenshot, but now the files mentioned above are included in each zip/tarball" /></p>
+<p>If you add <code>--output-format=json</code> you'll get a full machine-readable output instead, and have locally recreated the first step of the generate CI!</p>
+<h2 id="cutting-releases"><a class="header" href="#cutting-releases">Cutting Releases</a></h2>
+<p>With all our one-time setup done, we're ready to cut a release! This can be streamlined a lot with <a href="https://github.com/crate-ci/cargo-release">cargo-release</a> which will do essentially everything we're about to go through with a single command (<a href="./cargo-release-guide.html">see the guide on that</a>), but it's helpful to understand the actual steps in case cargo-release doesn't fit your usecase or if you need to debug issues.</p>
+<p>The first step is to do all the things you would do to prep a release: update docs, update release notes, bump version numbers in Cargo.tomls, run tests, and so on.</p>
+<p>At this point we're confident and want to release things for real. Once again, we can check what dist thinks should happen with the <a href="../reference/cli.html#dist-plan">plan</a> command:</p>
+<pre><code class="language-sh">dist plan
+</code></pre>
+<p>Similarly you can check that <code>cargo publish</code> will work with the <code>--dry-run</code> flag:</p>
+<pre><code class="language-sh">cargo publish --dry-run
+</code></pre>
+<p>If both of those seem happy, you're ready to release! All we need to do is push up a commit that has the <a href="https://git-scm.com/book/en/v2/Git-Basics-Tagging">Git Tag</a> that <a href="../reference/cli.html#dist-plan">plan</a> suggested. As we've seen in previous sections, it's recommending "v0.1.0" for our example app, so let's use that:</p>
+<pre><code class="language-sh"># Publish to a Github Release with dist
+git commit -am "Chore: Release 0.1.0"
+git tag "v0.1.0"
+git push
+git push --tags
+
+# Publish to crates.io
+cargo publish
+</code></pre>
+<p>and that's... it! If everything's working, your CI should spin up a "Release" workflow that dist generated for you, and after a few minutes the "Releases" section of your repo should have all the results populated with something like this:</p>
+<p><img src="../img/simple-github-release.png" alt="A Github Release for &quot;my-app 0.1.0&quot; with shell-script installers and tarballs of prebuilt binaries" /></p>
+<p>Oops! There's some extra features in that screenshot that I haven't explained yet! This includes the "Release Notes" feature and a few <a href="../installers/index.html">installers</a>. Since we're talking about Releasing, let's talk about Release Notes.</p>
+<h3 id="release-notes"><a class="header" href="#release-notes">Release Notes</a></h3>
+<p>If your project has a top-level RELEASES/CHANGELOG file like "RELEASES.md", then dist will automatically try to use it as part of your Announcement (Github Release). We use the <a href="https://github.com/taiki-e/parse-changelog">parse-changelog</a> library to try to find a heading for the version you're releasing, and if we do, we add it to the Github Release's text. We also use the heading as the title for the Github Release (rather than just the git tag).</p>
+<p>Roughly speaking, the library is looking for something like:</p>
+<pre><code class="language-text"># &lt;ignorable prefix&gt; &lt;version&gt; &lt;ignorable suffix&gt;
+</code></pre>
+<p>For instance in <code># Version 1.0.0 (2022-03-01)</code>, the only really important part is the "1.0.0", which should exactly match the Cargo version of your package. If you want to see how your RELEASES/CHANGELOG file is interpreted you can install parse-changelog as a CLI and run it on the file to see what it thinks. In the future we'll have some better debugging tools for this.</p>
+<p>If you're publishing a Version with some prerelease bits like "1.0.0-prerelease.1", then we'll first look for that exact match in your RELEASES/CHANGELOG. If we can't find it we'll strip the prerelease/build suffix (in this case going back to "1.0.0") and check for that. If <em>that</em> finds a match we'll edit the heading to include the prerelease suffix when we include it in the Announcement. This lets you have a stable heading like <code># Version 1.0.0 (under development)</code>, and prereleases will get headings like <code># Version 1.0.0-prerelease.1 (under development)</code>.</p>
+<p>If none of the previous rules apply, "1.0.0-prerelease.1" will also match a special "Unreleased" heading (i.e. "# Unreleased"), which will get rewritten to "# Version 1.0.0-prerelease.1". This lets you maintain a changelog for a pending release without having to commit to what version it will be.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../workspaces/structure.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../workspaces/workspace-guide.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../workspaces/structure.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../workspaces/workspace-guide.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

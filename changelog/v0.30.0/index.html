@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://axodotdev.github.io/cargo-dist" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+    
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.30.0 (2025-09-07)</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.30.0
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Sep  7 2025 at 20:55 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains several improvements to ZIP archives, the installers and additional build workflow customization options.</p>
+<h2>ZIP archive improvements</h2>
+<p>Previous versions of dist produced uncompressed ZIP archives which meant that they were much larger than necessary. ZIP archives are now compressed.</p>
+<ul>
+<li>impl @trim21 <a href="https://github.com/axodotdev/axoasset/pull/312" rel="noopener noreferrer">feat: enable compression on zip</a></li>
+</ul>
+<p>In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions.</p>
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/axoasset/pull/311" rel="noopener noreferrer">fix: preserve Unix permissions in ZIPs</a></li>
+</ul>
+<p>The npm installer previously used the <code>unzip</code> commandline utility to unpack ZIP archives on Windows. This isn't available in all installations, so some users would experience errors at install time. We've improved this by switching to the builtin PowerShell <code>Expand-Archive</code> cmdlet.</p>
+<ul>
+<li>impl @jacobtread
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2005" rel="noopener noreferrer">fix: windows use powershell to extract zip file</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/2046" rel="noopener noreferrer">fix: platform.includes bug</a></li>
+</ul>
+</li>
+</ul>
+<h2>Additional installer configuration environment variables</h2>
+<p>dist's installers are configurable using a variety of different environment variables, but in previous versions only some of these would be branded with your app's name. We now provide branded versions of all of the other environment variables as well. The previous unbranded environment variables will continue to work. The new variables are:</p>
+<ul>
+<li><code>${APP_NAME}_DOWNLOAD_URL</code></li>
+<li><code>${APP_NAME}_PRINT_QUIET</code></li>
+<li><code>${APP_NAME}_PRINT_VERBOSE</code></li>
+</ul>
+<ul>
+<li>impl @Gankra
+<ul>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/46" rel="noopener noreferrer">make every last INSTALLER_ variable have a branded version</a></li>
+<li><a href="https://github.com/astral-sh/cargo-dist/pull/48" rel="noopener noreferrer">support <code>{BRAND}_DOWNLOAD_URL</code> in ps1 installer</a></li>
+</ul>
+</li>
+</ul>
+<p>This feature previously appeared in version 0.28.7 of Astral's fork.</p>
+<h2>Shell installer refuses to use Snap-installed curl</h2>
+<p>The shell installers will now refuse to fetch archives using a copy of curl installed via the <a href="https://en.wikipedia.org/wiki/Snap_(software)" rel="noopener noreferrer">Snap</a> package manager for Ubuntu. Snap-installed copies of curl have limitations on their ability to write downloaded files to disk which makes them unsuitable for dist's installers. If a Snap-installed curl is detected, the installer will try to fall back to using another download tool; if no other tool is present, a message will be shown to the user and the installation will abort.</p>
+<ul>
+<li>impl @konstin <a href="https://github.com/astral-sh/cargo-dist/pull/28" rel="noopener noreferrer">Avoid snap curl</a></li>
+</ul>
+<p>This feature previously appeared in version 0.28.5 of Astral's fork.</p>
+<h2>PowerShell installer now supports proxies</h2>
+<p>The PowerShell installer now respects the <code>HTTPS_PROXY</code> and <code>ANY_PROXY</code> environment variables and uses them to configure a proxy when fetching artifacts. These were already supported by the shell installer.</p>
+<ul>
+<li>impl @zanieb and @zsol <a href="https://github.com/axodotdev/cargo-dist/pull/2078" rel="noopener noreferrer">Powershell installer: respect HTTPS_PROXY and ANY_PROXY env vars</a></li>
+</ul>
+<h2>macOS code signing now supports the <code>--options</code> flag</h2>
+<p>When using the experimental macOS codesigning feature, users can now specify a value to be passed to the <code>--options</code> flag using the <code>CODESIGN_OPTIONS</code> environment variable.</p>
+<ul>
+<li>impl @jackkleeman <a href="https://github.com/axodotdev/cargo-dist/pull/1743" rel="noopener noreferrer">Support --options in mac code signing</a></li>
+</ul>
+<h2>Linux arm64 GitHub Actions builds now use native arm64 runners by default</h2>
+<p>In previous versions of dist, we used cross-compilation to build arm64 Linux binaries from an x86_64 host. GitHub now provides free native arm64 runners, so we've switched to using these by default. Users can still use cross-compilation if they prefer by specifying the x86_64 runners using the <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">custom runners feature</a> in the dist config.</p>
+<h2>GitHub Actions artifact attestations can now be customized</h2>
+<p>It's now possible to customize exactly which artifacts are attested, and which phase of the build process to perform the attestations in. Currently, customizing which artifacts to attest requires the attestation to happen during the <code>host</code> phase; this restriction may be lifted in the future.</p>
+<p>To specify which artifacts to attest, you can use a list of globs; any artifacts matching any of those globs will receive an attestation. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">github-attestations-phase </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">host</span><span style="color:#89ddff;">"
+</span><span style="color:#f07178;">github-attestations-filters </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">*.json</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.sh</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.ps1</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.zip</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">*.tar.gz</span><span style="color:#89ddff;">"]
+</span></pre>
+
+<ul>
+<li>impl @samypr100 <a href="https://github.com/axodotdev/cargo-dist/issues/1754" rel="noopener noreferrer">Add support for attestations in the host phase</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+    
+
+    
+  </body>
+</html>
