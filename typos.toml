@@ -6,8 +6,12 @@ extend-ignore-identifiers-re = [
     # Allow all-caps words that are 2-letters or more and ends with 's'
     "[A-Z]{2,}s",
 ]
-# Ignore CLIENT_ID=<random letters>
-extend-ignore-re = ["CLIENT_ID=[A-Za-z0-9_-]+"]
+extend-ignore-re = [
+    # Ignore CLIENT_ID=<random letters>
+    "CLIENT_ID=[A-Za-z0-9_-]+",
+    # PowerShell's case-insensitive inequality operator
+    '\B-ine\b',
+]
 
 [default.extend-identifiers]
 PnP = "PnP"
