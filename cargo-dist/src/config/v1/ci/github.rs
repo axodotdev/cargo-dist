@@ -25,9 +25,13 @@ pub struct GithubCiLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<SortedMap<String, GithubPermissionMap>>,
 
-    /// Custom permissions for jobs
+    /// Custom steps for jobs
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build_setup: Option<String>,
+
+    /// What jobs to which the [`GithubCiLayer::build_setup`] steps should be prepended
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub build_setup_jobs: Option<Vec<String>>,
 
     /// Use these commits for actions
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,8 +50,11 @@ pub struct GithubCiConfig {
     /// Custom permissions for jobs
     pub permissions: SortedMap<String, GithubPermissionMap>,
 
-    /// Custom permissions for jobs
+    /// Custom steps for jobs
     pub build_setup: Option<String>,
+
+    /// What jobs to which the [`GithubCiConfig::build_setup`] steps should be prepended
+    pub build_setup_jobs: Vec<String>,
 
     /// Use these commits for github actions
     pub action_commits: SortedMap<String, String>,
@@ -62,6 +69,7 @@ impl GithubCiConfig {
             permissions: Default::default(),
             action_commits: Default::default(),
             build_setup: None,
+            build_setup_jobs: vec!["build-local-artifacts".to_string()],
         }
     }
 }
@@ -75,6 +83,7 @@ impl ApplyLayer for GithubCiConfig {
             runners,
             permissions,
             build_setup,
+            build_setup_jobs,
             action_commits,
         }: Self::Layer,
     ) {
@@ -143,6 +152,7 @@ impl ApplyLayer for GithubCiConfig {
         }));
         self.permissions.apply_val(permissions);
         self.build_setup.apply_opt(build_setup);
+        self.build_setup_jobs.apply_val(build_setup_jobs);
         self.action_commits.apply_val(action_commits);
     }
 }
@@ -155,6 +165,7 @@ impl ApplyLayer for GithubCiLayer {
             runners,
             permissions,
             build_setup,
+            build_setup_jobs,
             action_commits,
         }: Self::Layer,
     ) {
@@ -162,6 +173,7 @@ impl ApplyLayer for GithubCiLayer {
         self.runners.apply_opt(runners);
         self.permissions.apply_opt(permissions);
         self.build_setup.apply_opt(build_setup);
+        self.build_setup_jobs.apply_opt(build_setup_jobs);
         self.action_commits.apply_opt(action_commits);
     }
 }
