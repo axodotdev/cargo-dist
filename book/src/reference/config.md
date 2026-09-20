@@ -239,6 +239,7 @@ The supported choices are:
 * x64 Windows: "x86_64-pc-windows-msvc"
 * x64 Linux: "x86_64-unknown-linux-gnu"
 * arm64 macOS (Apple silicon): "aarch64-apple-darwin"
+* arm64 Windows: "aarch64-pc-windows-msvc"
 * arm64 Linux: "aarch64-unknown-linux-gnu"
 * x64 Linux (static musl): "x86_64-unknown-linux-musl"
 * arm64 Linux (static musl): "aarch64-unknown-linux-musl"
