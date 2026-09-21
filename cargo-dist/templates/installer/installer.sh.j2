@@ -690,6 +690,9 @@ install() {
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
     ensure mkdir -p "$_lib_install_dir"
+    _install_dir="$(cd "$_install_dir" 2>/dev/null && pwd -P || echo "$_install_dir")"
+    _lib_install_dir="$(cd "$_lib_install_dir" 2>/dev/null && pwd -P || echo "$_lib_install_dir")"
+    _install_dir_expr="$(replace_home "$_install_dir")"
     _install_temp=$(mktemp -d "$_install_dir/tmp.XXXXXXXXXX")
     _lib_install_temp=$(mktemp -d "$_lib_install_dir/tmp.XXXXXXXXXX")
 
@@ -802,6 +805,9 @@ check_for_shadowed_bins() {
     for _bin_name in $_bins; do
         _shadow="$(command -v "$_bin_name")"
         if [ -n "$_shadow" ] && [ "$_shadow" != "$_install_dir/$_bin_name" ]; then
+            if [ -e "$_shadow" ] && [ -e "$_install_dir/$_bin_name" ] && [ "$_shadow" -ef "$_install_dir/$_bin_name" ] 2>/dev/null; then
+                continue
+            fi
             _shadowed_bins="$_shadowed_bins $_bin_name"
         fi
     done
