@@ -959,7 +959,12 @@ pub(crate) fn parse_metadata_table_or_manifest(
 
 pub(crate) fn parse_generic_config(src: SourceFile) -> DistResult<DistMetadata> {
     let config: GenericConfig = src.deserialize_toml()?;
-    Ok(config.dist.unwrap_or_default())
+    let mut metadata = config.dist.unwrap_or_default();
+    // Extract workspace repository if present
+    if let Some(workspace) = config.workspace {
+        metadata.workspace_repository = workspace.repository;
+    }
+    Ok(metadata)
 }
 
 pub(crate) fn reject_metadata_table(
