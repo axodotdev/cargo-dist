@@ -6,6 +6,8 @@ By default dist will generate a matching checksum file for each [archive][] it g
 
 The homebrew installer actually ignores your checksum setting and always uses sha256 hashes that are baked into it, as required by homebrew itself.
 
+The PowerShell installer also uses SHA-256 hashes embedded from the build manifest, regardless of the algorithm selected for checksum files. It verifies each archive with PowerShell's built-in `Get-FileHash` before extracting it. Installer generation needs the manifests from the local artifact builds to embed these hashes; fake builds and archives without checksum metadata omit verification.
+
 Updating the other fetching installers to use these checksums is [still a work in progress][issue-checksum-backlog].
 
 > since 0.24.0
