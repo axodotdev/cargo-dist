@@ -6,6 +6,8 @@
       - custom-{{{ job.name|safe }}}
     {{%- endfor %}}
     runs-on: {{{ global_task.runner }}}
+    permissions:
+      id-token: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PLAN: ${{ needs.plan.outputs.val }}
@@ -19,7 +21,7 @@
           merge-multiple: true
       - uses: {{{ actions["actions/setup-node"] | safe }}}
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
       - run: |
           for release in $(echo "$PLAN" | jq --compact-output '.releases[] | select([.artifacts[] | endswith("-npm-package.tar.gz")] | any)'); do
