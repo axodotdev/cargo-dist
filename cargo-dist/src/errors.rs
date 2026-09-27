@@ -69,6 +69,10 @@ pub enum DistError {
     #[error(transparent)]
     TripleError(#[from] cargo_dist_schema::target_lexicon::ParseError),
 
+    /// random cargo_config2 error
+    #[error(transparent)]
+    ConfigError(#[from] cargo_config2::Error),
+
     /// A problem with a jinja template, which is always a dist bug
     #[error("Failed to render template")]
     #[diagnostic(
