@@ -338,7 +338,7 @@ multi-line strings.
 
 By default, dist will want to create its own GitHub Release and set the title/body with things like your CHANGELOG/RELEASES and some info about how to install the release. However if you have your own process for generating the contents of GitHub Release, we support that.
 
-If you set [`create-release = false`](../reference/config.md#create-release) in your dist config, dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the GitHub Release for you.
+If you set [`create-release = false`](../reference/config.md#create-release) in your dist config, dist will assume a draft Github Release for the current git tag already exists with the title/body you want, and just upload artifacts to it. At the end of a successful publish it will undraft the GitHub Release for you. To leave the release as a draft for another tool to publish, also set [`undraft-release = false`](../reference/config.md#undraft-release).
 
 ### Publish GitHub Release To Another Repository
 
