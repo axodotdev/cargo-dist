@@ -21,6 +21,14 @@ pub struct GithubHostLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub create: Option<bool>,
 
+    /// Whether dist should undraft an existing draft Github Release (default true).
+    ///
+    /// Only meaningful with `create = false`. If false, dist uploads its
+    /// artifacts into the existing draft (replacing same-named assets) and leaves
+    /// it a draft, for setups where another tool owns publishing the release.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub undraft: Option<bool>,
+
     /// Publish GitHub Releases to this repo instead of the current one
     ///
     /// The user must also set GH_RELEASES_TOKEN in their SECRETS
@@ -55,6 +63,8 @@ pub struct GithubHostConfig {
     pub common: CommonHostConfig,
     /// Whether we should create the Github Release for you
     pub create: bool,
+    /// Whether we should undraft an existing draft Github Release
+    pub undraft: bool,
     /// Publish GitHub Releases to this repo instead of the current one
     pub repo: Option<GithubRepoPair>,
     /// If github-releases-repo is used, the commit ref to used will
@@ -76,6 +86,7 @@ impl GithubHostConfig {
         Self {
             common: common.clone(),
             create: true,
+            undraft: true,
             repo: None,
             submodule_path: None,
             during: GithubReleasePhase::default(),
@@ -93,6 +104,7 @@ impl ApplyLayer for GithubHostConfig {
         Self::Layer {
             common,
             create,
+            undraft,
             repo,
             submodule_path,
             during,
@@ -103,6 +115,7 @@ impl ApplyLayer for GithubHostConfig {
     ) {
         self.common.apply_layer(common);
         self.create.apply_val(create);
+        self.undraft.apply_val(undraft);
         self.repo.apply_opt(repo);
         self.submodule_path.apply_opt(submodule_path);
         self.during.apply_val(during);
@@ -118,6 +131,7 @@ impl ApplyLayer for GithubHostLayer {
         Self::Layer {
             common,
             create,
+            undraft,
             repo,
             submodule_path,
             during,
@@ -128,6 +142,7 @@ impl ApplyLayer for GithubHostLayer {
     ) {
         self.common.apply_layer(common);
         self.create.apply_opt(create);
+        self.undraft.apply_opt(undraft);
         self.repo.apply_opt(repo);
         self.submodule_path.apply_opt(submodule_path);
         self.during.apply_opt(during);

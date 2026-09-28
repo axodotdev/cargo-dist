@@ -38,9 +38,15 @@
         {{%- if create_release %}}
           # Write and read notes from a file to avoid quoting breaking things
           echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
-        {{%- else %}}
+        {{%- elif undraft_release %}}
           # If we're editing a release in place, we need to upload things ahead of time
           gh release upload "${{ needs.plan.outputs.tag }}" artifacts/*
+        {{%- else %}}
+          # Upload into the existing draft and leave it a draft: publishing it is
+          # someone else's job. --clobber keeps re-runs idempotent.
+          gh release upload "${{ needs.plan.outputs.tag }}"{{%- if github_releases_repo %}} --repo "$REPO"{{%- endif %}} artifacts/* --clobber
         {{%- endif %}}
+        {{%- if create_release or undraft_release %}}
 
           {{{ release_command|safe }}}
+        {{%- endif %}}
