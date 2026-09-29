@@ -690,8 +690,8 @@ install() {
     say "installing to $_install_dir"
     ensure mkdir -p "$_install_dir"
     ensure mkdir -p "$_lib_install_dir"
-    _install_dir="$(cd "$_install_dir" 2>/dev/null && pwd -P || echo "$_install_dir")"
-    _lib_install_dir="$(cd "$_lib_install_dir" 2>/dev/null && pwd -P || echo "$_lib_install_dir")"
+    _install_dir="$(cd "$_install_dir" 2>/dev/null && pwd || echo "$_install_dir")"
+    _lib_install_dir="$(cd "$_lib_install_dir" 2>/dev/null && pwd || echo "$_lib_install_dir")"
     _install_dir_expr="$(replace_home "$_install_dir")"
     _install_temp=$(mktemp -d "$_install_dir/tmp.XXXXXXXXXX")
     _lib_install_temp=$(mktemp -d "$_lib_install_dir/tmp.XXXXXXXXXX")
