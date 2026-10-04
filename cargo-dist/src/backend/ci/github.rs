@@ -375,7 +375,7 @@ impl GithubCiInfo {
             .unwrap_or_default();
 
         let default_action_versions = [
-            ("actions/checkout", "v6"),
+            ("actions/checkout", "v7"),
             ("actions/upload-artifact", "v7"),
             ("actions/download-artifact", "v8"),
             ("actions/attest", "v4"),
