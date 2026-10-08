@@ -1349,7 +1349,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         let idx = ReleaseIdx(self.inner.releases.len());
         let id = app_name.clone();
         info!("added release {id}");
-        self.inner.releases.push(Release {
+        let mut release = Release {
             app_name,
             app_desc,
             app_authors,
@@ -1371,7 +1371,12 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             config,
             static_assets,
             platform_support,
-        });
+        };
+        // Apply workspace-level repository override if set
+        if let Some(workspace_repo) = &self.inner.config.repository {
+            release.app_repository_url = Some(workspace_repo.clone());
+        }
+        self.inner.releases.push(release);
         idx
     }
 
