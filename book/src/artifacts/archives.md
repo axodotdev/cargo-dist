@@ -13,7 +13,7 @@ When you [tell us to build an app][apps] for [a platform][config-targets] we wil
 We will always auto-detect READMEs, LICENSES, and CHANGELOGs with the following logic (described more below):
 
 * README: [package.readme][config-package-readme], or find `README*`
-* LICENSE: [package.license-file][config-package-license-file], or find `LICENSE*`/`UNLICENSE*`
+* LICENSE: [package.license-file][config-package-license-file], or find `LICENSE*`/`UNLICENSE*`/`COPYING*`
 * CHANGELOG: find `CHANGELOG*`/`RELEASES*`
 
 "Find `XYZ*`" means we will look for a file whose name starts with "XYZ" in the same directory as the Cargo.toml for a package that defines the app. If no such file is found, we will also search for it in the same directory as the workspace's Cargo.toml (so packages "inherit" these files from the workspace).
