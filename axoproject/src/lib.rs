@@ -671,7 +671,7 @@ pub struct AutoIncludes {
 /// This includes:
 ///
 /// * readme: `README*`
-/// * license: `LICENSE*` and `UNLICENSE*`
+/// * license: `LICENSE*`, `UNLICENSE*`, `COPYING*`
 /// * changelog: `CHANGELOG*` and `RELEASES*`
 ///
 /// This doesn't look at parent/child dirs, and doesn't factor in user provided paths.
@@ -721,7 +721,10 @@ fn find_auto_includes_inner(dir: &Utf8Path) -> std::result::Result<AutoIncludes,
             } else {
                 info!("Ignoring duplicate candidate README at {}", entry.path());
             }
-        } else if file_name.starts_with("LICENSE") || file_name.starts_with("UNLICENSE") {
+        } else if file_name.starts_with("LICENSE")
+            || file_name.starts_with("UNLICENSE")
+            || file_name.starts_with("COPYING")
+        {
             // Found a license! Dual licensing means we will often have multiple of these,
             // so we should grab every one we can find!
             let path = entry.path().to_owned();
