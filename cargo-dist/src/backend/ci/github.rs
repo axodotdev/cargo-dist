@@ -8,7 +8,7 @@ use axoasset::{LocalAsset, SourceFile};
 use axoprocess::Cmd;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
-    target_lexicon::{self, Architecture, Environment, OperatingSystem, Triple},
+    target_lexicon::{self, Architecture, OperatingSystem, Triple},
     AptPackageName, ChocolateyPackageName, ContainerImageRef, GhaRunStep,
     GithubAttestationsFilters, GithubAttestationsPhase, GithubGlobalJobConfig,
     GithubLocalJobConfig, GithubMatrix, GithubRunnerConfig, GithubRunnerRef, GithubRunners,
