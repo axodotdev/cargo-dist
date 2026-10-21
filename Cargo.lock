@@ -213,7 +213,7 @@ dependencies = [
 
 [[package]]
 name = "axoproject"
-version = "0.33.0"
+version = "0.33.1"
 dependencies = [
  "axoasset",
  "axoprocess",
@@ -396,7 +396,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist"
-version = "0.33.0"
+version = "0.33.1"
 dependencies = [
  "axoasset",
  "axocli",
@@ -446,7 +446,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-dist-schema"
-version = "0.33.0"
+version = "0.33.1"
 dependencies = [
  "camino",
  "insta",

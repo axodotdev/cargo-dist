@@ -3,6 +3,11 @@
 Nothing Yet!
 
 
+# Version 0.33.1 (2026-10-21)
+
+This release updates several dependencies.
+
+
 # Version 0.33.0 (2026-09-10)
 
 This release includes several new features and a change to the shell installers in certain environments.
