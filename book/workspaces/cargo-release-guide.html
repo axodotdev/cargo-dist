@@ -1,0 +1,456 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Using cargo-release - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html" class="active"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/workspaces/cargo-release-guide.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="using-cargo-release"><a class="header" href="#using-cargo-release">Using cargo-release</a></h1>
+<ul>
+<li><a href="#cargo-release-basics">cargo-release Basics</a></li>
+<li><a href="#cargo-release-advanced-usage">cargo-release Advanced Usage</a></li>
+<li><a href="#one-package">One Package</a></li>
+<li><a href="#virtual-workspace-with-independent-versions">Virtual Workspace With Independent Versions</a>
+<ul>
+<li><a href="#using-slash-in-tag-prefix-with-cargo-release">Using slash in tag prefix with cargo-release</a></li>
+</ul>
+</li>
+<li><a href="#virtual-workspace-with-unified-versions">Virtual Workspace With Unified Versions</a></li>
+<li><a href="#non-virtual-workspace-with-unified-versions">Non-Virtual Workspace With Unified Versions</a></li>
+<li><a href="#non-virtual-workspace-with-totally-independent-versions">Non-Virtual Workspace With Totally Independent Versions</a></li>
+<li><a href="#non-virtual-workspace-with-independent-libraries">Non-Virtual Workspace With Independent Libraries</a></li>
+<li><a href="#library-only-workspaces">Library-only Workspaces</a></li>
+<li><a href="#previewing-your-release">Previewing Your Release</a></li>
+<li><a href="#using-cargo-release-with-pull-requests">Using cargo-release with Pull Requests</a></li>
+</ul>
+<blockquote>
+<p>NOTE: It will be helpful to read <a href="./workspace-guide.html#announcement-tags">the section on dist Announcement Tags</a>, because that is the interface boundary between cargo-release and dist. TL;DR: dist interprets a git tag of "v1.0.0" as "Announce/Release the whole workspace" (Unified Announcement) and "my-app-v1.0.0" or "my-app/v1.0.0" as "Announce/Release that one package" (Singular Announcement).</p>
+</blockquote>
+<blockquote>
+<p>NOTE: this guide assumes you're running <a href="https://github.com/crate-ci/cargo-release/releases/tag/v0.22.0">cargo-release v0.22.0</a> or greater, as that version made several significant changes to default behaviours (for the better!).</p>
+</blockquote>
+<p>dist intentionally doesn't handle these steps of cutting a release for you:</p>
+<ul>
+<li>updating the versions of your packages</li>
+<li>writing your release notes</li>
+<li>committing the results</li>
+<li>tagging your commits</li>
+<li>pushing to your repo</li>
+<li>publishing to crates.io</li>
+</ul>
+<p>There's a lot of different workflows for these things and we're happy to leave that to you. All dist cares about is that a tagged commit eventually ends up in your repo (and that the format of that commit reflects the versions/names in your Cargo.tomls).</p>
+<p>That said, you might find <a href="https://github.com/crate-ci/cargo-release">cargo-release</a> useful because it can handle all of the above things for you in a single command like <code>cargo release 1.0.0</code>. This section is dedicated to explaining how to use cargo-release with dist in various situations.</p>
+<h2 id="cargo-release-basics"><a class="header" href="#cargo-release-basics">cargo-release Basics</a></h2>
+<blockquote>
+<p>NOTE: cargo-release will never do anything side-effectful unless you also pass it <code>--execute</code>. Unless otherwise specified, we are discussing the behaviour when that flag is passed, but will be omitting it for safety/brevity.</p>
+</blockquote>
+<p>In <a href="./simple-guide.html">a simple project</a> with one package, without any configuration set for cargo-release, the command <code>cargo release 1.0.0</code> is roughly sugar for:</p>
+<pre><code class="language-sh">&lt;does some basic checks for uncommitted files and upstream being ahead&gt;
+&lt;edits your Cargo.toml to have version 1.0.0&gt;
+git commit -am "chore: Release my-app version 1.0.0"
+git tag v1.0.0
+cargo publish
+git push --atomic &lt;remote-branch&gt; refs/tags/v1.0.0
+</code></pre>
+<p>(The <code>git push --atomic</code> is basically a more robust version of <code>git push &amp;&amp; git push --tags</code>)</p>
+<p>Hey neat that's basically everything I listed at the start of this section! And the tag format is exactly what dist expects for <a href="./simple-guide.html">a simple project</a>!! What a coincidence!!! 😸</p>
+<p>If you don't want some of these behaviours, you can disable them permanently with <code>[workspace.metadata.release]</code> in your Cargo.toml, or disable temporarily with CLI flags. See the <a href="https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md">cargo-release reference</a> for all the details but here's some important ones to only get a subset of the behaviours:</p>
+<ul>
+<li>Don't want to publish? Set <code>publish = false</code> in the config or pass <code>--no-publish</code></li>
+<li>Don't want to push? Set <code>push = false</code> in the config or pass <code>--no-push</code></li>
+<li>Don't want to tag? Set <code>tag = false</code> in the config or pass <code>--no-tag</code></li>
+</ul>
+<p>See <a href="#using-cargo-release-with-pull-requests">this section for specific details on using cargo-release with github pull requests (PRs)</a>.</p>
+<p>Note also that you can use <code>[package.metadata.release]</code> to set configs on individual packages and not the whole workspace.</p>
+<h2 id="cargo-release-advanced-usage"><a class="header" href="#cargo-release-advanced-usage">cargo-release Advanced Usage</a></h2>
+<p>With <a href="./workspace-guide.html">a more complex project/workspace</a>, cargo-release won't work as well out of the box with dist. To understand why, we need to understand the rules it applies consistently that can be strange if unexpected.</p>
+<p>When you run <code>cargo release</code> <strong>it should follow the same rules cargo does for selecting the subset of the workspace to operate on</strong>. That is, if you were to run <code>cargo test</code>, the packages that actually get tested are the same ones that <code>cargo release</code> will attempt to release! I'll try to briefly summarize (imperfectly, workspaces can get really Complicated):</p>
+<ul>
+<li>When run in the subdirectory of a package, execution is scoped to that package</li>
+<li>When run in the root of a <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html#virtual-workspace">virtual workspace</a> (where the root Cargo.toml isn't an actual package), execution applies to all packages</li>
+<li>When run in the root of a non-virtual workspace (where the root Cargo.toml is probably the "main" package that all other packages exist to implement), execution <strong>only applies to the root package</strong>.</li>
+<li>When run with <code>--workspace</code>, execution applies to all packages (good for making a non-virtual workspace behave more like a virtual one).</li>
+<li>Specific packages can be selected with <code>-p</code>/<code>--package</code></li>
+<li>I haven't checked if cargo-release respects <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html#the-default-members-field">default-members</a> but that's a thing too!</li>
+</ul>
+<p><strong>By default, cargo-release will create a separate git tag for every package it's releasing.</strong> The default format of these tags depends on the shape of your workspace:</p>
+<ul>
+<li>If there is a root package (the workspace is non-virtual), releases of the root package will be tagged as <code>v{VERSION}</code> ("v1.0.0").</li>
+<li>All other packages will be tagged <code>{PACKAGE_NAME}-v{VERSION}</code> ("my-app-v1.0.0")</li>
+</ul>
+<p>As we'll see below, these combined behaviours have the following interactions with dist:</p>
+<ul>
+<li>✅ one package workspace: tags it like "v1.0.0"</li>
+<li>✅ virtual workspace, independent versions: tags each package like "my-app-v1.0.0"</li>
+<li>✅ virtual workspace, independent versions: tags each package like "my-app/v1.0.0" (needs additional configuration in cargo-release, see below)</li>
+<li>❌ virtual workspace, unified versions: we want a single tag like "v1.0.0"</li>
+<li>❌ non-virtual workspace: it will mix the tag formats, which <em>might</em> be ok in one situation</li>
+</ul>
+<p>Now let's dig into each of these situations in more detail.</p>
+<h2 id="one-package"><a class="header" href="#one-package">One Package</a></h2>
+<p>TLDR: cargo-release Just Works.</p>
+<pre><code class="language-sh">cargo release 1.0.0
+</code></pre>
+<hr />
+<p>As stated previously, cargo-release works great with dist if you have <a href="./simple-guide.html">a simple project</a> consisting of a single package (the kind of project <code>cargo new my-app</code> or <code>cargo init my-app</code> will create).</p>
+<p>See the previous sections for what this will do and how to configure the behaviour if, e.g. you want to hold off on publishing to crates.io or pushing.</p>
+<p>The more general version of this situation -- where you have one root package and all the other workspace members are libraries that exist to implement it -- has two possible solutions depending on how you want to version/release the libraries:</p>
+<ul>
+<li><a href="#non-virtual-workspace-with-unified-versions">version/release the libraries in lockstep</a></li>
+<li><a href="#non-virtual-workspace-with-independent-libraries">version/release the libraries separately</a></li>
+</ul>
+<h2 id="virtual-workspace-with-independent-versions"><a class="header" href="#virtual-workspace-with-independent-versions">Virtual Workspace With Independent Versions</a></h2>
+<p>TLDR: cargo-release just needs you to specify which package to release.</p>
+<pre><code class="language-sh">cargo release -p my-package 1.0.0
+</code></pre>
+<hr />
+<p>If you have a <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html#virtual-workspace">virtual workspace</a> (one where the root Cargo.toml isn't an actual package) and want everything in the workspace to be versioned/released independently, then dist will default to operating on all your packages at once, and you should do the same thing you would do if you were running <code>cargo publish</code>: either use <code>-p</code> to select the relevant packages or <code>cd</code> into the subdir of that package before running the command.</p>
+<p>Each tag will induce dist to produce an independent Announcement (Github Release) for that package.</p>
+<p>If the package is a library the Github Release won't have any builds/artifacts uploaded. <a href="./workspace-guide.html#singular-library-hack">See here for details</a>.</p>
+<p>Note that we currently don't support finding/emitting Release Notes for Singular Releases (simply haven't had time to design and implement it yet).</p>
+<h3 id="using-slash-in-tag-prefix-with-cargo-release"><a class="header" href="#using-slash-in-tag-prefix-with-cargo-release">Using slash in tag prefix with cargo-release</a></h3>
+<p>For cargo-release to work with tag prefixes that use a slash, you must configure it to use a different prefix for tags in <code>Cargo.toml</code>.</p>
+<p>For a virtual workspace, put the following in your root Cargo.toml:</p>
+<pre><code class="language-toml">[workspace.metadata.release]
+tag-prefix = "{{crate_name}}/"
+</code></pre>
+<p>Please refer to <a href="https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md#configuration">the cargo-release reference</a> for further information on how you can configure cargo-release.</p>
+<h2 id="virtual-workspace-with-unified-versions"><a class="header" href="#virtual-workspace-with-unified-versions">Virtual Workspace With Unified Versions</a></h2>
+<p>TLDR: cargo-release just needs you to specify that versioning/tagging should be unified.</p>
+<pre><code class="language-toml"># Add this config to your root Cargo.toml (virtual manifest)
+[workspace.metadata.release]
+shared-version = true
+tag-name = "v{{version}}"
+</code></pre>
+<pre><code class="language-sh">cargo release 1.0.0
+</code></pre>
+<hr />
+<p>If you have a <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html#virtual-workspace">virtual workspace</a> (one where the root Cargo.toml isn't an actual package) and want everything in the workspace to be versioned/released in lockstep with a single Unified Announcement (One Big Github Release), then you're going to need to configure cargo-release as above.</p>
+<p>After that it works perfectly, and cargo-release will even automagically handle publishing your packages to crates.io in the right sequence and waiting for the publishes to propagate before running the next one (no more "oops sorry the package you just published isn't actually propagated to the registry yet so the package that depends on it can't be published").</p>
+<p>(See the next section on non-virtual workspaces with unified versions for some grittier details on what's going on here.)</p>
+<h2 id="non-virtual-workspace-with-unified-versions"><a class="header" href="#non-virtual-workspace-with-unified-versions">Non-Virtual Workspace With Unified Versions</a></h2>
+<p>TLDR: this is much the same as the virtual workspace case <strong>but you need to pass --workspace on the CLI</strong>.</p>
+<pre><code class="language-toml"># Add this config to your root Cargo.toml (virtual manifest)
+[workspace.metadata.release]
+shared-version = true
+tag-name = "v{{version}}"
+</code></pre>
+<pre><code class="language-sh">cargo release 1.0.0 --workspace
+</code></pre>
+<hr />
+<p>If you have a non-virtual workspace (one where the root Cargo.toml is a package) and want everything in the workspace to be versioned/released in lockstep with a single Unified Announcement (One Big Github Release), then it's <em>almost</em> the same as the virtual case (see the previous section).</p>
+<p>The one caveat is that dist is consistent to a fault here, and even though we've explicitly told it things should be versioned/tagged in lockstep, <strong>running it in the root of your project still only releases the root package</strong>, and that's not what you want!</p>
+<p>We need to tell it that we <em>really</em> meant it and pass <code>--workspace</code>!</p>
+<p>What's happening here is that <code>cargo-release</code> is conceptually defined to run on each package individually, with just the "git push" step being unified. The tagging settings we're providing work because it's basically repeatedly going "oh hey I was already going to make that tag, no need to make it again". It doesn't have a proper notion of the entire workspace being released in perfect lockstep, so if you ask it to release only some of the packages it will happily oblige.</p>
+<p>In the virtual workspace this Just Works because commands in the root directory are implicitly <code>--workspace</code>.</p>
+<h2 id="non-virtual-workspace-with-totally-independent-versions"><a class="header" href="#non-virtual-workspace-with-totally-independent-versions">Non-Virtual Workspace With Totally Independent Versions</a></h2>
+<p>TLDR: this is a more complicated mess because but you <em>probably</em> want to make the root package have the Singular Announcement format, and then you just need to be explicit about each package you want to release on the CLI:</p>
+<pre><code class="language-toml"># Add this config to your root Cargo.toml (main package)
+[package.metadata.release]
+tag-name = "{{crate_name}}-v{{version}}"
+</code></pre>
+<pre><code class="language-sh">cargo release -p my-package 1.0.0
+</code></pre>
+<hr />
+<p>If you have a non-virtual workspace (one where the root Cargo.toml is a package) and want everything in the workspace to be versioned/released independently, then the simplest approach is to make everything behave like it does in the <a href="#virtual-workspace-with-independent-versions">Virtual Workspace With Independent Versions</a>.</p>
+<p>However if you find yourself in this position it's likely that your workspace actually looks like:</p>
+<ul>
+<li>root package is The One Application this project exists to develop</li>
+<li>all other packages are libraries that support it</li>
+</ul>
+<p>In this <em>precise</em> configuration you may be able to avoid configuration by adopting a hybrid "Partially Independent Versions" approach as described in the next section.</p>
+<h2 id="non-virtual-workspace-with-independent-libraries"><a class="header" href="#non-virtual-workspace-with-independent-libraries">Non-Virtual Workspace With Independent Libraries</a></h2>
+<p>TLDR: technically this Just Works but you need to be specific about what packages you're publishing and may have annoying issues in the future.</p>
+<pre><code class="language-sh">cargo release -p my-package 1.0.0
+</code></pre>
+<hr />
+<p>So if your workspace looks like this:</p>
+<ul>
+<li>root package is The One Application this project exists to develop</li>
+<li>all other packages are libraries that support it</li>
+</ul>
+<p>Whenever you <code>cargo release</code> the root package, it will get tagged without a prefix ("v1.0.0") and dist will create a Unified Announcement. Even though there are other packages in the workspace, dist will take this in stride because as far as it's concerned <strong>this looks exactly the same as a workspace with one package</strong>. Which is to say, it's no different from <a href="./simple-guide.html">a simple project</a> as far as dist is concerned.</p>
+<p>Whenever you <code>cargo release</code> a library, it will get tagged with a prefix ("my-lib-v1.0.0") and dist will create a minimal Singular Announcement. <a href="./workspace-guide.html#singular-library-hack">See here for details</a>. In future versions we might change this default (or at least make it configurable).</p>
+<p>I have some vague concerns that this will be wonky if you ever introduce a second application to the workspace, but honestly that's probably going to be true regardless of if you were using dist, so maybe it's fine? Really I just don't trust non-virtual workspaces...</p>
+<h2 id="library-only-workspaces"><a class="header" href="#library-only-workspaces">Library-only Workspaces</a></h2>
+<p>dist really isn't designed for this but technically you can use the <a href="./workspace-guide.html#singular-library-hack">Singular Library Trick</a> if you want. If you want dist to properly support this, please let us know!</p>
+<h2 id="previewing-your-release"><a class="header" href="#previewing-your-release">Previewing Your Release</a></h2>
+<p>cargo-release defaults to dry-run semantics, only doing side-effectful operations if you pass it <code>--execute</code>. It will also do its best to detect problems early and error out if things seem wrong. This absolutely rules!</p>
+<p>There are two things to keep in mind:</p>
+<ul>
+<li>cargo-release's dry-run is imperfect and has some differences from the real run</li>
+<li>cargo-release isn't aware of dist, so it can't check if what it's about to do will blow up in CI or not</li>
+</ul>
+<p>Let's start with the dry-run differences. I don't know them all but the <em>biggest</em> one that I hit is that it doesn't fully emulate bumping the versions in your Cargo.tomls. Notably when it checks if <code>publish</code> will work, it's building the current version of the packages. If your build is aware of its own version this can cause/miss problems (and you'll see funky stuff like "Upgrading my-app from 1.0.0 to 2.0.0" ... "Packaging my-app 1.0.0").</p>
+<p>As for being aware of dist... I want to design some features for this, but I'm not quite sure what it should look like yet.</p>
+<p>I think in the short-term, the best I can offer you is "make a temporary git branch and tell cargo-release to --execute but not push/tag/publish, then ask dist what it thinks extremely manually". A rough sketch:</p>
+<pre><code class="language-sh"># make a temp branch where we can mess stuff up
+git checkout -b tmp-release
+
+# ask cargo-release what it thinks should happen
+# (substitute the actual cargo-release command you'd use here)
+cargo release 1.0.0
+</code></pre>
+<p>That should end with a line that looks like "Pushing main, v1.0.0 to origin". The first item is the branch it's pushing to, all the following items are all the tags it wants to push. Now that we know the tags, we can ask cargo-release to update the package versions and then ask dist what it thinks of those tags:</p>
+<pre><code class="language-sh"># just bump versions
+cargo release 1.0.0 --execute --no-push --no-tag --no-publish
+
+# ask dist what should be produced for the given tag
+dist plan --tag=&lt;tag-you-want-to-check&gt;
+</code></pre>
+<p>If that runs successfully and prints out the artifacts you expect, that's pretty good sign running cargo-release For Real will work! (You can also try <code>dist build</code> if you're worried about the actual build failing.)</p>
+<h2 id="using-cargo-release-with-pull-requests"><a class="header" href="#using-cargo-release-with-pull-requests">Using cargo-release with Pull Requests</a></h2>
+<blockquote>
+<p>In this section we will be using <code>$BRANCH</code> and <code>$VERSION</code> as placeholders for the branch you make your PR on and the version you want to release.</p>
+</blockquote>
+<p>Many teams have policies that prevent pushing to main, and require you to open pull requests instead. This conflicts with the <em>default</em> behaviour of cargo-release, but it works fine with some extra flags to encourage it to defer the steps until later. Specifically, use the following to "partially" run cargo-release:</p>
+<pre><code class="language-sh">cargo release --no-publish --no-tag --allow-branch=$BRANCH $VERSION
+</code></pre>
+<p>The release process then has the following steps:</p>
+<ul>
+<li>step 0: create a new branch for the PR</li>
+<li>step 1: &lt; finalize things like changelogs and commit &gt;</li>
+<li>step 2: <strong>partially</strong> run <code>cargo release ...</code> to update your Cargo.tomls and push your branch</li>
+<li>step 3: &lt; open a pr, review, merge &gt;</li>
+<li>step 4: <strong>fully</strong> run <code>cargo release</code> on main to complete the process (publish and tag)</li>
+</ul>
+<p>Crucially, neither invocation of <code>cargo release</code> will modify your main branch directly. Step 4 will only push a git tag for the commit that is already on main.</p>
+<p>Here's what this looks in practice:</p>
+<pre><code class="language-sh"># step 0: make a branch
+git checkout -b $BRANCH
+
+
+# step 1: update things like the changelog
+# &lt; edit some files or whatever here &gt;
+git commit -am "prep release"
+
+
+# step 2: have cargo-release handle tedious mechanical stuff
+# this will:
+#  * do some safety checks like "git index is clean"
+#  * update version numbers in your crates (and handle inter-dependencies)
+#  * git commit -am "chore: release $NAME $VERSION" (one commit for the whole workspace)
+#  * git push (remember we're on a branch)
+cargo release --no-publish --no-tag --allow-branch=$BRANCH $VERSION
+
+
+# step 3: open a PR and review/merge to main
+# NOTE: the above steps will result in two commits
+#       we recommend using github's "merge and squash" feature to clean up
+# ...
+
+
+# step 4: remove the shackles from cargo release and RUN ON MAIN
+# this will:
+#  * tag the commit
+#  * push the tag
+#  * publish all crates to crates.io (handles waiting for dep publishes to propagate)
+#  * trigger dist when it sees the tag (if applicable)
+# THIS WON'T CREATE NEW COMMITS
+#
+# running "dist plan" is totally optional, but this is is the best time to check
+# that your dist release CI will produce the desired result when you push the tag
+git checkout main
+git pull
+dist plan
+cargo release
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../workspaces/workspace-guide.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../reference/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../workspaces/workspace-guide.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../reference/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

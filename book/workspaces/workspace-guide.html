@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>More Complex Workspaces - dist</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../install.html"><strong aria-hidden="true">2.</strong> Install</a></li><li class="chapter-item expanded "><a href="../quickstart/index.html"><strong aria-hidden="true">3.</strong> Quickstart</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quickstart/rust.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li class="chapter-item expanded "><a href="../quickstart/javascript.html"><strong aria-hidden="true">3.2.</strong> JavaScript</a></li><li class="chapter-item expanded "><a href="../quickstart/everyone-else.html"><strong aria-hidden="true">3.3.</strong> Everyone Else</a></li></ol></li><li class="chapter-item expanded "><a href="../updating.html"><strong aria-hidden="true">4.</strong> Updating</a></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">5.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="../custom-builds.html"><strong aria-hidden="true">6.</strong> Custom Builds</a></li><li class="chapter-item expanded "><a href="../supplychain-security/index.html"><strong aria-hidden="true">7.</strong> Supplychain Security</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../supplychain-security/signing/windows.html"><strong aria-hidden="true">7.1.</strong> Windows Signing</a></li><li class="chapter-item expanded "><a href="../supplychain-security/attestations/github.html"><strong aria-hidden="true">7.2.</strong> GitHub Attestations</a></li></ol></li><li class="chapter-item expanded "><a href="../installers/index.html"><strong aria-hidden="true">8.</strong> Installers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installers/shell.html"><strong aria-hidden="true">8.1.</strong> shell</a></li><li class="chapter-item expanded "><a href="../installers/powershell.html"><strong aria-hidden="true">8.2.</strong> powershell</a></li><li class="chapter-item expanded "><a href="../installers/npm.html"><strong aria-hidden="true">8.3.</strong> npm</a></li><li class="chapter-item expanded "><a href="../installers/homebrew.html"><strong aria-hidden="true">8.4.</strong> homebrew</a></li><li class="chapter-item expanded "><a href="../installers/msi.html"><strong aria-hidden="true">8.5.</strong> msi</a></li><li class="chapter-item expanded "><a href="../installers/updater.html"><strong aria-hidden="true">8.6.</strong> updater</a></li><li class="chapter-item expanded "><a href="../installers/usage.html"><strong aria-hidden="true">8.7.</strong> Usage</a></li></ol></li><li class="chapter-item expanded "><a href="../artifacts/index.html"><strong aria-hidden="true">9.</strong> Artifacts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../artifacts/archives.html"><strong aria-hidden="true">9.1.</strong> archives</a></li><li class="chapter-item expanded "><a href="../artifacts/checksums.html"><strong aria-hidden="true">9.2.</strong> checksums</a></li><li class="chapter-item expanded "><a href="../artifacts/symbols.html"><strong aria-hidden="true">9.3.</strong> symbols</a></li></ol></li><li class="chapter-item expanded "><a href="../ci/index.html"><strong aria-hidden="true">10.</strong> CI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci/customizing.html"><strong aria-hidden="true">10.1.</strong> Customizing</a></li></ol></li><li class="chapter-item expanded "><a href="../workspaces/index.html"><strong aria-hidden="true">11.</strong> Workspaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workspaces/structure.html"><strong aria-hidden="true">11.1.</strong> Structure</a></li><li class="chapter-item expanded "><a href="../workspaces/simple-guide.html"><strong aria-hidden="true">11.2.</strong> A Simple Application</a></li><li class="chapter-item expanded "><a href="../workspaces/workspace-guide.html" class="active"><strong aria-hidden="true">11.3.</strong> More Complex Workspaces</a></li><li class="chapter-item expanded "><a href="../workspaces/cargo-release-guide.html"><strong aria-hidden="true">11.4.</strong> Using cargo-release</a></li></ol></li><li class="chapter-item expanded "><a href="../reference/index.html"><strong aria-hidden="true">12.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/concepts.html"><strong aria-hidden="true">12.1.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="../reference/artifact-url.html"><strong aria-hidden="true">12.2.</strong> Artifact URLs</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">12.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/cli.html"><strong aria-hidden="true">12.4.</strong> CLI Manual</a></li><li class="chapter-item expanded "><a href="../reference/schema.html"><strong aria-hidden="true">12.5.</strong> dist-manifest.json</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dist</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/axodotdev/cargo-dist/edit/main/book/src/workspaces/workspace-guide.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="guide-more-complex-workspaces"><a class="header" href="#guide-more-complex-workspaces">Guide: More Complex Workspaces</a></h1>
+<ul>
+<li><a href="#multiple-binaries-in-one-package">Multiple Binaries In One Package</a></li>
+<li><a href="#multiple-packages-in-a-workspace">Multiple Packages In A Workspace</a></li>
+<li><a href="#announcement-tags">Announcement Tags</a></li>
+<li><a href="#singular-library-hack">Singular Library Hack</a></li>
+<li><a href="#using-cargo-release">Using cargo-release</a></li>
+</ul>
+<p>Now that we've <a href="./simple-guide.html">looked at a simple example</a> with <code>cargo new</code>, let's start looking at ways to make a <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html">Cargo Workspace</a> more complicated, and how dist will deal with them.</p>
+<p>But first, let's define some precise terminology:</p>
+<p>Rust projects typically exist as a single <em><a href="https://doc.rust-lang.org/cargo/reference/workspaces.html">Workspace</a></em>, which is a collection of one or more <em><a href="https://doc.rust-lang.org/cargo/appendix/glossary.html#package">Packages</a></em> that are all developed in the same repository (<a href="https://crates.io/">crates.io</a> dependencies are not considered part of the workspace). A workspace always has a root Cargo.toml where certain workspace-global settings are defined.</p>
+<p>If the root Cargo.toml <em>doesn't</em> define a Package then we say it's a <em><a href="https://doc.rust-lang.org/cargo/reference/workspaces.html#virtual-workspace">Virtual Workspace</a></em>. A Virtual Workspace puts all the packages on the same level, treating them as equals. If you don't use a Virtual Workspace you are essentially saying the entire project exists to produce that one root Package. Both approaches make sense in different contexts. I personally prefer virtual workspaces because it makes cargo (and other tools) default to operating on all packages at once, which is usually what I want (e.g. I want <code>cargo test</code> to test the entire workspace, I want <code>cargo fmt</code> to format the whole workspace, and so on).</p>
+<p>A <em><a href="https://doc.rust-lang.org/cargo/appendix/glossary.html#package">Package</a></em> is the thing defined by a Cargo.toml (except for the root Cargo.toml of a Virtual Workspace, which defines no package). Many people reasonably assume "Package" and "Crate" are synonyms -- after all you host your Packages on a website called "<a href="https://crates.io/">crates.io</a>"! As it turns out, this is not the case: a Package can in fact define multiple Crates at the same time.</p>
+<p>A <em><a href="https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html">Crate</a></em> is the actual unit of compilation that <em>rustc</em> thinks about, like a single library or binary. For the purposes of dist, you don't really need a perfect understanding of what is or isn't a "crate". The important takeaway is that a single Package can contain multiple things that are conflated with a single unified name and version. As we'll see, this can be useful.</p>
+<h2 id="multiple-binaries-in-one-package"><a class="header" href="#multiple-binaries-in-one-package">Multiple Binaries In One Package</a></h2>
+<p>So here's where the difference between a "Package" and a "Crate" is most relevant: <a href="https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries">Cargo lets a single Package define multiple binaries</a>. See those docs for all the details. This can be convenient if you want to produce a single logical application that provides a suite of CLIs. For instance, you might want to make a standalone "my-tool" CLI that can be invoked as <code>cargo my-tool</code> as well. The easiest way to do this is to define a second "cargo-my-tool" binary as part of the "my-tool" Package. Once you do, <code>cargo install my-tool</code> will install both!</p>
+<p>dist tries to respect this semantic. If you define multiple binaries in a Package, we will treat the Package as one "Application" and bundle both binaries in all zips and <a href="../installers/index.html">installers</a> for that App. There is no way to override this behaviour -- if you don't want two binaries to be considered part of the same App, you should use separate Packages.</p>
+<h2 id="multiple-packages-in-a-workspace"><a class="header" href="#multiple-packages-in-a-workspace">Multiple Packages In A Workspace</a></h2>
+<p>Alright here's where things get a bit more complicated and you need to make a decision on how exactly you plan to develop and release the packages that make up your project. Up until now we've been assuming you have a single package in your workspace, but now we're going to deal with more.</p>
+<p>How dist interprets multiple packages is actually fairly simple:</p>
+<ul>
+<li>Each Package that defines binaries is considered an "App" with completely independent zips/installers</li>
+<li>Each Package that doesn't define binaries is wholly irrelevant and ignored</li>
+</ul>
+<p>If a Package defines binaries but you want dist to ignore it just like it does with library-only packages (i.e. because the binaries are for local testing), you can do that with either:</p>
+<ul>
+<li><a href="../reference/config.html#publish"><code>publish = false</code> in that Package's Cargo.toml</a></li>
+<li><a href="../reference/config.html#dist"><code>dist = false</code> in that Package's <code>[package.metadata.dist]</code></a></li>
+</ul>
+<p>Now here's the really important question you need to answer: <strong>how do you want to announce new versions of your packages?</strong></p>
+<h2 id="announcement-tags"><a class="header" href="#announcement-tags">Announcement Tags</a></h2>
+<blockquote>
+<p>See <a href="./cargo-release-guide.html">the guide on using dist with cargo-release for more detailed documentation of how to tag your commits in various workspace configurations</a>!</p>
+</blockquote>
+<p>When you push a Git Tag to your repository, dist's CI will try to create a single Announcement (A Github Release) for that tag. When you only have one Package that's a completely unambiguous operation. When you have multiple Packages we now need some way to disambiguate what you actually meant.</p>
+<p>1 Git Tag = 1 dist Announcement = 1 Github Release</p>
+<p>dist supports two forms of Announcement which you can select with the format of your Git Tag:</p>
+<ul>
+<li>Unified Announcement: VERSION selects all packages with the given version (v1.0.0, 0.1.0-prerelease.1, releases/1.2.3, ...)</li>
+<li>Singular Announcement: PACKAGE-VERSION or PACKAGE/VERSION selects only the given package (my-app-v1.0.0, my-app/1.0.0, release/my-app/v1.2.3-alpha, ...)</li>
+</ul>
+<blockquote>
+<p>People love their different tag formats, so we do our best to parse lots
+of different kinds! Prefixing the version with <code>v</code> is optional. Anything
+that comes before a <code>/</code> is ignored unless it's exactly a package name
+(so <code>really/cool/5.0.0/releases/v1.0.0</code> is just read as "1.0.0"). Note
+that something like "1.0" is not a valid <a href="https://docs.rs/semver/latest/semver/struct.Version.html#errors">Cargo SemVer Version</a>.</p>
+</blockquote>
+<p>These two modes support the following workflows:</p>
+<ul>
+<li>Releasing a workspace with only one App (either mode works but Unified is Best)</li>
+<li>Releasing a workspace where all Apps are versioned in lockstep (Unified)</li>
+<li>Releasing an individual App in a workspace with its own independent versioning (Singular)</li>
+<li>Releasing several Apps in a workspace at once, but all independently (Push multiple Singular tags at once)</li>
+</ul>
+<blockquote>
+<p>NOTE: Although you <em>could</em> use extremely careful versioning in conjunction with Unified Announcements to release a weird subset of the packages in your workspace, you really <em>shouldn't</em> because the Github Releases will be incoherent (v0.1.0 has these random packages, v0.2.0 has these other random packages... huh?), and you're liable to create painful tag collisions.</p>
+</blockquote>
+<p><strong>The need for a coherent Announcement Tag is so important that dist commands like "build" and "manifest" will error out if one isn't provided and it can't be guessed.</strong> If that happens you may need to pass an explicit <code>--tag=...</code> flag to disambiguate. Being this strict helps catch problems before you push to CI.</p>
+<h2 id="singular-library-hack"><a class="header" href="#singular-library-hack">Singular Library Hack</a></h2>
+<p>Normally dist will error out if the Announcement Tag selects no Apps, because it exists to build and distribute Apps and you just asked it to do nothing (which is probably a mistake). This would however create annoying CI errors if you just wanted to tag releases for your libraries.</p>
+<p>For 0.0.3 I opted for this kind of weird half-functionality:</p>
+<p><strong>dist will produce a very minimal build-less Announcement (and therefore Github Release) if you explicitly request a Singular Announcement that matches a library-only package</strong>. This feature is kind of half-baked, please let us know what you want to happen in this situation!</p>
+<p>We'll probably have to add a config for specifying whether you want libraries to get Announcements or not when you push a singular tag for them.</p>
+<h2 id="using-cargo-release"><a class="header" href="#using-cargo-release">Using cargo-release</a></h2>
+<p>See <a href="./cargo-release-guide.html">the dedicated guide to using cargo-release with dist</a>, which covers all sorts of nasty workspaces (it's also just a more useful in-depth look at ).</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../workspaces/simple-guide.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../workspaces/cargo-release-guide.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../workspaces/simple-guide.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../workspaces/cargo-release-guide.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
