@@ -84,6 +84,7 @@ We're currently in the middle of [a major config migration](https://github.com/a
     * [`github-release`](#github-release)
     * [`github-releases-repo`](#github-releases-repo)
     * [`github-releases-submodule-path`](#github-releases-submodule-path)
+    * [`undraft-release`](#undraft-release)
 * [simple hosting settings](#simple-hosting-settings)
     * [`simple-download-url`](#simple-download-url)
 
@@ -1275,9 +1276,33 @@ If true, dist will create a new GitHub Release and generate
 a title/body for it based on your changelog.
 
 If false, dist will assume a draft GitHub Release for the current git tag
-already exists with the title/body you want, and just upload artifacts to it, undrafting when all artifacts are uploaded.
+already exists with the title/body you want, and just upload artifacts to it, undrafting when all artifacts are uploaded
+(unless [`undraft-release = false`](#undraft-release)).
 
 See also: [`github-release`](#github-release)
+
+
+#### `undraft-release`
+
+> <span style="float:right">since 1.0.0<br>[global-only][]</span>
+> [📖 read the releases guide!][github-releases-guide] \
+> default = `true`
+>
+> *in your dist-workspace.toml or dist.toml:*
+> ```toml
+> [dist]
+> create-release = false
+> undraft-release = false
+> ```
+
+Whether dist should undraft the existing draft GitHub Release once its artifacts are uploaded.
+
+Only has an effect with [`create-release = false`](#create-release). If false, dist uploads
+its artifacts into the existing draft (replacing any same-named assets, so re-runs are idempotent)
+and leaves the release a draft. Use this when another tool or workflow owns the release: for example
+one that attaches assets from other builders, waits for a human approval, and publishes the draft last.
+Note that dist no longer triggers anything that depends on the release being published
+(such as workflows on `release: published`); whoever publishes the draft does.
 
 
 ### simple hosting settings

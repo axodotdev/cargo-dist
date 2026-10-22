@@ -68,6 +68,7 @@ impl DistMetadata {
             publish_prereleases,
             force_latest,
             create_release,
+            undraft_release,
             github_releases_repo,
             github_releases_submodule_path,
             github_release,
@@ -245,6 +246,7 @@ impl DistMetadata {
         let mut github_host_layer =
             list_to_bool_layer(is_global, &hosting, HostingStyle::Github, || {
                 if create_release.is_some()
+                    || undraft_release.is_some()
                     || github_releases_repo.is_some()
                     || github_releases_submodule_path.is_some()
                     || github_release.is_some()
@@ -253,6 +255,7 @@ impl DistMetadata {
                     Some(GithubHostLayer {
                         common: CommonHostLayer::default(),
                         create: create_release,
+                        undraft: undraft_release,
                         repo: github_releases_repo,
                         submodule_path: github_releases_submodule_path.map(|p| p.into()),
                         during: github_release,

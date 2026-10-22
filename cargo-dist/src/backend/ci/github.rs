@@ -122,6 +122,8 @@ pub struct GithubCiInfo {
 pub struct GithubReleaseInfo {
     /// whether to create the release or assume an existing one
     pub create_release: bool,
+    /// whether to undraft an existing release (only used if `create_release` is false)
+    pub undraft_release: bool,
     /// external repo to release to
     pub github_releases_repo: Option<JinjaGithubRepoPair>,
     /// commit to use for github_release_repo
@@ -481,6 +483,7 @@ impl GithubReleaseInfo {
         };
 
         let create_release = host_config.create;
+        let undraft_release = host_config.undraft;
         let github_releases_repo = host_config.repo.clone().map(|r| r.into_jinja());
         let github_attestations = host_config.attestations;
         let github_attestations_filters = host_config.attestations_filters.clone();
@@ -529,6 +532,7 @@ impl GithubReleaseInfo {
 
         Ok(Some(Self {
             create_release,
+            undraft_release,
             github_releases_repo,
             external_repo_commit,
             github_attestations,
