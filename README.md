@@ -92,7 +92,7 @@ outputs. This allows us to both catch regressions and also more easily review UI
 test fails, you will need to use the `cargo insta` CLI tool to update them:
 
 ```sh
-cargo install cargo-insta
+just dev-install
 ```
 
 Once installed, you can review and accept the changes with:
