@@ -25,11 +25,13 @@ name = "my_app"
 version = "0.1.0"
 # The URL to the git repository; this is used for publishing releases
 repository = "https://github.com/example/example"
-# The executables produced by your app
+# The executables produced by your app (basenames on disk; no .exe/extension)
 binaries = ["main"]
 # The build command dist runs to produce those binaries
 build-command = ["make"]
 ```
+
+Each entry in `binaries` is the **executable basename as produced on disk** — the name of the binary your build drops into the expected output directory, without a platform extension such as `.exe`. Dist appends the platform-specific extension itself when looking for build artifacts. Do not use the Cargo package name unless it happens to match that basename.
 
 All you need to run to build this program is `make`, so we specified `build-command = ["make"]`. If your app has a more complex build that will require multiple commands to run, it may be easier for you to add a build script to your repository. In that case, `build-command` can simply be a reference to executing it:
 
