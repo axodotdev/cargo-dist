@@ -71,6 +71,7 @@ current_platform.workspace = true
 color-backtrace.workspace = true
 backtrace.workspace = true
 schemars.workspace = true
+cargo-config2 = "0.1.36"
 
 [dev-dependencies]
 insta.workspace = true
