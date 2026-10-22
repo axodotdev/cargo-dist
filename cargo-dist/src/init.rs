@@ -554,6 +554,7 @@ fn get_new_dist_metadata(
             cargo_cyclonedx: None,
             omnibor: None,
             simple_download_url: None,
+            workspace_repository: None,
         }
     };
 
@@ -1056,6 +1057,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         cargo_cyclonedx,
         simple_download_url,
         omnibor,
+        workspace_repository: _,
         // These settings are complex enough that we don't support editing them in init
         github_action_commits: _,
         extra_artifacts: _,

@@ -17,6 +17,15 @@ use crate::SortedMap;
 pub struct GenericConfig {
     /// The dist field within dist.toml
     pub dist: Option<DistMetadata>,
+    /// The workspace field within dist.toml (if present)
+    pub workspace: Option<WorkspaceMetadata>,
+}
+
+/// Workspace-level metadata from dist(-workspace).toml files
+#[derive(Debug, Deserialize)]
+pub struct WorkspaceMetadata {
+    /// Repository URL that overrides package-level URLs
+    pub repository: Option<String>,
 }
 
 declare_strongly_typed_string! {
@@ -510,6 +519,11 @@ pub struct DistMetadata {
 
     /// Where to download artifacts from on the Simple host
     pub simple_download_url: Option<String>,
+
+    /// Workspace-level repository URL (for `[workspace]` section in dist-workspace.toml),
+    /// internal-only and not serialized from TOML directly.
+    #[serde(skip)]
+    pub workspace_repository: Option<String>,
 }
 
 impl DistMetadata {
@@ -592,6 +606,7 @@ impl DistMetadata {
             cargo_cyclonedx: _,
             omnibor: _,
             simple_download_url: _,
+            workspace_repository: _,
         } = self;
         if let Some(include) = include {
             for include in include {
@@ -702,6 +717,7 @@ impl DistMetadata {
             cargo_cyclonedx,
             omnibor,
             simple_download_url,
+            workspace_repository: _,
         } = self;
 
         // Check for global settings on local packages
