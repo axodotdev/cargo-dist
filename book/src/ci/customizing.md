@@ -25,8 +25,8 @@ For more information, see the [configuration syntax][config-dependencies].
 dist's CI can be configured to call additional jobs on top of the ones it has builtin. Currently, we support adding extra jobs to the the following list of steps:
 
 * [`plan-jobs`][config-plan] (the beginning of the build process)
-* [`build-local-artifacts-jobs`][config-build-local]
-* [`build-global-artifacts-jobs`][config-build-global]
+* [`local-artifacts-jobs`][config-build-local]
+* [`global-artifacts-jobs`][config-build-global]
 * [`host-jobs`][config-host-jobs] (pre-publish)
 * [`publish-jobs`][config-publish-jobs]
 * [`post-announce-jobs`][config-post-announce] (after the release is created)
@@ -376,8 +376,8 @@ By default dist breaks build tasks onto more machines than strictly necessary to
 [config-dependencies]: ../reference/config.md#dependencies
 [config-plan]: ../reference/config.md#plan-jobs
 [config-allow-dirty]: ../reference/config.md#allow-dirty
-[config-build-local]: ../reference/config.md#build-local-artifacts-jobs
-[config-build-global]: ../reference/config.md#build-global-artifacts-jobs
+[config-build-local]: ../reference/config.md#local-artifacts-jobs
+[config-build-global]: ../reference/config.md#global-artifacts-jobs
 [config-fail-fast]: ../reference/config.md#fail-fast
 [config-github-custom-runners]: ../reference/config.md#github-custom-runners
 [config-github-releases-repo]: ../reference/config.md#github-releases-repo
