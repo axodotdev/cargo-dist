@@ -993,8 +993,7 @@ pub fn default_desktop_targets() -> Vec<TripleName> {
         t::TARGET_X64_MAC.to_owned(),
         t::TARGET_ARM64_MAC.to_owned(),
         t::TARGET_ARM64_LINUX_GNU.to_owned(),
-        // that one requires a bit of config (use the `messense/cargo-xwin` image)
-        // t::TARGET_ARM64_WINDOWS.to_owned(),
+        t::TARGET_ARM64_WINDOWS.to_owned(),
     ]
 }
 

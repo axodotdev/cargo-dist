@@ -19,10 +19,14 @@ lazy_static::lazy_static! {
         m.insert(GithubRunnerRef::from_str("ubuntu-24.04-arm"), t::TARGET_ARM64_LINUX_GNU);
         m.insert(GithubRunnerRef::from_str("ubuntu-latest"), t::TARGET_X64_LINUX_GNU);
 
-        //-------- windows
+        //-------- windows x64
         m.insert(GithubRunnerRef::from_str("windows-2022"), t::TARGET_X64_WINDOWS);
         m.insert(GithubRunnerRef::from_str("windows-2025"), t::TARGET_X64_WINDOWS);
         m.insert(GithubRunnerRef::from_str("windows-latest"), t::TARGET_X64_WINDOWS);
+
+        //-------- windows arm64
+        m.insert(GithubRunnerRef::from_str("windows-11-arm"), t::TARGET_ARM64_WINDOWS);
+        m.insert(GithubRunnerRef::from_str("windows-11-vs2026-arm"), t::TARGET_ARM64_WINDOWS);
 
         //-------- macos x64
         m.insert(GithubRunnerRef::from_str("macos-14-large"), t::TARGET_X64_MAC);
@@ -96,6 +100,14 @@ mod tests {
         assert_eq!(
             target_for_github_runner(GithubRunnerRef::from_str("buildjet-8vcpu-ubuntu-2204-arm")),
             Some(t::TARGET_ARM64_LINUX_GNU)
+        );
+        assert_eq!(
+            target_for_github_runner(GithubRunnerRef::from_str("windows-11-arm")),
+            Some(t::TARGET_ARM64_WINDOWS)
+        );
+        assert_eq!(
+            target_for_github_runner(GithubRunnerRef::from_str("windows-11-vs2026-arm")),
+            Some(t::TARGET_ARM64_WINDOWS)
         );
     }
 }
