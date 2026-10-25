@@ -1673,7 +1673,7 @@ unix-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_and_plan(test_name)?;
-        results.check_all(&ctx, ".local/share/../bin")?.snap();
+        results.check_all(&ctx, ".local/bin")?.snap();
 
         Ok(())
     })
@@ -1701,7 +1701,7 @@ unix-archive = ".tar.gz"
         ))?;
 
         let results = ctx.cargo_dist_build_and_plan(test_name)?;
-        results.check_all(&ctx, ".local/share/../bin")?.snap();
+        results.check_all(&ctx, ".local/bin")?.snap();
 
         Ok(())
     })
