@@ -3270,7 +3270,7 @@ install(false);
         "prettier": "^3.9.10"
       },
       "engines": {
-        "node": ">=14.14",
+        "node": ">=14.18",
         "npm": ">=6"
       },
       "hasInstallScript": true,
@@ -3325,7 +3325,7 @@ install(false);
     "prettier": "^3.9.10"
   },
   "engines": {
-    "node": ">=14.14",
+    "node": ">=14.18",
     "npm": ">=6"
   },
   "glibcMinimum": {
