@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
-      - run: cargo publish -p axoproject --token ${CRATES_TOKEN}
+      - run: cargo publish -p dist_project --token ${CRATES_TOKEN}
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
       - run: cargo publish -p cargo-dist-schema --token ${CRATES_TOKEN}

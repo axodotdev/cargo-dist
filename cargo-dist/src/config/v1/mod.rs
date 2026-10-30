@@ -112,7 +112,7 @@ pub mod hosts;
 pub mod installers;
 pub mod publishers;
 
-use axoproject::{PackageIdx, WorkspaceGraph};
+use dist_project::{PackageIdx, WorkspaceGraph};
 use semver::Version;
 use v0::CargoDistUrlOverride;
 

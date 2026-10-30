@@ -6,12 +6,12 @@
 //!
 //! If we ever change this decision, this will be a lot more important!
 
-use axoproject::errors::AxoprojectError;
 use backtrace::Backtrace;
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{target_lexicon::Triple, ArtifactId, TripleName};
 use color_backtrace::BacktracePrinter;
 use console::style;
+use dist_project::errors::AxoprojectError;
 use miette::{Diagnostic, SourceOffset, SourceSpan};
 use thiserror::Error;
 
@@ -38,7 +38,7 @@ pub enum DistError {
     /// random axoproject error
     #[error(transparent)]
     #[diagnostic(transparent)]
-    Project(#[from] axoproject::errors::ProjectError),
+    Project(#[from] dist_project::errors::ProjectError),
 
     /// random string error
     #[error(transparent)]
@@ -415,7 +415,7 @@ pub enum DistError {
     UpdateNotInWorkspace {
         /// The report about the missing workspace
         #[diagnostic_source]
-        cause: axoproject::errors::ProjectError,
+        cause: dist_project::errors::ProjectError,
     },
 
     /// Trying to include CargoHome with other install paths
