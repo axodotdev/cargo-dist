@@ -3,9 +3,9 @@
 use std::env;
 
 use axoprocess::Cmd;
-use axoproject::WorkspaceIdx;
 use cargo_dist_schema::target_lexicon::{Architecture, Environment, Triple};
 use cargo_dist_schema::{DistManifest, TripleName};
+use dist_project::WorkspaceIdx;
 use miette::{Context, IntoDiagnostic};
 use tracing::warn;
 
@@ -41,7 +41,7 @@ impl<'a> DistGraphBuilder<'a> {
                 .axoupdater_versions
                 .iter()
                 .min_by(|a, b| a.1.cmp(&b.1));
-            if let Some((source, axoproject::Version::Cargo(version))) = oldest {
+            if let Some((source, dist_project::Version::Cargo(version))) = oldest {
                 let axoupdater_min_version = semver::Version::parse(AXOUPDATER_MINIMUM_VERSION)
                     .expect("invalid axoupdater const?!");
 

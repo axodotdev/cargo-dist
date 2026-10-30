@@ -5,8 +5,8 @@ use crate::{
     DistResult,
 };
 use axoasset::SourceFile;
-use axoproject::WorkspaceKind;
 use camino::Utf8PathBuf;
+use dist_project::WorkspaceKind;
 
 fn parse_rust_config(src: SourceFile) -> DistResult<DistMetadata> {
     // yes this is deserializing a toml document into a json value

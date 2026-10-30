@@ -1,5 +1,5 @@
 [package]
-name = "axoproject"
+name = "dist_project"
 description = "project detection logic for various axo.dev applications"
 version.workspace = true
 edition.workspace = true

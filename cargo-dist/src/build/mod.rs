@@ -1,8 +1,8 @@
 //! Compiling Things
 
-use axoproject::PackageId;
 use camino::Utf8PathBuf;
 use cargo_dist_schema::{AssetInfo, DistManifest, TripleNameRef};
+use dist_project::PackageId;
 use tracing::info;
 
 use crate::{

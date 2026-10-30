@@ -56,13 +56,13 @@ use crate::platform::targets::{
 };
 use axoasset::AxoClient;
 use axoprocess::Cmd;
-use axoproject::{PackageId, PackageIdx, WorkspaceGraph};
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::target_lexicon::{OperatingSystem, Triple};
 use cargo_dist_schema::{
     ArtifactId, BuildEnvironment, DistManifest, HomebrewPackageName, SystemId, SystemInfo,
     TripleName, TripleNameRef,
 };
+use dist_project::{PackageId, PackageIdx, WorkspaceGraph};
 use semver::Version;
 use serde::Serialize;
 use tracing::{info, warn};
@@ -2755,11 +2755,13 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
         for workspace_idx in self.workspaces.all_workspace_indices() {
             let workspace_kind = self.workspaces.workspace(workspace_idx).kind;
             let builds = match workspace_kind {
-                axoproject::WorkspaceKind::Javascript => {
+                dist_project::WorkspaceKind::Javascript => {
                     self.compute_generic_builds(workspace_idx)?
                 }
-                axoproject::WorkspaceKind::Generic => self.compute_generic_builds(workspace_idx)?,
-                axoproject::WorkspaceKind::Rust => self.compute_cargo_builds(workspace_idx)?,
+                dist_project::WorkspaceKind::Generic => {
+                    self.compute_generic_builds(workspace_idx)?
+                }
+                dist_project::WorkspaceKind::Rust => self.compute_cargo_builds(workspace_idx)?,
             };
             local_build_steps.extend(builds);
         }
@@ -2895,7 +2897,8 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
             let package_kind = package_workspace.kind;
             if announcing.package.is_none() {
                 match package_kind {
-                    axoproject::WorkspaceKind::Generic | axoproject::WorkspaceKind::Javascript => {
+                    dist_project::WorkspaceKind::Generic
+                    | dist_project::WorkspaceKind::Javascript => {
                         if let Some(build_command) = &package.build_command {
                             if build_command.len() == 1
                                 && build_command.first().unwrap().contains(' ')
@@ -2915,7 +2918,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                                         .unwrap_or_else(|| package.manifest_path.clone()),
                                 });
                             }
-                        } else if package_kind == axoproject::WorkspaceKind::Javascript {
+                        } else if package_kind == dist_project::WorkspaceKind::Javascript {
                             return Err(DistError::NoDistScript {
                                 manifest: package.manifest_path.clone(),
                             });
@@ -2928,7 +2931,7 @@ impl<'pkg_graph> DistGraphBuilder<'pkg_graph> {
                             });
                         }
                     }
-                    axoproject::WorkspaceKind::Rust => {
+                    dist_project::WorkspaceKind::Rust => {
                         if package.build_command.is_some() {
                             return Err(DistError::UnexpectedBuildCommand {
                                 manifest: package

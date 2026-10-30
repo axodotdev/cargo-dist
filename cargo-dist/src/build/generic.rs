@@ -3,9 +3,9 @@
 use std::{env, process::ExitStatus};
 
 use axoprocess::Cmd;
-use axoproject::WorkspaceIdx;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{DistManifest, TripleName, TripleNameRef};
+use dist_project::WorkspaceIdx;
 
 use crate::{
     build::{package_id_string, BuildExpectations},

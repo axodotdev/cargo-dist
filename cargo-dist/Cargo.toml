@@ -35,7 +35,7 @@ axoupdater.workspace = true
 
 # Features used by the cli and library
 cargo-dist-schema.workspace = true
-axoproject.workspace = true
+dist_project.workspace = true
 
 axotag.workspace = true
 axoasset.workspace = true
