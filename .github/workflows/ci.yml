@@ -115,7 +115,7 @@ jobs:
     strategy:
       # Test the cross-product of these platforms+toolchains
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-15]
         rust: [stable]
     steps:
       # Setup tools

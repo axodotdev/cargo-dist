@@ -693,7 +693,7 @@ fn github_runner_for_target(
         }
         OperatingSystem::Darwin(_) => {
             if matches!(target_triple.architecture, Architecture::Aarch64(_)) {
-                runner_to_config(GithubRunnerRef::from_str("macos-14"))
+                runner_to_config(GithubRunnerRef::from_str("macos-15"))
             } else {
                 runner_to_config(GithubRunnerRef::from_str("macos-15-intel"))
             }
