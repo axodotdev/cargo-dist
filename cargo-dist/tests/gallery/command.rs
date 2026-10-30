@@ -24,9 +24,9 @@ impl CommandInfo {
     /// Create a new command, checking that it works by running it with `--version`
     ///
     /// The command in this case is assumed to be a JS program like `npm`. See
-    /// `axoproject::javascript::JS_PROGRAM_EXT` for why this is special.
+    /// `dist_project::javascript::JS_PROGRAM_EXT` for why this is special.
     pub fn new_js(name: &str, path: Option<&str>) -> Option<Self> {
-        let ext = axoproject::javascript::JS_PROGRAM_EXT;
+        let ext = dist_project::javascript::JS_PROGRAM_EXT;
         Self::new(name, path).or_else(|| Self::new(&format!("name{ext}"), path))
     }
 

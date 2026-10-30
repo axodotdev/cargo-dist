@@ -88,9 +88,9 @@
 
 use std::fmt::Display;
 
-use axoproject::PackageIdx;
 use axotag::{parse_tag, Package, PartialAnnouncementTag, ReleaseType};
 use cargo_dist_schema::{DistManifest, GithubHosting, TripleName, TripleNameRef};
+use dist_project::PackageIdx;
 use itertools::Itertools;
 use semver::Version;
 use tracing::info;
@@ -194,7 +194,7 @@ impl<'a> DistGraphBuilder<'a> {
     pub fn compute_announcement_changelog(&mut self, announcing: &AnnouncementTag) {
         let info = if let Some(announcing_version) = &announcing.version {
             // Try to find the version we're announcing in the top level CHANGELOG/RELEASES
-            let version = axoproject::Version::Cargo(announcing_version.clone());
+            let version = dist_project::Version::Cargo(announcing_version.clone());
             let Ok(Some(info)) = self
                 .workspaces
                 .root_workspace()
@@ -276,7 +276,7 @@ impl Display for DisabledReason {
 fn check_dist_package(
     graph: &DistGraphBuilder,
     pkg_id: PackageIdx,
-    pkg: &axoproject::PackageInfo,
+    pkg: &dist_project::PackageInfo,
     announcing: &PartialAnnouncementTag,
 ) -> Option<DisabledReason> {
     let config = graph.package_config(pkg_id).clone();
@@ -730,7 +730,7 @@ fn overwrite_package_versions(
 ) {
     for pkg_idx in packages {
         graph.workspaces.package_mut(pkg_idx).version =
-            Some(axoproject::Version::Cargo(version.clone()));
+            Some(dist_project::Version::Cargo(version.clone()));
     }
 }
 

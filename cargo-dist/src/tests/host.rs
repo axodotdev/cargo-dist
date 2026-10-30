@@ -4,8 +4,8 @@ use crate::config::{CiStyle, HostingStyle};
 use crate::host::select_hosting;
 use crate::DistError;
 use crate::{config::ArtifactMode, DistGraphBuilder};
-use axoproject::errors::AxoprojectError;
-use axoproject::{PackageIdx, WorkspaceGraph};
+use dist_project::errors::AxoprojectError;
+use dist_project::{PackageIdx, WorkspaceGraph};
 use semver::Version;
 
 fn mock_announce(workspaces: &mut WorkspaceGraph) -> (DistGraphBuilder<'_>, AnnouncementTag) {
