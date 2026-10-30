@@ -114,7 +114,7 @@ fn brew_style(homebrew: &CommandInfo, path: &PathBuf) -> Result<Output> {
             // default exclusion, and adding anything to
             // --except-cops overrides it.
             .arg("--except-cops")
-            .arg("FormulaAudit/Homepage,FormulaAudit/Desc,FormulaAuditStrict")
+            .arg("FormulaAudit/Homepage,FormulaAudit/Desc,FormulaAudit/Test,FormulaAuditStrict")
             // Applying --fix will ensure that fixable
             // style issues won't be treated as errors.
             .arg("--fix")

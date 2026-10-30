@@ -87,7 +87,7 @@ By default, dist uses the following runners:
 
 * Linux (x86_64): `ubuntu-22.04`
 * macOS (x86_64): `macos-15-intel`
-* macOS (Apple Silicon): `macos-14`
+* macOS (Apple Silicon): `macos-15`
 * Windows (x86_64): `windows-2022`
 
 It's possible to configure alternate runners for these jobs, or runners for targets not natively supported by GitHub actions. To do this, use the [`github-custom-runners`][config-github-custom-runners] configuration setting in your dist config. Here's an example which adds support for Linux (aarch64) using runners from [Buildjet](https://buildjet.com/for-github-actions):
@@ -100,13 +100,13 @@ aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
 aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
 ```
 
-In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to opt into building for Apple Silicon from a native runner by using the `macos-14` runner. Here's an example which uses `macos-14` for native Apple Silicon builds:
+In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to opt into building for Apple Silicon from a native runner by using the `macos-15` runner. Here's an example which uses `macos-15` for native Apple Silicon builds:
 
 ```toml
 # in `dist-workspace.toml`
 
 [dist.github-custom-runners]
-aarch64-apple-darwin = "macos-14"
+aarch64-apple-darwin = "macos-15"
 ```
 
 ## Cross-compilation
