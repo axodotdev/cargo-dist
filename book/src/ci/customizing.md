@@ -100,13 +100,13 @@ aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
 aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
 ```
 
-In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to build on a newer macOS runner. Here's an example which uses `macos-26` for Apple Silicon builds:
+In addition to adding support for new targets, some users may find it useful to use this feature to fine-tune their builds for supported targets. For example, some projects may wish to build on a newer Ubuntu runner or alternate Linux distros, or may wish to opt into building for Apple Silicon from a native runner by using the `macos-15` runner. Here's an example which uses `macos-15` for native Apple Silicon builds:
 
 ```toml
 # in `dist-workspace.toml`
 
 [dist.github-custom-runners]
-aarch64-apple-darwin = "macos-26"
+aarch64-apple-darwin = "macos-15"
 ```
 
 ## Cross-compilation
