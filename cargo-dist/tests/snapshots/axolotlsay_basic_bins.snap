@@ -3158,6 +3158,15 @@ class Package {
           error(result.error);
         }
 
+        // spawnSync sets status=null when the child is killed by a signal;
+        // process.exit(null) becomes 0 and falsely reports success.
+        if (result.status === null) {
+          const signals = require("os").constants.signals;
+          const signalCode =
+            result.signal && signals ? signals[result.signal] : undefined;
+          process.exit(typeof signalCode === "number" ? 128 + signalCode : 1);
+        }
+
         process.exit(result.status);
       })
       .catch((e) => {
