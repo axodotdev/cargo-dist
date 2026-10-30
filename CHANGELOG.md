@@ -1,6 +1,8 @@
 # Unreleased
 
-Nothing Yet!
+## GitHub Windows ARM64 support
+
+dist now supports native `aarch64-pc-windows-msvc` by default for [`github` backends](https://github.com/actions/runner-images/blob/main/images/windows/Windows11-Arm64-Readme.md).
 
 
 # Version 0.33.1 (2026-10-21)
@@ -138,7 +140,7 @@ Thanks to @zachstence for handling the rimraf/glob upgrade!
 # Version 0.30.1 (2025-10-29)
 
 * Bump default x64 macos runners to macos-15-intel (macos-13 is deprecated)
-* In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level. 
+* In order to avoid overly broad permissions, GitHub attestations permissions scope is moved to the job level.
 * Don't run host job if plan fails
 
 # Version 0.30.0 (2025-09-07)
@@ -151,7 +153,7 @@ Previous versions of dist produced uncompressed ZIP archives which meant that th
 
 - impl @trim21 [feat: enable compression on zip](https://github.com/axodotdev/axoasset/pull/312)
 
-In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions. 
+In previous versions, ZIP archives were only suitable for Windows binaries because they didn't preserve executable permissions. ZIP archives now correctly preserve extended Unix permissions.
 
 - impl @mistydemeo [fix: preserve Unix permissions in ZIPs](https://github.com/axodotdev/axoasset/pull/311)
 

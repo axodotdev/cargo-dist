@@ -682,32 +682,33 @@ fn github_runner_for_target(
     // We want to default to older runners to minimize the places
     // where random system dependencies can creep in and be very
     // recent. This helps with portability!
-    let result = Some(match target_triple.operating_system {
-        OperatingSystem::Linux => {
+    let result = Some(
+        match (target_triple.operating_system, target_triple.architecture) {
             // Use ARM-specific runner for aarch64 Linux targets
-            if matches!(target_triple.architecture, Architecture::Aarch64(_)) {
+            (OperatingSystem::Linux, Architecture::Aarch64(_)) => {
                 runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04-arm"))
-            } else {
+            }
+            (OperatingSystem::Linux, _) => {
                 runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04"))
             }
-        }
-        OperatingSystem::Darwin(_) => {
-            if matches!(target_triple.architecture, Architecture::Aarch64(_)) {
+
+            (OperatingSystem::Darwin(_), Architecture::Aarch64(_)) => {
                 runner_to_config(GithubRunnerRef::from_str("macos-14"))
-            } else {
+            }
+            (OperatingSystem::Darwin(_), _) => {
                 runner_to_config(GithubRunnerRef::from_str("macos-15-intel"))
             }
-        }
-        OperatingSystem::Windows => {
-            // Default to cargo-xwin for Windows cross-compiles
-            if target_triple.architecture != Architecture::X86_64 {
-                cargo_xwin()
-            } else {
+
+            (OperatingSystem::Windows, Architecture::Aarch64(_)) => {
+                runner_to_config(GithubRunnerRef::from_str("windows-11-arm"))
+            }
+            (OperatingSystem::Windows, Architecture::X86_64) => {
                 runner_to_config(GithubRunnerRef::from_str("windows-2022"))
             }
-        }
-        _ => return Ok(None),
-    });
+            (OperatingSystem::Windows, _) => cargo_xwin(),
+            _ => return Ok(None),
+        },
+    );
 
     Ok(result)
 }
