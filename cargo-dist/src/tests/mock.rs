@@ -4,10 +4,10 @@
 use crate::{
     announce::ReleaseArtifacts, platform::targets::TARGET_X64_LINUX_GNU, CargoInfo, Tools,
 };
-use axoproject::{
+use camino::Utf8PathBuf;
+use dist_project::{
     AutoIncludes, PackageIdx, PackageInfo, WorkspaceGraph, WorkspaceInfo, WorkspaceStructure,
 };
-use camino::Utf8PathBuf;
 use serde_json::json;
 
 pub const REPO_URL: &str = "https://github.com/axodotdev/axolotlsay";
@@ -92,7 +92,7 @@ pub fn mock_tools() -> Tools {
 }
 
 pub fn mock_package(name: &str, ver: &str) -> PackageInfo {
-    let version = Some(axoproject::Version::Cargo(ver.parse().unwrap()));
+    let version = Some(dist_project::Version::Cargo(ver.parse().unwrap()));
     let package_root = package_dir(name);
     let manifest_path = package_manifest(name);
     PackageInfo {
@@ -138,7 +138,7 @@ pub fn mock_workspace(packages: Vec<PackageInfo>) -> WorkspaceGraph {
         workspace: WorkspaceInfo {
             // This is currently load-bearing as generic workspaces induce
             // us to read the manifest from disk, whereas rust uses cargo_metadata_table
-            kind: axoproject::WorkspaceKind::Rust,
+            kind: dist_project::WorkspaceKind::Rust,
             target_dir,
             workspace_dir,
             manifest_path,

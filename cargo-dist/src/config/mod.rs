@@ -3,12 +3,12 @@
 use std::collections::BTreeMap;
 
 use axoasset::{toml_edit, SourceFile};
-use axoproject::local_repo::LocalRepo;
 use camino::{Utf8Path, Utf8PathBuf};
 use cargo_dist_schema::{
     AptPackageName, ChecksumExtensionRef, ChocolateyPackageName, GithubAttestationsFilters,
     GithubAttestationsPhase, HomebrewPackageName, PackageVersion, TripleName, TripleNameRef,
 };
+use dist_project::local_repo::LocalRepo;
 use serde::{Deserialize, Serialize};
 
 use crate::announce::TagSettings;
@@ -994,11 +994,11 @@ pub(crate) fn parse_metadata_table(
 }
 
 /// Find the dist workspaces relative to the current directory
-pub fn get_project() -> Result<axoproject::WorkspaceGraph, axoproject::errors::ProjectError> {
+pub fn get_project() -> Result<dist_project::WorkspaceGraph, dist_project::errors::ProjectError> {
     let start_dir = std::env::current_dir().expect("couldn't get current working dir!?");
     let start_dir = Utf8PathBuf::from_path_buf(start_dir).expect("project path isn't utf8!?");
     let repo = LocalRepo::new("git", &start_dir).ok();
-    let workspaces = axoproject::WorkspaceGraph::find_from_git(&start_dir, repo)?;
+    let workspaces = dist_project::WorkspaceGraph::find_from_git(&start_dir, repo)?;
     Ok(workspaces)
 }
 

@@ -12,8 +12,8 @@ use crate::{
     manifest::save_manifest,
     DistError, DistGraphBuilder, HostingInfo,
 };
-use axoproject::WorkspaceGraph;
 use cargo_dist_schema::DistManifest;
+use dist_project::WorkspaceGraph;
 
 /// Do hosting
 pub fn do_host(cfg: &Config, host_args: HostArgs) -> DistResult<DistManifest> {
