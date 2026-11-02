@@ -212,6 +212,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "axoproject"
+version = "0.33.1"
+dependencies = [
+ "axoasset",
+ "axoprocess",
+ "camino",
+ "guppy",
+ "itertools 0.15.0",
+ "miette 7.6.0",
+ "node-semver",
+ "oro-common",
+ "oro-package-spec",
+ "parse-changelog",
+ "pathdiff",
+ "semver",
+ "serde",
+ "thiserror 2.0.21",
+ "tracing",
+ "url",
+]
+
+[[package]]
 name = "axotag"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -379,6 +401,7 @@ dependencies = [
  "axoasset",
  "axocli",
  "axoprocess",
+ "axoproject",
  "axotag",
  "axoupdater",
  "backtrace",
@@ -395,7 +418,6 @@ dependencies = [
  "console 0.16.6",
  "current_platform",
  "dialoguer",
- "dist_project",
  "flate2",
  "goblin",
  "include_dir",
@@ -916,28 +938,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
-]
-
-[[package]]
-name = "dist_project"
-version = "0.33.1"
-dependencies = [
- "axoasset",
- "axoprocess",
- "camino",
- "guppy",
- "itertools 0.15.0",
- "miette 7.6.0",
- "node-semver",
- "oro-common",
- "oro-package-spec",
- "parse-changelog",
- "pathdiff",
- "semver",
- "serde",
- "thiserror 2.0.21",
- "tracing",
- "url",
 ]
 
 [[package]]

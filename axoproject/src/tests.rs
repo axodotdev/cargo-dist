@@ -24,8 +24,8 @@ fn test_self_detect() {
     assert_eq!(project.kind, WorkspaceKind::Rust);
     assert_eq!(packages.len(), 3);
 
-    let package = get_package(&packages, "dist_project");
-    assert_eq!(package.name, "dist_project");
+    let package = get_package(&packages, "axoproject");
+    assert_eq!(package.name, "axoproject");
     assert_eq!(package.binaries.len(), 0);
 }
 
