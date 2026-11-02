@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://axodotdev.github.io/cargo-dist" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+    
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.29.0-prerelease.1</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release pre-release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.29.0-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Jul 25 2025 at 16:50 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This is a big release! 0.29.0 includes all of the new features from Astral's fork of dist along with some new bugfixes. It also removes support for Axo Releases.</p>
+<h2>Pinning GitHub Actions to commits</h2>
+<p>By default, dist uses Actions via floating versioned tags such as <code>actions/checkout@v4</code>. Users with specific security requirements may instead want to pin these to specific commits so that they know exactly which version will be run. This release provides configuration to allow users to specify which commit to use for a given action. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#pinned-actions-commits" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1944" rel="noopener noreferrer">feat: add github-action-commits config</a></li>
+</ul>
+<h2>Recursive source tarballs, including the contents of submodules</h2>
+<p>While we've had support for source tarballs since <a href="https://github.com/axodotdev/cargo-dist/releases/tag/v0.5.0" rel="noopener noreferrer">0.5.0</a>, those tarballs have been limited to the contents of the base repository and didn't contain the contents of submodules. (This is a limitation of the <code>git archive</code> tool that we use to generate them.) This release adds support for recursive tarballs that include the contents of submodules as well. This feature is opt-in and can be enabled with the <code>recursive-tarballs = true</code> setting. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#recursive-tarball" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1966" rel="noopener noreferrer">feat: add recursive-tarballs</a></li>
+</ul>
+<h2>Support cross-compiling from Windows to Windows</h2>
+<p>In previous versions, dist would refuse to cross-compile from one Windows architecture to another. This release fixes that and allows the build to be attempted. We still default to cross-compiling via <code>cargo-xwin</code>; users who would like to try this will need to configure their builds to use a Windows runner. For example:</p>
+<pre style="background-color:#263238;"><span style="color:#89ddff;">[dist.github-custom-runners.aarch64-pc-windows-msvc]
+</span><span style="color:#f07178;">runner </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">windows-2025</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>impl @baszalmstra <a href="https://github.com/axodotdev/cargo-dist/pull/1962" rel="noopener noreferrer">fix: allow cross compiling from windows to windows</a></li>
+</ul>
+<h2>Installer improvements</h2>
+<p>We've improved compatibility for the shell installer by bringing in newer changes from the Rustup installer it was originally based on. We've also improved compatibility with Linux distributions that don't use the <code>$HOME</code> environment variable.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1958" rel="noopener noreferrer">feat: improve installer.sh with changes from rustup</a></li>
+<li>impl @konstin <a href="https://github.com/axodotdev/cargo-dist/pull/1968" rel="noopener noreferrer">feat: support Linux distros that don't set HOME</a></li>
+</ul>
+<h2>BYO GitHub bearer token for installers</h2>
+<p>In addition to the above, we now allow users to bring their own GitHub token to be used when fetching tarballs from GitHub. This is useful for users who are often rate-limited when downloading artifacts or who need to fetch artifacts from private repositories. Like our other environment variables, this is branded with your application's name in the format <code>{APP_NAME}_GITHUB_TOKEN</code>. This environment variable is supported in both the shell and PowerShell installers. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/installers/usage.html?highlight=bearer#github-bearer-token" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1956" rel="noopener noreferrer">feat: add <code>{APP_NAME}_GITHUB_TOKEN</code> install env-var</a></li>
+</ul>
+<h2>Reduce unnecessary credentials persistence in Actions config</h2>
+<p>This release includes some tweaks to generated Actions config in order to reduce the risk of accidentally persisting credentials longer in the run than necessary. This is always enabled and doesn't require configuration to opt into.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1948" rel="noopener noreferrer">feat: add persist-credentials: false to checkouts</a></li>
+</ul>
+<h2>Allow overriding binaries per-platform</h2>
+<p>It's now possible to override the set of binaries to install on a per-platform basis. For example, a project with three binaries may choose to only install two of them on Windows, or may choose to provide an extra binary on other platforms. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#binaries" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1946" rel="noopener noreferrer">feat: allow overriding per-platform binaries</a></li>
+</ul>
+<h2>New setting for overriding packages to dist</h2>
+<p>A new top-level option, <code>packages</code>, allows specifying a list of exactly which packages should be disted. This overrides any individual <code>dist = true</code> or <code>dist = false</code> set in individual packages, and can be easier to reason about. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html?highlight=packages#packages" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1960" rel="noopener noreferrer">feat: add packages override for externally setting dist=true/false</a></li>
+</ul>
+<h2>Overriding package versions</h2>
+<p>The new top-level <code>version</code> option overrides the individually-configuredversions for every package and instead causes dist to assume every package has the specified version. For more information, see <a href="" rel="noopener noreferrer">the docs</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1964" rel="noopener noreferrer">feat: add workspace.version override</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @mistydemeo
+<ul>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1949" rel="noopener noreferrer">fix: mark homebrew with persist-credentials</a></li>
+<li><a href="https://github.com/axodotdev/cargo-dist/pull/1971" rel="noopener noreferrer">fix: don't write unified checksum with no checksums</a></li>
+</ul>
+</li>
+<li>impl @cibyr <a href="https://github.com/axodotdev/cargo-dist/pull/1978" rel="noopener noreferrer">fix(axoproject): allow building without generic-projects</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+    
+
+    
+  </body>
+</html>
