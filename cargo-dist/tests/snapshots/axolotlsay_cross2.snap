@@ -2481,22 +2481,16 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "artifacts_matrix": {
         "include": [
           {
-            "runner": "ubuntu-22.04",
-            "host": "x86_64-unknown-linux-gnu",
-            "container": {
-              "image": "messense/cargo-xwin",
-              "host": "x86_64-unknown-linux-musl",
-              "package_manager": "apt"
-            },
+            "runner": "windows-11-arm",
+            "host": "aarch64-pc-windows-msvc",
             "install_dist": {
-              "shell": "sh",
-              "run": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.sh | sh"
+              "shell": "pwsh",
+              "run": "irm https://github.com/axodotdev/cargo-dist/releases/download/vSOME_VERSION/cargo-dist-installer.ps1 | iex"
             },
             "dist_args": "--artifacts=local --target=aarch64-pc-windows-msvc",
             "targets": [
               "aarch64-pc-windows-msvc"
             ],
-            "packages_install": "if ! command -v cargo-xwin > /dev/null 2>&1; then\n  if ! command -v pip3 > /dev/null 2>&1; then\n    dnf install --assumeyes python3-pip\n    pip3 install --upgrade pip\n  fi\n  pip3 install cargo-xwin\nfi",
             "cache_provider": "github"
           },
           {
