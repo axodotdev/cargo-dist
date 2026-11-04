@@ -691,9 +691,8 @@ fn github_runner_for_target(
             (OperatingSystem::Linux, _) => {
                 runner_to_config(GithubRunnerRef::from_str("ubuntu-22.04"))
             }
-
             (OperatingSystem::Darwin(_), Architecture::Aarch64(_)) => {
-                runner_to_config(GithubRunnerRef::from_str("macos-14"))
+                runner_to_config(GithubRunnerRef::from_str("macos-15"))
             }
             (OperatingSystem::Darwin(_), _) => {
                 runner_to_config(GithubRunnerRef::from_str("macos-15-intel"))

@@ -5,6 +5,19 @@
 dist now supports native `aarch64-pc-windows-msvc` by default for [`github` backends](https://github.com/actions/runner-images/blob/main/images/windows/Windows11-Arm64-Readme.md).
 
 
+# Version 0.34.0 (2026-11-01)
+
+This release upgrades the aarch64-apple-darwin runner to macos-14.
+
+- impl @20jasper [feat: default Apple Silicon builds to macos-15](https://github.com/axodotdev/cargo-dist/pull/2555)
+
+
+
+# Version 0.33.1 (2026-10-21)
+
+This release updates several dependencies.
+
+
 # Version 0.33.0 (2026-09-10)
 
 This release includes several new features and a change to the shell installers in certain environments.

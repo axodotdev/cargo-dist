@@ -521,7 +521,7 @@ stdout:
       "artifacts_matrix": {
         "include": [
           {
-            "runner": "macos-14",
+            "runner": "macos-15",
             "host": "aarch64-apple-darwin",
             "install_dist": {
               "shell": "sh",
