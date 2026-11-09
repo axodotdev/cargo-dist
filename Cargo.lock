@@ -423,7 +423,6 @@ dependencies = [
  "include_dir",
  "insta",
  "itertools 0.15.0",
- "lazy_static",
  "mach_object",
  "miette 7.6.0",
  "minijinja",
