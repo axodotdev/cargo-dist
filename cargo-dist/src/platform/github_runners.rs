@@ -4,52 +4,121 @@ use std::collections::HashMap;
 
 use crate::platform::targets as t;
 use cargo_dist_schema::{target_lexicon::Triple, GithubRunnerRef, TripleNameRef};
+use std::sync::LazyLock;
 use tracing::warn;
 
-lazy_static::lazy_static! {
-    static ref KNOWN_GITHUB_RUNNERS: HashMap<&'static GithubRunnerRef, &'static TripleNameRef> = {
+static KNOWN_GITHUB_RUNNERS: LazyLock<HashMap<&'static GithubRunnerRef, &'static TripleNameRef>> =
+    LazyLock::new(|| {
         let mut m = HashMap::new();
         // cf. https://github.com/actions/runner-images/blob/main/README.md
         // last updated 2026-10-30
 
         //-------- linux
-        m.insert(GithubRunnerRef::from_str("ubuntu-22.04"), t::TARGET_X64_LINUX_GNU);
-        m.insert(GithubRunnerRef::from_str("ubuntu-22.04-arm"), t::TARGET_ARM64_LINUX_GNU);
-        m.insert(GithubRunnerRef::from_str("ubuntu-24.04"), t::TARGET_X64_LINUX_GNU);
-        m.insert(GithubRunnerRef::from_str("ubuntu-24.04-arm"), t::TARGET_ARM64_LINUX_GNU);
-        m.insert(GithubRunnerRef::from_str("ubuntu-26.04"), t::TARGET_X64_LINUX_GNU);
-        m.insert(GithubRunnerRef::from_str("ubuntu-26.04-arm"), t::TARGET_ARM64_LINUX_GNU);
-        m.insert(GithubRunnerRef::from_str("ubuntu-latest"), t::TARGET_X64_LINUX_GNU);
-        m.insert(GithubRunnerRef::from_str("ubuntu-slim"), t::TARGET_X64_LINUX_GNU);
+        m.insert(
+            GithubRunnerRef::from_str("ubuntu-22.04"),
+            t::TARGET_X64_LINUX_GNU,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("ubuntu-22.04-arm"),
+            t::TARGET_ARM64_LINUX_GNU,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("ubuntu-24.04"),
+            t::TARGET_X64_LINUX_GNU,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("ubuntu-24.04-arm"),
+            t::TARGET_ARM64_LINUX_GNU,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("ubuntu-26.04"),
+            t::TARGET_X64_LINUX_GNU,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("ubuntu-26.04-arm"),
+            t::TARGET_ARM64_LINUX_GNU,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("ubuntu-latest"),
+            t::TARGET_X64_LINUX_GNU,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("ubuntu-slim"),
+            t::TARGET_X64_LINUX_GNU,
+        );
 
         //-------- windows x64
-        m.insert(GithubRunnerRef::from_str("windows-2022"), t::TARGET_X64_WINDOWS);
-        m.insert(GithubRunnerRef::from_str("windows-2025"), t::TARGET_X64_WINDOWS);
-        m.insert(GithubRunnerRef::from_str("windows-2025-vs2026"), t::TARGET_X64_WINDOWS);
-        m.insert(GithubRunnerRef::from_str("windows-latest"), t::TARGET_X64_WINDOWS);
+        m.insert(
+            GithubRunnerRef::from_str("windows-2022"),
+            t::TARGET_X64_WINDOWS,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("windows-2025"),
+            t::TARGET_X64_WINDOWS,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("windows-2025-vs2026"),
+            t::TARGET_X64_WINDOWS,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("windows-latest"),
+            t::TARGET_X64_WINDOWS,
+        );
 
         //-------- windows arm64
-        m.insert(GithubRunnerRef::from_str("windows-11-arm"), t::TARGET_ARM64_WINDOWS);
-        m.insert(GithubRunnerRef::from_str("windows-11-vs2026-arm"), t::TARGET_ARM64_WINDOWS);
+        m.insert(
+            GithubRunnerRef::from_str("windows-11-arm"),
+            t::TARGET_ARM64_WINDOWS,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("windows-11-vs2026-arm"),
+            t::TARGET_ARM64_WINDOWS,
+        );
 
         //-------- macos x64
-        m.insert(GithubRunnerRef::from_str("macos-15-large"), t::TARGET_X64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-15-intel"), t::TARGET_X64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-26-intel"), t::TARGET_X64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-26-large"), t::TARGET_X64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-latest-large"), t::TARGET_X64_MAC);
+        m.insert(
+            GithubRunnerRef::from_str("macos-15-large"),
+            t::TARGET_X64_MAC,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("macos-15-intel"),
+            t::TARGET_X64_MAC,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("macos-26-intel"),
+            t::TARGET_X64_MAC,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("macos-26-large"),
+            t::TARGET_X64_MAC,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("macos-latest-large"),
+            t::TARGET_X64_MAC,
+        );
 
         //-------- macos arm64
         m.insert(GithubRunnerRef::from_str("macos-15"), t::TARGET_ARM64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-15-xlarge"), t::TARGET_ARM64_MAC);
+        m.insert(
+            GithubRunnerRef::from_str("macos-15-xlarge"),
+            t::TARGET_ARM64_MAC,
+        );
         m.insert(GithubRunnerRef::from_str("macos-26"), t::TARGET_ARM64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-26-xlarge"), t::TARGET_ARM64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-latest"), t::TARGET_ARM64_MAC);
-        m.insert(GithubRunnerRef::from_str("macos-latest-xlarge"), t::TARGET_ARM64_MAC);
+        m.insert(
+            GithubRunnerRef::from_str("macos-26-xlarge"),
+            t::TARGET_ARM64_MAC,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("macos-latest"),
+            t::TARGET_ARM64_MAC,
+        );
+        m.insert(
+            GithubRunnerRef::from_str("macos-latest-xlarge"),
+            t::TARGET_ARM64_MAC,
+        );
 
         m
-    };
-}
+    });
 
 /// Get the target triple for a given GitHub Actions runner (if we know about it)
 pub fn target_for_github_runner(runner: &GithubRunnerRef) -> Option<&'static TripleNameRef> {
