@@ -115,7 +115,7 @@ aarch64-apple-darwin = "macos-15"
 
 > since 0.26.0
 
-dist will transparently use either of:
+dist can build for certain targets from non-native hosts. When necessary, dist will transparently use one of:
 
   * [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild)
   * [cargo-xwin](https://github.com/rust-cross/cargo-xwin)
@@ -125,8 +125,7 @@ To try and build for the target you specified, from the host you specified.
 dist hardcodes knowledge of which cargo wrappers are better suited for which cross: `cargo-zigbuild`
 handles `x86_64-unknown-linux-gnu` to `aarch64-unknown-linux-gnu` handsomely, for example.
 
-So if you ask for `aarch64-unknown-linux-gnu` artifacts, because at the time of this writing
-there are no free `aarch64` GitHub runners, dist will assume you meant this:
+For example, if you want to build for `aarch64-unknown-linux-gnu` from an `x86_64` host, you can specify:
 
 ```toml
 [dist.github-custom-runners]
@@ -155,14 +154,8 @@ the target, which is why this works:
 aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
 ```
 
-Building `aarch64-pc-windows-msvc` binaries from a `x86_64-pc-windows-msvc` runner (like
-`windows-2022`) is surprisingly hard. But building both binaries from an `x86_64-unknown-linux-gnu`
-runner is surprisingly easy via `cargo-xwin`
-
-> Note: dist now supports `aarch64-pc-windows-msvc` by default for GitHub backends. The
-> `cargo-xwin` recipes below remain useful for other configurations.
-
-This will work, eventually:
+Likewise, dist can build Windows binaries from an `x86_64-unknown-linux-gnu`
+runner via `cargo-xwin`:
 
 ```toml
 # in `dist-workspace.toml`
@@ -177,9 +170,8 @@ runner = "ubuntu-22.04"
 runner = "ubuntu-22.04"
 ```
 
-...because dist can install `cargo-xwin` via `pip`. However, it will take
-forever. It's probably best to use a docker image that already has
-`cargo-xwin` installed, and other dependencies you probably want:
+It's even faster if you use a docker image that already has
+`cargo-xwin` installed, and other dependencies you probably want, like `messense/cargo-xwin`:
 
 ```toml
 # in `dist-workspace.toml`
