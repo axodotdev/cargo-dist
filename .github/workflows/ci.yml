@@ -142,6 +142,12 @@ jobs:
       # with the difference essentially being polyfilling a new stdio API for MSRV.
       # For now avoid --all-features which causes issues with axoproject.
 
+      - name: Install `zizmor` ${{ env.ZIZMOR_VERSION }}
+        shell: bash
+        run: cargo +stable install --locked --version ${ZIZMOR_VERSION} zizmor
+        env:
+          ZIZMOR_VERSION: 1.32.0
+
       # Run the tests/doctests (default features)
       # - run: cargo test --workspace
       #  env:
