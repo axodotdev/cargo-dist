@@ -257,11 +257,46 @@ function WebProxyFromUrl {
     }
 }
 
+function NoProxyBypassList {
+    param([string]$NoProxy)
+
+    # IsBypassed matches these patterns against "scheme://host[:port]"
+    $patterns = @()
+    foreach ($entry in $NoProxy.Split(",")) {
+        $entryHost = $entry.Trim().TrimStart("*").TrimStart(".")
+        $entryHost = ($entryHost -split ":")[0]
+        if ([string]::IsNullOrEmpty($entryHost)) {
+            continue
+        }
+        $escaped = [System.Text.RegularExpressions.Regex]::Escape($entryHost)
+        $patterns += "(^|://|\.)$escaped(:\d+)?$"
+    }
+    return $patterns
+}
+
 function WebProxyFromEnvironment {
     $httpsProxy = [System.Environment]::GetEnvironmentVariable("HTTPS_PROXY")
     $allProxy = [System.Environment]::GetEnvironmentVariable("ALL_PROXY")
     $proxyUrl = if (-not [string]::IsNullOrWhiteSpace($httpsProxy)) { $httpsProxy } else { $allProxy }
     $webProxy = WebProxyFromUrl -ProxyUrl $proxyUrl
+    if ($null -eq $webProxy) {
+        return $null
+    }
+
+    $noProxy = [System.Environment]::GetEnvironmentVariable("NO_PROXY")
+    if ([string]::IsNullOrWhiteSpace($noProxy)) {
+        $noProxy = [System.Environment]::GetEnvironmentVariable("no_proxy")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($noProxy)) {
+        if ($noProxy.Split(",") | Where-Object { $_.Trim() -eq "*" }) {
+            # A bare "*" bypasses every host, so no proxy is used.
+            return $null
+        }
+        $bypassList = @(NoProxyBypassList -NoProxy $noProxy)
+        if ($bypassList.Count -gt 0) {
+            $webProxy.BypassList = [string[]]$bypassList
+        }
+    }
     return $webProxy
 }
 
