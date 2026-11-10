@@ -7,6 +7,7 @@
 //! * Run `cargo-dist dist build -aglobal` on it (building installers)
 //!     * set `OVERRIDE_CARGO_BIN_EXE_cargo-dist=path/to/some/cargo-dist` to not use the current checkout
 //! * Run shellcheck on installer.sh (only if detected on the system)
+//! * Run zizmor on release.yml (only if detected on the system)
 //! * Run PSScriptAnalyzer on installer.ps1 (only if detected on the system)
 //! * Run installer.sh and check the results
 //!    * linux/macos only, must also set RUIN_MY_COMPUTER_WITH_INSTALLERS to opt in
@@ -64,7 +65,7 @@ identifier = "dev.axo.axolotsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -98,7 +99,7 @@ simple-download-url = "https://github.com/axodotdev//axolotlsay/releases/downloa
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -133,7 +134,7 @@ hosting = ["simple"]
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -168,7 +169,7 @@ hosting = ["simple", "github"]
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -203,7 +204,7 @@ hosting = ["github", "simple"]
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -244,7 +245,7 @@ cache-builds = true
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -281,7 +282,7 @@ min-glibc-version."*" = "2.18"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -315,7 +316,7 @@ min-glibc-version."*" = "2.18"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -354,7 +355,7 @@ install-location = "/opt/axolotlsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_lies(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -398,7 +399,7 @@ identifier = "dev.axo.axolotsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks (the axolotlsayw binary is fake!)
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all_no_ruin(&ctx, ".cargo/bin/")?;
@@ -439,7 +440,7 @@ path-guid = "BFD25009-65A4-4D1E-97F1-0030465D90D6"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -466,7 +467,7 @@ dispatch-releases = true
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -493,7 +494,7 @@ tag-namespace = "owo"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate_prefixed(test_name, "owo-")?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -521,7 +522,7 @@ github-releases-repo = "custom-owner/cool-repo"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         // !!! this hosting doesn't exist, do not ruin my computer with installers!!!
@@ -553,7 +554,7 @@ release-branch = "production"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         // !!! this hosting doesn't exist, do not ruin my computer with installers!!!
@@ -588,7 +589,7 @@ cache-builds = true
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -621,7 +622,7 @@ create-release = false
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -659,7 +660,7 @@ install-location = "/opt/axolotlsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -697,7 +698,7 @@ install-location = "/opt/axolotlsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -737,7 +738,7 @@ install-location = "/opt/axolotlsay"
         ))?;
 
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        ci_result.check_all()?.snap();
+        ci_result.check_all(&ctx)?.snap();
         Ok(())
     })
 }
@@ -767,7 +768,7 @@ pr-run-mode = "upload"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -800,7 +801,7 @@ npm-scope ="@axodotdev"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -832,7 +833,7 @@ npm-scope ="@axodotdev"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -864,7 +865,7 @@ npm-scope ="@axodotdev"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -895,7 +896,7 @@ npm-scope ="@axodotdev"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -926,7 +927,7 @@ npm-scope ="@axodotdev"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -957,7 +958,7 @@ npm-scope ="@axodotdev"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -990,7 +991,7 @@ aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1031,7 +1032,7 @@ identifier = "dev.axo.axolotsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         // Ruin won't work because we don't have a release with actual updaters yet
@@ -1072,7 +1073,7 @@ identifier = "dev.axo.axolotsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1115,7 +1116,7 @@ install-location = "/opt/axolotlsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1157,7 +1158,7 @@ identifier = "dev.axo.axolotsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1199,7 +1200,7 @@ identifier = "dev.axo.axolotsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1229,7 +1230,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1264,7 +1265,7 @@ x86_64-pc-windows-msvc = ["akextract", "akmetadata"]
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all_no_ruin(&ctx, ".cargo/bin/")?;
@@ -1321,7 +1322,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "aarch64-app
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1353,7 +1354,7 @@ install-updater = true
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         // Ruin won't work because we don't have a release with actual updaters yet
@@ -1388,7 +1389,7 @@ akextract = ["akextract-link"]
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1424,7 +1425,7 @@ akmetadata = ["akmetadata-link"]
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1935,7 +1936,7 @@ install-location = "/opt/axolotlsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1964,7 +1965,7 @@ windows-archive = ".tar.gz"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -1993,7 +1994,7 @@ windows-archive = ".tar.gz"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2022,7 +2023,7 @@ windows-archive = ".tar.gz"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2051,7 +2052,7 @@ windows-archive = ".tar.gz"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2084,7 +2085,7 @@ fn axolotlsay_generic_workspace_basic() -> Result<(), miette::Report> {
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2128,7 +2129,7 @@ identifier = "dev.axo.axolotsay"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2159,7 +2160,7 @@ windows-archive = ".tar.gz"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2193,7 +2194,7 @@ aarch64-unknown-linux-gnu = "ubuntu-22.04"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2225,7 +2226,7 @@ container = {{ image = "quay.io/pypa/manylinux_2_28_x86_64", host = "aarch64-unk
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         // Since this is a cross-compile for a non-local target, we'll
@@ -2262,7 +2263,7 @@ github-attestations-phase = "host"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2297,7 +2298,7 @@ github-attestations-phase = "announce"
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
@@ -2332,7 +2333,7 @@ github-attestations-filters = ["*.json", "*.sh", "*.ps1", "*.zip", "*.tar.gz"]
 
         // Run generate to make sure stuff is up to date before running other commands
         let ci_result = ctx.cargo_dist_generate(test_name)?;
-        let ci_snap = ci_result.check_all()?;
+        let ci_snap = ci_result.check_all(&ctx)?;
         // Do usual build+plan checks
         let main_result = ctx.cargo_dist_build_and_plan(test_name)?;
         let main_snap = main_result.check_all(&ctx, ".cargo/bin/")?;
