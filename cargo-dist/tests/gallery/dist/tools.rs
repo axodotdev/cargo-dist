@@ -7,6 +7,7 @@ pub struct Tools {
     pub git: CommandInfo,
     pub cargo_dist: CommandInfo,
     pub shellcheck: Option<CommandInfo>,
+    pub zizmor: Option<CommandInfo>,
     pub psanalyzer: Option<CommandInfo>,
     pub homebrew: Option<CommandInfo>,
     pub npm: Option<CommandInfo>,
@@ -28,6 +29,7 @@ impl Tools {
             CommandInfo::new("cargo-dist", Some(&cargo_dist_path)).expect("dist isn't built!?");
         cargo_dist.version().expect("couldn't parse dist version!?");
         let shellcheck = CommandInfo::new("shellcheck", None);
+        let zizmor = CommandInfo::new("zizmor", None);
         let psanalyzer = CommandInfo::new_powershell_command("Invoke-ScriptAnalyzer");
         let homebrew = CommandInfo::new("brew", None);
         let tar = CommandInfo::new("tar", None);
@@ -39,6 +41,7 @@ impl Tools {
             git,
             cargo_dist,
             shellcheck,
+            zizmor,
             psanalyzer,
             homebrew,
             npm,

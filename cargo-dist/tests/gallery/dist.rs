@@ -543,7 +543,36 @@ impl BuildAndPlanResult {
 }
 
 impl GenerateResult {
-    pub fn check_all(&self) -> Result<Snapshots> {
+    /// Run zizmor on the workflows
+    pub fn zizmor(&self, persona: &str, ctx: &TestContext<Tools>) -> Result<()> {
+        // Only do this if the workflow is available
+        let Some(workflow) = &self.github_ci_path else {
+            return Ok(());
+        };
+        // Only do this if the tool is available
+        let Some(zizmor) = &ctx.tools.zizmor else {
+            return Ok(());
+        };
+        eprintln!("scanning {workflow} with zizmor");
+        let output = zizmor.output(|cmd| {
+            cmd.args(["--persona", persona, "--no-config"])
+                .arg(workflow)
+        })?;
+
+        if !output.status.success() {
+            eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+            return Err(miette!("zizmor found issues"));
+        }
+        Ok(())
+    }
+
+    pub fn linttests(&self, ctx: &TestContext<Tools>) -> Result<()> {
+        self.zizmor("pedantic", ctx)?;
+        Ok(())
+    }
+
+    pub fn check_all(&self, ctx: &TestContext<Tools>) -> Result<Snapshots> {
+        self.linttests(ctx)?;
         self.snapshot()
     }
 }
