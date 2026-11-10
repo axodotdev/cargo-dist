@@ -112,6 +112,7 @@ jobs:
     env:
       # runtest the installer scripts
       RUIN_MY_COMPUTER_WITH_INSTALLERS: all
+      ZIZMOR_VERSION: 1.32.0
     strategy:
       # Test the cross-product of these platforms+toolchains
       matrix:
@@ -142,11 +143,17 @@ jobs:
       # with the difference essentially being polyfilling a new stdio API for MSRV.
       # For now avoid --all-features which causes issues with axoproject.
 
+      - name: Check cache for `zizmor` ${{ env.ZIZMOR_VERSION }}
+        id: cache-zizmor
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo/bin/zizmor
+          key: zizmor-${{ matrix.os }}-bin-${{ env.ZIZMOR_VERSION }}
+
       - name: Install `zizmor` ${{ env.ZIZMOR_VERSION }}
+        if: ${{ steps.cache-zizmor.outputs.cache-hit != 'true' }}
         shell: bash
         run: cargo +stable install --locked --version ${ZIZMOR_VERSION} zizmor
-        env:
-          ZIZMOR_VERSION: 1.32.0
 
       # Run the tests/doctests (default features)
       # - run: cargo test --workspace
