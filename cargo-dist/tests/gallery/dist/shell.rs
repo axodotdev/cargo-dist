@@ -188,7 +188,7 @@ impl AppResult {
             return Ok(());
         };
         eprintln!("shellchecking {script}");
-        let output = shellcheck.output(|cmd| cmd.arg(script))?;
+        let output = shellcheck.output(|cmd| cmd.arg("--norc").arg(script))?;
 
         if !output.status.success() {
             eprintln!("{}", String::from_utf8_lossy(&output.stdout));
