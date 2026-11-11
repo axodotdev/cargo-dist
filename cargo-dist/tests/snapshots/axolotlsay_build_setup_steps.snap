@@ -4000,12 +4000,12 @@ jobs:
             echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           fi
       - name: "Some build step"
-        uses: "some-action-user/some-action"
+        uses: "some-action-user/some-action@v0"
         with:
           "input1": "input1"
           "input2": "input2"
       - name: "Some Other build step"
-        uses: "some-action-user/some-other-action"
+        uses: "some-action-user/some-other-action@v0"
         env:
           "ENV_VAR": "${{ github.head_ref }}"
       - name: "Some Run Step simple"
