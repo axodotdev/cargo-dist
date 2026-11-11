@@ -30,6 +30,22 @@ const ENV_RUIN_ME: &str = "RUIN_MY_COMPUTER_WITH_INSTALLERS";
 const ENV_RUNTIME_DIST_BIN: &str = "OVERRIDE_CARGO_BIN_EXE_dist";
 const STATIC_DIST_BIN: &str = env!("CARGO_BIN_EXE_dist");
 const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
+/// The configuration file used by `zizmor` in [`GenerateResult::zizmor`].
+///
+/// This can be used to disable lints as needed. The format is:
+///
+/// ```yaml
+/// rules:
+///  lint-to-disable-a:
+///    disable: true
+///  lint-to-disable-b:
+///    disable: true
+/// ```
+///
+/// For more details, see [the `zizmor` configuration documentation].
+///
+/// [the `zizmor` configuration documentation]: <https://docs.zizmor.sh/configuration/>
+const ZIZMOR_TESTING_CONFIG: &str = include_str!("zizmor_testing_config.yml");
 static TOOLS: Mutex<Option<Tools>> = Mutex::new(None);
 
 /// axolotlsay 0.1.0 is a nice simple project with shell+powershell+npm+homebrew+msi installers in its release
@@ -553,9 +569,12 @@ impl GenerateResult {
         let Some(zizmor) = &ctx.tools.zizmor else {
             return Ok(());
         };
+
+        ctx.workspace_write_file("zizmor.yml", ZIZMOR_TESTING_CONFIG)?;
+
         eprintln!("scanning {workflow} with zizmor");
         let output = zizmor.output(|cmd| {
-            cmd.args(["--persona", persona, "--no-config"])
+            cmd.args(["--persona", persona, "--config", "zizmor.yml"])
                 .arg(workflow)
         })?;
 
