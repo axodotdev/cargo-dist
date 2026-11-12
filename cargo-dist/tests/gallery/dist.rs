@@ -574,12 +574,19 @@ impl GenerateResult {
 
         eprintln!("scanning {workflow} with zizmor");
         let output = zizmor.output(|cmd| {
-            cmd.args(["--persona", persona, "--config", "zizmor.yml"])
-                .arg(workflow)
+            cmd.args([
+                "--persona",
+                persona,
+                "--config",
+                "zizmor.yml",
+                "--color=always",
+            ])
+            .arg(workflow)
         })?;
 
         if !output.status.success() {
             eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+            eprintln!("{}", String::from_utf8_lossy(&output.stderr));
             return Err(miette!("zizmor found issues"));
         }
         Ok(())
