@@ -6,7 +6,7 @@ rules:
   concurrency-limits:
     disable: true
   excessive-permissions:
-    disable: true
+    disable: false
   secrets-inherit:
     disable: true
   template-injection:
