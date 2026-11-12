@@ -12,7 +12,7 @@ rules:
   template-injection:
     disable: true
   undocumented-permissions:
-    disable: true
+    disable: false
   unpinned-images:
     disable: true
   unpinned-uses:
