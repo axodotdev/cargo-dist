@@ -29,16 +29,16 @@ pub type GithubPermissionMap = SortedMap<String, GithubPermission>;
 
 /// Possible values for a github ci permission
 ///
-/// These are assumed to be strictly increasing in power, so admin includes write includes read.
+/// These are assumed to be strictly increasing in power, eg write includes read.
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum GithubPermission {
+    /// No permissions
+    None,
     /// Read (min)
     Read,
     /// Write
     Write,
-    /// Admin (max)
-    Admin,
 }
 
 /// Global config for commands
