@@ -30,15 +30,52 @@ pub type GithubPermissionMap = SortedMap<String, GithubPermission>;
 /// Possible values for a github ci permission
 ///
 /// These are assumed to be strictly increasing in power, so admin includes write includes read.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq)]
+#[serde(rename_all = "kebab-case")]
+#[serde(untagged)]
+pub enum GithubPermission {
+    /// A permission with an associated comment.
+    WithComment(GithubPermissionWithComments),
+    /// A permission without an associated comment.
+    WithoutComment(GithubPermissionWithoutComment),
+}
+
+/// Possible values for a github ci permission
+///
+/// These are assumed to be strictly increasing in power, so admin includes write includes read.
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq)]
 #[serde(rename_all = "kebab-case")]
-pub enum GithubPermission {
+pub enum GithubPermissionWithoutComment {
     /// Read (min)
     Read,
     /// Write
     Write,
     /// Admin (max)
     Admin,
+}
+
+/// Possible values for a github ci permission, but with comments.
+///
+/// These are assumed to be strictly increasing in power, so admin includes write includes read.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq)]
+#[serde(rename_all = "kebab-case")]
+#[serde(tag = "level")]
+pub enum GithubPermissionWithComments {
+    /// Read (min)
+    Read {
+        /// A comment explaining why the read permission is needed.
+        comment: String,
+    },
+    /// Write
+    Write {
+        /// A comment explaining why the write permission is needed.
+        comment: String,
+    },
+    /// Admin (max)
+    Admin {
+        /// A comment explaining why the admin permission is needed.
+        comment: String,
+    },
 }
 
 /// Global config for commands
