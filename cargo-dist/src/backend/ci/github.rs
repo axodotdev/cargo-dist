@@ -18,6 +18,7 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
+use crate::config::GithubPermissionWithoutComment;
 use crate::{
     backend::{diff_files, templates::TEMPLATE_CI_GITHUB},
     build_wrapper_for_cross,
@@ -297,16 +298,28 @@ impl GithubCiInfo {
         for JobStyle::User(name) in &ci_config.publish_jobs {
             job_permissions.entry(name.clone()).or_insert_with(|| {
                 GithubPermissionMap::from_iter([
-                    ("id-token".to_owned(), GithubPermission::Write),
-                    ("packages".to_owned(), GithubPermission::Write),
+                    (
+                        "id-token".to_owned(),
+                        GithubPermission::WithoutComment(GithubPermissionWithoutComment::Write),
+                    ),
+                    (
+                        "packages".to_owned(),
+                        GithubPermission::WithoutComment(GithubPermissionWithoutComment::Write),
+                    ),
                 ])
             });
         }
 
         let mut root_permissions = GithubPermissionMap::new();
-        root_permissions.insert("contents".to_owned(), GithubPermission::Write);
+        root_permissions.insert(
+            "contents".to_owned(),
+            GithubPermission::WithoutComment(GithubPermissionWithoutComment::Write),
+        );
         if azure_windows_sign {
-            root_permissions.insert("id-token".to_owned(), GithubPermission::Write);
+            root_permissions.insert(
+                "id-token".to_owned(),
+                GithubPermission::WithoutComment(GithubPermissionWithoutComment::Write),
+            );
         }
 
         let mut publish_jobs = vec![];

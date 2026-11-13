@@ -26,7 +26,7 @@ name: Release
 {{%- if root_permissions %}}
 permissions:
   {{%- for perm_name in root_permissions %}}
-  {{{ perm_name }}}: {{{ root_permissions[perm_name] }}}
+  {{{ perm_name }}}: {{{root_permissions[perm_name].level|default(root_permissions[perm_name])}}}{{%- if root_permissions[perm_name].comment is defined %}} # {{{root_permissions[perm_name].comment | safe }}} {{%- endif %}}
   {{%- endfor %}}
 {{%- endif %}}
 
@@ -162,7 +162,7 @@ jobs:
     {{%- if job.permissions %}}
     permissions:
       {{%- for perm_name in job.permissions %}}
-      {{{ perm_name }}}: {{{ job.permissions[perm_name] }}}
+      {{{ perm_name }}}: {{{job.permissions[perm_name].level|default(job.permissions[perm_name])}}}{{%- if job.permissions[perm_name].comment is defined %}} # {{{job.permissions[perm_name].comment | safe }}} {{%- endif %}}
       {{%- endfor %}}
     {{%- endif %}}
 {{%- endfor %}}
@@ -707,7 +707,7 @@ jobs:
     {{%- if job.permissions %}}
     permissions:
       {{%- for perm_name in job.permissions %}}
-      {{{ perm_name }}}: {{{ job.permissions[perm_name] }}}
+      {{{ perm_name }}}: {{{job.permissions[perm_name].level|default(job.permissions[perm_name])}}}{{%- if job.permissions[perm_name].comment is defined %}} # {{{job.permissions[perm_name].comment | safe }}} {{%- endif %}}
       {{%- endfor %}}
     {{%- endif %}}
 {{%- endfor %}}
