@@ -85,7 +85,29 @@ We've got all the docs you need over at the [dist book](https://axodotdev.github
 
 # Contributing
 
-## Updating Snapshots
+## Running Tests
+
+The tests can be run using `cargo test`. This will run both the unit tests and integration tests. When running in CI, the integration tests will additionally perform builds and other tasks that change the build environment and are unsafe to do locally.
+
+### Test dependencies
+
+#### ShellCheck (optional)
+
+If installed, generated shell installer scripts will be checked via [ShellCheck](https://www.shellcheck.net).
+
+#### PSScriptAnalyzer (optional)
+
+If installed, generated PowerShell installer scripts will be checked via [PSScriptAnalyzer](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules).
+
+#### zizmor (optional)
+
+If installed, generated GitHub Actions YAML will be checked via [zizmor](https://zizmor.sh).
+
+#### omnibor
+
+Certain integration tests require the [`omnibor`](https://github.com/omnibor/omnibor-rs) commandline tool. If you plan to run them, you will need to install [version 0.7.0](https://github.com/omnibor/omnibor-rs/releases/tag/omnibor-cli-v0.7.0) as the commandline flags have changed in later releases and cargo-dist currently expects the older flags.
+
+### Updating Snapshots
 
 dist's tests rely on [cargo-insta](https://crates.io/crates/cargo-insta) for snapshot testing various
 outputs. This allows us to both catch regressions and also more easily review UI/output changes. If a snapshot
