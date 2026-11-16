@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://axodotdev.github.io/cargo-dist" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+    
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.31.0-prerelease.3</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release pre-release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.31.0-prerelease.3
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        Feb 23 2026 at 15:11 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release includes several new features, including the major introduction of <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings" rel="noopener noreferrer">mirrors</a> that installers can fallback to.</p>
+<h2>Simple hosting (aka mirrors)</h2>
+<p>This release adds a new hosting method, <code>simple</code>, which supports static file hosting. This allows you to host your artifacts on the hosting provider of your choice so long as it follows a similar URL structure to GitHub Releases hosting. It can also be used alongside GitHub hosting; if you specify more than one hosting provider, the secondary hosting source will be used as a mirror. The priority is determined by the order of the keys in your config. For example, this will use GitHub first and fall back to your static host if GitHub is unavailable:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">hosting </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">github</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">simple</span><span style="color:#89ddff;">"]
+</span><span style="color:#f07178;">simple-download-url </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">https://static.myapp.com/{tag}</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>And this will use your static host first and fall back to GitHub if necessary:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">hosting </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">simple</span><span style="color:#89ddff;">", "</span><span style="color:#c3e88d;">github</span><span style="color:#89ddff;">"]
+</span><span style="color:#f07178;">simple-download-url </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">https://static.myapp.com/{tag}</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#simple-hosting-settings" rel="noopener noreferrer">the docs</a>.</p>
+<p>Note: currently, dist won't <em>upload</em> artifacts to static hosts; it expects you to handle that, either manually or via writing a <a href="https://axodotdev.github.io/cargo-dist/book/ci/customizing.html#custom-jobs" rel="noopener noreferrer">custom job</a>.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/2285" rel="noopener noreferrer">Add "simple" hosting style</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/2302" rel="noopener noreferrer">feat(homebrew): mirror support with multi-urls</a></li>
+</ul>
+<h2>Disabling npm-shrinkwrap.json for npm installers</h2>
+<p>Currently, the npm installer includes an <code>npm-shrinkwrap.json</code> to specify the exact versions of its runtime dependencies as used at the time dist was released. Since some users would prefer looser dependency specification, this release provides an option to disable this. For more information, see <a href="https://axodotdev.github.io/cargo-dist/book/reference/config.html#npm-shrinkwrap" rel="noopener noreferrer">the docs</a>.</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">npm-shrinkwrap </span><span style="color:#89ddff;">= </span><span style="color:#f78c6c;">false
+</span></pre>
+
+<ul>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/2294" rel="noopener noreferrer">feat: option to skip npm-shrinkwrap.json generation</a></li>
+</ul>
+<h2>Configurable build directory for generic projects</h2>
+<p>Until now, generic (non-Rust) project support has assumed that artifacts are always written to the root of the project directory. This path is now configurable using the <code>out-dir</code> setting in your <code>dist.toml</code>. For example, if your project generates a binary named <code>example</code> in a subdirectory called <code>build</code>, you can specify:</p>
+<pre style="background-color:#263238;"><span style="color:#f07178;">binaries </span><span style="color:#89ddff;">= ["</span><span style="color:#c3e88d;">example</span><span style="color:#89ddff;">"]
+</span><span style="color:#f07178;">out-dir </span><span style="color:#89ddff;">= "</span><span style="color:#c3e88d;">build</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>impl @CatBraaain <a href="https://github.com/axodotdev/cargo-dist/pull/2271" rel="noopener noreferrer">support out_dir in config</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>impl @EliteTK + @gankra <a href="https://github.com/axodotdev/cargo-dist/pull/2261" rel="noopener noreferrer">Reduce risk of an interrupted installation leading to a partial installation</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+    
+
+    
+  </body>
+</html>
