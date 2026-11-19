@@ -378,6 +378,14 @@ pub struct DistMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub create_release: Option<bool>,
 
+    /// Whether dist should undraft an existing draft Github Release (default true).
+    ///
+    /// Only meaningful with `create-release = false`. If false, dist uploads its
+    /// artifacts into the existing draft (replacing same-named assets) and leaves
+    /// it a draft, for setups where another tool owns publishing the release.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub undraft_release: Option<bool>,
+
     /// Publish GitHub Releases to this repo instead of the current one
     ///
     /// The user must also set GH_RELEASES_TOKEN in their SECRETS
@@ -560,6 +568,7 @@ impl DistMetadata {
             publish_prereleases: _,
             force_latest: _,
             create_release: _,
+            undraft_release: _,
             pr_run_mode: _,
             allow_dirty: _,
             github_release: _,
@@ -669,6 +678,7 @@ impl DistMetadata {
             publish_prereleases,
             force_latest,
             create_release,
+            undraft_release,
             pr_run_mode,
             allow_dirty,
             github_release,
@@ -740,6 +750,9 @@ impl DistMetadata {
         }
         if create_release.is_some() {
             warn!("package.metadata.dist.create-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
+        }
+        if undraft_release.is_some() {
+            warn!("package.metadata.dist.undraft-release is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);
         }
         if github_releases_repo.is_some() {
             warn!("package.metadata.dist.github-releases-repo is set, but this is only accepted in workspace.metadata (value is being ignored): {}", package_manifest_path);

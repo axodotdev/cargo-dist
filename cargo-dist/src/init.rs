@@ -521,6 +521,7 @@ fn get_new_dist_metadata(
             publish_prereleases: None,
             force_latest: None,
             create_release: None,
+            undraft_release: None,
             github_releases_repo: None,
             github_releases_submodule_path: None,
             github_action_commits: None,
@@ -1030,6 +1031,7 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         publish_prereleases,
         force_latest,
         create_release,
+        undraft_release,
         github_releases_repo,
         github_releases_submodule_path,
         pr_run_mode,
@@ -1265,6 +1267,13 @@ fn apply_dist_to_metadata(metadata: &mut toml_edit::Item, meta: &DistMetadata) {
         "create-release",
         "# Whether dist should create a Github Release or use an existing draft\n",
         *create_release,
+    );
+
+    apply_optional_value(
+        table,
+        "undraft-release",
+        "# Whether dist should undraft an existing draft Github Release\n",
+        *undraft_release,
     );
 
     apply_optional_value(

@@ -14,10 +14,15 @@
 #
 # Note that the GitHub Release will be created with a generated
 # title/body based on your changelogs.
-  {{%- else %}}
+  {{%- elif undraft_release %}}
 #
 # Note that a GitHub Release with this tag is assumed to exist as a draft
 # with the appropriate title/body, and will be undrafted for you.
+  {{%- else %}}
+#
+# Note that a GitHub Release with this tag is assumed to exist as a draft
+# with the appropriate title/body. It is left as a draft: undrafting it is
+# up to you.
   {{%- endif %}}
 {{%- endif %}}
 
