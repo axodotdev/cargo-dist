@@ -3009,18 +3009,25 @@ class Package {
                 let result;
                 if (this.platform.artifactName.includes("windows")) {
                   // Windows does not have "unzip" by default on many installations, instead
-                  // we use Expand-Archive from powershell
-                  result = spawnSync("powershell.exe", [
-                    "-NoProfile",
-                    "-NonInteractive",
-                    "-Command",
-                    `& {
-                        param([string]$LiteralPath, [string]$DestinationPath)
-                        Expand-Archive -LiteralPath $LiteralPath -DestinationPath $DestinationPath -Force
-                    }`,
-                    tempFile,
-                    this.installDirectory,
-                  ]);
+                  // we use Expand-Archive from powershell.
+                  // PowerShell joins every argument after -Command into one script, so a
+                  // path with a space would split in two. Pass the paths through the env.
+                  result = spawnSync(
+                    "powershell.exe",
+                    [
+                      "-NoProfile",
+                      "-NonInteractive",
+                      "-Command",
+                      "$ErrorActionPreference = 'Stop'; Expand-Archive -LiteralPath $env:DIST_NPM_ARCHIVE -DestinationPath $env:DIST_NPM_INSTALL_DIR -Force",
+                    ],
+                    {
+                      env: {
+                        ...process.env,
+                        DIST_NPM_ARCHIVE: tempFile,
+                        DIST_NPM_INSTALL_DIR: this.installDirectory,
+                      },
+                    },
+                  );
                 } else {
                   result = spawnSync("unzip", [
                     "-q",
@@ -3051,6 +3058,11 @@ class Package {
         });
       })
       .then(() => {
+        if (!this.exists()) {
+          throw new Error(
+            `The archive was extracted, but ${this.name} is missing from ${this.installDirectory}`,
+          );
+        }
         if (!suppressLogs) {
           console.error(`${this.name} has been installed!`);
         }
