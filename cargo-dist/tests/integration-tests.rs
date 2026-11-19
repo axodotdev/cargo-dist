@@ -546,7 +546,7 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 ci = ["github"]
 build-local-artifacts = false
 local-artifacts-jobs = ["./local-artifacts"]
-github-custom-job-permissions = {{ local-artifacts = {{ packages = "write" }} }}
+github-custom-job-permissions = {{ local-artifacts = {{ packages = "write", contents = {{ level = "write", comment = "Needed to do the thing." }} }} }}
 release-branch = "production"
 
 "#

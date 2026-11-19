@@ -402,6 +402,7 @@ jobs:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
     permissions:
+      "contents": "write" # Needed to do the thing.
       "packages": "write"
 
   # Build and package all the platform-agnostic(ish) things
