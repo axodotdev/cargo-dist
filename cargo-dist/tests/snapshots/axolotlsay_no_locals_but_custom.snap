@@ -402,7 +402,7 @@ jobs:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
     permissions:
-      "contents": "write" # Needed to do the thing.
+      "contents": "write" # Needed to do the thing. You know, the thing. The one thing? Yeah, that one.
       "packages": "write"
 
   # Build and package all the platform-agnostic(ish) things
