@@ -621,7 +621,7 @@ stdout:
             "targets": [
               "x86_64-unknown-linux-musl"
             ],
-            "packages_install": "sudo apt-get update\nsudo apt-get install musl-tools",
+            "packages_install": "sudo apt-get update\nsudo apt-get install -y musl-tools",
             "cache_provider": "github"
           }
         ]
