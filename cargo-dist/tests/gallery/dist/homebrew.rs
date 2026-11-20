@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::Output};
+use std::process::Output;
 
 use super::*;
 
@@ -32,15 +32,26 @@ impl AppResult {
                 return Ok(());
             };
 
-            // Homebrew fails to guess that this is a formula
-            // file if it's not in a path named Formula,
-            // so we need to put the formula in a temp path
-            // to hint it correctly.
-            // (We could also skip individual lints via
-            // --except-cop on the `brew style` CLI, but that's
-            // a bit too much of a game of whack a mole.)
-            let temp_root = temp_dir::TempDir::new().unwrap();
-            let formula_temp_path = create_formula_copy(&temp_root, formula_path).unwrap();
+            // Homebrew insists every single formula has to be in a tap,
+            // so we have to set this up as a temporary tap for testing
+            // before we can start working with it.
+            let brew_prefix = brew_prefix(homebrew)?;
+            let tap_path = Utf8PathBuf::from(&brew_prefix)
+                .join("Library")
+                .join("Taps")
+                .join("axodotdev")
+                .join("homebrew-citesttap");
+            // If this exists from a previous test run, remove it
+            // before running.
+            if tap_path.exists() {
+                std::fs::remove_dir_all(&tap_path).unwrap();
+            }
+
+            let tap_formula_path = create_formula_copy(&tap_path, formula_path).unwrap();
+            let tap_name = "axodotdev/citesttap";
+            // Formula name is the same as the filename minus the .rb extension
+            let formula_basename = formula_path.file_prefix().unwrap();
+            let formula_name = format!("{tap_name}/{formula_basename}");
 
             // We perform linting here too because we want to both
             // lint and runtest the `brew style --fix`ed version.
@@ -48,7 +59,7 @@ impl AppResult {
             // snapshots since it doesn't work cross-platform, so
             // doing them both in one place means we don't have to
             // run it twice.
-            let output = brew_style(homebrew, &formula_temp_path)?;
+            let output = brew_style(homebrew, &formula_name)?;
             if !output.status.success() {
                 eprintln!("{}", String::from_utf8_lossy(&output.stdout));
                 return Err(miette!("brew style found issues"));
@@ -62,13 +73,13 @@ impl AppResult {
                 cmd.env("HOMEBREW_TESTS", "1")
                     .env("HOMEBREW_DEVELOPER", "1")
                     .arg("install")
-                    .arg(&formula_temp_path)
+                    .arg(&formula_name)
             })?;
             let prefix_output = homebrew.output_checked(|cmd| {
                 cmd.env("HOMEBREW_TESTS", "1")
                     .env("HOMEBREW_DEVELOPER", "1")
                     .arg("--prefix")
-                    .arg(&formula_temp_path)
+                    .arg(&formula_name)
             })?;
             let prefix_raw = String::from_utf8(prefix_output.stdout).unwrap();
             let prefix = prefix_raw.strip_suffix('\n').unwrap();
@@ -83,26 +94,36 @@ impl AppResult {
                 cmd.env("HOMEBREW_TESTS", "1")
                     .env("HOMEBREW_DEVELOPER", "1")
                     .arg("uninstall")
-                    .arg(formula_temp_path)
+                    .arg(formula_name)
             })?;
+
+            // Finally, remove the tap entirely
+            homebrew.output_checked(|cmd| cmd.arg("untap").arg(tap_name))?;
         }
         Ok(())
     }
 }
 
 fn create_formula_copy(
-    temp_root: &temp_dir::TempDir,
+    temp_root: &Utf8PathBuf,
     formula_path: &Utf8PathBuf,
-) -> std::io::Result<PathBuf> {
-    let formula_temp_root = temp_root.path().join("Formula");
-    std::fs::create_dir(&formula_temp_root)?;
+) -> std::io::Result<Utf8PathBuf> {
+    let formula_temp_root = temp_root.join("Formula");
+    std::fs::create_dir_all(&formula_temp_root)?;
     let formula_temp_path = formula_temp_root.join(formula_path.file_name().unwrap());
     std::fs::copy(formula_path, &formula_temp_path)?;
 
     Ok(formula_temp_path)
 }
 
-fn brew_style(homebrew: &CommandInfo, path: &PathBuf) -> Result<Output> {
+fn brew_prefix(homebrew: &CommandInfo) -> Result<String> {
+    let output = homebrew.output(|cmd| cmd.arg("--prefix"))?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    Ok(stdout.trim().to_string())
+}
+
+fn brew_style(homebrew: &CommandInfo, path: &str) -> Result<Output> {
     homebrew.output(|cmd| {
         cmd.arg("style")
             // We ignore audits for user-supplied metadata,
