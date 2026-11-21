@@ -49,9 +49,13 @@ We want it to be easy for anyone to run our bun build on any platform, so add [a
 We run `npm install` in "predist" to ensure dev-dependencies like bun are installed for anyone who runs the "dist" script. The name "dist" here is important, as dist will be looking for it. However the file it runs can have any name/location. Here we're calling it "dist.js", and it contains the following:
 
 ```js
-// you might need to change this path to your package.json
-const { bin } = require("./package.json");
-const execSync = require('child_process').execSync;
+const path = require("path");
+const execSync = require("child_process").execSync;
+
+// the directory containing your package.json; if this script lives in a
+// subdirectory, point this at the parent, e.g. path.resolve(__dirname, "..")
+const packageDir = __dirname;
+const { bin } = require(path.join(packageDir, "package.json"));
 
 // Compute the target we're building for
 const bunTargets = {
@@ -72,17 +76,17 @@ if (!bunTarget) {
 const binExt = distTarget.includes("windows") ? ".exe" : "";
 
 // setup bun
-execSync("bun install");
+execSync("bun install", { cwd: packageDir });
 
 // for each binary, run bun
 for (binName of Object.keys(bin)) {
-    const binScript = bin[binName];
-    const binPath = `${binName}${binExt}`;
-    execSync(`bun build ${binScript} --compile --target ${bunTarget} --outfile ${binPath}`);
+    const binScript = path.join(packageDir, bin[binName]);
+    const binPath = path.join(packageDir, `${binName}${binExt}`);
+    execSync(`bun build ${binScript} --compile --target ${bunTarget} --outfile ${binPath}`, { cwd: packageDir });
 }
 ```
 
-Ideally you won't have to customize this script at all (except maybe the relative path to package.json on the first line), because it reads your package.json and determines what to do for you. In particular it requires you to have [a "bin" field in your package.json](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#bin):
+Ideally you won't have to customize this script at all (except maybe the `packageDir` line near the top), because it reads your package.json and determines what to do for you. In particular it requires you to have [a "bin" field in your package.json](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#bin):
 
 ```json
   "bin": {
