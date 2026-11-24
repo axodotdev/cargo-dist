@@ -3131,17 +3131,26 @@ class Package {
                 if (this.platform.artifactName.includes("windows")) {
                   // Windows does not have "unzip" by default on many installations, instead
                   // we use Expand-Archive from powershell
-                  result = spawnSync("powershell.exe", [
-                    "-NoProfile",
-                    "-NonInteractive",
-                    "-Command",
-                    `& {
-                        param([string]$LiteralPath, [string]$DestinationPath)
-                        Expand-Archive -LiteralPath $LiteralPath -DestinationPath $DestinationPath -Force
-                    }`,
-                    tempFile,
-                    this.installDirectory,
-                  ]);
+                  // The paths are passed via environment variables rather than as
+                  // arguments: powershell.exe re-joins arguments after -Command into
+                  // a single command string, so a path containing a quote (e.g. a
+                  // username like O'Hanlon) would break parsing.
+                  result = spawnSync(
+                    "powershell.exe",
+                    [
+                      "-NoProfile",
+                      "-NonInteractive",
+                      "-Command",
+                      "Expand-Archive -LiteralPath $env:BINARY_INSTALL_ZIP -DestinationPath $env:BINARY_INSTALL_DEST -Force",
+                    ],
+                    {
+                      env: {
+                        ...process.env,
+                        BINARY_INSTALL_ZIP: tempFile,
+                        BINARY_INSTALL_DEST: this.installDirectory,
+                      },
+                    },
+                  );
                 } else {
                   result = spawnSync("unzip", [
                     "-q",
