@@ -3076,6 +3076,10 @@ jobs:
         run: |
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
+          # Use the dist-manifest.json this job just wrote. The download above
+          # can list this run's artifacts before the upload of it shows up,
+          # which would leave it out of the release.
+          cp dist-manifest.json artifacts/dist-manifest.json
       - name: Create GitHub Release
         env:
           PRERELEASE_FLAG: "${{ fromJson(steps.host.outputs.manifest).announcement_is_prerelease && '--prerelease' || '' }}"
