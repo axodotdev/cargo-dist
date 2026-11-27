@@ -9,6 +9,12 @@
         run: |
           # Remove the granular manifests
           rm -f artifacts/*-dist-manifest.json
+          {{%- if release_phase == "host" %}}
+          # Use the dist-manifest.json this job just wrote. The download above
+          # can list this run's artifacts before the upload of it shows up,
+          # which would leave it out of the release.
+          cp dist-manifest.json artifacts/dist-manifest.json
+          {{%- endif %}}
         {{%- if github_attestations is defined and github_attestations and (github_attestations_phase == "host" or github_attestations_phase == "announce") %}}
       - name: Attest
         uses: {{{actions["actions/attest"] | safe }}}
