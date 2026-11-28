@@ -2124,11 +2124,52 @@ function WebProxyFromUrl {
     }
 }
 
+function NoProxyBypassList {
+    param([string]$NoProxy)
+
+    # IsBypassed matches these patterns against "scheme://host[:port]"
+    $patterns = @()
+    foreach ($entry in $NoProxy.Split(",")) {
+        $entryHost = $entry.Trim().TrimStart("*").TrimStart(".")
+        if ($entryHost.Contains("]") -or ($entryHost -split ":").Count -gt 2) {
+            # .NET expands IPv6 literals in Uri.Host, so they cannot be matched here.
+            continue
+        }
+        if ([string]::IsNullOrEmpty($entryHost)) {
+            continue
+        }
+        $escaped = [System.Text.RegularExpressions.Regex]::Escape($entryHost)
+        # An entry with a port matches that port only; without one, any port matches.
+        $patterns += "(^|://|\.)$escaped(:\d+)?$"
+    }
+    return $patterns
+}
+
 function WebProxyFromEnvironment {
     $httpsProxy = [System.Environment]::GetEnvironmentVariable("HTTPS_PROXY")
     $allProxy = [System.Environment]::GetEnvironmentVariable("ALL_PROXY")
     $proxyUrl = if (-not [string]::IsNullOrWhiteSpace($httpsProxy)) { $httpsProxy } else { $allProxy }
     $webProxy = WebProxyFromUrl -ProxyUrl $proxyUrl
+    if ($null -eq $webProxy) {
+        return $null
+    }
+
+    $noProxy = [System.Environment]::GetEnvironmentVariable("NO_PROXY")
+    if ([string]::IsNullOrWhiteSpace($noProxy)) {
+        $noProxy = [System.Environment]::GetEnvironmentVariable("no_proxy")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($noProxy)) {
+        if ($noProxy.Split(",") | Where-Object { $_.Trim() -eq "*" }) {
+            # A bare "*" bypasses every host. An empty proxy would leave the
+            # system proxy in place, so bypass everything instead.
+            $webProxy.BypassList = [string[]]@(".*")
+            return $webProxy
+        }
+        $bypassList = @(NoProxyBypassList -NoProxy $noProxy)
+        if ($bypassList.Count -gt 0) {
+            $webProxy.BypassList = [string[]]$bypassList
+        }
+    }
     return $webProxy
 }
 
