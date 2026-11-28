@@ -134,6 +134,8 @@ By default, the installer fetches archives without using any form of authenticat
 
 Users who need to fetch artifacts via a proxy can set the `HTTPS_PROXY` or `ALL_PROXY` environment variables. This is compatible with the syntax used by cURL; for more information, see [cURL's documentation](https://everything.curl.dev/usingcurl/proxies/env.html).
 
+Hosts that should be reached without the proxy go in `NO_PROXY` (or `no_proxy`), comma separated, as in `NO_PROXY=localhost,.corp.example`. An entry covers that host and its subdomains, an optional `:port` limits it to that port, and a `*` entry bypasses the proxy for every host. The shell installer gets this behaviour from cURL; the PowerShell installer matches the hostnames itself and ignores IPv6 literals.
+
 ## Verbosity
 
 > since 0.30.0

@@ -264,7 +264,10 @@ function NoProxyBypassList {
     $patterns = @()
     foreach ($entry in $NoProxy.Split(",")) {
         $entryHost = $entry.Trim().TrimStart("*").TrimStart(".")
-        $entryHost = ($entryHost -split ":")[0]
+        if ($entryHost.Contains("]") -or ($entryHost -split ":").Count -gt 2) {
+            # .NET expands IPv6 literals in Uri.Host, so they cannot be matched here.
+            continue
+        }
         if ([string]::IsNullOrEmpty($entryHost)) {
             continue
         }
@@ -289,8 +292,10 @@ function WebProxyFromEnvironment {
     }
     if (-not [string]::IsNullOrWhiteSpace($noProxy)) {
         if ($noProxy.Split(",") | Where-Object { $_.Trim() -eq "*" }) {
-            # A bare "*" bypasses every host, so no proxy is used.
-            return $null
+            # A bare "*" bypasses every host. An empty proxy would leave the
+            # system proxy in place, so bypass everything instead.
+            $webProxy.BypassList = [string[]]@(".*")
+            return $webProxy
         }
         $bypassList = @(NoProxyBypassList -NoProxy $noProxy)
         if ($bypassList.Count -gt 0) {
