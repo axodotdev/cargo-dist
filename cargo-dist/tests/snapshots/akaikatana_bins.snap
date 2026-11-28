@@ -2046,11 +2046,52 @@ function WebProxyFromUrl {
     }
 }
 
+function NoProxyBypassList {
+    param([string]$NoProxy)
+
+    # IsBypassed matches these patterns against "scheme://host[:port]"
+    $patterns = @()
+    foreach ($entry in $NoProxy.Split(",")) {
+        $entryHost = $entry.Trim().TrimStart("*").TrimStart(".")
+        if ($entryHost.Contains("]") -or ($entryHost -split ":").Count -gt 2) {
+            # .NET expands IPv6 literals in Uri.Host, so they cannot be matched here.
+            continue
+        }
+        if ([string]::IsNullOrEmpty($entryHost)) {
+            continue
+        }
+        $escaped = [System.Text.RegularExpressions.Regex]::Escape($entryHost)
+        # An entry with a port matches that port only; without one, any port matches.
+        $patterns += "(^|://|\.)$escaped(:\d+)?$"
+    }
+    return $patterns
+}
+
 function WebProxyFromEnvironment {
     $httpsProxy = [System.Environment]::GetEnvironmentVariable("HTTPS_PROXY")
     $allProxy = [System.Environment]::GetEnvironmentVariable("ALL_PROXY")
     $proxyUrl = if (-not [string]::IsNullOrWhiteSpace($httpsProxy)) { $httpsProxy } else { $allProxy }
     $webProxy = WebProxyFromUrl -ProxyUrl $proxyUrl
+    if ($null -eq $webProxy) {
+        return $null
+    }
+
+    $noProxy = [System.Environment]::GetEnvironmentVariable("NO_PROXY")
+    if ([string]::IsNullOrWhiteSpace($noProxy)) {
+        $noProxy = [System.Environment]::GetEnvironmentVariable("no_proxy")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($noProxy)) {
+        if ($noProxy.Split(",") | Where-Object { $_.Trim() -eq "*" }) {
+            # A bare "*" bypasses every host. An empty proxy would leave the
+            # system proxy in place, so bypass everything instead.
+            $webProxy.BypassList = [string[]]@(".*")
+            return $webProxy
+        }
+        $bypassList = @(NoProxyBypassList -NoProxy $noProxy)
+        if ($bypassList.Count -gt 0) {
+            $webProxy.BypassList = [string[]]$bypassList
+        }
+    }
     return $webProxy
 }
 
@@ -2733,7 +2774,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "artifacts_matrix": {
         "include": [
           {
-            "runner": "macos-14",
+            "runner": "macos-15",
             "host": "aarch64-apple-darwin",
             "install_dist": {
               "shell": "sh",
@@ -2852,7 +2893,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
@@ -2914,7 +2955,7 @@ jobs:
       - name: enable windows longpaths
         run: |
           git config --global core.longpaths true
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
@@ -2975,7 +3016,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
@@ -3027,7 +3068,7 @@ jobs:
     outputs:
       val: ${{ steps.host.outputs.manifest }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
@@ -3094,7 +3135,7 @@ jobs:
       GITHUB_EMAIL: "admin+bot@axo.dev"
     if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: true
           repository: "mistydemeo/homebrew-formulae"
@@ -3141,7 +3182,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive

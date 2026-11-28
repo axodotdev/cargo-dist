@@ -2167,11 +2167,52 @@ function WebProxyFromUrl {
     }
 }
 
+function NoProxyBypassList {
+    param([string]$NoProxy)
+
+    # IsBypassed matches these patterns against "scheme://host[:port]"
+    $patterns = @()
+    foreach ($entry in $NoProxy.Split(",")) {
+        $entryHost = $entry.Trim().TrimStart("*").TrimStart(".")
+        if ($entryHost.Contains("]") -or ($entryHost -split ":").Count -gt 2) {
+            # .NET expands IPv6 literals in Uri.Host, so they cannot be matched here.
+            continue
+        }
+        if ([string]::IsNullOrEmpty($entryHost)) {
+            continue
+        }
+        $escaped = [System.Text.RegularExpressions.Regex]::Escape($entryHost)
+        # An entry with a port matches that port only; without one, any port matches.
+        $patterns += "(^|://|\.)$escaped(:\d+)?$"
+    }
+    return $patterns
+}
+
 function WebProxyFromEnvironment {
     $httpsProxy = [System.Environment]::GetEnvironmentVariable("HTTPS_PROXY")
     $allProxy = [System.Environment]::GetEnvironmentVariable("ALL_PROXY")
     $proxyUrl = if (-not [string]::IsNullOrWhiteSpace($httpsProxy)) { $httpsProxy } else { $allProxy }
     $webProxy = WebProxyFromUrl -ProxyUrl $proxyUrl
+    if ($null -eq $webProxy) {
+        return $null
+    }
+
+    $noProxy = [System.Environment]::GetEnvironmentVariable("NO_PROXY")
+    if ([string]::IsNullOrWhiteSpace($noProxy)) {
+        $noProxy = [System.Environment]::GetEnvironmentVariable("no_proxy")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($noProxy)) {
+        if ($noProxy.Split(",") | Where-Object { $_.Trim() -eq "*" }) {
+            # A bare "*" bypasses every host. An empty proxy would leave the
+            # system proxy in place, so bypass everything instead.
+            $webProxy.BypassList = [string[]]@(".*")
+            return $webProxy
+        }
+        $bypassList = @(NoProxyBypassList -NoProxy $noProxy)
+        if ($bypassList.Count -gt 0) {
+            $webProxy.BypassList = [string[]]$bypassList
+        }
+    }
     return $webProxy
 }
 
@@ -3356,10 +3397,10 @@ install(false);
         "detect-libc": "^2.1.2"
       },
       "devDependencies": {
-        "prettier": "^3.9.9"
+        "prettier": "^3.10.1"
       },
       "engines": {
-        "node": ">=14.14",
+        "node": ">=14.18",
         "npm": ">=6"
       },
       "hasInstallScript": true,
@@ -3387,10 +3428,10 @@ install(false);
       "funding": {
         "url": "https://github.com/prettier/prettier?sponsor=1"
       },
-      "integrity": "sha512-Z/CJHIkdujO/OtN7nXUii0Rf3VT5SRuhjBA82Xvu2XhBUgX3nhP67T0LHceBdQLex7OOFGTox+Q5Yg8Jk2Qivg==",
+      "integrity": "sha512-70vp3ZUYoPlFbF9uiTdXHUUCGEIp7d4+6p+8DYbkm2jP7x/3i/paXVF6dopSI3zd/CEitrZN1rc4i85xWmmXlg==",
       "license": "MIT",
-      "resolved": "https://registry.npmjs.org/prettier/-/prettier-3.9.9.tgz",
-      "version": "3.9.9"
+      "resolved": "https://registry.npmjs.org/prettier/-/prettier-3.10.1.tgz",
+      "version": "3.10.1"
     }
   },
   "requires": true,
@@ -3411,10 +3452,10 @@ install(false);
   },
   "description": "💬 a CLI for learning to distribute CLIs in rust",
   "devDependencies": {
-    "prettier": "^3.9.9"
+    "prettier": "^3.10.1"
   },
   "engines": {
-    "node": ">=14.14",
+    "node": ">=14.18",
     "npm": ">=6"
   },
   "glibcMinimum": {
@@ -4022,7 +4063,7 @@ CENSORED (see https://github.com/axodotdev/cargo-dist/issues/1477)  source.tar.g
       "artifacts_matrix": {
         "include": [
           {
-            "runner": "macos-14",
+            "runner": "macos-15",
             "host": "aarch64-apple-darwin",
             "install_dist": {
               "shell": "sh",
@@ -4181,7 +4222,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
@@ -4241,7 +4282,7 @@ jobs:
       - name: enable windows longpaths
         run: |
           git config --global core.longpaths true
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
@@ -4300,7 +4341,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
@@ -4350,7 +4391,7 @@ jobs:
     outputs:
       val: ${{ steps.host.outputs.manifest }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
@@ -4415,7 +4456,7 @@ jobs:
       GITHUB_EMAIL: "admin+bot@axo.dev"
     if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: true
           repository: "axodotdev/homebrew-packages"
@@ -4491,7 +4532,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: recursive
