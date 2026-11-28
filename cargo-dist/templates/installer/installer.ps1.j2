@@ -272,6 +272,7 @@ function NoProxyBypassList {
             continue
         }
         $escaped = [System.Text.RegularExpressions.Regex]::Escape($entryHost)
+        # An entry with a port matches that port only; without one, any port matches.
         $patterns += "(^|://|\.)$escaped(:\d+)?$"
     }
     return $patterns
